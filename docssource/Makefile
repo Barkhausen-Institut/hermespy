@@ -7,7 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SPHINXAPI     = sphinx-apidoc
 SOURCEDIR     = .
-BUILDDIR      = _build
+BUILDDIR      = ../docs
 APIEXCLUDES	  = ../*tests* ../hermes.py ../parameters_parser/
 
 # Put it first so that "make" without argument is like "make help".
