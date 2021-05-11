@@ -1,0 +1,1135 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>modem package &mdash; hermespy  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="modem.coding package" href="modem.coding.html" />
+    <link rel="prev" title="channel package" href="channel.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> hermespy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="high_level_description.html">High Level Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explanation_platform_approach.html">Explanation of Platform Approach</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameter_description.html">Parameter Description</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="channel.html">channel package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">modem package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modem.coding.html">modem.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.tools.html">modem.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-modem.modem">modem.modem module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-modem.rf_chain">modem.rf_chain module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-modem.waveform_generator">modem.waveform_generator module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-modem.waveform_generator_chirp_fsk">modem.waveform_generator_chirp_fsk module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-modem.waveform_generator_ofdm">modem.waveform_generator_ofdm module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-modem.waveform_generator_psk_qam">modem.waveform_generator_psk_qam module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-modem">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scenario.html">scenario package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator_core.html">simulator_core package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source.html">source package</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">hermespy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+        
+      <li>modem package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/modem.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="modem-package">
+<h1>modem package<a class="headerlink" href="#modem-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modem.coding.html">modem.coding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.encoder">modem.coding.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.ldpc_encoder">modem.coding.ldpc_encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.repetition_encoder">modem.coding.repetition_encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modem.tools.html">modem.tools package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modem.tools.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.tools.html#module-modem.tools.mimo">modem.tools.mimo module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.tools.html#module-modem.tools.psk_qam_mapping">modem.tools.psk_qam_mapping module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.tools.html#module-modem.tools.shaping_filter">modem.tools.shaping_filter module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.tools.html#module-modem.tools">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-modem.modem">
+<span id="modem-modem-module"></span><h2>modem.modem module<a class="headerlink" href="#module-modem.modem" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.modem.Modem">
+<em class="property">class </em><code class="sig-name descname">Modem</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">random_number_gen</span></em>, <em class="sig-param"><span class="n">tx_modem</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></p>
+<p>Implements a modem.</p>
+<p>The modem consists of an analog RF chain, a waveform generator, and can be used
+either for transmission or reception of a given technology.</p>
+<dl class="py attribute">
+<dt id="modem.modem.Modem.param">
+<code class="sig-name descname">param</code><a class="headerlink" href="#modem.modem.Modem.param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modem-specific parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ParametersModem</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.waveform_generator">
+<code class="sig-name descname">waveform_generator</code><a class="headerlink" href="#modem.modem.Modem.waveform_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>waveform generator object, generates baseband samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modem.waveform_generator.WaveformGenerator" title="modem.waveform_generator.WaveformGenerator">WaveformGenerator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.rf_chain">
+<code class="sig-name descname">rf_chain</code><a class="headerlink" href="#modem.modem.Modem.rf_chain" title="Permalink to this definition">¶</a></dt>
+<dd><p>RF chain object, that models RF impairments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modem.rf_chain.RfChain" title="modem.rf_chain.RfChain">RfChain</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.power_factor">
+<code class="sig-name descname">power_factor</code><a class="headerlink" href="#modem.modem.Modem.power_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>if this is a transmit modem, signal is scaled to
+the desired power, depending on the current power factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.encoder">
+<code class="sig-name descname">encoder</code><a class="headerlink" href="#modem.modem.Modem.encoder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.coding.html#modem.coding.encoder.Encoder" title="modem.coding.encoder.Encoder">Encoder</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.paired_tx_modem">
+<em class="property">property </em><code class="sig-name descname">paired_tx_modem</code><a class="headerlink" href="#modem.modem.Modem.paired_tx_modem" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Modem</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.send">
+<code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">drop_duration</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array with the complex baseband samples of a waveform generator.</p>
+<p>The signal may be distorted by RF impairments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>drop_duration</strong> (<em>float</em>) – Length of signal in seconds.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Complex baseband samples, rows denoting transmitter antennas and
+columns denoting samples.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.receive">
+<code class="sig-name descname">receive</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_signal</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Demodulates the signal received.</p>
+<p>The received signal may be distorted by RF imperfections before demodulation and decoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Received signal.</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – noise variance (for equalization).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Detected bits as a list of data blocks for the drop.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.get_bit_energy">
+<code class="sig-name descname">get_bit_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.get_bit_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average bit energy of the modulated signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.get_symbol_energy">
+<code class="sig-name descname">get_symbol_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.get_symbol_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average symbol energy of the modulated signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.set_channel">
+<code class="sig-name descname">set_channel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.set_channel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modem.rf_chain">
+<span id="modem-rf-chain-module"></span><h2>modem.rf_chain module<a class="headerlink" href="#module-modem.rf_chain" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.rf_chain.RfChain">
+<em class="property">class </em><code class="sig-name descname">RfChain</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">tx_power</span></em>, <em class="sig-param"><span class="n">random_number_gen</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.rf_chain.RfChain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements an RF chain model.</p>
+<p>Only PA is modelled.</p>
+<dl class="py method">
+<dt id="modem.rf_chain.RfChain.send">
+<code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.rf_chain.RfChain.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distorted version of signal in “input_signal”.</p>
+<p>According to transmission impairments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.rf_chain.RfChain.receive">
+<code class="sig-name descname">receive</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.rf_chain.RfChain.receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distorted version of signal in “input_signal”.</p>
+<p>According to reception impairments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modem.waveform_generator">
+<span id="modem-waveform-generator-module"></span><h2>modem.waveform_generator module<a class="headerlink" href="#module-modem.waveform_generator" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.waveform_generator.WaveformGenerator">
+<em class="property">class </em><code class="sig-name descname">WaveformGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Implements an abstract waveform generator.</p>
+<p>Implementations for specific technologies should inherit from this class.</p>
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.samples_in_frame">
+<em class="property">property </em><code class="sig-name descname">samples_in_frame</code><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.samples_in_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>samples contained in current frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.max_frame_length">
+<em class="property">property </em><code class="sig-name descname">max_frame_length</code><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.max_frame_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum length of a data frame (in seconds)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.get_bit_energy">
+<em class="property">abstract </em><code class="sig-name descname">get_bit_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.get_bit_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average (discrete-time) bit energy of the modulated signal.</p>
+<p>Energy of signal x[k] is defined as sum{<a href="#id1"><span class="problematic" id="id2">|</span></a>x[k]}^2
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.get_symbol_energy">
+<em class="property">abstract </em><code class="sig-name descname">get_symbol_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.get_symbol_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average symbol (discrete-time) energy of the modulated signal.</p>
+<p>Energy of signal x[k] is defined as sum{<a href="#id3"><span class="problematic" id="id4">|</span></a>x[k]}^2
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.get_power">
+<em class="property">abstract </em><code class="sig-name descname">get_power</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.get_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average symbol (unitless) power,</p>
+<p>Power of signal x[k] is defined as sum_{k=1}^N{<a href="#id5"><span class="problematic" id="id6">|</span></a>x[k]}^2 / N
+Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.create_frame">
+<em class="property">abstract </em><code class="sig-name descname">create_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">old_timestamp</span></em>, <em class="sig-param"><span class="n">data_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.create_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new transmission frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_timestamp</strong> (<em>int</em>) – Initial timestamp (in sample number) of new frame.</p></li>
+<li><p><strong>data_bits</strong> (<em>np.array</em>) – Flattened blocks, whose bits are supposed to fit into this frame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>np.ndarray</cite>: Baseband complex samples of transmission frame.
+<cite>int</cite>: timestamp(in sample number) of frame end.
+<cite>int</cite>: Sample number of first sample in frame (to account for possible filtering).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(np.ndarray, int, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.receive_frame">
+<em class="property">abstract </em><code class="sig-name descname">receive_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rx_signal</span></em>, <em class="sig-param"><span class="n">timestamp_in_samples</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.receive_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives and detects the bits from a new received frame.</p>
+<p>The method receives the whole received signal ‘rx_signal’ from the drop,
+extracts the signal corresponding to the current frame, and detects the
+transmitted bits, which are returned in ‘bits’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rx_signal</strong> (<em>np.ndarray</em>) – Received signal in drop. Rows denoting antennas and columns
+being the samples.</p></li>
+<li><p><strong>timestamp_in_samples</strong> (<em>int</em>) – First timestamp in samples of this frame-</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – ES/NO required for equalization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>List[np.array]</cite>: Detected bits as a list of data blocks.
+<cite>np.ndarray</cite>: remeaining received signal corresponding to the
+following frames.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(List[np.narray], np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator.WaveformGenerator.set_channel">
+<code class="sig-name descname">set_channel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator.WaveformGenerator.set_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associates a given propagation channel to this modem.</p>
+<p>It can be used to obtain perfect channel state information for
+detection/precoding algorithms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modem.waveform_generator_chirp_fsk">
+<span id="modem-waveform-generator-chirp-fsk-module"></span><h2>modem.waveform_generator_chirp_fsk module<a class="headerlink" href="#module-modem.waveform_generator_chirp_fsk" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk">
+<em class="property">class </em><code class="sig-name descname">WaveformGeneratorChirpFsk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modem.waveform_generator.WaveformGenerator" title="modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.waveform_generator.WaveformGenerator</span></code></a></p>
+<p>Implements a chirp FSK waveform generator.</p>
+<dl class="py method">
+<dt id="modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.create_frame">
+<code class="sig-name descname">create_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timestamp</span></em>, <em class="sig-param"><span class="n">data_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.create_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new transmission frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_timestamp</strong> (<em>int</em>) – Initial timestamp (in sample number) of new frame.</p></li>
+<li><p><strong>data_bits</strong> (<em>np.array</em>) – Flattened blocks, whose bits are supposed to fit into this frame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>np.ndarray</cite>: Baseband complex samples of transmission frame.
+<cite>int</cite>: timestamp(in sample number) of frame end.
+<cite>int</cite>: Sample number of first sample in frame (to account for possible filtering).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(np.ndarray, int, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.receive_frame">
+<code class="sig-name descname">receive_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rx_signal</span></em>, <em class="sig-param"><span class="n">timestamp_in_samples</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.receive_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives and detects the bits from a new received frame.</p>
+<p>The method receives the whole received signal ‘rx_signal’ from the drop,
+extracts the signal corresponding to the current frame, and detects the
+transmitted bits, which are returned in ‘bits’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rx_signal</strong> (<em>np.ndarray</em>) – Received signal in drop. Rows denoting antennas and columns
+being the samples.</p></li>
+<li><p><strong>timestamp_in_samples</strong> (<em>int</em>) – First timestamp in samples of this frame-</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – ES/NO required for equalization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>List[np.array]</cite>: Detected bits as a list of data blocks.
+<cite>np.ndarray</cite>: remeaining received signal corresponding to the
+following frames.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(List[np.narray], np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_bit_energy">
+<code class="sig-name descname">get_bit_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_bit_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average (discrete-time) bit energy of the modulated signal.</p>
+<p>Energy of signal x[k] is defined as sum{<a href="#id7"><span class="problematic" id="id8">|</span></a>x[k]}^2
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_symbol_energy">
+<code class="sig-name descname">get_symbol_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_symbol_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average symbol (discrete-time) energy of the modulated signal.</p>
+<p>Energy of signal x[k] is defined as sum{<a href="#id9"><span class="problematic" id="id10">|</span></a>x[k]}^2
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_power">
+<code class="sig-name descname">get_power</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average symbol (unitless) power,</p>
+<p>Power of signal x[k] is defined as sum_{k=1}^N{<a href="#id11"><span class="problematic" id="id12">|</span></a>x[k]}^2 / N
+Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modem.waveform_generator_ofdm">
+<span id="modem-waveform-generator-ofdm-module"></span><h2>modem.waveform_generator_ofdm module<a class="headerlink" href="#module-modem.waveform_generator_ofdm" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm">
+<em class="property">class </em><code class="sig-name descname">WaveformGeneratorOfdm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">rng</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modem.waveform_generator.WaveformGenerator" title="modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.waveform_generator.WaveformGenerator</span></code></a></p>
+<p>This module provides a class for a generic OFDM modem, with a flexible frame configuration.</p>
+<p>The following features are supported:
+- The modem can transmit or receive custom-defined frames. (see class ParametersOfdm). The frame may contain UL/DL data
+symbols, null carriers, pilot subcarriers, reference signals and guard intervals.
+- SC-FDMA can also be implemented with a precoder.
+- Subcarriers can be modulated with BPSK/QPSK/16-/64-/256-QAM.
+- cyclic-prefix OFDM are supported.</p>
+<p>This implementation has currently the following limitations:
+- all subcarriers use the same modulation scheme
+- reference is a random
+- ideal channel estimation assumed
+- pilot not implemented</p>
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.samples_in_frame">
+<em class="property">property </em><code class="sig-name descname">samples_in_frame</code><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.samples_in_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only samples_in_frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.bits_in_frame">
+<em class="property">property </em><code class="sig-name descname">bits_in_frame</code><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.bits_in_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only bits_in_frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.cyclic_prefix_overhead">
+<em class="property">property </em><code class="sig-name descname">cyclic_prefix_overhead</code><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.cyclic_prefix_overhead" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only cyclic_prefix_overhead</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.create_frame">
+<code class="sig-name descname">create_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timestamp</span></em>, <em class="sig-param"><span class="n">data_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.create_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a modulated complex baseband signal for a whole transmit frame.</p>
+<p>The signal will be modulated based on the bits generated by “self.source”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<em>int</em>) – timestamp (in samples) of initial sample in frame</p></li>
+<li><p><strong>data_bits</strong> (<em>np.array</em>) – Flattened blocks, whose bits are supposed to fit into this frame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt><cite>output_signal(numpy.ndarray)</cite>: 2D array containing the transmitted signal with</dt><dd><p>(self.param.number_tx_antennas x self.samples_in_frame) elements</p>
+</dd>
+</dl>
+<p><cite>timestamp(int)</cite>: current timestamp (in samples) of the following frame
+<cite>initial_sample_num(int)</cite>: sample in which this frame starts (equal to initial timestamp)</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(np.ndarray, int, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.create_ofdm_symbol_time_domain">
+<code class="sig-name descname">create_ofdm_symbol_time_domain</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">first_sample_idx</span></em>, <em class="sig-param"><span class="n">resource_elements</span></em>, <em class="sig-param"><span class="n">ofdm_symbol_config</span></em>, <em class="sig-param"><span class="n">output_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.create_ofdm_symbol_time_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates one ofdm symbol in time domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>first_sample_idx</strong> (<em>int</em>) – first sample index of frame</p></li>
+<li><p><strong>resource_elements</strong> (<em>np.array</em>) – resource elements already mapped to subcarriers.</p></li>
+<li><p><strong>ofdm_symbol_config</strong> (<em>OfdmSymbolConfig</em>) – Configuration of ofdm symbol to create.</p></li>
+<li><p><strong>output_signal</strong> (<em>np.ndarray</em>) – frame signal of shape <cite>N_tx_antennas x samples</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>int</cite>: updated sampleindex
+<cite>np.ndarray</cite>: updated output signal</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(int, np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.map_resources">
+<code class="sig-name descname">map_resources</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">res_mapping</span></em>, <em class="sig-param"><span class="n">data_symbols_in_frame</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.map_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps data symbols to subcarriers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>res_mapping</strong> (<em>List</em><em>(</em><em>ResourcePattern</em><em>)</em>) – Describes which sc are data, reference and null.</p></li>
+<li><p><strong>data_symbols_in_frame</strong> (<em>np.array</em>) – Data symbols to distribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>np.ndarray</cite>: Resources in current ofdm symbol in f domain, rows denote tx ant.
+<cite>np.ndarray</cite>: Remaining data symbols.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(np.ndarray, np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.receive_frame">
+<code class="sig-name descname">receive_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rx_signal</span></em>, <em class="sig-param"><span class="n">timestamp_in_samples</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.receive_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Demodulates the signal for a whole received frame.</p>
+<p>This method extracts a signal frame from ‘rx_signal’ and demodulates it according to
+the frame and modulation parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rx_signal</strong> (<em>numpy.ndarray</em>) – N x S array containg the received signal, with N the number of receive antennas
+and S the number of samples left in the drop.</p></li>
+<li><p><strong>timestamp_in_samples</strong> (<em>int</em>) – timestamp of initial sample in received signal, relative to the first sample in
+the simulation drop.</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – noise variance (for equalization).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>(list[np.ndarray], np.ndarray)_</dt><dd><dl class="simple">
+<dt><cite>list[numpy.ndarray]</cite>:</dt><dd><p>list of detected blocks of bits.</p>
+</dd>
+<dt><cite>numpy.ndarray</cite>:</dt><dd><p>N x S’ array containing the remaining part of the signal, after this frame was
+demodulated.  S’ = S - self.samples_in_frame</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_bits_from_ofdm_symbol">
+<code class="sig-name descname">get_bits_from_ofdm_symbol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ofdm_symbol_config</span></em>, <em class="sig-param"><span class="n">frame_signal</span></em>, <em class="sig-param"><span class="n">channel_in_freq_domain</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_bits_from_ofdm_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detects the bits that are contained in an ofdm symbol in time domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ofdm_symbol_config</strong> (<em>OfdmSymbolConfig</em>) – Configuration of current ofdm symbol.</p></li>
+<li><p><strong>frame_signal</strong> (<em>numpy.ndarray</em>) – array with the received signal in the whole remaining frame</p></li>
+<li><p><strong>channel_in_freq_domain</strong> (<em>np.ndarray</em>) – channel frequency response estimation. It should be a np.ndarray of shape
+fft_size x #rx_antennas x #tx_antennas</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – noise variance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Vector containing the detected bits for this particular symbol.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.demodulate_ofdm_symbol">
+<code class="sig-name descname">demodulate_ofdm_symbol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ofdm_symbol_config</span></em>, <em class="sig-param"><span class="n">ofdm_symbol_resources</span></em>, <em class="sig-param"><span class="n">channel_in_freq_domain</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.demodulate_ofdm_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Demodulates  a single OFDM symbol</p>
+<p>This method performs the FFT of the time-domain signal and equalizes it with knowledge of the channel frequency
+response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ofdm_symbol_config</strong> (<em>OfdmSymbolConfig</em>) – Config of ofdm symbol to demodulate.</p></li>
+<li><p><strong>ofdm_symbol_resources</strong> (<em>numpy.ndarray</em>) – contains information the received OFDM symbol in time domain of shape
+#rx_antennas x #fft_size</p></li>
+<li><p><strong>channel_in_freq_domain</strong> (<em>numpy.ndarray</em>) – channel estimate in the frequency domain of shape
+fft_size x #rx_antennas x #tx_antennas</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – noise variance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>estimate of the frequency-domain symbols at the data subcarriers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.discard_reference_symbols">
+<code class="sig-name descname">discard_reference_symbols</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ofdm_symbol_config</span></em>, <em class="sig-param"><span class="n">ofdm_symbol_resources</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.discard_reference_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discards symbols except data symbols in ofdm symbol.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ofdm_symbol_config</strong> (<em>OfdmSymbolConfig</em>) – Config that defines the resource element mapping.</p></li>
+<li><p><strong>ofdm_symbol_resources</strong> (<em>np.ndarray</em>) – subcarriers of the frame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Data subcarriers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.channel_estimation">
+<code class="sig-name descname">channel_estimation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rx_signal</span></em>, <em class="sig-param"><span class="n">timestamp_in_samples</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.channel_estimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs channel estimation</p>
+<p>This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
+algorithm is defined in the parameter variable <cite>self.param</cite>.
+Currently only ideal channel estimation is available, either considering the channel state information (CSI)
+only at the beginning/middle/end of the frame (estimation_type=’IDEAL_PREAMBLE’/’IDEAL_MIDAMBLE’/
+‘IDEAL_POSTAMBLE’), or at every OFDM symbol (‘IDEAL’).
+Ideal channel estimation extracts the CSI directly from the channel,a and does not use the received signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rx_signal</strong> (<em>numpy.ndarray</em>) – time-domain samples of the received signal over the whole frame</p></li>
+<li><p><strong>timestamp_in_samples</strong> (<em>int</em>) – sample index inside the drop of the first sample in frame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>channel estimate in the frequency domain. It is a N x R x T x K array, with N
+the FFT size and K the number of data OFDM symbols in the frame.
+R denotes the number of receiving antennas and T of the transmitting
+antennas.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_ideal_channel_estimation">
+<code class="sig-name descname">get_ideal_channel_estimation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel_timestamp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_ideal_channel_estimation" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns ideal channel estimation</p>
+<p>This method extracts the frequency-domain response from a known channel impulse response. The channel is the one
+from <cite>self.channel</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>channel_timestamp</strong> (<em>np.array</em>) – timestamp (in seconds) at which the channel impulse response should be
+measured</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>channel in freqence domain in shape <a href="#id13"><span class="problematic" id="id14">`</span></a>FFT_SIZE x #rx_antennas x #tx_antennas</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_bit_energy">
+<code class="sig-name descname">get_bit_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_bit_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the theoretical (discrete) bit energy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>raw bit energy. For the OFDM signal, the average bit energy of all data symbols, including
+the cyclic prefix overhead, is considered.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_symbol_energy">
+<code class="sig-name descname">get_symbol_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_symbol_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the theoretical symbol energy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>raw symbol energy. For the OFDM signal, the average energy of a data resource element,
+including the cyclic prefix overhead, is considered.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_power">
+<code class="sig-name descname">get_power</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average symbol (unitless) power,</p>
+<p>Power of signal x[k] is defined as sum_{k=1}^N{<a href="#id15"><span class="problematic" id="id16">|</span></a>x[k]}^2 / N
+Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modem.waveform_generator_psk_qam">
+<span id="modem-waveform-generator-psk-qam-module"></span><h2>modem.waveform_generator_psk_qam module<a class="headerlink" href="#module-modem.waveform_generator_psk_qam" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.waveform_generator_psk_qam.WaveformGeneratorPskQam">
+<em class="property">class </em><code class="sig-name descname">WaveformGeneratorPskQam</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modem.waveform_generator.WaveformGenerator" title="modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.waveform_generator.WaveformGenerator</span></code></a></p>
+<p>This method provides a class for a generic PSK/QAM modem.</p>
+<p>The modem has the following characteristics:
+- root-raised cosine filter with arbitrary roll-off factor
+- arbitrary constellation, as defined in modem.tools.psk_qam_mapping:PskQamMapping</p>
+<p>This implementation has currently the following limitations:
+- SISO only
+- hard output only (no LLR)
+- no reference signal
+- ideal channel estimation
+- equalization of ISI with FMCW in AWGN channel only
+- no equalization (only amplitude and phase of first propagation path is compensated)</p>
+<p>Creates a modem object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param</strong> (<em>ParametersPskQam</em>) – object containing all the relevant parameters</p></li>
+<li><p><strong>source</strong> (<a class="reference internal" href="source.html#source.bits_source.BitsSource" title="source.bits_source.BitsSource"><em>BitsSource</em></a>) – bits source for transmitter</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.create_frame">
+<code class="sig-name descname">create_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timestamp</span></em>, <em class="sig-param"><span class="n">data_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.create_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new transmission frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>old_timestamp</strong> (<em>int</em>) – Initial timestamp (in sample number) of new frame.</p></li>
+<li><p><strong>data_bits</strong> (<em>np.array</em>) – Flattened blocks, whose bits are supposed to fit into this frame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>np.ndarray</cite>: Baseband complex samples of transmission frame.
+<cite>int</cite>: timestamp(in sample number) of frame end.
+<cite>int</cite>: Sample number of first sample in frame (to account for possible filtering).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(np.ndarray, int, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.receive_frame">
+<code class="sig-name descname">receive_frame</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rx_signal</span></em>, <em class="sig-param"><span class="n">timestamp_in_samples</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.receive_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives and detects the bits from a new received frame.</p>
+<p>The method receives the whole received signal ‘rx_signal’ from the drop,
+extracts the signal corresponding to the current frame, and detects the
+transmitted bits, which are returned in ‘bits’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rx_signal</strong> (<em>np.ndarray</em>) – Received signal in drop. Rows denoting antennas and columns
+being the samples.</p></li>
+<li><p><strong>timestamp_in_samples</strong> (<em>int</em>) – First timestamp in samples of this frame-</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – ES/NO required for equalization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><cite>List[np.array]</cite>: Detected bits as a list of data blocks.
+<cite>np.ndarray</cite>: remeaining received signal corresponding to the
+following frames.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(List[np.narray], np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.get_bit_energy">
+<code class="sig-name descname">get_bit_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.get_bit_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average (discrete-time) bit energy of the modulated signal.</p>
+<p>Energy of signal x[k] is defined as sum{<a href="#id17"><span class="problematic" id="id18">|</span></a>x[k]}^2
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.get_symbol_energy">
+<code class="sig-name descname">get_symbol_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.get_symbol_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average symbol (discrete-time) energy of the modulated signal.</p>
+<p>Energy of signal x[k] is defined as sum{<a href="#id19"><span class="problematic" id="id20">|</span></a>x[k]}^2
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.get_power">
+<code class="sig-name descname">get_power</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.get_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the theoretical average symbol (unitless) power,</p>
+<p>Power of signal x[k] is defined as sum_{k=1}^N{<a href="#id21"><span class="problematic" id="id22">|</span></a>x[k]}^2 / N
+Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-modem">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-modem" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="modem.coding.html" class="btn btn-neutral float-right" title="modem.coding package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="channel.html" class="btn btn-neutral float-left" title="channel package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Barkhausen Institut
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

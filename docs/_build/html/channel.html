@@ -1,0 +1,1098 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>channel package &mdash; hermespy  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="modem package" href="modem.html" />
+    <link rel="prev" title="hermespy" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> hermespy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="high_level_description.html">High Level Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="explanation_platform_approach.html">Explanation of Platform Approach</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameter_description.html">Parameter Description</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">channel package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-channel.channel">channel.channel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-channel.multipath_fading_channel">channel.multipath_fading_channel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-channel.noise">channel.noise module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-channel.quadriga_channel">channel.quadriga_channel module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-channel.quadriga_interface">channel.quadriga_interface module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-channel.rx_sampler">channel.rx_sampler module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-channel">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">modem package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scenario.html">scenario package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulator_core.html">simulator_core package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source.html">source package</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">hermespy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+        
+      <li>channel package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/channel.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="channel-package">
+<h1>channel package<a class="headerlink" href="#channel-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-channel.channel">
+<span id="channel-channel-module"></span><h2>channel.channel module<a class="headerlink" href="#module-channel.channel" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="channel.channel.Channel">
+<em class="property">class </em><code class="sig-name descname">Channel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">random_number_gen</span></em>, <em class="sig-param"><span class="n">sampling_rate</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.channel.Channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements an ideal distortion-less channel.</p>
+<p>It also serves as a base class for all other channel models.</p>
+<p>For MIMO systems, the received signal is the addition of the signal transmitted at all
+antennas.
+The channel will provide <cite>number_rx_antennas</cite> outputs to a signal
+consisting of <cite>number_tx_antennas</cite> inputs. Depending on the channel model,
+a random number generator, given by <cite>rnd</cite> may be needed. The sampling rate is
+the same at both input and output of the channel, and is given by <cite>sampling_rate</cite>
+samples/second.</p>
+<dl class="py attribute">
+<dt id="channel.channel.Channel.param">
+<code class="sig-name descname">param</code><a class="headerlink" href="#channel.channel.Channel.param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Channel-related parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ParametersChannel</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.channel.Channel.number_tx_antennas">
+<code class="sig-name descname">number_tx_antennas</code><a class="headerlink" href="#channel.channel.Channel.number_tx_antennas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of transmitting antennas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.channel.Channel.number_rx_antennas">
+<code class="sig-name descname">number_rx_antennas</code><a class="headerlink" href="#channel.channel.Channel.number_rx_antennas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of receiving antennas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.channel.Channel.random_number_gen">
+<code class="sig-name descname">random_number_gen</code><a class="headerlink" href="#channel.channel.Channel.random_number_gen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Random number generator for random noise etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.random.RandomState</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.channel.Channel.sampling_rate">
+<code class="sig-name descname">sampling_rate</code><a class="headerlink" href="#channel.channel.Channel.sampling_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampling rate in Hz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.channel.Channel.ideal_mimo_response">
+<code class="sig-name descname">ideal_mimo_response</code><a class="headerlink" href="#channel.channel.Channel.ideal_mimo_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rows denoting the receiving antennas, columns denoting the samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.channel.Channel.init_drop">
+<code class="sig-name descname">init_drop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#channel.channel.Channel.init_drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes random channel parameters for each drop, if required by model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.channel.Channel.propagate">
+<code class="sig-name descname">propagate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.channel.Channel.propagate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modifies the input signal and returns it after channel propagation.</p>
+<p>For the ideal channel in the base class, the MIMO channel is modeled as a matrix of one’s.</p>
+<p>If ‘tx_signal’ is an array of size <cite>number_tx_antennas</cite> X <cite>number_of_samples</cite>,
+then the output <cite>rx_signal</cite> will be an array of size
+<cite>number_rx_antennas</cite> X <cite>number_of_samples</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx_signal</strong> (<em>np.ndarray</em>) – Input signal.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The distorted signal after propagation. The output depends
+on the channel model employed.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.channel.Channel.get_impulse_response">
+<code class="sig-name descname">get_impulse_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timestamps</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.channel.Channel.get_impulse_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the channel impulse responses.</p>
+<p>This method can be used for instance by the transceivers to obtain the channel state
+information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timestamps</strong> (<em>np.ndarray</em>) – Time instants with length <cite>T</cite> to calculate the response for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Impulse response in all <cite>number_rx_antennas</cite> x <cite>number_tx_antennas</cite>.
+4-dimensional array of size <cite>T x number_rx_antennas x number_tx_antennas x (L+1)</cite>
+where <cite>L</cite> is the maximum path delay (in samples). For the ideal
+channell in the base class, <cite>L = 0</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-channel.multipath_fading_channel">
+<span id="channel-multipath-fading-channel-module"></span><h2>channel.multipath_fading_channel module<a class="headerlink" href="#module-channel.multipath_fading_channel" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel">
+<em class="property">class </em><code class="sig-name descname">MultipathFadingChannel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span></em>, <em class="sig-param"><span class="n">random_number_gen</span></em>, <em class="sig-param"><span class="n">sampling_rate</span></em>, <em class="sig-param"><span class="n">doppler_frequency</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#channel.channel.Channel" title="channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">channel.channel.Channel</span></code></a></p>
+<p>Implements a stochastic fading multipath channel.</p>
+<p>For MIMO systems, the received signal is the addition of the signal transmitted
+at all antennas.
+The channel model is defined in the parameters, which should have the following fields:
+- param.delays - numpy.ndarray containing the delays of all significant paths (in s)
+- param.power_delay_profile - numpy.ndarray containing the average power of each path
+(in linear scale). It must have the same number of elements as ‘param.delays’
+- param.k_factor_rice: numpy.ndarray containing the K-factor of the Ricean
+distribution for each path (in linear scale). It must have the same number of
+elements as ‘param.delays’</p>
+<p>The channel is time-variant, with the auto-correlation depending on  its maximum
+‘doppler_frequency’ (in Hz).
+Realizations in different drops are independent.</p>
+<p>The model supports multiple antennas, and the correlation among different antennas can be
+specified in parameters ‘tx_cov_matrix’ and ‘rx_cov_matrix’, for the both transmitter and
+at the receiver side, respectively.
+They both must be Hermitian, positive definite square matrices.</p>
+<p>Rayleigh/Rice fading and uncorrelated scattering is considered. Fading follows Jakes’
+Doppler spectrum, using the simulation approach from:</p>
+<blockquote>
+<div><p><cite>C. Xiao, Zheng, Y. and Beaulieu, N. “Novel sum-of-sinusoids simulation models for
+rayleigh and rician fading channels. IEEE Trans. Wireless Comm., 5(12), 2006</cite></p>
+</div></blockquote>
+<p>which is based on the sum of sinusoids with random phases.</p>
+<p>If the delays are not multiple of the sampling interval, then sinc-based interpolation is
+considered.</p>
+<p>Antenna correlation considers the Kronecker model, as described in:</p>
+<blockquote>
+<div><p>K. Yu, M. Bengtsson, B. Ottersten, D. McNamara, P. Karlsson, and M. Beach, “A wideband
+statistical model for NLOS indoor MIMO channels,” IEEE Veh. Technol. Conf.
+(VTC - Spring), 2002</p>
+</div></blockquote>
+<p>The channel will provide ‘number_rx_antennas’ outputs to a signal
+consisting of ‘number_tx_antennas’ inputs. A random number generator,
+given by ‘rnd’ may be needed. The sampling rate is the same at both input and output
+of the channel, and is given by ‘sampling_rate’ samples/second.
+<cite>tx_cov_matrix</cite> and <cite>rx_cov_matrix</cite> are covariance matrices for transmitter
+and receiver.</p>
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.number_of_paths">
+<code class="sig-name descname">number_of_paths</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.number_of_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of paths in the multipath channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.los_phi">
+<code class="sig-name descname">los_phi</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.los_phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>initial phase of line-of-sight (LOS) components</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.los_theta">
+<code class="sig-name descname">los_theta</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.los_theta" title="Permalink to this definition">¶</a></dt>
+<dd><p>angle of arrival of LOS component(default=0)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.los_gain">
+<code class="sig-name descname">los_gain</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.los_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>path gains for LOS</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.non_los_gain">
+<code class="sig-name descname">non_los_gain</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.non_los_gain" title="Permalink to this definition">¶</a></dt>
+<dd><p>path gains for NLOS</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.doppler_frequency">
+<code class="sig-name descname">doppler_frequency</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.doppler_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>doppler frequency in Hz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.postcoding_matrix">
+<code class="sig-name descname">postcoding_matrix</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.postcoding_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>for receive antenna correlation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.precoding_matrix">
+<code class="sig-name descname">precoding_matrix</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.precoding_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>transmit antenna correlation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.phi">
+<code class="sig-name descname">phi</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>random phases of paths in Jake’s model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.theta">
+<code class="sig-name descname">theta</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.theta" title="Permalink to this definition">¶</a></dt>
+<dd><p>random angles of paths of sinusoids in Jake’s model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.interpolation_filter">
+<code class="sig-name descname">interpolation_filter</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.interpolation_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter to apply if sampling instants are not
+at time delay instants.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.max_delay_in_samples">
+<code class="sig-name descname">max_delay_in_samples</code><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.max_delay_in_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum delay of all paths in samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.number_of_sinewaves">
+<code class="sig-name descname">number_of_sinewaves</code><em class="property"> = 20</em><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.number_of_sinewaves" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.init_drop">
+<code class="sig-name descname">init_drop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.init_drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes random channel parameters for each drop, by selecting random phases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.propagate">
+<code class="sig-name descname">propagate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.propagate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modifies the input signal and returns it after channel propagation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx_signal</strong> (<em>np.ndarray</em>) – Input signal to channel with shape of <cite>N_tx_antennas x n_samples</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Distorted signal after channel propagation. If input is
+an array of size ‘number_tx_antennas’ X ‘number_of_samples’,
+then the output is of size ‘number_rx_antennas’ X ‘number_of_samples’
++ L, with L denoting the maximum excess delay of the power
+delay profile, in samples.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.multipath_fading_channel.MultipathFadingChannel.get_impulse_response">
+<code class="sig-name descname">get_impulse_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timestamps</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.multipath_fading_channel.MultipathFadingChannel.get_impulse_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the channel impulse response.</p>
+<p>This method can be used for instance by the transceivers to obtain the
+channel state information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timestamps</strong> (<em>np.array</em>) – Time instants with length T to calculate the
+response for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Impulse response in all ‘number_rx_antennas’ x ‘number_tx_antennas’ channels
+at the time instants given in vector ‘timestamps’.
+<cite>impulse_response</cite> is a 4D-array, with the following dimensions:
+1- sampling instants, 2 - Rx antennas, 3 - Tx antennas, 4 - delays
+(in samples)
+The shape is T x number_rx_antennas x number_tx_antennas x (L+1)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>impulse_response(np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-channel.noise">
+<span id="channel-noise-module"></span><h2>channel.noise module<a class="headerlink" href="#module-channel.noise" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="channel.noise.Noise">
+<em class="property">class </em><code class="sig-name descname">Noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">snr_type</span></em>, <em class="sig-param"><span class="n">rnd</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.noise.Noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements a complex additive white gaussian noise at the receiver.</p>
+<dl class="py attribute">
+<dt id="channel.noise.Noise.snr_type">
+<code class="sig-name descname">snr_type</code><a class="headerlink" href="#channel.noise.Noise.snr_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>ignal-to-noise definition.
+The following values are currently supported:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>EB/N0(dB): bit-energy over N0 (in dB)</p></li>
+<li><p>ES/NO(dB): signal-energy over N0 (in dB)</p></li>
+<li><p>custom(dB): custom SNR (in dB)</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.noise.Noise.add_noise">
+<code class="sig-name descname">add_noise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">signal</span></em>, <em class="sig-param"><span class="n">snr</span></em>, <em class="sig-param"><span class="n">signal_energy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.noise.Noise.add_noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds noise to a signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Input signal, rows denoting antenna, columns denoting samples.</p></li>
+<li><p><strong>snr</strong> (<em>float</em>) – Signal-to-noise ratio for noise power. If snr_type is ‘CUSTOM’,
+the parameter is interpreted as actual noise variance.</p></li>
+<li><p><strong>signal_energy</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Energy of signal.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Noisy signal.
+float: noise variance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.noise.Noise.calculate_noise_var">
+<code class="sig-name descname">calculate_noise_var</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">snr</span></em>, <em class="sig-param"><span class="n">signal_energy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.noise.Noise.calculate_noise_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the required noise variance</p>
+<p>Noise variance is calculated according to the SNR definition specified in self.snr_type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snr</strong> (<em>float</em>) – Signal-to-noise ratio for noise power. If snr_type is ‘CUSTOM’,
+the parameter is interpreted as actual noise variance.</p></li>
+<li><p><strong>signal_energy</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – Energy of signal.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>noise variance</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.noise.Noise.db_to_linear">
+<code class="sig-name descname">db_to_linear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">db_quantity</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.noise.Noise.db_to_linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts db quantity to linear quanity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-channel.quadriga_channel">
+<span id="channel-quadriga-channel-module"></span><h2>channel.quadriga_channel module<a class="headerlink" href="#module-channel.quadriga_channel" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="channel.quadriga_channel.QuadrigaChannel">
+<em class="property">class </em><code class="sig-name descname">QuadrigaChannel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">modem_tx</span></em>, <em class="sig-param"><span class="n">modem_rx</span></em>, <em class="sig-param"><span class="n">sampling_rate</span></em>, <em class="sig-param"><span class="n">rng</span></em>, <em class="sig-param"><span class="n">quadriga_interface</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#channel.channel.Channel" title="channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">channel.channel.Channel</span></code></a></p>
+<p>Maps the output of the QuadrigaInterface to fit into hermes software architecture.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modem_tx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Transmitter modem.</p></li>
+<li><p><strong>modem_rx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Receiver Modem.</p></li>
+<li><p><strong>sampling_rate</strong> (<em>float</em>) – Sampling rate in Hertz.</p></li>
+<li><p><strong>rng</strong> (<em>np.random.RandomState</em>) – Random number generator.</p></li>
+<li><p><strong>quadriga_interface</strong> (<a class="reference internal" href="#channel.quadriga_interface.QuadrigaInterface" title="channel.quadriga_interface.QuadrigaInterface"><em>QuadrigaInterface</em></a>) – Interface to the actual
+quadriga backend.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="channel.quadriga_channel.QuadrigaChannel.init_drop">
+<code class="sig-name descname">init_drop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel.init_drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes random channel parameters for each drop</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.quadriga_channel.QuadrigaChannel.propagate">
+<code class="sig-name descname">propagate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel.propagate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modifies the input signal and returns it after channel propagation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx_signal</strong> (<em>np.ndarray</em>) – array of size <cite>number_tx_antennas</cite> X <cite>number_of_samples</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Output signal after propagation through quadriga channel
+with <cite>number_rx_antennas</cite> rows and <cite>samples</cite> columns.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.quadriga_channel.QuadrigaChannel.get_impulse_response">
+<code class="sig-name descname">get_impulse_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timestamps</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel.get_impulse_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the channel impulse response.</p>
+<p>This method can be used for instance by the transceivers to obtain the
+channel state information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timestamps</strong> (<em>np.array</em>) – Time instants with length T to calculate the response for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Impulse response in all ‘number_rx_antennas’ x ‘number_tx_antennas’
+channels at the time instants given in vector ‘timestamps’.
+<cite>impulse_response</cite> is a 4D-array, with the following dimensions:
+1- sampling instants, 2 - Rx antennas, 3 - Tx antennas, 4 - delays
+(in samples)
+The shape is T x number_rx_antennas x number_tx_antennas x (L+1)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>impulse_response(np.ndarray)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-channel.quadriga_interface">
+<span id="channel-quadriga-interface-module"></span><h2>channel.quadriga_interface module<a class="headerlink" href="#module-channel.quadriga_interface" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="channel.quadriga_interface.QuadrigaInterface">
+<em class="property">class </em><code class="sig-name descname">QuadrigaInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements the direct interface between hermes QuadrigChannel/quadriga backend.</p>
+<p>It is important to mention, that in the hermes implementation channels are
+independent of each other, i.e. are associated with each transmitter/receiver
+modem pair. However, this is not the case for quadriga which creates one
+channel for all transmitter/receiver modem pairs. Therefore, we need to do
+a mapping between the QuadrigaChannel objects for all transmitter/receiver
+modem pairs and the Quadriga simulation which runs in the background.</p>
+<p>This mapping is done in that class.</p>
+<dl class="py attribute">
+<dt id="channel.quadriga_interface.QuadrigaInterface.api_script_path">
+<code class="sig-name descname">api_script_path</code><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.api_script_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path of the quadriga script to start.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.quadriga_interface.QuadrigaInterface.tx_modem_ids">
+<code class="sig-name descname">tx_modem_ids</code><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.tx_modem_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of transmitter modems saved as ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.quadriga_interface.QuadrigaInterface.rx_modem_ids">
+<code class="sig-name descname">rx_modem_ids</code><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.rx_modem_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of receiver modems saved as ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.quadriga_interface.QuadrigaInterface.update_quadriga_parameters">
+<code class="sig-name descname">update_quadriga_parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">modem_tx</span></em>, <em class="sig-param"><span class="n">modem_rx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.update_quadriga_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the quadriga parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modem_tx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – transmitting modem the QuadrigaChannel is created for.</p></li>
+<li><p><strong>modem_rx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – receiving modem the QuadrigaChannel is created for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.quadriga_interface.QuadrigaInterface.init_drop">
+<code class="sig-name descname">init_drop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.init_drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialization that needs to be performed for each drop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>float</em>) – The seed to pass to quadriga.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.quadriga_interface.QuadrigaInterface.get_impulse_response">
+<code class="sig-name descname">get_impulse_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">modem_tx</span></em>, <em class="sig-param"><span class="n">modem_rx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.get_impulse_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the impulse response betwen two modems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modem_tx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Transmitting modem.</p></li>
+<li><p><strong>modem_rx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Receiving modem.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>CIR and delay. Currently, only SISO.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[np.array, np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-channel.rx_sampler">
+<span id="channel-rx-sampler-module"></span><h2>channel.rx_sampler module<a class="headerlink" href="#module-channel.rx_sampler" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="channel.rx_sampler.RxSampler">
+<em class="property">class </em><code class="sig-name descname">RxSampler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rx_sampling_rate</span></em>, <em class="sig-param"><span class="n">rx_center_freq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.rx_sampler.RxSampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines a resampler at the receiver input.</p>
+<p>This is required if the signal originates from different transmitters using
+different sampling rates and/or carrier frequencies.</p>
+<dl class="py attribute">
+<dt id="channel.rx_sampler.RxSampler.rx_sampling_rate">
+<code class="sig-name descname">rx_sampling_rate</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.rx_sampling_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampling rate of receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="channel.rx_sampler.RxSampler.rx_center_freq">
+<code class="sig-name descname">rx_center_freq</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.rx_center_freq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Center, i.e. carrier frequency of receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.oversample_rate">
+<em class="property">property </em><code class="sig-name descname">oversample_rate</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.oversample_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only oversample rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.interpolate_factor_rx">
+<em class="property">property </em><code class="sig-name descname">interpolate_factor_rx</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.interpolate_factor_rx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only interpolate factor for receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.interpolate_factors_tx">
+<em class="property">property </em><code class="sig-name descname">interpolate_factors_tx</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.interpolate_factors_tx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only interpolate factors for transmitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.decimate_factor_rx">
+<em class="property">property </em><code class="sig-name descname">decimate_factor_rx</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.decimate_factor_rx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only decimate factor for receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.decimate_factor_tx">
+<em class="property">property </em><code class="sig-name descname">decimate_factor_tx</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.decimate_factor_tx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only decimate factor for transmitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id0">
+<em class="property">property </em><code class="sig-name descname">rx_sampling_rate</code><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampling rate of receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id1">
+<em class="property">property </em><code class="sig-name descname">rx_center_freq</code><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Carrier frequency of receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.tx_sampling_rate">
+<em class="property">property </em><code class="sig-name descname">tx_sampling_rate</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.tx_sampling_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only sampling rate of transmitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.tx_center_freq">
+<em class="property">property </em><code class="sig-name descname">tx_center_freq</code><a class="headerlink" href="#channel.rx_sampler.RxSampler.tx_center_freq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns read-only carrier frequency of transmitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.set_tx_sampling_rate">
+<code class="sig-name descname">set_tx_sampling_rate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx_sampling_rate</span></em>, <em class="sig-param"><span class="n">tx_center_freq</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.rx_sampler.RxSampler.set_tx_sampling_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setter method for sampling rate of transmitter.</p>
+<p>Beside setting the sampling rate and the carrier frequency for the
+transmitter, factors for resampling are internally calulcated by calling
+<cite>computeFactors()</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx_sampling_rate</strong> (<em>np.array</em>) – Sampling rates of transmitting modems.</p></li>
+<li><p><strong>tx_center_freq</strong> (<em>np.array</em>) – Center frequency of transmitting modems.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.resample">
+<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.rx_sampler.RxSampler.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resamples input signal.</p>
+<p>Interpolation and decimate factors are internally calculcated. As a
+filter, the Kaiser window is being used with beta being 5 and n being 10.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Input signal.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Resampled signal.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="channel.rx_sampler.RxSampler.computeFactors">
+<code class="sig-name descname">computeFactors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#channel.rx_sampler.RxSampler.computeFactors" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates the interpolation factor (I) and decimation
+factor (D) for resampling the transmitted signals, the factors to
+resample the combined received signals and the oversampling rate.
+The function updates the respective private properties of the class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-channel">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-channel" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="modem.html" class="btn btn-neutral float-right" title="modem package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules.html" class="btn btn-neutral float-left" title="hermespy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Barkhausen Institut
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
