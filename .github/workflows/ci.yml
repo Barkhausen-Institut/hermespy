@@ -21,10 +21,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-    - name: Test
-      run: |
-        python run_unit_tests.py
+        if [ -f requirements_doc.txt ]; then pip install -r requirements_doc.txt; fi
     - name: Build documentation
       run: cd docssource && make html
     - name: Deploy
@@ -32,3 +29,5 @@ jobs:
       with:
         branch: gh-pages
         folder: docs
+    - name: Test
+      run: python run_unit_tests.py
