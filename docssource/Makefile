@@ -7,7 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SPHINXAPI     = sphinx-apidoc
 SOURCEDIR     = .
-BUILDDIR      = ../docsbuild/docs
+BUILDDIR      = ../docs
 APIEXCLUDES	  = ../*tests* ../hermes.py ../parameters_parser/
 
 # Put it first so that "make" without argument is like "make help".
@@ -19,6 +19,9 @@ api:
 
 gh-pages:
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
+
+copy:
+	mv ../docs/html ../docs/ && rm -r ../docs/html/
 
 .PHONY: help Makefile
 
