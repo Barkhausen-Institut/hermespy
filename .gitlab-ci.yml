@@ -26,4 +26,3 @@ test:
   stage: test
   script:
     - python run_unit_tests.py
-  allow_failure: true
