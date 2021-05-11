@@ -23,11 +23,11 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f requirements_doc.txt ]; then pip install -r requirements_doc.txt; fi
     - name: Build documentation
-      run: cd docssource && make gh-pages
+      run: cd docssource && make gh-pages && make copy
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@4.1.2
       with:
         branch: gh-pages
-        folder: docsbuild
+        folder: docs
     - name: Test
       run: python run_unit_tests.py
