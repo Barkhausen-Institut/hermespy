@@ -17,6 +17,12 @@ help:
 api:
 	$(SPHINXAPI) -f -o "$(SOURCEDIR)" "../" $(APIEXCLUDES)
 
+gh-pages:
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
+
+github-docs:
+	mv ../docs/html/* ../docs/
+
 .PHONY: help Makefile
 
 # Catch-all target: route all unknown targets to Sphinx using the new
