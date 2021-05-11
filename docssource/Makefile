@@ -21,7 +21,7 @@ gh-pages:
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
 
 copy:
-	mv ../docs/html ../docs/ && rm -r ../docs/html/
+	mv ../docs/html/* ../docs/ && rm -r ../docs/html/
 
 .PHONY: help Makefile
 
