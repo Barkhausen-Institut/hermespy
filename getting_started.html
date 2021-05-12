@@ -102,7 +102,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="high_level_description.html">High Level Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="explanation_platform_approach.html">Explanation of Platform Approach</a></li>
 <li class="toctree-l1"><a class="reference internal" href="parameter_description.html">Parameter Description</a></li>
 </ul>
 
@@ -189,8 +188,11 @@
 <p>Everything concerning <strong>modem setup</strong> needs to be done in the <strong>settings_scenario.ini</strong> file.
 Let us open it and create the transmitter modem:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[TxModem_1]</span>
-<span class="na">technology_param_file</span> <span class="o">=</span> <span class="s">settings_psk_qam.ini  # defines the modulation scheme</span>
-<span class="na">encoder_param_file</span> <span class="o">=</span> <span class="s">none  # we want to have no encoding</span>
+<span class="c1"># defines the modulation scheme</span>
+<span class="na">technology_param_file</span> <span class="o">=</span> <span class="s">settings_psk_qam.ini</span>
+
+<span class="c1"># we want to have no encoding</span>
+<span class="na">encoder_param_file</span> <span class="o">=</span> <span class="s">none</span>
 
 <span class="na">carrier_frequency</span> <span class="o">=</span> <span class="s">1e9</span>
 
@@ -234,15 +236,17 @@ Let us open it and create the transmitter modem:</p>
 <p>We define a <strong>stochastic</strong> multipath model with an attenuation of 3db. We defined three paths with a delay of <code class="docutils literal notranslate"><span class="pre">delays</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">1e-6,</span> <span class="pre">3e-6</span></code> per path. The power delay profiles are described in <code class="docutils literal notranslate"><span class="pre">power_delay_profile_db</span></code> with respective <code class="docutils literal notranslate"><span class="pre">k_rice</span></code> factors. We define one LOS path.</p>
 <p>Your <strong>settings_scenario.ini</strong> file should look like this right now:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[TxModem_1]</span>
-<span class="na">technology_param_file</span> <span class="o">=</span> <span class="s">settings_psk_qam.ini  # defines the modulation scheme</span>
-<span class="na">encoder_param_file</span> <span class="o">=</span> <span class="s">none  # we want to have no encoding</span>
+<span class="c1"># defines the modulation scheme</span>
+<span class="na">technology_param_file</span> <span class="o">=</span> <span class="s">settings_psk_qam.ini</span>
+
+<span class="c1"># we want to have no encoding</span>
+<span class="na">encoder_param_file</span> <span class="o">=</span> <span class="s">none</span>
 
 <span class="na">carrier_frequency</span> <span class="o">=</span> <span class="s">1e9</span>
 
 <span class="na">tx_power_db</span> <span class="o">=</span> <span class="s">0</span>
 
 <span class="na">number_of_antennas</span> <span class="o">=</span> <span class="s">1</span>
-
 <span class="na">device_type</span> <span class="o">=</span> <span class="s">BASE_STATION</span>
 
 <span class="k">[RxModem_1]</span>

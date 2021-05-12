@@ -28,8 +28,11 @@ Let us open it and create the transmitter modem:
 .. code-block:: ini
 
    [TxModem_1]
-   technology_param_file = settings_psk_qam.ini  # defines the modulation scheme
-   encoder_param_file = none  # we want to have no encoding
+   # defines the modulation scheme
+   technology_param_file = settings_psk_qam.ini
+
+   # we want to have no encoding
+   encoder_param_file = none
 
    carrier_frequency = 1e9
 
@@ -86,15 +89,17 @@ Your **settings_scenario.ini** file should look like this right now:
 .. code-block:: ini
 
    [TxModem_1]
-   technology_param_file = settings_psk_qam.ini  # defines the modulation scheme
-   encoder_param_file = none  # we want to have no encoding
+   # defines the modulation scheme
+   technology_param_file = settings_psk_qam.ini
+
+   # we want to have no encoding
+   encoder_param_file = none
 
    carrier_frequency = 1e9
 
    tx_power_db = 0
 
    number_of_antennas = 1
-
    device_type = BASE_STATION
 
    [RxModem_1]
