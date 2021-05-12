@@ -11,7 +11,7 @@ You can find an introductory video here: https://www.barkhauseninstitut.org/open
 
 # Features
 
-The curent release "Platform Release" serves as a platform for joint development. Beside some core functionality, that can be found beside the [release plan](docs/features.md), its main focus is to provide a software architecture that can be easily extended.
+The curent release "Platform Release" serves as a platform for joint development. Beside some core functionality, that can be found beside the [release plan](FEATURES.md), its main focus is to provide a software architecture that can be easily extended.
 
 # Installation
 
