@@ -83,6 +83,7 @@ Quadriga documentation can be found in **hermes/docs**.
 - no parallelization of the simulation
 - LDPC code performance insufficient
 - general performance improvemenets required
+- the CI is currently not executing the unit tests due to LFS restrictions. This will be fixed in the coming weeks.
 
 # Authors
 
