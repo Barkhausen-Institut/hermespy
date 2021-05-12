@@ -21,7 +21,7 @@ gh-pages:
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
 
 install:
-	touch ../docs/.nojekyll
+	mv ../docs/html/* ../docs/ && rm -r ../docs/html && touch ../docs/.nojekyll
 
 .PHONY: help Makefile
 
