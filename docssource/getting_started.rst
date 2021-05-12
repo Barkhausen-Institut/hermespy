@@ -262,7 +262,7 @@ OFDM-pair means ``i=3``, ``j=2``, i.e:
    [Channel_3_to_2]
    multipath_model = 5G_TDL
    tdl_type = A
-   rms_delay = 90
+   rms_delay = 90e-9
    correlation = LOW
    custom_correlation = 0.5
 
@@ -351,7 +351,7 @@ In total our **settings_scenario.ini** - file should look like this:
    [Channel_3_to_2]
    multipath_model = 5G_TDL
    tdl_type = A
-   rms_delay = 90
+   rms_delay = 90e-9
    correlation = LOW
    custom_correlation = 0.5
 
