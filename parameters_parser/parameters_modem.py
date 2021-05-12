@@ -77,7 +77,7 @@ class ParametersModem(ABC):
     def check_params(self, param_path: str = "") -> None:
         """checks the validity of the parameters."""
 
-        if not self._encoder_param_file == "NONE":
+        if not self._encoder_param_file.upper() == "NONE":
             if not os.path.exists(os.path.join(param_path, "coding")):
                 print(f"Directory {os.path.join(param_path, 'coding')} does not exist.")
                 print("Taking default settings directory.")
