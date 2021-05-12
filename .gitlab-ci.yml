@@ -1,12 +1,6 @@
-image: ubuntu:18.04
+image: python:3.7.7
 
 before_script:
-  - apt-get update
-  - apt install -y python3-pip && apt-get install --no-install-recommends -q -y software-properties-common
-  #- add-apt-repository -y ppa:deadsnakes/ppa && apt install -y python3.7
-  - apt-add-repository -y universe && apt update && apt install -y python3-venv
-  - python3 -m venv env
-  - . env/bin/activate
   - pip install -r requirements.txt
 
 test:
