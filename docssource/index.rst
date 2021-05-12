@@ -17,6 +17,5 @@ The instructions should be read prior to this documentaiton.
    self
    getting_started
    high_level_description
-   explanation_platform_approach
    parameter_description
    Modules <modules>
