@@ -1,26 +1,13 @@
-image: mtmiller/octave:latest
+image: ubuntu:18.04
 
 before_script:
   - apt-get update
   - apt install -y python3-pip && apt-get install --no-install-recommends -q -y software-properties-common
-  - add-apt-repository -y ppa:deadsnakes/ppa && apt install -y python3.7
-  - apt-add-repository -y universe && apt update && apt install -y python3.7-venv
-  - python3.7 -m venv env
+  #- add-apt-repository -y ppa:deadsnakes/ppa && apt install -y python3.7
+  #- apt-add-repository -y universe && apt update && apt install -y python3.7-venv
+  - python3 -m venv env
   - . env/bin/activate
-  - pip install oct2py
   - pip install -r requirements.txt
-  - pip install -r requirements_doc.txt
-  - cd docs && make api && cd ..
-
-pages:
-  stage: test
-  script:
-    - sphinx-build docs public
-  artifacts:
-    paths:
-      - public
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
 
 test:
   stage: test
