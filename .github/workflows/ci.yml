@@ -9,6 +9,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
         lfs: false
 
     - name: Setup python 3.7.7
