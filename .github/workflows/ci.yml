@@ -21,7 +21,7 @@ jobs:
       run: if [ -f requirements_doc.txt ]; then pip install -r requirements_doc.txt; fi
 
     - name: Build documentation
-      run: cd docssource && make gh-pages
+      run: cd docssource && make gh-pages && make install
 
     - name: Create github pages
       uses: JamesIves/github-pages-deploy-action@4.1.2

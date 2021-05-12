@@ -20,8 +20,8 @@ api:
 gh-pages:
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
 
-copy:
-	mv ../docs/html/* ../docs/ && rm -r ../docs/html/ && touch ../docs/.nojekyll
+install:
+	touch ../docs/.nojekyll
 
 .PHONY: help Makefile
 
