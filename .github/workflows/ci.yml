@@ -4,10 +4,32 @@ name: hermespy
 on: [push, pull_request]
 
 jobs:
-  build:
-
+  documentation:
     runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+        lfs: false
 
+    - name: Setup python 3.7.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7.7
+
+    - name: Install doc dependencies
+      run: if [ -f requirements_doc.txt ]; then pip install -r requirements_doc.txt; fi
+
+    - name: Build documentation
+      run: cd docssource && make gh-pages
+
+    - name: Create github pages
+      uses: JamesIves/github-pages-deploy-action@4.1.2
+      with:
+        branch: gh-pages
+        folder: docs
+
+  test:
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout repo + lfs
       uses: actions/checkout@v2
@@ -20,19 +42,8 @@ jobs:
         python-version: 3.7.7
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements_doc.txt ]; then pip install -r requirements_doc.txt; fi
+      run: if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Run unit tests
       run: python run_unit_tests.py
 
-    - name: Build documentation
-      run: cd docssource && make gh-pages
-
-    - name: Create github pages
-      uses: JamesIves/github-pages-deploy-action@4.1.2
-      with:
-        branch: gh-pages
-        folder: docs
