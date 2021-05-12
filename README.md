@@ -49,11 +49,9 @@ If you want to run **matlab**, you must use the `matlab.engine` package proided 
    2. **ubuntu**: `. env/bin/activate` 
 2. The simulator can be called by `python hermes.py <param> <output_dir>`.
 
-The main execution file is `hermes.py -p <settings-directory -o <results-directory>`. Both command line parameters are optional arguments. `<settings-directory>` contains settings files for the simulation and `<results-directory>` tells the simulator where to put the result files. Both are relative paths and have default values namely `_settings` and `results`.
+The main execution file is `hermes.py -p <settings-directory -o <results-directory>`. Both command line parameters are optional arguments. `<settings-directory>` contains settings files for the simulation and `<results-directory>` tells the simulator where to put the result files. Both are relative paths and have default values namely `_settings` and `results`. Plase refer to our documentation (see below).
 
-`settings_general.ini` contains all the parameters that describe the simulation flow and `settings_scenario.ini` contains the parameters that describe the simulation scenario (modems,
-channel). Depending on the scenario, some technology specific parameter files must also be
-defined. For further information on the parameters, refer to the simulation files and to the documentation in the `docs` folder.
+Some examples may be found in the **_examples** folder. Check the readmes.
 
 ## Quadriga
 
@@ -65,13 +63,15 @@ Set `Multipath=QUADRIGA` for **all channels** in `settings_scenario.ini`. The Qu
 
 ## Running the tests
 
-Tests are run by calling `pytest` in the root directory. They test for
+Tests may be run by calling `pytest` in the root directory. They test for
 
 - type linting using [mypy](mypy.readthedocs.io/)
 - basic checks on pep8
-- unit tests. 
+- unit tests.
 
-**Attention:** Since running the integrity tests might take more than an hour, we advise to run them separately. Simply call `python run_integrity_tests.py`. If you don't want to check on mypy and pep8 and only want to chceck if the unit tests pass, call `python run_unit_tests.py`. No tests cover the use case of quadriga.
+If only unit tests are to be executed, call `python run_unit_tests.py`.
+
+**Attention:** Due to current GIT LFS storage issues, integrity tests will be uploaded in the future.
 
 # Documentation
 
@@ -85,5 +85,5 @@ Quadriga documentation can be found in **hermes/docs**.
 
 
 # Copyright
-Copyright (C) 2020 Barkhausen Institut gGmbH
+Copyright (C) 2021 Barkhausen Institut gGmbH
 
