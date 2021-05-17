@@ -15,6 +15,8 @@ The curent release "Platform Release" serves as a platform for joint development
 
 # Installation
 
+Ensure that [git lfs](https://github.com/git-lfs/git-lfs/releases) is installed.
+
 - `git clone <this-repo>`
 - Change to `hermespy/`
 
