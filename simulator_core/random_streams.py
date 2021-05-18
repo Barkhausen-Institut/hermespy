@@ -1,7 +1,7 @@
 import os
 import time
+import csv
 
-import scipy.io as sio
 from numpy import random as rnd
 
 
@@ -16,7 +16,7 @@ class RandomStreams:
         seeds_dir_name(str): parent directory of seeds_file_name
     """
     seeds_dir_name = "simulator_core"
-    seeds_file_name = "RandomNumberGeneratorSeeds.mat"
+    seeds_file_name = "RandomNumberGeneratorSeeds.csv"
     seed_types = ['noise', 'channel', 'source', 'hardware']
 
     def __init__(self, seed: int) -> None:
@@ -24,8 +24,9 @@ class RandomStreams:
             os.getcwd(),
             self.seeds_dir_name,
             self.seeds_file_name)
-        mat_contents = sio.loadmat(file_path)
-        seed_set = mat_contents['SeedSet']
+        with open(file_path, 'r') as f:
+            r = csv.reader(f, delimiter=',')
+            seed_set = [int(row[0]) for row in r]
 
         self._rng_dict = {}
 
