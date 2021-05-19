@@ -19,6 +19,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="hermespy" href="modules.html" />
     <link rel="prev" title="High Level Description" href="high_level_description.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -27,6 +28,12 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="hermespy"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="high_level_description.html" title="High Level Description"
              accesskey="P">previous</a> |</li>
@@ -143,7 +150,7 @@ All parameters are in SI units, unless otherwise stated.</p>
 </section>
 <section id="settings-general-ini">
 <h2>settings_general.ini<a class="headerlink" href="#settings-general-ini" title="Permalink to this headline">¶</a></h2>
-<p><strong>[RandomNumber]</strong>: Actual random number generator seeds will be obtained from a list of good seeds in “RandomNumberGeneratorSeeds.mat”.
+<p><strong>[RandomNumber]</strong>: Actual random number generator seeds will be obtained from a list of good seeds in “RandomNumberGeneratorSeeds.csv”.
 If index is negative, then a random seed is used, based on the computer clock</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: Seed to be used</p></li>
@@ -169,7 +176,7 @@ If <code class="docutils literal notranslate"><span class="pre">confidence_margi
 </ul>
 <p><strong>[NoiseLoop]</strong>: The simulator can run for different noise levels, as specified here.</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">snr_type</span></code>: signal-to-noise-ratio: allowed values: “Eb/N0(dB)”, “Es/N0(dB)”, “CUSTOM”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">snr_type</span></code>: signal-to-noise-ratio: allowed values: <code class="docutils literal notranslate"><span class="pre">Eb/N0(dB)</span></code>, <code class="docutils literal notranslate"><span class="pre">Es/N0(dB)</span></code>, <code class="docutils literal notranslate"><span class="pre">CUSTOM</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">snr_vector</span></code>:</p>
 <blockquote>
 <div><p>Simulator will run for all of the SNR values specified in this vector (in numpy format).
@@ -329,7 +336,7 @@ the whole chirps are processed at receiver.</p>
 </ul>
 <p><strong>[Frame]</strong>: The specifications for the transmission frame.
 unmodulated pilot symbols can be added either at the beginning of a frame (preamble) or at its end (postamble)
-if filter is “FMCW”, then pilots are spaced by ‘chirp_duration’, i.e., they are non-overlapping
+if filter is <code class="docutils literal notranslate"><span class="pre">FMCW</span></code>, then pilots are spaced by <code class="docutils literal notranslate"><span class="pre">chirp_duration</span></code>, i.e., they are non-overlapping
 otherwise, then pilots are spaced by the symbol interval
 preamble, postamble and guard intervals are optional.</p>
 <ul>
@@ -339,7 +346,7 @@ preamble, postamble and guard intervals are optional.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">pilot_symbol_rate</span></code>:</p>
 <blockquote>
 <div><p>transmission rate of pilot symbols, can be given as function of symbol_rate or chirp_duration (if defined)
-default value is “symbol_rate”. Can also be <code class="docutils literal notranslate"><span class="pre">1/chirp_duration</span></code>.</p>
+default value is <code class="docutils literal notranslate"><span class="pre">symbol_rate</span></code>. Can also be <code class="docutils literal notranslate"><span class="pre">1/chirp_duration</span></code>.</p>
 </div></blockquote>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">guard_interval</span></code>: guard interval between frames in s</p></li>
@@ -361,9 +368,9 @@ default value is “symbol_rate”. Can also be <code class="docutils literal no
 <h2>settings_scenario.ini<a class="headerlink" href="#settings-scenario-ini" title="Permalink to this headline">¶</a></h2>
 <p>This file specifies the simulator scenario, i.e., the transmitter, receivers and channel models between them.
 The simulation may consist of several transmit and receive modems.
-All transmitters must be specified in sections ‘TxModem_i’, with i the transmit modem index, starting with i=1.
-All receivers must be specified in sections ‘RxModem_j’, with i the receive modem index, starting with j=1.
-Between every pair of receiver and transmitter modem, a channel model must be specified, in ‘Channel_i_to_j’.</p>
+All transmitters must be specified in sections <code class="docutils literal notranslate"><span class="pre">TxModem_i</span></code>, with i the transmit modem index, starting with i=1.
+All receivers must be specified in sections <code class="docutils literal notranslate"><span class="pre">RxModem_j</span></code>, with i the receive modem index, starting with j=1.
+Between every pair of receiver and transmitter modem, a channel model must be specified, in <code class="docutils literal notranslate"><span class="pre">Channel_i_to_j</span></code>.</p>
 <p><strong>[TxModem_i]</strong>:</p>
 <ul class="simple">
 <li><dl class="simple">
@@ -432,7 +439,7 @@ This track defined is a linear track, i.e. no curves or circles.</p>
 Parameters are defined for each tx-rx-pair.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">multipath_model</span></code>: parameter is optional, defaults to <code class="docutils literal notranslate"><span class="pre">NONE</span></code></p>
-<p>Supported_values: “None”, “STOCHASTIC”, “COST259”, “EXPONENTIAL”, “5G_TDL”, “QUADRIGA”.</p>
+<p>Supported_values: <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">STOCHASTIC</span></code>, <code class="docutils literal notranslate"><span class="pre">COST259</span></code>, <code class="docutils literal notranslate"><span class="pre">EXPONENTIAL</span></code>, <code class="docutils literal notranslate"><span class="pre">5G_TDL</span></code>, <code class="docutils literal notranslate"><span class="pre">QUADRIGA</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Stochastic</span></code>: a stochastic channel model follows an arbitrary power delay profile, defined in the parameters</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Cost-259</span></code>: measurement-based power delay profile defined in COST 259, according to a given scenario</p></li>
@@ -445,7 +452,7 @@ Parameters are defined for each tx-rx-pair.</p>
 </ul>
 <p>The following parameters apply for selection of <strong>stochastic</strong> multipath model:</p>
 <p>the power delay profile is given in terms of path delays, relative power (in dB), K-factor of the Rice distribution
-(in dB) and the Doppler frequency. For Rayleigh fading, choose K-factor equal to “-inf”, for LOS, K-Factor is “inf”.
+(in dB) and the Doppler frequency. For Rayleigh fading, choose K-factor equal to <code class="docutils literal notranslate"><span class="pre">-inf</span></code>, for LOS, K-Factor is <code class="docutils literal notranslate"><span class="pre">inf</span></code>.
 The parameters corresponding to power delay profile (<code class="docutils literal notranslate"><span class="pre">delays,</span> <span class="pre">power_delay_profile_db,</span> <span class="pre">k_rice_db</span></code>) must be vectors of the
 same size.</p>
 <p>The LOS components can have a different Doppler frequency, which is scaled by <code class="docutils literal notranslate"><span class="pre">los_doppler_factor</span></code> (default = 1.0).
@@ -513,7 +520,7 @@ if number of antennas &gt; 4 and correlation is NOT custom, an exception will be
 <li><p><code class="docutils literal notranslate"><span class="pre">rx_correlation</span></code>: correlation for receiver</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tx_correlation</span></code>: correlation for transmitter</p></li>
 </ul>
-<p>If correlation is set to “CUSTOM”, then correlation between adjacent antennas can be set in <code class="docutils literal notranslate"><span class="pre">custom_correlation</span></code>.
+<p>If correlation is set to <code class="docutils literal notranslate"><span class="pre">CUSTOM</span></code>, then correlation between adjacent antennas can be set in <code class="docutils literal notranslate"><span class="pre">custom_correlation</span></code>.
 The factor is to be between 0 and 1.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">rx_custom_correlation</span></code>:</p></li>
@@ -561,6 +568,9 @@ We support the following <a href="#id1"><span class="problematic" id="id2">``</s
   <h4>Previous topic</h4>
   <p class="topless"><a href="high_level_description.html"
                         title="previous chapter">High Level Description</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="next chapter">hermespy</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -588,6 +598,12 @@ We support the following <a href="#id1"><span class="problematic" id="id2">``</s
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="hermespy"
+             >next</a> |</li>
         <li class="right" >
           <a href="high_level_description.html" title="High Level Description"
              >previous</a> |</li>

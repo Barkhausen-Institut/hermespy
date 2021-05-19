@@ -29,6 +29,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="parameter_description.html" title="Parameter Description"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -54,7 +57,7 @@ In the following, we will describe the software architecture based on the <a cla
 The purpose of the <strong>Bit Source</strong> is to create bits that fit into one drop (this term will be explained later on).</p>
 <p>Each transmitter modem proceeds in the following way:</p>
 <ol class="arabic simple">
-<li><p><strong>Encoder</strong>: Bits are encoded by the <strong>Encoder</strong>. All encoders can be found in the module <code class="xref py py-mod docutils literal notranslate"><span class="pre">modem.coding</span></code></p></li>
+<li><p><strong>Encoder</strong>: Bits are encoded by the <strong>Encoder</strong>. All encoders can be found in the module <a class="reference internal" href="modem.coding.html#module-modem.coding" title="modem.coding"><code class="xref py py-mod docutils literal notranslate"><span class="pre">modem.coding</span></code></a></p></li>
 <li><p><strong>Modulator</strong>: A signal is created which is then modulated. This happens in the module <code class="xref py py-mod docutils literal notranslate"><span class="pre">modem.digital_modem</span></code></p></li>
 <li><p><strong>RfChain</strong>: Rf Impairments are added to the signal afterwards.</p></li>
 <li><p>The signal is sent.</p></li>
@@ -72,7 +75,7 @@ by the classes deriving from <code class="xref py py-class docutils literal notr
 </section>
 <section id="channel">
 <h2>Channel<a class="headerlink" href="#channel" title="Permalink to this headline">¶</a></h2>
-<p>After the signal is sent from the <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code>, it is distorted by a channel which can be found in the <code class="xref py py-mod docutils literal notranslate"><span class="pre">channel</span></code> module.
+<p>After the signal is sent from the <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code>, it is distorted by a channel which can be found in the <a class="reference internal" href="channel.html#module-channel" title="channel"><code class="xref py py-mod docutils literal notranslate"><span class="pre">channel</span></code></a> module.
 Each <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code> is associated to a channel. Therefore, for each transmitter-receiver-modem-pair exists one channel.
 The channels are treated independently (exception: quadriga). After propagation, <code class="xref py py-class docutils literal notranslate"><span class="pre">channel.noise.Noise</span></code> is added given
 the SNR values defined in the settings files prior to the simulation.</p>
@@ -159,6 +162,9 @@ multitude of one frame.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="parameter_description.html" title="Parameter Description"
              >next</a> |</li>
