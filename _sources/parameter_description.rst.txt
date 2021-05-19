@@ -217,7 +217,7 @@ settings_psk_qam.ini
     - QAM: 16, 64, 256
     - PAM: 2, 4, 8, 16
 
-- ``is_complex``: False for PAM, PAM/QAM True
+- ``is_complex``: False for PAM, True for PAM/QAM
 - ``symbol_rate``: in bauds
 - ``filter_type``: allowed values: ``root_raised_cosine``, ``raised_cosine``, ``rectangular``, ``FMCW``, ``none``.
 
@@ -230,27 +230,28 @@ settings_psk_qam.ini
 
     if filter is ``rectangular``: rectangular pulses with a given width are considered.
 
-    .. note::
-       The oversampling factor may have different meanings:
-    
-       For FMCW modulation, ``sampling_rate = oversampling_factor * chirp_bandwidth``.
-       For other modulation schemes, ``sampling_rate = oversampling_factor * symbol_rate``.
-
 Parameters for RRC:
 
 - ``filter_length``:
 - ``roll_off_factor``:
 
+parameters for FMCW filter (can be given as function of the symbol rate):
+
 - ``chirp_bandwidth``:
 - ``chirp_duration``:
 
-    parameters for FMCW filter (can be given as function of the symbol rate).
     a negative bandwidth means a down chirp.
-    please notice that a guard interval of at least ``chirp_duration - 1/symbol_rate`` should be included to guarantee that
-    the whole chirps are processed at receiver.
+    please notice that a guard interval of at least ``chirp_duration - 1/symbol_rate`` should be included to guarantee
+    that the whole chirps are processed at receiver.
 
-- ``pulse_width``: parameters for rectangular filter, pulse width relative to symbol interval, between 0 and 1
-- ``oversampling_factor``: parameters for all filters (number of samples per symbol)
+parameters for rectangular filter:
+
+- ``pulse_width``: pulse width relative to symbol interval, between 0 and 1
+
+parameters for all filters
+
+- ``oversampling_factor``:  number of samples per symbol
+
 
 **[Receiver]**: Specifications for receiver implementation.
 

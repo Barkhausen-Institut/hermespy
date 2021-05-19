@@ -290,7 +290,7 @@ Therefore, it is up to the user to define the frames accordingly.</p>
 </ul>
 </div></blockquote>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">is_complex</span></code>: False for PAM, PAM/QAM True</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_complex</span></code>: False for PAM, True for PAM/QAM</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">symbol_rate</span></code>: in bauds</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">filter_type</span></code>: allowed values: <code class="docutils literal notranslate"><span class="pre">root_raised_cosine</span></code>, <code class="docutils literal notranslate"><span class="pre">raised_cosine</span></code>, <code class="docutils literal notranslate"><span class="pre">rectangular</span></code>, <code class="docutils literal notranslate"><span class="pre">FMCW</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p>
 <blockquote>
@@ -300,30 +300,32 @@ filter, and long filter length may be required.
 Default values are <code class="docutils literal notranslate"><span class="pre">roll-off</span> <span class="pre">factor</span> <span class="pre">=</span> <span class="pre">0.3,</span> <span class="pre">filter</span> <span class="pre">length</span> <span class="pre">=</span> <span class="pre">16,</span> <span class="pre">oversampling</span> <span class="pre">factor</span> <span class="pre">=</span> <span class="pre">2</span></code>.</p>
 <p>if filter is <code class="docutils literal notranslate"><span class="pre">FMCW</span></code> (chirp): bandwith and chirp duration must be given.</p>
 <p>if filter is <code class="docutils literal notranslate"><span class="pre">rectangular</span></code>: rectangular pulses with a given width are considered.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The oversampling factor may have different meanings:</p>
-<p>For FMCW modulation, <code class="docutils literal notranslate"><span class="pre">sampling_rate</span> <span class="pre">=</span> <span class="pre">oversampling_factor</span> <span class="pre">*</span> <span class="pre">chirp_bandwidth</span></code>.
-For other modulation schemes, <code class="docutils literal notranslate"><span class="pre">sampling_rate</span> <span class="pre">=</span> <span class="pre">oversampling_factor</span> <span class="pre">*</span> <span class="pre">symbol_rate</span></code>.</p>
-</div>
 </div></blockquote>
 </li>
 </ul>
 <p>Parameters for RRC:</p>
-<ul>
+<ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">filter_length</span></code>:</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">roll_off_factor</span></code>:</p></li>
+</ul>
+<p>parameters for FMCW filter (can be given as function of the symbol rate):</p>
+<ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">chirp_bandwidth</span></code>:</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">chirp_duration</span></code>:</p>
 <blockquote>
-<div><p>parameters for FMCW filter (can be given as function of the symbol rate).
-a negative bandwidth means a down chirp.
-please notice that a guard interval of at least <code class="docutils literal notranslate"><span class="pre">chirp_duration</span> <span class="pre">-</span> <span class="pre">1/symbol_rate</span></code> should be included to guarantee that
-the whole chirps are processed at receiver.</p>
+<div><p>a negative bandwidth means a down chirp.
+please notice that a guard interval of at least <code class="docutils literal notranslate"><span class="pre">chirp_duration</span> <span class="pre">-</span> <span class="pre">1/symbol_rate</span></code> should be included to guarantee
+that the whole chirps are processed at receiver.</p>
 </div></blockquote>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pulse_width</span></code>: parameters for rectangular filter, pulse width relative to symbol interval, between 0 and 1</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">oversampling_factor</span></code>: parameters for all filters (number of samples per symbol)</p></li>
+</ul>
+<p>parameters for rectangular filter:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pulse_width</span></code>: pulse width relative to symbol interval, between 0 and 1</p></li>
+</ul>
+<p>parameters for all filters</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">oversampling_factor</span></code>:  number of samples per symbol</p></li>
 </ul>
 <p><strong>[Receiver]</strong>: Specifications for receiver implementation.</p>
 <ul class="simple">
