@@ -250,13 +250,8 @@ parameters for rectangular filter:
 
 parameters for all filters
 
-- ``oversampling_factor``:  (number of samples per symbol)
+- ``oversampling_factor``:  number of samples per symbol
 
-    .. note::
-       The oversampling factor may have different meanings:
-
-       For FMCW modulation, ``sampling_rate = oversampling_factor * chirp_bandwidth``.
-       For other modulation schemes, ``sampling_rate = oversampling_factor * symbol_rate``.
 
 **[Receiver]**: Specifications for receiver implementation.
 
