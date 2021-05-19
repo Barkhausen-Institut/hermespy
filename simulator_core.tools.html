@@ -57,8 +57,53 @@
 <section id="module-simulator_core.tools.constants">
 <span id="simulator-core-tools-constants-module"></span><h2>simulator_core.tools.constants module<a class="headerlink" href="#module-simulator_core.tools.constants" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="simulator-core-tools-theoretical-results-module">
-<h2>simulator_core.tools.theoretical_results module<a class="headerlink" href="#simulator-core-tools-theoretical-results-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-simulator_core.tools.theoretical_results">
+<span id="simulator-core-tools-theoretical-results-module"></span><h2>simulator_core.tools.theoretical_results module<a class="headerlink" href="#module-simulator_core.tools.theoretical_results" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="simulator_core.tools.theoretical_results.TheoreticalResults">
+<em class="property">class </em><code class="sig-name descname">TheoreticalResults</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#simulator_core.tools.theoretical_results.TheoreticalResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Generates theoretical results depending on the simulation parameters</p>
+<p>Theoretical results are available just for some scenarios. Currently the following are available:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>BPSK/QPSK/8PSK and M-QAM</dt><dd><ul>
+<li><p>in AWGN channel (apart from BSK/QPSK, only an approximation for high SNR)</p></li>
+<li><p>in Rayleigh-faded channels</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>chirp-FSK (supposing orthogonal modulation with non-coherent detection) in AWGN channel</p></li>
+<li><dl class="simple">
+<dt>OFDM</dt><dd><ul>
+<li><p>only in AWGN channel</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The results are returned in a map containing the relevant statistics.</p>
+<p>initializes an object for obtaining theoretical results.</p>
+<p>Based on the parameters in ‘parameters’. Depending on the parameters,
+no theoretical results can be generated.</p>
+<dl class="py method">
+<dt id="simulator_core.tools.theoretical_results.TheoreticalResults.get_results">
+<code class="sig-name descname">get_results</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">snr_type</span></em>, <em class="sig-param"><span class="n">snr_vector_db</span></em><span class="sig-paren">)</span><a class="headerlink" href="#simulator_core.tools.theoretical_results.TheoreticalResults.get_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns theoretical results for all the Rx modems defined in the scenario.</p>
+<p>depending on their particular modem and channel configurations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>snr_vector_db</strong> (<em>np.ndarray</em>) – vector of Eb/N0 values.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-simulator_core.tools">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-simulator_core.tools" title="Permalink to this headline">¶</a></h2>
@@ -77,7 +122,7 @@
 <li><a class="reference internal" href="#">simulator_core.tools package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-simulator_core.tools.constants">simulator_core.tools.constants module</a></li>
-<li><a class="reference internal" href="#simulator-core-tools-theoretical-results-module">simulator_core.tools.theoretical_results module</a></li>
+<li><a class="reference internal" href="#module-simulator_core.tools.theoretical_results">simulator_core.tools.theoretical_results module</a></li>
 <li><a class="reference internal" href="#module-simulator_core.tools">Module contents</a></li>
 </ul>
 </li>

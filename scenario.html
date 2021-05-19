@@ -53,8 +53,100 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="scenario-scenario-module">
-<h2>scenario.scenario module<a class="headerlink" href="#scenario-scenario-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-scenario.scenario">
+<span id="scenario-scenario-module"></span><h2>scenario.scenario module<a class="headerlink" href="#module-scenario.scenario" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="scenario.scenario.Scenario">
+<em class="property">class </em><code class="sig-name descname">Scenario</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">param_general</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rnd</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#scenario.scenario.Scenario" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements the simulation scenario.</p>
+<p>The scenario contains objects for all the different elements in a given simulation,
+such as modems, channel models, bit sources, etc.</p>
+<dl class="py attribute">
+<dt id="scenario.scenario.Scenario.tx_modems">
+<code class="sig-name descname">tx_modems</code><a class="headerlink" href="#scenario.scenario.Scenario.tx_modems" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all modems to be used for transmission with
+‘number_of_tx_modems’ elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list(<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem">Modem</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="scenario.scenario.Scenario.rx_modems">
+<code class="sig-name descname">rx_modems</code><a class="headerlink" href="#scenario.scenario.Scenario.rx_modems" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all modems to be used for reception with
+‘number_of_rx_modems’ elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list(<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem">Modem</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="scenario.scenario.Scenario.sources">
+<code class="sig-name descname">sources</code><a class="headerlink" href="#scenario.scenario.Scenario.sources" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all bits sources. Each bit source will
+be associated to one transmit modem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list(<a class="reference internal" href="source.html#source.bits_source.BitsSource" title="source.bits_source.BitsSource">BitsSource</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="scenario.scenario.Scenario.rx_samplers">
+<code class="sig-name descname">rx_samplers</code><a class="headerlink" href="#scenario.scenario.Scenario.rx_samplers" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all receive re-samplers. Each resampler
+will be associated to one receive modem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list(<a class="reference internal" href="channel.html#channel.rx_sampler.RxSampler" title="channel.rx_sampler.RxSampler">RxSampler</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="scenario.scenario.Scenario.channels">
+<code class="sig-name descname">channels</code><a class="headerlink" href="#scenario.scenario.Scenario.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all propagation channels.
+channels[i][j] contains the channel from transmit modem ‘i’ to receive modem ‘j’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list(list(<a class="reference internal" href="channel.html#channel.channel.Channel" title="channel.channel.Channel">Channel</a>))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="scenario.scenario.Scenario.noise">
+<code class="sig-name descname">noise</code><a class="headerlink" href="#scenario.scenario.Scenario.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all noise sources. Each noise source is
+associated to one receive modem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list(<a class="reference internal" href="channel.html#channel.noise.Noise" title="channel.noise.Noise">Noise</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="scenario.scenario.Scenario.init_drop">
+<code class="sig-name descname">init_drop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scenario.scenario.Scenario.init_drop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Intializes variables for each drop or creates new random numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-scenario">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-scenario" title="Permalink to this headline">¶</a></h2>
@@ -72,7 +164,7 @@
   <ul>
 <li><a class="reference internal" href="#">scenario package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#scenario-scenario-module">scenario.scenario module</a></li>
+<li><a class="reference internal" href="#module-scenario.scenario">scenario.scenario module</a></li>
 <li><a class="reference internal" href="#module-scenario">Module contents</a></li>
 </ul>
 </li>
