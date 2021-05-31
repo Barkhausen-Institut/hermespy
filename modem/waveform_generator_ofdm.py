@@ -107,10 +107,13 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         Returns:
             (np.ndarray, int, int):
-                `output_signal(numpy.ndarray)`: 2D array containing the transmitted signal with
-                                                (self.param.number_tx_antennas x self.samples_in_frame) elements
-                `timestamp(int)`: current timestamp (in samples) of the following frame
-                `initial_sample_num(int)`: sample in which this frame starts (equal to initial timestamp)
+            
+            `output_signal(numpy.ndarray)`: 2D array containing the transmitted signal with
+            (self.param.number_tx_antennas x self.samples_in_frame) elements
+
+            `timestamp(int)`: current timestamp (in samples) of the following frame
+
+            `initial_sample_num(int)`: sample in which this frame starts (equal to initial timestamp)
         """
         output_signal: np.ndarray = np.zeros(
             (self.param.number_tx_antennas, self._samples_in_frame_no_oversampling),
@@ -260,8 +263,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             noise_var (float): noise variance (for equalization).
 
         Returns:
-            (list[np.ndarray], np.ndarray)_
-                `list[numpy.ndarray]`:
+            (list[np.ndarray], np.ndarray):
+                `list[numpy.ndarray]`: 
                     list of detected blocks of bits.
                 `numpy.ndarray`:
                     N x S' array containing the remaining part of the signal, after this frame was
@@ -338,12 +341,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return bits_in_ofdm_symbol
 
-    def demodulate_ofdm_symbol(
-            self,
-            ofdm_symbol_config: OfdmSymbolConfig,
-            ofdm_symbol_resources: np.ndarray,
-            channel_in_freq_domain: np.ndarray,
-            noise_var: float) -> np.ndarray:
+    def demodulate_ofdm_symbol(self, ofdm_symbol_config: OfdmSymbolConfig, ofdm_symbol_resources: np.ndarray,
+                               channel_in_freq_domain: np.ndarray, noise_var: float) -> np.ndarray:
         """Demodulates  a single OFDM symbol
 
         This method performs the FFT of the time-domain signal and equalizes it with knowledge of the channel frequency
@@ -361,7 +360,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         Returns:
             (numpy.ndarray, numpy.ndarray)
-                'data_symbols(numpy.nndarray)': estimate of the frequency-domain symbols at the data subcarriers
+                'data_symbols(numpy.ndarray)': estimate of the frequency-domain symbols at the data subcarriers
                 'noise_var(numpy.ndarray)': noise variance of demodulated symbols
 
         """
