@@ -4,7 +4,7 @@ This file serves to describe how to make you first steps with Hermespy.
 
 In general, it is recommended to read :doc:`Parameters Description <parameter_description>` at first. In the first section `First Simple Simulation`_, we will describe how you can define a simple simulation. A rather `Complex Simulation`_ is described afterwards.
 
-A few examples with different configurations are given in the **\\_examples** folder
+A few examples with different configurations are given in the **_examples** folder
 
 -----------------------
 First Simple Simulation
@@ -57,7 +57,7 @@ The parameters are described in :doc:`Parameters Description <parameter_descript
 
 Our **first requirement** from our desired simulation is thus fulfilled. Note that the definition of the receiver modem is significantly shorter as technology and coding parameters are chosen from the definition of the respective transmitter modem which is indicated by ``tx_modem = 1``. Carrier frequency is picked from it as well.
 
-Our **second requirement** is to use PSK/QAM as modulation scheme. We did this by setting ``technology_param_file = settings_psk_qam.ini``. **You can change relevant modulation parameters by modifying the **_settings/settings_psk_qam.ini** and by reading :doc:`Parameters Description <parameter_description>` carefully.
+Our **second requirement** is to use PSK/QAM as modulation scheme. We did this by setting ``technology_param_file = settings_psk_qam.ini``. **You can change relevant modulation parameters by modifying the _settings/settings_psk_qam.ini** and by reading :doc:`Parameters Description <parameter_description>` carefully.
 
 The **carrier frequency** was set at the transmitter receiver modem only, as the carrier frequency is taken for the receiver from the respective transmitter modem by setting ``tx_modem = 1``. The carrier frequency at the transmitter side was defined by ``carrier_frequency = 1e9``.
 
