@@ -161,8 +161,8 @@ class Scenario:
 
         for modem_count in range(self.params.number_of_rx_modems):
             modem_parameters = self.params.rx_modem_params[modem_count]
-            rx_modems.append(Modem(modem_parameters, self.sources[modem_count], self.random.get_rng("hardware"),
-                                   self.tx_modems[modem_parameters.tx_modem]))
+            rx_modems.append(Modem(modem_parameters, self.sources[modem_parameters.tx_modem],
+                                   self.random.get_rng("hardware"), self.tx_modems[modem_parameters.tx_modem]))
 
             noise.append(
                 Noise(
