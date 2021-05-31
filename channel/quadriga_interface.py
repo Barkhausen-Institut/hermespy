@@ -141,7 +141,7 @@ class QuadrigaInterface:
             modem_rx(Modem): Receiving modem.
 
         Returns:
-            Tuple[np.array, np.array]: CIR and delay. Currently, only SISO.
+            (np.array, np.array): CIR and delay. Currently, only SISO.
         """
         self._launch_quadriga()
         if self._number_rx == 1 and self._number_tx == 1:

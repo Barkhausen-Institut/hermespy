@@ -7,7 +7,7 @@ class Noise:
 
     Attributes:
         snr_type (str)
-            ignal-to-noise definition.
+            signal-to-noise definition.
             The following values are currently supported:
              - EB/N0(dB): bit-energy over N0 (in dB)
              - ES/NO(dB): signal-energy over N0 (in dB)
@@ -32,8 +32,8 @@ class Noise:
             signal_energy: Energy of signal.
 
         Returns:
-            np.ndarray: Noisy signal.
-            float: noise variance
+            (np.ndarray, float):
+                Noisy signal with noise variance.
         """
         noise_var = self.calculate_noise_var(snr, signal_energy)
 
