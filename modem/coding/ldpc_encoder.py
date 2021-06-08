@@ -6,7 +6,7 @@ import numpy as np
 
 from modem.coding.encoder import Encoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
-
+import ldpc_binding
 
 class LdpcEncoder(Encoder):
     """Implementation of an LDPC Encoder.
@@ -55,6 +55,13 @@ class LdpcEncoder(Encoder):
         if (self.bits_in_frame - no_bits) > 0:
             encoded_words.append(np.random.randint(2, size=self.bits_in_frame - no_bits))
         return encoded_words
+
+    def encode_binding(self, data_bits: List[np.array]) -> List[np.array]:
+        encoded_words = ldpc_binding.encode(
+            data_bits, self.G, self.Z, self.encoded_bits_n, self.bits_in_frame
+        )
+        return encoded_words
+
 
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
         eps = np.finfo(float).tiny

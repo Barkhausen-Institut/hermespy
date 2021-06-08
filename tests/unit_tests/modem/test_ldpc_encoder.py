@@ -8,7 +8,7 @@ from scipy.io import loadmat
 
 from modem.coding.ldpc_encoder import LdpcEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
-
+import ldpc_binding
 
 class TestLdpcEncoder(unittest.TestCase):
     def setUp(self) -> None:
@@ -28,6 +28,28 @@ class TestLdpcEncoder(unittest.TestCase):
         self.encoder = LdpcEncoder(self.params, self.bits_in_frame)
         self.encoderTestResultsDir = os.path.join(
             os.path.dirname(__file__), 'res', 'ldpc')
+
+    def test_ldpcBindingEncodingYieldsSameResultsAsPythonCode(self) -> None:
+        params = ParametersLdpcEncoder()
+        params.code_ratio = 2 / 3
+        params.block_size = 256
+        params.code_rate_fraction = Fraction(2, 3)
+        params.custom_ldpc_codes = ""
+
+        ldpc_results_mat = loadmat(os.path.join(
+                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
+            ), squeeze_me=True)
+        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
+
+        bits_in_frame = len(ldpc_results_mat['code_words'][0])
+
+        encoder = LdpcEncoder(params, bits_in_frame)
+        data_word = ldpc_results_mat['bit_words']
+        encoded_word = encoder.encode([data_word[0]])
+        encoded_word_binding = encoder.encode_binding([data_word[0]])
+
+        np.testing.assert_array_almost_equal(encoded_word[0], encoded_word_binding[0])
+
 
     def test_properEncoding_oneBlock(self) -> None:
         params = ParametersLdpcEncoder()
