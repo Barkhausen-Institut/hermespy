@@ -8,7 +8,6 @@ from scipy.io import loadmat
 
 from modem.coding.ldpc_encoder import LdpcEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
-import modem.coding.ldpc_binding.ldpc_binding as ldpc_binding
 
 
 class TestLdpcEncoder(unittest.TestCase):
