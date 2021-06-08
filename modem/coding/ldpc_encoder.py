@@ -6,7 +6,7 @@ import numpy as np
 
 from modem.coding.encoder import Encoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
-import modem.coding.ldpc_binding.ldpc_binding as ldpc_binding
+import ldpc_binding
 
 
 class LdpcEncoder(Encoder):
