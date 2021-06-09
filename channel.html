@@ -444,7 +444,7 @@ The shape is T x number_rx_antennas x number_tx_antennas x (L+1)</p>
 <dl class="py attribute">
 <dt id="channel.noise.Noise.snr_type">
 <code class="sig-name descname">snr_type</code><a class="headerlink" href="#channel.noise.Noise.snr_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>ignal-to-noise definition.
+<dd><p>signal-to-noise definition.
 The following values are currently supported:</p>
 <blockquote>
 <div><ul class="simple">
@@ -474,11 +474,10 @@ the parameter is interpreted as actual noise variance.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Noisy signal.
-float: noise variance</p>
+<dd class="field-even"><p>Noisy signal with noise variance.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.ndarray</p>
+<dd class="field-odd"><p>(np.ndarray, float)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -586,7 +585,7 @@ channels at the time instants given in vector ‘timestamps’.
 The shape is T x number_rx_antennas x number_tx_antennas x (L+1)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>impulse_response(np.ndarray)</p>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -687,7 +686,7 @@ modem pairs and the Quadriga simulation which runs in the background.</p>
 <dd class="field-even"><p>CIR and delay. Currently, only SISO.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Tuple[np.array, np.array]</p>
+<dd class="field-odd"><p>(np.array, np.array)</p>
 </dd>
 </dl>
 </dd></dl>

@@ -51,7 +51,7 @@
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <p>This file serves to describe how to make you first steps with Hermespy.</p>
 <p>In general, it is recommended to read <a class="reference internal" href="parameter_description.html"><span class="doc">Parameters Description</span></a> at first. In the first section <a class="reference internal" href="#first-simple-simulation">First Simple Simulation</a>, we will describe how you can define a simple simulation. A rather <a class="reference internal" href="#complex-simulation">Complex Simulation</a> is described afterwards.</p>
-<p>A few examples with different configurations are given in the <strong>\_examples</strong> folder</p>
+<p>A few examples with different configurations are given in the <strong>_examples</strong> folder</p>
 <section id="first-simple-simulation">
 <h2>First Simple Simulation<a class="headerlink" href="#first-simple-simulation" title="Permalink to this headline">¶</a></h2>
 <p>Let’s start defining a simple simulation. Let us assume we want to simulate the following:</p>
@@ -92,7 +92,7 @@ Let us open it and create the transmitter modem:</p>
 </div>
 <p>The parameters are described in <a class="reference internal" href="parameter_description.html"><span class="doc">Parameters Description</span></a>.</p>
 <p>Our <strong>first requirement</strong> from our desired simulation is thus fulfilled. Note that the definition of the receiver modem is significantly shorter as technology and coding parameters are chosen from the definition of the respective transmitter modem which is indicated by <code class="docutils literal notranslate"><span class="pre">tx_modem</span> <span class="pre">=</span> <span class="pre">1</span></code>. Carrier frequency is picked from it as well.</p>
-<p>Our <strong>second requirement</strong> is to use PSK/QAM as modulation scheme. We did this by setting <code class="docutils literal notranslate"><span class="pre">technology_param_file</span> <span class="pre">=</span> <span class="pre">settings_psk_qam.ini</span></code>. <strong>You can change relevant modulation parameters by modifying the **_settings/settings_psk_qam.ini</strong> and by reading <a class="reference internal" href="parameter_description.html"><span class="doc">Parameters Description</span></a> carefully.</p>
+<p>Our <strong>second requirement</strong> is to use PSK/QAM as modulation scheme. We did this by setting <code class="docutils literal notranslate"><span class="pre">technology_param_file</span> <span class="pre">=</span> <span class="pre">settings_psk_qam.ini</span></code>. <strong>You can change relevant modulation parameters by modifying the _settings/settings_psk_qam.ini</strong> and by reading <a class="reference internal" href="parameter_description.html"><span class="doc">Parameters Description</span></a> carefully.</p>
 <p>The <strong>carrier frequency</strong> was set at the transmitter receiver modem only, as the carrier frequency is taken for the receiver from the respective transmitter modem by setting <code class="docutils literal notranslate"><span class="pre">tx_modem</span> <span class="pre">=</span> <span class="pre">1</span></code>. The carrier frequency at the transmitter side was defined by <code class="docutils literal notranslate"><span class="pre">carrier_frequency</span> <span class="pre">=</span> <span class="pre">1e9</span></code>.</p>
 </section>
 <section id="define-multipath-channel">

@@ -566,12 +566,10 @@ symbols, null carriers, pilot subcarriers, reference signals and guard intervals
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt><cite>output_signal(numpy.ndarray)</cite>: 2D array containing the transmitted signal with</dt><dd><p>(self.param.number_tx_antennas x self.samples_in_frame) elements</p>
-</dd>
-</dl>
-<p><cite>timestamp(int)</cite>: current timestamp (in samples) of the following frame
-<cite>initial_sample_num(int)</cite>: sample in which this frame starts (equal to initial timestamp)</p>
+<dd class="field-even"><p><p><cite>output_signal(numpy.ndarray)</cite>: 2D array containing the transmitted signal with
+(self.param.number_tx_antennas x self.samples_in_frame) elements</p>
+<p><cite>timestamp(int)</cite>: current timestamp (in samples) of the following frame</p>
+<p><cite>initial_sample_num(int)</cite>: sample in which this frame starts (equal to initial timestamp)</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -640,21 +638,18 @@ the simulation drop.</p></li>
 <li><p><strong>noise_var</strong> (<em>float</em>) – noise variance (for equalization).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>(list[np.ndarray], np.ndarray)_</dt><dd><dl class="simple">
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
 <dt><cite>list[numpy.ndarray]</cite>:</dt><dd><p>list of detected blocks of bits.</p>
 </dd>
 <dt><cite>numpy.ndarray</cite>:</dt><dd><p>N x S’ array containing the remaining part of the signal, after this frame was
 demodulated.  S’ = S - self.samples_in_frame</p>
 </dd>
 </dl>
-</dd>
-</dl>
 </p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(list[np.ndarray], np.ndarray)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -704,7 +699,7 @@ fft_size x #rx_antennas x #tx_antennas</p></li>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><dl class="simple">
-<dt>(numpy.ndarray, numpy.ndarray)</dt><dd><p>’data_symbols(numpy.nndarray)’: estimate of the frequency-domain symbols at the data subcarriers
+<dt>(numpy.ndarray, numpy.ndarray)</dt><dd><p>’data_symbols(numpy.ndarray)’: estimate of the frequency-domain symbols at the data subcarriers
 ‘noise_var(numpy.ndarray)’: noise variance of demodulated symbols</p>
 </dd>
 </dl>
