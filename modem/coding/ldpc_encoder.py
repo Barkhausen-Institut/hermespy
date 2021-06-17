@@ -59,7 +59,8 @@ class LdpcEncoder(Encoder):
 
     def encode_binding(self, data_bits: List[np.array]) -> List[np.array]:
         encoded_words = ldpc_binding.encode(
-            data_bits, self.G, self.Z, self.encoded_bits_n, self.bits_in_frame
+            data_bits, self.G, self.Z, self.num_info_bits, self.encoded_bits_n,
+            self.data_bits_k, self.code_blocks, self.bits_in_frame
         )
         return encoded_words
 
