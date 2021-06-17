@@ -15,7 +15,8 @@ template <class T>
 using RowVector = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 
 RowVector<int> soft_to_hard_bits(const RowVector<double> &vec, const int num_info_bits);
-int get_no_negative_elements(const RowVector<double> &vec);
+template <class T>
+int get_no_negative_elements(const RowVector<T> &vec);
 template <class T>
 int sign(const T &x);
 
@@ -100,7 +101,7 @@ std::vector<RowVector<int>> decode(
                     double S_mag = (-((temp_llr.array().abs() / 2).tanh() + eps).log()).sum();
                     int S_sign = 0;
 
-                    if (get_no_negative_elements(temp_llr) % 2 == 0)
+                    if (get_no_negative_elements<double>(temp_llr) % 2 == 0)
                         S_sign = 1;
                     else
                         S_sign = -1;
@@ -167,7 +168,9 @@ RowVector<int> soft_to_hard_bits(const RowVector<double> &vec, const int num_inf
 
     return hard_bits;
 }
-int get_no_negative_elements(const RowVector<double> &vec)
+
+template <class T>
+int get_no_negative_elements(const RowVector<T> &vec)
 {
     int idx = 0;
     for (auto el : vec)
