@@ -14,7 +14,7 @@ using Eigen::Dynamic;
 template <class T>
 using RowVector = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 
-RowVector<int> soft_to_hard_bits(const RowVector<double> &vec, const int num_info_bits);
+RowVector<int> soft_to_hard_bits(const RowVector<double> &llrs, const int num_info_bits);
 template <class T>
 int get_no_negative_elements(const RowVector<T> &vec);
 template <class T>
@@ -106,9 +106,8 @@ std::vector<RowVector<int>> decode(
                     else
                         S_sign = -1;
 
-                    for (size_t var_ind = 0; var_ind < nb_var_nodes.size(); var_ind++)
+                    for (const int var_pos : nb_var_nodes)
                     {
-                        int var_pos = nb_var_nodes[var_ind];
                         double Q_temp = Qcv(0, var_pos) - Rcv(check_ind, var_pos);
                         double Q_temp_mag = -std::log(std::tanh(std::abs(Q_temp) / 2) + eps);
                         int Q_temp_sign = sign<double>(Q_temp + eps);
@@ -141,29 +140,23 @@ template <class T>
 std::vector<int> nonzero(const RowVector<T> &vec)
 {
     std::vector<int> indices;
-    int idx = 0;
-    for (auto el : vec)
+    for (size_t idx = 0; idx < vec.cols(); idx++)
     {
-        if (el != 0)
+        if (vec(0, idx) != 0)
             indices.push_back(idx);
-        idx++;
     }
 
     return indices;
 }
-RowVector<int> soft_to_hard_bits(const RowVector<double> &vec, const int num_info_bits)
+RowVector<int> soft_to_hard_bits(const RowVector<double> &llrs, const int num_info_bits)
 {
     RowVector<int> hard_bits(1, num_info_bits);
-
-    int idx = 0;
-    for (auto llr : vec(0, Eigen::seq(0, num_info_bits - 1)))
+    for (size_t idx = 0; idx < num_info_bits; idx++)
     {
-        if (llr < 0)
+        if (llrs(0, idx) < 0)
             hard_bits(0, idx) = 1;
         else
             hard_bits(0, idx) = 0;
-
-        idx++;
     }
 
     return hard_bits;
