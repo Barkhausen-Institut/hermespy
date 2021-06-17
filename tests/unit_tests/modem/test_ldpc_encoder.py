@@ -2,6 +2,7 @@ import unittest
 from fractions import Fraction
 from tests.unit_tests.modem.utils import flatten_blocks
 import os
+from datetime import datetime
 
 import numpy as np
 from scipy.io import loadmat
@@ -50,6 +51,25 @@ class TestLdpcEncoder(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(encoded_word[0], encoded_word_binding[0])
 
+    def test_ldpcBindingDecodingYieldsSameResultsAsPythonCode(self) -> None:
+        params = ParametersLdpcEncoder()
+        params.code_ratio = 2 / 3
+        params.block_size = 256
+        params.code_rate_fraction = Fraction(2, 3)
+        params.custom_ldpc_codes = ""
+
+        ldpc_results_mat = loadmat(os.path.join(
+                self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
+            ), squeeze_me=True)
+        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
+
+        bits_in_frame = len(ldpc_results_mat['llrs'][0])
+        encoder = LdpcEncoder(params, bits_in_frame)
+
+        llrs = -ldpc_results_mat['llrs'][0]
+        decoded_word = encoder.decode([llrs])
+        decoded_word_binding = encoder.decode_binding([llrs])
+        np.testing.assert_array_almost_equal(decoded_word[0], decoded_word_binding[0])
 
     def test_properEncoding_oneBlock(self) -> None:
         params = ParametersLdpcEncoder()
