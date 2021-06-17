@@ -63,10 +63,16 @@ class LdpcEncoder(Encoder):
         )
         return encoded_words
 
+    def decode_binding(self, encoded_bits: List[np.array]) -> List[np.array]:
+        decoded_blocks = ldpc_binding.decode(
+            encoded_bits, self.encoded_bits_n, self.code_blocks, self.number_parity_bits,
+            self.num_total_bits, self.Z, self.params.no_iterations, self.H, self.num_info_bits
+        )
+        return decoded_blocks
 
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
-        eps = np.finfo(float).tiny
-
+        #eps = np.finfo(float).tiny
+        eps = 2.22045e-16
         decoded_blocks: List[np.array] = []
         for block in encoded_bits:
             dec_block: np.array = np.array([])
@@ -111,6 +117,7 @@ class LdpcEncoder(Encoder):
 
                             # Update Qv
                             Qv[var_pos] = Q_temp + Rcv[check_ind, var_pos]
+
                 dec_code_block = np.array(Qv[:self.num_info_bits] < 0, dtype=int)
                 dec_block = np.append(dec_block, dec_code_block)
 
