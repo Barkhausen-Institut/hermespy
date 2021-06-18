@@ -61,6 +61,7 @@ class LdpcEncoder(Encoder):
 
         if (self.bits_in_frame - no_bits) > 0:
             encoded_words.append(np.random.randint(2, size=self.bits_in_frame - no_bits))
+
         return encoded_words
 
     def __encode_binding(self, data_bits: List[np.array]) -> List[np.array]:
@@ -77,15 +78,12 @@ class LdpcEncoder(Encoder):
             return self.__decode_python(encoded_bits)
 
     def __decode_python(self, encoded_bits: List[np.array]) -> List[np.array]:
-        #eps = np.finfo(float).tiny
         eps = 2.22045e-16
         decoded_blocks: List[np.array] = []
         for block in encoded_bits:
             dec_block: np.array = np.array([])
             for code_block in range(self.code_blocks):
                 curr_code_block = -block[:self.encoded_bits_n]
-                if len(curr_code_block) < self.encoded_bits_n:
-                    continue
 
                 Rcv = np.zeros((self.number_parity_bits, self.num_total_bits + 2 * self.Z))
                 punc_bits = np.zeros(2 * self.Z)
