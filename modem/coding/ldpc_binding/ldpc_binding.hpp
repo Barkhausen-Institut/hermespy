@@ -54,8 +54,8 @@ std::vector<Eigen::RowVectorXi> encode(
 
         if ((bits_in_frame - no_bits) > 0)
         {
-            Eigen::RowVectorXi fillup_data = (Eigen::MatrixXi::Random(1, bits_in_frame - no_bits).array() + 1) / 2;
-
+            Eigen::RowVectorXi fillup_data = (Eigen::MatrixXi::Random(1, bits_in_frame - no_bits).array()).unaryExpr([](auto x)
+                                                                                                                     { return x % 2; });
             encoded_words.push_back(fillup_data);
         }
     }
@@ -82,9 +82,6 @@ std::vector<Eigen::RowVectorXi> decode(
         for (int i = 0; i < code_blocks; i++)
         {
             Eigen::RowVectorXd curr_code_block = -block(0, Eigen::seq(0, encoded_bits_n));
-            if (curr_code_block.cols() < encoded_bits_n)
-                continue;
-
             Eigen::MatrixXd Rcv(number_parity_bits, num_total_bits + 2 * Z);
             Rcv = Eigen::MatrixXd::Zero(number_parity_bits, num_total_bits + 2 * Z);
             Eigen::RowVectorXd punc_bits = Eigen::MatrixXd::Zero(1, 2 * Z);
@@ -118,11 +115,11 @@ std::vector<Eigen::RowVectorXi> decode(
                     }
                 }
             }
-            Eigen::RowVectorXi code_block = soft_to_hard_bits(Qcv, num_info_bits);
+            Eigen::RowVectorXi dec_code_block = soft_to_hard_bits(Qcv, num_info_bits);
 
-            dec_block(0, Eigen::seq(i * num_info_bits, (i + 1) * num_info_bits)) = code_block;
+            dec_block(0, Eigen::seq(i * num_info_bits, (i + 1) * num_info_bits)) = dec_code_block;
 
-            block = block(0, Eigen::lastN(encoded_bits_n));
+            block = block(0, Eigen::seq(encoded_bits_n, Eigen::last));
         }
         decoded_blocks.push_back(dec_block);
     }
