@@ -1,9 +1,4 @@
 # HermesPy
-**IMPORTANT NOTE FOR CLONING FROM GITHUB- READ BEFORE USE: AS WE USE GIT LFS TO TRACK BINARY FILES, GIT LFS IS REQUIRED FOR CLONING THE REPOSITORY. HOWEVER, THE GIT LFS BANDWIDTH OF OUR ORGANIZATION IS EXCEEDED UNTIL JUNE. THEREFORE, CLONING THIS REPOSITORY MUST BE DONE VIA GIT_LFS_SKIP_SMUDGE=1 git clone <this repo>. 
-THE BINARY FILES WON'T BE PULLED. THIS MEANS, THAT SOME OF THE UNIT TESTS WILL NOT PASS. FURTHER, THE LDPC ENCODING AND DECODING WILL NOT WORK. IF YOU WANT TO USE LDPC, PLEASE GET IN TOUCH.**
-
-**AT THE BEGINNING OF JUNE, EVERYTHING WILL BE RUNNING SMOOTH AGAIN.**
-
 HermesPy (Heterogeneous Radio Mobile Simulator - Python) is a semi-static link-level simulator based on time-driven mechanisms.
 
 It provides a framework for the link-level simulation of a multi-RAT wireless link, consisting of
@@ -19,7 +14,7 @@ The curent release "Platform Release" serves as a platform for joint development
 
 # Installation
 
-Ensure that [git lfs](https://git-lfs.github.com/) is installed.
+Ensure that [git lfs](https://git-lfs.github.com/) is installed. Further, C++14 needs to be installed.
 
 - `git clone <this-repo>`
 - Change to `hermespy/`
@@ -29,12 +24,14 @@ Ensure that [git lfs](https://git-lfs.github.com/) is installed.
 - `conda activate <envname>` (can be omitted for ubuntu users)
 - `conda install pip` (can be omitted for ubuntu users)
 - `pip install -r requirements.txt`
+- `pip install .`
 
 **Ubuntu users**:
 - Ensure `python` is linked to python3.7
 - `python -m venv env`
 - `. env/bin/activate`
 - `pip install -r requirements.txt`
+- `pip install .`
  
 
 [Quadriga channel model v2.1.30](https://quadriga-channel-model.de/) is supported by HermesPy.
@@ -87,9 +84,8 @@ Quadriga documentation can be found in **hermes/docssource**.
 # Python binding
 
 For running ldpc, we rely on a python binding. For that purpose, we use pybind11.
-Under Linux, the command to compile the cpp code is as follows (assuming you are in hermespy root folder):
+If you want to use it, choose `use_binding = True` in the `settings_ldpc_encoder.ini` file. This increases the speed of a factor of 100. If there any errors occuring via building etc., you can choose `use_binding = False` for running python code.
 
-`g++ -O3 -Wall -shared -std=c++11 -I3rdparty/ -fPIC $(python -m pybind11 --includes) -Ienv/lib/python3.7/site-packages/pybind11/include/ -I/usr/include/python3.7 modem/coding/ldpc_binding/ldpc_binding.cpp -o ldpc_binding$(python3-config --extension-suffix)`
 # Known Limitations
 
 - no parallelization of the simulation
