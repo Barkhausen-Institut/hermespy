@@ -73,7 +73,7 @@ std::vector<Eigen::RowVectorXi> decode(
     const Eigen::MatrixXi &H,
     const int num_info_bits)
 {
-    double eps = std::numeric_limits<double>::epsilon();
+    double eps = 2.22045e-16;
     std::vector<Eigen::RowVectorXi> decoded_blocks;
 
     for (auto block : encoded_bits)
