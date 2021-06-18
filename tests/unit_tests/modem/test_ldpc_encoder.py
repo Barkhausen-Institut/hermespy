@@ -19,6 +19,7 @@ class TestLdpcEncoder(unittest.TestCase):
         self.params.code_rate_fraction = Fraction(2, 3)
         self.params.no_iterations = 20
         self.params.custom_ldpc_codes = ""
+        self.params.use_binding = False
 
         self.nActual = 528
         self.kActual = 352
@@ -36,6 +37,7 @@ class TestLdpcEncoder(unittest.TestCase):
         params.block_size = 256
         params.code_rate_fraction = Fraction(2, 3)
         params.custom_ldpc_codes = ""
+        params.use_binding = False
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
@@ -43,11 +45,12 @@ class TestLdpcEncoder(unittest.TestCase):
         params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
 
         bits_in_frame = len(ldpc_results_mat['code_words'][0])
+        data_word = ldpc_results_mat['bit_words']
 
         encoder = LdpcEncoder(params, bits_in_frame)
-        data_word = ldpc_results_mat['bit_words']
         encoded_word = encoder.encode([data_word[0]])
-        encoded_word_binding = encoder.encode_binding([data_word[0]])
+        encoder.params.use_binding = True
+        encoded_word_binding = encoder.encode([data_word[0]])
 
         np.testing.assert_array_almost_equal(encoded_word[0], encoded_word_binding[0])
 
@@ -57,18 +60,19 @@ class TestLdpcEncoder(unittest.TestCase):
         params.block_size = 256
         params.code_rate_fraction = Fraction(2, 3)
         params.custom_ldpc_codes = ""
+        params.use_binding = False
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
             ), squeeze_me=True)
         params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
-
         bits_in_frame = len(ldpc_results_mat['llrs'][0])
-        encoder = LdpcEncoder(params, bits_in_frame)
-
         llrs = -ldpc_results_mat['llrs'][0]
+
+        encoder = LdpcEncoder(params, bits_in_frame)
         decoded_word = encoder.decode([llrs])
-        decoded_word_binding = encoder.decode_binding([llrs])
+        encoder.params.use_binding = True
+        decoded_word_binding = encoder.decode([llrs])
         np.testing.assert_array_almost_equal(decoded_word[0], decoded_word_binding[0])
 
     def test_properEncoding_oneBlock(self) -> None:
@@ -77,6 +81,7 @@ class TestLdpcEncoder(unittest.TestCase):
         params.block_size = 256
         params.code_rate_fraction = Fraction(2, 3)
         params.custom_ldpc_codes = ""
+        params.use_binding = False
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
@@ -111,6 +116,7 @@ class TestLdpcEncoder(unittest.TestCase):
         params.block_size = 256
         params.code_rate_fraction = Fraction(2, 3)
         params.custom_ldpc_codes = ""
+        params.use_binding = False
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
@@ -132,6 +138,7 @@ class TestLdpcEncoder(unittest.TestCase):
         params.block_size = 256
         params.code_rate_fraction = Fraction(2, 3)
         params.custom_ldpc_codes = ""
+        params.use_binding = False
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
@@ -155,6 +162,7 @@ class TestLdpcEncoder(unittest.TestCase):
         params.block_size = 256
         params.code_rate_fraction = Fraction(2, 3)
         params.custom_ldpc_codes = ""
+        params.use_binding = False
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
