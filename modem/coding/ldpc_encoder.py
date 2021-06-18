@@ -39,6 +39,12 @@ class LdpcEncoder(Encoder):
         return self.num_info_bits
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
+        if self.params.use_binding:
+            return self.__encode_binding(data_bits)
+        else:
+            return self.__encode_python(data_bits)
+
+    def __encode_python(self, data_bits: List[np.array]) -> List[np.array]:
         no_bits = 0
         encoded_words = []
         for block in data_bits:
@@ -57,21 +63,20 @@ class LdpcEncoder(Encoder):
             encoded_words.append(np.random.randint(2, size=self.bits_in_frame - no_bits))
         return encoded_words
 
-    def encode_binding(self, data_bits: List[np.array]) -> List[np.array]:
+    def __encode_binding(self, data_bits: List[np.array]) -> List[np.array]:
         encoded_words = ldpc_binding.encode(
             data_bits, self.G, self.Z, self.num_info_bits, self.encoded_bits_n,
             self.data_bits_k, self.code_blocks, self.bits_in_frame
         )
         return encoded_words
 
-    def decode_binding(self, encoded_bits: List[np.array]) -> List[np.array]:
-        decoded_blocks = ldpc_binding.decode(
-            encoded_bits, self.encoded_bits_n, self.code_blocks, self.number_parity_bits,
-            self.num_total_bits, self.Z, self.params.no_iterations, self.H, self.num_info_bits
-        )
-        return decoded_blocks
-
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
+        if self.params.use_binding:
+            return self.__decode_binding(encoded_bits)
+        else:
+            return self.__decode_python(encoded_bits)
+
+    def __decode_python(self, encoded_bits: List[np.array]) -> List[np.array]:
         #eps = np.finfo(float).tiny
         eps = 2.22045e-16
         decoded_blocks: List[np.array] = []
@@ -125,6 +130,13 @@ class LdpcEncoder(Encoder):
                 block = block[self.encoded_bits_n:]
             decoded_blocks.append(dec_block)
 
+        return decoded_blocks
+
+    def __decode_binding(self, encoded_bits: List[np.array]) -> List[np.array]:
+        decoded_blocks = ldpc_binding.decode(
+            encoded_bits, self.encoded_bits_n, self.code_blocks, self.number_parity_bits,
+            self.num_total_bits, self.Z, self.params.no_iterations, self.H, self.num_info_bits
+        )
         return decoded_blocks
 
     def _read_precalculated_codes(self):
