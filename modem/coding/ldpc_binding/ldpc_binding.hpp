@@ -12,19 +12,19 @@
 namespace py = pybind11;
 using Eigen::Dynamic;
 template <class T>
-using RowVector = Eigen::Matrix<T, 1, Eigen::Dynamic>;
+using RowVectorXx = Eigen::Matrix<T, 1, Dynamic>;
 
-RowVector<int> soft_to_hard_bits(const RowVector<double> &llrs, const int num_info_bits);
+Eigen::RowVectorXi soft_to_hard_bits(const Eigen::RowVectorXd &llrs, const int num_info_bits);
 template <class T>
-int get_no_negative_elements(const RowVector<T> &vec);
+int get_no_negative_elements(const RowVectorXx<T> &vec);
 template <class T>
 int sign(const T &x);
 
 template <class T>
-std::vector<int> nonzero(const RowVector<T> &vec);
+std::vector<int> nonzero(const RowVectorXx<T> &vec);
 
-std::vector<RowVector<int>> encode(
-    const std::vector<RowVector<int>> &data_bits,
+std::vector<Eigen::RowVectorXi> encode(
+    const std::vector<Eigen::RowVectorXi> &data_bits,
     const Eigen::Matrix<int, Dynamic, Dynamic> &G, //check if not 2d
     const int Z,
     const int num_info_bits,
@@ -34,7 +34,7 @@ std::vector<RowVector<int>> encode(
     const int bits_in_frame)
 {
     int no_bits = 0;
-    std::vector<RowVector<int>> encoded_words;
+    std::vector<Eigen::RowVectorXi> encoded_words;
     for (auto block : data_bits)
     {
         if (block.size() % data_bits_k != 0)
@@ -42,27 +42,28 @@ std::vector<RowVector<int>> encode(
 
         for (int code_block_idx = 0; code_block_idx < code_blocks; code_block_idx++)
         {
-            RowVector<int> code_word = block(0, Eigen::seq(0, num_info_bits - 1)) * G;
+            Eigen::RowVectorXi code_word = block(0, Eigen::seq(0, num_info_bits - 1)) * G;
             code_word = code_word.unaryExpr([](auto x)
                                             { return x % 2; });
-            code_word = code_word(0, Eigen::seq(2 * Z, Eigen::last));
-            block = block(0, Eigen::seq(num_info_bits, block.cols() - 1));
+            Eigen::RowVectorXi code_word_compressed = code_word(0, Eigen::seq(2 * Z, Eigen::last));
+            encoded_words.push_back(code_word_compressed);
+            Eigen::VectorXi updated_block = block(0, Eigen::seq(num_info_bits, block.cols() - 1));
+            block = updated_block;
             no_bits += encoded_bits_n;
         }
 
         if ((bits_in_frame - no_bits) > 0)
         {
-            RowVector<int> fillup_data = (Eigen::MatrixXi::Random(1, bits_in_frame - no_bits).array() + 1) / 2;
+            Eigen::RowVectorXi fillup_data = (Eigen::MatrixXi::Random(1, bits_in_frame - no_bits).array() + 1) / 2;
 
-            std::cout << "adding " << fillup_data << std::endl;
             encoded_words.push_back(fillup_data);
         }
     }
     return encoded_words;
 }
 
-std::vector<RowVector<int>> decode(
-    const std::vector<RowVector<double>> &encoded_bits,
+std::vector<Eigen::RowVectorXi> decode(
+    const std::vector<Eigen::RowVectorXd> &encoded_bits,
     const int encoded_bits_n,
     const int code_blocks,
     const int number_parity_bits,
@@ -73,31 +74,31 @@ std::vector<RowVector<int>> decode(
     const int num_info_bits)
 {
     double eps = std::numeric_limits<double>::epsilon();
-    std::vector<RowVector<int>> decoded_blocks;
+    std::vector<Eigen::RowVectorXi> decoded_blocks;
 
     for (auto block : encoded_bits)
     {
-        RowVector<int> dec_block(1, code_blocks * num_info_bits);
+        Eigen::RowVectorXi dec_block(1, code_blocks * num_info_bits);
         for (int i = 0; i < code_blocks; i++)
         {
-            RowVector<double> curr_code_block = -block(0, Eigen::seq(0, encoded_bits_n));
+            Eigen::RowVectorXd curr_code_block = -block(0, Eigen::seq(0, encoded_bits_n));
             if (curr_code_block.cols() < encoded_bits_n)
                 continue;
 
             Eigen::MatrixXd Rcv(number_parity_bits, num_total_bits + 2 * Z);
             Rcv = Eigen::MatrixXd::Zero(number_parity_bits, num_total_bits + 2 * Z);
-            RowVector<double> punc_bits = Eigen::MatrixXd::Zero(1, 2 * Z);
-            RowVector<double> Qcv(1, punc_bits.cols() + curr_code_block.cols());
+            Eigen::RowVectorXd punc_bits = Eigen::MatrixXd::Zero(1, 2 * Z);
+            Eigen::RowVectorXd Qcv(1, punc_bits.cols() + curr_code_block.cols());
             Qcv << punc_bits, curr_code_block;
 
             for (int spa_ind = 0; spa_ind < no_iterations; spa_ind++)
             {
                 for (int check_ind = 0; check_ind < number_parity_bits; check_ind++)
                 {
-                    RowVector<int> H_row = H(check_ind, Eigen::all);
+                    Eigen::RowVectorXi H_row = H(check_ind, Eigen::all);
                     std::vector<int> nb_var_nodes = nonzero<int>(H_row);
 
-                    RowVector<double> temp_llr = Qcv(0, nb_var_nodes) - Rcv(check_ind, nb_var_nodes);
+                    Eigen::RowVectorXd temp_llr = Qcv(0, nb_var_nodes) - Rcv(check_ind, nb_var_nodes);
                     double S_mag = (-((temp_llr.array().abs() / 2).tanh() + eps).log()).sum();
                     int S_sign = 0;
 
@@ -117,7 +118,7 @@ std::vector<RowVector<int>> decode(
                     }
                 }
             }
-            RowVector<int> code_block = soft_to_hard_bits(Qcv, num_info_bits);
+            Eigen::RowVectorXi code_block = soft_to_hard_bits(Qcv, num_info_bits);
 
             dec_block(0, Eigen::seq(i * num_info_bits, (i + 1) * num_info_bits)) = code_block;
 
@@ -137,7 +138,7 @@ int sign(const T &x)
         return -1;
 }
 template <class T>
-std::vector<int> nonzero(const RowVector<T> &vec)
+std::vector<int> nonzero(const RowVectorXx<T> &vec)
 {
     std::vector<int> indices;
     for (size_t idx = 0; idx < vec.cols(); idx++)
@@ -148,9 +149,9 @@ std::vector<int> nonzero(const RowVector<T> &vec)
 
     return indices;
 }
-RowVector<int> soft_to_hard_bits(const RowVector<double> &llrs, const int num_info_bits)
+Eigen::RowVectorXi soft_to_hard_bits(const Eigen::RowVectorXd &llrs, const int num_info_bits)
 {
-    RowVector<int> hard_bits(1, num_info_bits);
+    Eigen::RowVectorXi hard_bits(1, num_info_bits);
     for (size_t idx = 0; idx < num_info_bits; idx++)
     {
         if (llrs(0, idx) < 0)
@@ -163,7 +164,7 @@ RowVector<int> soft_to_hard_bits(const RowVector<double> &llrs, const int num_in
 }
 
 template <class T>
-int get_no_negative_elements(const RowVector<T> &vec)
+int get_no_negative_elements(const RowVectorXx<T> &vec)
 {
     int idx = 0;
     for (auto el : vec)
