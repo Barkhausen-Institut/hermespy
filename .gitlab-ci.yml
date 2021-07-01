@@ -1,7 +1,8 @@
-image: python:18.04
+image: python:3.7
 
 before_script:
-  - apt-get -y install build-essential 
+  - apt update
+  - apt-get install -y build-essential
   - pip install -r requirements.txt
   - pip install .
 
