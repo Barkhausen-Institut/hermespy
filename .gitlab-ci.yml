@@ -1,7 +1,9 @@
-image: python:3.7.7
+image: python:18.04
 
 before_script:
+  - apt-get -y install build-essential 
   - pip install -r requirements.txt
+  - pip install .
 
 test:
   stage: test
