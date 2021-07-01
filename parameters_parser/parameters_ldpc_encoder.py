@@ -21,6 +21,7 @@ class ParametersLdpcEncoder(ParametersEncoder):
         self.no_iterations = config.getint('no_iterations', fallback=20)  # type: ignore
         self.code_rate_fraction = Fraction(self.code_rate).limit_denominator(6)
         self.custom_ldpc_codes = config.get('custom_ldpc_codes', fallback="")
+        self.use_binding = config.getboolean('use_binding')  # type: ignore
 
         self.check_params()
 
