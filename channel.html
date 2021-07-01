@@ -518,181 +518,11 @@ the parameter is interpreted as actual noise variance.</p></li>
 </dd></dl>
 
 </section>
-<section id="module-channel.quadriga_channel">
-<span id="channel-quadriga-channel-module"></span><h2>channel.quadriga_channel module<a class="headerlink" href="#module-channel.quadriga_channel" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="channel.quadriga_channel.QuadrigaChannel">
-<em class="property">class </em><code class="sig-name descname">QuadrigaChannel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">modem_tx</span></em>, <em class="sig-param"><span class="n">modem_rx</span></em>, <em class="sig-param"><span class="n">sampling_rate</span></em>, <em class="sig-param"><span class="n">rng</span></em>, <em class="sig-param"><span class="n">quadriga_interface</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#channel.channel.Channel" title="channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">channel.channel.Channel</span></code></a></p>
-<p>Maps the output of the QuadrigaInterface to fit into hermes software architecture.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>modem_tx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Transmitter modem.</p></li>
-<li><p><strong>modem_rx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Receiver Modem.</p></li>
-<li><p><strong>sampling_rate</strong> (<em>float</em>) – Sampling rate in Hertz.</p></li>
-<li><p><strong>rng</strong> (<em>np.random.RandomState</em>) – Random number generator.</p></li>
-<li><p><strong>quadriga_interface</strong> (<a class="reference internal" href="#channel.quadriga_interface.QuadrigaInterface" title="channel.quadriga_interface.QuadrigaInterface"><em>QuadrigaInterface</em></a>) – Interface to the actual
-quadriga backend.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt id="channel.quadriga_channel.QuadrigaChannel.init_drop">
-<code class="sig-name descname">init_drop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel.init_drop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes random channel parameters for each drop</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="channel.quadriga_channel.QuadrigaChannel.propagate">
-<code class="sig-name descname">propagate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx_signal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel.propagate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Modifies the input signal and returns it after channel propagation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>tx_signal</strong> (<em>np.ndarray</em>) – array of size <cite>number_tx_antennas</cite> X <cite>number_of_samples</cite>.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Output signal after propagation through quadriga channel
-with <cite>number_rx_antennas</cite> rows and <cite>samples</cite> columns.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="channel.quadriga_channel.QuadrigaChannel.get_impulse_response">
-<code class="sig-name descname">get_impulse_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timestamps</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_channel.QuadrigaChannel.get_impulse_response" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the channel impulse response.</p>
-<p>This method can be used for instance by the transceivers to obtain the
-channel state information.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>timestamps</strong> (<em>np.array</em>) – Time instants with length T to calculate the response for.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Impulse response in all ‘number_rx_antennas’ x ‘number_tx_antennas’
-channels at the time instants given in vector ‘timestamps’.
-<cite>impulse_response</cite> is a 4D-array, with the following dimensions:
-1- sampling instants, 2 - Rx antennas, 3 - Tx antennas, 4 - delays
-(in samples)
-The shape is T x number_rx_antennas x number_tx_antennas x (L+1)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+<section id="channel-quadriga-channel-module">
+<h2>channel.quadriga_channel module<a class="headerlink" href="#channel-quadriga-channel-module" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="module-channel.quadriga_interface">
-<span id="channel-quadriga-interface-module"></span><h2>channel.quadriga_interface module<a class="headerlink" href="#module-channel.quadriga_interface" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="channel.quadriga_interface.QuadrigaInterface">
-<em class="property">class </em><code class="sig-name descname">QuadrigaInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Implements the direct interface between hermes QuadrigChannel/quadriga backend.</p>
-<p>It is important to mention, that in the hermes implementation channels are
-independent of each other, i.e. are associated with each transmitter/receiver
-modem pair. However, this is not the case for quadriga which creates one
-channel for all transmitter/receiver modem pairs. Therefore, we need to do
-a mapping between the QuadrigaChannel objects for all transmitter/receiver
-modem pairs and the Quadriga simulation which runs in the background.</p>
-<p>This mapping is done in that class.</p>
-<dl class="py attribute">
-<dt id="channel.quadriga_interface.QuadrigaInterface.api_script_path">
-<code class="sig-name descname">api_script_path</code><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.api_script_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path of the quadriga script to start.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="channel.quadriga_interface.QuadrigaInterface.tx_modem_ids">
-<code class="sig-name descname">tx_modem_ids</code><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.tx_modem_ids" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of transmitter modems saved as ids.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[int]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="channel.quadriga_interface.QuadrigaInterface.rx_modem_ids">
-<code class="sig-name descname">rx_modem_ids</code><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.rx_modem_ids" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of receiver modems saved as ids.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>List[int]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="channel.quadriga_interface.QuadrigaInterface.update_quadriga_parameters">
-<code class="sig-name descname">update_quadriga_parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">modem_tx</span></em>, <em class="sig-param"><span class="n">modem_rx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.update_quadriga_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates the quadriga parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>modem_tx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – transmitting modem the QuadrigaChannel is created for.</p></li>
-<li><p><strong>modem_rx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – receiving modem the QuadrigaChannel is created for.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="channel.quadriga_interface.QuadrigaInterface.init_drop">
-<code class="sig-name descname">init_drop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.init_drop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialization that needs to be performed for each drop.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>seed</strong> (<em>float</em>) – The seed to pass to quadriga.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="channel.quadriga_interface.QuadrigaInterface.get_impulse_response">
-<code class="sig-name descname">get_impulse_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">modem_tx</span></em>, <em class="sig-param"><span class="n">modem_rx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#channel.quadriga_interface.QuadrigaInterface.get_impulse_response" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the impulse response betwen two modems.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>modem_tx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Transmitting modem.</p></li>
-<li><p><strong>modem_rx</strong> (<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><em>Modem</em></a>) – Receiving modem.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>CIR and delay. Currently, only SISO.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(np.array, np.array)</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+<section id="channel-quadriga-interface-module">
+<h2>channel.quadriga_interface module<a class="headerlink" href="#channel-quadriga-interface-module" title="Permalink to this headline">¶</a></h2>
 </section>
 <section id="module-channel.rx_sampler">
 <span id="channel-rx-sampler-module"></span><h2>channel.rx_sampler module<a class="headerlink" href="#module-channel.rx_sampler" title="Permalink to this headline">¶</a></h2>
@@ -926,8 +756,8 @@ The function updates the respective private properties of the class.</p>
 <li><a class="reference internal" href="#module-channel.channel">channel.channel module</a></li>
 <li><a class="reference internal" href="#module-channel.multipath_fading_channel">channel.multipath_fading_channel module</a></li>
 <li><a class="reference internal" href="#module-channel.noise">channel.noise module</a></li>
-<li><a class="reference internal" href="#module-channel.quadriga_channel">channel.quadriga_channel module</a></li>
-<li><a class="reference internal" href="#module-channel.quadriga_interface">channel.quadriga_interface module</a></li>
+<li><a class="reference internal" href="#channel-quadriga-channel-module">channel.quadriga_channel module</a></li>
+<li><a class="reference internal" href="#channel-quadriga-interface-module">channel.quadriga_interface module</a></li>
 <li><a class="reference internal" href="#module-channel.rx_sampler">channel.rx_sampler module</a></li>
 <li><a class="reference internal" href="#module-channel">Module contents</a></li>
 </ul>

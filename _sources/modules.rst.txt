@@ -7,5 +7,6 @@ hermespy
    channel
    modem
    scenario
+   setup
    simulator_core
    source
