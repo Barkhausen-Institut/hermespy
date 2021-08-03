@@ -106,7 +106,7 @@ class QuadrigaChannel(Channel):
                 Time instants with length T to calculate the response for.
 
         Returns:
-            impulse_response(np.ndarray):
+            np.ndarray:
                 Impulse response in all 'number_rx_antennas' x 'number_tx_antennas'
                 channels at the time instants given in vector 'timestamps'.
                 `impulse_response` is a 4D-array, with the following dimensions:

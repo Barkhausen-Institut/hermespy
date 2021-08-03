@@ -75,7 +75,7 @@ Parameters for an M-FSK chirpmodulation with ``M`` being the modulation order.
 settings_general.ini
 ====================
 
-**[RandomNumber]**: Actual random number generator seeds will be obtained from a list of good seeds in "RandomNumberGeneratorSeeds.mat".
+**[RandomNumber]**: Actual random number generator seeds will be obtained from a list of good seeds in "RandomNumberGeneratorSeeds.csv".
 If index is negative, then a random seed is used, based on the computer clock
 
 - ``seed``: Seed to be used
@@ -100,7 +100,7 @@ reached. However, at least ``min_num_drops`` drops will be performed.
 
 **[NoiseLoop]**: The simulator can run for different noise levels, as specified here.
 
-- ``snr_type``: signal-to-noise-ratio: allowed values: "Eb/N0(dB)", "Es/N0(dB)", "CUSTOM"
+- ``snr_type``: signal-to-noise-ratio: allowed values: ``Eb/N0(dB)``, ``Es/N0(dB)``, ``CUSTOM``
 - ``snr_vector``: 
 
     Simulator will run for all of the SNR values specified in this vector (in numpy format).
@@ -217,7 +217,7 @@ settings_psk_qam.ini
     - QAM: 16, 64, 256
     - PAM: 2, 4, 8, 16
 
-- ``is_complex``: False for PAM, PAM/QAM True
+- ``is_complex``: False for PAM, True for PAM/QAM
 - ``symbol_rate``: in bauds
 - ``filter_type``: allowed values: ``root_raised_cosine``, ``raised_cosine``, ``rectangular``, ``FMCW``, ``none``.
 
@@ -230,27 +230,28 @@ settings_psk_qam.ini
 
     if filter is ``rectangular``: rectangular pulses with a given width are considered.
 
-    .. note::
-       The oversampling factor may have different meanings:
-    
-       For FMCW modulation, ``sampling_rate = oversampling_factor * chirp_bandwidth``.
-       For other modulation schemes, ``sampling_rate = oversampling_factor * symbol_rate``.
-
 Parameters for RRC:
 
 - ``filter_length``:
 - ``roll_off_factor``:
 
+parameters for FMCW filter (can be given as function of the symbol rate):
+
 - ``chirp_bandwidth``:
 - ``chirp_duration``:
 
-    parameters for FMCW filter (can be given as function of the symbol rate).
     a negative bandwidth means a down chirp.
-    please notice that a guard interval of at least ``chirp_duration - 1/symbol_rate`` should be included to guarantee that
-    the whole chirps are processed at receiver.
+    please notice that a guard interval of at least ``chirp_duration - 1/symbol_rate`` should be included to guarantee
+    that the whole chirps are processed at receiver.
 
-- ``pulse_width``: parameters for rectangular filter, pulse width relative to symbol interval, between 0 and 1
-- ``oversampling_factor``: parameters for all filters (number of samples per symbol)
+parameters for rectangular filter:
+
+- ``pulse_width``: pulse width relative to symbol interval, between 0 and 1
+
+parameters for all filters
+
+- ``oversampling_factor``:  number of samples per symbol
+
 
 **[Receiver]**: Specifications for receiver implementation.
 
@@ -261,7 +262,7 @@ Parameters for RRC:
 
 **[Frame]**: The specifications for the transmission frame.
 unmodulated pilot symbols can be added either at the beginning of a frame (preamble) or at its end (postamble)
-if filter is "FMCW", then pilots are spaced by 'chirp_duration', i.e., they are non-overlapping
+if filter is ``FMCW``, then pilots are spaced by ``chirp_duration``, i.e., they are non-overlapping
 otherwise, then pilots are spaced by the symbol interval
 preamble, postamble and guard intervals are optional.
 
@@ -272,7 +273,7 @@ preamble, postamble and guard intervals are optional.
 - ``pilot_symbol_rate``: 
 
     transmission rate of pilot symbols, can be given as function of symbol_rate or chirp_duration (if defined)
-    default value is "symbol_rate". Can also be ``1/chirp_duration``.
+    default value is ``symbol_rate``. Can also be ``1/chirp_duration``.
 
 - ``guard_interval``: guard interval between frames in s
 
@@ -293,9 +294,9 @@ settings_scenario.ini
 =====================
 This file specifies the simulator scenario, i.e., the transmitter, receivers and channel models between them.
 The simulation may consist of several transmit and receive modems.
-All transmitters must be specified in sections 'TxModem_i', with i the transmit modem index, starting with i=1.
-All receivers must be specified in sections 'RxModem_j', with i the receive modem index, starting with j=1.
-Between every pair of receiver and transmitter modem, a channel model must be specified, in 'Channel_i_to_j'.
+All transmitters must be specified in sections ``TxModem_i``, with i the transmit modem index, starting with i=1.
+All receivers must be specified in sections ``RxModem_j``, with i the receive modem index, starting with j=1.
+Between every pair of receiver and transmitter modem, a channel model must be specified, in ``Channel_i_to_j``.
 
 **[TxModem_i]**:
 
@@ -354,7 +355,7 @@ Parameters are defined for each tx-rx-pair.
 
 - ``multipath_model``: parameter is optional, defaults to ``NONE``
 
-  Supported_values: "None", "STOCHASTIC", "COST259", "EXPONENTIAL", "5G_TDL", "QUADRIGA".
+  Supported_values: ``None``, ``STOCHASTIC``, ``COST259``, ``EXPONENTIAL``, ``5G_TDL``, ``QUADRIGA``.
 
   - ``Stochastic``: a stochastic channel model follows an arbitrary power delay profile, defined in the parameters
   - ``Cost-259``: measurement-based power delay profile defined in COST 259, according to a given scenario
@@ -367,7 +368,7 @@ Parameters are defined for each tx-rx-pair.
 The following parameters apply for selection of **stochastic** multipath model:
 
 the power delay profile is given in terms of path delays, relative power (in dB), K-factor of the Rice distribution
-(in dB) and the Doppler frequency. For Rayleigh fading, choose K-factor equal to "-inf", for LOS, K-Factor is "inf".
+(in dB) and the Doppler frequency. For Rayleigh fading, choose K-factor equal to ``-inf``, for LOS, K-Factor is ``inf``.
 The parameters corresponding to power delay profile (``delays, power_delay_profile_db, k_rice_db``) must be vectors of the
 same size.
 
@@ -437,7 +438,7 @@ Correlation can be  LOW, MEDIUM, MEDIUM_A, HIGH or CUSTOM.
 - ``rx_correlation``: correlation for receiver
 - ``tx_correlation``: correlation for transmitter
 
-If correlation is set to "CUSTOM", then correlation between adjacent antennas can be set in ``custom_correlation``.
+If correlation is set to ``CUSTOM``, then correlation between adjacent antennas can be set in ``custom_correlation``.
 The factor is to be between 0 and 1.
 
 - ``rx_custom_correlation``:
