@@ -333,6 +333,7 @@ Between every pair of receiver and transmitter modem, a channel model must be sp
   This track defined is a linear track, i.e. no curves or circles.
 
 - ``device_type``: can be either BASE_SSTATION or UE (required for MIMO channel model, see below)
+- ``crc_bits``: Number of crc bits to add to the frame.
 
 **[RxModem_i]**:
 

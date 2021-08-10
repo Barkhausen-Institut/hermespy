@@ -44,3 +44,4 @@ class ParametersRxModem(ParametersModem):
         self.carrier_frequency = tx_modem_params[self.tx_modem].carrier_frequency
         self.encoding_type = tx_modem_params[self.tx_modem].encoding_type
         self.encoding_params = tx_modem_params[self.tx_modem].encoding_params
+        self.crc_bits = tx_modem_params[self.tx_modem].crc_bits
