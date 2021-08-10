@@ -16,7 +16,6 @@ class ParametersTxModem(ParametersModem):
     def __init__(self) -> None:
         super().__init__()
         self.id = 0
-        self.crc_bits = 1
 
         self._technology_param_file = ""
 
@@ -41,8 +40,6 @@ class ParametersTxModem(ParametersModem):
         if self.carrier_frequency < 0:
             raise ValueError(
                 'carrier_frequency (' + str(self.carrier_frequency) + 'must be >= 0')
-        if self.crc_bits < 0:
-            raise ValueError(f"Number of crc_bits must be positive, currently it is {self.crc_bits}.")
 
         # read technology-specific parameters
         config = configparser.ConfigParser()
