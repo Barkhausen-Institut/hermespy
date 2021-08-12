@@ -37,7 +37,8 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         self.modem_chirp_fsk = Modem(
             self.modem_params,
             self.source,
-            np.random.RandomState(42))
+            np.random.RandomState(42),
+            np.random.RandomState(43))
 
         self.parent_dir = os.path.join(
             os.path.dirname(
