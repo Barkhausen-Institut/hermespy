@@ -121,6 +121,7 @@ class ParametersModem(ABC):
             self.encoding_params = ParametersRepetitionEncoder()
             self.encoding_params.encoded_bits_n = 1
             self.encoding_params.data_bits_k = 1
+            self.crc_bits = 0
         else:
             encoding_params_file_path = os.path.join(
                 self.dir_encoding_parameters, self._encoder_param_file)

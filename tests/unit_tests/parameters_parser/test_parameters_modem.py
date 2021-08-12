@@ -80,21 +80,18 @@ class TestParametersModem(unittest.TestCase):
             lambda: self.stubbed_params_modem.check_params()
         )
 
-    def test_negative_crc_bits(self) -> None:
-        self.stubbed_params_modem.crc_bits = -1
-        self.assertRaises(
-            ValueError,
-            lambda: self.stubbed_params_modem.check_params()
-        )
 
-    def test_no_crc_bits_equal_k(self) -> None:
+    def test_crc_bits_set_too_zero_if_no_encoder(self) -> None:
+        self.stubbed_params_modem.encoding_type = ""
         self.stubbed_params_modem.encoding_params = Mock()
-        self.stubbed_params_modem.encoding_params.data_bits_k = 3
-        self.stubbed_params_modem.crc_bits = 3
-        self.assertRaises(
-            ValueError,
-            lambda: self.stubbed_params_modem.check_params()
-        )
+        self.stubbed_params_modem.check_params()
+        self.assertEqual(self.stubbed_params_modem.crc_bits, 0)
+
+    def test_crc_bits_set_too_zero_if_no_encoder_file(self) -> None:
+        self.stubbed_params_modem._encoder_param_file = "NONE"
+        self.stubbed_params_modem.encoding_params = Mock()
+        self.stubbed_params_modem.check_params()
+        self.assertEqual(self.stubbed_params_modem.crc_bits, 0)
 
 
 class StubParametersModem(ParametersModem):
