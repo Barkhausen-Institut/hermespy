@@ -49,6 +49,8 @@ class TestModem(unittest.TestCase):
         mock_parameters_modem.encoding_type = "REPETITION"
         mock_parameters_modem.encoding_params = ParametersRepetitionEncoder()
         mock_parameters_modem.technology = self.params_psk_am
+        mock_parameters_modem.crc_bits = 0
+
         self.modem = Modem(mock_parameters_modem, self.source, rng_hw, rng_src)
 
         # assign necessary mocks

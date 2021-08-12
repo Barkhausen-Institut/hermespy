@@ -111,9 +111,9 @@ class Modem(Generic[P]):
 
         while timestamp < number_of_samples:
             data_bits_per_frame = self.source.get_bits(
-                self.encoder.source_bits)
-
-            encoded_bits_per_frame = self.encoder.encode(data_bits_per_frame)
+                self.crc_encoder.source_bits)
+            data_bits_per_frame_crc = self.crc_encoder.encode(data_bits_per_frame)
+            encoded_bits_per_frame = self.encoder.encode(data_bits_per_frame_crc)
             encoded_bits_per_frame_flattened = np.array([], dtype=int)
             for block in encoded_bits_per_frame:
                 encoded_bits_per_frame_flattened = np.append(
@@ -202,6 +202,7 @@ class Modem(Generic[P]):
 
             if not bits_rx[0] is None:
                 bits_rx_decoded = self.encoder.decode(bits_rx)
+                bits_rx_no_crc = self.crc_encoder.decode(bits_rx_decoded)
                 all_bits.extend(bits_rx_decoded)
         return all_bits
 
