@@ -47,7 +47,6 @@ class Modem(Generic[P]):
         self.source = source
 
         self.encoder: Encoder
-
         if self.param.encoding_type.upper() == "REPETITION":
             self.encoder = RepetitionEncoder(self.param.encoding_params, self.param.technology.bits_in_frame)
         elif self.param.encoding_type.upper() == "LDPC":
@@ -55,7 +54,13 @@ class Modem(Generic[P]):
         else:
             self.encoder = RepetitionEncoder(ParametersRepetitionEncoder(), self.param.technology.bits_in_frame)
 
-        # create repetition encoder
+        # create crc encoder
+        params = ParametersEncoder()
+        params.encoded_bits_n = self.encoder.data_bits_k
+        params.data_bits_k = self.encoder.data_bits_k - self.param.crc_bits
+        self.crc_encoder = CrcEncoder(
+            params, self.param.technology.bits_in_frame, rng_source)
+
         self.waveform_generator: Any
         if isinstance(param.technology, ParametersPskQam):
             self.waveform_generator = WaveformGeneratorPskQam(param.technology)
