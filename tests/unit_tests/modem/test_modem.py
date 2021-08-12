@@ -13,11 +13,13 @@ from source.bits_source import BitsSource
 from modem.coding.repetition_encoder import RepetitionEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 
+
 class TestModem(unittest.TestCase):
 
     def setUp(self) -> None:
         # do some general setup that is required for creating the Modem
-        rng = rnd.RandomState(42)
+        rng_src = rnd.RandomState(42)
+        rng_hw = rnd.RandomState(43)
         self.params_psk_am = ParametersPskQam()
         self.params_psk_am.modulation_order = 2
         self.params_psk_am.symbol_rate = 125e3
@@ -35,7 +37,7 @@ class TestModem(unittest.TestCase):
             np.log2(self.params_psk_am.modulation_order))
         self.params_psk_am.bits_in_frame = self.params_psk_am.number_data_symbols * \
             self.params_psk_am.bits_per_symbol
-        self.source = BitsSource(rng)
+        self.source = BitsSource(rng_src)
 
         # generate patch for ParametersModem
         self.patch_parameters_modem = patch(
@@ -47,7 +49,7 @@ class TestModem(unittest.TestCase):
         mock_parameters_modem.encoding_type = "REPETITION"
         mock_parameters_modem.encoding_params = ParametersRepetitionEncoder()
         mock_parameters_modem.technology = self.params_psk_am
-        self.modem = Modem(mock_parameters_modem, self.source, rng)
+        self.modem = Modem(mock_parameters_modem, self.source, rng_hw, rng_src)
 
         # assign necessary mocks
         self.mock_rf_chain = Mock()
@@ -203,7 +205,7 @@ class TestModem(unittest.TestCase):
 
         source = BitsSource(np.random.RandomState())
 
-        modem = Modem(param, source, np.random.RandomState(), tx_modem=None)
+        modem = Modem(param, source, np.random.RandomState(), np.random.RandomState(), tx_modem=None)
 
         power_sum = 0
 
