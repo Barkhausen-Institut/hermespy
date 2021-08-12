@@ -140,7 +140,8 @@ class Scenario:
                 Modem(
                     modem_parameters,
                     sources[modem_count],
-                    self.random.get_rng("hardware")))
+                    self.random.get_rng("hardware"),
+                    self.random.get_rng("source")))
 
         return sources, tx_modems
 
