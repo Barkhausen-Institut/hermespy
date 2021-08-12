@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 from typing import Any
 
 import numpy as np
@@ -78,6 +79,24 @@ class TestParametersModem(unittest.TestCase):
             ValueError,
             lambda: self.stubbed_params_modem.check_params()
         )
+
+    def test_negative_crc_bits(self) -> None:
+        self.stubbed_params_modem.crc_bits = -1
+        self.assertRaises(
+            ValueError,
+            lambda: self.stubbed_params_modem.check_params()
+        )
+
+    def test_no_crc_bits_equal_k(self) -> None:
+        self.stubbed_params_modem.encoding_params = Mock()
+        self.stubbed_params_modem.encoding_params.data_bits_k = 3
+        self.stubbed_params_modem.crc_bits = 3
+        self.assertRaises(
+            ValueError,
+            lambda: self.stubbed_params_modem.check_params()
+        )
+
+
 class StubParametersModem(ParametersModem):
     def read_params(self, section: Any) -> None:
         super().read_params(section)
