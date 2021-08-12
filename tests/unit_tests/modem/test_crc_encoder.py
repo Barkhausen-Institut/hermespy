@@ -36,8 +36,27 @@ class TestCrcEncoder(unittest.TestCase):
         ]
         expected_encoded_bits.append(np.array(0))
 
-
         assert_frame_equality(expected_encoded_bits, encoded_bits)
+
+    def test_encoding_no_crc_bits(self) -> None:
+        params = ParametersEncoder()
+        params.data_bits_k = 4
+        params.encoded_bits_n = params.data_bits_k
+        bits_in_frame = 10
+
+        data_bits = np.arange(bits_in_frame)
+        encoder = CrcEncoder(params, bits_in_frame, np.random.RandomState)
+        assert_frame_equality(data_bits, encoder.encode(data_bits))
+
+    def test_decoding_no_crc_bits(self) -> None:
+        params = ParametersEncoder()
+        params.data_bits_k = 4
+        params.encoded_bits_n = params.data_bits_k
+        bits_in_frame = 10
+
+        encoded_bits = np.arange(bits_in_frame)
+        encoder = CrcEncoder(params, bits_in_frame, np.random.RandomState)
+        assert_frame_equality(encoded_bits, encoder.decode(encoded_bits))
 
     def test_decoding(self) -> None:
         encoded_bits: List[np.array] = [
