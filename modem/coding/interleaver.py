@@ -12,6 +12,9 @@ class BlockInterleaver(Encoder):
         self.bits_in_frame = bits_in_frame
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
+        if self.params.data_bits_k == 1:
+            return data_bits
+
         encoded_bits: List[np.array] = []
 
         for block in data_bits:
@@ -31,6 +34,9 @@ class BlockInterleaver(Encoder):
         return encoded_bits
 
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
+        if self.params.data_bits_k == 1:
+            return encoded_bits
+
         if encoded_bits[-1].size < self.params.encoded_bits_n:
             del encoded_bits[-1]
 
