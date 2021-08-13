@@ -5,6 +5,7 @@ from modem.coding.encoder import Encoder
 
 
 class EncoderManager:
+    """Serves as a wrapper class for multiple encoders."""
     def __init__(self) -> None:
         self._encoders: List[Encoder] = []
 
