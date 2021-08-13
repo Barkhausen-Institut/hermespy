@@ -146,7 +146,7 @@ Precoding can either be ``none`` or ``DFT`` for DFT-spread OFDM (SC-FDMA).
     the sampling rate will be ``fft_size * subcarrier_spacing * oversampling_rate``.
     upsampling is performed using a polyphase filter approach
 
-- ``dc_suppresion``: Define if DC subcarrier is to be suppressed or not.
+- ``dc_suppression``: Define if DC subcarrier is to be suppressed or not.
 
 **[MIMO]**:
 In case of multiple antennas, the specifications for the MIMO processing are given here

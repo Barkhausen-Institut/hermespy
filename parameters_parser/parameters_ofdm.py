@@ -30,7 +30,6 @@ ResourcePattern = namedtuple(
 class FrameElement(ABC):
     no_samples: int = 0
 
-
 @dataclass
 class GuardInterval(FrameElement):
     pass
@@ -57,7 +56,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
         modulation_order:
         modulation_order_val(List[int]):
         oversampling_factor(int):
-        dc_suppresion:
+        dc_suppression:
 
         channel_estimation(str):
         equalization(str):
@@ -72,19 +71,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
         ofdm_symbol_resources_mapping(List[List[MultipleRes]]):
         ofdm_symbol_configs(List[OfdmSymbolConfig]): each ofdm symbol has a certain config.
 
-        pilot_subcarriers(list of numpy.ndarray):
-            list of arrays containing the positions of the pilot symbols inside
-            the frame in the frequency domain. Each array should have the dimension T x P, with T the number of transmit
-            antennas and P the number of pilots. Each element in the list corresponds to a data OFDM symbol. If the list
-            size is less than the number of data OFDM symbols in the frame, than the pilot sequence is repeated. If
-            empty, then no pilots are considered. NOT IMPLEMENTED YET.
-        pilot_symbols(list of numpy.ndarray):
-            list of arrays containing the values of the pilot symbols. This list
-            should have the same size as 'pilot_subcarriers'. NOT IMPLEMENTED YET.
-        reference_symbols(list of numpy.ndarray):
-            list of arrays containing the values of the reference symbols in the
-            frequency domain. Each array should have the dimension T x N, with T the number of transmit antennas and N
-            the FFT size. NOT IMPLEMENTED YET.
+
         bits_in_frame:
     """
 
@@ -102,6 +89,8 @@ class ParametersOfdm(ParametersWaveformGenerator):
         """creates a parsing object, that will manage the transceiver parameters.
         """
         super().__init__()
+        ####################
+        # input parameters
 
         # Modulation parameters
         self.subcarrier_spacing = 0.
@@ -111,8 +100,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
         self.precoding = ""
         self.modulation_order = 2
         self.oversampling_factor = 1
-        self.bits_in_frame = 0
-        self.dc_suppresion = True
+        self.dc_suppression = True
 
         # receiver parameters
         self.channel_estimation = ""
@@ -129,14 +117,11 @@ class ParametersOfdm(ParametersWaveformGenerator):
         self.frame_structure: List[FrameElement] = []
         self.ofdm_symbol_resources_mapping: List[List[ResourcePattern]] = []
         self.ofdm_symbol_configs: List[OfdmSymbolConfig] = []
+        self.reference_symbols = np.array([])
 
-        # technology-specific pilot and reference signals can be defined here
-        # to be used by technology-specific derived classes
-        self.pilot_subcarriers: List[np.ndarray] = []
-        # content of pilot subcarriers
-        self.pilot_symbols: List[np.ndarray] = []
-        # reference signal (in frequency domain)
-        self.reference_symbols: List[np.ndarray] = []
+        ######################
+        # derived parameters
+        self.bits_in_frame = 0
 
     def read_params(self, file_name: str) -> None:
         """reads the modem parameters
@@ -155,21 +140,12 @@ class ParametersOfdm(ParametersWaveformGenerator):
         self.subcarrier_spacing = cfg.getfloat('subcarrier_spacing')
         self.fft_size = cfg.getint('fft_size')
         self.oversampling_factor = cfg.getint("oversampling_factor")
-
-        self.sampling_rate = self.subcarrier_spacing * \
-            self.fft_size * self.oversampling_factor
-
-        self.number_occupied_subcarriers = cfg.getint(
-            'number_occupied_subcarriers')
-
+        self.number_occupied_subcarriers = cfg.getint('number_occupied_subcarriers')
         self.cp_ratio = cfg.get('cp_ratio')
-        self.cp_ratio = np.fromstring(
-            self.cp_ratio, sep=',')
-
+        self.cp_ratio = np.fromstring(self.cp_ratio, sep=',')
         self.modulation_order = cfg.getint("modulation_order")
-
         self.precoding = cfg.get('precoding')
-        self.dc_suppresion = cfg.getboolean('dc_suppresion', fallback=self.dc_suppresion)
+        self.dc_suppression = cfg.getboolean('dc_suppression', fallback=self.dc_suppression)
 
         cfg = config['Receiver']
 
@@ -186,6 +162,9 @@ class ParametersOfdm(ParametersWaveformGenerator):
         self._ofdm_symbol_res_str = cfg.get("ofdm_symbol_resources")
         self._cp_lengths_str = cfg.get("cp_length")
 
+        ref_symbols = cfg.get("reference_symbols", fallback='')
+        self.reference_symbols = np.fromstring(ref_symbols, dtype=complex, sep=',')
+
         self._check_params()
 
     def _check_params(self) -> None:
@@ -200,6 +179,8 @@ class ParametersOfdm(ParametersWaveformGenerator):
         #######################
         # check modulation parameters
         msg_header = top_header + ', Section "Modulation", '
+        self.sampling_rate = self.subcarrier_spacing * self.fft_size * self.oversampling_factor
+
         if self.sampling_rate <= 0:
             raise ValueError(
                 msg_header +
@@ -258,6 +239,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
         self.ofdm_symbol_resources_mapping = self.read_ofdm_symbol_resources(self._ofdm_symbol_res_str)
         self.ofdm_symbol_configs = self.map_resource_types_to_symbols(self.ofdm_symbol_resources_mapping)
         self.read_cp_lengths(self._cp_lengths_str, self.ofdm_symbol_configs)
+
         self.frame_structure = self.read_frame_structure(self._frame_structure_str)
 
         self._calculate_bits_in_frame()
@@ -396,7 +378,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
                 repetitions = int(number_found[0])
 
                 if not (frame_block_str.startswith('(') and frame_block_str.endswith(')')):
-                    raise ValueError("Parenthesis required.")
+                    raise ValueError("Error reading OFDM frame structure, parenthesis required.")
                 else:
                     frame_block_str = frame_block_str[1:-1]
             frame_config.extend(

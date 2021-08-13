@@ -27,15 +27,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     - pilot not implemented
     """
 
-    def __init__(self, param: ParametersOfdm,
-                 rng: np.random.RandomState) -> None:
+    def __init__(self, param: ParametersOfdm) -> None:
         super().__init__(param)
         self.param = param
         self._samples_in_frame_no_oversampling = 0
 
         self._mapping = PskQamMapping(self.param.modulation_order)
-
-        self._rand = rng
 
         self._mimo = Mimo(mimo_method=self.param.mimo_scheme,
                           number_tx_antennas=self.param.number_tx_antennas,
@@ -44,6 +41,50 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self._samples_in_frame_no_oversampling, self._cyclic_prefix_overhead = (
             self._calculate_samples_in_frame()
         )
+
+        self._number_ofdm_symbols = sum(isinstance(frame_element, OfdmSymbolConfig)
+                                        for frame_element in self.param.frame_structure)
+        self._reference_frame, self._data_frame_indices = self._get_frame_structure()
+
+    def _get_frame_structure(self):
+        ref_frame = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
+                              self.param.number_tx_antennas), dtype=complex)
+        data_frame_indices = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
+                                       self.param.number_tx_antennas))
+
+        ofdm_symbol_idx = 0
+        for frame_element in self.param.frame_structure:
+            if isinstance(frame_element, OfdmSymbolConfig):
+                ref_idxs = self._get_subcarrier_indices(frame_element, ResourceType.REFERENCE)
+
+                #######################################################
+                # fill out resource elements with pilot symbols
+                ref_symbols = np.tile(self.param.reference_symbols,
+                                      int(np.ceil(ref_idxs.size / self.param.reference_symbols.size)))
+                ref_symbols = ref_symbols[:ref_idxs.size]
+
+                ref_frame[ofdm_symbol_idx, ref_idxs, 0] = ref_symbols
+
+                data_idxs = self._get_subcarrier_indices(frame_element, ResourceType.DATA)
+                data_frame_indices[ofdm_symbol_idx, data_idxs, :] = 1
+
+                ofdm_symbol_idx += 1
+
+        return ref_frame, data_frame_indices
+
+    def _get_subcarrier_indices(self, frame_element, resource_type):
+        #############################################################################
+        # calculate indices for data and pilot resource elements in this OFDM symbol
+        subcarrier_idx = 0
+        resource_idxs: np.array = np.array([], dtype=int)
+
+        for res_pattern in frame_element.resource_types:
+            for pattern_el_idx in range(res_pattern.number):
+                for res in res_pattern.MultipleRes:
+                    if res.ResourceType == resource_type:
+                        resource_idxs = np.append(resource_idxs, np.arange(subcarrier_idx, subcarrier_idx + res.number))
+                    subcarrier_idx += res.number
+        return resource_idxs
 
     def _calculate_samples_in_frame(self) -> Tuple[int, float]:
         samples_in_frame_no_oversampling = 0
@@ -72,7 +113,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         final_index = int(np.floor(self.param.number_occupied_subcarriers / 2))
         resource_element_mapping = np.append(
             resource_element_mapping, np.arange(
-                self.param.dc_suppresion, final_index + self.param.dc_suppresion))
+                self.param.dc_suppression, final_index + self.param.dc_suppression))
         return resource_element_mapping
 
     ###################################
@@ -226,18 +267,19 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         data_symbols_in_frame = data_symbols_in_frame[number_data_symbols:]
 
         data_symbols = self._mimo.encode(data_symbols)
-        if self.param.precoding == "DFT":
+        if self.param.precoding == "DFT" and number_data_res_el:
             resource_elements[:, data_idxs] = np.fft.fft(data_symbols, norm='ortho')
         else:
             resource_elements[:, data_idxs] = data_symbols
 
         #######################################################
-        # fill out resource elements with random pilot symbols
+        # fill out resource elements with pilot symbols
         size = (self.param.number_tx_antennas, ref_idxs.size)
-        resource_elements[:, ref_idxs] = (
-            (self._rand.standard_normal(size) + 1j * self._rand.standard_normal(size))
-            / np.sqrt(2) / np.sqrt(self.param.number_tx_antennas)
-        )
+        ref_symbols = np.tile(self.param.reference_symbols,
+                              int(np.ceil(ref_idxs.size / self.param.reference_symbols.size)))
+        ref_symbols = ref_symbols[:ref_idxs.size]
+
+        resource_elements[:, ref_idxs] = ref_symbols
 
         # fill out resource elements with null carriers
         resource_elements[:, null_idxs] = 0
@@ -403,7 +445,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         noise_var = noise_var * np.abs(equalizer) ** 2
         data_symbols = data_symbols * equalizer
 
-        if self.param.precoding == "DFT":
+        if self.param.precoding == "DFT" and data_symbols.size:
             data_symbols = np.fft.ifft(data_symbols, norm='ortho')
 
             dftmtx = np.fft.fft(np.eye(data_symbols.size), norm='ortho')
@@ -442,10 +484,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
         algorithm is defined in the parameter variable `self.param`.
-        Currently only ideal channel estimation is available, either considering the channel state information (CSI)
-        only at the beginning/middle/end of the frame (estimation_type='IDEAL_PREAMBLE'/'IDEAL_MIDAMBLE'/
-        'IDEAL_POSTAMBLE'), or at every OFDM symbol ('IDEAL').
-        Ideal channel estimation extracts the CSI directly from the channel,a and does not use the received signal.
+
+        With ideal channel estimation, the channel state information is obtained directly from the channel.
+        The CSI can be considered to be known only at the beginning/middle/end of the frame
+        (estimation_type='IDEAL_PREAMBLE'/'IDEAL_MIDAMBLE'/ 'IDEAL_POSTAMBLE'), or at every OFDM symbol ('IDEAL').
+
+        With reference-based estimation, the specified reference subcarriers are employed for channel estimation.
 
         Args:
             rx_signal(numpy.ndarray): time-domain samples of the received signal over the whole frame
@@ -459,49 +503,38 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 antennas.
         """
 
-        if self.param.channel_estimation == 'IDEAL':  # ideal channel estimation at each transmitted OFDM symbol
-            channel_in_freq_domain = np.empty(
-                (self.param.fft_size,
-                 self._channel.number_rx_antennas,
-                 self._channel.number_tx_antennas,
-                 0),
-                dtype=complex
-            )
-            for frame_element in self.param.frame_structure:
-
-                if isinstance(frame_element, OfdmSymbolConfig):
-                    # get channel estimation in frequency domain
-                    channel_timestamp = np.array(
-                        timestamp_in_samples / self.param.sampling_rate)
-                    channel_in_freq_domain = np.concatenate(
-                        (channel_in_freq_domain,
-                         self.get_ideal_channel_estimation(channel_timestamp)),
-                        axis=3)
-                    samples_in_element = frame_element.no_samples + frame_element.cyclic_prefix_samples
-                else:
-                    samples_in_element = frame_element.no_samples
-
-                timestamp_in_samples += samples_in_element * self.param.oversampling_factor
-
-        else:  # self.param == 'IDEAL_PREAMBLE', 'IDEAL_MIDAMBLE', 'IDEAL_POSTAMBLE':
-            # ideal estimation at a single instant at each frame
-            number_of_data_symbols = sum(isinstance(frame_element, OfdmSymbolConfig)
-                                         for frame_element in self.param.frame_structure)
-
-            if self.param.channel_estimation == 'IDEAL_PREAMBLE':
-                channel_timestamp = np.array(
-                    timestamp_in_samples / self.param.sampling_rate)
-            elif self.param.channel_estimation == 'IDEAL_MIDAMBLE':
-                channel_timestamp = np.array(
-                    (timestamp_in_samples + self.samples_in_frame / 2) / self.param.sampling_rate)
-            elif self.param.channel_estimation == 'IDEAL_POSTAMBLE':
-                channel_timestamp = np.array(
-                    (timestamp_in_samples + self.samples_in_frame) / self.param.sampling_rate)
+        # determine timestamp of data symbols
+        channel_sampling_timestamps = np.array([])
+        for frame_element in self.param.frame_structure:
+            if isinstance(frame_element, OfdmSymbolConfig):
+                channel_sampling_timestamps = np.append(channel_sampling_timestamps, timestamp_in_samples)
+                samples_in_element = frame_element.no_samples + frame_element.cyclic_prefix_samples
             else:
-                raise ValueError('invalid channel estimation type')
-            channel_in_freq_domain = np.tile(
-                self.get_ideal_channel_estimation(channel_timestamp),
-                number_of_data_symbols)
+                samples_in_element = frame_element.no_samples
+
+            timestamp_in_samples += samples_in_element * self.param.oversampling_factor
+
+        channel_timestamps = channel_sampling_timestamps / self.param.sampling_rate
+
+        number_of_symbols = channel_sampling_timestamps.size
+        channel_in_freq_domain = np.zeros((self.param.fft_size, self._channel.number_rx_antennas,
+                                           self._channel.number_tx_antennas, number_of_symbols), dtype=complex)
+
+        if self.param.channel_estimation == 'IDEAL':  # ideal channel estimation at each transmitted OFDM symbol
+            channel_in_freq_domain = self.get_ideal_channel_estimation(channel_timestamps)
+
+        elif self.param.channel_estimation in {'IDEAL_PREAMBLE', 'IDEAL_MIDAMBLE', 'IDEAL_POSTAMBLE'}:
+            if self.param.channel_estimation == 'IDEAL_PREAMBLE':
+                channel_timestamp = channel_timestamps[0]
+            elif self.param.channel_estimation == 'IDEAL_MIDAMBLE':
+                channel_timestamp = (channel_timestamps[0] + channel_timestamps[-1]) / 2
+            elif self.param.channel_estimation == 'IDEAL_POSTAMBLE':
+                channel_timestamp = np.array(channel_timestamps[-1])
+
+            channel_in_freq_domain = np.tile( self.get_ideal_channel_estimation(channel_timestamp), number_of_symbols)
+
+        else:
+            raise ValueError('invalid channel estimation type')
 
         return channel_in_freq_domain
 
@@ -520,22 +553,23 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             np.ndarray:
                 channel in freqence domain in shape `FFT_SIZE x #rx_antennas x #tx_antennas
         """
-
         channel_in_freq_domain_MIMO = np.zeros(
             (self.param.fft_size * self.param.oversampling_factor,
              self._channel.number_rx_antennas,
              self._channel.number_tx_antennas,
-             1),
+             channel_timestamp.size),
             dtype=complex
         )
         cir = self._channel.get_impulse_response(channel_timestamp)
+        cir = np.swapaxes(cir, 0, 3)
 
         for rx_antenna_idx in range(self._channel.number_rx_antennas):
             for tx_antenna_idx in range(self._channel.number_tx_antennas):
-                channel_in_freq_domain_MIMO[:, rx_antenna_idx, tx_antenna_idx, 0] = (
+                channel_in_freq_domain_MIMO[:, rx_antenna_idx, tx_antenna_idx, :] = (
                     np.fft.fft(
-                        cir[:, rx_antenna_idx, tx_antenna_idx].ravel(),
-                        n=self.param.fft_size * self.param.oversampling_factor
+                        cir[:, rx_antenna_idx, tx_antenna_idx, :],
+                        n=self.param.fft_size * self.param.oversampling_factor,
+                        axis=0
                     )
                 )
 
@@ -547,6 +581,9 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             )
 
         return channel_in_freq_domain_MIMO
+
+    def reference_based_channel_estimation(self, rx_signal, channel_timestamp: np.array):
+        pass
 
     def get_bit_energy(self) -> float:
         """returns the theoretical (discrete) bit energy.
