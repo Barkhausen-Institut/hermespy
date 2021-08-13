@@ -2,18 +2,18 @@ import unittest
 
 import numpy as np
 
-from modem.coding.interleaver import Interleaver
+from modem.coding.interleaver import BlockInterleaver
 from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
 from .utils import assert_frame_equality
 
 
-class TestInterleaver(unittest.TestCase):
+class TestBlockInterleaver(unittest.TestCase):
     def setUp(self) -> None:
         self.M = 4
         self.N = 3
         self.bits_in_frame = 30
         self.params = ParametersBlockInterleaver(self.M, self.N)
-        self.interleaver = Interleaver(self.params, self.bits_in_frame)
+        self.interleaver = BlockInterleaver(self.params, self.bits_in_frame)
 
     def test_no_code_blocks(self) -> None:
         self.assertTrue(self.interleaver.code_blocks, 2)
