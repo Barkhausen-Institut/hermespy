@@ -8,22 +8,22 @@ class EncoderManager:
     def __init__(self) -> None:
         self._encoders: List[Encoder] = []
 
-    def add_encoder(self, encoder: Encoder) -> bool:
-        encoders = self._encoders
-        encoders.append(encoder)
-        encoders = sorted(encoders, key=lambda e: e.data_bits_k)
-
-        if len(encoders) > 1:
-            for enc, enc_next in zip(encoders[:-1], encoders[1:]):
-                if enc.encoded_bits_n > enc_next.data_bits_k:
-                    return False
-
-        self._encoders = encoders
-        return True
+    def add_encoder(self, encoder: Encoder) -> None:
+        self._encoders.append(encoder)
+        self._encoders = sorted(
+            self._encoders,
+            key=lambda encoder: encoder.data_bits_k)
 
     @property
     def encoders(self) -> List[Encoder]:
         return self._encoders
+    @property
+    def code_rate(self) -> float:
+        R = 1
+        for encoder in self._encoders:
+            R *= encoder.data_bits_k / encoder.encoded_bits_n
+
+        return R
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
         encoded_bits: List[np.array] = data_bits

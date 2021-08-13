@@ -80,3 +80,12 @@ class TestEncoderManager(unittest.TestCase):
         mock_encoder1.decode.assert_called_once()
         mock_encoder2.decode.assert_called_once()
         mock_encoder3.decode.assert_called_once()
+
+    def test_code_rate_calculation(self) -> None:
+        self.encoder_manager.add_encoder(self.encoder1)
+        self.encoder_manager.add_encoder(self.encoder2)
+        expected_code_rate = (
+            self.params_encoder1.data_bits_k / self.params_encoder1.encoded_bits_n
+            * self.params_encoder2.data_bits_k / self.params_encoder2.encoded_bits_n
+        )
+        self.assertAlmostEqual(expected_code_rate, self.encoder_manager.code_rate)
