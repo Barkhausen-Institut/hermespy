@@ -9,15 +9,17 @@ class EncoderManager:
         self._encoders: List[Encoder] = []
 
     def add_encoder(self, encoder: Encoder) -> bool:
-        valid = True
-        if len(self._encoders) > 0:
-            if encoder.data_bits_k == self._encoders[-1].encoded_bits_n:
-                valid = True
-            else:
-                valid = False
-        if valid:
-            self._encoders.append(encoder)
-        return valid
+        encoders = self._encoders
+        encoders.append(encoder)
+        encoders = sorted(encoders, key=lambda e: e.data_bits_k)
+
+        if len(encoders) > 1:
+            for enc, enc_next in zip(encoders[:-1], encoders[1:]):
+                if enc.encoded_bits_n != enc_next.data_bits_k:
+                    return False
+
+        self._encoders = encoders
+        return True
 
     @property
     def encoders(self) -> List[Encoder]:
