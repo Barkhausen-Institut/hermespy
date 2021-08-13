@@ -5,7 +5,7 @@ from modem.coding.encoder import Encoder
 import numpy as np
 
 
-class Interleaver(Encoder):
+class BlockInterleaver(Encoder):
 
     def __init__(self, params: ParametersBlockInterleaver, bits_in_frame: int) -> None:
         self.params = params
