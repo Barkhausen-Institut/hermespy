@@ -3,10 +3,12 @@ from typing import Dict
 from parameters_parser.parameters_encoder import ParametersEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
+from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
+from modem.coding.interleaver import BlockInterleaver
 
 
 class EncoderFactory:
@@ -21,6 +23,8 @@ class EncoderFactory:
             encoder = RepetitionEncoder(encoding_params, bits_in_frame)
         elif type == "LDPC":
             encoder = LdpcEncoder(encoding_params, bits_in_frame)
+        elif type == "BLOCK_INTERLEAVER":
+            encoder = BlockInterleaver(encoding_params, bits_in_frame)
         else:
             encoder = RepetitionEncoder(ParametersRepetitionEncoder(), bits_in_frame)
         return encoder
@@ -29,7 +33,8 @@ class EncoderFactory:
         wrong_parameter = False
         VALID_COMBINATIONS: Dict[str, ParametersEncoder] = {
             'REPETITION': ParametersRepetitionEncoder,
-            'LDPC': ParametersLdpcEncoder
+            'LDPC': ParametersLdpcEncoder,
+            'BLOCK_INTERLEAVER': ParametersBlockInterleaver
         }
 
         if type.upper() in VALID_COMBINATIONS.keys():
