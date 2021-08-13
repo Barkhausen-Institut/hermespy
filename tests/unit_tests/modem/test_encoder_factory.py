@@ -1,12 +1,14 @@
-from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
-from modem.coding.encoder_factory import EncoderFactory
 import unittest
 from unittest.mock import (Mock, patch)
 
+from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
+from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
+from modem.coding.encoder_factory import EncoderFactory
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
+from modem.coding.interleaver import BlockInterleaver
 
 
 class TestEncoderFactory(unittest.TestCase):
@@ -32,3 +34,9 @@ class TestEncoderFactory(unittest.TestCase):
         self.assertTrue(isinstance(encoder, RepetitionEncoder))
         self.assertTrue(encoder.data_bits_k, 1)
         self.assertTrue(encoder.encoded_bits_n, 1)
+
+    def test_block_interleaver_return(self) -> None:
+        encoder = self.factory.get_encoder(
+            ParametersBlockInterleaver(4,3), "block_interleaver", 30
+        )
+        self.assertTrue(isinstance(encoder, BlockInterleaver))
