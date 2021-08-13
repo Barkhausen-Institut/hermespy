@@ -48,11 +48,12 @@ class Modem(Generic[P]):
         self.encoder_factory = EncoderFactory()
         self.encoder_manager = EncoderManager()
 
-        encoder: Encoder = self.encoder_factory.get_encoder(
-            self.param.encoding_params,
-            self.param.encoding_type,
-            self.param.technology.bits_in_frame)
-        self.encoder_manager.add_encoder(encoder)
+        for encoding_type, encoding_params in zip(
+                            self.param.encoding_type, self.param.encoding_params):
+            encoder: Encoder = self.encoder_factory.get_encoder(
+                encoding_params, encoding_type,
+                self.param.technology.bits_in_frame)
+            self.encoder_manager.add_encoder(encoder)
 
         self.waveform_generator: Any
         if isinstance(param.technology, ParametersPskQam):

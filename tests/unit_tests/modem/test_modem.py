@@ -46,8 +46,8 @@ class TestModem(unittest.TestCase):
         mock_parameters_modem = MockParametersModem()
 
         # create modem; ParametersModem needs to be mocked since it is abstract
-        mock_parameters_modem.encoding_type = "REPETITION"
-        mock_parameters_modem.encoding_params = ParametersRepetitionEncoder()
+        mock_parameters_modem.encoding_type = ["REPETITION"]
+        mock_parameters_modem.encoding_params = [ParametersRepetitionEncoder()]
         mock_parameters_modem.technology = self.params_psk_am
         self.modem = Modem(mock_parameters_modem, self.source, rng)
 
@@ -201,8 +201,8 @@ class TestModem(unittest.TestCase):
         param.number_of_antennas = 1
         param.carrier_frequency = 1e9
         param.tx_power = 10 ** (desired_power_db / 10)
-        param.encoding_type = "REPETITION"
-        param.encoding_params = ParametersRepetitionEncoder()
+        param.encoding_type = ["REPETITION"]
+        param.encoding_params = [ParametersRepetitionEncoder()]
 
         source = BitsSource(np.random.RandomState())
 
