@@ -15,7 +15,7 @@ class EncoderManager:
 
         if len(encoders) > 1:
             for enc, enc_next in zip(encoders[:-1], encoders[1:]):
-                if enc.encoded_bits_n != enc_next.data_bits_k:
+                if enc.encoded_bits_n > enc_next.data_bits_k:
                     return False
 
         self._encoders = encoders
