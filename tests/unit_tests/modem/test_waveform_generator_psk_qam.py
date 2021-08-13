@@ -52,7 +52,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
 
         self.modem_qpsk_params = ParametersTxModem()
         self.modem_qpsk_params.technology = self.params_qpsk
-        self.modem_qpsk_params.encoding_params = ParametersRepetitionEncoder()
+        self.modem_qpsk_params.encoding_params = [ParametersRepetitionEncoder()]
 
         self.waveform_generator_qpsk = WaveformGeneratorPskQam(self.params_qpsk)
         self.modem_qpsk = Modem(self.modem_qpsk_params, self.source_qpsk, rng)
@@ -102,7 +102,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
 
         self.modem_qam_params = ParametersTxModem()
         self.modem_qam_params.technology = self.params_qam
-        self.modem_qam_params.encoding_params = ParametersRepetitionEncoder()
+        self.modem_qam_params.encoding_params = [ParametersRepetitionEncoder()]
 
         self.waveform_generator_qam = WaveformGeneratorPskQam(self.params_qam)
         self.modem_qam = Modem(self.modem_qam_params, self.source_qam, rng)

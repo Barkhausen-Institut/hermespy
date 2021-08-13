@@ -44,7 +44,8 @@ class ParametersModem(ABC):
         self.tx_power = 0.
         self.dir_encoding_parameters = os.path.join(os.getcwd(), '_settings', 'coding')
         self.rf_chain_parameters = os.path.join(os.getcwd(), '_settings')
-        self.encoding_type = ""
+        self.encoding_type = [""]
+        self.encoding_params = []
         self.block_interleaver_m = 1
         self.block_interleaver_n = 1
         self._encoder_param_file = "NONE"

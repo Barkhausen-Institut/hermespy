@@ -33,7 +33,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         self.modem_params = ParametersTxModem()
         self.modem_params.number_of_antennas = 1
         self.modem_params.technology = self.params_cfsk
-        self.modem_params.encoding_params = ParametersRepetitionEncoder()
+        self.modem_params.encoding_params = [ParametersRepetitionEncoder()]
 
         self.source = BitsSource(np.random.RandomState(42))
         self.waveform_generator_chirp_fsk = WaveformGeneratorChirpFsk(self.params_cfsk)
