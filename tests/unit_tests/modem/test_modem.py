@@ -1,3 +1,4 @@
+from modem.coding.encoder_factory import EncoderFactory
 import unittest
 import numpy as np
 import unittest.mock
@@ -10,6 +11,7 @@ from modem.modem import Modem
 from parameters_parser.parameters_tx_modem import ParametersTxModem
 from parameters_parser.parameters_psk_qam import ParametersPskQam
 from source.bits_source import BitsSource
+from modem.coding.encoder_manager import EncoderManager
 from modem.coding.repetition_encoder import RepetitionEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 
@@ -66,17 +68,18 @@ class TestModem(unittest.TestCase):
         params_encoder = ParametersRepetitionEncoder()
         params_encoder.encoded_bits_n = N
         params_encoder.data_bits_k = K
-        repetition_encoder = RepetitionEncoder(
-            params_encoder, self.params_psk_am.bits_in_frame)
 
-        self.modem.encoder = repetition_encoder
+        encoder_factory = EncoderFactory()
+        encoder = encoder_factory.get_encoder(
+            params_encoder, "repetition", self.params_psk_am.bits_in_frame)
+        encoder_manager = EncoderManager()
+        encoder_manager.add_encoder(encoder)
+        self.modem.encoder_manager = encoder_manager
+
         symbol_energy_n2k1 = self.modem.get_symbol_energy()
         bit_energy_n2k1 = self.modem.get_bit_energy()
 
         params_encoder.encoded_bits_n = 1
-        repetition_encoder = RepetitionEncoder(
-            params_encoder, self.params_psk_am.bits_in_frame)
-
         symbol_energy_n1k1 = self.modem.get_symbol_energy()
         bit_energy_n1k1 = self.modem.get_bit_energy()
 
