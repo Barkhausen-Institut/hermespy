@@ -1,3 +1,4 @@
+from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 import unittest
 import os
 
@@ -8,6 +9,7 @@ from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from modem.modem import Modem
 from parameters_parser.parameters_chirp_fsk import ParametersChirpFsk
 from parameters_parser.parameters_tx_modem import ParametersTxModem
+from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from source.bits_source import BitsSource
 
 
@@ -31,6 +33,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         self.modem_params = ParametersTxModem()
         self.modem_params.number_of_antennas = 1
         self.modem_params.technology = self.params_cfsk
+        self.modem_params.encoding_params = ParametersRepetitionEncoder()
 
         self.source = BitsSource(np.random.RandomState(42))
         self.waveform_generator_chirp_fsk = WaveformGeneratorChirpFsk(self.params_cfsk)
