@@ -32,14 +32,17 @@ class TestEncoderManager(unittest.TestCase):
         self.encoder1 = StubEncoder(self.params_encoder1, 100)
         self.encoder2 = StubEncoder(self.params_encoder2, 100)
 
+        self.encoder_manager = EncoderManager()
+
     def test_correct_order_of_encoders(self) -> None:
-        encoder_manager = EncoderManager()
-        self.assertTrue(encoder_manager.add_encoder(self.encoder1))
-        self.assertTrue(encoder_manager.add_encoder(self.encoder2))
-        self.assertEqual(len(encoder_manager.encoders), 2)
+        self.encoder_manager.add_encoder(self.encoder1)
+        self.encoder_manager.add_encoder(self.encoder2)
+        self.assertEqual(id(self.encoder_manager.encoders[0]), id(self.encoder1))
+        self.assertEqual(id(self.encoder_manager.encoders[1]), id(self.encoder2))
 
     def test_ordering_of_encoders(self) -> None:
-        encoder_manager = EncoderManager()
-        self.assertTrue(encoder_manager.add_encoder(self.encoder2))
-        self.assertTrue(encoder_manager.add_encoder(self.encoder1))
-        self.assertEqual(len(encoder_manager.encoders), 2)
+        self.encoder_manager.add_encoder(self.encoder2)
+        self.encoder_manager.add_encoder(self.encoder1)
+        self.assertEqual(id(self.encoder_manager.encoders[0]), id(self.encoder1))
+        self.assertEqual(id(self.encoder_manager.encoders[1]), id(self.encoder2))
+
