@@ -348,12 +348,8 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    #unittest.main()
+    unittest.main()
 
-    object = TestWaveformGeneratorOfdm()
-    object.setUp()
-    object.test_resource_elements_allocated_correctly()
-    object.test_ofdmSymbolCreation_timeDomain_noSamples()
 
 
 
