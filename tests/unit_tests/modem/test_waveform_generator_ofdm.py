@@ -99,137 +99,41 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         O = WaveformGeneratorOfdm(self.params)
         self.assertEqual(expected_samples, O.samples_in_frame)
 
-    def test_reference_symbols(self) -> None:
-        pass
+    def test_resource_elements_allocated_correctly(self) -> None:
+        """ test if reference and data symbols are allocated in the right positions"""
 
-    def data_symbols_in_right_positions(self) -> None:
-        pass
+        # Resource-element grid of dimension N_symb x N_sc
+        time_frequency_grid_ref = np.zeros((21, 1200, 1))
+        time_frequency_grid_data = np.zeros((21, 1200, 1))
+        ref_idx_symbol_1 = np.tile(np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 100)
+        data_idx_symbol_1 = np.logical_not(ref_idx_symbol_1)
+        ref_idx_symbol_2 = np.tile(np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]), 100)
+        data_idx_symbol_2 = np.logical_not(ref_idx_symbol_2)
 
-    """
-    def test_mappingResource_givenResourcesList_twoTxAntennas(self) -> None:
-        p = self.params
-        p.mimo_scheme = "SC"
-        p.number_tx_antennas = 2
+        for idx in range(10):
+            time_frequency_grid_ref[2*idx, :, 0] = ref_idx_symbol_1
+            time_frequency_grid_ref[2*idx + 1, :, 0] = ref_idx_symbol_2
+            time_frequency_grid_data[2*idx, :, 0] = data_idx_symbol_1
+            time_frequency_grid_data[2*idx + 1, :, 0] = data_idx_symbol_2
+        time_frequency_grid_ref[20, :, 0] = ref_idx_symbol_1
+        time_frequency_grid_data[20, :, 0] = data_idx_symbol_1
 
-        res: List[ResourcePattern] = [
-            ResourcePattern(
-                MultipleRes=[
-                    MultipleRes(ResourceType.REFERENCE, 1),
-                    MultipleRes(ResourceType.NULL, 1),
-                    MultipleRes(ResourceType.DATA, 2)
-                ],
-                number=1
-            )
-        ]
-        data_symbols = np.array([0, 1, 2, 3])
-
-        res_elements, remaining_data_symbols = self.O.map_resources(res, data_symbols)
-
-        np.testing.assert_array_almost_equal(
-            res_elements[:, 1:4],
-            np.array([[0, data_symbols[0], data_symbols[1]],
-                      [0, data_symbols[0], data_symbols[1]]], dtype=complex)
-        )
-        np.testing.assert_array_almost_equal(
-            res_elements[:, 4:],
-            np.zeros(
-                (2, self.params.number_occupied_subcarriers - 4),
-                dtype=complex)
-        )
-        np.testing.assert_array_almost_equal(
-            remaining_data_symbols,
-            np.array([data_symbols[2], data_symbols[3]])
-        )
-    """
-    """
-    def test_mappingResource_givenResourceList(self) -> None:
-        rnd = np.random.RandomState(42)
-
-        res: List[ResourcePattern] = [
-            ResourcePattern(
-                MultipleRes=[
-                    MultipleRes(ResourceType.REFERENCE, 1),
-                    MultipleRes(ResourceType.NULL, 1),
-                    MultipleRes(ResourceType.DATA, 2)
-                ],
-                number=1
-            )
-        ]
-        data_symbols = np.array([0, 1, 2, 3])
-        ref_symbol = (rnd.standard_normal(1) + 1j * rnd.standard_normal(1))/np.sqrt(2)
-
-        res_elements, remaining_data_symbols = self.O.map_resources(res, data_symbols)
-        np.testing.assert_array_almost_equal(
-            res_elements[0, :4],
-            np.array([ref_symbol[0], 0, data_symbols[0], data_symbols[1]], dtype=complex)
-        )
-        np.testing.assert_array_almost_equal(
-            res_elements[:, 4:],
-            np.zeros(
-                (self.NO_TX_ANTENNAS, self.params.number_occupied_subcarriers - 4),
-                dtype=complex)
-        )
-        np.testing.assert_array_almost_equal(
-            remaining_data_symbols,
-            np.array([data_symbols[2], data_symbols[3]])
-        )
+        np.testing.assert_array_almost_equal(time_frequency_grid_ref, self.O.reference_frame != 0)
+        np.testing.assert_array_almost_equal(time_frequency_grid_data, self.O.data_frame_indices)
 
     def test_ofdmSymbolCreation_timeDomain_noSamples(self) -> None:
-        CP_SAMPLES = 50
-        res = [np.exp(1j), np.exp(2j), np.exp(3j)]
+        frame = np.random.rand(self.O._number_ofdm_symbols, self.O.param.number_occupied_subcarriers,
+                               self.O.param.number_tx_antennas)
+        number_of_samples_ofdm_symbols = self.O.param.fft_size + np.around(self.O.param.fft_size * self.params.cp_ratio)
+        number_of_samples_guard = int(np.around(self.O.param.frame_guard_interval * self.O.sampling_rate))
 
-        ofdm_symbol_config = OfdmSymbolConfig()
-        ofdm_symbol_config.cyclic_prefix_samples = CP_SAMPLES
+        expected_number_of_samples = (11 * int(number_of_samples_ofdm_symbols[0]) +
+                                      10 * int(number_of_samples_ofdm_symbols[1]) + number_of_samples_guard)
 
-        output_signal = np.zeros(
-            (self.NO_TX_ANTENNAS, self.O.samples_in_frame),
-            dtype=complex)
-        self.O._resource_element_mapping = np.arange(len(res))
+        time_domain_frame = self.O.create_ofdm_frame_time_domain(frame)
 
-        sample_idx, _ = self.O.create_ofdm_symbol_time_domain(
-            0, res, ofdm_symbol_config, output_signal
-        )
+        self.assertEqual(expected_number_of_samples, time_domain_frame.size)
 
-        expected_sample_idx = self.FFT_SIZE + CP_SAMPLES
-
-        self.assertEqual(sample_idx, expected_sample_idx)
-
-    def test_ofdmSymbolCreation_timeDomain_content(self) -> None:
-        ressources = [np.exp(1j), np.exp(2j), np.exp(3j)]
-        guard_interval = self.params.frame_structure[0]
-        ofdm_symbol_config = self.params.frame_structure[1]
-
-        self.O._resource_element_mapping = np.arange(len(ressources))
-
-        output_signal = np.zeros(
-            (self.NO_TX_ANTENNAS, self.O.samples_in_frame),
-            dtype=complex)
-
-        # create actual ofdm symbol in time domain
-        _, output_signal = self.O.create_ofdm_symbol_time_domain(
-            guard_interval.no_samples, ressources, ofdm_symbol_config, output_signal
-        )
-
-        # check that guard interval is prepended
-        np.testing.assert_array_almost_equal(
-            output_signal[:, :guard_interval.no_samples],
-            np.zeros((self.NO_TX_ANTENNAS, guard_interval.no_samples), dtype=complex)
-        )
-
-        # let us get the symbols in f domain
-        ofdm_symbol_content_start = (
-            guard_interval.no_samples + ofdm_symbol_config.cyclic_prefix_samples)
-        ofdm_symbol_content_t = (
-            output_signal[:, ofdm_symbol_content_start: ofdm_symbol_content_start + self.params.fft_size])
-
-        ofdm_symbol_content_f = np.fft.fft(ofdm_symbol_content_t, norm='ortho', axis=1)
-
-        # check actual symbol
-        np.testing.assert_array_almost_equal(
-            ofdm_symbol_content_f[0,self.O._resource_element_mapping],
-            np.array(ressources)
-        )
-    """
 
     def test_frameCreation_startsWithGuardIntervalZeros(self) -> None:
         data_bits = np.random.randint(2, size=self.O.bits_in_frame)
@@ -444,7 +348,12 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+
+    object = TestWaveformGeneratorOfdm()
+    object.setUp()
+    object.test_resource_elements_allocated_correctly()
+    object.test_ofdmSymbolCreation_timeDomain_noSamples()
 
 
 
