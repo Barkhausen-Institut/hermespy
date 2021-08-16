@@ -497,6 +497,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 antennas.
         """
 
+        initial_timestamp_in_samples = copy(timestamp_in_samples)
         # determine timestamp of data symbols
         channel_sampling_timestamps = np.array([])
         for frame_element in self.param.frame_structure:
@@ -511,21 +512,24 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         channel_timestamps = channel_sampling_timestamps / self.param.sampling_rate
 
         number_of_symbols = channel_sampling_timestamps.size
-        channel_in_freq_domain = np.zeros((self.param.fft_size, self._channel.number_rx_antennas,
-                                           self._channel.number_tx_antennas, number_of_symbols), dtype=complex)
+
+        channel_in_freq_domain: np.ndarray
 
         if self.param.channel_estimation == 'IDEAL':  # ideal channel estimation at each transmitted OFDM symbol
             channel_in_freq_domain = self.get_ideal_channel_estimation(channel_timestamps)
 
         elif self.param.channel_estimation in {'IDEAL_PREAMBLE', 'IDEAL_MIDAMBLE', 'IDEAL_POSTAMBLE'}:
             if self.param.channel_estimation == 'IDEAL_PREAMBLE':
-                channel_timestamp = channel_timestamps[0]
+                channel_timestamps = initial_timestamp_in_samples / self.param.sampling_rate
             elif self.param.channel_estimation == 'IDEAL_MIDAMBLE':
-                channel_timestamp = (channel_timestamps[0] + channel_timestamps[-1]) / 2
+                channel_timestamps = ((initial_timestamp_in_samples + self.samples_in_frame/2)
+                                      / self.param.sampling_rate)
             elif self.param.channel_estimation == 'IDEAL_POSTAMBLE':
-                channel_timestamp = np.array(channel_timestamps[-1])
+                channel_timestamps = ((initial_timestamp_in_samples + self.samples_in_frame)
+                                      / self.param.sampling_rate)
 
-            channel_in_freq_domain = np.tile( self.get_ideal_channel_estimation(channel_timestamp), number_of_symbols)
+            channel_in_freq_domain = np.tile(self.get_ideal_channel_estimation(np.array([channel_timestamps])),
+                                             number_of_symbols)
 
         else:
             raise ValueError('invalid channel estimation type')

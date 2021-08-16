@@ -117,7 +117,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
         self.frame_structure: List[FrameElement] = []
         self.ofdm_symbol_resources_mapping: List[List[ResourcePattern]] = []
         self.ofdm_symbol_configs: List[OfdmSymbolConfig] = []
-        self.reference_symbols = np.array([])
+        self.reference_symbols = np.array([1.0])
 
         ######################
         # derived parameters
@@ -162,7 +162,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
         self._ofdm_symbol_res_str = cfg.get("ofdm_symbol_resources")
         self._cp_lengths_str = cfg.get("cp_length")
 
-        ref_symbols = cfg.get("reference_symbols", fallback='')
+        ref_symbols = cfg.get("reference_symbols", fallback="1")
         self.reference_symbols = np.fromstring(ref_symbols, dtype=complex, sep=',')
 
         self._check_params()
