@@ -218,7 +218,7 @@ precoding = DFT
 modulation_order = 16
 
 oversampling_factor = 1
-dc_suppresion = False
+dc_suppression = False
 
 [Receiver]
 channel_estimation = ideal_postamble
