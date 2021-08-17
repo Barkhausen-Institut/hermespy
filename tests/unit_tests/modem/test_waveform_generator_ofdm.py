@@ -121,6 +121,12 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         np.testing.assert_array_almost_equal(time_frequency_grid_ref, self.O.reference_frame != 0)
         np.testing.assert_array_almost_equal(time_frequency_grid_data, self.O.data_frame_indices)
 
+    def test_time_indices_allocated_correctly(self) -> None:
+
+        all_indices = np.concatenate((self.O.prefix_time_indices, self.O.guard_time_indices, self.O.data_time_indices))
+        all_indices = np.sort(all_indices)
+        np.testing.assert_equal(all_indices, np.arange(self.O._samples_in_frame_no_oversampling, dtype=int))
+
     def test_ofdmSymbolCreation_timeDomain_noSamples(self) -> None:
         frame = np.random.rand(self.O._number_ofdm_symbols, self.O.param.number_occupied_subcarriers,
                                self.O.param.number_tx_antennas)
@@ -133,7 +139,6 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         time_domain_frame = self.O.create_ofdm_frame_time_domain(frame)
 
         self.assertEqual(expected_number_of_samples, time_domain_frame.size)
-
 
     def test_frameCreation_startsWithGuardIntervalZeros(self) -> None:
         data_bits = np.random.randint(2, size=self.O.bits_in_frame)

@@ -32,6 +32,10 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         N_tx the number of transmit antennas
     data_frame_indices (numpy.ndarray): a 3D boolean array (N_symb x K_sc x M_tx )indicating the position of all data
         subcarriers
+    guard_time_indices (numpy.ndarray):
+    prefix_time_indices (numpy.ndarray):
+    data_time_indices (numpy.ndarray): vectors containing the indices of the guard intervals, prefixes and data in time
+        samples, considering sampling at the FFT rate
     """
     def __init__(self, param: ParametersOfdm) -> None:
         super().__init__(param)
@@ -51,42 +55,52 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self._number_ofdm_symbols = sum(isinstance(frame_element, OfdmSymbolConfig)
                                         for frame_element in self.param.frame_structure)
          
-        self.reference_frame, self.data_frame_indices = self._get_frame_structure()
+        self.reference_frame = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
+                                         self.param.number_tx_antennas), dtype=complex)
+        self.data_frame_indices = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
+                                           self.param.number_tx_antennas), dtype=bool)
+        self.guard_time_indices = np.array([], dtype=int)
+        self.prefix_time_indices = np.array([], dtype=int)
+        self.data_time_indices = np.array([], dtype=int)
+        self._generate_frame_structure()
 
-    def _get_frame_structure(self):
+    def _generate_frame_structure(self):
         """Creates the OFDM frame structure in time, frequency and space.
 
         This method interprets the OFDM parameters in 'self.param' that describe the OFDM frame and generates matrices
         with the allocation of all resource elements in a time/frequency/antenna grid
 
-        Returns:
-            ref_frame(numpy.ndarray): see description in class attributes
-            data_frame_indices(numpy.ndarray): see description in class attributes
         """
-        ref_frame = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
-                              self.param.number_tx_antennas), dtype=complex)
-        data_frame_indices = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
-                                       self.param.number_tx_antennas), dtype=bool)
-
         ofdm_symbol_idx = 0
+        sample_idx = 0
         for frame_element in self.param.frame_structure:
-            if isinstance(frame_element, OfdmSymbolConfig):
+            if isinstance(frame_element, GuardInterval):
+                self.guard_time_indices = np.append(self.guard_time_indices,
+                                                    np.arange(sample_idx, sample_idx + frame_element.no_samples))
+                sample_idx += frame_element.no_samples
+            elif isinstance(frame_element, OfdmSymbolConfig):
                 ref_idxs = self._get_subcarrier_indices(frame_element, ResourceType.REFERENCE)
 
-                #######################################################
                 # fill out resource elements with pilot symbols
                 ref_symbols = np.tile(self.param.reference_symbols,
                                       int(np.ceil(ref_idxs.size / self.param.reference_symbols.size)))
                 ref_symbols = ref_symbols[:ref_idxs.size]
 
-                ref_frame[ofdm_symbol_idx, ref_idxs, 0] = ref_symbols
+                self.reference_frame[ofdm_symbol_idx, ref_idxs, 0] = ref_symbols
 
+                # update indices for data and (cyclic) prefix
                 data_idxs = self._get_subcarrier_indices(frame_element, ResourceType.DATA)
-                data_frame_indices[ofdm_symbol_idx, data_idxs, :] = True
+                self.data_frame_indices[ofdm_symbol_idx, data_idxs, :] = True
+
+                self.prefix_time_indices = np.append(self.prefix_time_indices,
+                                                     np.arange(sample_idx, sample_idx +
+                                                               frame_element.cyclic_prefix_samples))
+                sample_idx += frame_element.cyclic_prefix_samples
+                self.data_time_indices = np.append(self.data_time_indices,
+                                                   np.arange(sample_idx, sample_idx + frame_element.no_samples))
+                sample_idx += frame_element.no_samples
 
                 ofdm_symbol_idx += 1
-
-        return ref_frame, data_frame_indices
 
     def _get_subcarrier_indices(self, frame_element, resource_type):
         #############################################################################
@@ -227,33 +241,20 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self.param.frame_structure.
 
         Args:
-            frame(numpy.array): a 2D array containing the raw OFDM symbols in time domain. It is of size M_tx x N_s,
-                with M_tx the number of transmit antennas and N_s = N_symb x N_fft.
+            frame(numpy.array): a 2D array containing the raw OFDM symbols in time domain. It is of size
+                N_symb x N_fft x M_tx, with M_tx the number of transmit antennas and N_symb the number of symbols.
 
         Returns:
             output_signal(numpy.array): an M_tx x N_samp array containing the time-domain OFDM frame.
         """
         output_signal: np.ndarray = np.zeros((self.param.number_tx_antennas, self._samples_in_frame_no_oversampling),
                                              dtype=complex)
-        sample_index = 0
-        ofdm_symbol_idx = 0
-        for frame_element in self.param.frame_structure:
-            if isinstance(frame_element, GuardInterval):
-                sample_index += frame_element.no_samples
-            else:
-                ofdm_symbol = frame[ofdm_symbol_idx, :, :].T
 
-                # add cyclic prefix
-                cyclic_prefix_length = frame_element.cyclic_prefix_samples
-                output_signal[:, sample_index:sample_index + cyclic_prefix_length] = \
-                    ofdm_symbol[:, -cyclic_prefix_length:]
-                sample_index += cyclic_prefix_length
-
-                # add daza symbol
-                output_signal[:, sample_index:sample_index + self.param.fft_size] = ofdm_symbol
-                sample_index += self.param.fft_size
-
-                ofdm_symbol_idx += 1
+        data_symbols = np.reshape(frame, (self._number_ofdm_symbols * self.param.fft_size,
+                                          self.param.number_tx_antennas))
+        data_symbols = data_symbols.transpose()
+        output_signal[:, self.data_time_indices] = data_symbols
+        output_signal[:, self.prefix_time_indices] = output_signal[:, self.prefix_time_indices + self.param.fft_size]
 
         return output_signal
 
@@ -312,13 +313,20 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         else:
             bits = np.array([])
             frame_signal = rx_signal[:, :self.samples_in_frame]
-            channel_estimation = self.channel_estimation(
-                rx_signal, timestamp_in_samples)
-
             rx_signal = rx_signal[:, self.samples_in_frame:]
+
             if self.param.oversampling_factor > 1:
-                frame_signal = signal.decimate(
-                    frame_signal, self.param.oversampling_factor)
+                frame_signal = signal.decimate(frame_signal, self.param.oversampling_factor)
+
+            #frame_in_freq_domain = self._get_frame_in_freq_domain(frame_signal)
+            #channel_estimation = self.channel_estimation(frame_in_freq_domain, timestamp_in_samples)
+
+            #frame_in_freq_domain = self._equalize(frame_in_freq_domain)
+            #frame_in_freq_domain = self._decode(frame_in_freq_domain)
+            #bits = self.get_bits(frame_in_freq_domain)
+
+            channel_estimation = self.channel_estimation(frame_signal, timestamp_in_samples)
+
 
             for frame_element_def in self.param.frame_structure:
                 frame_element_samples = frame_element_def.no_samples
@@ -344,6 +352,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 timestamp_in_samples += frame_element_samples * \
                     self.param.oversampling_factor
         return list([bits]), rx_signal
+
+    def get_frame_in_freq_domain(self, frame_in_time_domain: np.ndarray):
+
+        # remove guard intervals and cyclic prefixes
+
+        return frame
 
     def get_bits_from_ofdm_symbol(
             self,
