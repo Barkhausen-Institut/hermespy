@@ -149,25 +149,6 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
                 dtype=complex),
             signal[:, :self.params.frame_structure[0].no_samples])
 
-    def test_discardingReferenceSymbols(self) -> None:
-        res_types: List[ResourcePattern] = [
-            ResourcePattern(
-                MultipleRes=[MultipleRes(ResourceType.REFERENCE, 1)],
-                number=1),
-            ResourcePattern(
-                MultipleRes=[MultipleRes(ResourceType.DATA, 1)],
-                number=2
-            )]
-
-        ofdm_symbol_config = OfdmSymbolConfig(resource_types=res_types)
-        ofdm_symbol_resources = np.array([[0, 1, 2],
-                                          [0, 1, 2]])
-
-        np.testing.assert_array_almost_equal(
-            ofdm_symbol_resources[:, 1:],
-            self.O.discard_reference_symbols(ofdm_symbol_config, ofdm_symbol_resources)
-        )
-
     def test_MMSE_lower_BER_than_ZF(self) -> None:
         """Checks if MMSE is actually performed by checking if BER is lower for
         low SNRs than for ZF equalization. """
@@ -256,7 +237,7 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         estimated_channel = self.O.channel_estimation(
             None, 0)
         np.testing.assert_allclose(
-            expected_channel_in_frequency,
+            expected_channel_in_frequency.T,
             np.squeeze(estimated_channel))
 
     def test_channel_estimation_ideal_preamble(self) -> None:
@@ -343,7 +324,7 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
 
         self.O.set_channel(channel)
         self.O.param.channel_estimation = position_in_frame
-        estimated_channel = self.O.channel_estimation(None, 0)
+        estimated_channel = np.moveaxis(self.O.channel_estimation(None, 0), -1, 0)
         number_of_channel_samples = estimated_channel.shape[3]
         expected_channel_in_frequency = np.tile(
             expected_channel_in_frequency, number_of_channel_samples)
