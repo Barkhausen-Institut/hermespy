@@ -241,8 +241,8 @@ class Mimo:
                                                                                        np.ndarray]:
         """Decode data for STBC with 2 transmit antennas
 
-        Received signal with equal noise power is assumed, the decoded signal has same noise
-        level as input.
+        Received signal with equal noise power is assumed, the decoded signal has same noise level as input.
+        If more than 2 receive antennas are employed, then MRC is applied on the STBC decoding output of all antennas.
 
         Args:
             input_data(np.ndarray): Input signal with N_rx x N symbols.
