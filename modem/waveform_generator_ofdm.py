@@ -62,6 +62,10 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self.guard_time_indices = np.array([], dtype=int)
         self.prefix_time_indices = np.array([], dtype=int)
         self.data_time_indices = np.array([], dtype=int)
+
+        # derived variables for precoding
+        self._data_resource_elements_per_symbol = np.array([])
+
         self._generate_frame_structure()
 
     def _generate_frame_structure(self):
@@ -101,6 +105,10 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 sample_idx += frame_element.no_samples
 
                 ofdm_symbol_idx += 1
+
+        if self.param.precoding != "NONE":
+            # check if all symbols have the same number of data REs
+            self._data_resource_elements_per_symbol = np.sum(self.data_frame_indices[:, :, 0], axis=1)
 
     def _get_subcarrier_indices(self, frame_element, resource_type):
         #############################################################################
@@ -269,15 +277,14 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         Returns:
             frame(numpy.array): the precoded frame
         """
-
-        if self.param.precoding == "DFT":
-            for symbol_idx in range(self._number_ofdm_symbols):
-                for antenna_idx in range(self.param.number_streams):
-                    data_symbol_idx = self.data_frame_indices[symbol_idx, :, antenna_idx]
-                    data = frame[symbol_idx, data_symbol_idx, antenna_idx]
-                    if data.size:
-                        data = np.fft.fft(data, norm="ortho")
-                    frame[symbol_idx, data_symbol_idx, antenna_idx] = data
+        if self.param.precoding == 'DFT':
+            # iterate over all symbols as they may have different number of data REs
+            for symbol in range(self._number_ofdm_symbols):
+                data_indices = self.data_frame_indices[symbol, :, 0]
+                if np.any(data_indices):
+                    data_symbols = frame[symbol, data_indices, :]
+                    data_symbols = np.fft.fft(data_symbols, axis=0, norm='ortho')
+                    frame[symbol, data_indices, :] = data_symbols
 
         return frame
 
@@ -318,173 +325,114 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             if self.param.oversampling_factor > 1:
                 frame_signal = signal.decimate(frame_signal, self.param.oversampling_factor)
 
-            #frame_in_freq_domain = self._get_frame_in_freq_domain(frame_signal)
-            #channel_estimation = self.channel_estimation(frame_in_freq_domain, timestamp_in_samples)
+            frame_in_freq_domain = self._get_frame_in_freq_domain(copy(frame_signal))
+            channel_estimation = self.channel_estimation(frame_in_freq_domain, timestamp_in_samples)
 
-            #frame_in_freq_domain = self._equalize(frame_in_freq_domain)
-            #frame_in_freq_domain = self._decode(frame_in_freq_domain)
-            #bits = self.get_bits(frame_in_freq_domain)
+            frame_symbols, noise_var = self._equalize(frame_in_freq_domain, channel_estimation, noise_var)
 
-            channel_estimation = self.channel_estimation(frame_signal, timestamp_in_samples)
+            frame_symbols, noise_var = self._decode(frame_symbols, noise_var)
+            bits = self._mapping.detect_bits(frame_symbols.flatten('F'), noise_var.flatten('F'))
 
-
-            for frame_element_def in self.param.frame_structure:
-                frame_element_samples = frame_element_def.no_samples
-                if isinstance(frame_element_def, OfdmSymbolConfig):
-                    # get channel estimation for this symbol
-                    channel_in_freq_domain = channel_estimation[:, :, :, 0]
-
-                    if channel_in_freq_domain.size:
-                        channel_estimation = channel_estimation[:, :, :, 1:]
-
-                    frame_element_samples += frame_element_def.cyclic_prefix_samples
-
-                    bits_in_ofdm_symbol = self.get_bits_from_ofdm_symbol(
-                        frame_element_def,
-                        frame_signal[:, frame_element_def.cyclic_prefix_samples:],
-                        channel_in_freq_domain,
-                        noise_var
-                    )
-                    bits = np.append(bits, bits_in_ofdm_symbol)
-
-                frame_signal = frame_signal[:,
-                                            frame_element_samples:]
-                timestamp_in_samples += frame_element_samples * \
-                    self.param.oversampling_factor
         return list([bits]), rx_signal
 
-    def get_frame_in_freq_domain(self, frame_in_time_domain: np.ndarray):
+    def _get_frame_in_freq_domain(self, frame_in_time_domain: np.ndarray):
+        """Converts a frame from time to frequency domain
 
+        This method removes all the guard intervals and prefixes, and converts time domain to frequency domain.
+
+        Args:
+            frame_in_time_domain(numpy.array): a M_rx x N_samp array containing the time-domain frame, with M_rx the
+                number of receive antennas and N_samp the number of samples in a frame (without oversampling)
+
+        Returns:
+            frame_freq_domain(numpy.array): the frequemcy-domain frame, of size M_rx x N_symb x N_fft, with N_symb the
+                number of OFDM symbols in the frame and N_fft the FFT length.
+        """
         # remove guard intervals and cyclic prefixes
+        frame_in_time_domain = frame_in_time_domain[:, self.data_time_indices]
 
-        return frame
+        # convert to frequency domain
+        frame_in_time_domain = np.reshape(frame_in_time_domain, (self.param.number_rx_antennas,
+                                                                 self._number_ofdm_symbols,
+                                                                 self.param.fft_size))
 
-    def get_bits_from_ofdm_symbol(
-            self,
-            ofdm_symbol_config: OfdmSymbolConfig,
-            frame_signal: np.ndarray,
-            channel_in_freq_domain: np.ndarray,
-            noise_var: float) -> np.ndarray:
-        """Detects the bits that are contained in an ofdm symbol in time domain.
+        frame_in_freq_domain = np.fft.fft(frame_in_time_domain, norm='ortho')
 
-        Args:
-            ofdm_symbol_config(OfdmSymbolConfig): Configuration of current ofdm symbol.
-            frame_signal(numpy.ndarray): array with the received signal in the whole remaining frame
-            channel_in_freq_domain(np.ndarray):
-                channel frequency response estimation. It should be a np.ndarray of shape
-                fft_size x #rx_antennas x #tx_antennas
-            noise_var(float): noise variance.
+        return frame_in_freq_domain
 
-        Returns:
-            Vector containing the detected bits for this particular symbol.
-        """
-        ofdm_symbol_resources: np.ndarray = frame_signal[:, :self.param.fft_size]
-        symbols, noise_var = self.demodulate_ofdm_symbol(
-            ofdm_symbol_config,
-            ofdm_symbol_resources,
-            channel_in_freq_domain,
-            noise_var
-        )
+    def _equalize(self, frame_in_freq_domain, channel_in_freq_domain, noise_var):
+        """Equalize the frequency-domain symbols
 
-        symbols = symbols.flatten('F')
-        bits_in_ofdm_symbol = self._mapping.detect_bits(symbols)
-
-        return bits_in_ofdm_symbol
-
-    def demodulate_ofdm_symbol(self, ofdm_symbol_config: OfdmSymbolConfig, ofdm_symbol_resources: np.ndarray,
-                               channel_in_freq_domain: np.ndarray, noise_var: float) -> np.ndarray:
-        """Demodulates  a single OFDM symbol
-
-        This method performs the FFT of the time-domain signal and equalizes it with knowledge of the channel frequency
-        response.
+        Perform linear frequency-domain equalization according to estimated channel.
+        Both ZF or MMSE are supported, as defined in 'self.param.equalization'
 
         Args:
-            ofdm_symbol_config(OfdmSymbolConfig): Config of ofdm symbol to demodulate.
-            ofdm_symbol_resources(numpy.ndarray):
-                contains information the received OFDM symbol in time domain of shape
-                #rx_antennas x #fft_size
-            channel_in_freq_domain(numpy.ndarray):
-                channel estimate in the frequency domain of shape
-                fft_size x #rx_antennas x #tx_antennas
-            noise_var(float): noise variance.
+            frame_in_freq_domain(numpy.ndarray): a 3D array (M_rx x N_symb x N_fft) containing the frequency-domain frame,
+                with M_rx the number of receive antennas, N_symb the number of OFDM symbols in a frame and N_fft the FFT
+                length.
+            channel_in_freq_domain(numpy.ndarray): a 4D array (M_rx x N_symb x N_fft) containing the channel estimates
+            noise_var(float): estimated noise variance
 
         Returns:
-            (numpy.ndarray, numpy.ndarray)
-                'data_symbols(numpy.ndarray)': estimate of the frequency-domain symbols at the data subcarriers
-                'noise_var(numpy.ndarray)': noise variance of demodulated symbols
-
+            data_symbols(numpy.ndarray): M_rx x N_re array with data symbols after equalization, with N_re the number of
+                resource elements (RE) in the frame
+            noise_var(numpy.ndarray): M_rx x N_re array with the estimated noise variance at each RE
         """
-        channel_in_freq_domain = np.moveaxis(channel_in_freq_domain, 0, -1)
+        # remove null subcarriers
+        resource_elements = frame_in_freq_domain[:, :, self._resource_element_mapping]
+        channel_in_freq_domain = channel_in_freq_domain[:, :, :, self._resource_element_mapping]
 
-        ofdm_symbol_resources_f = np.fft.fft(ofdm_symbol_resources, norm='ortho')
-        data_symbols = ofdm_symbol_resources_f[:, self._resource_element_mapping]
-        channel_in_freq_domain = channel_in_freq_domain[:, :, self._resource_element_mapping]
+        # remove reference symbols
+        data_frame_indices = self.data_frame_indices[:, :, 0]
+        resource_elements = resource_elements[:, data_frame_indices]
+        channel_in_freq_domain = channel_in_freq_domain[:, :, data_frame_indices]
 
-        data_symbols = self.discard_reference_symbols(ofdm_symbol_config, data_symbols)
+        # MIMO decode
+        data_symbols, channel, noise_var = self._mimo.decode(resource_elements, channel_in_freq_domain, noise_var)
 
-        channel_in_freq_domain_reduced = np.zeros(
-            (
-                self.param.number_rx_antennas,
-                self.param.number_tx_antennas,
-                data_symbols.shape[1],
-            ),
-            dtype=complex
-        )
-
-        for rx_antenna_idx in range(self.param.number_rx_antennas):
-            channel_in_freq_domain_reduced[rx_antenna_idx, :, :] = self.discard_reference_symbols(
-                ofdm_symbol_config,
-                channel_in_freq_domain[rx_antenna_idx, :, :],
-            )
-
-        channel_in_freq_domain = channel_in_freq_domain_reduced
-        data_symbols, channel_in_freq_domain, noise_var = \
-            self._mimo.decode(data_symbols, channel_in_freq_domain, noise_var)
-
+        # equalize
         if self.param.equalization == "MMSE":
-            SNR = (channel_in_freq_domain *
-                   np.conj(channel_in_freq_domain))**2 / noise_var
-            equalizer = 1 / channel_in_freq_domain * (SNR / (SNR + 1))
-        else:
-            # ZF equalization considering perfect channel state information
-            # (SISO only)
-            equalizer = 1 / channel_in_freq_domain
+            snr = (channel * np.conj(channel))**2 / noise_var
+            equalizer = 1 / channel * (snr / (snr + 1.))
+        else:  # ZF
+            equalizer = 1 / channel
 
-        noise_var = noise_var * np.abs(equalizer) ** 2
+        noise_var = noise_var * np.abs(equalizer)**2
         data_symbols = data_symbols * equalizer
-
-        if self.param.precoding == "DFT" and data_symbols.size:
-            data_symbols = np.fft.ifft(data_symbols, norm='ortho')
-
-            dftmtx = np.fft.fft(np.eye(data_symbols.size), norm='ortho')
-            noise_var = dftmtx @ np.diag(noise_var.flatten()) @ dftmtx.T.conj()
 
         return data_symbols, noise_var
 
-    def discard_reference_symbols(self,
-                                  ofdm_symbol_config: OfdmSymbolConfig,
-                                  ofdm_symbol_resources: np.ndarray) -> np.ndarray:
-        """Discards symbols except data symbols in ofdm symbol.
+    def _decode(self, frame, noise_var):
+        """Decode the frequency-domain OFDM frame according to a given precoding method
+
+        The precoding algorithm is defined in 'self.param.precoding'. Currently, only DFT-spread precoding is supported
 
         Args:
-            ofdm_symbol_config(OfdmSymbolConfig): Config that defines the resource element mapping.
-            ofdm_symbol_resources(np.ndarray): subcarriers of the frame.
+            frame(numpy.array): an M_rx x N_re array containing the OFDM resource elements, with M_rx the number of
+                receive antennas and N_re the number of data resource elements in the frame
+            noise_var(numpy.array): an M_rx x N_re array containing the noise variance
 
         Returns:
-            np.ndarray: Data subcarriers
+            frame(numpy.array): symbols after decoding
+            noise_var(numpy.array): noise variance after decoding
         """
+        if self.param.precoding == "DFT":
+            frame_idx = 0
+            for symbol in range(self._number_ofdm_symbols):
+                data_indices = self.data_frame_indices[symbol, :, 0]
+                if np.any(data_indices):
+                    idx_end = frame_idx + self._data_resource_elements_per_symbol[symbol]
+                    data_symbols = (frame[:, frame_idx: idx_end])
+                    noise_var_data = noise_var[:, frame_idx: idx_end]
 
-        data_resources_indices: np.array = np.array([], dtype=int)
-        symbol_idx = 0
-        for pattern in ofdm_symbol_config.resource_types:
-            for pattern_el_idx in range(pattern.number):
-                for res in pattern.MultipleRes:
-                    if res.ResourceType == ResourceType.DATA:
-                        data_resources_indices = np.append(
-                            data_resources_indices,
-                            np.arange(symbol_idx, symbol_idx + res.number))
-                    symbol_idx += res.number
-        return ofdm_symbol_resources[:, data_resources_indices]
+                    frame[:, frame_idx:idx_end] = np.fft.ifft(data_symbols, norm='ortho')
+                    noise_var[:, frame_idx: idx_end] = np.broadcast_to(np.mean(noise_var_data, axis=1),
+                                                                       (self._data_resource_elements_per_symbol[symbol],
+                                                                        self.param.number_rx_antennas)).T
+
+                frame_idx += self._data_resource_elements_per_symbol[symbol]
+
+        return frame, noise_var
 
     def channel_estimation(self, rx_signal: np.ndarray,
                            timestamp_in_samples: int) -> np.ndarray:
@@ -505,9 +453,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         Returns:
             numpy.ndarray:
-                channel estimate in the frequency domain. It is a N x R x T x K array, with N
-                the FFT size and K the number of data OFDM symbols in the frame.
-                R denotes the number of receiving antennas and T of the transmitting
+                channel estimate in the frequency domain. It is a R x T x K x N array, with N the FFT size and K the
+                number of data OFDM symbols in the frame. R denotes the number of receive antennas and T of the transmit
                 antennas.
         """
 
@@ -548,7 +495,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         else:
             raise ValueError('invalid channel estimation type')
 
-        return channel_in_freq_domain
+        return np.moveaxis(channel_in_freq_domain, 0, -1)
 
     def get_ideal_channel_estimation(
             self, channel_timestamp: np.array) -> np.ndarray:
