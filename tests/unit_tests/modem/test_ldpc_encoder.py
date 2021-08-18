@@ -2,8 +2,7 @@ import unittest
 from fractions import Fraction
 from tests.unit_tests.modem.utils import flatten_blocks
 import os
-from datetime import datetime
-
+import warnings
 import numpy as np
 from scipy.io import loadmat
 
@@ -32,6 +31,11 @@ class TestLdpcEncoder(unittest.TestCase):
             os.path.dirname(__file__), 'res', 'ldpc')
 
     def test_ldpcBindingEncodingYieldsSameResultsAsPythonCode(self) -> None:
+        if 'ldpc_binding' not in globals():
+            warnings.warn("LDPC C++ binding could not ne imported,"
+                          "'test_ldpcBindingEncodingYieldsSameResultsAsPythonCode' skipped")
+            return
+
         params = ParametersLdpcEncoder()
         params.code_ratio = 2 / 3
         params.block_size = 256
@@ -55,6 +59,11 @@ class TestLdpcEncoder(unittest.TestCase):
         np.testing.assert_array_almost_equal(encoded_word[0], encoded_word_binding[0])
 
     def test_ldpcBindingDecodingYieldsSameResultsAsPythonCode(self) -> None:
+        if 'ldpc_binding' not in globals():
+            warnings.warn("LDPC C++ binding could not ne imported,"
+                          "'test_ldpcBindingDecodingYieldsSameResultsAsPythonCode' skipped")
+            return
+
         params = ParametersLdpcEncoder()
         params.code_ratio = 2 / 3
         params.block_size = 256
