@@ -36,6 +36,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     prefix_time_indices (numpy.ndarray):
     data_time_indices (numpy.ndarray): vectors containing the indices of the guard intervals, prefixes and data in time
         samples, considering sampling at the FFT rate
+    channel_sampling_timestamps (numpy.ndarray): vector containing the timestamps (in terms of nor obersampled samples)
+        of each OFDM symbol
     """
     def __init__(self, param: ParametersOfdm) -> None:
         super().__init__(param)
@@ -62,6 +64,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self.guard_time_indices = np.array([], dtype=int)
         self.prefix_time_indices = np.array([], dtype=int)
         self.data_time_indices = np.array([], dtype=int)
+        self.channel_sampling_timestamps = np.array([], dtype=int)
 
         # derived variables for precoding
         self._data_resource_elements_per_symbol = np.array([])
@@ -77,13 +80,17 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         """
         ofdm_symbol_idx = 0
         sample_idx = 0
+        self.channel_sampling_timestamps = np.array([], dtype=int)
+
         for frame_element in self.param.frame_structure:
             if isinstance(frame_element, GuardInterval):
                 self.guard_time_indices = np.append(self.guard_time_indices,
                                                     np.arange(sample_idx, sample_idx + frame_element.no_samples))
                 sample_idx += frame_element.no_samples
+
             elif isinstance(frame_element, OfdmSymbolConfig):
                 ref_idxs = self._get_subcarrier_indices(frame_element, ResourceType.REFERENCE)
+                self.channel_sampling_timestamps = np.append(self.channel_sampling_timestamps, sample_idx)
 
                 # fill out resource elements with pilot symbols
                 ref_symbols = np.tile(self.param.reference_symbols,
@@ -448,7 +455,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         With reference-based estimation, the specified reference subcarriers are employed for channel estimation.
 
         Args:
-            rx_signal(numpy.ndarray): time-domain samples of the received signal over the whole frame
+            rx_signal(numpy.ndarray): frequency-domain samples of the received signal over the whole frame
             timestamp_in_samples(int): sample index inside the drop of the first sample in frame
 
         Returns:
@@ -457,9 +464,10 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 number of data OFDM symbols in the frame. R denotes the number of receive antennas and T of the transmit
                 antennas.
         """
-
         initial_timestamp_in_samples = copy(timestamp_in_samples)
-        # determine timestamp of data symbols
+
+        ####
+        # old determine timestamp of data symbols
         channel_sampling_timestamps = np.array([])
         for frame_element in self.param.frame_structure:
             if isinstance(frame_element, OfdmSymbolConfig):
@@ -467,12 +475,15 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 samples_in_element = frame_element.no_samples + frame_element.cyclic_prefix_samples
             else:
                 samples_in_element = frame_element.no_samples
-
             timestamp_in_samples += samples_in_element * self.param.oversampling_factor
+        channel_timestamps_old = channel_sampling_timestamps / self.param.sampling_rate
+        number_of_symbols_old = channel_sampling_timestamps.size
+        ####
 
-        channel_timestamps = channel_sampling_timestamps / self.param.sampling_rate
+        channel_timestamps = ((self.channel_sampling_timestamps * self.param.oversampling_factor
+                              + initial_timestamp_in_samples) / self.param.sampling_rate)
 
-        number_of_symbols = channel_sampling_timestamps.size
+        number_of_symbols = channel_timestamps.size
 
         channel_in_freq_domain: np.ndarray
 
@@ -491,6 +502,9 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
             channel_in_freq_domain = np.tile(self.get_ideal_channel_estimation(np.array([channel_timestamps])),
                                              number_of_symbols)
+
+        elif self.param.channel_estimation == "REFERENCE_SIGNAL":
+            channel_in_freq_domain = self.reference_based_channel_estimation(rx_signal, channel_timestamps)
 
         else:
             raise ValueError('invalid channel estimation type')
@@ -541,8 +555,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return channel_in_freq_domain_MIMO
 
-    def reference_based_channel_estimation(self, rx_signal, channel_timestamp: np.array):
-        pass
+    def reference_based_channel_estimation(self, rx_signal, channel_timestamp: np.array, frequency_bins=np.array([])):
+        ch_est = np.zeros(rx_signal.size)
+
+        ch_est = rx_signal / self.reference_frame
+
+        return 0
 
     def get_bit_energy(self) -> float:
         """returns the theoretical (discrete) bit energy.
