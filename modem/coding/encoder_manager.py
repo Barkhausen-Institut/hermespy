@@ -35,7 +35,7 @@ class EncoderManager:
 
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
         decoded_bits: List[np.array] = encoded_bits
-        for encoder in self._encoders:
-            decoded_bits = encoder.decode(encoded_bits)
+        for encoder in reversed(self._encoders):
+            decoded_bits = encoder.decode(decoded_bits)
 
         return decoded_bits
