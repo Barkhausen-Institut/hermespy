@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 from typing import List
 import numpy as np
 
@@ -48,38 +48,55 @@ class TestEncoderManager(unittest.TestCase):
         self.assertEqual(id(self.encoder_manager.encoders[1]), id(self.encoder2))
 
     def test_encoding_functions_called(self) -> None:
-        mock_encoder1 = Mock()
-        mock_encoder1.data_bits_k = 2
-        mock_encoder2 = Mock()
-        mock_encoder2.data_bits_k = 3
-        mock_encoder3 = Mock()
-        mock_encoder3.data_bits_k = 5
+        mock_parent = Mock()
+        mock_parent.mock_encoder1 = Mock()
+        mock_parent.mock_encoder1.data_bits_k = 2
+        mock_parent.mock_encoder2 = Mock()
+        mock_parent.mock_encoder2.data_bits_k = 3
+        mock_parent.mock_encoder3 = Mock()
+        mock_parent.mock_encoder3.data_bits_k = 5
 
-        self.encoder_manager.add_encoder(mock_encoder1)
-        self.encoder_manager.add_encoder(mock_encoder2)
-        self.encoder_manager.add_encoder(mock_encoder3)
+        self.encoder_manager.add_encoder(mock_parent.mock_encoder1)
+        self.encoder_manager.add_encoder(mock_parent.mock_encoder2)
+        self.encoder_manager.add_encoder(mock_parent.mock_encoder3)
 
         _ = self.encoder_manager.encode([np.array([0])])
-        mock_encoder1.encode.assert_called_once()
-        mock_encoder2.encode.assert_called_once()
-        mock_encoder3.encode.assert_called_once()
+        mock_parent.assert_has_calls([
+            call.mock_encoder1.encode([np.array([0])]),
+            call.mock_encoder2.encode(mock_parent.mock_encoder1.encode(np.array([0]))),
+            call.mock_encoder3.encode(
+                mock_parent.mock_encoder2.encode(
+                    mock_parent.mock_encoder1.encode(np.array([0]))
+                )
+            )])
 
     def test_decoding_functions_called(self) -> None:
-        mock_encoder1 = Mock()
-        mock_encoder1.data_bits_k = 2
-        mock_encoder2 = Mock()
-        mock_encoder2.data_bits_k = 3
-        mock_encoder3 = Mock()
-        mock_encoder3.data_bits_k = 5
+        mock_parent = Mock()
+        mock_parent.mock_encoder1 = Mock()
+        mock_parent.mock_encoder1.data_bits_k = 2
+        mock_parent.mock_encoder2 = Mock()
+        mock_parent.mock_encoder2.data_bits_k = 3
+        mock_parent.mock_encoder3 = Mock()
+        mock_parent.mock_encoder3.data_bits_k = 5
 
-        self.encoder_manager.add_encoder(mock_encoder1)
-        self.encoder_manager.add_encoder(mock_encoder2)
-        self.encoder_manager.add_encoder(mock_encoder3)
+        self.encoder_manager.add_encoder(mock_parent.mock_encoder1)
+        self.encoder_manager.add_encoder(mock_parent.mock_encoder2)
+        self.encoder_manager.add_encoder(mock_parent.mock_encoder3)
 
         _ = self.encoder_manager.decode([np.array([0])])
-        mock_encoder1.decode.assert_called_once()
-        mock_encoder2.decode.assert_called_once()
-        mock_encoder3.decode.assert_called_once()
+
+        mock_parent.assert_has_calls([
+            call.mock_encoder3.decode([np.array([0])]),
+            call.mock_encoder2.decode(
+                mock_parent.mock_encoder3.decode(np.array([0]))
+            ),
+            call.mock_encoder1.decode(
+                mock_parent.mock_encoder2.decode(
+                    mock_parent.mock_encoder3.decode(np.array([0]))
+                )
+            )]
+        )
+
 
     def test_code_rate_calculation(self) -> None:
         self.encoder_manager.add_encoder(self.encoder1)
