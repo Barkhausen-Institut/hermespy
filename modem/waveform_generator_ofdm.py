@@ -285,7 +285,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                     data_symbols = frame[symbol, data_indices, :]
                     data_symbols = np.fft.fft(data_symbols, axis=0, norm='ortho')
                     frame[symbol, data_indices, :] = data_symbols
-
+        elif self.param.precoding == "GFDM":
+            # 1. get data symbols from frame (nix mit gfdm zu tun)
+            # 2. definiere pulse shape, wie? li muss ahmad fragen
+            # 3. create window (gfdm_func.g2Wtx), z.B. Wtx_FD = gfdm_func.g2Wtx(g, K, M, "FD")
+            # 4. data_symbols = data_symbols.reshape(K, M), len(D) MUSS gleich K*M, sonst zero padding oder so
+            # 5. data_symbols = GFDM_Mod(D, window von 3, K_set, TD/FD)
         return frame
 
     def receive_frame(self,
@@ -431,6 +436,11 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                                                                         self.param.number_rx_antennas)).T
 
                 frame_idx += self._data_resource_elements_per_symbol[symbol]
+        elif self.param.precoding == "GFDM":
+            # 1. create window für rx, Wtx2Wrx(Window transmitter, "ZF", 1, 1)
+            # 2. data_symbols = GFDM_Demod(data_symbols, window von 1, K_set, TD/FD)
+            # (3. data_symbols = data_sy)
+            # 3. data_symbols = von KxM auf K*Mx1... wie's halt sein muss
 
         return frame, noise_var
 
