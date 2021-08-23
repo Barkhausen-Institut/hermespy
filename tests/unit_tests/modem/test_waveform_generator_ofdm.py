@@ -38,9 +38,9 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         self.params.subcarrier_spacing = 15e3
         self.params.cp_ratio = np.array([0.07, 0.073])
         self.params.number_tx_antennas = self.NO_TX_ANTENNAS
-        self.params._ofdm_symbol_res_str = "100(r11d), 100(6r6d)"
-        self.params._frame_structure_str = "g, 10(12),1"
-        self.params._cp_lengths_str = "c1,c2"
+        self.params._ofdm_symbol_res_str = "1(1200r), 100(r11d), 100(6r6d)"
+        self.params._frame_structure_str = "g,1,10(23),2"
+        self.params._cp_lengths_str = "c1,c1,c2"
         self.params.modulation_order = 4
         self.params.sampling_rate = self.FFT_SIZE * self.params.subcarrier_spacing
         self.params.mimo_scheme = "NONE"
@@ -93,7 +93,7 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
                     cp_samples[0] + self.params.fft_size
                     + cp_samples[1] + self.params.fft_size
                  )
-               + cp_samples[0] + self.params.fft_size + gi_samples
+               + 2 * (cp_samples[0] + self.params.fft_size) + gi_samples
         )
 
         O = WaveformGeneratorOfdm(self.params)
@@ -103,23 +103,25 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         """ test if reference and data symbols are allocated in the right positions"""
 
         # Resource-element grid of dimension N_symb x N_sc
-        time_frequency_grid_ref = np.zeros((21, 1200, 1))
-        time_frequency_grid_data = np.zeros((21, 1200, 1))
+        time_frequency_grid_ref = np.zeros((22, 1200, 1))
+        time_frequency_grid_data = np.zeros((22, 1200, 1))
+        ref_idx_symbol_0 = np.ones(1200)
         ref_idx_symbol_1 = np.tile(np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 100)
         data_idx_symbol_1 = np.logical_not(ref_idx_symbol_1)
         ref_idx_symbol_2 = np.tile(np.array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]), 100)
         data_idx_symbol_2 = np.logical_not(ref_idx_symbol_2)
 
+        time_frequency_grid_ref[0, :, 0] = ref_idx_symbol_0
         for idx in range(10):
-            time_frequency_grid_ref[2*idx, :, 0] = ref_idx_symbol_1
-            time_frequency_grid_ref[2*idx + 1, :, 0] = ref_idx_symbol_2
-            time_frequency_grid_data[2*idx, :, 0] = data_idx_symbol_1
-            time_frequency_grid_data[2*idx + 1, :, 0] = data_idx_symbol_2
-        time_frequency_grid_ref[20, :, 0] = ref_idx_symbol_1
-        time_frequency_grid_data[20, :, 0] = data_idx_symbol_1
+            time_frequency_grid_ref[2*idx + 1, :, 0] = ref_idx_symbol_1
+            time_frequency_grid_ref[2*idx + 2, :, 0] = ref_idx_symbol_2
+            time_frequency_grid_data[2*idx + 1, :, 0] = data_idx_symbol_1
+            time_frequency_grid_data[2*idx + 2, :, 0] = data_idx_symbol_2
+        time_frequency_grid_ref[21, :, 0] = ref_idx_symbol_1
+        time_frequency_grid_data[21, :, 0] = data_idx_symbol_1
 
-        np.testing.assert_array_almost_equal(time_frequency_grid_ref, self.O.reference_frame != 0)
-        np.testing.assert_array_almost_equal(time_frequency_grid_data, self.O.data_frame_indices)
+        np.testing.assert_array_equal(time_frequency_grid_ref, self.O.reference_frame != 0)
+        np.testing.assert_array_equal(time_frequency_grid_data, self.O.data_frame_indices)
 
     def test_time_indices_allocated_correctly(self) -> None:
 
@@ -133,7 +135,7 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         number_of_samples_ofdm_symbols = self.O.param.fft_size + np.around(self.O.param.fft_size * self.params.cp_ratio)
         number_of_samples_guard = int(np.around(self.O.param.frame_guard_interval * self.O.sampling_rate))
 
-        expected_number_of_samples = (11 * int(number_of_samples_ofdm_symbols[0]) +
+        expected_number_of_samples = (12 * int(number_of_samples_ofdm_symbols[0]) +
                                       10 * int(number_of_samples_ofdm_symbols[1]) + number_of_samples_guard)
 
         time_domain_frame = self.O.create_ofdm_frame_time_domain(frame)
@@ -331,6 +333,46 @@ class TestWaveformGeneratorOfdm(unittest.TestCase):
         np.testing.assert_allclose(
             expected_channel_in_frequency,
             np.squeeze(estimated_channel))
+
+    def test_channel_estimation_least_square(self) -> None:
+        """
+        Test reference-based least-square channel estimation for a SISO system.
+        In this test we verify if the LS channel estimator yields the same results as ideal channel estimation without
+        noise
+        """
+        # create a channel
+        rx_modem_params = ParametersRxModem()
+        tx_modem_params = ParametersTxModem()
+
+        channel_param = ParametersChannel(rx_modem_params, tx_modem_params)
+        channel_param.multipath_model = "COST259"
+        channel_param.cost_259_type = "TYPICAL_URBAN"
+        channel_param.attenuation_db = 0
+        channel_param.velocity = np.asarray([0, 0, 0])
+
+        channel_param.check_params()
+
+        # get ideal channel estimation
+        rnd_ideal = np.random.RandomState(42)
+        channel = MultipathFadingChannel(channel_param, rnd_ideal, self.params.sampling_rate, 0)
+        channel.init_drop()
+        self.O.set_channel(channel)
+        self.O.param.channel_estimation_ideal = "IDEAL"
+        estimated_channel_ideal = self.O.channel_estimation(None, 0)
+
+        # get LS channel estimation
+        rnd_ideal = np.random.RandomState(42)
+        channel = MultipathFadingChannel(channel_param, rnd_ideal, self.params.sampling_rate, 0)
+        channel.init_drop()
+        self.O.set_channel(channel)
+        self.O.param.channel_estimation_ideal = "IDEAL"
+
+        data_bits = np.random.randint(2, size=self.O.bits_in_frame)
+        signal, _, _ = self.O.create_frame(0, data_bits)
+        frame_in_freq_domain = self.O._get_frame_in_freq_domain(signal)
+        estimated_channel_ls = self.O.channel_estimation(frame_in_freq_domain, np.array([0]))
+
+        np.testing.assert_allclose(estimated_channel_ideal, estimated_channel_ls)
 
 
 if __name__ == '__main__':

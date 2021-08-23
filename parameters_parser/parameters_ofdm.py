@@ -82,7 +82,8 @@ class ParametersOfdm(ParametersWaveformGenerator):
         'IDEAL',
         'IDEAL_PREAMBLE',
         'IDEAL_MIDAMBLE',
-        'IDEAL_POSTAMBLE']
+        'IDEAL_POSTAMBLE',
+        'LS', 'LEAST_SQUARE']
     equalization_val = ['ZF', 'MMSE']
 
     def __init__(self, number_tx_antennas: int = 1, number_rx_antennas: int = 1) -> None:
@@ -209,6 +210,8 @@ class ParametersOfdm(ParametersWaveformGenerator):
             raise ValueError(
                 msg_header +
                 f'channel_estimation ({self.channel_estimation}) not supported')
+        if self.channel_estimation == 'LS':
+            self.channel_estimation = 'LEAST_SQUARE'
 
         if self.equalization not in ParametersOfdm.equalization_val:
             raise ValueError(
