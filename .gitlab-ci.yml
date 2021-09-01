@@ -1,12 +1,39 @@
 image: python:3.7
 
-before_script:
-  - apt update
-  - apt-get install -y build-essential
-  - pip install -r requirements.txt
-  - pip install .
+stages:
+  - test
+  - build
 
 test:
   stage: test
+  before_script:
+    - apt update
+    - apt-get install -y build-essential
+    - pip install -r requirements.txt
+    - pip install .
   script:
     - python run_unit_tests.py
+
+wheel-linux:
+  stage: build
+  image: python:3.8
+  services:
+    - name: docker:dind
+      entrypoint: [ "env", "-u", "DOCKER_HOST" ]
+      command: [ "dockerd-entrypoint.sh" ]
+    variables:
+      DOCKER_HOST: tcp://docker:2375/
+      DOCKER_DRIVER: overlay2
+      # See https://github.com/docker-library/docker/pull/166
+      DOCKER_TLS_CERTDIR: ""
+    before_script:
+      - apt-get install -y build-essential
+      - pip install -r requirements.txt
+      - pip install .
+      - curl -sSL https://get.docker.com/ | sh
+      - python -m pip install cibuildwheel==2.1.1
+    script:
+      - cibuildwheel --output-dir wheels
+    artifacts:
+      paths:
+        - wheels
