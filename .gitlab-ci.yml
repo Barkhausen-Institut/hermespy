@@ -8,7 +8,7 @@ test:
   stage: test
   before_script:
     - apt update
-    - apt-get install -y build-essential libeigen3-dev
+    - apt-get install -y build-essential
     - pip install -r requirements.txt
     - pip install .
   script:
@@ -17,7 +17,7 @@ test:
 wheel-linux:
   stage: build
   before_script:
-    - apt-get install -y build-essential libeigen3-dev
+    - apt-get install -y build-essential
     - mkdir wheels/
   script:
     - pip wheel -v . --wheel-dir wheels/
