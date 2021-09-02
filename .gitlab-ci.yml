@@ -16,23 +16,11 @@ test:
 
 wheel-linux:
   stage: build
-  image: python:3.8
-  services:
-    - name: docker:dind
-      entrypoint: [ "env", "-u", "DOCKER_HOST" ]
-      command: [ "dockerd-entrypoint.sh" ]
-  variables:
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
   before_script:
     - apt-get install -y build-essential
-    - pip install -r requirements.txt
-    - pip install .
-    - curl -sSL https://get.docker.com/ | sh
-    - python -m pip install cibuildwheel==2.1.1
+    - mkdir wheels/
   script:
-    - cibuildwheel --output-dir wheels
+    - pip wheel -v . --wheel-dir wheels/
   artifacts:
     paths:
       - wheels
