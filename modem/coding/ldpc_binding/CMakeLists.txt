@@ -6,6 +6,7 @@ find_package(Eigen3 3.3 NO_MODULE)
 
 pybind11_add_module(ldpc MODULE src/ldpc_binding.cpp)
 target_include_directories(ldpc PUBLIC include/)
+target_compile_definitions(ldpc PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 # Since Eigen3 is an optional import, we revert back to the 3rdparty folder if it is not available on system
 if(Eigen3)
