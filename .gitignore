@@ -18,7 +18,7 @@ matlab_env/
 .python-version
 
 # Don't track build fragments
-dist/
+wheels/
 *.egg-info/
 MANIFEST
 _skbuild/
