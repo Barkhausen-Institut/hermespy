@@ -11,4 +11,4 @@ if(SKBUILD)
   list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
 endif()
 
-add_subdirectory(src/modem/coding/ldpc_binding)
+add_subdirectory(modem/coding/ldpc_binding)
