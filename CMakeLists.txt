@@ -12,3 +12,4 @@ if(SKBUILD)
 endif()
 
 add_subdirectory(modem/coding/ldpc_binding)
+install(TARGETS ldpc_binding DESTINATION modem/coding/ldpc_binding)
