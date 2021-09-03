@@ -19,7 +19,7 @@ wheel-linux:
   before_script:
     - apt update
     - apt-get install -y build-essential
-    - mkdir wheels/
+    - mkdir wheel/
   script:
     - pip wheel -v . --wheel-dir wheel/
   artifacts:
