@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15...3.19)
-project(ldpc_binding VERSION "0.0.1")
+project(ldpc VERSION "0.0.1")
 
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Eigen3 3.3 NO_MODULE)
@@ -14,5 +14,3 @@ if(Eigen3)
 else()
     target_include_directories(ldpc_binding PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/)
 endif()
-
-install(TARGETS ldpc_binding DESTINATION .)

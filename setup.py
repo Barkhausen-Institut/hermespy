@@ -9,8 +9,8 @@ setup(
     description="",
     long_description="",
     packages=find_packages('.', exclude=("tests",)),
+    package_dir={"": ""},
     include_package_data=True,
     extras_require={"test": ["pytest"]},
-    cmake_install_dir=".",
     zip_safe=False
 )
