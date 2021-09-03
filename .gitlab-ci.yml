@@ -10,7 +10,7 @@ test:
     - apt update
     - apt-get install -y build-essential
     - pip install -r requirements.txt
-    - pip install .
+    - pip install -e .
   script:
     - python run_unit_tests.py
 
