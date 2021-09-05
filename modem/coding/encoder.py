@@ -26,7 +26,7 @@ class Encoder(ABC):
         """This method encodes the incoming bits.
 
         Args:
-            bits(List[np.array]):
+            data_bits(List[np.array]):
                 List of data_bits that are contained in the current frame.
                 Each list element is one block with bits created by the BitSource.
 
@@ -64,7 +64,7 @@ class Encoder(ABC):
 
     @property
     def code_blocks(self) -> int:
-        """int: Number of code blocks which are to encoded."""
+        """int: Number of code blocks to be encoded."""
         return int(np.floor(self.bits_in_frame / self.encoded_bits_n))
 
     @property
