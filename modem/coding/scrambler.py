@@ -37,7 +37,7 @@ class PseudoRandomGenerator:
             raise ValueError("The init sequence must contain at least 4 bits")
 
         # Init the first fifo queue as [1 0 0 ... 0]
-        self.__queue_x1 = deque(np.zeros(m, dtype=int), self.__m)
+        self.__queue_x1 = deque(np.zeros(m, dtype=int), m)
         self.__queue_x1.append(1)
 
         # Init the second fifo queue by the provided init sequence
@@ -91,15 +91,14 @@ class PseudoRandomGenerator:
 
     def __forward_x1(self) -> int:
 
-        x1 = (self.__queue_x1.index(3) + self.__queue_x1.index(0)) % 2
+        x1 = (self.__queue_x1[3] + self.__queue_x1[0]) % 2
 
         self.__queue_x1.append(x1)
         return x1
 
     def __forward_x2(self) -> int:
 
-        x2 = (self.__queue_x2.index(3) + self.__queue_x2.index(2) + self.__queue_x2.index(1) +
-              self.__queue_x1.index(0)) % 2
+        x2 = (self.__queue_x2[3] + self.__queue_x2[2] + self.__queue_x2[1] + self.__queue_x1[0]) % 2
 
         self.__queue_x2.append(x2)
         return x2
@@ -119,7 +118,7 @@ class Scrambler3GPP(Encoder):
         super(Scrambler3GPP, self).__init__(params, bits_in_frame)
 
         self.__randomGenerator = PseudoRandomGenerator(np.random.randint(2, size=31))
-        self.__codewords = List[np.array]
+        self.__codewords = list()
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
         """This method encodes the incoming bits.
@@ -140,12 +139,12 @@ class Scrambler3GPP(Encoder):
             raise RuntimeWarning("Unused codewords will be overwritten since the encoder re-encodes before decoding")
 
         self.__codewords.clear()
-        codes = List[np.array]
+        codes = list()
 
         for block in data_bits:
 
             codeword = self.__randomGenerator.generate_sequence(block.shape[0])
-            code = (block * codeword) % 2
+            code = (block + codeword) % 2
 
             self.__codewords.append(codeword)
             codes.append(code)
@@ -169,7 +168,7 @@ class Scrambler3GPP(Encoder):
         if len(self.__codewords) < len(encoded_bits):
             raise RuntimeError("Codes require more codewords than available")
 
-        data = List[np.array]
+        data = list()
 
         for n, block in enumerate(encoded_bits):
             data.append((block + self.__codewords[n]) % 2)

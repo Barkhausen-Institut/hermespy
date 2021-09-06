@@ -1,10 +1,12 @@
 import unittest
 from unittest.mock import Mock
 from typing import List
+from abc import abstractmethod
 
 import numpy as np
 
 from modem.coding.encoder import Encoder
+from .utils import assert_frame_equality
 
 
 class StubEncoder(Encoder):
@@ -13,6 +15,20 @@ class StubEncoder(Encoder):
 
     def decode(self, bits: List[np.array]) -> List[np.array]:
         return bits
+
+
+class TestAbstractEncoder(unittest.TestCase):
+
+    @property
+    @abstractmethod
+    def encoder(self) -> Encoder:
+        pass
+
+    def test_coding(self) -> None:
+        """Test the expected en- and subsequent decoding behaviour for each encoder."""
+
+        data = [np.random.randint(2, size=31)]
+        assert_frame_equality(data, self.encoder.decode(self.encoder.encode(data)))
 
 
 class TestEncoder(unittest.TestCase):
