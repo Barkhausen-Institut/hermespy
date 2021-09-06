@@ -68,4 +68,4 @@ class TestScrambler80211a(TestAbstractEncoder, unittest.TestCase):
         See also Annex G.5.2 of IEEE Std 802.11a-1999
         """
 
-        assert_frame_equality([self.__scramble[:20]], self.scrambler.encode([self.__data[:20]]))
+        assert_frame_equality([self.__scramble], self.scrambler.encode([self.__data]))
