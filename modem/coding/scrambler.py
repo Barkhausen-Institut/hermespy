@@ -106,7 +106,8 @@ class PseudoRandomGenerator:
 
 class Scrambler3GPP(Encoder):
     """This class represents a scrambler in the physical up- and down-link channel of the 3GPP.
-    7.3.1.1
+
+    See section 7.3.1.1 of the respective technical standard TS 138 211 for details.
     """
 
     __randomGenerator: PseudoRandomGenerator
@@ -176,3 +177,135 @@ class Scrambler3GPP(Encoder):
         self.__codewords.clear()
 
         return data
+
+
+class Scrambler80211a(Encoder):
+    """This class represents a scrambler in the 802.11a standard.
+
+    See section 17.3.5.4 of IEEE Standard 802.11a-1999 for details.
+    https://ieeexplore.ieee.org/document/815305
+    """
+
+    __seed: np.array
+    __queue: deque
+
+    def __init__(self, params: ParametersEncoder, bits_in_frame: int) -> None:
+
+        # Init base class (Encoder)
+        super(Scrambler80211a, self).__init__(params, bits_in_frame)
+
+        # The default seed is all zeros
+        self.__seed = np.array([0] * 7)
+        self.__queue = deque(self.__seed, 7)
+
+    @property
+    def seed(self) -> np.array:
+        return self.__seed
+
+    @seed.setter
+    def seed(self, value: np.array) -> None:
+        """Set the scramble seed.
+
+        Resets the internal register queue used to generate the scrambling sequence.
+
+        Args:
+            value(np.array):
+                The new seed. Must be an array of dimension 7 containing only soft bits.
+        """
+
+        if value.shape[0] != 7:
+            raise ValueError("The seed must contain exactly 7 bit")
+
+        for bit in value:
+            if bit != 0 and bit != 1:
+                raise ValueError("Only bits (i.e. 0 or 1) represent valid seed fields")
+
+        self.__seed = value
+        self.__queue = deque(self.__seed, 7)
+
+    def encode(self, data_bits: List[np.array]) -> List[np.array]:
+
+        """This method encodes the incoming bits.
+
+        Args:
+            data_bits(List[np.array]):
+                List of data_bits that are contained in the current frame.
+                Each list element is one block with bits created by the BitSource.
+
+        Returns:
+            List[np.array]:
+                List of blocks with the encoded bits. Each list item corresponds
+                to a block containing a code word.
+        """
+
+        # Reset queue
+        self.__queue = deque(self.__seed, 7)
+
+        codes = list()
+
+        for data_block in data_bits:
+
+            code_block = np.empty(data_block.shape, dtype=int)
+
+            for n, data_bit in enumerate(data_block):
+                code_block[n] = self.__scramble_bit(data_bit)
+
+            codes.append(code_block)
+
+        return codes
+
+    def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
+        """Decode code words.
+
+        Args:
+            encoded_bits(List[np.array]):
+                List of blocks with the encoded bits. Each list item corresponds
+                to a block containing a code word. The expected input is soft bits.
+        Returns:
+            List[np.array]:
+                List of data_bits that are contained in the current frame.
+                Each list element is one block with bits created by the BitsSource.
+        """
+
+        # Reset queue
+        self.__queue = deque(self.__seed, 7)
+
+        data = list()
+
+        for code_block in encoded_bits:
+
+            data_block = np.empty(code_block.shape, dtype=int)
+
+            for n, code_bit in enumerate(code_block):
+                data_block[n] = self.__scramble_bit(code_bit)
+
+            data.append(data_block)
+
+        return data
+
+    def __forward_code_bit(self) -> int:
+        """Generate the next bit in the scrambling sequence.
+
+        The sequence depends on the configured seed.
+
+        Returns:
+            int:
+                The next bit within the scrambling sequence
+        """
+
+        code_bit = (self.__queue[3] + self.__queue[6]) % 2
+        self.__queue.appendleft(code_bit)
+
+        return code_bit
+
+    def __scramble_bit(self, bit: int) -> int:
+        """Scramble a given bit.
+
+        Args:
+            bit(int):
+                The bit to be scrambled.
+
+        Returns:
+            int: The scrambled bit."""
+
+        return (self.__forward_code_bit() + bit) % 2
