@@ -17,12 +17,12 @@ class StubEncoder(Encoder):
         return bits
 
 
-class TestAbstractEncoder(unittest.TestCase):
+class TestAbstractEncoder:
 
     @property
     @abstractmethod
     def encoder(self) -> Encoder:
-        pass
+        ...
 
     def test_coding(self) -> None:
         """Test the expected en- and subsequent decoding behaviour for each encoder."""

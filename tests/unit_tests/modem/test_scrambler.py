@@ -1,12 +1,11 @@
 import unittest
-import numpy as np
 
 from .test_encoder import TestAbstractEncoder
 from modem.coding.scrambler import Scrambler3GPP
 from modem.coding.encoder import ParametersEncoder
 
 
-class TestScrambler3GPP(TestAbstractEncoder):
+class TestScrambler3GPP(TestAbstractEncoder, unittest.TestCase):
 
     @property
     def encoder(self) -> Scrambler3GPP:
@@ -14,7 +13,7 @@ class TestScrambler3GPP(TestAbstractEncoder):
 
     def setUp(self) -> None:
 
-        self.scrambler = Scrambler3GPP(ParametersEncoder, 31)
+        self.scrambler = Scrambler3GPP(ParametersEncoder(), 31)
 
     def tearDown(self) -> None:
         pass

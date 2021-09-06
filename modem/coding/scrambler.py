@@ -12,7 +12,6 @@ class PseudoRandomGenerator:
 
     __queue_x1: deque
     __queue_x2: deque
-    __m: int
     __initial_queue_x1: deque
     __initial_queue_x2: deque
 
@@ -83,9 +82,10 @@ class PseudoRandomGenerator:
 
     def reset(self) -> None:
         """Resets the generator to its default state.
+
+        This implies reverting the queues back to their original state (at generator position n = 0).
         """
 
-        # Resetting the generator implicitly means resetting the queues to their respective initial sequeunces
         self.__queue_x1 = self.__initial_queue_x1
         self.__queue_x2 = self.__initial_queue_x2
 
