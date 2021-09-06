@@ -37,10 +37,10 @@ class PseudoRandomGenerator:
 
         # Init the first fifo queue as [1 0 0 ... 0]
         self.__queue_x1 = deque(np.zeros(m, dtype=int), m)
-        self.__queue_x1.append(1)
+        self.__queue_x1.appendleft(1)
 
         # Init the second fifo queue by the provided init sequence
-        self.__queue_x2 = deque(init_sequence, m)  # TODO: Flip queue content
+        self.__queue_x2 = deque(init_sequence, m)
 
         # Fast-forward the queues to compensate for the offset
         for _ in range(offset - m):
@@ -91,14 +91,14 @@ class PseudoRandomGenerator:
 
     def __forward_x1(self) -> int:
 
-        x1 = (self.__queue_x1[3] + self.__queue_x1[0]) % 2
+        x1 = (self.__queue_x1[-3] + self.__queue_x1[0]) % 2
 
         self.__queue_x1.append(x1)
         return x1
 
     def __forward_x2(self) -> int:
 
-        x2 = (self.__queue_x2[3] + self.__queue_x2[2] + self.__queue_x2[1] + self.__queue_x1[0]) % 2
+        x2 = (self.__queue_x2[-3] + self.__queue_x2[-2] + self.__queue_x2[-1] + self.__queue_x1[0]) % 2
 
         self.__queue_x2.append(x2)
         return x2
