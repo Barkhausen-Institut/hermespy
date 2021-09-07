@@ -3,6 +3,7 @@ from typing import List
 from numpy import random as rnd
 import numpy as np
 from typing import Tuple, Generic, TypeVar, Any
+from quaternion import quaternion
 
 from parameters_parser.parameters_modem import ParametersModem
 from parameters_parser.parameters_psk_qam import ParametersPskQam
@@ -20,6 +21,7 @@ from modem.coding.encoder_manager import EncoderManager
 from modem.coding.encoder_factory import EncoderFactory
 from source.bits_source import BitsSource
 from channel.channel import Channel
+from beamformer.beamformer import Beamformer
 
 P = TypeVar('P', bound=ParametersModem)
 
@@ -39,6 +41,11 @@ class Modem(Generic[P]):
             the desired power, depending on the current power factor.
         encoder(Encoder):
     """
+
+    __position: np.array        # Position of the modem within the scenario
+    __orientation: quaternion   # Orientation of the modem within the scenario
+    __topology: np.ndarray      # Antenna positions in the modem's local coordinate frame
+    __beamformer: Beamformer    # Beamformer associated with this modem
 
     def __init__(self, param: P, source: BitsSource,
                  random_number_gen: rnd.RandomState, tx_modem=None) -> None:
@@ -72,7 +79,6 @@ class Modem(Generic[P]):
         # current power factor
 
         self.rf_chain = RfChain(param.rf_chain, self.waveform_generator.get_power(), random_number_gen,)
-
 
     @property
     def paired_tx_modem(self) -> 'Modem':
@@ -213,3 +219,36 @@ class Modem(Generic[P]):
 
     def set_channel(self, channel: Channel):
         self.waveform_generator.set_channel(channel)
+
+    @property
+    def position(self) -> np.array:
+        """Access the modem's position.
+
+        Returns:
+            np.array:
+                The modem position in xyz-coordinates.
+        """
+
+        return self.__position
+
+    @property
+    def orientation(self) -> quaternion:
+        """Access the modem's orientation.
+
+        Returns:
+            quaternion:
+                The modem orientation as a normalized quaternion.
+        """
+
+        return self.__orientation
+
+    @orientation.setter
+    def orientation(self, orientation: quaternion) -> None:
+        """Update the modem's orientation.
+
+        Args:
+            orientation(quaternion):
+                The new modem orientation.
+        """
+
+        self.__orientation = orientation
