@@ -367,4 +367,3 @@ class Beamformer:
 
                 axes.imshow(graph[0, ::].T)
                 axes.set(xlabel="Azimuth", ylabel="Elevation")
-

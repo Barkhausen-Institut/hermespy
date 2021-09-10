@@ -3,7 +3,6 @@ from typing import List
 from numpy import random as rnd
 import numpy as np
 from typing import Tuple, Generic, TypeVar, Any
-from quaternion import quaternion
 
 from parameters_parser.parameters_modem import ParametersModem
 from parameters_parser.parameters_psk_qam import ParametersPskQam
@@ -42,8 +41,8 @@ class Modem(Generic[P]):
         encoder(Encoder):
     """
 
-    __position: np.array        # Position of the modem within the scenario
-    __orientation: quaternion   # Orientation of the modem within the scenario
+    __position: np.array        # Position of the modem within the scenario. Set to None if unknown.
+    __orientation: np.array     # Orientation of the modem within the scenario. Set to None if unknown.
     __topology: np.ndarray      # Antenna positions in the modem's local coordinate frame
     __beamformer: Beamformer    # Beamformer associated with this modem
 
@@ -232,22 +231,22 @@ class Modem(Generic[P]):
         return self.__position
 
     @property
-    def orientation(self) -> quaternion:
+    def orientation(self) -> np.array:
         """Access the modem's orientation.
 
         Returns:
-            quaternion:
+            np.array:
                 The modem orientation as a normalized quaternion.
         """
 
         return self.__orientation
 
     @orientation.setter
-    def orientation(self, orientation: quaternion) -> None:
+    def orientation(self, orientation: np.array) -> None:
         """Update the modem's orientation.
 
         Args:
-            orientation(quaternion):
+            orientation(np.array):
                 The new modem orientation.
         """
 
