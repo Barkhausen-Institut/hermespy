@@ -11,8 +11,8 @@ class RfChain:
     Only PA is modelled.
     """
 
-    def __init__(self, param: ParametersRfChain, tx_power: float,
-                 random_number_gen: rnd.RandomState) -> None:
+    def __init__(self, param: ParametersRfChain = None,
+                 tx_power: float = 1.0) -> None:
         self.param = param
         if self.param is not None:
             self.power_amplifier = PowerAmplifier(self.param, tx_power)

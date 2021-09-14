@@ -1,26 +1,30 @@
-from typing import List
-
+from __future__ import annotations
+from typing import Tuple, Generic, TypeVar, List, Type, TYPE_CHECKING
+from abc import abstractmethod
+from enum import Enum
 from numpy import random as rnd
 import numpy as np
-from typing import Tuple, Generic, TypeVar, Any
 
 from parameters_parser.parameters_modem import ParametersModem
-from parameters_parser.parameters_psk_qam import ParametersPskQam
-from parameters_parser.parameters_chirp_fsk import ParametersChirpFsk
-from parameters_parser.parameters_ofdm import ParametersOfdm
-from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
-from modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
-from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
-from modem.waveform_generator_ofdm import WaveformGeneratorOfdm
-from modem.rf_chain import RfChain
-from modem.coding.repetition_encoder import RepetitionEncoder
-from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
 from modem.coding.encoder_manager import EncoderManager
-from modem.coding.encoder_factory import EncoderFactory
-from source.bits_source import BitsSource
+from modem.waveform_generator import WaveformGenerator
+from modem.rf_chain import RfChain
 from channel.channel import Channel
-from beamformer.beamformer import Beamformer
+from source.bits_source import BitsSource
+
+if TYPE_CHECKING:
+    from scenario import Scenario
+    from beamformer import Beamformer
+
+
+class TransmissionMode(Enum):
+    """Direction of transmission.
+    """
+
+    Rx = 1  # Receive mode
+    Tx = 2  # Transmit mode
+
 
 P = TypeVar('P', bound=ParametersModem)
 
@@ -30,62 +34,91 @@ class Modem(Generic[P]):
 
     The modem consists of an analog RF chain, a waveform generator, and can be used
     either for transmission or reception of a given technology.
-
-    Attributes:
-        param (ParametersModem): Modem-specific parameters.
-        waveform_generator (WaveformGenerator): waveform generator object, generates baseband samples.
-        rf_chain (RfChain): RF chain object, that models RF impairments.
-        power_factor(float):
-            if this is a transmit modem, signal is scaled to
-            the desired power, depending on the current power factor.
-        encoder(Encoder):
     """
 
-    __position: np.array        # Position of the modem within the scenario. Set to None if unknown.
-    __orientation: np.array     # Orientation of the modem within the scenario. Set to None if unknown.
-    __topology: np.ndarray      # Antenna positions in the modem's local coordinate frame
-    __beamformer: Beamformer    # Beamformer associated with this modem
+    __scenario: Scenario                    # Scenario this modem belongs to
+    __position: np.array                    # Position of the modem within the scenario. Set to None if unknown.
+    __orientation: np.array                 # Orientation of the modem within the scenario. Set to None if unknown.
+    __topology: np.ndarray                  # Antenna array topology, implicitly contains the number of antennas
+    __carrier_frequency: float              # Center frequency of the RF signal
+    __sampling_rate: float                  # Signal sampling rate in Hz
+    __linear_topology: bool                 # Flag indicating a one-dimensional sensor array topology
+    __beamformer: Beamformer                # Beamformer associated with this modem
+    __encoder_manager: EncoderManager
+    __bits_source: BitsSource
+    __waveform_generator: WaveformGenerator
+    __rf_chain: RfChain
 
-    def __init__(self, param: P, source: BitsSource,
-                 random_number_gen: rnd.RandomState, tx_modem=None) -> None:
-        self.param = param
-        self.source = source
+    def __init__(self,
+                 scenario: Scenario,
+                 topology: np.ndarray = None,
+                 carrier_frequency: float = None,
+                 sampling_rate: float = None,
+                 bits_source: BitsSource = None,
+                 waveform_generator: WaveformGenerator = None,
+                 rf_chain: RfChain = None) -> None:
+        """Object initialization.
 
-        self.encoder_factory = EncoderFactory()
-        self.encoder_manager = EncoderManager()
+        Args:
+            scenario (Scenario):
+                The scenario this modem is attached to.
 
-        for encoding_type, encoding_params in zip(
-                            self.param.encoding_type, self.param.encoding_params):
-            encoder: Encoder = self.encoder_factory.get_encoder(
-                encoding_params, encoding_type,
-                self.param.technology.bits_in_frame)
-            self.encoder_manager.add_encoder(encoder)
+            topology (np.ndarray, optional)
+        """
 
-        self.waveform_generator: Any
-        if isinstance(param.technology, ParametersPskQam):
-            self.waveform_generator = WaveformGeneratorPskQam(param.technology)
-        elif isinstance(param.technology, ParametersChirpFsk):
-            self.waveform_generator = WaveformGeneratorChirpFsk(param.technology)
-        elif isinstance(param.technology, ParametersOfdm):
-            self.waveform_generator = WaveformGeneratorOfdm(
-                param.technology, random_number_gen)
-        else:
-            raise ValueError(
-                "invalid technology in constructor of Modem class")
-        # if this is a received modem, link to tx modem must be provided
-        self._paired_tx_modem = tx_modem
-        self.power_factor = 1.  # if this is a transmit modem, signal is scaled to the desired power, depending on the
-        # current power factor
+        self.__scenario = scenario
+        self.__position = None
+        self.__orientation = None
+        self.__topology = None
+        self.__carrier_frequency = 2.4e9
+        self.__sampling_rate = 2 * 2.5e9
+        self.__linear_topology = False
+        self.__beamformer = Beamformer(self)
+        self.__bits_source = BitsSource(rnd.RandomState())
+        self.__encoder_manager = EncoderManager()
+        #self.__waveform_generator = WaveformGenerator()
+        self.__rf_chain = RfChain()
 
-        self.rf_chain = RfChain(param.rf_chain, self.waveform_generator.get_power(), random_number_gen,)
+        if topology is not None:
+            self.topology = topology
+
+        if carrier_frequency is not None:
+            self.carrier_frequency = carrier_frequency
+
+        if sampling_rate is not None:
+            self.sampling_rate = sampling_rate
+
+        if bits_source is not None:
+            self.bits_source = bits_source
+
+        if waveform_generator is not None:
+            self.waveform_generator = waveform_generator
+
+        if rf_chain is not None:
+            self.rf_chain = rf_chain
 
     @property
-    def paired_tx_modem(self) -> 'Modem':
-        return self._paired_tx_modem
+    def scenario(self) -> Scenario:
+        """Access the scenario this modem is attached to.
 
-    @paired_tx_modem.setter
-    def paired_tx_modem(self, other_modem: 'Modem'):
-        self._paired_tx_modem = other_modem
+        Returns:
+            Scenario:
+                The referenced scenario.
+        """
+
+        return self.__scenario
+
+    @property
+    @abstractmethod
+    def paired_modems(self) -> List[Modem]:
+        """The modems connected to this modem over an active channel.
+
+        Returns:
+            List[Modem]:
+                A list of paired modems.
+        """
+
+        pass
 
     def send(self, drop_duration: float) -> np.ndarray:
         """Returns an array with the complex baseband samples of a waveform generator.
@@ -104,13 +137,12 @@ class Modem(Generic[P]):
         number_of_samples = int(
             np.ceil(
                 drop_duration *
-                self.param.technology.sampling_rate))
+                self.sampling_rate))
         timestamp = 0
         frame_index = 1
 
         while timestamp < number_of_samples:
-            data_bits_per_frame = self.source.get_bits(
-                self.encoder_manager.encoders[0].source_bits)
+            data_bits_per_frame = self.bits_source.get_bits(self.encoder_manager.num_input_bits)
 
             encoded_bits_per_frame = self.encoder_manager.encode(data_bits_per_frame)
             encoded_bits_per_frame_flattened = np.array([], dtype=int)
@@ -251,3 +283,262 @@ class Modem(Generic[P]):
         """
 
         self.__orientation = orientation
+
+    @property
+    def topology(self) -> np.ndarray:
+        """Access the configured sensor array topology.
+
+        Returns:
+            np.ndarray:
+                A matrix of m x 3 entries describing the sensor array topology.
+                Each row represents the xyz-location of a single antenna within an array of m antennas.
+        """
+
+        return self.__topology
+
+    @topology.setter
+    def topology(self, topology: np.ndarray) -> None:
+        """Update the configured sensor array topology.
+
+        Args:
+            topology (np.ndarray):
+                A matrix of m x 3 entries describing the sensor array topology.
+                Each row represents the xyz-location of a single antenna within an array of m antennas.
+
+        Raises:
+            ValueError:
+                If the first dimension `topology` is smaller than 1 or its second dimension is larger than 3.
+        """
+
+        if len(topology.shape) > 2:
+            raise ValueError("The topology array must be of dimension 2")
+
+        if topology.shape[0] < 1:
+            raise ValueError("The topology must contain at least one sensor")
+
+        if len(topology.shape) > 1:
+
+            if topology.shape[1] > 3:
+                raise ValueError("The second topology dimension must contain 3 fields (xyz)")
+
+            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
+            self.__topology[:, :topology.shape[1]] = topology
+
+        else:
+
+            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
+            self.__topology[:, 0] = topology
+
+        # Automatically detect linearity in default configurations, where all sensor elements
+        # are oriented along the local x-axis.
+        axis_sums = np.sum(self.__topology, axis=0)
+
+        if (axis_sums[1] + axis_sums[2]) < 1e-10:
+            self.__is_linear = True
+
+    @property
+    def carrier_frequency(self) -> float:
+        """Access the configured carrier frequency of the RF signal.
+
+        Returns:
+            float:
+                Carrier frequency in Hz.
+        """
+
+        return self.__carrier_frequency
+
+    @carrier_frequency.setter
+    def carrier_frequency(self, carrier_frequency: float) -> None:
+        """Modify the configured center frequency of the steered RF-signal.
+
+        Args:
+            carrier_frequency (float):
+                Carrier frequency in Hz.
+
+        Raises:
+            ValueError:
+                If center frequency is less or equal to zero.
+        """
+
+        if carrier_frequency <= 0.0:
+            raise ValueError("Carrier frequency must be greater than zero")
+
+        self.__carrier_frequency = carrier_frequency
+
+    @property
+    def sampling_rate(self) -> float:
+        """Access the rate at which the analog signals are sampled.
+
+        Returns:
+            float:
+                Signal sampling rate in Hz.
+        """
+
+        return self.__sampling_rate
+
+    @sampling_rate.setter
+    def sampling_rate(self, value: float) -> None:
+        """Modify the rate at which the analog signals are sampled.
+
+        Args:
+            value (float):
+                Signal sampling rate in Hz.
+
+        Raises:
+            ValueError:
+                If the sampling rate is less or equal to zero.
+        """
+
+        if value <= 0.0:
+            raise ValueError("Sampling rate must be greater than zero")
+
+        self.__sampling_rate = value
+
+    @property
+    def linear_topology(self) -> bool:
+        """Access the configured linearity flag.
+
+        Returns:
+            bool:
+                A boolean flag indicating whether this array is considered to be one-dimensional.
+        """
+
+        return self.__linear_topology
+
+    @property
+    def beamformer(self) -> Beamformer:
+        """Access the modem's beamformer configuration.
+
+        Returns:
+            Beamformer:
+                Currently configured beamformer instance.
+            """
+
+        return self.__beamformer
+
+    def configure_beamformer(self, beamformer: Type[Beamformer], **kwargs) -> Beamformer:
+        """Configure this modem to a new type of beamformer.
+
+        Args:
+            beamformer (Type[Beamformer]):
+                The type of beamformer to be configured.
+
+            **kwargs:
+                The additional arguments required to initialize the `beamformer`.
+
+        Returns:
+            Beamformer:
+                A handle to the new type of `beamformer`.
+        """
+
+        self.__beamformer = beamformer(self, **kwargs)
+        return self.__beamformer
+
+    @property
+    def num_antennas(self) -> int:
+        """The number of physical antennas available to the modem.
+
+        For a transmitter this represents the number of transmitting antennas,
+        or a receiver the respective receiving ones
+
+        Returns:
+            int:
+                The number of physical antennas available to the modem.
+        """
+
+        return self.__topology.shape[0]
+
+    @property
+    def num_streams(self) -> int:
+        """The number of data streams generated by the modem.
+
+        The number of data streams is always less or equal to the number of available antennas `num_antennas`.
+
+        Returns:
+            int:
+                The number of data streams generated by the modem.
+        """
+
+        # For now, only beamforming influences the number of data streams.
+        # This might change in future!
+        return self.__beamformer.num_streams
+
+    @property
+    def encoder_manager(self) -> EncoderManager:
+        """Access the modem's encoder management.
+
+        Returns:
+            EncoderManager:
+                Handle to the modem's encoder instance.
+        """
+
+        return self.__encoder_manager
+
+    @property
+    def bits_source(self) -> BitsSource:
+        """Access the modem's configured bits source.
+
+        Returns:
+            BitsSource:
+                Handle to the modem's bit source instance.
+        """
+
+        return self.__bits_source
+
+    @bits_source.setter
+    def bits_source(self, bits_source: BitsSource) -> None:
+        """Configure the modem's bits source.
+
+        Args:
+            bits_source (BitsSource):
+                The new bits source.
+        """
+
+        self.__bits_source = bits_source
+
+    @property
+    def waveform_generator(self) -> WaveformGenerator:
+        """Access the modem's configured waveform generator.
+
+        Returns:
+            WaveformGenerator:
+                Handle to the modem's `WaveformGenerator` instance.
+        """
+
+        return self.__waveform_generator
+
+    @waveform_generator.setter
+    def waveform_generator(self, waveform_generator: WaveformGenerator) -> None:
+        """Configure the modem's waveform generator
+
+        Args:
+            waveform_generator (WaveformGenerator):
+                The new waveform generator instance.
+        """
+
+        self.__waveform_generator = waveform_generator
+
+    @property
+    def rf_chain(self) -> RfChain:
+        """Access the modem's configured RF chain.
+
+        Returns:
+            RfChain:
+                Handle to the modem's `RfChain` instance.
+        """
+
+        return self.__rf_chain
+
+    @rf_chain.setter
+    def rf_chain(self, rf_chain: RfChain) -> None:
+        """Configure the modem's RF chain
+
+        Args:
+            rf_chain (RfChain):
+                The new waveform `RfChain` instance.
+        """
+
+        self.__rf_chain = rf_chain
+
+
+from beamformer import Beamformer

@@ -1,5 +1,6 @@
+from __future__ import annotations
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, TYPE_CHECKING
 
 from parameters_parser.parameters_scenario import ParametersScenario
 from parameters_parser.parameters_general import ParametersGeneral
@@ -7,14 +8,17 @@ from parameters_parser.parameters_channel import ParametersChannel
 from simulator_core.random_streams import RandomStreams
 import simulator_core.tools.constants as constants
 from source.bits_source import BitsSource
-from modem.modem import Modem
 
-from channel.channel import Channel
 from channel.multipath_fading_channel import MultipathFadingChannel
 from channel.quadriga_channel import QuadrigaChannel
 from channel.quadriga_interface import QuadrigaInterface
 from channel.noise import Noise
 from channel.rx_sampler import RxSampler
+
+if TYPE_CHECKING:
+
+    from modem import TransmissionMode, Modem
+    from channel import Channel
 
 
 class Scenario:
@@ -43,10 +47,10 @@ class Scenario:
     def __init__(self, parameters: ParametersScenario = None, param_general: ParametersGeneral = None,
                  rnd: RandomStreams = None) -> None:
         self.sources: List[BitsSource] = []
-        self.tx_modems: List[Modem] = []
-        self.rx_modems: List[Modem] = []
+        self.__transmitters: List[Modem] = []
+        self.__receivers: List[Modem] = []
         self.rx_samplers: List[RxSampler] = []
-        self.channels: List[List[Channel]] = []
+        self.__channels: np.ndarray = np.empty((0, 0), dtype=np.object)
         self.noise: List[Noise] = []
         self.params: ParametersScenario
         self.param_general: ParametersGeneral
@@ -181,13 +185,14 @@ class Scenario:
         return rx_samplers, rx_modems, noise
 
     def init_drop(self) -> None:
-        """Intializes variables for each drop or creates new random numbers."""
+        """Initializes variables for each drop or creates new random numbers.
+        """
+
         for source in self.sources:
             source.init_drop()
 
-        for rx_channel in self.channels:
-            for channel in rx_channel:
-                channel.init_drop()
+        for channel in self.channels.ravel():
+            channel.init_drop()
 
     def __get_channel_instance(
             self, channel_params: ParametersChannel, modem_tx: Modem, modem_rx: Modem) -> Channel:
@@ -202,3 +207,250 @@ class Scenario:
             pass
 
         return channel
+
+    @property
+    def receivers(self) -> List[Modem]:
+        """Access receiving modems within this scenario.
+
+        Returns:
+            List[Modem]:
+                A list of modems configured as receivers.
+        """
+
+        return self.__receivers
+
+    @property
+    def transmitters(self) -> List[Modem]:
+        """Access transmitting modems within this scenario.
+
+        Returns:
+            List[Modem]:
+                A list of modems configured as transmitters.
+        """
+
+        return self.__transmitters
+
+    @property
+    def channels(self) -> np.ndarray:
+        """Access full channel matrix.
+
+        Returns:
+            np.ndarray:
+                A numpy array containing channels between sender and receiver modems.
+        """
+
+        return self.__channels
+
+    def channel(self, transmitter: Modem, receiver: Modem) -> Channel:
+        """Access a specific channel between two modems.
+
+        Args:
+            transmitter (Modem):
+                The transmitting modem.
+
+            receiver (Modem):
+                The receiving modem.
+
+        Returns:
+            Channel:
+                A handle to the transmission channel between `transmitter` and `receiver`.
+
+        Raises:
+            ValueError:
+                Should `transmitter` or `receiver` not be registered with this scenario.
+        """
+
+        if transmitter not in self.transmitters:
+            raise ValueError("Provided transmitter is not registered with this scenario")
+
+        if receiver not in self.__receivers:
+            raise ValueError("Provided receiver is not registered with this scenario")
+
+        index_transmitter = self.__transmitters.index(transmitter)
+        index_receiver = self.__receivers.index(receiver)
+
+        return self.__channels[index_transmitter, index_receiver]
+
+    def departing_channels(self, transmitter: Modem, active_only: bool = False) -> List[Channel]:
+        """Collect all channels departing from a `transmitter`.
+
+        Args:
+            transmitter (Modem):
+                The transmitting modem.
+
+            active_only (bool, optional):
+                Consider only active channels.
+
+        Returns:
+            List[Modem]:
+                A list of departing channels.
+
+        Raises:
+            ValueError:
+                Should `transmitter` not be registered with this scenario.
+        """
+
+        if transmitter not in self.__transmitters:
+            raise ValueError("The provided transmitter is not registered with this scenario.")
+
+        transmitter_index = self.__transmitters.index(transmitter)
+        channels = self.__channels[transmitter_index, :].tolist()
+
+        if active_only:
+            channels = [channel for channel in channels if channel.active]
+
+        return channels
+
+    def arriving_channels(self, receiver: Modem, active_only: bool = False) -> List[Channel]:
+        """Collect all channels arriving at a `receiver`.
+
+        Args:
+            receiver (Modem):
+                The receiving modem.
+
+            active_only (bool, optional):
+                Consider only active channels.
+
+        Returns:
+            List[Modem]:
+                A list of arriving channels.
+
+        Raises:
+            ValueError:
+                Should `receiver` not be registered with this scenario.
+        """
+
+        if receiver not in self.__receivers:
+            raise ValueError("The provided transmitter is not registered with this scenario.")
+
+        receiver_index = self.__receivers.index(receiver)
+        channels = self.__channels[receiver_index, :].tolist()
+
+        if active_only:
+            channels = [channel for channel in channels if channel.active]
+
+        return channels
+
+    def add_receiver(self, **kwargs) -> Modem:
+        """Add a new receiving modem to the simulated scenario.
+
+        Args:
+            **kwargs:
+                Modem configuration arguments.
+
+        Returns:
+            Modem:
+                A handle to the newly created modem instance.
+        """
+
+        receiver_index = len(self.__receivers)
+        receiver = Modem(self, **kwargs)
+
+        self.__receivers.append(receiver)
+
+        if self.__channels.shape[0] == 0:
+
+            self.__channels = np.empty((0, receiver_index + 1), dtype=object)
+
+        elif self.__channels.shape[1] == 0:
+
+            self.__channels = np.array(
+                [[Channel(transmitter, receiver)] for transmitter in self.transmitters], dtype=object)
+
+        else:
+
+            self.__channels = np.append(
+                self.__channels, [[Channel(transmitter, receiver)] for transmitter in self.transmitters], axis=1)
+
+        return receiver
+
+    def add_transmitter(self, **kwargs) -> Modem:
+        """Add a new transmitting modem to the simulated scenario.
+
+        Args:
+            **kwargs:
+                Modem configuration arguments.
+
+        Returns:
+            Modem:
+                A handle to the newly created modem instance.
+        """
+
+        transmitter_index = len(self.__transmitters)
+        transmitter = Modem(self, **kwargs)
+
+        self.__transmitters.append(transmitter)
+
+        if self.__channels.shape[1] == 0:
+
+            self.__channels = np.empty((transmitter_index + 1, 0), dtype=object)
+
+        elif self.__channels.shape[0] == 0:
+
+            self.__channels = np.array(
+                [[Channel(transmitter, receiver) for receiver in self.receivers]], dtype=object)
+
+        else:
+
+            np.insert(self.__channels, transmitter_index,
+                      [[Channel(transmitter, receiver) for receiver in self.receivers]], axis=0)
+
+        return transmitter
+
+    def remove_modem(self, modem: Modem) -> None:
+        """Remove a modem from the scenario.
+
+        Args:
+            modem (Modem):
+                The `modem` instance to be removed.
+
+        Raises:
+            ValueError:
+                If the provided `modem` is not registered with this scenario.
+        """
+
+        if modem in self.__transmitters:
+
+            index = self.__transmitters.index(modem)
+
+            del self.__transmitters[index]          # Remove the actual modem
+            np.delete(self.__channels, index, 0)    # Remove its departing channels
+
+        elif modem in self.__receivers:
+
+            index = self.__receivers.index(modem)
+
+            del self.__receivers[index]             # Remove the actual modem
+            np.delete(self.__channels, index, 1)    # Remove its arriving channels
+
+        else:
+
+            raise ValueError("The provided modem handle was not registered with this scenario")
+
+    def transmit(self, drop_duration: float) -> List[np.ndarray]:
+        """Simulated signals emitted by transmitters.
+
+        Args:
+            drop_duration:
+                Length of simulated transmission in seconds.
+
+        Returns:
+            A list containing the the signals emitted by each transmitting modem.
+
+        Raises:
+            ValueError:
+                On invalid drop lengths.
+        """
+
+        if drop_duration <= 0.0:
+            raise ValueError("Drop duration must be greater or equal to zero")
+
+        transmitted_signals = []
+        for transmitter in self.transmitters:
+            transmitted_signals.append(transmitter.send(drop_duration))
+
+        return transmitted_signals
+
+
+from modem import Modem
+from channel import Channel
