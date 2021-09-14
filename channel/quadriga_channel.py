@@ -1,6 +1,6 @@
 import numpy as np
 
-from modem.modem import Modem
+from modem import Modem
 from channel.channel import Channel
 from parameters_parser.parameters_channel import ParametersChannel
 from channel.quadriga_interface import QuadrigaInterface

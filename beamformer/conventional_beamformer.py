@@ -1,25 +1,34 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy.constants as const
 
 from beamformer import Beamformer, TransmissionDirection
+
+if TYPE_CHECKING:
+    from modem import Modem
 
 
 class ConventionalBeamformer(Beamformer):
 
-    def __init__(self, topology: np.ndarray, center_frequency: float):
+    __focused_modem: Modem
+
+    def __init__(self, modem: Modem, focused_modem: Modem = None):
         """Class initialization.
 
         Args:
-            topology (np.ndarray):
-                A matrix of m x 3 entries describing the sensor array topology.
-                Each row represents the xyz-location of a single antenna within an array of m antennas.
+            modem (Modem):
+                Modem instance this beamformer is linked to.
 
-            center_frequency (float):
-                The center frequency in Hz of the RF-signal to be steered.
+            focused_modem (Modem, optional):
+                Modem towards which the beamformer is focusing its power pattern.
         """
 
-        Beamformer.__init__(self, topology, center_frequency)
+        Beamformer.__init__(self, modem)
+        self.__focused_modem = focused_modem
+
+    @property
+    def focused_modem(self) -> Modem:
+        return self.__focused_modem
 
     def weights(self, direction: TransmissionDirection, azimuth: float, elevation: float) -> np.array:
         """Compute the beamforming weights towards a desired direction.
@@ -44,7 +53,7 @@ class ConventionalBeamformer(Beamformer):
         if direction == TransmissionDirection.Rx:
             wave_vector *= -1
 
-        return np.array([np.exp(1j * wave_vector @ p) for p in self.topology], dtype=complex)
+        return np.array([np.exp(1j * wave_vector @ p) for p in self.modem.topology], dtype=complex)
 
     @property
     def num_streams(self) -> int:

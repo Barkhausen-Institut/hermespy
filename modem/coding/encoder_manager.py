@@ -18,6 +18,7 @@ class EncoderManager:
     @property
     def encoders(self) -> List[Encoder]:
         return self._encoders
+
     @property
     def code_rate(self) -> float:
         R = 1
@@ -39,3 +40,17 @@ class EncoderManager:
             decoded_bits = encoder.decode(decoded_bits)
 
         return decoded_bits
+
+    @property
+    def num_input_bits(self) -> int:
+        """The number of bits required by the encoder input.
+
+        Returns:
+            int:
+                The number of input bits required by the encoder input.
+        """
+
+        if len(self.encoders) < 1:
+            return 1
+
+        return self.encoders[0].source_bits

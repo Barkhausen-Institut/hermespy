@@ -1,9 +1,14 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from enum import Enum
 import numpy as np
 import scipy.constants as const
 from scipy import sin, cos
 import matplotlib.pyplot as plt
 from abc import abstractmethod
+
+if TYPE_CHECKING:
+    from modem import Modem
 
 
 class TransmissionDirection(Enum):
@@ -22,32 +27,34 @@ class Beamformer:
     Caution: Beamforming is only applicable to spatial system models.
     """
 
-    __topology: np.ndarray      # Antenna array topology, implicitly contains the number of antennas
-    __center_frequency: float   # Center frequency of the considered RF-signal
-    __is_linear: bool           # Flag indicating a one-dimensional array
+    __modem: Modem              # Modem linked to this beamformer
+    __center_frequency: float   # Assumed center frequency of the steered RF signal.
 
-    def __init__(self, topology: np.ndarray, center_frequency: float):
+    def __init__(self, modem: Modem,
+                 center_frequency: float = 0.0):
         """Class initialization.
 
         Args:
-            topology (np.ndarray):
-                A matrix of m x 3 entries describing the sensor array topology.
-                Each row represents the xyz-location of a single antenna within an array of m antennas.
+            modem (Modem):
+                Modem instance this beamformer is linked to.
 
-            center_frequency (float):
+            center_frequency (float, optional):
                 The center frequency in Hz of the RF-signal to be steered.
         """
 
-        self.topology = topology
+        self.__modem = modem
         self.center_frequency = center_frequency
-        self.__is_linear = False
 
-        # Automatically detect linearity in default configurations, where all sensor elements
-        # are oriented along the local x-axis.
-        axis_sums = np.sum(self.__topology, axis=0)
+    @property
+    def modem(self) -> Modem:
+        """Access the modem instance this beamformer is linked to.
 
-        if (axis_sums[1] + axis_sums[2]) < 1e-10:
-            self.__is_linear = True
+        Returns:
+            Modem:
+                A handle to the modem instance this beamformer is linked to.
+        """
+
+        return self.__modem
 
     @abstractmethod
     def weights(self, direction: TransmissionDirection, azimuth: float, elevation: float) -> np.array:
@@ -71,7 +78,7 @@ class Beamformer:
                 Each column within the weight matrix may only contain one non-zero entry.
         """
 
-        return np.identity(self.__topology.shape[0], dtype=complex)
+        return np.identity(self.__modem.topology.shape[0], dtype=complex)
 
     def gain(self, direction: TransmissionDirection, azimuth: float, elevation: float, weights: np.ndarray) -> complex:
         """Compute the complex gain coefficient towards a specific steering angle.
@@ -102,7 +109,7 @@ class Beamformer:
                 Should the number of `weights` not match the configured topology.
         """
 
-        if weights.shape[-1] != self.__topology.shape[0]:
+        if weights.shape[-1] != self.__modem.topology.shape[0]:
             raise ValueError("The number of beamforming weights must match the number of antennas")
 
         wave_vector = self.wave_vector(azimuth, elevation)
@@ -110,7 +117,7 @@ class Beamformer:
         if direction == TransmissionDirection.Tx:
             wave_vector *= -1
 
-        steering = np.array([np.exp(1j * wave_vector @ p) for p in self.__topology], dtype=complex)
+        steering = np.array([np.exp(1j * wave_vector @ p) for p in self.__modem.topology], dtype=complex)
         gain = weights @ steering
 
         return gain
@@ -138,51 +145,6 @@ class Beamformer:
                                                                           cos(azimuth) * cos(elevation)])
 
     @property
-    def topology(self) -> np.ndarray:
-        """Access the configured sensor array topology.
-
-        Returns:
-            np.ndarray:
-                A matrix of m x 3 entries describing the sensor array topology.
-                Each row represents the xyz-location of a single antenna within an array of m antennas.
-        """
-
-        return self.__topology
-
-    @topology.setter
-    def topology(self, topology: np.ndarray) -> None:
-        """Update the configured sensor array topology.
-
-        Args:
-            topology (np.ndarray):
-                A matrix of m x 3 entries describing the sensor array topology.
-                Each row represents the xyz-location of a single antenna within an array of m antennas.
-
-        Raises:
-            ValueError:
-                If the first dimension `topology` is smaller than 1 or its second dimension is larger than 3.
-        """
-
-        if len(topology.shape) > 2:
-            raise ValueError("The topology array must be of dimension 2")
-
-        if topology.shape[0] < 1:
-            raise ValueError("The topology must contain at least one sensor")
-
-        if len(topology.shape) > 1:
-
-            if topology.shape[1] > 3:
-                raise ValueError("The second topology dimension must contain 3 fields (xyz)")
-
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
-            self.__topology[:, :topology.shape[1]] = topology
-
-        else:
-
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
-            self.__topology[:, 0] = topology
-
-    @property
     @abstractmethod
     def num_streams(self) -> int:
         """The number of streams available after beamforming.
@@ -193,7 +155,7 @@ class Beamformer:
 
         # Standard beamforming applications compress multiple antenna signals into a single one.
         # However, since the default beamformer does no beamforming at all, it returns the number of antennas.
-        return self.__topology.shape[0]
+        return self.__modem.topology.shape[0]
 
     @property
     def center_frequency(self) -> float:
@@ -204,6 +166,9 @@ class Beamformer:
                 Center frequency in Hz.
         """
 
+        if self.__center_frequency <= 0.0:
+            return self.modem.carrier_frequency
+
         return self.__center_frequency
 
     @center_frequency.setter
@@ -213,14 +178,15 @@ class Beamformer:
         Args:
             center_frequency (float):
                 Center frequency in Hz.
+                If `center_frequency` is zero, the beamformer will assume the modem's configured center frequency.
 
         Raises:
             ValueError:
-                If center frequency is less or equal to zero.
+                If center frequency is less than zero.
         """
 
-        if center_frequency <= 0:
-            raise ValueError("Center frequency must be greater than zero")
+        if center_frequency < 0.0:
+            raise ValueError("Center frequency must be greater or equal to zero")
 
         self.__center_frequency = center_frequency
 
@@ -235,33 +201,13 @@ class Beamformer:
 
         return const.c / self.__center_frequency
 
-    @property
-    def is_linear(self) -> bool:
-        """Access the configured linearity flag.
-
-        Returns:
-            bool:
-                A boolean flag indicating whether this array is considered to be one-dimensional.
-        """
-
-        return self.__is_linear
-
-    @is_linear.setter
-    def is_linear(self, is_linear: bool) -> None:
-        """Modify the configured linearity flag.
-
-        Args:
-            is_linear (bool):
-                A boolean flag indicating whether this array is considered to be one-dimensional.
-        """
-
-        self.__is_linear = is_linear
-
     def inspect(self, weights: np.ndarray,
                 azimuth_candidates: np.array = None,
                 elevation_candidates: np.array = None,
+                num_samples: int = None,
                 direction: TransmissionDirection = TransmissionDirection.Tx,
-                normalized: bool = True) -> None:
+                normalized: bool = True,
+                interpolation: str = 'spline36') -> None:
         """Display the beamformer's spatial power pattern.
 
         Args:
@@ -270,9 +216,15 @@ class Beamformer:
 
             azimuth_candidates (np.array, optional):
                 An array of azimuth candidates to be sampled into the rendering.
+                Definition is mutually exclusive to the definition of `num_samples`.
 
             elevation_candidates (np.array, optional):
                 An array of elevation candidates to be sampled into the rendering.
+                Definition is mutually exclusive to the definition of `num_samples`.
+
+            num_samples (int, optional):
+                The number of samples by which the field of view is sampled into the rendering.
+                Definition is mutually exclusive to the definition of `azimuth_candidates` or `elevation_candidates`.
 
             direction (TransmissionDirection, optional):
                 The direction of transmission, i.e. receive or transmit mode.
@@ -282,31 +234,52 @@ class Beamformer:
                 Normalize the visualized gains.
                 Enabled by default.
 
+            interpolation
+                Matplotlib interpolation mode.
+                Enabled by default to spline36, set to None to disable.
+
         Raises:
             ValueError:
                 Should the number of `weights` not match the configured topology.
+
+            ValueError:
+                Should both `num_samples` and `azimuth_candidates` or `elevation_candidates` be defined.
         """
 
-        if weights.shape[-1] != self.__topology.shape[0]:
+        if weights.shape[-1] != self.__modem.topology.shape[0]:
             raise ValueError("The number of beamforming weights must match the number of antennas")
 
         # Make weights vectors matrices with a single row to simplify following routines
         if len(weights.shape) == 1:
             weights = weights[np.newaxis, ...]
 
+        if num_samples is None:
+
+            if self.__modem.linear_topology:
+                num_samples = 180
+
+            else:
+                num_samples = 80
+
+        elif azimuth_candidates or elevation_candidates is not None:
+            raise ValueError("There can't be a definition of both sample count and samples")
+
+        if num_samples < 1:
+            raise ValueError("The number of rendered samples must be greater than zero")
+
         # By default, the candidates are sampled in 1 degree steps over an 180 degree field of view
         if azimuth_candidates is None:
 
             if elevation_candidates is None:
 
-                if self.is_linear:
+                if self.__modem.linear_topology:
 
-                    azimuth_candidates = .5 * np.linspace(-const.pi, const.pi, 180, dtype=float)
+                    azimuth_candidates = .5 * np.linspace(-const.pi, const.pi, num_samples, dtype=float)
 
                 else:
 
-                    azimuth_candidates = .5 * np.linspace(-const.pi, const.pi,  60, dtype=float)
-                    elevation_candidates = .5 * np.linspace(-const.pi, const.pi, 60, dtype=float)
+                    azimuth_candidates = .5 * np.linspace(-const.pi, const.pi,  num_samples, dtype=float)
+                    elevation_candidates = .5 * np.linspace(const.pi, -const.pi, num_samples, dtype=float)
 
             else:
 
@@ -327,7 +300,7 @@ class Beamformer:
                 graph[:, c] = np.absolute(self.gain(direction, candidate, 0.0, weights))
 
             if normalized:
-                graph /= self.__topology.shape[0]
+                graph /= self.__modem.topology.shape[0]
 
             if weights.shape[0] > 1:
 
@@ -345,25 +318,26 @@ class Beamformer:
         # 2-D visualization mode
         else:
 
-            graph = np.empty((weights.shape[0], azimuth_candidates.shape[0], elevation_candidates.shape[0]), dtype=float)
+            graph = np.empty((weights.shape[0], azimuth_candidates.shape[0], elevation_candidates.shape[0]),
+                             dtype=float)
             for index_azimuth, azimuth in enumerate(azimuth_candidates):
                 for index_elevation, elevation in enumerate(elevation_candidates):
 
-                    graph[:, index_azimuth, index_elevation] = np.absolute(
+                    graph[:, index_elevation, index_azimuth] = np.absolute(
                         self.gain(direction, azimuth, elevation, weights))
 
             if normalized:
-                graph /= self.__topology.shape[0]
+                graph /= self.__modem.topology.shape[0]
 
             if weights.shape[0] > 1:
 
                 for s in range(weights.shape[0]):
 
                     axes[s].set_title("Subarray #{}".format(s))
-                    axes[s].imshow(graph[s, ::].T)
+                    axes[s].imshow(graph[s, ::], interpolation=interpolation)
                     axes[s].set(xlabel="Azimuth", ylabel="Magnitude")
 
             else:
 
-                axes.imshow(graph[0, ::].T)
+                axes.imshow(graph[0, ::], interpolation=interpolation)
                 axes.set(xlabel="Azimuth", ylabel="Elevation")
