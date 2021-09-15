@@ -3,7 +3,12 @@ from modem import TransmissionMode
 import numpy as np
 import scipy.constants as const
 from beamformer import ConventionalBeamformer, TransmissionDirection
+from source.bits_source import BitsSource
+from modem import Transmitter, Receiver
 import matplotlib.pyplot as plt
+from ruamel.yaml import YAML, Node
+from io import StringIO
+import sys
 
 # 8x8 MIMO arrays at 60Ghz
 carrier_frequency = 60e9
@@ -28,41 +33,15 @@ scenario.channel(transmitterB, receiverB).active = True
 # Add a conventional beamformer to transmitter A, steering towards transmitter B
 conventional_beamformer = transmitterA.configure_beamformer(ConventionalBeamformer, focused_modem=receiverA)
 
-# Simulate a 1ms transmission
-scenario.init_drop()
-transmitted_signal = scenario.transmit(0.001)
+# Simulate a configuration dump
 
-"""    
-        def __init__(self, param: P, source: BitsSource,
-                 random_number_gen: rnd.RandomState, tx_modem=None) -> None:
-        self.param = param
-        self.source = source
+yaml = YAML(typ='safe')
+yaml.register_class(Scenario)
+yaml.register_class(BitsSource)
+yaml.register_class(Transmitter)
+yaml.register_class(Receiver)
 
-        self.encoder_factory = EncoderFactory()
-        self.encoder_manager = EncoderManager()
-
-        for encoding_type, encoding_params in zip(
-                            self.param.encoding_type, self.param.encoding_params):
-            encoder: Encoder = self.encoder_factory.get_encoder(
-                encoding_params, encoding_type,
-                self.param.technology.bits_in_frame)
-            self.encoder_manager.add_encoder(encoder)
-
-        self.waveform_generator: Any
-        if isinstance(param.technology, ParametersPskQam):
-            self.waveform_generator = WaveformGeneratorPskQam(param.technology)
-        elif isinstance(param.technology, ParametersChirpFsk):
-            self.waveform_generator = WaveformGeneratorChirpFsk(param.technology)
-        elif isinstance(param.technology, ParametersOfdm):
-            self.waveform_generator = WaveformGeneratorOfdm(
-                param.technology, random_number_gen)
-        else:
-            raise ValueError(
-                "invalid technology in constructor of Modem class")
-        # if this is a received modem, link to tx modem must be provided
-        self._paired_tx_modem = tx_modem
-        self.power_factor = 1.  # if this is a transmit modem, signal is scaled to the desired power, depending on the
-        # current power factor
-
-        self.rf_chain = RfChain(param.rf_chain, self.waveform_generator.get_power(), random_number_gen,)
-"""
+stream = StringIO()
+yaml.dump(scenario, stream)
+print(stream.getvalue())
+scenario = yaml.load(stream.getvalue())

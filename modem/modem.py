@@ -1,9 +1,10 @@
 from __future__ import annotations
-from typing import Tuple, Generic, TypeVar, List, Type, TYPE_CHECKING
+from typing import Tuple, Generic, TypeVar, List, Dict, Type, TYPE_CHECKING
 from abc import abstractmethod
 from enum import Enum
 from numpy import random as rnd
 import numpy as np
+from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
 
 from parameters_parser.parameters_modem import ParametersModem
 from modem.coding.encoder import Encoder
@@ -36,6 +37,7 @@ class Modem(Generic[P]):
     either for transmission or reception of a given technology.
     """
 
+    yaml_tag = 'Modem'
     __scenario: Scenario                    # Scenario this modem belongs to
     __position: np.array                    # Position of the modem within the scenario. Set to None if unknown.
     __orientation: np.array                 # Orientation of the modem within the scenario. Set to None if unknown.
@@ -96,6 +98,29 @@ class Modem(Generic[P]):
 
         if rf_chain is not None:
             self.rf_chain = rf_chain
+
+    @classmethod
+    def to_yaml(cls: Type[Modem], representer: RoundTripRepresenter, node: Modem) -> Node:
+        """Serialize a modem object to YAML.
+
+        Args:
+            representer (RoundTripRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Modem):
+                The modem instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        serialization = {
+            "carrier_frequency": node.__carrier_frequency,
+            "sampling_rate": node.__sampling_rate
+        }
+        return representer.represent_mapping("Modem", serialization)
 
     @property
     def scenario(self) -> Scenario:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
-from typing import List, Tuple, TYPE_CHECKING
+from typing import List, Tuple, Type, TYPE_CHECKING
+from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
 
 from parameters_parser.parameters_scenario import ParametersScenario
 from parameters_parser.parameters_general import ParametersGeneral
@@ -17,7 +18,7 @@ from channel.rx_sampler import RxSampler
 
 if TYPE_CHECKING:
 
-    from modem import TransmissionMode, Modem
+    from modem import Modem, Transmitter, Receiver
     from channel import Channel
 
 
@@ -44,11 +45,13 @@ class Scenario:
 
     """
 
+    yaml_tag = 'Scenario'
+
     def __init__(self, parameters: ParametersScenario = None, param_general: ParametersGeneral = None,
                  rnd: RandomStreams = None) -> None:
         self.sources: List[BitsSource] = []
-        self.__transmitters: List[Modem] = []
-        self.__receivers: List[Modem] = []
+        self.__transmitters: List[Transmitter] = []
+        self.__receivers: List[Receiver] = []
         self.rx_samplers: List[RxSampler] = []
         self.__channels: np.ndarray = np.empty((0, 0), dtype=np.object)
         self.noise: List[Noise] = []
@@ -70,6 +73,55 @@ class Scenario:
             self.rx_samplers, self.rx_modems, self.noise = self._create_receiver_modems()
 
             self.channels = self._create_channels()
+
+    @classmethod
+    def to_yaml(cls: Type[Scenario], representer: RoundTripRepresenter, node: Scenario) -> Node:
+        """Serialize a scenario object to YAML.
+
+        Args:
+            representer (BaseRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Scenario):
+                The scenario instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        serialization = {
+            'Modems': [*node.__transmitters, *node.__receivers]
+        }
+
+
+        return representer.represent_mapping("Scenario", serialization)
+
+    @classmethod
+    def from_yaml(cls: Type[Scenario], constructor: RoundTripConstructor, node: Node) -> Scenario:
+        """Recall a new `Scenario` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Scenario` serialization.
+
+        Returns:
+            Scenario:
+                Newly created `Scenario` instance.
+            """
+
+        serialization = constructor.construct_mapping(node)
+
+        args = serialization.copy()
+        args.pop('Modems', None)
+        scenario = Scenario(**args)
+
+        for modem_node in serialization['Modems']:
+            
 
     def _create_channels(self) -> List[List[Channel]]:
         """Creates channels according to parameters specification.
@@ -209,7 +261,7 @@ class Scenario:
         return channel
 
     @property
-    def receivers(self) -> List[Modem]:
+    def receivers(self) -> List[Receiver]:
         """Access receiving modems within this scenario.
 
         Returns:
@@ -220,7 +272,7 @@ class Scenario:
         return self.__receivers
 
     @property
-    def transmitters(self) -> List[Modem]:
+    def transmitters(self) -> List[Transmitter]:
         """Access transmitting modems within this scenario.
 
         Returns:
@@ -331,7 +383,7 @@ class Scenario:
 
         return channels
 
-    def add_receiver(self, **kwargs) -> Modem:
+    def add_receiver(self, **kwargs) -> Receiver:
         """Add a new receiving modem to the simulated scenario.
 
         Args:
@@ -344,7 +396,7 @@ class Scenario:
         """
 
         receiver_index = len(self.__receivers)
-        receiver = Modem(self, **kwargs)
+        receiver = Receiver(self, **kwargs)
 
         self.__receivers.append(receiver)
 
@@ -364,7 +416,7 @@ class Scenario:
 
         return receiver
 
-    def add_transmitter(self, **kwargs) -> Modem:
+    def add_transmitter(self, **kwargs) -> Transmitter:
         """Add a new transmitting modem to the simulated scenario.
 
         Args:
@@ -377,7 +429,7 @@ class Scenario:
         """
 
         transmitter_index = len(self.__transmitters)
-        transmitter = Modem(self, **kwargs)
+        transmitter = Transmitter(self, **kwargs)
 
         self.__transmitters.append(transmitter)
 
@@ -452,5 +504,5 @@ class Scenario:
         return transmitted_signals
 
 
-from modem import Modem
+from modem import Modem, Transmitter, Receiver
 from channel import Channel
