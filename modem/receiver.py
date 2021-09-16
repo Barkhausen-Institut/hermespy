@@ -16,34 +16,21 @@ class Receiver(Modem):
         Modem.__init__(self, scenario, **kwargs)
 
     @classmethod
-    def to_yaml(cls: Type[Modem], representer: RoundTripRepresenter, node: Receiver) -> Node:
-        """Serialize a modem object to YAML.
-
-        Args:
-            representer (RoundTripRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Modem):
-                The modem instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        serialization = {
-            "carrier_frequency": node.carrier_frequency,
-            "sampling_rate": node.sampling_rate
-        }
-
-        return representer.represent_mapping(node.yaml_tag, serialization)
-
-    @classmethod
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
 
         scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
         return scenario.add_receiver(**constructor.construct_mapping(node))
+
+    @property
+    def index(self) -> int:
+        """The index of this receiver in the scenario.
+
+        Returns:
+            int:
+                The index.
+        """
+
+        return self.scenario.receivers.index(self)
 
     @property
     def paired_modems(self) -> List[Modem]:

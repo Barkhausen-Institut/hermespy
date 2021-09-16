@@ -4,7 +4,7 @@ from abc import abstractmethod
 from enum import Enum
 from numpy import random as rnd
 import numpy as np
-from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
+from ruamel.yaml import RoundTripRepresenter, Node
 
 from parameters_parser.parameters_modem import ParametersModem
 from modem.coding.encoder import Encoder
@@ -120,7 +120,11 @@ class Modem(Generic[P]):
             "carrier_frequency": node.__carrier_frequency,
             "sampling_rate": node.__sampling_rate
         }
-        return representer.represent_mapping("Modem", serialization)
+
+        """if node.beamformer.__class__ is not Beamformer:
+            serialization['Beamformer'] = node.__beamformer"""
+
+        return representer.represent_mapping(cls.yaml_tag, serialization)
 
     @property
     def scenario(self) -> Scenario:
@@ -132,6 +136,18 @@ class Modem(Generic[P]):
         """
 
         return self.__scenario
+
+    @property
+    @abstractmethod
+    def index(self) -> int:
+        """The index of this modem in the scenario.
+
+        Returns:
+            int:
+                The index.
+        """
+
+        pass
 
     @property
     @abstractmethod

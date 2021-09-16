@@ -93,7 +93,8 @@ class Scenario:
         """
 
         serialization = {
-            'Modems': [*node.__transmitters, *node.__receivers]
+            'Modems': [*node.__transmitters, *node.__receivers],
+            'Channels': node.__channels.flatten().tolist()
         }
 
         return representer.represent_mapping("Scenario", serialization)
@@ -117,9 +118,11 @@ class Scenario:
         scenario = cls.__new__(cls)
         yield scenario
 
+        constructor.add_multi_constructor("Channel", Channel.from_yaml)
         state_scenario = constructor.construct_mapping(node, deep=True)
-        state_scenario.pop('Modems', None)
 
+        state_scenario.pop('Modems', None)
+        state_scenario.pop('Channels', None)
         scenario.__init__(**state_scenario)
 
     def _create_channels(self) -> List[List[Channel]]:
