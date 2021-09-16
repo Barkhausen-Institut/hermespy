@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Type, TYPE_CHECKING
 from abc import abstractmethod
 import numpy as np
-
-from parameters_parser.parameters_channel import ParametersChannel
+from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
 
 if TYPE_CHECKING:
     from modem import Modem
@@ -23,12 +22,17 @@ class Channel:
     samples/second.
     """
 
-    __active: bool
-    __transmitter: Modem
-    __receiver: Modem
-    __gain: float
+    yaml_tag = 'Channel'
+    __active: bool = False
+    __transmitter: Modem = None
+    __receiver: Modem = None
+    __gain: float = 1.0
 
-    def __init__(self, transmitter: Modem, receiver: Modem) -> None:
+    def __init__(self,
+                 transmitter: Modem,
+                 receiver: Modem,
+                 active: bool = None,
+                 gain: float = None) -> None:
         """Class constructor.
 
         Args:
@@ -37,12 +41,67 @@ class Channel:
 
             receiver (Modem):
                 The modem receiving from this channel.
+
+            active (bool, optional):
+                Channel activity flag.
+
+            gain (float, optional):
+                Channel gain.
         """
 
-        self.__active = False
         self.__transmitter = transmitter
         self.__receiver = receiver
-        self.__gain = 1.0
+
+        if active is not None:
+            self.active = active
+
+        if gain is not None:
+            self.gain = gain
+
+    @classmethod
+    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> Node:
+        """Serialize a channel object to YAML.
+
+        Args:
+            representer (RoundTripRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Channel):
+                The channel instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'active': node.__active,
+            'gain': node.__gain
+        }
+
+        transmitter_index, receiver_index = node.indices
+        return representer.represent_mapping(cls.yaml_tag + "_{}_{}".format(transmitter_index, receiver_index), state)
+
+    @classmethod
+    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node) -> Channel:
+
+        channel = cls.__new__(cls)
+        yield channel
+
+        scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
+
+        indices = tag_suffix.split('_')
+        if indices[0] == '':
+            indices.pop(0)
+
+        transmitter_index = int(indices[0])
+        receiver_index = int(indices[1])
+        scenario.channels[transmitter_index, receiver_index] = channel
+
+        state = constructor.construct_mapping(node)
+        channel.__init__(scenario.transmitters[transmitter_index], scenario.receivers[receiver_index], **state)
+
 
     @property
     def active(self) -> bool:
@@ -136,6 +195,19 @@ class Channel:
         """
 
         return self.__receiver.num_streams
+
+    @property
+    def indices(self) -> (int, int):
+        """The indices of this channel within the scenarios channel matrix.
+
+        Returns:
+            int:
+                Transmitter index.
+            int:
+                Receiver index.
+        """
+
+        return self.__transmitter.index, self.__receiver.index
 
     @abstractmethod
     def init_drop(self) -> None:

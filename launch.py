@@ -5,6 +5,7 @@ import scipy.constants as const
 from beamformer import ConventionalBeamformer, TransmissionDirection
 from source.bits_source import BitsSource
 from modem import Transmitter, Receiver
+from channel import Channel
 import matplotlib.pyplot as plt
 from ruamel.yaml import YAML, Node
 from io import StringIO
@@ -40,8 +41,10 @@ yaml.register_class(Scenario)
 yaml.register_class(BitsSource)
 yaml.register_class(Transmitter)
 yaml.register_class(Receiver)
+yaml.register_class(ConventionalBeamformer)
+yaml.register_class(Channel)
 
 stream = StringIO()
 yaml.dump(scenario, stream)
+print(stream.getvalue())
 scenario = yaml.load(stream.getvalue())
-print(scenario.transmitters)
