@@ -43,12 +43,8 @@ class Transmitter(Modem):
     @classmethod
     def from_yaml(cls: Type[Transmitter], constructor: RoundTripConstructor, node: Node) -> Transmitter:
 
-        # Recover scenario instance which must have been created already
-        # Ugly hack, there must be a better way to handle this
-        constructor.constructed_objects(constructor.)
-        for constructed_object in constructor.constructed_objects.values():
-            if isinstance(constructed_object, type(Scenario)):
-                return constructed_object.add_transmitter(**constructor.construct_mapping(node))
+        scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
+        return scenario.add_transmitter(**constructor.construct_mapping(node))
 
     @property
     def paired_modems(self) -> List[Modem]:

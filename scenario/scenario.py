@@ -46,14 +46,15 @@ class Scenario:
     """
 
     yaml_tag = 'Scenario'
+    __transmitters: List[Transmitter] = []
+    __receivers: List[Receiver] = []
+    __channels: np.ndarray = np.empty((0, 0), dtype=np.object)
 
     def __init__(self, parameters: ParametersScenario = None, param_general: ParametersGeneral = None,
                  rnd: RandomStreams = None) -> None:
         self.sources: List[BitsSource] = []
-        self.__transmitters: List[Transmitter] = []
-        self.__receivers: List[Receiver] = []
         self.rx_samplers: List[RxSampler] = []
-        self.__channels: np.ndarray = np.empty((0, 0), dtype=np.object)
+
         self.noise: List[Noise] = []
         self.params: ParametersScenario
         self.param_general: ParametersGeneral
@@ -95,7 +96,6 @@ class Scenario:
             'Modems': [*node.__transmitters, *node.__receivers]
         }
 
-
         return representer.represent_mapping("Scenario", serialization)
 
     @classmethod
@@ -114,14 +114,13 @@ class Scenario:
                 Newly created `Scenario` instance.
             """
 
-        serialization = constructor.construct_mapping(node)
+        scenario = cls.__new__(cls)
+        yield scenario
 
-        args = serialization.copy()
-        args.pop('Modems', None)
-        scenario = Scenario(**args)
+        state_scenario = constructor.construct_mapping(node, deep=True)
+        state_scenario.pop('Modems', None)
 
-        for modem_node in serialization['Modems']:
-            
+        scenario.__init__(**state_scenario)
 
     def _create_channels(self) -> List[List[Channel]]:
         """Creates channels according to parameters specification.

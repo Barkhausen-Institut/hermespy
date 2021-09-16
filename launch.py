@@ -43,5 +43,5 @@ yaml.register_class(Receiver)
 
 stream = StringIO()
 yaml.dump(scenario, stream)
-print(stream.getvalue())
 scenario = yaml.load(stream.getvalue())
+print(scenario.transmitters)
