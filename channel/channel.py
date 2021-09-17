@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Type, TYPE_CHECKING
+from typing import Type, List, TYPE_CHECKING
 from abc import abstractmethod
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
@@ -84,10 +84,7 @@ class Channel:
         return representer.represent_mapping(cls.yaml_tag + "_{}_{}".format(transmitter_index, receiver_index), state)
 
     @classmethod
-    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node) -> Channel:
-
-        channel = cls.__new__(cls)
-        yield channel
+    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node) -> (Channel, List):
 
         scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
 
@@ -95,13 +92,21 @@ class Channel:
         if indices[0] == '':
             indices.pop(0)
 
-        transmitter_index = int(indices[0])
-        receiver_index = int(indices[1])
-        scenario.channels[transmitter_index, receiver_index] = channel
-
         state = constructor.construct_mapping(node)
-        channel.__init__(scenario.transmitters[transmitter_index], scenario.receivers[receiver_index], **state)
+        return (Channel(None, None, **state), (int(indices[0]), int(indices[1])))
 
+    def move_to(self, transmitter: Modem, receiver: Modem) -> None:
+        """Move the channel to a new matrix position.
+
+        transmitter (Modem):
+            New transmitting modem.
+
+        receiver (Modem):
+            New receiving modem.
+        """
+
+        self.__transmitter = transmitter
+        self.__receiver = receiver
 
     @property
     def active(self) -> bool:

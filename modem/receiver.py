@@ -19,7 +19,7 @@ class Receiver(Modem):
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
 
         scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
-        return scenario.add_receiver(**constructor.construct_mapping(node))
+        return Receiver(scenario, **constructor.construct_mapping(node))
 
     @property
     def index(self) -> int:
