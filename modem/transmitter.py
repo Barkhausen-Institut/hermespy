@@ -20,7 +20,7 @@ class Transmitter(Modem):
     def from_yaml(cls: Type[Transmitter], constructor: RoundTripConstructor, node: Node) -> Transmitter:
 
         scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
-        return scenario.add_transmitter(**constructor.construct_mapping(node))
+        return Transmitter(scenario, **constructor.construct_mapping(node))
 
     @property
     def index(self) -> int:

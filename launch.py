@@ -37,6 +37,7 @@ conventional_beamformer = transmitterA.configure_beamformer(ConventionalBeamform
 # Simulate a configuration dump
 
 yaml = YAML(typ='safe')
+
 yaml.register_class(Scenario)
 yaml.register_class(BitsSource)
 yaml.register_class(Transmitter)
@@ -47,4 +48,7 @@ yaml.register_class(Channel)
 stream = StringIO()
 yaml.dump(scenario, stream)
 print(stream.getvalue())
-scenario = yaml.load(stream.getvalue())
+scenarioImport = yaml.load(stream.getvalue())
+stream.flush()
+yaml.dump(scenarioImport, stream)
+print(stream.getvalue())

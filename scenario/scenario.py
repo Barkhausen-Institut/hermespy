@@ -2,6 +2,7 @@ from __future__ import annotations
 import numpy as np
 from typing import List, Tuple, Type, TYPE_CHECKING
 from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
+from ruamel.yaml.comments import CommentedMap as ordereddict
 
 from parameters_parser.parameters_scenario import ParametersScenario
 from parameters_parser.parameters_general import ParametersGeneral
@@ -46,34 +47,20 @@ class Scenario:
     """
 
     yaml_tag = 'Scenario'
-    __transmitters: List[Transmitter] = []
-    __receivers: List[Receiver] = []
-    __channels: np.ndarray = np.empty((0, 0), dtype=np.object)
+    __transmitters: List[Transmitter]
+    __receivers: List[Receiver]
+    __channels: np.matrix
 
-    def __init__(self, parameters: ParametersScenario = None, param_general: ParametersGeneral = None,
-                 rnd: RandomStreams = None) -> None:
+    def __init__(self) -> None:
+
+        self.__transmitters = []
+        self.__receivers = []
+        self.__channels = np.ndarray((0, 0), dtype=Channel)
+
         self.sources: List[BitsSource] = []
         self.rx_samplers: List[RxSampler] = []
 
         self.noise: List[Noise] = []
-        self.params: ParametersScenario
-        self.param_general: ParametersGeneral
-
-        if parameters is None and param_general is None and rnd is None:  # used to facilitate unit testing
-            pass
-        else:
-            self.random = rnd
-            self.params = parameters
-            self.param_general = param_general
-            if self.params.channel_model_params[0][0].multipath_model == "QUADRIGA":
-                self._quadriga_interface = QuadrigaInterface(
-                    self.params.channel_model_params[0][0])
-
-            self.sources, self.tx_modems = self._create_transmit_modems()
-
-            self.rx_samplers, self.rx_modems, self.noise = self._create_receiver_modems()
-
-            self.channels = self._create_channels()
 
     @classmethod
     def to_yaml(cls: Type[Scenario], representer: RoundTripRepresenter, node: Scenario) -> Node:
@@ -97,7 +84,7 @@ class Scenario:
             'Channels': node.__channels.flatten().tolist()
         }
 
-        return representer.represent_mapping("Scenario", serialization)
+        return representer.represent_mapping(cls.yaml_tag, serialization)
 
     @classmethod
     def from_yaml(cls: Type[Scenario], constructor: RoundTripConstructor, node: Node) -> Scenario:
@@ -121,9 +108,31 @@ class Scenario:
         constructor.add_multi_constructor("Channel", Channel.from_yaml)
         state_scenario = constructor.construct_mapping(node, deep=True)
 
-        state_scenario.pop('Modems', None)
-        state_scenario.pop('Channels', None)
+        modems = state_scenario.pop('Modems', None)
+        channels = state_scenario.pop('Channels', None)
+
         scenario.__init__(**state_scenario)
+
+        # Integrate modems
+        for modem in modems:
+
+            if isinstance(modem, Transmitter):
+                scenario.__transmitters.append(modem)
+
+            elif isinstance(modem, Receiver):
+                scenario.__receivers.append(modem)
+
+            else:
+                raise RuntimeWarning("Unknown modem type encountered")
+
+        # Integrate channels
+        scenario.__channels = np.array(
+            [[Channel(transmitter, receiver) for receiver in scenario.__receivers]
+             for transmitter in scenario.__transmitters], dtype=object)
+
+        for channel, position in channels:
+            scenario.__channels[position[0], position[1]] = channel
+            channel.move_to(scenario.__transmitters[position[0]], scenario.receivers[position[1]])
 
     def _create_channels(self) -> List[List[Channel]]:
         """Creates channels according to parameters specification.
@@ -285,11 +294,11 @@ class Scenario:
         return self.__transmitters
 
     @property
-    def channels(self) -> np.ndarray:
+    def channels(self) -> np.matrix:
         """Access full channel matrix.
 
         Returns:
-            np.ndarray:
+            np.matrix:
                 A numpy array containing channels between sender and receiver modems.
         """
 
@@ -384,6 +393,26 @@ class Scenario:
             channels = [channel for channel in channels if channel.active]
 
         return channels
+
+    def set_channel(self, transmitter_index: int, receiver_index: int, channel: Channel) -> None:
+        """Specify a channel within the channel matrix.
+
+        Warning:
+            This function will expand the channel matrix dimension if insufficient.
+
+        Args:
+            transmitter_index (int):
+                Index of the transmitter within the channel matrix.
+
+            receiver_index (int):
+                Index of the receiver within the channel matrix.
+
+            channel (Channel):
+                The channel instance to be set at position (`transmitter_index`, `receiver_index`).
+        """
+
+        channel = self.__channels[transmitter_index, receiver_index]
+        self.__channels[transmitter_index, receiver_index] = channel
 
     def add_receiver(self, **kwargs) -> Receiver:
         """Add a new receiving modem to the simulated scenario.
