@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import Type, List, TYPE_CHECKING
+from typing import Type, List, Tuple, TYPE_CHECKING
 from abc import abstractmethod
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
+from ruamel.yaml.comments import CommentedOrderedMap
 
 if TYPE_CHECKING:
-    from modem import Modem
+    from modem import Transmitter, Receiver
 
 
 class Channel:
@@ -24,13 +25,13 @@ class Channel:
 
     yaml_tag = 'Channel'
     __active: bool = False
-    __transmitter: Modem = None
-    __receiver: Modem = None
+    __transmitter: Transmitter = None
+    __receiver: Receiver = None
     __gain: float = 1.0
 
     def __init__(self,
-                 transmitter: Modem,
-                 receiver: Modem,
+                 transmitter: Transmitter,
+                 receiver: Receiver,
                  active: bool = None,
                  gain: float = None) -> None:
         """Class constructor.
@@ -84,24 +85,47 @@ class Channel:
         return representer.represent_mapping(cls.yaml_tag + "_{}_{}".format(transmitter_index, receiver_index), state)
 
     @classmethod
-    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node) -> (Channel, List):
+    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node)\
+            -> Tuple[Channel, List[int]]:
+        """Recall a new `Channel` instance from YAML.
 
-        scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            tag_suffix (str):
+                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
+                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
+
+            node (Node):
+                YAML node representing the `Channel` serialization.
+
+        Returns:
+            Channel:
+                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+
+            List:
+                Channel position within the scenarios channel matrix.
+            """
 
         indices = tag_suffix.split('_')
         if indices[0] == '':
             indices.pop(0)
 
-        state = constructor.construct_mapping(node)
-        return (Channel(None, None, **state), (int(indices[0]), int(indices[1])))
+        transmitter = Transmitter.__new__(Transmitter)
+        receiver = Receiver.__new__(Receiver)
+        state = constructor.construct_mapping(node, CommentedOrderedMap)
 
-    def move_to(self, transmitter: Modem, receiver: Modem) -> None:
+        return Channel(transmitter, receiver, **state), [int(indices[0]), int(indices[1])]
+
+    def move_to(self, transmitter: Transmitter, receiver: Receiver) -> None:
         """Move the channel to a new matrix position.
 
-        transmitter (Modem):
+        transmitter (Transmitter):
             New transmitting modem.
 
-        receiver (Modem):
+        receiver (Receiver):
             New receiving modem.
         """
 
@@ -131,21 +155,21 @@ class Channel:
         self.__active = active
 
     @property
-    def transmitter(self) -> Modem:
+    def transmitter(self) -> Transmitter:
         """Access the modem transmitting into this channel.
 
         Returns:
-            Modem: A handle to the modem transmitting into this channel.
+            Transmitter: A handle to the modem transmitting into this channel.
         """
 
         return self.__transmitter
 
     @property
-    def receiver(self) -> Modem:
+    def receiver(self) -> Receiver:
         """Access the modem receiving from this channel.
 
         Returns:
-            Modem: A handle to the modem receiving from this channel.
+            Receiver: A handle to the modem receiving from this channel.
         """
 
         return self.__receiver
@@ -202,7 +226,7 @@ class Channel:
         return self.__receiver.num_streams
 
     @property
-    def indices(self) -> (int, int):
+    def indices(self) -> Tuple[int, int]:
         """The indices of this channel within the scenarios channel matrix.
 
         Returns:
@@ -274,4 +298,7 @@ class Channel:
             (timestamps.size, 1, 1))
 
         impulse_responses = np.expand_dims(impulse_responses, axis=3)
-        return impulse_responses * self.param.gain
+        return impulse_responses * self.gain
+
+
+from modem import Transmitter, Receiver
