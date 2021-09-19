@@ -1,5 +1,6 @@
 from __future__ import annotations
-from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
+from ruamel.yaml import RoundTripConstructor, Node
+from ruamel.yaml.comments import CommentedOrderedMap
 from typing import Type, List, TYPE_CHECKING
 
 from modem import Modem
@@ -19,8 +20,8 @@ class Transmitter(Modem):
     @classmethod
     def from_yaml(cls: Type[Transmitter], constructor: RoundTripConstructor, node: Node) -> Transmitter:
 
-        scenario = [object for node, object in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
-        return Transmitter(scenario, **constructor.construct_mapping(node))
+        scenario = [scene for node, scene in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
+        return Transmitter(scenario, **constructor.construct_mapping(node, CommentedOrderedMap))
 
     @property
     def index(self) -> int:
