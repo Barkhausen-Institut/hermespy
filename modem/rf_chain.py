@@ -13,9 +13,13 @@ class RfChain:
     """
 
     yaml_tag = 'RfChain'
+    __power_amplifier: PowerAmplifier
 
     def __init__(self, param: ParametersRfChain = None,
                  tx_power: float = 1.0) -> None:
+
+        self.__power_amplifier = None
+
         self.param = param
         if self.param is not None:
             self.power_amplifier = PowerAmplifier(self.param, tx_power)

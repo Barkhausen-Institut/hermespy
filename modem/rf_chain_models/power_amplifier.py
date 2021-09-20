@@ -1,6 +1,8 @@
 from __future__ import annotations
 import numpy as np
 from enum import Enum
+from typing import Type
+from ruamel.yaml import Node, RoundTripRepresenter, RoundTripConstructor, SafeConstructor
 
 
 class PowerAmplifier:
@@ -19,6 +21,8 @@ class PowerAmplifier:
     - any custom AM/AM and AM/PM response as a vector
 
     Currently only memoryless models are supported.
+
+    TODO: Refactor models into dedicated subclasses of `PowerAmplifier`
     """
 
     class Model(Enum):
@@ -63,8 +67,7 @@ class PowerAmplifier:
                  adjust_power_after_pa: bool = None) -> None:
         """Creates a power amplifier object
 
-        Args:
-            TODO
+        TODO: ARGUMENTS
         """
 
         self.__model = self.Model.NONE
@@ -131,6 +134,61 @@ class PowerAmplifier:
             saturation_power = tx_power * self.__power_backoff
             self.__saturation_amplitude = np.sqrt(saturation_power)
 
+    @classmethod
+    def to_yaml(cls: Type[PowerAmplifier], representer: RoundTripRepresenter, node: PowerAmplifier) -> Node:
+        """Serialize a `PowerAmplifier` object to YAML.
+
+        Args:
+            representer (BaseRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (PowerAmplifier):
+                The amplifier instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'model': node.__model,
+            'tx_power': node.__tx_power,
+            'saturation_amplitude':  node.__saturation_amplitude,
+            'input_backoff_pa_db': node.__input_backoff_pa_db,
+            'rapp_smoothness_factor': node.__rapp_smoothness_factor,
+            'power_backoff': node.__power_backoff,
+            'saleh_alpha_a': node.__saleh_alpha_a,
+            'saleh_alpha_phi': node.__saleh_alpha_phi,
+            'saleh_beta_a': node.__saleh_beta_a,
+            'saleh_beta_phi': node.__saleh_beta_phi,
+            'custom_pa_input': node.__custom_pa_input,
+            'custom_pa_output': node.__custom_pa_output,
+            'custom_pa_gain': node.__custom_pa_gain,
+            'custom_pa_phase': node.__custom_pa_phase,
+            'adjust_power_after_pa': node.__adjust_power_after_pa
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[PowerAmplifier], constructor: SafeConstructor, node: Node) -> PowerAmplifier:
+        """Recall a new `PowerAmplifier` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `PowerAmplifier` serialization.
+
+        Returns:
+            PowerAmplifier:
+                Newly created `PowerAmplifier` instance.
+            """
+
+        state = SafeConstructor.construct_mapping(constructor, node, deep=False)
+        return PowerAmplifier(**state)
 
     def send(self, input_signal: np.ndarray) -> np.ndarray:
         """Returns the distorted version of the input signal according to the desired model
@@ -230,6 +288,6 @@ class PowerAmplifier:
         """
 
         if factor <= 0.0:
-            raise ValueError("Smoothness factor ({}) in Rapp's model must be greater than zero 0".format(factor))
+            raise ValueError("Smoothness factor ({}) in Rapp's model must be greater than zero".format(factor))
 
         self.__rapp_smoothness_factor = factor
