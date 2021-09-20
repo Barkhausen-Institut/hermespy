@@ -24,14 +24,14 @@ Ensure that [git lfs](https://git-lfs.github.com/) is installed. Further, C++14 
 - `conda activate <envname>` (can be omitted for ubuntu users)
 - `conda install pip` (can be omitted for ubuntu users)
 - `pip install -r requirements.txt`
-- `pip install .`
+- `pip install -e .`
 
 **Ubuntu users**:
 - Ensure `python` is linked to python3.7
 - `python -m venv env`
 - `. env/bin/activate`
 - `pip install -r requirements.txt`
-- `pip install .`
+- `pip install -e .`
  
 
 [Quadriga channel model v2.1.30](https://quadriga-channel-model.de/) is supported by HermesPy.
