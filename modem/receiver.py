@@ -20,7 +20,11 @@ class Receiver(Modem):
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
 
         scenario = [scene for node, scene in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
-        return Receiver(scenario, **constructor.construct_mapping(node, CommentedOrderedMap))
+
+        mapping = constructor.construct_mapping(node, CommentedOrderedMap)
+        args = dict((k.lower(), v) for k, v in mapping.items())
+
+        return Receiver(scenario, **args)
 
     @property
     def index(self) -> int:
