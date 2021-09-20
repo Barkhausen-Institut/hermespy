@@ -60,7 +60,7 @@ class Modem(Generic[P]):
                  bits_source: BitsSource = None,
                  encoding: EncoderManager = None,
                  waveform_generator: WaveformGenerator = None,
-                 rf_chain: RfChain = None) -> None:
+                 rfchain: RfChain = None) -> None:
         """Object initialization.
 
         Args:
@@ -104,8 +104,8 @@ class Modem(Generic[P]):
         if waveform_generator is not None:
             self.waveform_generator = waveform_generator
 
-        if rf_chain is not None:
-            self.rf_chain = rf_chain
+        if rfchain is not None:
+            self.rf_chain = rfchain
 
     @classmethod
     def to_yaml(cls: Type[Modem], representer: RoundTripRepresenter, node: Modem) -> Node:
@@ -128,6 +128,7 @@ class Modem(Generic[P]):
             "carrier_frequency": node.__carrier_frequency,
             "sampling_rate": node.__sampling_rate,
             EncoderManager.yaml_tag: node.__encoder_manager,
+            RfChain.yaml_tag: node.__rf_chain,
         }
 
         """if node.beamformer.__class__ is not Beamformer:

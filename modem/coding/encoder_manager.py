@@ -33,6 +33,9 @@ class EncoderManager:
                 The serialized YAML node.
         """
 
+        if len(node.encoders) < 1:
+            return representer.represent_none(None)
+
         return representer.represent_sequence(cls.yaml_tag, node.encoders)
 
     @classmethod
