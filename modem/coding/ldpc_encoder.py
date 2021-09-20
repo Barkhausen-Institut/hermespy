@@ -24,6 +24,10 @@ class LdpcEncoder(Encoder):
     """
 
     def __init__(self, params: ParametersLdpcEncoder, bits_in_frame: int) -> None:
+
+        self.__block_size = 1
+        self.__
+
         self.params = params
         self.bits_in_frame = bits_in_frame
         self._read_precalculated_codes()
