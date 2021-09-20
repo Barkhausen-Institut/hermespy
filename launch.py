@@ -5,6 +5,7 @@ import scipy.constants as const
 from beamformer import ConventionalBeamformer, TransmissionDirection
 from source.bits_source import BitsSource
 from modem import Transmitter, Receiver
+from modem.coding import EncoderManager, Encoder
 from channel import Channel
 import matplotlib.pyplot as plt
 from ruamel.yaml import YAML, Node
@@ -38,12 +39,12 @@ conventional_beamformer = transmitterA.configure_beamformer(ConventionalBeamform
 
 yaml = YAML(typ='safe')
 
-yaml.register_class(Scenario)
-yaml.register_class(BitsSource)
-yaml.register_class(Transmitter)
-yaml.register_class(Receiver)
-yaml.register_class(ConventionalBeamformer)
-yaml.register_class(Channel)
+serializable_classes = [Scenario, BitsSource, Transmitter, Receiver, EncoderManager, Encoder, ConventionalBeamformer,
+                        Channel]
+
+for serializable_class in serializable_classes:
+    yaml.register_class(serializable_class)
+
 
 stream = StringIO()
 yaml.dump(scenario, stream)

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Tuple, Generic, TypeVar, List, Dict, Type, TYPE_CHECKING
+from typing import Tuple, Generic, TypeVar, List, Type, TYPE_CHECKING
 from abc import abstractmethod
 from enum import Enum
 from numpy import random as rnd
@@ -7,7 +7,6 @@ import numpy as np
 from ruamel.yaml import RoundTripRepresenter, Node
 
 from parameters_parser.parameters_modem import ParametersModem
-from modem.coding.encoder import Encoder
 from modem.coding.encoder_manager import EncoderManager
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
@@ -53,10 +52,13 @@ class Modem(Generic[P]):
 
     def __init__(self,
                  scenario: Scenario,
+                 position: np.array = None,
+                 orientation: np.array = None,
                  topology: np.ndarray = None,
                  carrier_frequency: float = None,
                  sampling_rate: float = None,
                  bits_source: BitsSource = None,
+                 encoding: EncoderManager = None,
                  waveform_generator: WaveformGenerator = None,
                  rf_chain: RfChain = None) -> None:
         """Object initialization.
@@ -69,17 +71,20 @@ class Modem(Generic[P]):
         """
 
         self.__scenario = scenario
-        self.__position = None
-        self.__orientation = None
-        self.__topology = None
         self.__carrier_frequency = 2.4e9
         self.__sampling_rate = 2 * 2.5e9
         self.__linear_topology = False
         self.__beamformer = Beamformer(self)
         self.__bits_source = BitsSource(rnd.RandomState())
         self.__encoder_manager = EncoderManager()
-        #self.__waveform_generator = WaveformGenerator()
+        # self.__waveform_generator = WaveformGenerator()
         self.__rf_chain = RfChain()
+
+        if position is not None:
+            self.position = position
+
+        if orientation is not None:
+            self.orientation = orientation
 
         if topology is not None:
             self.topology = topology
@@ -92,6 +97,9 @@ class Modem(Generic[P]):
 
         if bits_source is not None:
             self.bits_source = bits_source
+
+        if encoding is not None:
+            self.__encoder_manager = encoding
 
         if waveform_generator is not None:
             self.waveform_generator = waveform_generator
@@ -118,7 +126,8 @@ class Modem(Generic[P]):
 
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
-            "sampling_rate": node.__sampling_rate
+            "sampling_rate": node.__sampling_rate,
+            EncoderManager.yaml_tag: node.__encoder_manager,
         }
 
         """if node.beamformer.__class__ is not Beamformer:
@@ -302,6 +311,17 @@ class Modem(Generic[P]):
         """
 
         return self.__position
+
+    @position.setter
+    def position(self, position: np.array) -> None:
+        """Update the modem's position.
+
+        Args:
+            position (np.array):
+                The modem's new position.
+        """
+
+        self.__position = position
 
     @property
     def orientation(self) -> np.array:
