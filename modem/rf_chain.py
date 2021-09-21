@@ -1,8 +1,7 @@
 from __future__ import annotations
 import numpy as np
-from ruamel.yaml import RoundTripConstructor, RoundTripRepresenter, Node
-from typing import Type
-from parameters_parser.parameters_rf_chain import ParametersRfChain
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from typing import Type, Optional
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
 
 
@@ -13,19 +12,19 @@ class RfChain:
     """
 
     yaml_tag = 'RfChain'
-    __power_amplifier: PowerAmplifier
+    __tx_power: float
+    __power_amplifier: Optional[PowerAmplifier]
 
-    def __init__(self, param: ParametersRfChain = None,
-                 tx_power: float = 1.0) -> None:
+    def __init__(self, tx_power: float = None) -> None:
 
+        self.__tx_power = 1.0
         self.__power_amplifier = None
 
-        self.param = param
-        if self.param is not None:
-            self.power_amplifier = PowerAmplifier(self.param, tx_power)
+        if tx_power is not None:
+            self.__tx_power = tx_power
 
     @classmethod
-    def to_yaml(cls: Type[RfChain], representer: RoundTripRepresenter, node: RfChain) -> Node:
+    def to_yaml(cls: Type[RfChain], representer: SafeRepresenter, node: RfChain) -> Node:
         """Serialize an RfChain object to YAML.
 
         Args:
@@ -39,12 +38,21 @@ class RfChain:
         Returns:
             Node:
                 The serialized YAML node.
+                None if the object state is default.
         """
 
-        return representer.represent_none(None)
+        state = {}
+
+        if node.__power_amplifier is not None:
+            state[node.power_amplifier.yaml_tag] = node.__power_amplifier
+
+        if len(state) < 1:
+            return representer.represent_none(None)
+
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[RfChain], constructor: RoundTripConstructor, node: Node) -> RfChain:
+    def from_yaml(cls: Type[RfChain], constructor: SafeConstructor, node: Node) -> RfChain:
         """Recall a new `RfChain` instance from YAML.
 
         Args:
@@ -59,7 +67,14 @@ class RfChain:
                 Newly created `RfChain` instance.
         """
 
-        return RfChain()
+        state = constructor.construct_mapping(node)
+        power_amplifier = state.pop(PowerAmplifier.yaml_tag, None)
+
+        rf_chain = cls(**state)
+        yield rf_chain
+
+        if power_amplifier is not None:
+            rf_chain.power_amplifier = power_amplifier
 
     def send(self, input_signal: np.ndarray) -> np.ndarray:
         """Returns the distorted version of signal in "input_signal".
@@ -78,3 +93,24 @@ class RfChain:
         According to reception impairments.
         """
         return input_signal
+
+    @property
+    def power_amplifier(self) -> PowerAmplifier:
+        """Access the `PowerAmplifier` of the rf chain.
+
+        Returns:
+            A handle to the `PowerAmplifier`.
+        """
+
+        return self.__power_amplifier
+
+    @power_amplifier.setter
+    def power_amplifier(self, power_amplifier: PowerAmplifier) -> None:
+        """Reassign the power amplifier configuration.
+
+        Args:
+            power_amplifier (PowerAmplifier):
+                The new power amplifier configuration.
+        """
+
+        self.__power_amplifier = power_amplifier

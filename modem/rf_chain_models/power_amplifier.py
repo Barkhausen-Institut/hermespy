@@ -152,20 +152,19 @@ class PowerAmplifier:
         """
 
         state = {
-            'model': node.__model,
+            'model': node.__model.name,
             'tx_power': node.__tx_power,
             'saturation_amplitude':  node.__saturation_amplitude,
             'input_backoff_pa_db': node.__input_backoff_pa_db,
             'rapp_smoothness_factor': node.__rapp_smoothness_factor,
-            'power_backoff': node.__power_backoff,
             'saleh_alpha_a': node.__saleh_alpha_a,
             'saleh_alpha_phi': node.__saleh_alpha_phi,
             'saleh_beta_a': node.__saleh_beta_a,
             'saleh_beta_phi': node.__saleh_beta_phi,
-            'custom_pa_input': node.__custom_pa_input,
-            'custom_pa_output': node.__custom_pa_output,
-            'custom_pa_gain': node.__custom_pa_gain,
-            'custom_pa_phase': node.__custom_pa_phase,
+            #'custom_pa_input': node.__custom_pa_input,
+            #'custom_pa_output': node.__custom_pa_output,
+            #'custom_pa_gain': node.__custom_pa_gain,
+            #'custom_pa_phase': node.__custom_pa_phase,
             'adjust_power_after_pa': node.__adjust_power_after_pa
         }
 
@@ -188,6 +187,15 @@ class PowerAmplifier:
             """
 
         state = SafeConstructor.construct_mapping(constructor, node, deep=False)
+
+        if 'model' in state.keys():
+
+            if isinstance(state['model'], str):
+                state['model'] = PowerAmplifier.Model[state['model']]
+
+            elif isinstance(state['model'], int):
+                state['model'] = PowerAmplifier.Model(state['model'])
+
         return PowerAmplifier(**state)
 
     def send(self, input_signal: np.ndarray) -> np.ndarray:
