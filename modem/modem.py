@@ -75,7 +75,7 @@ class Modem(Generic[P]):
         self.__sampling_rate = 2 * 2.5e9
         self.__linear_topology = False
         self.__beamformer = Beamformer(self)
-        self.__bits_source = BitsSource(rnd.RandomState())
+        self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
         # self.__waveform_generator = WaveformGenerator()
         self.__rf_chain = RfChain()
@@ -127,6 +127,7 @@ class Modem(Generic[P]):
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
             "sampling_rate": node.__sampling_rate,
+            BitsSource.yaml_tag: node.__bits_source,
             EncoderManager.yaml_tag: node.__encoder_manager,
             RfChain.yaml_tag: node.__rf_chain,
         }

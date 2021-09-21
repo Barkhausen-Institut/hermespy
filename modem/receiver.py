@@ -4,6 +4,7 @@ from ruamel.yaml.comments import CommentedOrderedMap
 from typing import Type, List, TYPE_CHECKING
 
 from modem import Modem
+from source import BitsSource
 
 if TYPE_CHECKING:
     from scenario import Scenario
@@ -21,10 +22,15 @@ class Receiver(Modem):
 
         scenario = [scene for node, scene in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
 
-        mapping = constructor.construct_mapping(node, CommentedOrderedMap)
-        args = dict((k.lower(), v) for k, v in mapping.items())
+        state = constructor.construct_mapping(node, CommentedOrderedMap)
+        bits_source = state.pop(BitsSource.yaml_tag, None)
 
-        return Receiver(scenario, **args)
+        args = dict((k.lower(), v) for k, v in state.items())
+        receiver = Receiver(scenario, **args)
+        yield receiver
+
+        if bits_source is not None:
+            receiver.bits_source = bits_source
 
     @property
     def index(self) -> int:
