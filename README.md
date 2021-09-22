@@ -6,7 +6,7 @@ multiple transmit and receive modems, which may operate at different carrier fre
 simulating individual transmission links, HermesPy allows the analysis of both co-channel and
 adjacent-channel interference among different communication systems.
 
-You can find an introductory video here: https://www.barkhauseninstitut.org/opensource/hermespy
+You can find an introductory video here: https://www.barkhauseninstitut.org/en/results/hermespy
 
 # Features
 
