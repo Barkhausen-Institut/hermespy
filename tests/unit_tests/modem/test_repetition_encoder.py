@@ -6,6 +6,7 @@ import numpy as np
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
+from .utils import assert_frame_equality
 
 
 class TestRepetitionEncoder(unittest.TestCase):
@@ -22,7 +23,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         data_bits = [np.arange(self.bits_in_frame)]
         encoded_bits = self._rEncoder.encode(deepcopy(data_bits))
 
-        _assert_frame_equality(data_bits, encoded_bits)
+        assert_frame_equality(data_bits, encoded_bits)
 
     def test_encoding_multiple_blocks_nk1(self) -> None:
         data_bits = [
@@ -34,7 +35,7 @@ class TestRepetitionEncoder(unittest.TestCase):
                 2)]
         encoded_bits = self._rEncoder.encode(deepcopy(data_bits))
 
-        _assert_frame_equality(data_bits, encoded_bits)
+        assert_frame_equality(data_bits, encoded_bits)
 
     def test_encoding_one_block_n3k1(self) -> None:
         self.params_encoder.encoded_bits_n = 3
@@ -54,7 +55,7 @@ class TestRepetitionEncoder(unittest.TestCase):
             )
         ]
 
-        _assert_frame_equality(encoded_bits, expected_encoded_bits)
+        assert_frame_equality(encoded_bits, expected_encoded_bits)
 
     def test_encoding_two_blocks_n3k1(self) -> None:
         self.params_encoder.encoded_bits_n = 3
@@ -85,7 +86,7 @@ class TestRepetitionEncoder(unittest.TestCase):
                 )
             )
         ]
-        _assert_frame_equality(encoded_bits, expected_encoded_bits)
+        assert_frame_equality(encoded_bits, expected_encoded_bits)
 
     def test_encoding_one_block_n3k2(self) -> None:
         self.params_encoder.encoded_bits_n = 3
@@ -105,7 +106,7 @@ class TestRepetitionEncoder(unittest.TestCase):
             )
         ]
 
-        _assert_frame_equality(encoded_bits, expected_encoded_bits)
+        assert_frame_equality(encoded_bits, expected_encoded_bits)
 
     def test_data_bits_set_to_1(self) -> None:
         self.params_encoder.data_bits_k = 2
@@ -123,7 +124,7 @@ class TestRepetitionEncoder(unittest.TestCase):
                         np.array([-0.3, -0.7, -1, -0.9, -0.4])]
 
         decoded_bits = encoder.decode(encoded_bits)
-        _assert_frame_equality(data_bits, decoded_bits)
+        assert_frame_equality(data_bits, decoded_bits)
 
     def test_decoding_one_block_n2k1(self) -> None:
         self.params_encoder.encoded_bits_n = 2
@@ -136,10 +137,5 @@ class TestRepetitionEncoder(unittest.TestCase):
         encoded_bits = [np.repeat(data_bits_soft, 2)]
 
         decoded_bits = encoder.decode(encoded_bits)
-        _assert_frame_equality(data_bits_hard, decoded_bits)
+        assert_frame_equality(data_bits_hard, decoded_bits)
 
-
-def _assert_frame_equality(
-        data_bits: List[np.array], encoded_bits: List[np.array]) -> None:
-    for data_block, encoded_block in zip(data_bits, encoded_bits):
-        np.testing.assert_array_equal(data_block, encoded_block)

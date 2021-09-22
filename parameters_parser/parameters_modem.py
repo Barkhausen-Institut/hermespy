@@ -8,6 +8,7 @@ import numpy as np
 
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
+from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
 from parameters_parser.parameters_rf_chain import ParametersRfChain
 from parameters_parser.parameters_encoder import ParametersEncoder
 
@@ -24,7 +25,7 @@ class ParametersModem(ABC):
         carrier_frequency (float): transceiver carrier frequency (in Hz)
                 supported_encoders List(str): list of valid encoders
         dir_encoding_parameters(str): path where we can find the encoding parametersr
-        encoding_type(str): type of encoder
+        encoding_type(List[str]): type of encoders
         device_type (str): defines which device type the modem ist
         antenna_spacing (float): Ratio between antenna distance and lambda/2
     """
@@ -43,7 +44,10 @@ class ParametersModem(ABC):
         self.tx_power = 0.
         self.dir_encoding_parameters = os.path.join(os.getcwd(), '_settings', 'coding')
         self.rf_chain_parameters = os.path.join(os.getcwd(), '_settings')
-        self.encoding_type = ""
+        self.encoding_type = [""]
+        self.encoding_params = []
+        self.block_interleaver_m = 1
+        self.block_interleaver_n = 1
         self._encoder_param_file = "NONE"
         self._encoded_bits_n = 1
         self._data_bits_k = 1
@@ -63,6 +67,8 @@ class ParametersModem(ABC):
         self.number_of_antennas = section.getint("number_of_antennas", fallback=1)
         self.device_type = section.get("device_type", fallback="UE").upper()
         self.antenna_spacing = section.getfloat("antenna_spacing", fallback=1.)
+        self.block_interleaver_m = section.getint("block_interleaver_m", fallback=1)
+        self.block_interleaver_n = section.getint("block_interleaver_n", fallback=1)
 
         tx_power_db = section.getfloat("tx_power_db", fallback=0.)
         if tx_power_db == 0:
@@ -116,13 +122,18 @@ class ParametersModem(ABC):
 
         # read encoder parameters file
         if self._encoder_param_file.upper() == "NONE":
-            self.encoding_params = ParametersRepetitionEncoder()
-            self.encoding_params.encoded_bits_n = 1
-            self.encoding_params.data_bits_k = 1
+            self.encoding_params.append(ParametersRepetitionEncoder())
+            self.encoding_params[-1].encoded_bits_n = 1
+            self.encoding_params[-1].data_bits_k = 1
         else:
             encoding_params_file_path = os.path.join(
                 self.dir_encoding_parameters, self._encoder_param_file)
             self._read_encoding_file(encoding_params_file_path)
+
+        self.encoding_params.append(
+            ParametersBlockInterleaver(
+                self.block_interleaver_m, self.block_interleaver_n))
+        self.encoding_type.append("BLOCK_INTERLEAVER")
 
         if self._rf_chain_param_file:
             if self._rf_chain_param_file.upper() == "NONE":
@@ -138,15 +149,15 @@ class ParametersModem(ABC):
             raise ValueError(f'File {encoding_params_file_path} does not exist.')
 
         config.read(encoding_params_file_path)
-        self.encoding_type = config["General"].get("type").upper()
+        self.encoding_type.append(config["General"].get("type").upper())
 
-        if self.encoding_type not in self.supported_encoders:
+        if self.encoding_type[-1] not in self.supported_encoders:
             raise ValueError(f"Encoding Type {self.encoding_type} not supported")
 
-        encoding_parameter: ParametersEncoder
-        if self.encoding_type == "REPETITION":
+        encoding_parameters: ParametersEncoder
+        if self.encoding_type[-1] == "REPETITION":
             encoding_parameters = ParametersRepetitionEncoder()
-        elif self.encoding_type == "LDPC":
+        elif self.encoding_type[-1] == "LDPC":
             encoding_parameters = ParametersLdpcEncoder()
 
         self._encoded_bits_n = config["General"].getint("encoded_bits_n", fallback=1)
@@ -156,7 +167,7 @@ class ParametersModem(ABC):
         encoding_parameters.data_bits_k = self._data_bits_k
 
         encoding_parameters.read_params(config["General"])
-        self.encoding_params = encoding_parameters
+        self.encoding_params.append(encoding_parameters)
 
     def _calculate_correlation_matrices(self):
         a = 0.
