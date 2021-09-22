@@ -91,9 +91,15 @@ class WaveformGenerator(ABC):
         return cls(**state)
 
     @property
+    @abstractmethod
     def samples_in_frame(self) -> int:
-        """int: samples contained in current frame."""
-        return self._samples_in_frame
+        """The number of discrete samples per generated frame.
+
+        Returns:
+            int:
+                The number of samples.
+        """
+        pass
 
     @property
     def max_frame_length(self) -> float:
@@ -119,18 +125,20 @@ class WaveformGenerator(ABC):
         Energy of signal x[k] is defined as \\sum{|x[k]}^2
         Only data bits are considered, i.e., reference, guard intervals are ignored.
         """
+        pass
 
-        return 0.0
-
+    @property
     @abstractmethod
-    def get_symbol_energy(self) -> float:
-        """Returns the theoretical average symbol (discrete-time) energy of the modulated signal.
+    def symbol_energy(self) -> float:
+        """The theoretical average symbol (discrete-time) energy of the modulated signal.
 
         Energy of signal x[k] is defined as \\sum{|x[k]}^2
         Only data bits are considered, i.e., reference, guard intervals are ignored.
-        """
 
-        return 0.0
+        Returns:
+            The average symbol energy in UNIT.
+        """
+        pass
 
     @abstractmethod
     def get_power(self) -> float:

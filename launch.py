@@ -43,7 +43,6 @@ scenario.channel(transmitterB, receiverB).active = True
 conventional_beamformer = transmitterA.configure_beamformer(ConventionalBeamformer, focused_modem=receiverA)
 
 # Simulate a configuration dump
-
 yaml = YAML(typ='safe')
 
 serializable_classes = [Scenario, BitsSource, Transmitter, Receiver, EncoderManager, Encoder, RfChain, PowerAmplifier,
