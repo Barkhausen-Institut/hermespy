@@ -28,7 +28,7 @@ class RfChain:
         """Serialize an RfChain object to YAML.
 
         Args:
-            representer (RoundTripRepresenter):
+            representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
@@ -56,7 +56,7 @@ class RfChain:
         """Recall a new `RfChain` instance from YAML.
 
         Args:
-            constructor (RoundTripConstructor):
+            constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
             node (Node):

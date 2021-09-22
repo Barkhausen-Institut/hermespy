@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Tuple, Generic, TypeVar, List, Type, TYPE_CHECKING
+from typing import Tuple, Generic, TypeVar, List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
 from numpy import random as rnd
@@ -37,17 +37,17 @@ class Modem(Generic[P]):
     """
 
     yaml_tag = 'Modem'
-    __scenario: Scenario                    # Scenario this modem belongs to
-    __position: np.array                    # Position of the modem within the scenario. Set to None if unknown.
-    __orientation: np.array                 # Orientation of the modem within the scenario. Set to None if unknown.
-    __topology: np.ndarray                  # Antenna array topology, implicitly contains the number of antennas
-    __carrier_frequency: float              # Center frequency of the RF signal
-    __sampling_rate: float                  # Signal sampling rate in Hz
-    __linear_topology: bool                 # Flag indicating a one-dimensional sensor array topology
-    __beamformer: Beamformer                # Beamformer associated with this modem
+    __scenario: Scenario
+    __position: np.array
+    __orientation: np.array
+    __topology: np.ndarray
+    __carrier_frequency: float
+    __sampling_rate: float
+    __linear_topology: bool
+    __beamformer: Beamformer
     __encoder_manager: EncoderManager
     __bits_source: BitsSource
-    __waveform_generator: WaveformGenerator
+    __waveform_generator: Optional[WaveformGenerator]
     __rf_chain: RfChain
 
     def __init__(self,
@@ -77,7 +77,7 @@ class Modem(Generic[P]):
         self.__beamformer = Beamformer(self)
         self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
-        # self.__waveform_generator = WaveformGenerator()
+        self.__waveform_generator = None
         self.__rf_chain = RfChain()
 
         if position is not None:
@@ -572,7 +572,9 @@ class Modem(Generic[P]):
 
     @waveform_generator.setter
     def waveform_generator(self, waveform_generator: WaveformGenerator) -> None:
-        """Configure the modem's waveform generator
+        """Configure the modem's waveform generator.
+
+        This modifies the referenced modem within the `waveform_generator` to this modem!
 
         Args:
             waveform_generator (WaveformGenerator):
@@ -580,6 +582,7 @@ class Modem(Generic[P]):
         """
 
         self.__waveform_generator = waveform_generator
+        self.__waveform_generator.modem = self
 
     @property
     def rf_chain(self) -> RfChain:
