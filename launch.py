@@ -8,6 +8,7 @@ from modem import Transmitter, Receiver
 from modem.coding import EncoderManager, Encoder
 from modem import RfChain
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
+from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from channel import Channel
 import matplotlib.pyplot as plt
 from ruamel.yaml import YAML, Node
@@ -28,7 +29,10 @@ transmitterA = scenario.add_transmitter(**modem_configuration)
 transmitterB = scenario.add_transmitter(**modem_configuration)
 receiverA = scenario.add_receiver(**modem_configuration)
 receiverB = scenario.add_receiver(**modem_configuration)
+
+transmitterA.waveform_generator = WaveformGeneratorChirpFsk()
 receiverB.rf_chain.power_amplifier = PowerAmplifier()
+
 
 # Configure channels
 scenario.channel(transmitterA, receiverA).active = True
