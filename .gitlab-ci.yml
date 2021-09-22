@@ -25,3 +25,5 @@ wheel-linux:
   artifacts:
     paths:
       - wheel
+  only:
+    - master
