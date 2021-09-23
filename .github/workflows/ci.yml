@@ -52,23 +52,24 @@ jobs:
     - name: Run unit tests
       run: python run_unit_tests.py
 
-dist:
+  dist:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
         runs-on: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+    - name: Checkout repo + lfs
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
-      - name: Build SDist and wheel
-        run: pipx run build
+    - name: Build SDist and wheel
+      run: pipx run build
 
-      - uses: actions/upload-artifact@v2
-        with:
-          path: dist/*
+    - uses: actions/upload-artifact@v2
+      with:
+        path: dist/*
 
-      - name: Check metadata
-        run: pipx run twine check dist/*
+    - name: Check metadata
+      run: pipx run twine check dist/*
