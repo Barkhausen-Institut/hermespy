@@ -60,14 +60,15 @@ jobs:
 
     steps:
     - name: Checkout repo + lfs
-    - uses: actions/checkout@v2
+      uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
-    - name: Build SDist and wheel
+    - name: Build distribution and wheel
       run: pipx run build
 
-    - uses: actions/upload-artifact@v2
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
       with:
         path: dist/*
 
