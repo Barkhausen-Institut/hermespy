@@ -66,15 +66,12 @@ jobs:
         branch: gh-pages
         folder: docs
 
-  Deploy:
+  Deploy-Windows:
 #    if: ${{ env.deploy }}
     environment: pypi
     needs: Testing
-    runs-on: ${{ matrix.runs-on }}
-    strategy:
-      matrix:
-        runs-on: [ubuntu-latest, windows-latest]
-    name: Build distribution for ${{ matrix.runs-on }}
+    runs-on: windows-latest
+    name: Deploy Windows distribution to PyPI
     steps:
     
     - name: Checkout full repository
