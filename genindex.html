@@ -55,16 +55,25 @@
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modem.coding.html#modem.coding.encoder_manager.EncoderManager.add_encoder">add_encoder() (EncoderManager method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="channel.html#channel.noise.Noise.add_noise">add_noise() (Noise method)</a>
+</li>
+      <li><a href="channel.html#channel.quadriga_interface.QuadrigaInterface.api_script_path">api_script_path (QuadrigaInterface attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -74,11 +83,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modem.html#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.bits_in_frame">bits_in_frame() (WaveformGeneratorOfdm property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modem.tools.html#modem.tools.psk_qam_mapping.PskQamMapping.bits_per_symbol">bits_per_symbol (PskQamMapping attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source.html#source.bits_source.BitsSource">BitsSource (class in source.bits_source)</a>
+</li>
+      <li><a href="modem.coding.html#modem.coding.interleaver.BlockInterleaver">BlockInterleaver (class in modem.coding.interleaver)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -118,6 +129,20 @@
         <li><a href="channel.html#module-channel.noise">module</a>
 </li>
       </ul></li>
+      <li>
+    channel.quadriga_channel
+
+      <ul>
+        <li><a href="channel.html#module-channel.quadriga_channel">module</a>
+</li>
+      </ul></li>
+      <li>
+    channel.quadriga_interface
+
+      <ul>
+        <li><a href="channel.html#module-channel.quadriga_interface">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
@@ -129,7 +154,15 @@
       </ul></li>
       <li><a href="modem.html#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.channel_estimation">channel_estimation() (WaveformGeneratorOfdm method)</a>
 </li>
-      <li><a href="modem.coding.html#modem.coding.encoder.Encoder.code_blocks">code_blocks() (Encoder property)</a>
+      <li><a href="scenario.html#scenario.scenario.Scenario.channels">channels (Scenario attribute)</a>
+</li>
+      <li><a href="modem.coding.html#modem.coding.interleaver.BlockInterleaver.code_blocks">code_blocks() (BlockInterleaver property)</a>
+
+      <ul>
+        <li><a href="modem.coding.html#modem.coding.encoder.Encoder.code_blocks">(Encoder property)</a>
+</li>
+      </ul></li>
+      <li><a href="modem.coding.html#modem.coding.encoder_manager.EncoderManager.code_rate">code_rate() (EncoderManager property)</a>
 </li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.computeFactors">computeFactors() (RxSampler method)</a>
 </li>
@@ -153,17 +186,29 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modem.coding.html#modem.coding.encoder.Encoder.data_bits_k">data_bits_k() (Encoder property)</a>
+      <li><a href="modem.coding.html#modem.coding.interleaver.BlockInterleaver.data_bits_k">data_bits_k() (BlockInterleaver property)</a>
+
+      <ul>
+        <li><a href="modem.coding.html#modem.coding.encoder.Encoder.data_bits_k">(Encoder property)</a>
 </li>
+        <li><a href="modem.coding.html#modem.coding.ldpc_encoder.LdpcEncoder.data_bits_k">(LdpcEncoder property)</a>
+</li>
+      </ul></li>
       <li><a href="channel.html#channel.noise.Noise.db_to_linear">db_to_linear() (Noise method)</a>
 </li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.decimate_factor_rx">decimate_factor_rx() (RxSampler property)</a>
 </li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.decimate_factor_tx">decimate_factor_tx() (RxSampler property)</a>
 </li>
-      <li><a href="modem.coding.html#modem.coding.encoder.Encoder.decode">decode() (Encoder method)</a>
+      <li><a href="modem.coding.html#modem.coding.interleaver.BlockInterleaver.decode">decode() (BlockInterleaver method)</a>
 
       <ul>
+        <li><a href="modem.coding.html#modem.coding.encoder.Encoder.decode">(Encoder method)</a>
+</li>
+        <li><a href="modem.coding.html#modem.coding.encoder_manager.EncoderManager.decode">(EncoderManager method)</a>
+</li>
+        <li><a href="modem.coding.html#modem.coding.ldpc_encoder.LdpcEncoder.decode">(LdpcEncoder method)</a>
+</li>
         <li><a href="modem.tools.html#modem.tools.mimo.Mimo.decode">(Mimo method)</a>
 </li>
         <li><a href="modem.coding.html#modem.coding.repetition_encoder.RepetitionEncoder.decode">(RepetitionEncoder method)</a>
@@ -181,25 +226,47 @@
 </li>
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.doppler_frequency">doppler_frequency (MultipathFadingChannel attribute)</a>
 </li>
+      <li><a href="simulator_core.html#simulator_core.drop_loop.DropLoop">DropLoop (class in simulator_core.drop_loop)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modem.coding.html#modem.coding.encoder.Encoder.encode">encode() (Encoder method)</a>
+      <li><a href="modem.coding.html#modem.coding.interleaver.BlockInterleaver.encode">encode() (BlockInterleaver method)</a>
 
       <ul>
+        <li><a href="modem.coding.html#modem.coding.encoder.Encoder.encode">(Encoder method)</a>
+</li>
+        <li><a href="modem.coding.html#modem.coding.encoder_manager.EncoderManager.encode">(EncoderManager method)</a>
+</li>
+        <li><a href="modem.coding.html#modem.coding.ldpc_encoder.LdpcEncoder.encode">(LdpcEncoder method)</a>
+</li>
         <li><a href="modem.tools.html#modem.tools.mimo.Mimo.encode">(Mimo method)</a>
 </li>
         <li><a href="modem.coding.html#modem.coding.repetition_encoder.RepetitionEncoder.encode">(RepetitionEncoder method)</a>
 </li>
       </ul></li>
+      <li><a href="modem.coding.html#modem.coding.interleaver.BlockInterleaver.encoded_bits_n">encoded_bits_n() (BlockInterleaver property)</a>
+
+      <ul>
+        <li><a href="modem.coding.html#modem.coding.encoder.Encoder.encoded_bits_n">(Encoder property)</a>
+</li>
+        <li><a href="modem.coding.html#modem.coding.ldpc_encoder.LdpcEncoder.encoded_bits_n">(LdpcEncoder property)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modem.coding.html#modem.coding.encoder.Encoder.encoded_bits_n">encoded_bits_n() (Encoder property)</a>
-</li>
       <li><a href="modem.coding.html#modem.coding.encoder.Encoder">Encoder (class in modem.coding.encoder)</a>
+</li>
+      <li><a href="modem.html#modem.modem.Modem.encoder">encoder (Modem attribute)</a>
+</li>
+      <li><a href="modem.coding.html#modem.coding.encoder_factory.EncoderFactory">EncoderFactory (class in modem.coding.encoder_factory)</a>
+</li>
+      <li><a href="modem.coding.html#modem.coding.encoder_manager.EncoderManager">EncoderManager (class in modem.coding.encoder_manager)</a>
+</li>
+      <li><a href="modem.coding.html#modem.coding.encoder_manager.EncoderManager.encoders">encoders() (EncoderManager property)</a>
 </li>
       <li><a href="source.html#source.bits_source.ErrorStats">ErrorStats (class in source.bits_source)</a>
 </li>
@@ -219,9 +286,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modem.tools.html#modem.tools.psk_qam_mapping.PskQamMapping.generate_pam_symbol_3gpp">generate_pam_symbol_3gpp() (PskQamMapping static method)</a>
 </li>
-      <li><a href="modem.html#modem.waveform_generator.WaveformGenerator.get_bit_energy">get_bit_energy() (WaveformGenerator method)</a>
+      <li><a href="modem.html#modem.modem.Modem.get_bit_energy">get_bit_energy() (Modem method)</a>
 
       <ul>
+        <li><a href="modem.html#modem.waveform_generator.WaveformGenerator.get_bit_energy">(WaveformGenerator method)</a>
+</li>
         <li><a href="modem.html#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_bit_energy">(WaveformGeneratorChirpFsk method)</a>
 </li>
         <li><a href="modem.html#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_bit_energy">(WaveformGeneratorOfdm method)</a>
@@ -233,6 +302,8 @@
 </li>
       <li><a href="modem.html#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_bits_from_ofdm_symbol">get_bits_from_ofdm_symbol() (WaveformGeneratorOfdm method)</a>
 </li>
+      <li><a href="modem.coding.html#modem.coding.encoder_factory.EncoderFactory.get_encoder">get_encoder() (EncoderFactory method)</a>
+</li>
       <li><a href="modem.html#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_ideal_channel_estimation">get_ideal_channel_estimation() (WaveformGeneratorOfdm method)</a>
 </li>
       <li><a href="channel.html#channel.channel.Channel.get_impulse_response">get_impulse_response() (Channel method)</a>
@@ -240,13 +311,17 @@
       <ul>
         <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.get_impulse_response">(MultipathFadingChannel method)</a>
 </li>
+        <li><a href="channel.html#channel.quadriga_channel.QuadrigaChannel.get_impulse_response">(QuadrigaChannel method)</a>
+</li>
+        <li><a href="channel.html#channel.quadriga_interface.QuadrigaInterface.get_impulse_response">(QuadrigaInterface method)</a>
+</li>
       </ul></li>
       <li><a href="modem.tools.html#modem.tools.psk_qam_mapping.PskQamMapping.get_llr_3gpp">get_llr_3gpp() (PskQamMapping static method)</a>
 </li>
-      <li><a href="modem.tools.html#modem.tools.psk_qam_mapping.PskQamMapping.get_mapping">get_mapping() (PskQamMapping method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modem.tools.html#modem.tools.psk_qam_mapping.PskQamMapping.get_mapping">get_mapping() (PskQamMapping method)</a>
+</li>
       <li><a href="source.html#source.bits_source.BitsSource.get_number_of_errors">get_number_of_errors() (BitsSource method)</a>
 </li>
       <li><a href="source.html#source.bits_source.BitsSource.get_number_of_generated_bits">get_number_of_generated_bits() (BitsSource method)</a>
@@ -265,9 +340,13 @@
 </li>
       <li><a href="simulator_core.html#simulator_core.random_streams.RandomStreams.get_rng">get_rng() (RandomStreams method)</a>
 </li>
-      <li><a href="modem.html#modem.waveform_generator.WaveformGenerator.get_symbol_energy">get_symbol_energy() (WaveformGenerator method)</a>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.get_snr_list">get_snr_list() (Statistics method)</a>
+</li>
+      <li><a href="modem.html#modem.modem.Modem.get_symbol_energy">get_symbol_energy() (Modem method)</a>
 
       <ul>
+        <li><a href="modem.html#modem.waveform_generator.WaveformGenerator.get_symbol_energy">(WaveformGenerator method)</a>
+</li>
         <li><a href="modem.html#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.get_symbol_energy">(WaveformGeneratorChirpFsk method)</a>
 </li>
         <li><a href="modem.html#modem.waveform_generator_ofdm.WaveformGeneratorOfdm.get_symbol_energy">(WaveformGeneratorOfdm method)</a>
@@ -294,6 +373,12 @@
 </li>
         <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.init_drop">(MultipathFadingChannel method)</a>
 </li>
+        <li><a href="channel.html#channel.quadriga_channel.QuadrigaChannel.init_drop">(QuadrigaChannel method)</a>
+</li>
+        <li><a href="channel.html#channel.quadriga_interface.QuadrigaInterface.init_drop">(QuadrigaInterface method)</a>
+</li>
+        <li><a href="scenario.html#scenario.scenario.Scenario.init_drop">(Scenario method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -309,6 +394,8 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modem.coding.html#modem.coding.ldpc_encoder.LdpcEncoder">LdpcEncoder (class in modem.coding.ldpc_encoder)</a>
+</li>
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.los_gain">los_gain (MultipathFadingChannel attribute)</a>
 </li>
   </ul></td>
@@ -344,6 +431,8 @@
         <li><a href="modem.html#module-modem">module</a>
 </li>
       </ul></li>
+      <li><a href="modem.html#modem.modem.Modem">Modem (class in modem.modem)</a>
+</li>
       <li>
     modem.coding
 
@@ -359,10 +448,45 @@
 </li>
       </ul></li>
       <li>
+    modem.coding.encoder_factory
+
+      <ul>
+        <li><a href="modem.coding.html#module-modem.coding.encoder_factory">module</a>
+</li>
+      </ul></li>
+      <li>
+    modem.coding.encoder_manager
+
+      <ul>
+        <li><a href="modem.coding.html#module-modem.coding.encoder_manager">module</a>
+</li>
+      </ul></li>
+      <li>
+    modem.coding.interleaver
+
+      <ul>
+        <li><a href="modem.coding.html#module-modem.coding.interleaver">module</a>
+</li>
+      </ul></li>
+      <li>
+    modem.coding.ldpc_encoder
+
+      <ul>
+        <li><a href="modem.coding.html#module-modem.coding.ldpc_encoder">module</a>
+</li>
+      </ul></li>
+      <li>
     modem.coding.repetition_encoder
 
       <ul>
         <li><a href="modem.coding.html#module-modem.coding.repetition_encoder">module</a>
+</li>
+      </ul></li>
+      <li>
+    modem.modem
+
+      <ul>
+        <li><a href="modem.html#module-modem.modem">module</a>
 </li>
       </ul></li>
       <li>
@@ -444,6 +568,10 @@
 </li>
         <li><a href="channel.html#module-channel.noise">channel.noise</a>
 </li>
+        <li><a href="channel.html#module-channel.quadriga_channel">channel.quadriga_channel</a>
+</li>
+        <li><a href="channel.html#module-channel.quadriga_interface">channel.quadriga_interface</a>
+</li>
         <li><a href="channel.html#module-channel.rx_sampler">channel.rx_sampler</a>
 </li>
         <li><a href="modem.html#module-modem">modem</a>
@@ -452,7 +580,17 @@
 </li>
         <li><a href="modem.coding.html#module-modem.coding.encoder">modem.coding.encoder</a>
 </li>
+        <li><a href="modem.coding.html#module-modem.coding.encoder_factory">modem.coding.encoder_factory</a>
+</li>
+        <li><a href="modem.coding.html#module-modem.coding.encoder_manager">modem.coding.encoder_manager</a>
+</li>
+        <li><a href="modem.coding.html#module-modem.coding.interleaver">modem.coding.interleaver</a>
+</li>
+        <li><a href="modem.coding.html#module-modem.coding.ldpc_encoder">modem.coding.ldpc_encoder</a>
+</li>
         <li><a href="modem.coding.html#module-modem.coding.repetition_encoder">modem.coding.repetition_encoder</a>
+</li>
+        <li><a href="modem.html#module-modem.modem">modem.modem</a>
 </li>
         <li><a href="modem.html#module-modem.rf_chain">modem.rf_chain</a>
 </li>
@@ -474,9 +612,15 @@
 </li>
         <li><a href="scenario.html#module-scenario">scenario</a>
 </li>
+        <li><a href="scenario.html#module-scenario.scenario">scenario.scenario</a>
+</li>
         <li><a href="simulator_core.html#module-simulator_core">simulator_core</a>
 </li>
+        <li><a href="simulator_core.html#module-simulator_core.drop_loop">simulator_core.drop_loop</a>
+</li>
         <li><a href="simulator_core.html#module-simulator_core.random_streams">simulator_core.random_streams</a>
+</li>
+        <li><a href="simulator_core.html#module-simulator_core.statistics">simulator_core.statistics</a>
 </li>
         <li><a href="simulator_core.tools.html#module-simulator_core.tools">simulator_core.tools</a>
 </li>
@@ -499,7 +643,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="channel.html#channel.noise.Noise">Noise (class in channel.noise)</a>
 </li>
+      <li><a href="scenario.html#scenario.scenario.Scenario.noise">noise (Scenario attribute)</a>
+</li>
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.non_los_gain">non_los_gain (MultipathFadingChannel attribute)</a>
+</li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.num_drops">num_drops (Statistics attribute)</a>
+</li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.num_snrs">num_snrs (Statistics attribute)</a>
 </li>
       <li><a href="source.html#source.bits_source.ErrorStats.number_of_bit_errors">number_of_bit_errors() (ErrorStats property)</a>
 </li>
@@ -507,10 +657,10 @@
 </li>
       <li><a href="source.html#source.bits_source.ErrorStats.number_of_block_errors">number_of_block_errors() (ErrorStats property)</a>
 </li>
-      <li><a href="source.html#source.bits_source.ErrorStats.number_of_blocks">number_of_blocks() (ErrorStats property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source.html#source.bits_source.ErrorStats.number_of_blocks">number_of_blocks() (ErrorStats property)</a>
+</li>
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.number_of_paths">number_of_paths (MultipathFadingChannel attribute)</a>
 </li>
       <li><a href="modem.tools.html#modem.tools.shaping_filter.ShapingFilter.number_of_samples">number_of_samples (ShapingFilter attribute)</a>
@@ -518,6 +668,8 @@
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.number_of_sinewaves">number_of_sinewaves (MultipathFadingChannel attribute)</a>
 </li>
       <li><a href="modem.tools.html#modem.tools.mimo.Mimo.number_of_streams">number_of_streams (Mimo attribute)</a>
+</li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.number_of_tx_signals">number_of_tx_signals (Statistics attribute)</a>
 </li>
       <li><a href="channel.html#channel.channel.Channel.number_rx_antennas">number_rx_antennas (Channel attribute)</a>
 </li>
@@ -541,14 +693,26 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modem.html#modem.modem.Modem.paired_tx_modem">paired_tx_modem() (Modem property)</a>
+</li>
       <li><a href="channel.html#channel.channel.Channel.param">param (Channel attribute)</a>
+
+      <ul>
+        <li><a href="modem.html#modem.modem.Modem.param">(Modem attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.param_general">param_general (Statistics attribute)</a>
+</li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.param_scenario">param_scenario (Statistics attribute)</a>
 </li>
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.phi">phi (MultipathFadingChannel attribute)</a>
 </li>
-      <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.postcoding_matrix">postcoding_matrix (MultipathFadingChannel attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.postcoding_matrix">postcoding_matrix (MultipathFadingChannel attribute)</a>
+</li>
+      <li><a href="modem.html#modem.modem.Modem.power_factor">power_factor (Modem attribute)</a>
+</li>
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.precoding_matrix">precoding_matrix (MultipathFadingChannel attribute)</a>
 </li>
       <li><a href="channel.html#channel.channel.Channel.propagate">propagate() (Channel method)</a>
@@ -556,8 +720,22 @@
       <ul>
         <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.propagate">(MultipathFadingChannel method)</a>
 </li>
+        <li><a href="channel.html#channel.quadriga_channel.QuadrigaChannel.propagate">(QuadrigaChannel method)</a>
+</li>
       </ul></li>
       <li><a href="modem.tools.html#modem.tools.psk_qam_mapping.PskQamMapping">PskQamMapping (class in modem.tools.psk_qam_mapping)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="channel.html#channel.quadriga_channel.QuadrigaChannel">QuadrigaChannel (class in channel.quadriga_channel)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="channel.html#channel.quadriga_interface.QuadrigaInterface">QuadrigaInterface (class in channel.quadriga_interface)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -569,8 +747,12 @@
 </li>
       <li><a href="simulator_core.html#simulator_core.random_streams.RandomStreams">RandomStreams (class in simulator_core.random_streams)</a>
 </li>
-      <li><a href="modem.html#modem.rf_chain.RfChain.receive">receive() (RfChain method)</a>
+      <li><a href="modem.html#modem.modem.Modem.receive">receive() (Modem method)</a>
+
+      <ul>
+        <li><a href="modem.html#modem.rf_chain.RfChain.receive">(RfChain method)</a>
 </li>
+      </ul></li>
       <li><a href="modem.html#modem.waveform_generator.WaveformGenerator.receive_frame">receive_frame() (WaveformGenerator method)</a>
 
       <ul>
@@ -581,17 +763,27 @@
         <li><a href="modem.html#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.receive_frame">(WaveformGeneratorPskQam method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modem.coding.html#modem.coding.repetition_encoder.RepetitionEncoder">RepetitionEncoder (class in modem.coding.repetition_encoder)</a>
 </li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.resample">resample() (RxSampler method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modem.html#modem.modem.Modem.rf_chain">rf_chain (Modem attribute)</a>
+</li>
       <li><a href="modem.html#modem.rf_chain.RfChain">RfChain (class in modem.rf_chain)</a>
+</li>
+      <li><a href="simulator_core.html#simulator_core.drop_loop.DropLoop.run_loop">run_loop() (DropLoop method)</a>
 </li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.rx_center_freq">rx_center_freq (RxSampler attribute)</a>
 </li>
       <li><a href="channel.html#id1">rx_center_freq() (RxSampler property)</a>
+</li>
+      <li><a href="channel.html#channel.quadriga_interface.QuadrigaInterface.rx_modem_ids">rx_modem_ids (QuadrigaInterface attribute)</a>
+</li>
+      <li><a href="scenario.html#scenario.scenario.Scenario.rx_modems">rx_modems (Scenario attribute)</a>
+</li>
+      <li><a href="scenario.html#scenario.scenario.Scenario.rx_samplers">rx_samplers (Scenario attribute)</a>
 </li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.rx_sampling_rate">rx_sampling_rate (RxSampler attribute)</a>
 </li>
@@ -615,11 +807,22 @@
 </li>
       <li><a href="channel.html#channel.channel.Channel.sampling_rate">sampling_rate (Channel attribute)</a>
 </li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.save">save() (Statistics method)</a>
+</li>
       <li>
     scenario
 
       <ul>
         <li><a href="scenario.html#module-scenario">module</a>
+</li>
+      </ul></li>
+      <li><a href="scenario.html#scenario.scenario.Scenario">Scenario (class in scenario.scenario)</a>
+</li>
+      <li>
+    scenario.scenario
+
+      <ul>
+        <li><a href="scenario.html#module-scenario.scenario">module</a>
 </li>
       </ul></li>
       <li><a href="simulator_core.html#id2">seed_types (RandomStreams attribute)</a>, <a href="simulator_core.html#simulator_core.random_streams.RandomStreams.seed_types">[1]</a>
@@ -628,10 +831,18 @@
 </li>
       <li><a href="simulator_core.html#id1">seeds_file_name (RandomStreams attribute)</a>, <a href="simulator_core.html#simulator_core.random_streams.RandomStreams.seeds_file_name">[1]</a>
 </li>
-      <li><a href="modem.html#modem.rf_chain.RfChain.send">send() (RfChain method)</a>
+      <li><a href="modem.html#modem.modem.Modem.send">send() (Modem method)</a>
+
+      <ul>
+        <li><a href="modem.html#modem.rf_chain.RfChain.send">(RfChain method)</a>
 </li>
-      <li><a href="modem.html#modem.waveform_generator.WaveformGenerator.set_channel">set_channel() (WaveformGenerator method)</a>
+      </ul></li>
+      <li><a href="modem.html#modem.modem.Modem.set_channel">set_channel() (Modem method)</a>
+
+      <ul>
+        <li><a href="modem.html#modem.waveform_generator.WaveformGenerator.set_channel">(WaveformGenerator method)</a>
 </li>
+      </ul></li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.set_tx_sampling_rate">set_tx_sampling_rate() (RxSampler method)</a>
 </li>
       <li><a href="modem.tools.html#modem.tools.shaping_filter.ShapingFilter">ShapingFilter (class in modem.tools.shaping_filter)</a>
@@ -643,6 +854,13 @@
         <li><a href="simulator_core.html#module-simulator_core">module</a>
 </li>
       </ul></li>
+      <li>
+    simulator_core.drop_loop
+
+      <ul>
+        <li><a href="simulator_core.html#module-simulator_core.drop_loop">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
@@ -650,6 +868,13 @@
 
       <ul>
         <li><a href="simulator_core.html#module-simulator_core.random_streams">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulator_core.statistics
+
+      <ul>
+        <li><a href="simulator_core.html#module-simulator_core.statistics">module</a>
 </li>
       </ul></li>
       <li>
@@ -691,7 +916,17 @@
         <li><a href="source.html#module-source.bits_source">module</a>
 </li>
       </ul></li>
-      <li><a href="modem.coding.html#modem.coding.encoder.Encoder.source_bits">source_bits() (Encoder property)</a>
+      <li><a href="modem.coding.html#modem.coding.interleaver.BlockInterleaver.source_bits">source_bits() (BlockInterleaver property)</a>
+
+      <ul>
+        <li><a href="modem.coding.html#modem.coding.encoder.Encoder.source_bits">(Encoder property)</a>
+</li>
+        <li><a href="modem.coding.html#modem.coding.ldpc_encoder.LdpcEncoder.source_bits">(LdpcEncoder property)</a>
+</li>
+      </ul></li>
+      <li><a href="scenario.html#scenario.scenario.Scenario.sources">sources (Scenario attribute)</a>
+</li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics">Statistics (class in simulator_core.statistics)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -703,11 +938,39 @@
 </li>
       <li><a href="channel.html#channel.multipath_fading_channel.MultipathFadingChannel.theta">theta (MultipathFadingChannel attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.tx_center_freq">tx_center_freq() (RxSampler property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="channel.html#channel.quadriga_interface.QuadrigaInterface.tx_modem_ids">tx_modem_ids (QuadrigaInterface attribute)</a>
+</li>
+      <li><a href="scenario.html#scenario.scenario.Scenario.tx_modems">tx_modems (Scenario attribute)</a>
+</li>
       <li><a href="channel.html#channel.rx_sampler.RxSampler.tx_sampling_rate">tx_sampling_rate() (RxSampler property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.update_error_rate">update_error_rate() (Statistics method)</a>
+</li>
+      <li><a href="channel.html#channel.quadriga_interface.QuadrigaInterface.update_quadriga_parameters">update_quadriga_parameters() (QuadrigaInterface method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.update_rx_spectrum">update_rx_spectrum() (Statistics method)</a>
+</li>
+      <li><a href="simulator_core.html#simulator_core.statistics.Statistics.update_tx_spectrum">update_tx_spectrum() (Statistics method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="simulator_core.html#simulator_core.drop_loop.DropLoop.verify_drop_loop">verify_drop_loop() (DropLoop method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -715,12 +978,14 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="modem.html#modem.waveform_generator.WaveformGenerator">WaveformGenerator (class in modem.waveform_generator)</a>
+      <li><a href="modem.html#modem.modem.Modem.waveform_generator">waveform_generator (Modem attribute)</a>
 </li>
-      <li><a href="modem.html#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk">WaveformGeneratorChirpFsk (class in modem.waveform_generator_chirp_fsk)</a>
+      <li><a href="modem.html#modem.waveform_generator.WaveformGenerator">WaveformGenerator (class in modem.waveform_generator)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modem.html#modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk">WaveformGeneratorChirpFsk (class in modem.waveform_generator_chirp_fsk)</a>
+</li>
       <li><a href="modem.html#modem.waveform_generator_ofdm.WaveformGeneratorOfdm">WaveformGeneratorOfdm (class in modem.waveform_generator_ofdm)</a>
 </li>
       <li><a href="modem.html#modem.waveform_generator_psk_qam.WaveformGeneratorPskQam">WaveformGeneratorPskQam (class in modem.waveform_generator_psk_qam)</a>

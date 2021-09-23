@@ -168,8 +168,288 @@ Each list element is one block with bits created by the BitsSource.</p>
 </dd></dl>
 
 </section>
-<section id="modem-coding-ldpc-encoder-module">
-<h2>modem.coding.ldpc_encoder module<a class="headerlink" href="#modem-coding-ldpc-encoder-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-modem.coding.encoder_factory">
+<span id="modem-coding-encoder-factory-module"></span><h2>modem.coding.encoder_factory module<a class="headerlink" href="#module-modem.coding.encoder_factory" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.coding.encoder_factory.EncoderFactory">
+<em class="property">class </em><code class="sig-name descname">EncoderFactory</code><a class="headerlink" href="#modem.coding.encoder_factory.EncoderFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Responible for creating an Encoder instance which is not contained by the factory.</p>
+<dl class="py method">
+<dt id="modem.coding.encoder_factory.EncoderFactory.get_encoder">
+<code class="sig-name descname">get_encoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">encoding_params</span></em>, <em class="sig-param"><span class="n">type</span></em>, <em class="sig-param"><span class="n">bits_in_frame</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.encoder_factory.EncoderFactory.get_encoder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modem.coding.encoder.Encoder" title="modem.coding.encoder.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-modem.coding.encoder_manager">
+<span id="modem-coding-encoder-manager-module"></span><h2>modem.coding.encoder_manager module<a class="headerlink" href="#module-modem.coding.encoder_manager" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.coding.encoder_manager.EncoderManager">
+<em class="property">class </em><code class="sig-name descname">EncoderManager</code><a class="headerlink" href="#modem.coding.encoder_manager.EncoderManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Serves as a wrapper class for multiple encoders.</p>
+<dl class="py method">
+<dt id="modem.coding.encoder_manager.EncoderManager.add_encoder">
+<code class="sig-name descname">add_encoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">encoder</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.encoder_manager.EncoderManager.add_encoder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.encoder_manager.EncoderManager.encoders">
+<em class="property">property </em><code class="sig-name descname">encoders</code><a class="headerlink" href="#modem.coding.encoder_manager.EncoderManager.encoders" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#modem.coding.encoder.Encoder" title="modem.coding.encoder.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.encoder_manager.EncoderManager.code_rate">
+<em class="property">property </em><code class="sig-name descname">code_rate</code><a class="headerlink" href="#modem.coding.encoder_manager.EncoderManager.code_rate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.encoder_manager.EncoderManager.encode">
+<code class="sig-name descname">encode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.encoder_manager.EncoderManager.encode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.encoder_manager.EncoderManager.decode">
+<code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">encoded_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.encoder_manager.EncoderManager.decode" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">array</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-modem.coding.interleaver">
+<span id="modem-coding-interleaver-module"></span><h2>modem.coding.interleaver module<a class="headerlink" href="#module-modem.coding.interleaver" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.coding.interleaver.BlockInterleaver">
+<em class="property">class </em><code class="sig-name descname">BlockInterleaver</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">bits_in_frame</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.interleaver.BlockInterleaver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modem.coding.encoder.Encoder" title="modem.coding.encoder.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.coding.encoder.Encoder</span></code></a></p>
+<p>Args:
+params (ParametersEncoder): Parameters necessary for Encoder.
+bits_in_frame (int): Number of bits that fit into one frame.</p>
+<dl class="py method">
+<dt id="modem.coding.interleaver.BlockInterleaver.encode">
+<code class="sig-name descname">encode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.interleaver.BlockInterleaver.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method encodes the incoming bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bits</strong> (<em>List</em><em>[</em><em>np.array</em><em>]</em>) – List of data_bits that are contained in the current frame.
+Each list element is one block with bits created by the BitSource.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of blocks with the encoded bits. Each list item corresponds
+to a block containing a code word.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.interleaver.BlockInterleaver.decode">
+<code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">encoded_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.interleaver.BlockInterleaver.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode code words.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>encoded_bits</strong> (<em>List</em><em>[</em><em>np.array</em><em>]</em>) – List of blocks with the encoded bits. Each list item corresponds
+to a block containing a code word. The expected input is soft bits.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of data_bits that are contained in the current frame.
+Each list element is one block with bits created by the BitsSource.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.interleaver.BlockInterleaver.encoded_bits_n">
+<em class="property">property </em><code class="sig-name descname">encoded_bits_n</code><a class="headerlink" href="#modem.coding.interleaver.BlockInterleaver.encoded_bits_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of encoded bits that the encoding of k data bits result in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.interleaver.BlockInterleaver.data_bits_k">
+<em class="property">property </em><code class="sig-name descname">data_bits_k</code><a class="headerlink" href="#modem.coding.interleaver.BlockInterleaver.data_bits_k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bits that are to be encoded into n bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.interleaver.BlockInterleaver.code_blocks">
+<em class="property">property </em><code class="sig-name descname">code_blocks</code><a class="headerlink" href="#modem.coding.interleaver.BlockInterleaver.code_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of code blocks which are to encoded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.interleaver.BlockInterleaver.source_bits">
+<em class="property">property </em><code class="sig-name descname">source_bits</code><a class="headerlink" href="#modem.coding.interleaver.BlockInterleaver.source_bits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bits to be generated by the source given n/k.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-modem.coding.ldpc_encoder">
+<span id="modem-coding-ldpc-encoder-module"></span><h2>modem.coding.ldpc_encoder module<a class="headerlink" href="#module-modem.coding.ldpc_encoder" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.coding.ldpc_encoder.LdpcEncoder">
+<em class="property">class </em><code class="sig-name descname">LdpcEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">bits_in_frame</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.ldpc_encoder.LdpcEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#modem.coding.encoder.Encoder" title="modem.coding.encoder.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.coding.encoder.Encoder</span></code></a></p>
+<p>Implementation of an LDPC Encoder.</p>
+<p>LDPC decoder using a serial C (check node) schedule and  message-passing as introduced in
+[E. Sharon, S. Litsyn and J. Goldberger, “An efficient message-passing schedule for LDPC
+decoding,” 2004 23rd IEEE Convention of Electrical and Electronics Engineers in Israel,
+2004, pp. 223-226].</p>
+<p>Args:
+params (ParametersEncoder): Parameters necessary for Encoder.
+bits_in_frame (int): Number of bits that fit into one frame.</p>
+<dl class="py method">
+<dt id="modem.coding.ldpc_encoder.LdpcEncoder.source_bits">
+<em class="property">property </em><code class="sig-name descname">source_bits</code><a class="headerlink" href="#modem.coding.ldpc_encoder.LdpcEncoder.source_bits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bits to be generated by the source given n/k.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.ldpc_encoder.LdpcEncoder.encoded_bits_n">
+<em class="property">property </em><code class="sig-name descname">encoded_bits_n</code><a class="headerlink" href="#modem.coding.ldpc_encoder.LdpcEncoder.encoded_bits_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of encoded bits that the encoding of k data bits result in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.ldpc_encoder.LdpcEncoder.data_bits_k">
+<em class="property">property </em><code class="sig-name descname">data_bits_k</code><a class="headerlink" href="#modem.coding.ldpc_encoder.LdpcEncoder.data_bits_k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bits that are to be encoded into n bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.ldpc_encoder.LdpcEncoder.encode">
+<code class="sig-name descname">encode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.ldpc_encoder.LdpcEncoder.encode" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method encodes the incoming bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bits</strong> (<em>List</em><em>[</em><em>np.array</em><em>]</em>) – List of data_bits that are contained in the current frame.
+Each list element is one block with bits created by the BitSource.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of blocks with the encoded bits. Each list item corresponds
+to a block containing a code word.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.coding.ldpc_encoder.LdpcEncoder.decode">
+<code class="sig-name descname">decode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">encoded_bits</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.coding.ldpc_encoder.LdpcEncoder.decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode code words.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>encoded_bits</strong> (<em>List</em><em>[</em><em>np.array</em><em>]</em>) – List of blocks with the encoded bits. Each list item corresponds
+to a block containing a code word. The expected input is soft bits.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of data_bits that are contained in the current frame.
+Each list element is one block with bits created by the BitsSource.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-modem.coding.repetition_encoder">
 <span id="modem-coding-repetition-encoder-module"></span><h2>modem.coding.repetition_encoder module<a class="headerlink" href="#module-modem.coding.repetition_encoder" title="Permalink to this headline">¶</a></h2>
@@ -245,7 +525,10 @@ Each list element is one block with bits created by the BitsSource.</p>
 <li><a class="reference internal" href="#">modem.coding package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-modem.coding.encoder">modem.coding.encoder module</a></li>
-<li><a class="reference internal" href="#modem-coding-ldpc-encoder-module">modem.coding.ldpc_encoder module</a></li>
+<li><a class="reference internal" href="#module-modem.coding.encoder_factory">modem.coding.encoder_factory module</a></li>
+<li><a class="reference internal" href="#module-modem.coding.encoder_manager">modem.coding.encoder_manager module</a></li>
+<li><a class="reference internal" href="#module-modem.coding.interleaver">modem.coding.interleaver module</a></li>
+<li><a class="reference internal" href="#module-modem.coding.ldpc_encoder">modem.coding.ldpc_encoder module</a></li>
 <li><a class="reference internal" href="#module-modem.coding.repetition_encoder">modem.coding.repetition_encoder module</a></li>
 <li><a class="reference internal" href="#module-modem.coding">Module contents</a></li>
 </ul>

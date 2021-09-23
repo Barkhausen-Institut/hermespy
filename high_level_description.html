@@ -62,7 +62,7 @@ The purpose of the <strong>Bit Source</strong> is to create bits that fit into o
 <li><p><strong>RfChain</strong>: Rf Impairments are added to the signal afterwards.</p></li>
 <li><p>The signal is sent.</p></li>
 </ol>
-<p>Within HermesPy, the class <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code> has instances of:</p>
+<p>Within HermesPy, the class <a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code></a> has instances of:</p>
 <ul class="simple">
 <li><p>a Bit Source</p></li>
 <li><p>an encoder</p></li>
@@ -70,16 +70,16 @@ The purpose of the <strong>Bit Source</strong> is to create bits that fit into o
 <li><p>the RfChain</p></li>
 </ul>
 <p>Hence, the white and the blue box, i.e. <em>Bit Source 1/2</em> and <em>Tx Modem 1/2</em> are represented by the class
-<code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code> internally. The block <em>Modulator</em> in the block diagram is represented
+<a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code></a> internally. The block <em>Modulator</em> in the block diagram is represented
 by the classes deriving from <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.digital_modem.DigitalModem</span></code>.</p>
 </section>
 <section id="channel">
 <h2>Channel<a class="headerlink" href="#channel" title="Permalink to this headline">¶</a></h2>
-<p>After the signal is sent from the <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code>, it is distorted by a channel which can be found in the <a class="reference internal" href="channel.html#module-channel" title="channel"><code class="xref py py-mod docutils literal notranslate"><span class="pre">channel</span></code></a> module.
-Each <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code> is associated to a channel. Therefore, for each transmitter-receiver-modem-pair exists one channel.
+<p>After the signal is sent from the <a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code></a>, it is distorted by a channel which can be found in the <a class="reference internal" href="channel.html#module-channel" title="channel"><code class="xref py py-mod docutils literal notranslate"><span class="pre">channel</span></code></a> module.
+Each <a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code></a> is associated to a channel. Therefore, for each transmitter-receiver-modem-pair exists one channel.
 The channels are treated independently (exception: quadriga). After propagation, <a class="reference internal" href="channel.html#channel.noise.Noise" title="channel.noise.Noise"><code class="xref py py-class docutils literal notranslate"><span class="pre">channel.noise.Noise</span></code></a> is added given
 the SNR values defined in the settings files prior to the simulation.</p>
-<p>The <strong>Receiver Modems</strong> are of type <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code> as well. The distinction between receiving and
+<p>The <strong>Receiver Modems</strong> are of type <a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code></a> as well. The distinction between receiving and
 transmitting modems is only made within the class itself.</p>
 </section>
 <section id="quadriga">
@@ -88,14 +88,14 @@ transmitting modems is only made within the class itself.</p>
 the source code can be found in <strong>3rdparty/</strong> of our repository. Quadriga is run in either Matlab or Octave,
 depending on the parameter setting in the <strong>_settings</strong> directory.</p>
 <p>As Quadriga treats the channels between all transceiver pairs as a common channel, which is in contrast
-to HermesPy treating all channels independently, the class <code class="xref py py-class docutils literal notranslate"><span class="pre">channel.quadriga_interface.QuadrigaInterface</span></code>
+to HermesPy treating all channels independently, the class <a class="reference internal" href="channel.html#channel.quadriga_interface.QuadrigaInterface" title="channel.quadriga_interface.QuadrigaInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">channel.quadriga_interface.QuadrigaInterface</span></code></a>
 had to be implemented performing the mapping.</p>
 </section>
 <section id="statistics">
 <h2>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline">¶</a></h2>
 <p>After the bits are decoded, measurement metrics (e.g. BER, BLER, PSD…) are calculated, based on
-e.g. the <a class="reference internal" href="source.html#source.bits_source.BitsSource" title="source.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">source.bits_source.BitsSource</span></code></a> that is part of each <code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code>. Results are stored in an instance
-of the <code class="xref py py-class docutils literal notranslate"><span class="pre">simulator_core.statistics.Statistics</span></code> class.</p>
+e.g. the <a class="reference internal" href="source.html#source.bits_source.BitsSource" title="source.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">source.bits_source.BitsSource</span></code></a> that is part of each <a class="reference internal" href="modem.html#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">modem.modem.Modem</span></code></a>. Results are stored in an instance
+of the <a class="reference internal" href="simulator_core.html#simulator_core.statistics.Statistics" title="simulator_core.statistics.Statistics"><code class="xref py py-class docutils literal notranslate"><span class="pre">simulator_core.statistics.Statistics</span></code></a> class.</p>
 <p>The simulation itself has stopping criteria defined by confidence intervals in the settings files.
 Each “simulation run” is called a <strong>drop</strong>. One drop has a certain time length which can be a (non-integer)
 multitude of one frame.</p>

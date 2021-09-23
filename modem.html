@@ -57,7 +57,10 @@
 <li class="toctree-l1"><a class="reference internal" href="modem.coding.html">modem.coding package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="modem.coding.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.encoder">modem.coding.encoder module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#modem-coding-ldpc-encoder-module">modem.coding.ldpc_encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.encoder_factory">modem.coding.encoder_factory module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.encoder_manager">modem.coding.encoder_manager module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.interleaver">modem.coding.interleaver module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.ldpc_encoder">modem.coding.ldpc_encoder module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding.repetition_encoder">modem.coding.repetition_encoder module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.coding.html#module-modem.coding">Module contents</a></li>
 </ul>
@@ -76,8 +79,149 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="modem-modem-module">
-<h2>modem.modem module<a class="headerlink" href="#modem-modem-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-modem.modem">
+<span id="modem-modem-module"></span><h2>modem.modem module<a class="headerlink" href="#module-modem.modem" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="modem.modem.Modem">
+<em class="property">class </em><code class="sig-name descname">Modem</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">source</span></em>, <em class="sig-param"><span class="n">random_number_gen</span></em>, <em class="sig-param"><span class="n">tx_modem</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></p>
+<p>Implements a modem.</p>
+<p>The modem consists of an analog RF chain, a waveform generator, and can be used
+either for transmission or reception of a given technology.</p>
+<dl class="py attribute">
+<dt id="modem.modem.Modem.param">
+<code class="sig-name descname">param</code><a class="headerlink" href="#modem.modem.Modem.param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modem-specific parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ParametersModem</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.waveform_generator">
+<code class="sig-name descname">waveform_generator</code><a class="headerlink" href="#modem.modem.Modem.waveform_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>waveform generator object, generates baseband samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modem.waveform_generator.WaveformGenerator" title="modem.waveform_generator.WaveformGenerator">WaveformGenerator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.rf_chain">
+<code class="sig-name descname">rf_chain</code><a class="headerlink" href="#modem.modem.Modem.rf_chain" title="Permalink to this definition">¶</a></dt>
+<dd><p>RF chain object, that models RF impairments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modem.rf_chain.RfChain" title="modem.rf_chain.RfChain">RfChain</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.power_factor">
+<code class="sig-name descname">power_factor</code><a class="headerlink" href="#modem.modem.Modem.power_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>if this is a transmit modem, signal is scaled to
+the desired power, depending on the current power factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="modem.modem.Modem.encoder">
+<code class="sig-name descname">encoder</code><a class="headerlink" href="#modem.modem.Modem.encoder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.coding.html#modem.coding.encoder.Encoder" title="modem.coding.encoder.Encoder">Encoder</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.paired_tx_modem">
+<em class="property">property </em><code class="sig-name descname">paired_tx_modem</code><a class="headerlink" href="#modem.modem.Modem.paired_tx_modem" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#modem.modem.Modem" title="modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Modem</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.send">
+<code class="sig-name descname">send</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">drop_duration</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array with the complex baseband samples of a waveform generator.</p>
+<p>The signal may be distorted by RF impairments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>drop_duration</strong> (<em>float</em>) – Length of signal in seconds.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Complex baseband samples, rows denoting transmitter antennas and
+columns denoting samples.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.receive">
+<code class="sig-name descname">receive</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_signal</span></em>, <em class="sig-param"><span class="n">noise_var</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Demodulates the signal received.</p>
+<p>The received signal may be distorted by RF imperfections before demodulation and decoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Received signal.</p></li>
+<li><p><strong>noise_var</strong> (<em>float</em>) – noise variance (for equalization).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Detected bits as a list of data blocks for the drop.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.get_bit_energy">
+<code class="sig-name descname">get_bit_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.get_bit_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average bit energy of the modulated signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.get_symbol_energy">
+<code class="sig-name descname">get_symbol_energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.get_symbol_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average symbol energy of the modulated signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="modem.modem.Modem.set_channel">
+<code class="sig-name descname">set_channel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em><span class="sig-paren">)</span><a class="headerlink" href="#modem.modem.Modem.set_channel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-modem.rf_chain">
 <span id="modem-rf-chain-module"></span><h2>modem.rf_chain module<a class="headerlink" href="#module-modem.rf_chain" title="Permalink to this headline">¶</a></h2>
@@ -816,7 +960,7 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
 <li><a class="reference internal" href="#">modem package</a><ul>
 <li><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#modem-modem-module">modem.modem module</a></li>
+<li><a class="reference internal" href="#module-modem.modem">modem.modem module</a></li>
 <li><a class="reference internal" href="#module-modem.rf_chain">modem.rf_chain module</a></li>
 <li><a class="reference internal" href="#module-modem.waveform_generator">modem.waveform_generator module</a></li>
 <li><a class="reference internal" href="#module-modem.waveform_generator_chirp_fsk">modem.waveform_generator_chirp_fsk module</a></li>

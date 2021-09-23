@@ -12,6 +12,30 @@ modem.coding.encoder module
    :undoc-members:
    :show-inheritance:
 
+modem.coding.encoder\_factory module
+------------------------------------
+
+.. automodule:: modem.coding.encoder_factory
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+modem.coding.encoder\_manager module
+------------------------------------
+
+.. automodule:: modem.coding.encoder_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+modem.coding.interleaver module
+-------------------------------
+
+.. automodule:: modem.coding.interleaver
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 modem.coding.ldpc\_encoder module
 ---------------------------------
 
