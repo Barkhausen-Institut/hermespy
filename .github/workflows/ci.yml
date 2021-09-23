@@ -64,12 +64,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Build SDist and wheel
-      run: pipx run build
+      - name: Build SDist and wheel
+        run: pipx run build
 
-    - uses: actions/upload-artifact@v2
-      with:
-        path: dist/*
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*
 
-    - name: Check metadata
-      run: pipx run twine check dist/*
+      - name: Check metadata
+        run: pipx run twine check dist/*
