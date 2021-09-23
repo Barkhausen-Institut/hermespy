@@ -98,7 +98,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: dist
+        name: dist-windows
         path: dist/*
 
     - name: Check metadata
@@ -113,10 +113,17 @@ jobs:
     name: Distribute to PyPI
     steps:
     
-    - name: Download artifacts
+    - name: Create additional directories
+      run: mkdir artifacts/ && mkdir dist/
+    
+    - name: Download Windows artifacts
       uses: actions/download-artifact@v2
       with:
-        name: dist
+        name: dist-windows
+        path: artifacts/
+        
+    - name: Move artifacts
+      run: mv artifacts/dist-windows/* dist/
      
     - name: Publish to PyPI-Test
       uses: pypa/gh-action-pypi-publish@master
@@ -128,4 +135,6 @@ jobs:
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
+        packages_dir: dist/
+        
     
