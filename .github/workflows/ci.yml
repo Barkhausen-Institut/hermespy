@@ -9,7 +9,9 @@ env:
 
 jobs:
 
+
   Testing:
+  
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -33,10 +35,12 @@ jobs:
         pip install -r requirements.txt
         pip install -e .
 
-    - name: Run unit tests
-      run: python run_unit_tests.py
+    #- name: Run unit tests
+    #  run: python run_unit_tests.py
       
+
   Documentation:
+  
     needs: Testing
     runs-on: ubuntu-latest
     steps:
@@ -66,12 +70,12 @@ jobs:
         branch: gh-pages
         folder: docs
 
-  Deploy-Windows:
-#    if: ${{ env.deploy }}
-    environment: pypi
+
+  Build-Windows:
+  
     needs: Testing
     runs-on: windows-latest
-    name: Deploy Windows distribution to PyPI
+    name: Build Windows Dist
     steps:
     
     - name: Checkout full repository
@@ -98,7 +102,21 @@ jobs:
 
     - name: Check metadata
       run: python -m twine check dist/*
-      
+
+
+  Distribute:
+  
+    needs: [Testing, Build-Windows]
+    runs-on: ubuntu-latest
+    environment: pypi
+    name: Distribute to PyPI
+    steps:
+    
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+      with:
+        path: dist/
+     
     - name: Publish to PyPI-Test
       uses: pypa/gh-action-pypi-publish@master
       with:
@@ -109,3 +127,4 @@ jobs:
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
+    
