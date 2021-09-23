@@ -60,7 +60,7 @@ jobs:
       run: cd docssource && make api && make gh-pages && make install
 
     - name: Create github pages
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       uses: JamesIves/github-pages-deploy-action@4.1.2
       with:
         branch: gh-pages
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     name: Distribute to PyPI
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
     
     - name: Create additional directories
