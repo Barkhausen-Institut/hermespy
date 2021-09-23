@@ -9,7 +9,7 @@ env:
 
 jobs:
 
-  tests:
+  Testing:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
@@ -18,7 +18,7 @@ jobs:
 
     name: Test on ${{ matrix.runs-on }}
     steps:
-    - name: Checkout repo + lfs
+    - name: Checkout full repository
       uses: actions/checkout@v2
       with:
         lfs: true
@@ -36,8 +36,8 @@ jobs:
     - name: Run unit tests
       run: python run_unit_tests.py
       
-  documentation:
-    needs: tests
+  Documentation:
+    needs: Testing
     runs-on: ubuntu-latest
     steps:
     
@@ -66,8 +66,10 @@ jobs:
         branch: gh-pages
         folder: docs
 
-  dist:
-    needs: tests
+  Deploy:
+#    if: ${{ env.deploy }}
+    environment: pypi
+    needs: Testing
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
@@ -75,7 +77,7 @@ jobs:
     name: Build distribution for ${{ matrix.runs-on }}
     steps:
     
-    - name: Checkout full repositry
+    - name: Checkout full repository
       uses: actions/checkout@v2
       with:
         lfs: true
@@ -93,7 +95,6 @@ jobs:
       run: python -m build --sdist --wheel --outdir dist/
 
     - name: Upload artifacts
-      if: ${{ env.deploy }}
       uses: actions/upload-artifact@v2
       with:
         path: dist/*
@@ -108,7 +109,6 @@ jobs:
         repository_url: https://test.pypi.org/legacy/
         
     - name: Publish to PyPI
-      if: ${{ env.deploy }}
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
