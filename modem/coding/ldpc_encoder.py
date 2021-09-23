@@ -1,12 +1,17 @@
 from typing import List
 from scipy.io import loadmat
 import os
+import warnings
 
 import numpy as np
 
+
 from modem.coding.encoder import Encoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
-import ldpc_binding
+try:
+    from modem.coding import ldpc_binding
+except ImportError:
+    pass
 
 
 class LdpcEncoder(Encoder):
@@ -23,8 +28,14 @@ class LdpcEncoder(Encoder):
         self.bits_in_frame = bits_in_frame
         self._read_precalculated_codes()
 
+        if self.params.use_binding and 'ldpc_binding' not in globals():
+            self.params.use_binding = False
+            warnings.warn("LDPC C++ binding could not ne imported, falling back to slower Python LDPC implementation")
+
         if self.code_blocks < 1:
             raise ValueError("Code block must not be longer than bits in frame")
+
+
 
     @property
     def source_bits(self) -> int:
