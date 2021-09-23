@@ -3,10 +3,6 @@ name: hermespy
 # Execute tests if pushed to any branch
 on: [push, pull_request]
 
-# Only deploy on pushes to the master branch
-env:
-  deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-
 jobs:
 
 
@@ -64,7 +60,7 @@ jobs:
       run: cd docssource && make api && make gh-pages && make install
 
     - name: Create github pages
-      if: ${{ env.deploy }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       uses: JamesIves/github-pages-deploy-action@4.1.2
       with:
         branch: gh-pages
@@ -111,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     name: Distribute to PyPI
-    if: ${{ env.deploy }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
     steps:
     
     - name: Create additional directories
