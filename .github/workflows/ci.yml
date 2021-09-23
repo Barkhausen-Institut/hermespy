@@ -3,33 +3,11 @@ name: hermespy
 # Execute tests if pushed to any branch
 on: [push, pull_request]
 
+# Only deploy on pushes to the master branch
+env:
+  deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+
 jobs:
-  documentation:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        lfs: false
-
-    - name: Setup python 3.7.7
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.7.7
-
-    - name: Install doc dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install -r requirements_doc.txt
-
-    - name: Build documentation
-      run: cd docssource && make api && make gh-pages && make install
-
-    - name: Create github pages
-      uses: JamesIves/github-pages-deploy-action@4.1.2
-      with:
-        branch: gh-pages
-        folder: docs
 
   tests:
     runs-on: ${{ matrix.runs-on }}
@@ -57,18 +35,50 @@ jobs:
 
     - name: Run unit tests
       run: python run_unit_tests.py
+      
+  documentation:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        lfs: false
+
+    - name: Setup python 3.7.7
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7.7
+
+    - name: Install doc dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements_doc.txt
+
+    - name: Build documentation
+      run: cd docssource && make api && make gh-pages && make install
+
+    - name: Create github pages
+      if: ${{ env.deploy }}
+      uses: JamesIves/github-pages-deploy-action@4.1.2
+      with:
+        branch: gh-pages
+        folder: docs
 
   dist:
+    needs: tests
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+        runs-on: [ubuntu-latest, windows-latest]
     name: Build distribution for ${{ matrix.runs-on }}
     steps:
     
-    - name: Checkout repo + lfs
+    - name: Checkout full repositry
       uses: actions/checkout@v2
       with:
+        lfs: true
         fetch-depth: 0
         
     - name: Setup python 3.7.7
@@ -76,13 +86,14 @@ jobs:
       with:
         python-version: 3.7.7
         
-    - name: Install addditional requirements
+    - name: Install build tools
       run: pip install --upgrade build twine
 
     - name: Build distribution and wheel
-      run: python -m build
+      run: python -m build --sdist --wheel --outdir dist/
 
     - name: Upload artifacts
+      if: ${{ env.deploy }}
       uses: actions/upload-artifact@v2
       with:
         path: dist/*
