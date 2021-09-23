@@ -1,12 +1,29 @@
 image: python:3.7
 
-before_script:
-  - apt update
-  - apt-get install -y build-essential
-  - pip install -r requirements.txt
-  - pip install .
+stages:
+  - test
+  - build
 
 test:
   stage: test
+  before_script:
+    - apt update
+    - apt-get install -y build-essential
+    - pip install -r requirements.txt
+    - pip install -e .
   script:
     - python run_unit_tests.py
+
+wheel-linux:
+  stage: build
+  before_script:
+    - apt update
+    - apt-get install -y build-essential
+    - mkdir wheel/
+  script:
+    - pip wheel -v . --wheel-dir wheel/
+  artifacts:
+    paths:
+      - wheel
+  only:
+    - master

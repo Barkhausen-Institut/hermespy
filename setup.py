@@ -1,27 +1,31 @@
-from setuptools import setup, Extension
-from pybind11.setup_helpers import Pybind11Extension, build_ext
-from pybind11 import get_cmake_dir
+from skbuild import setup
+from setuptools import find_packages
 
-import sys
-import os
-
-
-ext_modules = [
-    Pybind11Extension("ldpc_binding",
-        [os.path.join("modem", "coding", "ldpc_binding", "ldpc_binding.cpp")],
-        include_dirs = ['3rdparty']
-    ),
-]
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 setup(
-    name="ldpc_binding",
+    name="hermespy",
+    version="0.1.0",
     author="Tobias Kronauer",
-    author_email="tobias.kronauer@bi-dd.de",
-    description="A test project using pybind11",
-    long_description="",
-    ext_modules=ext_modules,
-    # Currently, build_ext only provides an optional "highest supported C++
-    # level" feature, but in the future it may provide more features.
-    cmdclass={"build_ext": build_ext},
+    author_email="tobias.kronauer@barkhauseninstitut.org",
+    description="The Heterogeneous Mobile Radio Simulator",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://gitlab.com/barkhauseninstitut/wicon/hermespy",
+    project_urls={
+        "Barkhausen Institute": "https://www.barkhauseninstitut.org",
+        "Bug Tracker": "https://gitlab.com/barkhauseninstitut/wicon/hermespy/issues",
+    },
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU Affero General Public License version 3",
+        "Operating System :: OS Independent",
+    ],
+    packages=find_packages('.', exclude=("tests",)),
+    package_dir={"": ""},
+    include_package_data=True,
+    extras_require={"test": ["pytest"]},
     zip_safe=False,
+    python_requires=">=3.7",
 )
