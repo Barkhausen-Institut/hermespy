@@ -2,6 +2,7 @@ from typing import List
 from collections import deque
 import numpy as np
 from .encoder import Encoder, ParametersEncoder
+from parameters_parser.parameters_scrambler import ParametersScrambler
 
 
 class PseudoRandomGenerator:
@@ -110,10 +111,11 @@ class Scrambler3GPP(Encoder):
     See section 7.3.1.1 of the respective technical standard TS 138 211 for details.
     """
 
+    factory_tag: str = "SCRAMBLER_3GPP"
     __randomGenerator: PseudoRandomGenerator
     __codewords: List[np.array]
 
-    def __init__(self, params: ParametersEncoder, bits_in_frame: int) -> None:
+    def __init__(self, params: ParametersScrambler, bits_in_frame: int) -> None:
 
         # Init base class (Encoder)
         super(Scrambler3GPP, self).__init__(params, bits_in_frame)
@@ -186,16 +188,17 @@ class Scrambler80211a(Encoder):
     https://ieeexplore.ieee.org/document/815305
     """
 
+    factory_tag: str = "SCRAMBLER_80211A"
     __seed: np.array
     __queue: deque
 
-    def __init__(self, params: ParametersEncoder, bits_in_frame: int) -> None:
+    def __init__(self, params: ParametersScrambler, bits_in_frame: int) -> None:
 
         # Init base class (Encoder)
         super(Scrambler80211a, self).__init__(params, bits_in_frame)
 
         # The default seed is all zeros
-        self.__seed = np.array([0] * 7)
+        self.__seed = params.seed
         self.__queue = deque(self.__seed, 7)
 
     @property

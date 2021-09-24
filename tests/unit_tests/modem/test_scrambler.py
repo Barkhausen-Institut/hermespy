@@ -3,7 +3,7 @@ import numpy as np
 
 from .test_encoder import TestAbstractEncoder
 from modem.coding.scrambler import Scrambler3GPP, Scrambler80211a
-from modem.coding.encoder import ParametersEncoder
+from parameters_parser.parameters_scrambler import ParametersScrambler
 from .utils import assert_frame_equality
 
 
@@ -14,11 +14,7 @@ class TestScrambler3GPP(TestAbstractEncoder, unittest.TestCase):
         return self.scrambler
 
     def setUp(self) -> None:
-
-        self.scrambler = Scrambler3GPP(ParametersEncoder(), 31)
-
-    def tearDown(self) -> None:
-        pass
+        self.scrambler = Scrambler3GPP(ParametersScrambler(), 31)
 
 
 class TestScrambler80211a(TestAbstractEncoder, unittest.TestCase):
@@ -29,7 +25,7 @@ class TestScrambler80211a(TestAbstractEncoder, unittest.TestCase):
 
     def setUp(self) -> None:
 
-        self.scrambler = Scrambler80211a(ParametersEncoder(), 31)
+        self.scrambler = Scrambler80211a(ParametersScrambler(), 31)
 
         self.__sequence_seed = np.ones(7, dtype=int)
         self.__sequence_check = np.array([0, 0, 0, 0, 1, 1, 1, 0,
@@ -47,12 +43,9 @@ class TestScrambler80211a(TestAbstractEncoder, unittest.TestCase):
 
         self.scrambler.seed = self.__seed
 
-    def tearDown(self) -> None:
-        pass
-
     def test_sequence(self) -> None:
 
-        scrambler = Scrambler80211a(ParametersEncoder(), 31)
+        scrambler = Scrambler80211a(ParametersScrambler(), 31)
         scrambler.seed = self.__sequence_seed
 
         sequence = np.empty(self.__sequence_check.shape, dtype=int)
