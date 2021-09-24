@@ -4,11 +4,13 @@ from parameters_parser.parameters_encoder import ParametersEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
+from parameters_parser.parameters_scrambler import ParametersScrambler
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
 from modem.coding.interleaver import BlockInterleaver
+from modem.coding.scrambler import Scrambler80211a, Scrambler3GPP
 
 
 class EncoderFactory:
@@ -25,6 +27,10 @@ class EncoderFactory:
             encoder = LdpcEncoder(encoding_params, bits_in_frame)
         elif type == "BLOCK_INTERLEAVER":
             encoder = BlockInterleaver(encoding_params, bits_in_frame)
+        elif type == Scrambler80211a.factory_tag:
+            encoder = Scrambler80211a(encoding_params, bits_in_frame)
+        elif type == Scrambler3GPP.factory_tag:
+            encoder = Scrambler3GPP(encoding_params, bits_in_frame)
         else:
             encoder = RepetitionEncoder(ParametersRepetitionEncoder(), bits_in_frame)
         return encoder
@@ -34,7 +40,9 @@ class EncoderFactory:
         VALID_COMBINATIONS: Dict[str, ParametersEncoder] = {
             'REPETITION': ParametersRepetitionEncoder,
             'LDPC': ParametersLdpcEncoder,
-            'BLOCK_INTERLEAVER': ParametersBlockInterleaver
+            'BLOCK_INTERLEAVER': ParametersBlockInterleaver,
+            Scrambler3GPP.factory_tag: ParametersScrambler,
+            Scrambler80211a.factory_tag: ParametersScrambler,
         }
 
         if type.upper() in VALID_COMBINATIONS.keys():
