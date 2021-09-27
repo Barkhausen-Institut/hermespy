@@ -1,29 +1,34 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
 import numpy as np
 
+from . import Precoder
 
-class Precoder(ABC):
-    """Abstract base class for signal processing algorithms operating on complex data streams.
 
-    A `Precoder` may compress or expand the number of data streams, however, the number of data streams before encoding
-    and after decoding should generally be identical.
-
-    `Precoders` who just encode or decode data are allowed, in this case unsupported operations are required to raise a
-    `NotImplementedError` exception.
+class DFT(Precoder):
+    """A precoder applying the Discrete Fourier Transform to each data stream.
     """
 
-    def __init__(self) -> None:
+    __fft_norm: str
+
+    def __init__(self,
+                 fft_norm: str = None) -> None:
         """Object initialization.
+
+        Args:
+            fft_norm (str, optional):
+                The norm applied to the discrete fourier transform.
+                See also numpy.fft.fft for details
         """
 
-        pass
+        self.__fft_norm = 'ortho'
 
-    @abstractmethod
+        if fft_norm is not None:
+            self.__fft_norm = fft_norm
+
+        Precoder.__init__(self)
+
     def encode(self, output_stream: np.matrix) -> np.matrix:
-        """Encode a data stream before transmission.
-
-        This operation may modify the number of streams.
+        """Apply a DFT to data streams before transmission.
 
         Args:
             output_stream (np.matrix):
@@ -36,17 +41,12 @@ class Precoder(ABC):
                 The encoded data streams.
                 The first matrix dimension is the number of streams,
                 the second dimension the number of discrete samples.
-
-        Raises:
-            NotImplementedError: If the `Precoder` does not support an encoding operation.
         """
-        ...
 
-    @abstractmethod
+        return np.fft.fft(output_stream, norm=self.__fft_norm)
+
     def decode(self, input_stream: np.matrix) -> np.matrix:
-        """Decode a data stream after reception.
-
-        This operation may modify the number of streams.
+        """Apply an inverse DFT to data streams after reception
 
         Args:
             input_stream (np.matrix):
@@ -59,14 +59,11 @@ class Precoder(ABC):
                 The decoded data streams.
                 The first matrix dimension is the number of streams,
                 the second dimension the number of discrete samples.
-
-        Raises:
-            NotImplementedError: If the `Precoder` does not support a decoding operation.
         """
-        ...
+
+        return np.fft.ifft(input_stream, norm=self.__fft_norm)
 
     @property
-    @abstractmethod
     def num_streams(self) -> int:
         """The resulting number of data streams after precoding.
 
@@ -74,4 +71,5 @@ class Precoder(ABC):
             int:
                 The number of data streams.
         """
-        ...
+
+        return 0
