@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import Tuple, List
+from typing import Tuple, List, Type
 from functools import lru_cache
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 from scipy import integrate
 
@@ -11,8 +12,10 @@ from modem.waveform_generator import WaveformGenerator
 class WaveformGeneratorChirpFsk(WaveformGenerator):
     """ Implements a chirp FSK waveform generator."""
 
+    # YAML tag
+    yaml_tag = WaveformGenerator.yaml_tag + "ChirpFsk"
+
     # Modulation parameters
-    __modulation_order: int
     __chirp_duration: float
     __chirp_bandwidth: float
     __freq_difference: float
@@ -27,11 +30,11 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     def __init__(self,
                  modem: Modem = None,
                  sampling_rate: float = None,
+                 oversampling_factor: float = None,
                  modulation_order: int = None,
                  chirp_duration: float = None,
                  chirp_bandwidth: float = None,
                  freq_difference: float = None,
-                 oversampling_factor: int = None,
                  num_pilot_chirps: int = None,
                  num_data_chirps: int = None,
                  guard_interval: float = None) -> None:
@@ -39,20 +42,17 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         WaveformGenerator.__init__(self,
                                    modem=modem,
-                                   sampling_rate=sampling_rate)
+                                   sampling_rate=sampling_rate,
+                                   oversampling_factor=oversampling_factor,
+                                   modulation_order=modulation_order)
 
         # Default parameters
-        # TODO: Insert a valid default configuration
-        self.__modulation_order = 0
-        self.__chirp_duration = 0.0
-        self.__chirp_bandwidth = 0.0
-        self.__freq_difference = 0.0
-        self.__oversampling_factor = 0
+        self.__chirp_duration = 512e-6
+        self.__chirp_bandwidth = 500e3
+        self.__freq_difference = 1953.125
         self.__num_pilot_chirps = 0
-        self.__num_data_chirps = 0
+        self.__num_data_chirps = 20
         self.__guard_interval = 0.0
-        self.__bits_per_symbol = 0
-        self.__bits_in_frame = 0
 
         if modulation_order is not None:
             self.modulation_order = modulation_order
@@ -78,36 +78,58 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         if guard_interval is not None:
             self.guard_interval = guard_interval
 
-    @property
-    def modulation_order(self) -> int:
-        """Access the modulation order.
-
-        Returns:
-            int:
-                The modulation order.
-        """
-
-        return self.__modulation_order
-
-    @modulation_order.setter
-    def modulation_order(self, order: int) -> None:
-        """Modify the modulation order.
-
-        Must be a positive power of two.
+    @classmethod
+    def to_yaml(cls: Type[WaveformGeneratorChirpFsk],
+                representer: SafeRepresenter,
+                node: WaveformGeneratorChirpFsk) -> Node:
+        """Serialize an `WaveformGenerator` object to YAML.
 
         Args:
-            order (int):w
-                The new modulation order.
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
 
-        Raises:
-            ValueError:
-                If `order` is not a positive power of two.
+            node (WaveformGenerator):
+                The `WaveformGeneratorChirpFsk` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node
         """
 
-        if order <= 0 or (order & (order - 1)) != 0:
-            raise ValueError("Modulation order must be a positive power of two")
+        state = {
+            "chirp_duration": node.chirp_duration,
+            "chirp_bandwidth": node.chirp_bandwidth,
+            "freq_difference": node.freq_difference,
+            "num_pilot_chirps": node.num_pilot_chirps,
+            "num_data_chirps": node.num_data_chirps,
+            "guard_interval": node.guard_interval,
+        }
 
-        self.__modulation_order = order
+        mapping = representer.represent_mapping(cls.yaml_tag, state)
+        mapping.value.extend(WaveformGenerator.to_yaml(representer, node).value)
+
+        return mapping
+
+    @classmethod
+    def from_yaml(cls: Type[WaveformGeneratorChirpFsk], constructor: SafeConstructor, node: Node)\
+            -> WaveformGeneratorChirpFsk:
+        """Recall a new `WaveformGeneratorChirpFsk` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `WaveformGeneratorChirpFsk` serialization.
+
+        Returns:
+            WaveformGenerator:
+                Newly created `WaveformGeneratorChirpFsk` instance.
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)
 
     @property
     def chirp_duration(self) -> float:
@@ -199,35 +221,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             raise ValueError("The frequency difference must be smaller than the configured chirp bandwidth")
 
         self.__freq_difference = difference
-
-    @property
-    def oversampling_factor(self) -> int:
-        """Access the oversampling factor.
-
-        Returns:
-            int:
-                The oversampling factor.
-        """
-
-        return self.__oversampling_factor
-
-    @oversampling_factor.setter
-    def oversampling_factor(self, factor: int) -> None:
-        """Modify the oversampling factor.
-
-        Args:
-            factor (int):
-                The new oversampling factor.
-
-        Raises:
-            ValueError:
-                If the oversampling `factor` is less than one.
-        """
-
-        if factor < 1:
-            raise ValueError("The oversampling factor must be greater or equal to one")
-
-        self.__oversampling_factor = factor
 
     @property
     def num_pilot_chirps(self) -> int:
@@ -394,13 +387,13 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             The average symbol energy in UNIT.
         """
 
-        _, _, energy = self._prototypes(self.__bits_per_symbol,
+        _, _, energy = self._prototypes(self.bits_per_symbol,
                                         self.samples_in_chirp,
-                                        self.__modulation_order,
+                                        self.modulation_order,
                                         self.sampling_rate,
-                                        self.__chirp_bandwidth,
-                                        self.__chirp_duration,
-                                        self.__freq_difference)
+                                        self.chirp_bandwidth,
+                                        self.chirp_duration,
+                                        self.freq_difference)
         return energy
 
     def create_frame(self, timestamp: int,
@@ -442,7 +435,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         """
         # convert bits to integer frequency offsets
         # e.g. [8, 4, 2, 1]
-        power_of_2 = 2 ** np.arange(self.__bits_per_symbol - 1, -1, -1)
+        power_of_2 = 2 ** np.arange(self.bits_per_symbol - 1, -1, -1)
         bits = np.reshape(
             data_bits,
             (self.bits_per_symbol,
@@ -469,6 +462,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         amplitude = np.zeros(self.samples_in_frame, dtype=complex)
         frequency = np.zeros(self.samples_in_frame, dtype=complex)
         slope = self.__chirp_bandwidth / self.__chirp_duration
+        f1 = .5 * self.chirp_bandwidth
 
         for symbol_index, f0 in enumerate(initial_frequency):
             first_sample = symbol_index * self.samples_in_chirp
@@ -478,7 +472,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             frequency[first_sample:last_sample] = f0 + \
                 slope * self.chirp_time  # set (modulated) chirp
 
-        frequency[frequency > self._f1] -= self.__chirp_bandwidth  # wrap
+        frequency[frequency > f1] -= self.__chirp_bandwidth  # wrap
 
         return frequency, amplitude
 
@@ -494,20 +488,20 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             rx_signal = np.array([])
         else:
             bits = np.zeros(
-                (self.num_data_chirps, self.__bits_per_symbol), dtype=int)
+                (self.num_data_chirps, self.bits_per_symbol), dtype=int)
             frame_signal = rx_signal[0, :useful_signal_length]
 
             # remove pilots
             frame_signal = frame_signal[self.samples_in_chirp *
                                         self.num_pilot_chirps:]
 
-            cos_prototype, sin_prototype, _ = self._prototypes(self.__bits_per_symbol,
+            cos_prototype, sin_prototype, _ = self._prototypes(self.bits_per_symbol,
                                                                self.samples_in_chirp,
-                                                               self.__modulation_order,
+                                                               self.modulation_order,
                                                                self.sampling_rate,
-                                                               self.__chirp_bandwidth,
-                                                               self.__chirp_duration,
-                                                               self.__freq_difference)
+                                                               self.chirp_bandwidth,
+                                                               self.chirp_duration,
+                                                               self.freq_difference)
 
             for symbol_idx in range(self.num_data_chirps):
                 symbol_signal = frame_signal[:self.samples_in_chirp]
@@ -535,7 +529,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
                 symbol_est = np.argmax(symbol_metric)
                 bits[symbol_idx, :] = [int(x) for x in list(
-                    np.binary_repr(symbol_est, width=self.__bits_per_symbol))]
+                    np.binary_repr(symbol_est, width=self.bits_per_symbol))]
 
             rx_signal = rx_signal[:, self.samples_in_frame:]
 
@@ -544,7 +538,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return list([bits]), rx_signal
 
     def get_bit_energy(self) -> float:
-        return self.symbol_energy / self.__bits_per_symbol
+        return self.symbol_energy / self.bits_per_symbol
 
     def get_power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp

@@ -17,25 +17,40 @@ class WaveformGenerator(ABC):
     Implementations for specific technologies should inherit from this class.
     """
 
+    yaml_tag: str = "Waveform"
     __modem: Optional[Modem]
-    __sampling_rate: float
+    __sampling_rate: Optional[float]
+    __oversampling_factor: int
+    __modulation_order: int
 
     def __init__(self,
                  modem: Modem = None,
-                 sampling_rate: float = None) -> None:
+                 sampling_rate: float = None,
+                 oversampling_factor: int = None,
+                 modulation_order: int = None) -> None:
         """Object initialization.
 
         Args:
-            modem (Modem):
+            modem (Modem, optional):
                 A modem this generator is attached to.
                 By default, the generator is considered to be floating.
 
-            sampling_rate (float):
+            sampling_rate (float, optional):
                 Rate at which the generated signals are sampled.
+
+            oversampling_factor (int, optional):
+                The factor at which the simulated signal is oversampled.
+
+            modulation_order (int, optional):
+                Order of modulation.
+                Must be a non-negative power of two.
         """
 
+        # Default parameters
         self.__modem = None
-        self.__sampling_rate = 1e3
+        self.__sampling_rate = None
+        self.__oversampling_factor = 4
+        self.__modulation_order = 256
 
         if modem is not None:
             self.modem = modem
@@ -43,10 +58,11 @@ class WaveformGenerator(ABC):
         if sampling_rate is not None:
             self.sampling_rate = sampling_rate
 
-        #self.sampling_rate = param.sampling_rate
-        #self._samples_in_frame: int = None
-        # overhead to account for possible filtering effects (may overlap with following frames)
-        #self._samples_overhead_in_frame = 0
+        if oversampling_factor is not None:
+            self.oversampling_factor = oversampling_factor
+
+        if modulation_order is not None:
+            self.modulation_order = modulation_order
 
     @classmethod
     def to_yaml(cls: Type[WaveformGenerator], representer: SafeRepresenter, node: WaveformGenerator) -> Node:
@@ -66,7 +82,9 @@ class WaveformGenerator(ABC):
         """
 
         state = {
-            "sampling_rate": node.__sampling_rate
+            "sampling_rate": node.__sampling_rate,
+            "oversampling_factor": node.__oversampling_factor,
+            "modulation_order": node.__modulation_order,
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
@@ -100,6 +118,66 @@ class WaveformGenerator(ABC):
                 The number of samples.
         """
         pass
+
+    @property
+    def oversampling_factor(self) -> int:
+        """Access the oversampling factor.
+
+        Returns:
+            int:
+                The oversampling factor.
+        """
+
+        return self.__oversampling_factor
+
+    @oversampling_factor.setter
+    def oversampling_factor(self, factor: int) -> None:
+        """Modify the oversampling factor.
+
+        Args:
+            factor (int):
+                The new oversampling factor.
+
+        Raises:
+            ValueError:
+                If the oversampling `factor` is less than one.
+        """
+
+        if factor < 1:
+            raise ValueError("The oversampling factor must be greater or equal to one")
+
+        self.__oversampling_factor = factor
+
+    @property
+    def modulation_order(self) -> int:
+        """Access the modulation order.
+
+        Returns:
+            int:
+                The modulation order.
+        """
+
+        return self.__modulation_order
+
+    @modulation_order.setter
+    def modulation_order(self, order: int) -> None:
+        """Modify the modulation order.
+
+        Must be a positive power of two.
+
+        Args:
+            order (int):
+                The new modulation order.
+
+        Raises:
+            ValueError:
+                If `order` is not a positive power of two.
+        """
+
+        if order <= 0 or (order & (order - 1)) != 0:
+            raise ValueError("Modulation order must be a positive power of two")
+
+        self.__modulation_order = order
 
     @property
     def max_frame_length(self) -> float:
@@ -203,23 +281,37 @@ class WaveformGenerator(ABC):
 
         Returns:
             float:
-                The current sampling rate.
+                The configured sampling rate, alternatively the attached modem's sampling rate in Hz.
+
+        Raises:
+            RuntimeError:
+                If the sampling rate is not configured and the generator is floating.
         """
 
-        return self.__sampling_rate
+        if self.__sampling_rate is not None:
+            return self.__sampling_rate
+
+        if self.__modem is not None:
+            return self.__modem.sampling_rate
+
+        raise RuntimeError("Tried to access the unknown sampling rate of a floating generator")
 
     @sampling_rate.setter
-    def sampling_rate(self, sampling_rate: float) -> None:
+    def sampling_rate(self, sampling_rate: Optional[float]) -> None:
         """Modify the sampling rate configuration.
 
         Args:
-            sampling_rate (float):
+            sampling_rate (Optional[float]):
                 The new sampling rate.
+                None, if the modem's sampling rate is identical.
 
         Raises:
             ValueError:
                 If the sampling rate is smaller or equal to zero.
         """
+
+        if sampling_rate is None:
+            self.__sampling_rate = sampling_rate
 
         if sampling_rate <= 0.0:
             raise ValueError("Sampling rate must be greater than zero")

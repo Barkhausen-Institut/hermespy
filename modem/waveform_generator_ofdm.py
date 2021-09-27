@@ -1,11 +1,10 @@
 from typing import List, Tuple
-
+from enum import IntEnum
 import numpy as np
 from scipy import signal
 
+from modem import Modem
 from modem.waveform_generator import WaveformGenerator
-from parameters_parser.parameters_ofdm import (
-    ParametersOfdm, OfdmSymbolConfig, GuardInterval, ResourceType, ResourcePattern)
 from modem.tools.psk_qam_mapping import PskQamMapping
 from modem.tools.mimo import Mimo
 
@@ -26,16 +25,59 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     - ideal channel estimation assumed
     - pilot not implemented
     """
+    
+    # YAML tag
+    yaml_tag = "OFDM"
 
-    def __init__(self, param: ParametersOfdm,
-                 rng: np.random.RandomState) -> None:
-        super().__init__(param)
-        self.param = param
+    # Modulation parameters
+    __subcarrier_spacing: float
+    __fft_size: int
+    __numb_occupied_subcarriers: int
+    __cp_ratio: np.array
+    __precoding: str
+    __bits_in_frame: int
+    __dc_suppression: bool
+
+    # Receiver parameters
+    __channel_estimation: str
+    __equalization: str
+
+    # Frame parameters
+    __frame_guard_interval: float
+    __frame_structure: List[FrameElement]
+    __ofdm_symbol_resources_mapping: List[List[ResourcePattern]]
+    __ofdm_symbol_configs: List[OfdmSymbolConfig]
+
+    def __init__(self,
+                 modem: Modem = None,
+                 sampling_rate: float = None,
+                 oversampling_factor: float = None) -> None:
+        """Object initialization."""
+
+        WaveformGenerator.__init__(self,
+                                   modem=modem,
+                                   sampling_rate=sampling_rate,
+                                   oversampling_factor=oversampling_factor)
+
+        # Default parameters
+        self.__subcarrier_spacing = 0.0
+        self.__fft_size = 1
+        self.__num_occupied_subcarriers = 1
+        self.__cp_ratio = np.array([])
+        self.__precoding = ""
+        self.__bits_in_frame = 0
+        self.__dc_suppression = True
+        self.__channel_estimation = ""
+        self.__equalization = ""
+        self.__frame_guard_interval = 0.0
+        self.__frame_structure = []
+        self.__ofdm_symbol_resources_mapping = []
+        self.__ofdm_symbol_configs = []
+
         self._samples_in_frame_no_oversampling = 0
 
         self._mapping = PskQamMapping(self.param.modulation_order)
 
-        self._rand = rng
 
         self._mimo = Mimo(mimo_method=self.param.mimo_scheme,
                           number_tx_antennas=self.param.number_tx_antennas,
@@ -72,11 +114,92 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         final_index = int(np.floor(self.param.number_occupied_subcarriers / 2))
         resource_element_mapping = np.append(
             resource_element_mapping, np.arange(
-                self.param.dc_suppresion, final_index + self.param.dc_suppresion))
+                self.param.dc_suppression, final_index + self.param.dc_suppression))
         return resource_element_mapping
 
-    ###################################
-    # property definitions
+    @property
+    def subcarrier_spacing(self) -> float:
+        """Spacing between individual subcarriers.
+
+        Returns:
+            float:
+                Subcarrier spacing in Hz."""
+
+        return self.__subcarrier_spacing
+
+    @subcarrier_spacing.setter
+    def subcarrier_spacing(self, spacing: float) -> None:
+        """Modify spacing between individual subcarriers.
+
+        Args:
+            spacing (float): The new subcarrier spacing in Hz.
+
+        Raises:
+            ValueError: If the `spacing` is less than zero.
+        """
+
+        if spacing < 0.0:
+            raise ValueError("Subcarrier spacing must be greater or equal to zero")
+
+        self.__subcarrier_spacing = spacing
+
+    @property
+    def fft_size(self) -> int:
+        """Number of fft windows?
+
+        return:
+            int: Number of FFT windows.
+        """
+
+        return self.__fft_size
+
+    @fft_size.setter
+    def fft_size(self, size: int) -> None:
+        """Modify number of FFT windows.
+
+        Args:
+             size (int): New Number of FFT windows.
+
+        Raises:
+            ValueError: If `size` is smaller than one.
+        """
+
+        if size < 0:
+            raise ValueError("FFT size must be greater than zero.")
+
+        if size > self.__number_occupied_subcarriers:
+            raise ValueError("FFT size may not be larger than number of occupied subcarriers")
+
+        self.__fft_size = size
+
+    @property
+    def num_occupied_subcarriers(self) -> int:
+        """Number of occupied subcarriers.
+
+        return:
+            int: Number of occupied subcarriers.
+        """
+
+        return self.__num_occupied_subcarriers
+
+    @num_occupied_subcarriers.setter
+    def num_occupied_subcarriers(self, num: int) -> None:
+        """Modify the number of occupied subcarriers.
+
+        Args:
+             num (int): New number of occupied subcarriers.
+
+        Raises:
+            ValueError: If `num` is larger than the `fft_size`.
+        """
+
+        if self.fft_size < num:
+            raise ValueError("Number of occupied subcarriers may not be larger than the FFT size")
+
+        self.__num_occupied_subcarriers = num
+
+
+
     @property
     def samples_in_frame(self) -> int:
         """int: Returns read-only samples_in_frame"""
