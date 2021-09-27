@@ -28,7 +28,12 @@ class Transmitter(Modem):
         state = constructor.construct_mapping(node, deep=True)
 
         bits_source = state.pop(BitsSource.yaml_tag, None)
-        waveform_generator = state.pop((k for k in state.keys() if k.startswith(WaveformGenerator.yaml_tag)), None)
+
+        waveform_generator = None
+        for key in state.keys():
+            if key.startswith(WaveformGenerator.yaml_tag):
+                waveform_generator = state.pop(key)
+                break
 
         args = dict((k.lower(), v) for k, v in state.items())
         transmitter = Transmitter(scenario, **args)
