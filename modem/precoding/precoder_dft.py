@@ -64,12 +64,27 @@ class DFT(Precoder):
         return np.fft.ifft(input_stream, norm=self.__fft_norm)
 
     @property
-    def num_streams(self) -> int:
-        """The resulting number of data streams after precoding.
+    def num_inputs(self) -> int:
+        """The required number of input symbol streams during encoding.
+
+        DFT precoding does not alter the number of symbol streams,
+        therefore the number of inputs is equal to the number of outputs.
 
         Returns:
             int:
-                The number of data streams.
+                The number of symbol streams.
         """
+        ...
 
-        return 0
+    @property
+    def num_outputs(self) -> int:
+        """The generated number of output symbol streams after decoding.
+
+        DFT precoding does not alter the number of symbol streams,
+        therefore the number of inputs is equal to the number of outputs.
+
+        Returns:
+            int:
+                The number of symbol streams.
+        """
+        ...

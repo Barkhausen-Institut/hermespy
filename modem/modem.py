@@ -8,6 +8,7 @@ from ruamel.yaml import RoundTripRepresenter, Node
 
 from parameters_parser.parameters_modem import ParametersModem
 from modem.coding.encoder_manager import EncoderManager
+from modem.precoding import Precoding
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
 from channel.channel import Channel
@@ -46,6 +47,7 @@ class Modem(Generic[P]):
     __linear_topology: bool
     __beamformer: Beamformer
     __encoder_manager: EncoderManager
+    __precoding: Precoding
     __bits_source: BitsSource
     __waveform_generator: Optional[WaveformGenerator]
     __rf_chain: RfChain
@@ -59,6 +61,7 @@ class Modem(Generic[P]):
                  sampling_rate: float = None,
                  bits_source: BitsSource = None,
                  encoding: EncoderManager = None,
+                 precoding: Precoding = None,
                  waveform_generator: WaveformGenerator = None,
                  rfchain: RfChain = None) -> None:
         """Object initialization.
@@ -77,6 +80,7 @@ class Modem(Generic[P]):
         self.__beamformer = Beamformer(self)
         self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
+        self.__precoding = Precoding()
         self.__waveform_generator = None
         self.__rf_chain = RfChain()
 
@@ -100,6 +104,9 @@ class Modem(Generic[P]):
 
         if encoding is not None:
             self.__encoder_manager = encoding
+
+        if precoding is not None:
+            self.__precoding = precoding
 
         if waveform_generator is not None:
             self.waveform_generator = waveform_generator
@@ -129,8 +136,12 @@ class Modem(Generic[P]):
             "sampling_rate": node.__sampling_rate,
             BitsSource.yaml_tag: node.__bits_source,
             EncoderManager.yaml_tag: node.__encoder_manager,
+            Precoding.yaml_tag: node.__precoding,
             RfChain.yaml_tag: node.__rf_chain,
         }
+
+        if node.waveform_generator is not None:
+            serialization[node.waveform_generator.yaml_tag] = node.waveform_generator
 
         """if node.beamformer.__class__ is not Beamformer:
             serialization['Beamformer'] = node.__beamformer"""
@@ -605,6 +616,16 @@ class Modem(Generic[P]):
         """
 
         self.__rf_chain = rf_chain
+
+    @property
+    def precoding(self) -> Precoding:
+        """Access this modem's precoding configuration.
+
+        Returns:
+            Precoding: Handle to the configuration.
+        """
+
+        return self.__precoding
 
 
 from beamformer import Beamformer

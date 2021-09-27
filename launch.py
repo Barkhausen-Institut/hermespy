@@ -9,6 +9,7 @@ from modem.coding import EncoderManager, Encoder
 from modem import RfChain
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
 from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
+from modem.precoding import Precoding, Precoder, DFT
 from channel import Channel
 import matplotlib.pyplot as plt
 from ruamel.yaml import YAML, Node
@@ -31,6 +32,7 @@ receiverA = scenario.add_receiver(**modem_configuration)
 receiverB = scenario.add_receiver(**modem_configuration)
 
 transmitterA.waveform_generator = WaveformGeneratorChirpFsk()
+transmitterA.precoding[0] = DFT()
 receiverB.rf_chain.power_amplifier = PowerAmplifier()
 
 
@@ -46,11 +48,10 @@ conventional_beamformer = transmitterA.configure_beamformer(ConventionalBeamform
 yaml = YAML(typ='safe')
 
 serializable_classes = [Scenario, BitsSource, Transmitter, Receiver, EncoderManager, Encoder, RfChain, PowerAmplifier,
-                        ConventionalBeamformer, Channel]
+                        ConventionalBeamformer, Channel, WaveformGeneratorChirpFsk, Precoding, Precoder, DFT]
 
 for serializable_class in serializable_classes:
     yaml.register_class(serializable_class)
-
 
 stream = StringIO()
 yaml.dump(scenario, stream)

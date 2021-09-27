@@ -1,10 +1,14 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Optional
 import numpy as np
 
 
+from . import Precoding
+
+
 class Precoder(ABC):
-    """Abstract base class for signal processing algorithms operating on complex data streams.
+    """Abstract base class for signal processing algorithms operating on complex data symbols.
 
     A `Precoder` may compress or expand the number of data streams, however, the number of data streams before encoding
     and after decoding should generally be identical.
@@ -13,11 +17,43 @@ class Precoder(ABC):
     `NotImplementedError` exception.
     """
 
-    def __init__(self) -> None:
+    __precoding = Optional[Precoding]
+
+    def __init__(self,
+                 precoding: Precoding = None) -> None:
         """Object initialization.
         """
 
-        pass
+        self.__precoding = None
+
+        if precoding is not None:
+            self.precoding = precoding
+
+    @property
+    def precoding(self) -> Precoding:
+        """Access the precoding configuration this precoder is attached to.
+
+        Returns:
+            Precoding: Handle to the precoding.
+
+        Raises:
+            RuntimeError: If this precoder is currently floating.
+        """
+
+        if self.__precoding is None:
+            raise RuntimeError("Trying to access the precoding of a floating precoder")
+
+        return self.__precoding
+
+    @precoding.setter
+    def precoding(self, precoding: Precoding) -> None:
+        """Modify the precoding configuration this precoder is attached to.
+        
+        Args:
+            precoding (Precoding): Handle to the precoding configuration.
+        """
+
+        self.__precoding = precoding
 
     @abstractmethod
     def encode(self, output_stream: np.matrix) -> np.matrix:
@@ -67,11 +103,22 @@ class Precoder(ABC):
 
     @property
     @abstractmethod
-    def num_streams(self) -> int:
-        """The resulting number of data streams after precoding.
+    def num_inputs(self) -> int:
+        """The required number of input symbol streams during encoding.
 
         Returns:
             int:
-                The number of data streams.
+                The number of symbol streams.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def num_outputs(self) -> int:
+        """The generated number of output symbol streams after decoding.
+
+        Returns:
+            int:
+                The number of symbol streams.
         """
         ...
