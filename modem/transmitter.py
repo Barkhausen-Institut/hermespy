@@ -5,6 +5,7 @@ from typing import Type, List, TYPE_CHECKING
 
 from modem import Modem
 from source import BitsSource
+from modem.waveform_generator import WaveformGenerator
 
 if TYPE_CHECKING:
     from scenario import Scenario
@@ -23,8 +24,11 @@ class Transmitter(Modem):
 
         scenario = [scene for node, scene in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
 
+        constructor.add_multi_constructor(WaveformGenerator.yaml_tag, WaveformGenerator.from_yaml)
         state = constructor.construct_mapping(node, deep=True)
+
         bits_source = state.pop(BitsSource.yaml_tag, None)
+        waveform_generator = state.pop((k for k in state.keys() if k.startswith(WaveformGenerator.yaml_tag)), None)
 
         args = dict((k.lower(), v) for k, v in state.items())
         transmitter = Transmitter(scenario, **args)
@@ -32,6 +36,9 @@ class Transmitter(Modem):
 
         if bits_source is not None:
             transmitter.bits_source = bits_source
+
+        if waveform_generator is not None:
+            transmitter.waveform_generator = waveform_generator
 
     @property
     def index(self) -> int:

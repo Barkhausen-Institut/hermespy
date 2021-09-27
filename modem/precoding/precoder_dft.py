@@ -1,4 +1,6 @@
 from __future__ import annotations
+from typing import Type
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
 from . import Precoder
@@ -8,6 +10,7 @@ class DFT(Precoder):
     """A precoder applying the Discrete Fourier Transform to each data stream.
     """
 
+    yaml_tag = 'DFT'
     __fft_norm: str
 
     def __init__(self,
@@ -26,6 +29,43 @@ class DFT(Precoder):
             self.__fft_norm = fft_norm
 
         Precoder.__init__(self)
+
+    @classmethod
+    def to_yaml(cls: Type[DFT], representer: SafeRepresenter, node: DFT) -> Node:
+        """Serialize a `DFT` precoder to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (DFT):
+                The `DFT` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        return representer.represent_scalar(cls.yaml_tag, "")
+
+    @classmethod
+    def from_yaml(cls: Type[DFT], constructor: SafeConstructor, node: Node) -> DFT:
+        """Recall a new `DFT` precoder to YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `DFT` serialization.
+
+        Returns:
+            DFT:
+                Newly created `DFT` instance.
+        """
+
+        return cls()
 
     def encode(self, output_stream: np.matrix) -> np.matrix:
         """Apply a DFT to data streams before transmission.
