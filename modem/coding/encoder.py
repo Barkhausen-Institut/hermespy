@@ -1,8 +1,10 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List
-from parameters_parser.parameters_encoder import ParametersEncoder
-
+from typing import List, TYPE_CHECKING, Optional
 import numpy as np
+
+if TYPE_CHECKING:
+    from . import EncoderManager
 
 
 class Encoder(ABC):
@@ -12,62 +14,107 @@ class Encoder(ABC):
     `decode(encoded_bits)` function.
     """
 
-    def __init__(self, params: ParametersEncoder, bits_in_frame: int) -> None:
-        """
-        Args:
-            params (ParametersEncoder): Parameters necessary for Encoder.
-            bits_in_frame (int): Number of bits that fit into one frame.
-        """
-        self.params = params
-        self.bits_in_frame = bits_in_frame
+    __manager: Optional[EncoderManager]
 
-    @abstractmethod
-    def encode(self, data_bits: List[np.array]) -> List[np.array]:
-        """This method encodes the incoming bits.
+    def __init__(self, manager: EncoderManager = None) -> None:
+        """Object initialization.
 
         Args:
-            bits(List[np.array]):
-                List of data_bits that are contained in the current frame.
-                Each list element is one block with bits created by the BitSource.
+            manager (EncoderManager, optional): The encoding configuration this encoder belongs to.
+        """
+
+        # Default settings
+        self.__manager = None
+
+        if manager is not None:
+            self.manager = manager
+
+    @property
+    def manager(self) -> EncoderManager:
+        """Access the configuration this encoding step is attached to.
 
         Returns:
-            List[np.array]:
-                List of blocks with the encoded bits. Each list item corresponds
-                to a block containing a code word.
-        """
-        pass
+            EncoderManager:
+                Handle to the configuration object.
 
-    @abstractmethod
-    def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
-        """Decode code words.
+        Raises:
+            RuntimeError: If the encoder is floating.
+        """
+
+        if self.__manager is None:
+            raise RuntimeError("Trying to access the manager of a floating encoding")
+
+        return self.__manager
+
+    @manager.setter
+    def manager(self, manager: EncoderManager) -> None:
+        """Modify the configuration this encoding step is attached to.
 
         Args:
-            encoded_bits(List[np.array]):
-                List of blocks with the encoded bits. Each list item corresponds
-                to a block containing a code word. The expected input is soft bits.
-        Returns:
-            List[np.array]:
-                List of data_bits that are contained in the current frame.
-                Each list element is one block with bits created by the BitsSource.
+            manager (EncoderManager): Handle to the encoding manager.
         """
-        pass
+
+        if self.__manager is not manager:
+            self.__manager = manager
+
+    @abstractmethod
+    def encode(self, bits: np.array) -> np.array:
+        """Encodes a single block of bits.
+
+        Args:
+            bits (np.array): A block of bits to be encoded by this `Encoder`.
+
+        Returns:
+            np.array: The encoded `bits` block.
+
+        Raises:
+            ValueError: If the number of `bits` does not match the `Encoder` requirements.
+        """
+        ...
+
+    @abstractmethod
+    def decode(self, encoded_bits: np.array) -> np.array:
+        """Decodes a single block of encoded bits.
+
+        Args:
+            encoded_bits (np.array): An encoded block of bits.
+
+        Returns:
+            np.array: A decoded block of bits.
+
+        Raises:
+            ValueError: If the number of `bits` does not match the `Encoder` requirements.
+        """
+        ...
 
     @property
-    def encoded_bits_n(self) -> int:
-        """int: Number of encoded bits that the encoding of k data bits result in."""
-        return self.params.encoded_bits_n
+    @abstractmethod
+    def bit_block_size(self) -> int:
+        """The number of resulting bits after decoding / the number of bits required before encoding.
+
+        Returns:
+            int: The number of bits.
+        """
+        ...
 
     @property
-    def data_bits_k(self) -> int:
-        """int: Number of bits that are to be encoded into n bits."""
-        return self.params.data_bits_k
+    @abstractmethod
+    def code_block_size(self) -> int:
+        """The number of resulting bits after encoding / the number of bits required before decoding.
+
+        Returns:
+            int: The number of bits.
+        """
+        ...
 
     @property
-    def code_blocks(self) -> int:
-        """int: Number of code blocks which are to encoded."""
-        return int(np.floor(self.bits_in_frame / self.encoded_bits_n))
+    def rate(self) -> float:
+        """Code rate.
 
-    @property
-    def source_bits(self) -> int:
-        """int: Number of bits to be generated by the source given n/k."""
-        return int(self.code_blocks * self.data_bits_k)
+        The relation between the number of source bits to the number of code bits.
+
+        Returns:
+            float: The code rate.
+        """
+
+        return self.bit_block_size / self.code_block_size

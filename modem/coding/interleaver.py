@@ -1,71 +1,159 @@
-from typing import List
-from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
-from modem.coding.encoder import Encoder
-
 import numpy as np
 
+from modem.coding import Encoder, EncoderManager
 
-class BlockInterleaver(Encoder):
 
-    def __init__(self, params: ParametersBlockInterleaver, bits_in_frame: int) -> None:
-        self.params = params
-        self.bits_in_frame = bits_in_frame
+class Interleaver(Encoder):
+    """A bit interleaver.
 
-    def encode(self, data_bits: List[np.array]) -> List[np.array]:
-        if self.params.data_bits_k == 1:
-            return data_bits
+    TODO: Proper documentation.
+    """
 
-        encoded_bits: List[np.array] = []
+    yaml_tag = 'Interleaver'
+    __manager: EncoderManager
+    __block_size: int
+    __interleave_blocks: int
 
-        for block in data_bits:
-            while block.size > 0:
-                encoded_block = np.reshape(
-                    block[:self.params.data_bits_k],
-                    (self.params.M, self.params.N)
-                )
-                encoded_block = np.ravel(encoded_block.T)
-                encoded_bits.append(encoded_block)
-                block = block[self.params.data_bits_k:]
+    def __init__(self,
+                 manager: EncoderManager = None,
+                 block_size: int = None,
+                 interleave_blocks: int = None) -> None:
+        """Object initialization.
 
-        encoded_bits.append(np.zeros(
-            self.bits_in_frame
-            - self.code_blocks * self.params.encoded_bits_n
-        ))
-        return encoded_bits
+        Args:
+            manager (EncoderManager, optional): The encoding configuration this encoder belongs to.
+            block_size (int, optional): The input / output number of bits the interleaver requires / generates.
+            interleave_blocks (int, optional): The number of sections being interleaved.
 
-    def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
-        if self.params.data_bits_k == 1:
-            return encoded_bits
+        Raises:
+            ValueError: If `block_size` is not dividable into `interleave_blocks`.
+        """
 
-        if encoded_bits[-1].size < self.params.encoded_bits_n:
-            del encoded_bits[-1]
+        # Default parameters
+        Encoder.__init__(self, manager)
+        self.__block_size = 32
+        self.__interleave_blocks = 4
 
-        decoded_bits = [
-            np.ravel(
-                np.reshape(
-                    block,
-                    (self.params.N, self.params.M)
-                ).T
-            ) for block in encoded_bits
-        ]
-        return decoded_bits
+        if block_size is not None:
+            self.block_size = block_size
+
+        if interleave_blocks is not None:
+            self.interleave_blocks = interleave_blocks
+
+        if self.block_size % self.interleave_blocks != 0:
+            raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
+
+    def encode(self, bits: np.array) -> np.array:
+        """Interleaves a single block of bits.
+
+        Args:
+            bits (np.array): A block of bits to be encoded by this `Encoder`.
+
+        Returns:
+            np.array: The encoded `bits` block.
+
+        Raises:
+            ValueError: If the number of `bits` does not match the `Encoder` requirements.
+        """
+
+        return bits.reshape((self.interleave_blocks, -1)).T.flatten()
+
+    def decode(self, encoded_bits: np.array) -> np.array:
+        """De-interleaves a single block of encoded bits.
+
+        Args:
+            encoded_bits (np.array): An encoded block of bits.
+
+        Returns:
+            np.array: A decoded block of bits.
+
+        Raises:
+            ValueError: If the number of `bits` does not match the `Encoder` requirements.
+        """
+
+        return encoded_bits.reshape((-1, self.interleave_blocks)).T.flatten()
 
     @property
-    def encoded_bits_n(self) -> int:
-        """int: Number of encoded bits that the encoding of k data bits result in."""
-        return self.params.encoded_bits_n
+    def bit_block_size(self) -> int:
+        """The number of resulting bits after decoding / the number of bits required before encoding.
+
+        Returns:
+            int: The number of bits.
+        """
+
+        return self.block_size
 
     @property
-    def data_bits_k(self) -> int:
-        """int: Number of bits that are to be encoded into n bits."""
-        return self.params.data_bits_k
+    def code_block_size(self) -> int:
+        """The number of resulting bits after encoding / the number of bits required before decoding.
+
+        Returns:
+            int: The number of bits.
+        """
+
+        return self.block_size
 
     @property
-    def code_blocks(self) -> int:
-        """int: Number of code blocks which are to encoded."""
-        return int(np.floor(self.bits_in_frame / self.encoded_bits_n))
+    def block_size(self) -> int:
+        """The configured block size.
+
+        Returns:
+            int: The number of bits per block.
+        """
+
+        return self.__block_size
+
+    @block_size.setter
+    def block_size(self, num_bits: int) -> None:
+        """Modify the configured block size.
+
+        Args:
+            num_bits (int): The number of bits per block.
+
+        Raises:
+            ValueError: If the number of bits is less than one.
+        """
+
+        if num_bits < 1:
+            raise ValueError("The block size must be greater or equal to one")
+
+        self.__block_size = num_bits
 
     @property
-    def source_bits(self) -> int:
-        """int: Number of bits to be generated by the source given n/k."""
-        return int(self.code_blocks * self.data_bits_k)
+    def interleave_blocks(self) -> int:
+        """The configured number of interleaved sections.
+
+        Returns:
+            int: The number of interleaved sections.
+        """
+
+        return self.__interleave_blocks
+
+    @interleave_blocks.setter
+    def interleave_blocks(self, num_blocks: int) -> None:
+        """Modify configured number of interleaved sections.
+
+        Args:
+            num_blocks (int): The new number of interleaved sections.
+
+        Raises:
+            ValueError: If the number of interleaved sections is less than one.
+        """
+
+        if num_blocks < 1:
+            raise ValueError("The number of interleaved sections must be at least one")
+
+        self.interleave_blocks = num_blocks
+
+    @property
+    def rate(self) -> float:
+        """Code rate.
+
+        The relation between the number of source bits to the number of code bits.
+        Always one in proper interleavers.
+
+        Returns:
+            float: The code rate.
+        """
+
+        return 1.0
