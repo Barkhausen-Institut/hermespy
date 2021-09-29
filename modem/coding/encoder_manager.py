@@ -1,24 +1,38 @@
 from __future__ import annotations
-from typing import Type, List
+from typing import Type, List, Optional, TYPE_CHECKING
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
-from ruamel.yaml.comments import CommentedOrderedMap
 
-from modem.coding.encoder import Encoder
+if TYPE_CHECKING:
+    from modem import Modem
+    from . import Encoder
 
 
 class EncoderManager:
+    """Serves as a wrapper class for multiple encoders."""
 
     yaml_tag = 'Encoding'
-    _encoders = List[Encoder]
+    __modem: Optional[Modem]
+    _encoders: List[Encoder]
 
-    """Serves as a wrapper class for multiple encoders."""
-    def __init__(self) -> None:
+    def __init__(self,
+                 modem: Modem = None) -> None:
+        """Object initialization.
+
+        Args:
+            modem (Modem, optional): The modem this `EncoderManager` belongs to.
+        """
+
+        # Default parameters
+        self.__modem = None
         self._encoders: List[Encoder] = []
+
+        if modem is not None:
+            self.modem = modem
 
     @classmethod
     def to_yaml(cls: Type[EncoderManager], representer: RoundTripRepresenter, node: EncoderManager) -> Node:
-        """Serialize an EnoderManager to YAML.
+        """Serialize an EncoderManager to YAML.
 
         Args:
             representer (RoundTripRepresenter):
@@ -59,25 +73,62 @@ class EncoderManager:
 
         return manager
 
+    @property
+    def modem(self) -> Modem:
+        """Access the modem this encoding configuration is attached to.
+
+        Returns:
+            Modem:
+                Handle to the modem object.
+
+        Raises:
+            RuntimeError: If the encoding configuration is floating.
+        """
+
+        if self.__modem is None:
+            raise RuntimeError("Trying to access the modem of a floating encoding configuration")
+
+        return self.__modem
+
+    @modem.setter
+    def modem(self, modem: Modem) -> None:
+        """Modify the modem this encoding configuration is attached to.
+
+        Args:
+            modem (Modem):
+                Handle to the modem object.
+        """
+
+        if self.__modem is not modem:
+            self.__modem = modem
+
     def add_encoder(self, encoder: Encoder) -> None:
+        """Add a new encoder to this configuration.
+
+        Args:
+            encoder (Encoder): The new encoder to be added.
+        """
+
+        # Register this encoding configuration to the encoder
+        encoder.manager = self
+
+        # Add new encoder to the queue of configured encoders
         self._encoders.append(encoder)
-        self._encoders = sorted(
-            self._encoders,
-            key=lambda encoder: encoder.data_bits_k)
+        self._encoders = self.__execution_order()
 
     @property
     def encoders(self) -> List[Encoder]:
+        """"""
+
         return self._encoders
 
-    @property
-    def code_rate(self) -> float:
-        R = 1
-        for encoder in self._encoders:
-            R *= encoder.data_bits_k / encoder.encoded_bits_n
+    def encode(self, data_bits: np.array) -> np.array:
+        """Encode a stream of source bits.
 
-        return R
+        Returns:
+            np.array: The encoded source bits.
+        """
 
-    def encode(self, data_bits: List[np.array]) -> List[np.array]:
         encoded_bits: List[np.array] = data_bits
         for encoder in self._encoders:
             encoded_bits = encoder.encode(encoded_bits)
@@ -92,15 +143,52 @@ class EncoderManager:
         return decoded_bits
 
     @property
-    def num_input_bits(self) -> int:
-        """The number of bits required by the encoder input.
+    def bit_block_size(self) -> int:
+        """"The number of resulting bits after decoding / the number of bits required before encoding.
 
         Returns:
-            int:
-                The number of input bits required by the encoder input.
+            int: The number of bits.
         """
 
-        if len(self.encoders) < 1:
+        if len(self._encoders) < 1:
             return 1
 
-        return self.encoders[0].source_bits
+        return self._encoders[0].bit_block_size
+
+    @property
+    def code_block_size(self) -> int:
+        """The number of resulting bits after encoding / the number of bits required before decoding.
+
+        Returns:
+            int: The number of bits.
+        """
+
+        if len(self._encoders) < 1:
+            return 1
+
+        return int(self._encoders[0].bit_block_size * self.rate)
+
+    def __execution_order(self) -> List[Encoder]:
+        """Sort the encoders into an order of execution.
+
+        Returns:
+            List[Encoder]: A list of encoders in order of transmit execution (reversed receive execution).
+        """
+
+        return sorted(self._encoders, key=lambda encoder: encoder.bit_block_size)
+
+    @property
+    def rate(self) -> float:
+        """Code rate.
+
+        The relation between the number of source bits to the number of code bits.
+
+        Returns:
+            float: The code rate.
+        """
+
+        code_rate = 1.0
+        for encoder in self._encoders:
+            code_rate *= encoder.rate
+
+        return code_rate
