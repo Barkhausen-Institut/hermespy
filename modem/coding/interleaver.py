@@ -1,6 +1,9 @@
+from __future__ import annotations
+from typing import Type
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
-from modem.coding import Encoder, EncoderManager
+from modem.coding import Encoder
 
 
 class Interleaver(Encoder):
@@ -10,18 +13,15 @@ class Interleaver(Encoder):
     """
 
     yaml_tag = 'Interleaver'
-    __manager: EncoderManager
     __block_size: int
     __interleave_blocks: int
 
     def __init__(self,
-                 manager: EncoderManager = None,
                  block_size: int = None,
                  interleave_blocks: int = None) -> None:
         """Object initialization.
 
         Args:
-            manager (EncoderManager, optional): The encoding configuration this encoder belongs to.
             block_size (int, optional): The input / output number of bits the interleaver requires / generates.
             interleave_blocks (int, optional): The number of sections being interleaved.
 
@@ -30,7 +30,7 @@ class Interleaver(Encoder):
         """
 
         # Default parameters
-        Encoder.__init__(self, manager)
+        Encoder.__init__(self)
         self.__block_size = 32
         self.__interleave_blocks = 4
 
@@ -42,6 +42,51 @@ class Interleaver(Encoder):
 
         if self.block_size % self.interleave_blocks != 0:
             raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
+
+    @classmethod
+    def to_yaml(cls: Type[Interleaver], representer: SafeRepresenter, node: Interleaver) -> Node:
+        """Serialize a `Interleaver` encoder to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Interleaver):
+                The `Interleaver` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            "block_size": node.block_size,
+            "interleave_blocks": node.interleave_blocks
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[Interleaver], constructor: SafeConstructor, node: Node) -> Interleaver:
+        """Recall a new `Interleaver` encoder from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Interleaver` serialization.
+
+        Returns:
+            Interleaver:
+                Newly created `Interleaver` instance.
+
+        Note that the created instance is floating by default.
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)
 
     def encode(self, bits: np.array) -> np.array:
         """Interleaves a single block of bits.
