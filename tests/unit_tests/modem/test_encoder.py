@@ -1,42 +1,58 @@
 import unittest
-from unittest.mock import Mock
-from typing import List
-
 import numpy as np
+from unittest.mock import Mock
 
 from modem.coding.encoder import Encoder
 
 
 class StubEncoder(Encoder):
-    def encode(self, bits: List[np.array]) -> List[np.array]:
+    """Encoder mock for testing only."""
+
+    __block_size: int
+
+    def __init__(self, manager: Mock, block_size: int) -> None:
+
+        Encoder.__init__(self, manager)
+        self.__block_size = block_size
+
+    def encode(self, bits: np.array) -> np.array:
         return bits
 
-    def decode(self, bits: List[np.array]) -> List[np.array]:
-        return bits
+    def decode(self, encoded_bits: np.array) -> np.array:
+        return encoded_bits
+
+    @property
+    def bit_block_size(self) -> int:
+        return self.__block_size
+
+    @property
+    def code_block_size(self) -> int:
+        return 2 * self.__block_size
 
 
 class TestEncoder(unittest.TestCase):
+    """Test the abstract Encoder base class."""
+
     def setUp(self) -> None:
-        self.params_encoder = Mock()
-        self.params_encoder.encoded_bits_n = 3
-        self.params_encoder.data_bits_k = 2
+
         self.bits_in_frame = 100
+        self.manager = Mock()
+        self.encoder = StubEncoder(self.manager, self.bits_in_frame)
 
-        self.encoder = StubEncoder(self.params_encoder, self.bits_in_frame)
+    def test_init(self) -> None:
+        """Test that the init properly stores all parameters."""
 
-    def test_no_code_blocks_calculation(self) -> None:
-        no_code_blocks = np.floor(
-            self.bits_in_frame / self.params_encoder.encoded_bits_n
-        )
+        self.assertIs(self.encoder.manager, self.manager, "Manager init failed")
 
-        self.assertEqual(no_code_blocks, self.encoder.code_blocks)
+    def test_manager(self) -> None:
+        """Encoder manager getter must return setter value."""
 
-    def test_no_bits_for_source_calculation(self) -> None:
-        no_bits = (np.floor(
-            self.bits_in_frame / self.params_encoder.encoded_bits_n
-        ) * self.params_encoder.data_bits_k)
+        manager = Mock()
+        self.encoder.manager = manager
+        self.assertIs(manager, self.encoder.manager, "Manager get / set failed")
 
-        self.assertEqual(
-            no_bits,
-            self.encoder.source_bits
-        )
+    def test_rate(self) -> None:
+        """Rate property check."""
+
+        expected_rate = 0.5
+        self.assertAlmostEquals(expected_rate, self.encoder.rate, "Rate produced unexpected value")
