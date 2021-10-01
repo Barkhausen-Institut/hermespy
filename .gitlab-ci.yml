@@ -27,9 +27,8 @@ wheel-linux:
 mirror-github:
   stage: deploy
   rules:
-    # Only mirror to Github when we are on a master branch and the commit is tagged
-    # with a version tag, i.e. v1.0.1
-    - if: '$CI_COMMIT_TAG =~ /^v.*$/ && $CI_COMMIT_BRANCH == "master"'
+    # Only mirror to Github when a version tag is added, i.e. v1.0.1
+    - if: '$CI_COMMIT_TAG =~ /^v.*$/'
   before_script:
     - apt-get update -qy && apt-get install git-lfs -qqy
     - git lfs install
