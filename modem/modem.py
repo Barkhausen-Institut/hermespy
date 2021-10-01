@@ -5,10 +5,10 @@ from enum import Enum
 from numpy import random as rnd
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, Node
+from math import ceil
 
-from parameters_parser.parameters_modem import ParametersModem
-from modem.coding.encoder_manager import EncoderManager
 from modem.precoding import Precoding
+from modem.coding import EncoderManager
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
 from channel.channel import Channel
@@ -16,7 +16,6 @@ from source.bits_source import BitsSource
 
 if TYPE_CHECKING:
     from scenario import Scenario
-    from beamformer import Beamformer
 
 
 class TransmissionMode(Enum):
@@ -27,10 +26,7 @@ class TransmissionMode(Enum):
     Tx = 2  # Transmit mode
 
 
-P = TypeVar('P', bound=ParametersModem)
-
-
-class Modem(Generic[P]):
+class Modem:
     """Implements a modem.
 
     The modem consists of an analog RF chain, a waveform generator, and can be used
@@ -45,7 +41,6 @@ class Modem(Generic[P]):
     __carrier_frequency: float
     __sampling_rate: float
     __linear_topology: bool
-    __beamformer: Beamformer
     __encoder_manager: EncoderManager
     __precoding: Precoding
     __bits_source: BitsSource
@@ -77,7 +72,6 @@ class Modem(Generic[P]):
         self.__carrier_frequency = 2.4e9
         self.__sampling_rate = 2 * 2.5e9
         self.__linear_topology = False
-        self.__beamformer = Beamformer(self)
         self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
         self.__precoding = Precoding()
@@ -146,6 +140,7 @@ class Modem(Generic[P]):
         """if node.beamformer.__class__ is not Beamformer:
             serialization['Beamformer'] = node.__beamformer"""
 
+        # return representer.represent_omap(cls.yaml_tag, serialization)
         return representer.represent_mapping(cls.yaml_tag, serialization)
 
     @property
@@ -183,24 +178,78 @@ class Modem(Generic[P]):
 
         pass
 
-    def send(self, drop_duration: float) -> np.ndarray:
+    def send(self, drop_duration: float = None) -> np.ndarray:
         """Returns an array with the complex baseband samples of a waveform generator.
 
         The signal may be distorted by RF impairments.
 
         Args:
-            drop_duration (float): Length of signal in seconds.
+            drop_duration (float, optional): Length of signal in seconds.
 
         Returns:
             np.ndarray:
                 Complex baseband samples, rows denoting transmitter antennas and
                 columns denoting samples.
         """
-        # coded_bits = self.encoder.encoder(data_bits)
+
+        # Use the global scenario drop duration by default
+        if drop_duration is None:
+            drop_duration = self.scenario.drop_duration
+
+        # Number of required samples over the whole drop duration
+        sample_count = int(drop_duration * self.sampling_rate)
+
+        # Sample distance in seconds
+        sample_time = self.sampling_rate**-1
+
+        # Collect MIMO parameters
+        num_streams = self.precoding.num_transmit_streams
+
+        # Collect frame parameters
+        frame_length = self.waveform_generator.frame_length
+        frame_bit_count = self.waveform_generator.frame_bit_count
+        num_frames = int(ceil(drop_duration / frame_length))        # Number of dedicated frames within drop_duration
+        frames_sample_count = int(num_frames * frame_length * self.sampling_rate)
+        frame_sample_count = int(frames_sample_count / num_frames)
+        frames_bit_count = frame_bit_count * num_frames             # Number of bits required to generate all frames
+
+        # Generate frame input bits
+        frame_bits = self.bits_source.get_bits(frames_bit_count)[0].reshape(num_frames, frame_bit_count)
+
+        # Generate frame sample timestamps
+        frame_timestamps = (sample_time * np.arange(frames_sample_count).reshape((num_frames, frame_sample_count))) % frame_length
+
+        # Generate samples
+        frame_samples = np.empty((num_frames, frame_sample_count), dtype=complex)
+        for frame_index in range(num_frames):   # TODO: Possible parallel computation
+            frame_samples[frame_index, :] = self.waveform_generator.create_frame()
+
+        # Collect encoder parameters
+        # encoder_block_bit_count = self.encoder_manager.num_input_bits
+        # encoder_block_count = int(ceil(frame_bit_count / self.encoder_manager.))
+        # encoder_input_bit_count = encoder_block_count * encoder_block_bit_count
+
+        current_frame_index = -1
+        frame_bits = np.empty(0, dtype=int)
+
+        for sample_index in range(sample_count):
+
+            timestamp = sample_index * sample_time       # Global drop sample timestamp
+            frame_timestamp = timestamp % frame_length   # Local frame sample timestamp
+            frame_index = int(timestamp / frame_length)  # Global frame index within this drop
+
+            # Generate a new set of frame bits every time a new frame is sampled
+            if current_frame_index < frame_index:
+
+                current_frame_index = frame_index
+
+                encoder_input_bits = self.bits_source.get_bits()
+                frame_bits = self.encoder_manager.encode()
+
+
         number_of_samples = int(
             np.ceil(
-                drop_duration *
-                self.sampling_rate))
+                ))
         timestamp = 0
         frame_index = 1
 
@@ -480,35 +529,6 @@ class Modem(Generic[P]):
         return self.__linear_topology
 
     @property
-    def beamformer(self) -> Beamformer:
-        """Access the modem's beamformer configuration.
-
-        Returns:
-            Beamformer:
-                Currently configured beamformer instance.
-            """
-
-        return self.__beamformer
-
-    def configure_beamformer(self, beamformer: Type[Beamformer], **kwargs) -> Beamformer:
-        """Configure this modem to a new type of beamformer.
-
-        Args:
-            beamformer (Type[Beamformer]):
-                The type of beamformer to be configured.
-
-            **kwargs:
-                The additional arguments required to initialize the `beamformer`.
-
-        Returns:
-            Beamformer:
-                A handle to the new type of `beamformer`.
-        """
-
-        self.__beamformer = beamformer(self, **kwargs)
-        return self.__beamformer
-
-    @property
     def num_antennas(self) -> int:
         """The number of physical antennas available to the modem.
 
@@ -522,20 +542,20 @@ class Modem(Generic[P]):
 
         return self.__topology.shape[0]
 
-    @property
-    def num_streams(self) -> int:
-        """The number of data streams generated by the modem.
-
-        The number of data streams is always less or equal to the number of available antennas `num_antennas`.
-
-        Returns:
-            int:
-                The number of data streams generated by the modem.
-        """
-
-        # For now, only beamforming influences the number of data streams.
-        # This might change in future!
-        return self.__beamformer.num_streams
+#    @property
+#    def num_streams(self) -> int:
+#        """The number of data streams generated by the modem.
+#
+#        The number of data streams is always less or equal to the number of available antennas `num_antennas`.
+#
+#        Returns:
+#            int:
+#                The number of data streams generated by the modem.
+#        """
+#
+#        # For now, only beamforming influences the number of data streams.
+#        # This might change in future!
+#        return self.__beamformer.num_streams
 
     @property
     def encoder_manager(self) -> EncoderManager:
@@ -626,6 +646,3 @@ class Modem(Generic[P]):
         """
 
         return self.__precoding
-
-
-from beamformer import Beamformer

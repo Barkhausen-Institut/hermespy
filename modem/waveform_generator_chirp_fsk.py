@@ -107,6 +107,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         }
 
         mapping = representer.represent_mapping(cls.yaml_tag, state)
+        #mapping = representer.represent_omap(cls.yaml_tag, state)
         mapping.value.extend(WaveformGenerator.to_yaml(representer, node).value)
 
         return mapping
@@ -130,6 +131,26 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         state = constructor.construct_mapping(node)
         return cls(**state)
+
+    @property
+    def frame_length(self) -> float:
+        """Length of one data frame in seconds.
+
+        Returns:
+            float: Frame length in seconds.
+        """
+
+        return self.chirp_duration * (self.num_data_chirps + self.num_pilot_chirps) + self.guard_interval
+
+    @property
+    def frame_bit_count(self) -> int:
+        """Number of bits required to generate a single data frame.
+
+        Returns:
+            int: Number of bits
+        """
+
+        return self.num_data_chirps + self.bits_per_symbol
 
     @property
     def chirp_duration(self) -> float:

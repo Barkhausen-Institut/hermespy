@@ -16,10 +16,10 @@ class StubEncoder(Encoder):
         self.__block_size = block_size
 
     def encode(self, bits: np.array) -> np.array:
-        return bits
+        return bits.repeat(2)
 
     def decode(self, encoded_bits: np.array) -> np.array:
-        return encoded_bits
+        return encoded_bits[::2]
 
     @property
     def bit_block_size(self) -> int:

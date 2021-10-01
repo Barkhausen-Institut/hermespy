@@ -122,12 +122,7 @@ class Precoding:
         """
 
         # Prepare the stream
-        if len(self.__precoders) < 1:
-            num_streams = self.__modem.num_antennas
-        else:
-            num_streams = self.__precoders[0].num_inputs
-
-        stream = output_stream.reshape((num_streams, -1))
+        stream = output_stream.reshape((self.num_transmit_streams, -1))
 
         for precoder in self.__precoders:
             stream = precoder.encode(stream)
@@ -154,6 +149,36 @@ class Precoding:
             input_stream = precoder.encode(input_stream)
 
         return input_stream
+
+    @property
+    def num_transmit_streams(self) -> int:
+        """The number of input streams during transmission.
+
+        Currently this is the number of modem antennas by default!
+
+        Returns:
+            int: The number of input streams.
+        """
+
+        if len(self.__precoders) < 1:
+            return self.__modem.num_antennas
+
+        self.__precoders[0].num_inputs
+
+    @property
+    def num_receive_streams(self) -> int:
+        """The number of output streams during reception.
+
+        Currently this is the number of modem antennas by default!
+
+        Returns:
+            int: The number of output
+        """
+
+        if len(self.__precoders) < 1:
+            return self.__modem.num_antennas
+
+        self.__precoders[0].num_outputs
 
     def get_outputs(self, precoder: Precoder) -> int:
         """Query the number output streams of a given precoder within a transmitter.

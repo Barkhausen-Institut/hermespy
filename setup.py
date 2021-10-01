@@ -14,7 +14,7 @@ ext_modules = [
 ]
 
 setup(
-    name="ldpc_binding",
+    name="hermespy",
     author="Tobias Kronauer",
     author_email="tobias.kronauer@bi-dd.de",
     description="A test project using pybind11",

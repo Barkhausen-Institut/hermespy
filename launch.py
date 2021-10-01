@@ -2,14 +2,14 @@ from scenario import Scenario
 from modem import TransmissionMode
 import numpy as np
 import scipy.constants as const
-from beamformer import ConventionalBeamformer, TransmissionDirection
 from source.bits_source import BitsSource
 from modem import Transmitter, Receiver
-from modem.coding import EncoderManager, Encoder
+from modem.coding import EncoderManager, Encoder, Interleaver, RepetitionEncoder
 from modem import RfChain
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
 from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from modem.precoding import Precoding, Precoder, DFT
+from beamformer import Beamformer
 from channel import Channel
 import matplotlib.pyplot as plt
 from ruamel.yaml import YAML, Node
@@ -32,23 +32,49 @@ receiverA = scenario.add_receiver(**modem_configuration)
 receiverB = scenario.add_receiver(**modem_configuration)
 
 transmitterA.waveform_generator = WaveformGeneratorChirpFsk()
+transmitterB.waveform_generator = WaveformGeneratorChirpFsk()
 transmitterA.precoding[0] = DFT()
+transmitterA.precoding[1] = Beamformer()
 receiverB.rf_chain.power_amplifier = PowerAmplifier()
-
+transmitterA.encoder_manager.add_encoder(Interleaver())
+transmitterA.encoder_manager.add_encoder(RepetitionEncoder())
 
 # Configure channels
 scenario.channel(transmitterA, receiverA).active = True
 scenario.channel(transmitterA, receiverB).active = True
 scenario.channel(transmitterB, receiverB).active = True
 
-# Add a conventional beamformer to transmitter A, steering towards transmitter B
-conventional_beamformer = transmitterA.configure_beamformer(ConventionalBeamformer, focused_modem=receiverA)
+# Drop
+scenario.init_drop()
+# signals = scenario.transmit()
+
 
 # Simulate a configuration dump
-yaml = YAML(typ='safe')
+yaml = YAML(typ='unsafe')
+yaml.default_flow_style = False
+yaml.compact(seq_seq=False, seq_map=False)
+yaml.encoding = None
+
+# def strip_python_tags(s):
+#     result = []
+#
+#     for line in s.splitlines():
+#
+#         idx = line.find(": !<")
+#         if idx > -1:
+#            line = line[:idx+1]
+#
+#        idx = line.find("- !<")
+#        if idx > -1:
+#            line = line[:idx+2] + line[idx+4:-1]
+#
+#       result.append(line)
+#
+#   return '\n'.join(result)
 
 serializable_classes = [Scenario, BitsSource, Transmitter, Receiver, EncoderManager, Encoder, RfChain, PowerAmplifier,
-                        ConventionalBeamformer, Channel, WaveformGeneratorChirpFsk, Precoding, Precoder, DFT]
+                        Beamformer, Channel, WaveformGeneratorChirpFsk, Precoding, Precoder,
+                        DFT, Interleaver, RepetitionEncoder]
 
 for serializable_class in serializable_classes:
     yaml.register_class(serializable_class)
@@ -60,3 +86,10 @@ scenarioImport = yaml.load(stream.getvalue())
 stream.flush()
 yaml.dump(scenarioImport, stream)
 print(stream.getvalue())
+
+test = """
+!Scenario
+Modems:
+"""
+#testImport = yaml.load(test)
+#print(testImport)

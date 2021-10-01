@@ -1,14 +1,13 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Type
+from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 from enum import Enum
 import numpy as np
 import scipy.constants as const
 from scipy import sin, cos
 import matplotlib.pyplot as plt
-from abc import abstractmethod
 
-if TYPE_CHECKING:
-    from modem import Modem
+from modem.precoding import Precoding, Precoder
 
 
 class TransmissionDirection(Enum):
@@ -21,42 +20,124 @@ class TransmissionDirection(Enum):
     Tx = 2
 
 
-class Beamformer:
+class Beamformer(Precoder):
     """Base class for antenna array steering weight calculation.
 
     Caution: Beamforming is only applicable to spatial system models.
     """
 
-    __modem: Modem              # Modem linked to this beamformer
+    yaml_tag = 'Beamformer'
     __center_frequency: float   # Assumed center frequency of the steered RF signal.
 
-    def __init__(self, modem: Modem,
+    def __init__(self,
+                 precoding: Precoding = None,
                  center_frequency: float = 0.0):
         """Class initialization.
 
         Args:
-            modem (Modem):
-                Modem instance this beamformer is linked to.
+            precoding (Precoding, optional):
+                The precoding configuration this beamformer belongs to.
 
             center_frequency (float, optional):
                 The center frequency in Hz of the RF-signal to be steered.
         """
 
-        self.__modem = modem
+        Precoder.__init__(self, precoding)
         self.center_frequency = center_frequency
 
-    @property
-    def modem(self) -> Modem:
-        """Access the modem instance this beamformer is linked to.
+    @classmethod
+    def to_yaml(cls: Type[Beamformer], representer: SafeRepresenter, node: Beamformer) -> Node:
+        """Serialize a `Beamformer` to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Beamformer):
+                The `Beamformer` instance to be serialized.
 
         Returns:
-            Modem:
-                A handle to the modem instance this beamformer is linked to.
+            Node:
+                The serialized YAML node.
         """
 
-        return self.__modem
+        return representer.represent_scalar(cls.yaml_tag, "")
 
-    @abstractmethod
+    @classmethod
+    def from_yaml(cls: Type[Beamformer], constructor: SafeConstructor, node: Node) -> Beamformer:
+        """Recall a new `Beamformer` from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Beamformer` serialization.
+
+        Returns:
+            Beamformer:
+                Newly created `Beamformer` instance.
+        """
+
+        return cls()
+
+    def encode(self, output_stream: np.matrix) -> np.matrix:
+        """Add beam-forming weights to a data stream before transmission.
+
+        Args:
+            output_stream (np.matrix):
+                The data streams feeding into the `Beamformer` to be encoded.
+
+        Returns:
+            np.matrix:
+                The weighted data streams.
+                The first matrix dimension is the number of transmit antennas,
+                the second dimension the number of symbols transmitted per antenna.
+        """
+        pass
+
+    def decode(self, input_stream: np.matrix) -> np.matrix:
+        """Add inverse beam-forming weights to a data stream after reception.
+
+        Args:
+            input_stream (np.matrix):
+                The symbol streams feeding into the `Beamformer` to be decoded.
+                The first matrix dimension is the number of symbols per sensor,
+                the second dimension the number of antennas.
+
+        Returns:
+            np.matrix:
+                The decoded data streams.
+                The first matrix dimension is the number of streams,
+                the second dimension the number of symbols.
+        """
+        pass
+
+    def num_inputs(self) -> int:
+        """The required number of input symbol streams for transmit beam-forming.
+
+        The default count for most beam-formers is one.
+
+        Returns:
+            int:
+                The number of symbol streams.
+        """
+
+        return 1
+
+    def num_outputs(self) -> int:
+        """The generated number of output symbol streams after receive beam-forming.
+
+        The default count for most beam-formers is one.
+
+        Returns:
+            int:
+                The number of symbol streams.
+        """
+
+        return 1
+
     def weights(self, direction: TransmissionDirection, azimuth: float, elevation: float) -> np.array:
         """Compute the beamforming weights towards a desired direction.
 
@@ -78,7 +159,14 @@ class Beamformer:
                 Each column within the weight matrix may only contain one non-zero entry.
         """
 
-        return np.identity(self.__modem.topology.shape[0], dtype=complex)
+        if TransmissionDirection == TransmissionDirection.Tx:
+            return np.identity(self.precoding.get_outputs(self), dtype=complex)
+
+        elif TransmissionDirection == TransmissionDirection.Rx:
+            return np.identity(self.precoding.get_inputs(self), dtype=complex)
+
+        else:
+            raise RuntimeError("Unknown transmission direction")
 
     def gain(self, direction: TransmissionDirection, azimuth: float, elevation: float, weights: np.ndarray) -> complex:
         """Compute the complex gain coefficient towards a specific steering angle.
@@ -145,7 +233,6 @@ class Beamformer:
                                                                           cos(azimuth) * cos(elevation)])
 
     @property
-    @abstractmethod
     def num_streams(self) -> int:
         """The number of streams available after beamforming.
 

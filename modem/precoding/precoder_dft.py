@@ -51,7 +51,7 @@ class DFT(Precoder):
 
     @classmethod
     def from_yaml(cls: Type[DFT], constructor: SafeConstructor, node: Node) -> DFT:
-        """Recall a new `DFT` precoder to YAML.
+        """Recall a new `DFT` precoder from YAML.
 
         Args:
             constructor (SafeConstructor):

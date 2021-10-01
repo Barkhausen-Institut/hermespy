@@ -1,19 +1,17 @@
 from __future__ import annotations
 import numpy as np
 from typing import List, Tuple, Type, TYPE_CHECKING
-from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
-from ruamel.yaml.comments import CommentedMap as ordereddict
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from collections.abc import Iterable
 
-from parameters_parser.parameters_scenario import ParametersScenario
-from parameters_parser.parameters_general import ParametersGeneral
 from parameters_parser.parameters_channel import ParametersChannel
 from simulator_core.random_streams import RandomStreams
 import simulator_core.tools.constants as constants
 from source.bits_source import BitsSource
 
 from channel.multipath_fading_channel import MultipathFadingChannel
-from channel.quadriga_channel import QuadrigaChannel
-from channel.quadriga_interface import QuadrigaInterface
+# from channel.quadriga_channel import QuadrigaChannel
+# from channel.quadriga_interface import QuadrigaInterface
 from channel.noise import Noise
 from channel.rx_sampler import RxSampler
 
@@ -46,24 +44,35 @@ class Scenario:
 
     """
 
-    yaml_tag = 'Scenario'
+    yaml_tag = u'Scenario'
     __transmitters: List[Transmitter]
     __receivers: List[Receiver]
     __channels: np.matrix
+    __drop_duration: float
 
-    def __init__(self) -> None:
+    def __init__(self,
+                 drop_duration: float = None) -> None:
+        """Object initialization.
+
+        Args:
+            drop_duration (float, optional): The default drop duration in seconds.
+        """
 
         self.__transmitters = []
         self.__receivers = []
         self.__channels = np.ndarray((0, 0), dtype=Channel)
+        self.__drop_duration = 1e-6
 
         self.sources: List[BitsSource] = []
         self.rx_samplers: List[RxSampler] = []
 
         self.noise: List[Noise] = []
 
+        if drop_duration is not None:
+            self.drop_duration = drop_duration
+
     @classmethod
-    def to_yaml(cls: Type[Scenario], representer: RoundTripRepresenter, node: Scenario) -> Node:
+    def to_yaml(cls: Type[Scenario], representer: SafeRepresenter, node: Scenario) -> Node:
         """Serialize a scenario object to YAML.
 
         Args:
@@ -81,13 +90,15 @@ class Scenario:
 
         serialization = {
             'Modems': [*node.__transmitters, *node.__receivers],
-            'Channels': node.__channels.flatten().tolist()
+            'Channels': node.__channels.flatten().tolist(),
+            'drop_duration': node.__drop_duration
         }
 
+        # return representer.represent_omap(cls.yaml_tag, serialization)
         return representer.represent_mapping(cls.yaml_tag, serialization)
 
     @classmethod
-    def from_yaml(cls: Type[Scenario], constructor: RoundTripConstructor, node: Node) -> Scenario:
+    def from_yaml(cls: Type[Scenario], constructor: SafeConstructor, node: Node) -> Scenario:
         """Recall a new `Scenario` instance from YAML.
 
         Args:
@@ -107,6 +118,7 @@ class Scenario:
 
         constructor.add_multi_constructor("Channel", Channel.from_yaml)
         state_scenario = constructor.construct_mapping(node, deep=True)
+        # state_scenario = constructor.construct_yaml_omap(node)
 
         modems = state_scenario.pop('Modems', None)
         channels = state_scenario.pop('Channels', None)
@@ -114,25 +126,27 @@ class Scenario:
         scenario.__init__(**state_scenario)
 
         # Integrate modems
-        for modem in modems:
+        if isinstance(modems, Iterable):
+            for modem in modems:
 
-            if isinstance(modem, Transmitter):
-                scenario.__transmitters.append(modem)
+                if isinstance(modem, Transmitter):
+                    scenario.__transmitters.append(modem)
 
-            elif isinstance(modem, Receiver):
-                scenario.__receivers.append(modem)
+                elif isinstance(modem, Receiver):
+                    scenario.__receivers.append(modem)
 
-            else:
-                raise RuntimeWarning("Unknown modem type encountered")
+                else:
+                    raise RuntimeWarning("Unknown modem type encountered")
 
         # Integrate channels
         scenario.__channels = np.array(
             [[Channel(transmitter, receiver) for receiver in scenario.__receivers]
              for transmitter in scenario.__transmitters], dtype=object)
 
-        for channel, position in channels:
-            scenario.__channels[position[0], position[1]] = channel
-            channel.move_to(scenario.__transmitters[position[0]], scenario.receivers[position[1]])
+        if isinstance(modems, Iterable):
+            for channel, position in channels:
+                scenario.__channels[position[0], position[1]] = channel
+                channel.move_to(scenario.__transmitters[position[0]], scenario.receivers[position[1]])
 
     def _create_channels(self) -> List[List[Channel]]:
         """Creates channels according to parameters specification.
@@ -510,11 +524,11 @@ class Scenario:
 
             raise ValueError("The provided modem handle was not registered with this scenario")
 
-    def transmit(self, drop_duration: float) -> List[np.ndarray]:
+    def transmit(self, drop_duration: float = None) -> List[np.ndarray]:
         """Simulated signals emitted by transmitters.
 
         Args:
-            drop_duration:
+            drop_duration (float, optional):
                 Length of simulated transmission in seconds.
 
         Returns:
@@ -525,6 +539,9 @@ class Scenario:
                 On invalid drop lengths.
         """
 
+        if drop_duration is None:
+            drop_duration = self.drop_duration
+
         if drop_duration <= 0.0:
             raise ValueError("Drop duration must be greater or equal to zero")
 
@@ -533,6 +550,32 @@ class Scenario:
             transmitted_signals.append(transmitter.send(drop_duration))
 
         return transmitted_signals
+
+    @property
+    def drop_duration(self) -> float:
+        """The scenario's default drop duration in seconds.
+
+        Returns:
+            float: The default drop duration.
+        """
+
+        return self.__drop_duration
+
+    @drop_duration.setter
+    def drop_duration(self, duration: float) -> None:
+        """Modify the scenario's default drop duration.
+
+        Args:
+            duration (float): New drop duration in seconds.
+
+        Raises:
+            ValueError: If `duration` is less than zero.
+        """
+
+        if duration < 0.0:
+            raise ValueError("Drop duration must be greater or equal to zero")
+
+        return self.__drop_duration
 
 
 from modem import Modem, Transmitter, Receiver

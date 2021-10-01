@@ -1,6 +1,5 @@
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node
-from ruamel.yaml.comments import CommentedOrderedMap
 from typing import Type, List, TYPE_CHECKING
 
 from modem import Modem
