@@ -138,15 +138,18 @@ class Scenario:
                 else:
                     raise RuntimeWarning("Unknown modem type encountered")
 
-        # Integrate channels
+        # Add default channel matrix
         scenario.__channels = np.array(
             [[Channel(transmitter, receiver) for receiver in scenario.__receivers]
              for transmitter in scenario.__transmitters], dtype=object)
 
-        if isinstance(modems, Iterable):
-            for channel, position in channels:
-                scenario.__channels[position[0], position[1]] = channel
-                channel.move_to(scenario.__transmitters[position[0]], scenario.receivers[position[1]])
+        # Integrate configured channels into the default matrix
+        if isinstance(channels, Iterable):
+            for channel, transmitter_index, receiver_index in channels:
+
+                channel.transmitter = scenario.transmitters[transmitter_index]
+                channel.receiver = scenario.receivers[receiver_index]
+                scenario.__channels[transmitter_index, receiver_index] = channel
 
     def _create_channels(self) -> List[List[Channel]]:
         """Creates channels according to parameters specification.
