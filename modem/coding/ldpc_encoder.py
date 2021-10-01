@@ -9,7 +9,7 @@ import numpy as np
 from modem.coding.encoder import Encoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 try:
-    import ldpc_binding
+    from modem.coding import ldpc_binding
 except ImportError:
     pass
 

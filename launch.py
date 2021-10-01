@@ -41,7 +41,8 @@ transmitterA.encoder_manager.add_encoder(RepetitionEncoder())
 
 # Configure channels
 scenario.channel(transmitterA, receiverA).active = True
-scenario.channel(transmitterA, receiverB).active = True
+scenario.channel(transmitterA, receiverB).active = False
+scenario.channel(transmitterB, receiverA).active = False
 scenario.channel(transmitterB, receiverB).active = True
 
 # Drop
