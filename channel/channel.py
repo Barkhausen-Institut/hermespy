@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Type, List, Tuple, TYPE_CHECKING
+from typing import Type, List, Tuple, TYPE_CHECKING, Optional
 from abc import abstractmethod
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
@@ -24,34 +24,45 @@ class Channel:
     """
 
     yaml_tag = 'Channel'
-    __active: bool = False
-    __transmitter: Transmitter = None
-    __receiver: Receiver = None
-    __gain: float = 1.0
+    __active: bool
+    __transmitter: Optional[Transmitter]
+    __receiver: Optional[Receiver]
+    __gain: float
 
     def __init__(self,
-                 transmitter: Transmitter,
-                 receiver: Receiver,
+                 transmitter: Transmitter = None,
+                 receiver: Receiver = None,
                  active: bool = None,
                  gain: float = None) -> None:
         """Class constructor.
 
         Args:
-            transmitter (Modem):
+            transmitter (Transmitter, optional):
                 The modem transmitting into this channel.
 
-            receiver (Modem):
+            receiver (Receiver, optional):
                 The modem receiving from this channel.
 
             active (bool, optional):
                 Channel activity flag.
+                Activated by default.
 
             gain (float, optional):
-                Channel gain.
+                Channel power gain.
+                1.0 by default.
         """
 
-        self.__transmitter = transmitter
-        self.__receiver = receiver
+        # Default parameters
+        self.__active = True
+        self.__transmitter = None
+        self.__receiver = None
+        self.__gain = 1.0
+
+        if transmitter is not None:
+            self.transmitter = transmitter
+
+        if receiver is not None:
+            self.receiver = receiver
 
         if active is not None:
             self.active = active
@@ -87,7 +98,7 @@ class Channel:
 
     @classmethod
     def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node)\
-            -> Tuple[Channel, List[int]]:
+            -> Tuple[Channel, int, int]:
         """Recall a new `Channel` instance from YAML.
 
         Args:
@@ -106,19 +117,19 @@ class Channel:
                 Newly created `Channel` instance. The internal references to modems will be `None` and need to be
                 initialized by the `scenario` YAML constructor.
 
-            List:
-                Channel position within the scenarios channel matrix.
+            int:
+                Transmitter index of modem transmitting into this channel.
+
+            int:
+                Receiver index of modem receiving from this channel.
             """
 
         indices = tag_suffix.split('_')
         if indices[0] == '':
             indices.pop(0)
 
-        transmitter = Transmitter.__new__(Transmitter)
-        receiver = Receiver.__new__(Receiver)
         state = constructor.construct_mapping(node, CommentedOrderedMap)
-
-        return Channel(transmitter, receiver, **state), [int(indices[0]), int(indices[1])]
+        return Channel(**state), int(indices[0]), int(indices[1])
 
     def move_to(self, transmitter: Transmitter, receiver: Receiver) -> None:
         """Move the channel to a new matrix position.
@@ -165,6 +176,22 @@ class Channel:
 
         return self.__transmitter
 
+    @transmitter.setter
+    def transmitter(self, new_transmitter: Transmitter) -> None:
+        """Configure the modem transmitting into this channel.
+
+        Args:
+            new_transmitter (Transmitter): The transmitter to be configured.
+
+        Raises:
+            RuntimeError: If a transmitter is already configured.
+        """
+
+        if self.__transmitter is not None:
+            raise RuntimeError("Overwriting a transmitter configuration is not supported")
+
+        self.__transmitter = new_transmitter
+
     @property
     def receiver(self) -> Receiver:
         """Access the modem receiving from this channel.
@@ -174,6 +201,22 @@ class Channel:
         """
 
         return self.__receiver
+
+    @receiver.setter
+    def receiver(self, new_receiver: Receiver) -> None:
+        """Configure the modem receiving from this channel.
+
+        Args:
+            new_receiver (Receiver): The receiver to be configured.
+
+        Raises:
+            RuntimeError: If a receiver is already configured.
+        """
+
+        if self.__receiver is not None:
+            raise RuntimeError("Overwriting a receiver configuration is not supported")
+
+        self.__receiver = new_receiver
 
     @property
     def gain(self) -> float:
