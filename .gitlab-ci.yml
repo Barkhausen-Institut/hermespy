@@ -3,6 +3,7 @@ image: python:3.7
 stages:
   - test
   - build
+  - deploy
 
 test:
   stage: test
@@ -22,6 +23,27 @@ wheel-linux:
     - mkdir wheel/
   script:
     - pip wheel -v . --wheel-dir wheel/
-  artifacts:
-    paths:
-      - wheel
+
+mirror-github:
+  stage: deploy
+  rules:
+    # Only mirror to Github when we are on a master branch and the commit is tagged
+    # with a version tag, i.e. v1.0.1
+    - if: '$CI_COMMIT_TAG =~ /^v.*$/ && $CI_COMMIT_BRANCH == "master"'
+  before_script:
+    - apt-get update -qy && apt-get install git-lfs -qqy
+    - git lfs install
+    - 'which ssh-agent || ( apt-get install openssh-client -qqy )'
+    - eval `ssh-agent -s`
+    - echo "${GITHUB_DEPLOY_SSH}" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - git config --global user.email "${CI_EMAIL}"
+    - git config --global user.name "${CI_USERNAME}"
+    - git remote add github git@github.com:Barkhausen-Institut/hermespy.git
+    - git pull github main
+    - git checkout main
+    - git merge master
+    - git push github main
