@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import Type, List, Optional, TYPE_CHECKING
 import numpy as np
-from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
+from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
+from math import ceil
 
 if TYPE_CHECKING:
     from modem import Modem
@@ -31,7 +32,7 @@ class EncoderManager:
             self.modem = modem
 
     @classmethod
-    def to_yaml(cls: Type[EncoderManager], representer: RoundTripRepresenter, node: EncoderManager) -> Node:
+    def to_yaml(cls: Type[EncoderManager], representer: SafeRepresenter, node: EncoderManager) -> Node:
         """Serialize an EncoderManager to YAML.
 
         Args:
@@ -53,7 +54,7 @@ class EncoderManager:
         return representer.represent_sequence(cls.yaml_tag, node.encoders)
 
     @classmethod
-    def from_yaml(cls: Type[EncoderManager], constructor: RoundTripConstructor, node: Node) -> EncoderManager:
+    def from_yaml(cls: Type[EncoderManager], constructor: SafeConstructor, node: Node) -> EncoderManager:
         """Recall a new `EncoderManager` instance from YAML.
 
         Args:
@@ -125,15 +126,26 @@ class EncoderManager:
     def encode(self, data_bits: np.array) -> np.array:
         """Encode a stream of source bits.
 
+        By default, the input `data_bits` will be padded with zeros
+        to match the next integer multiple of the expected `bit_block_size`.
+
+        Args:
+            data_bits (np.array): The data bits to be encoded.
+
         Returns:
             np.array: The encoded source bits.
         """
 
-        encoded_bits: List[np.array] = data_bits
-        for encoder in self._encoders:
-            encoded_bits = encoder.encode(encoded_bits)
+        bits: np.ndarray = data_bits.copy()
 
-        return encoded_bits
+        for encoder in self._encoders:
+
+            num_input_blocks = int(ceil(bits.shape[0] / encoder.bit_block_size))
+            # num_padding_bits = input_bits.shape[0] % encoder.bit_block_size
+
+            bits = encoder.encode(bits)
+
+        return bits
 
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
         decoded_bits: List[np.array] = encoded_bits
@@ -153,7 +165,15 @@ class EncoderManager:
         if len(self._encoders) < 1:
             return 1
 
-        return self._encoders[0].bit_block_size
+        block_size = self._encoders[0].bit_block_size
+
+        for encoder_index in range(1, (len(self._encoders))):
+
+            repetitions = int(self.encoders[encoder_index].bit_block_size /
+                              self.encoders[encoder_index-1].code_block_size)
+            block_size *= repetitions
+
+        return block_size
 
     @property
     def code_block_size(self) -> int:
@@ -166,7 +186,7 @@ class EncoderManager:
         if len(self._encoders) < 1:
             return 1
 
-        return int(self._encoders[0].bit_block_size * self.rate)
+        return self.encoders[-1].code_block_size
 
     def __execution_order(self) -> List[Encoder]:
         """Sort the encoders into an order of execution.

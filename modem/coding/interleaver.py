@@ -188,7 +188,7 @@ class Interleaver(Encoder):
         if num_blocks < 1:
             raise ValueError("The number of interleaved sections must be at least one")
 
-        self.interleave_blocks = num_blocks
+        self.__interleave_blocks = num_blocks
 
     @property
     def rate(self) -> float:

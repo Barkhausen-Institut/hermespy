@@ -82,7 +82,8 @@ class Channel:
         }
 
         transmitter_index, receiver_index = node.indices
-        return representer.represent_mapping(cls.yaml_tag + "_{}_{}".format(transmitter_index, receiver_index), state)
+        yaml = representer.represent_mapping(cls.yaml_tag + "_{}_{}".format(transmitter_index, receiver_index), state)
+        return yaml
 
     @classmethod
     def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node)\
@@ -299,6 +300,3 @@ class Channel:
 
         impulse_responses = np.expand_dims(impulse_responses, axis=3)
         return impulse_responses * self.gain
-
-
-from modem import Transmitter, Receiver

@@ -39,8 +39,6 @@ class LdpcEncoder(Encoder):
         if self.code_blocks < 1:
             raise ValueError("Code block must not be longer than bits in frame")
 
-
-
     @property
     def source_bits(self) -> int:
         return self.code_blocks * self.data_bits_k

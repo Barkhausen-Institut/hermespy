@@ -88,6 +88,7 @@ class WaveformGenerator(ABC):
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
+        #return representer.represent_omap(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[WaveformGenerator], constructor: SafeConstructor, node: Node) -> WaveformGenerator:
@@ -178,6 +179,26 @@ class WaveformGenerator(ABC):
             raise ValueError("Modulation order must be a positive power of two")
 
         self.__modulation_order = order
+
+    @property
+    @abstractmethod
+    def frame_length(self) -> float:
+        """Length of one data frame in seconds.
+
+        Returns:
+            float: Frame length in seconds.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def frame_bit_count(self) -> int:
+        """Number of bits required to generate a single data frame.
+
+        Returns:
+            int: Number of bits
+        """
+        ...
 
     @property
     def max_frame_length(self) -> float:
