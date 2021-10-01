@@ -16,6 +16,8 @@ from modem.rf_chain import RfChain
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
+from modem.coding.encoder_manager import EncoderManager
+from modem.coding.encoder_factory import EncoderFactory
 from source.bits_source import BitsSource
 from channel.channel import Channel
 
@@ -43,14 +45,15 @@ class Modem(Generic[P]):
         self.param = param
         self.source = source
 
-        self.encoder: Encoder
+        self.encoder_factory = EncoderFactory()
+        self.encoder_manager = EncoderManager()
 
-        if self.param.encoding_type.upper() == "REPETITION":
-            self.encoder = RepetitionEncoder(self.param.encoding_params, self.param.technology.bits_in_frame)
-        elif self.param.encoding_type.upper() == "LDPC":
-            self.encoder = LdpcEncoder(self.param.encoding_params, self.param.technology.bits_in_frame)
-        else:
-            self.encoder = RepetitionEncoder(ParametersRepetitionEncoder(), self.param.technology.bits_in_frame)
+        for encoding_type, encoding_params in zip(
+                            self.param.encoding_type, self.param.encoding_params):
+            encoder: Encoder = self.encoder_factory.get_encoder(
+                encoding_params, encoding_type,
+                self.param.technology.bits_in_frame)
+            self.encoder_manager.add_encoder(encoder)
 
         self.waveform_generator: Any
         if isinstance(param.technology, ParametersPskQam):
@@ -102,9 +105,9 @@ class Modem(Generic[P]):
 
         while timestamp < number_of_samples:
             data_bits_per_frame = self.source.get_bits(
-                self.encoder.source_bits)
+                self.encoder_manager.encoders[0].source_bits)
 
-            encoded_bits_per_frame = self.encoder.encode(data_bits_per_frame)
+            encoded_bits_per_frame = self.encoder_manager.encode(data_bits_per_frame)
             encoded_bits_per_frame_flattened = np.array([], dtype=int)
             for block in encoded_bits_per_frame:
                 encoded_bits_per_frame_flattened = np.append(
@@ -192,20 +195,20 @@ class Modem(Generic[P]):
                 timestamp_in_samples += initial_size - rx_signal.shape[1]
 
             if not bits_rx[0] is None:
-                bits_rx_decoded = self.encoder.decode(bits_rx)
+                bits_rx_decoded = self.encoder_manager.decode(bits_rx)
                 all_bits.extend(bits_rx_decoded)
         return all_bits
 
     def get_bit_energy(self) -> float:
         """Returns the average bit energy of the modulated signal.
         """
-        R = self.encoder.data_bits_k / self.encoder.encoded_bits_n
+        R = self.encoder_manager.code_rate
         return self.waveform_generator.get_bit_energy() * self.power_factor / R
 
     def get_symbol_energy(self) -> float:
         """Returns the average symbol energy of the modulated signal.
         """
-        R = self.encoder.data_bits_k / self.encoder.encoded_bits_n
+        R = self.encoder_manager.code_rate
         return self.waveform_generator.get_symbol_energy() * self.power_factor / R
 
     def set_channel(self, channel: Channel):
