@@ -5,6 +5,7 @@ import numpy as np
 
 from parameters_parser.parameters_psk_qam import ParametersPskQam
 from parameters_parser.parameters_tx_modem import ParametersTxModem
+from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
 from modem.modem import Modem
 from source.bits_source import BitsSource
@@ -51,6 +52,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
 
         self.modem_qpsk_params = ParametersTxModem()
         self.modem_qpsk_params.technology = self.params_qpsk
+        self.modem_qpsk_params.encoding_params = [ParametersRepetitionEncoder()]
 
         self.waveform_generator_qpsk = WaveformGeneratorPskQam(self.params_qpsk)
         self.modem_qpsk = Modem(self.modem_qpsk_params, self.source_qpsk, rng)
@@ -100,6 +102,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
 
         self.modem_qam_params = ParametersTxModem()
         self.modem_qam_params.technology = self.params_qam
+        self.modem_qam_params.encoding_params = [ParametersRepetitionEncoder()]
 
         self.waveform_generator_qam = WaveformGeneratorPskQam(self.params_qam)
         self.modem_qam = Modem(self.modem_qam_params, self.source_qam, rng)

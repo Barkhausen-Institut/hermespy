@@ -6,27 +6,48 @@ multiple transmit and receive modems, which may operate at different carrier fre
 simulating individual transmission links, HermesPy allows the analysis of both co-channel and
 adjacent-channel interference among different communication systems.
 
-You can find an introductory video here: https://www.barkhauseninstitut.org/opensource/hermespy
+You can find an introductory video here: https://www.barkhauseninstitut.org/en/results/hermespy
 
 # Features
 
 The curent release "Platform Release" serves as a platform for joint development. Beside some core functionality, that can be found beside the [release plan](FEATURES.md), its main focus is to provide a software architecture that can be easily extended.
 
 # Installation
+There are two supported ways to install hermespy on your system:
 
-Ensure that [git lfs](https://git-lfs.github.com/) is installed. Further, C++14 needs to be installed.
+#### From PyPI
+This is the recommended method for end-users.
+Hermespy is registered as an [official package](https://pypi.org/project/hermespy/) in PyPI.
+We intend to directly serve prebuilt binaries for Windows, most Linux distributions and MacOS.
+Install the package via
 
+##### Windows users:
+- `conda create -n <envname> python=3.7`
+- `conda activate <envname>`
+- `conda install pip`
+- `pip install hermespy`
+
+##### Linux users
+- `python -m venv env`
+- `. env/bin/activate`
+- `pip install hermespy`
+
+### From Source
+This is the recommended method for developers.
+You can build the package from scratch at any system by cloning the repository via
 - `git clone <this-repo>`
 - Change to `hermespy/`
 
-**Windows users:**
-- `conda create -n <envname> python=3.7` (can be omitted for ubuntu users)
-- `conda activate <envname>` (can be omitted for ubuntu users)
-- `conda install pip` (can be omitted for ubuntu users)
+Install it via
+
+##### Windows users
+- `conda create -n <envname> python=3.7`
+- `conda activate <envname>`
+- `conda install pip`
 - `pip install -r requirements.txt`
 - `pip install -e .`
 
-**Ubuntu users**:
+##### Linux users
 - Ensure `python` is linked to python3.7
 - `python -m venv env`
 - `. env/bin/activate`
@@ -35,7 +56,7 @@ Ensure that [git lfs](https://git-lfs.github.com/) is installed. Further, C++14 
  
 
 [Quadriga channel model v2.1.30](https://quadriga-channel-model.de/) is supported by HermesPy.
-For it to be used, some preliminary steps need to be taken for it to be used. It can be run with either Octave or matlab. For **octave**, under Windows, you need to set the environemnt variable that tells python where to find octave-cli executable by calling
+For it to be used, some preliminary steps need to be taken. It can be run with either Octave or matlab. For **octave**, under Windows, you need to set the environemnt variable that tells python where to find octave-cli executable by calling
 
 ```
 setx PATH "%PATH%;<path-to-octave-cli>
@@ -95,7 +116,7 @@ If you want to use it, choose `use_binding = True` in the `settings_ldpc_encoder
 
 * [Andre Noll Barreto](https://gitlab.com/anollba)
 * [Tobias Kronauer](https://github.com/tokr-bit)
-
+* [Jan Adler](https://github.com/adlerjan)
 
 # Copyright
 Copyright (C) 2021 Barkhausen Institut gGmbH
