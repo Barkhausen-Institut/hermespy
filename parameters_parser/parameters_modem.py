@@ -6,6 +6,7 @@ from typing import List, Any
 
 import numpy as np
 
+from parameters_parser.parameters_crc_encoder import ParametersCrcEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
@@ -128,20 +129,20 @@ class ParametersModem(ABC):
             self.encoding_params.append(ParametersRepetitionEncoder())
             self.encoding_params[-1].encoded_bits_n = 1
             self.encoding_params[-1].data_bits_k = 1
-            self.crc_bits = 0
         else:
             encoding_params_file_path = os.path.join(
                 self.dir_encoding_parameters, self._encoder_param_file)
             self._read_encoding_file(encoding_params_file_path)
-        if self.crc_bits < 0:
-            raise ValueError(f"Number of crc_bits must be positive, currently it is {self.crc_bits}.")
-        elif self.crc_bits >= self.encoding_params.data_bits_k:
-            raise ValueError("Number of crc bits must be smaller than data bits of encoder.")
 
         self.encoding_params.append(
             ParametersBlockInterleaver(
                 self.block_interleaver_m, self.block_interleaver_n))
         self.encoding_type.append("BLOCK_INTERLEAVER")
+
+        self.encoding_params.append(
+            ParametersCrcEncoder(
+                self.crc_bits))
+        self.encoding_type.append("CRC_BITS")
 
         if self._rf_chain_param_file:
             if self._rf_chain_param_file.upper() == "NONE":
