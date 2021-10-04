@@ -75,7 +75,7 @@ class TestModem(unittest.TestCase):
 
         encoder_factory = EncoderFactory()
         encoder = encoder_factory.get_encoder(
-            params_encoder, "repetition", self.params_psk_am.bits_in_frame)
+            params_encoder, "repetition", self.params_psk_am.bits_in_frame, np.random.RandomState())
         encoder_manager = EncoderManager()
         encoder_manager.add_encoder(encoder)
         self.modem.encoder_manager = encoder_manager
