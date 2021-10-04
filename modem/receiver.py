@@ -20,17 +20,16 @@ class Receiver(Modem):
     @classmethod
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
 
-        scenario = [scene for node, scene in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
-
         state = constructor.construct_mapping(node, CommentedOrderedMap)
         bits_source = state.pop(BitsSource.yaml_tag, None)
 
         args = dict((k.lower(), v) for k, v in state.items())
-        receiver = Receiver(scenario, **args)
-        yield receiver
+        receiver = Receiver(**args)
 
         if bits_source is not None:
             receiver.bits_source = bits_source
+
+        return receiver
 
     @property
     def index(self) -> int:

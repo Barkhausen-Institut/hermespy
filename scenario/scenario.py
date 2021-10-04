@@ -113,22 +113,19 @@ class Scenario:
                 Newly created `Scenario` instance.
             """
 
-        scenario = cls.__new__(cls)
-        yield scenario
-
         constructor.add_multi_constructor("Channel", Channel.from_yaml)
-        state_scenario = constructor.construct_mapping(node, deep=True)
-        # state_scenario = constructor.construct_yaml_omap(node)
+        state_scenario = constructor.construct_non_recursive_object(node)
 
         modems = state_scenario.pop('Modems', None)
         channels = state_scenario.pop('Channels', None)
 
-        scenario.__init__(**state_scenario)
+        scenario = cls(**state_scenario)
 
         # Integrate modems
         if isinstance(modems, Iterable):
             for modem in modems:
 
+                # Integrate modem into scenario
                 if isinstance(modem, Transmitter):
                     scenario.__transmitters.append(modem)
 
@@ -137,6 +134,9 @@ class Scenario:
 
                 else:
                     raise RuntimeWarning("Unknown modem type encountered")
+
+                # Register scenario instance to the modems
+                modem.scenario = scenario
 
         # Add default channel matrix
         scenario.__channels = np.array(
@@ -150,6 +150,8 @@ class Scenario:
                 channel.transmitter = scenario.transmitters[transmitter_index]
                 channel.receiver = scenario.receivers[receiver_index]
                 scenario.__channels[transmitter_index, receiver_index] = channel
+
+        return scenario
 
     def _create_channels(self) -> List[List[Channel]]:
         """Creates channels according to parameters specification.
@@ -477,7 +479,8 @@ class Scenario:
         """
 
         transmitter_index = len(self.__transmitters)
-        transmitter = Transmitter(self, **kwargs)
+        kwargs['scenario'] = self
+        transmitter = Transmitter(**kwargs)
 
         self.__transmitters.append(transmitter)
 

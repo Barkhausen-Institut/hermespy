@@ -18,7 +18,7 @@ This module implements the main interface for loading and dumping HermesPy confi
 """
 
 from __future__ import annotations
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML, SafeConstructor, MappingNode, SequenceNode
 from typing import Any, Set
 from io import TextIOBase, StringIO
 
@@ -57,6 +57,32 @@ class Factory:
         for serializable_class in SerializableClasses:
             self.__yaml.register_class(serializable_class)
 
+        # Add constructors for untagged classes
+        self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
+        self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
+
+    @staticmethod
+    def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Any:
+
+        tag = node.value[0][0].value
+
+        if tag in constructor.yaml_constructors:
+            return constructor.yaml_constructors[tag](constructor, node.value[0][1])
+
+        else:
+            return constructor.construct_mapping(node, deep=True)
+
+    @staticmethod
+    def __construct_sequence(constructor: SafeConstructor, node: SequenceNode) -> Any:
+
+        tag = node.value[0].value
+
+        if tag in constructor.yaml_constructors:
+            return constructor.yaml_constructors[tag](constructor, node.value[0])
+
+        else:
+            return constructor.construct_sqeuence(node, deep=True)
+
     def from_folder(self, path: str) -> Simulation:
         """Load a configuration from a folder.
 
@@ -88,8 +114,7 @@ class Factory:
             Simulation: A configured simulation.
         """
 
-        stream = StringIO()
-        stream.read(config)
+        stream = StringIO(config)
         return self.from_stream(stream)
 
     def to_str(self, *args: Any) -> str:
@@ -102,7 +127,7 @@ class Factory:
             str: String containing full YAML configuration.
 
         Raises:
-            ValueError: If objects in ``*args`` are unregistered classes.
+            RepresenterError: If objects in ``*args`` are unregistered classes.
         """
 
         stream = StringIO()
@@ -128,7 +153,7 @@ class Factory:
             *args (Any): Configuration objects to be dumped.
 
         Raises:
-            ValueError: If objects in ``*args`` are unregistered classes.
+            RepresenterError: If objects in ``*args`` are unregistered classes.
         """
         pass
 
@@ -152,7 +177,8 @@ class Factory:
             *args (Any): Configuration objects to be dumped.
 
         Raises:
-            ValueError: If objects in ``*args`` are unregistered classes.
+            RepresenterError: If objects in ``*args`` are unregistered classes.
         """
 
-        self.__yaml.dump(args, stream)
+        for serializable_object in args:
+            self.__yaml.dump(serializable_object, stream)
