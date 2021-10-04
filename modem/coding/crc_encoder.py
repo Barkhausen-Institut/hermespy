@@ -6,11 +6,7 @@ import numpy as np
 
 
 class CrcEncoder(Encoder):
-    """This class serves as an abstract class for all encoders.
-
-    All deriving classes must overwrite the `encode(data_bits)` and
-    `decode(encoded_bits)` function.
-    """
+    """Implements CRC Encoder only for throughput calculations."""
 
     def __init__(self, params: ParametersEncoder,
                  bits_in_frame: int,
