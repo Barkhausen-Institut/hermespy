@@ -22,7 +22,7 @@ class TestEncoder(unittest.TestCase):
         self.params_encoder.data_bits_k = 2
         self.bits_in_frame = 100
 
-        self.encoder = StubEncoder(self.params_encoder, self.bits_in_frame)
+        self.encoder = StubEncoder(self.params_encoder, self.bits_in_frame, None)
 
     def test_no_code_blocks_calculation(self) -> None:
         no_code_blocks = np.floor(
