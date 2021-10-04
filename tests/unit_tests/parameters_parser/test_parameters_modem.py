@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock
 from typing import Any
 
 import numpy as np
@@ -78,6 +79,21 @@ class TestParametersModem(unittest.TestCase):
             ValueError,
             lambda: self.stubbed_params_modem.check_params()
         )
+
+
+    def test_crc_bits_set_too_zero_if_no_encoder(self) -> None:
+        self.stubbed_params_modem.encoding_type = ""
+        self.stubbed_params_modem.encoding_params = Mock()
+        self.stubbed_params_modem.check_params()
+        self.assertEqual(self.stubbed_params_modem.crc_bits, 0)
+
+    def test_crc_bits_set_too_zero_if_no_encoder_file(self) -> None:
+        self.stubbed_params_modem._encoder_param_file = "NONE"
+        self.stubbed_params_modem.encoding_params = Mock()
+        self.stubbed_params_modem.check_params()
+        self.assertEqual(self.stubbed_params_modem.crc_bits, 0)
+
+
 class StubParametersModem(ParametersModem):
     def read_params(self, section: Any) -> None:
         super().read_params(section)
