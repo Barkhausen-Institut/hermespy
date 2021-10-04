@@ -50,8 +50,8 @@ class PseudoRandomGenerator:
             self.__forward_x2()
 
         # Store the initial queues in order to reset the generator to n = 0
-        self.__initial_queue_x1 = self.__queue_x1
-        self.__initial_queue_x2 = self.__queue_x2
+        self.__initial_queue_x1 = self.__queue_x1.copy()
+        self.__initial_queue_x2 = self.__queue_x2.copy()
 
     def generate(self) -> int:
         """Generate the next bit within the generator sequence.
@@ -87,8 +87,8 @@ class PseudoRandomGenerator:
         This implies reverting the queues back to their original state (at generator position n = 0).
         """
 
-        self.__queue_x1 = self.__initial_queue_x1
-        self.__queue_x2 = self.__initial_queue_x2
+        self.__queue_x1 = self.__initial_queue_x1.copy()
+        self.__queue_x2 = self.__initial_queue_x2.copy()
 
     def __forward_x1(self) -> int:
 
