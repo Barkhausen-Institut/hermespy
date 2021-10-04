@@ -1,7 +1,7 @@
 from typing import List
 from collections import deque
 import numpy as np
-from .encoder import Encoder, ParametersEncoder
+from .encoder import Encoder
 from parameters_parser.parameters_scrambler import ParametersScrambler
 
 
@@ -113,15 +113,13 @@ class Scrambler3GPP(Encoder):
 
     factory_tag: str = "SCRAMBLER_3GPP"
     __randomGenerator: PseudoRandomGenerator
-    __codewords: List[np.array]
 
     def __init__(self, params: ParametersScrambler, bits_in_frame: int) -> None:
 
         # Init base class (Encoder)
         super(Scrambler3GPP, self).__init__(params, bits_in_frame)
 
-        self.__randomGenerator = PseudoRandomGenerator(np.random.randint(2, size=31))
-        self.__codewords = list()
+        self.__randomGenerator = PseudoRandomGenerator(params.seed)
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
         """This method encodes the incoming bits.
@@ -137,19 +135,11 @@ class Scrambler3GPP(Encoder):
                 to a block containing a code word.
         """
 
-        # Warn if the encoder overwrites an unused set of codewords
-        if len(self.__codewords) > 0:
-            raise RuntimeWarning("Unused codewords will be overwritten since the encoder re-encodes before decoding")
-
-        self.__codewords.clear()
-        codes = list()
-
+        codes = []
         for block in data_bits:
 
             codeword = self.__randomGenerator.generate_sequence(block.shape[0])
             code = (block + codeword) % 2
-
-            self.__codewords.append(codeword)
             codes.append(code)
 
         return codes
@@ -167,25 +157,22 @@ class Scrambler3GPP(Encoder):
                 Each list element is one block with bits created by the BitsSource.
         """
 
-        # Make sure that enough codewords have been buffered
-        if len(self.__codewords) < len(encoded_bits):
-            raise RuntimeError("Codes require more codewords than available")
+        data = []
+        for block in encoded_bits:
 
-        data = list()
-
-        for n, block in enumerate(encoded_bits):
-            data.append((block + self.__codewords[n]) % 2)
-
-        self.__codewords.clear()
+            codeword = self.__randomGenerator.generate_sequence(block.shape[0])
+            bits = (block + codeword) % 2
+            data.append(bits)
 
         return data
 
 
 class Scrambler80211a(Encoder):
-    """This class represents a scrambler in the 802.11a standard.
+    """This class represents a scrambler in the `802.11a`_ standard.
 
-    See section 17.3.5.4 of IEEE Standard 802.11a-1999 for details.
-    https://ieeexplore.ieee.org/document/815305
+    See section 17.3.5.4 of IEEE Standard `802.11a`_-1999 for details.
+
+    .. _802.11a: https://ieeexplore.ieee.org/document/815305
     """
 
     factory_tag: str = "SCRAMBLER_80211A"
@@ -214,6 +201,9 @@ class Scrambler80211a(Encoder):
         Args:
             value(np.array):
                 The new seed. Must be an array of dimension 7 containing only soft bits.
+
+        Raises:
+            ValueError: If `value` does not contain exactly 7 bits.
         """
 
         if value.shape[0] != 7:

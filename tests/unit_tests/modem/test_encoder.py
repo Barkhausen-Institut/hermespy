@@ -17,20 +17,6 @@ class StubEncoder(Encoder):
         return bits
 
 
-class TestAbstractEncoder:
-
-    @property
-    @abstractmethod
-    def encoder(self) -> Encoder:
-        ...
-
-    def test_coding(self) -> None:
-        """Test the expected en- and subsequent decoding behaviour for each encoder."""
-
-        data = [np.random.randint(2, size=31)]
-        assert_frame_equality(data, self.encoder.decode(self.encoder.encode(data)))
-
-
 class TestEncoder(unittest.TestCase):
     def setUp(self) -> None:
         self.params_encoder = Mock()
