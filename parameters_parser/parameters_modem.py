@@ -145,8 +145,7 @@ class ParametersModem(ABC):
             self._get_minimum_data_bits_k(self.encoding_params)
         )
         self.encoding_params.append(params_crc)
-
-        self.encoding_type.append("CRC_BITS")
+        self.encoding_type.append("CRC_ENCODER")
 
         if self._rf_chain_param_file:
             if self._rf_chain_param_file.upper() == "NONE":
