@@ -1,32 +1,40 @@
 from typing import Dict
 
+import numpy as np
+
 from parameters_parser.parameters_encoder import ParametersEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
+from parameters_parser.parameters_crc_encoder import ParametersCrcEncoder
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
 from modem.coding.interleaver import BlockInterleaver
+from modem.coding.crc_encoder import CrcEncoder
 
 
 class EncoderFactory:
     """Responible for creating an Encoder instance which is not contained by the factory."""
 
-    def get_encoder(self, encoding_params: ParametersEncoder, type: str, bits_in_frame: int) -> Encoder:
+    def get_encoder(self, encoding_params: ParametersEncoder,
+                          type: str, bits_in_frame: int,
+                          rng: np.random.RandomState) -> Encoder:
         type = type.upper()
         self._check_validity_parameters(encoding_params, type)
 
         encoder: Encoder
         if type == "REPETITION":
-            encoder = RepetitionEncoder(encoding_params, bits_in_frame)
+            encoder = RepetitionEncoder(encoding_params, bits_in_frame, rng)
         elif type == "LDPC":
-            encoder = LdpcEncoder(encoding_params, bits_in_frame)
+            encoder = LdpcEncoder(encoding_params, bits_in_frame, rng)
         elif type == "BLOCK_INTERLEAVER":
-            encoder = BlockInterleaver(encoding_params, bits_in_frame)
+            encoder = BlockInterleaver(encoding_params, bits_in_frame, rng)
+        elif type == "CRC_ENCODER":
+            encoder = CrcEncoder(encoding_params, bits_in_frame, rng)
         else:
-            encoder = RepetitionEncoder(ParametersRepetitionEncoder(), bits_in_frame)
+            encoder = RepetitionEncoder(ParametersRepetitionEncoder(), bits_in_frame, None)
         return encoder
 
     def _check_validity_parameters(self, params: ParametersEncoder, type: str) -> None:
@@ -34,7 +42,8 @@ class EncoderFactory:
         VALID_COMBINATIONS: Dict[str, ParametersEncoder] = {
             'REPETITION': ParametersRepetitionEncoder,
             'LDPC': ParametersLdpcEncoder,
-            'BLOCK_INTERLEAVER': ParametersBlockInterleaver
+            'BLOCK_INTERLEAVER': ParametersBlockInterleaver,
+            'CRC_ENCODER': ParametersCrcEncoder
         }
 
         if type.upper() in VALID_COMBINATIONS.keys():

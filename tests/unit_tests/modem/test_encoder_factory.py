@@ -1,14 +1,17 @@
 import unittest
 from unittest.mock import (Mock, patch)
+from modem.coding.crc_encoder import CrcEncoder
 
 from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
+from parameters_parser.parameters_crc_encoder import ParametersCrcEncoder
 from modem.coding.encoder_factory import EncoderFactory
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.interleaver import BlockInterleaver
+from modem.coding.crc_encoder import CrcEncoder
 
 
 class TestEncoderFactory(unittest.TestCase):
@@ -18,18 +21,18 @@ class TestEncoderFactory(unittest.TestCase):
 
     def test_repetition_encoder_return(self) -> None:
         encoder = self.factory.get_encoder(
-            ParametersRepetitionEncoder(), "Repetition", 10)
+            ParametersRepetitionEncoder(), "Repetition", 10, None)
         self.assertTrue(isinstance(encoder, RepetitionEncoder))
 
     def test_ldpc_encoder_return(self) -> None:
-        with patch.object(LdpcEncoder, "__init__", lambda x, y, z: None):
+        with patch.object(LdpcEncoder, "__init__", lambda w, x, y, z: None):
             encoder = self.factory.get_encoder(
-                ParametersLdpcEncoder(), "ldpc", 10)
+                ParametersLdpcEncoder(), "ldpc", 10, None)
             self.assertTrue(isinstance(encoder, LdpcEncoder))
 
     def test_default_encoder_is_repetition(self) -> None:
         encoder = self.factory.get_encoder(
-            ParametersRepetitionEncoder(), "bla", 10
+            ParametersRepetitionEncoder(), "bla", 10, None
         )
         self.assertTrue(isinstance(encoder, RepetitionEncoder))
         self.assertTrue(encoder.data_bits_k, 1)
@@ -37,6 +40,12 @@ class TestEncoderFactory(unittest.TestCase):
 
     def test_block_interleaver_return(self) -> None:
         encoder = self.factory.get_encoder(
-            ParametersBlockInterleaver(4,3), "block_interleaver", 30
+            ParametersBlockInterleaver(4,3), "block_interleaver", 30, None
         )
         self.assertTrue(isinstance(encoder, BlockInterleaver))
+
+    def test_crc_encoder_return(self) -> None:
+        encoder = self.factory.get_encoder(
+            ParametersCrcEncoder(), "crc_encoder", 30, None
+        )
+        self.assertTrue(isinstance(encoder, CrcEncoder))
