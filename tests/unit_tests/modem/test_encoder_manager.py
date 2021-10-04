@@ -10,8 +10,10 @@ from modem.coding.encoder_manager import EncoderManager
 
 class StubEncoder(Encoder):
 
-    def __init__(self, params: ParametersEncoder, bits_in_frame: int) -> None:
-        super().__init__(params, bits_in_frame)
+    def __init__(self, params: ParametersEncoder,
+                       bits_in_frame: int,
+                       rng: np.random.RandomState) -> None:
+        super().__init__(params, bits_in_frame, rng)
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
         return data_bits
@@ -30,8 +32,8 @@ class TestEncoderManager(unittest.TestCase):
         self.params_encoder2.data_bits_k = 6
         self.params_encoder2.encoded_bits_n = 7
 
-        self.encoder1 = StubEncoder(self.params_encoder1, 100)
-        self.encoder2 = StubEncoder(self.params_encoder2, 100)
+        self.encoder1 = StubEncoder(self.params_encoder1, 100, None)
+        self.encoder2 = StubEncoder(self.params_encoder2, 100, None)
 
         self.encoder_manager = EncoderManager()
 
