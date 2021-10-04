@@ -1,5 +1,5 @@
+from simulator_core import Factory
 from scenario import Scenario
-from modem import TransmissionMode
 import numpy as np
 import scipy.constants as const
 from source.bits_source import BitsSource
@@ -84,13 +84,7 @@ stream = StringIO()
 yaml.dump(scenario, stream)
 print(stream.getvalue())
 scenarioImport = yaml.load(stream.getvalue())
-stream.flush()
-yaml.dump(scenarioImport, stream)
-print(stream.getvalue())
 
-test = """
-!Scenario
-Modems:
-"""
-#testImport = yaml.load(test)
-#print(testImport)
+factory = Factory()
+dump = factory.to_str(scenarioImport)
+print(dump)
