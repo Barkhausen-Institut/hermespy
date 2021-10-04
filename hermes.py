@@ -33,7 +33,6 @@ import sys
 import argparse
 from typing import List
 
-from parameters_parser.parameters import Parameters
 from simulator_core.random_streams import RandomStreams
 from scenario.scenario import Scenario
 from simulator_core.drop_loop import DropLoop
@@ -79,10 +78,6 @@ def hermes(args: List[str]) -> None:
 
     shutil.copytree(input_parameters_dir, results_dir)
 
-    #########################
-    # initialize parameters
-    parameters: Parameters = Parameters(results_dir)
-    parameters.read_params()
 
     ######################################
     # initialize random number generation
