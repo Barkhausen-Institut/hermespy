@@ -9,13 +9,10 @@ from parameters_parser.parameters_modem import ParametersModem
 from parameters_parser.parameters_psk_qam import ParametersPskQam
 from parameters_parser.parameters_chirp_fsk import ParametersChirpFsk
 from parameters_parser.parameters_ofdm import ParametersOfdm
-from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
 from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from modem.waveform_generator_ofdm import WaveformGeneratorOfdm
 from modem.rf_chain import RfChain
-from modem.coding.repetition_encoder import RepetitionEncoder
-from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
 from modem.coding.encoder_manager import EncoderManager
 from modem.coding.encoder_factory import EncoderFactory
@@ -57,13 +54,6 @@ class Modem(Generic[P]):
                 encoding_params, encoding_type,
                 self.param.technology.bits_in_frame)
             self.encoder_manager.add_encoder(encoder)
-
-        # create crc encoder
-        params = ParametersEncoder()
-        params.encoded_bits_n = self.encoder.data_bits_k
-        params.data_bits_k = self.encoder.data_bits_k - self.param.crc_bits
-        self.crc_encoder = CrcEncoder(
-            params, self.param.technology.bits_in_frame, rng_source)
 
         self.waveform_generator: Any
         if isinstance(param.technology, ParametersPskQam):
