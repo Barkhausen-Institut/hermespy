@@ -25,7 +25,7 @@ class LdpcEncoder(Encoder):
 
     def __init__(self, params: ParametersLdpcEncoder,
                        bits_in_frame: int,
-                       rng: np.random.RandomState) -> None:
+                       rng: np.random.RandomState=None) -> None:
         super().__init__(params, bits_in_frame, rng)
         self.params = params
         self.bits_in_frame = bits_in_frame
@@ -74,7 +74,7 @@ class LdpcEncoder(Encoder):
                 no_bits += self.encoded_bits_n
 
         if (self.bits_in_frame - no_bits) > 0:
-            encoded_words.append(self.rng(2, size=self.bits_in_frame - no_bits))
+            encoded_words.append(np.zeros(2, size=self.bits_in_frame - no_bits))
 
         return encoded_words
 

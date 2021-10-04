@@ -9,7 +9,7 @@ class BlockInterleaver(Encoder):
 
     def __init__(self, params: ParametersBlockInterleaver,
                        bits_in_frame: int,
-                       rng: np.random.RandomState) -> None:
+                       rng: np.random.RandomState=None) -> None:
         super().__init__(params, bits_in_frame, rng)
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
