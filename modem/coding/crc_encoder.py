@@ -27,14 +27,14 @@ class CrcEncoder(Encoder):
             encoded_bits = data_bits
         else:
             for block in data_bits:
-                while block.size > 0:
+                num_subblocks = int(np.ceil(block.size / self.data_bits_k))
+
+                for n in range(num_subblocks):
                     encoded_block = np.append(
-                        block[:self.data_bits_k], 
-                        self.rng.randint(2, size=self.encoded_bits_n - self.data_bits_k))
+                        block[n*self.data_bits_k:(n+1)*self.data_bits_k],
+                        self.rng.randint(2, size=self.encoded_bits_n-self.data_bits_k)
+                    )
                     encoded_bits.append(encoded_block)
-
-                    block = block[self.data_bits_k:]
-
             encoded_bits.append(np.zeros(
                     self.bits_in_frame 
                     - self.code_blocks * self.params.encoded_bits_n))
