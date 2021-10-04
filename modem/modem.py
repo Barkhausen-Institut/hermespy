@@ -40,7 +40,8 @@ class Modem(Generic[P]):
     """
 
     def __init__(self, param: P, source: BitsSource,
-                 rng_hardware: rnd.RandomState, rng_source: rnd.RandomState,
+                 rng_hardware: rnd.RandomState,
+                 rng_source: rnd.RandomState,
                  tx_modem=None) -> None:
         self.param = param
         self.source = source
@@ -52,7 +53,8 @@ class Modem(Generic[P]):
                             self.param.encoding_type, self.param.encoding_params):
             encoder: Encoder = self.encoder_factory.get_encoder(
                 encoding_params, encoding_type,
-                self.param.technology.bits_in_frame)
+                self.param.technology.bits_in_frame,
+                rng_source)
             self.encoder_manager.add_encoder(encoder)
 
         self.waveform_generator: Any
