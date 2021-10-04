@@ -21,13 +21,13 @@ Hermespy is registered as an [official package](https://pypi.org/project/hermesp
 We intend to directly serve prebuilt binaries for Windows, most Linux distributions and MacOS.
 Install the package via
 
-#####Windows users:
-- `conda create -n <envname> python=3.7` (can be omitted for ubuntu users)
-- `conda activate <envname>` (can be omitted for ubuntu users)
-- `conda install pip` (can be omitted for ubuntu users)
+##### Windows users:
+- `conda create -n <envname> python=3.7`
+- `conda activate <envname>`
+- `conda install pip`
 - `pip install hermespy`
 
-#####Linux users
+##### Linux users
 - `python -m venv env`
 - `. env/bin/activate`
 - `pip install hermespy`
@@ -40,14 +40,14 @@ You can build the package from scratch at any system by cloning the repository v
 
 Install it via
 
-#####Windows users
+##### Windows users
 - `conda create -n <envname> python=3.7`
 - `conda activate <envname>`
 - `conda install pip`
 - `pip install -r requirements.txt`
 - `pip install -e .`
 
-#####Linux users
+##### Linux users
 - Ensure `python` is linked to python3.7
 - `python -m venv env`
 - `. env/bin/activate`
