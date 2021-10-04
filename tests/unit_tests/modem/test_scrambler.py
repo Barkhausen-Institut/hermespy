@@ -1,10 +1,43 @@
 import unittest
 import numpy as np
+from numpy.testing import assert_array_equal
 
 from .test_encoder import TestAbstractEncoder
-from modem.coding.scrambler import Scrambler3GPP, Scrambler80211a
+from modem.coding.scrambler import Scrambler3GPP, Scrambler80211a, PseudoRandomGenerator
 from parameters_parser.parameters_scrambler import ParametersScrambler
 from .utils import assert_frame_equality
+
+
+class TestPseudoRandomGenerator(unittest.TestCase):
+    """Test the pseudo random numbers generator."""
+
+    def setUp(self) -> None:
+
+        init_sequence = np.zeros(4)
+        offset = 0
+        self.expected_output = np.array([1, 0, 0, 0, 0, 0, 0, 1], dtype=int)
+        self.generator = PseudoRandomGenerator(init_sequence, offset)
+
+    def test_generate(self) -> None:
+        """Test the first generated bit."""
+
+        for bit in self.expected_output:
+            self.assertEquals(self.generator.generate(), bit, "Unexpected generator result")
+
+    def test_generate_sequence(self) -> None:
+        """Test the sequence generation."""
+
+        assert_array_equal(self.expected_output, self.generator.generate_sequence(self.expected_output.shape[0]),
+                           "Unexpected sequence generated")
+
+    def test_reset(self) -> None:
+        """Test the generator reset behaviour."""
+
+        _ = self.generator.generate_sequence(1000)
+        self.generator.reset()
+
+        assert_array_equal(self.expected_output, self.generator.generate_sequence(self.expected_output.shape[0]),
+                           "Unexpected sequence generated after reset")
 
 
 class TestScrambler3GPP(TestAbstractEncoder, unittest.TestCase):
