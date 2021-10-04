@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="hermespy",
-    version="0.1.1",
+    version="0.1.2",
     author="Tobias Kronauer",
     author_email="tobias.kronauer@barkhauseninstitut.org",
     description="The Heterogeneous Mobile Radio Simulator",
