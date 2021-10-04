@@ -139,9 +139,13 @@ class ParametersModem(ABC):
                 self.block_interleaver_m, self.block_interleaver_n))
         self.encoding_type.append("BLOCK_INTERLEAVER")
 
-        self.encoding_params.append(
-            ParametersCrcEncoder(
-                self.crc_bits))
+
+        params_crc = ParametersCrcEncoder(
+            self.crc_bits,
+            self._get_minimum_data_bits_k(self.encoding_params)
+        )
+        self.encoding_params.append(params_crc)
+
         self.encoding_type.append("CRC_BITS")
 
         if self._rf_chain_param_file:
@@ -151,6 +155,13 @@ class ParametersModem(ABC):
                 self.rf_chain.read_params(os.path.join(param_path, self._rf_chain_param_file))
         else:
             self.rf_chain = None
+
+    def _get_minimum_data_bits_k(self, encoding_params: List[ParametersEncoder]) -> int:
+        p = min(
+            self.encoding_params,
+            key=lambda params: params.data_bits_k)
+
+        return p.data_bits_k
 
     def _read_encoding_file(self, encoding_params_file_path: str) -> None:
         config = configparser.ConfigParser()
