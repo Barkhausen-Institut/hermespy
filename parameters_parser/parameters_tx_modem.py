@@ -29,6 +29,7 @@ class ParametersTxModem(ParametersModem):
 
         self._technology_param_file = section.get("technology_param_file")
         self.carrier_frequency = section.getfloat("carrier_frequency")
+        self.crc_bits = section.getint("crc_bits", 1)
 
     def check_params(self, param_path: str = "") -> None:
         try:
@@ -66,6 +67,6 @@ class ParametersTxModem(ParametersModem):
             tech_parameters = ParametersOfdm(number_tx_antennas=self.number_of_antennas)
         else:
             raise ValueError("invalid technology")
-
+        
         tech_parameters.read_params(filename)
         self.technology = tech_parameters

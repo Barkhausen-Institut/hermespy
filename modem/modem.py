@@ -1,3 +1,4 @@
+from parameters_parser.parameters_encoder import ParametersEncoder
 from typing import List
 
 from numpy import random as rnd
@@ -18,6 +19,7 @@ from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
 from modem.coding.encoder_manager import EncoderManager
 from modem.coding.encoder_factory import EncoderFactory
+from modem.coding.crc_encoder import CrcEncoder
 from source.bits_source import BitsSource
 from channel.channel import Channel
 
@@ -41,7 +43,8 @@ class Modem(Generic[P]):
     """
 
     def __init__(self, param: P, source: BitsSource,
-                 random_number_gen: rnd.RandomState, tx_modem=None) -> None:
+                 rng_hardware: rnd.RandomState, rng_source: rnd.RandomState,
+                 tx_modem=None) -> None:
         self.param = param
         self.source = source
 
@@ -55,6 +58,13 @@ class Modem(Generic[P]):
                 self.param.technology.bits_in_frame)
             self.encoder_manager.add_encoder(encoder)
 
+        # create crc encoder
+        params = ParametersEncoder()
+        params.encoded_bits_n = self.encoder.data_bits_k
+        params.data_bits_k = self.encoder.data_bits_k - self.param.crc_bits
+        self.crc_encoder = CrcEncoder(
+            params, self.param.technology.bits_in_frame, rng_source)
+
         self.waveform_generator: Any
         if isinstance(param.technology, ParametersPskQam):
             self.waveform_generator = WaveformGeneratorPskQam(param.technology)
@@ -62,7 +72,7 @@ class Modem(Generic[P]):
             self.waveform_generator = WaveformGeneratorChirpFsk(param.technology)
         elif isinstance(param.technology, ParametersOfdm):
             self.waveform_generator = WaveformGeneratorOfdm(
-                param.technology, random_number_gen)
+                param.technology, rng_hardware)
         else:
             raise ValueError(
                 "invalid technology in constructor of Modem class")
@@ -71,7 +81,7 @@ class Modem(Generic[P]):
         self.power_factor = 1.  # if this is a transmit modem, signal is scaled to the desired power, depending on the
         # current power factor
 
-        self.rf_chain = RfChain(param.rf_chain, self.waveform_generator.get_power(), random_number_gen,)
+        self.rf_chain = RfChain(param.rf_chain, self.waveform_generator.get_power(), rng_hardware,)
 
 
     @property

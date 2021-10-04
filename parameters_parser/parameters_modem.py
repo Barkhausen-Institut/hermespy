@@ -58,6 +58,7 @@ class ParametersModem(ABC):
         self.device_type = ""
         self.cov_matrix = np.array([])
         self.antenna_spacing = 1.
+        self.crc_bits = 0
 
     @abstractmethod
     def read_params(self, section: configparser.SectionProxy) -> None:
@@ -70,6 +71,7 @@ class ParametersModem(ABC):
         self.block_interleaver_m = section.getint("block_interleaver_m", fallback=1)
         self.block_interleaver_n = section.getint("block_interleaver_n", fallback=1)
 
+        self.crc_bits = section.getint("crc_bits", fallback=0)
         tx_power_db = section.getfloat("tx_power_db", fallback=0.)
         if tx_power_db == 0:
             self.tx_power = 0.
@@ -120,15 +122,21 @@ class ParametersModem(ABC):
         if self.antenna_spacing <= 0:
             raise ValueError('antenna spacing must be > 0.')
 
+
         # read encoder parameters file
         if self._encoder_param_file.upper() == "NONE":
             self.encoding_params.append(ParametersRepetitionEncoder())
             self.encoding_params[-1].encoded_bits_n = 1
             self.encoding_params[-1].data_bits_k = 1
+            self.crc_bits = 0
         else:
             encoding_params_file_path = os.path.join(
                 self.dir_encoding_parameters, self._encoder_param_file)
             self._read_encoding_file(encoding_params_file_path)
+        if self.crc_bits < 0:
+            raise ValueError(f"Number of crc_bits must be positive, currently it is {self.crc_bits}.")
+        elif self.crc_bits >= self.encoding_params.data_bits_k:
+            raise ValueError("Number of crc bits must be smaller than data bits of encoder.")
 
         self.encoding_params.append(
             ParametersBlockInterleaver(
