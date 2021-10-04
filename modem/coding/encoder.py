@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List
-from parameters_parser.parameters_encoder import ParametersEncoder
 
 import numpy as np
+
+from parameters_parser.parameters_encoder import ParametersEncoder
 
 
 class Encoder(ABC):
@@ -12,14 +13,18 @@ class Encoder(ABC):
     `decode(encoded_bits)` function.
     """
 
-    def __init__(self, params: ParametersEncoder, bits_in_frame: int) -> None:
+    def __init__(self, params: ParametersEncoder,
+                       bits_in_frame: int,
+                       rng: np.random.RandomState) -> None:
         """
         Args:
             params (ParametersEncoder): Parameters necessary for Encoder.
             bits_in_frame (int): Number of bits that fit into one frame.
+            rng (RandomState): RNG for random numbers if required.
         """
         self.params = params
         self.bits_in_frame = bits_in_frame
+        self.rng = rng
 
     @abstractmethod
     def encode(self, data_bits: List[np.array]) -> List[np.array]:

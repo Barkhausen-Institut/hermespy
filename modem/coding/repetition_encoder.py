@@ -17,8 +17,9 @@ class RepetitionEncoder(Encoder):
     """
 
     def __init__(self, params: ParametersRepetitionEncoder,
-                 bits_in_frame: int) -> None:
-        super().__init__(params, bits_in_frame)
+                 bits_in_frame: int,
+                 rng: np.random.RandomState) -> None:
+        super().__init__(params, bits_in_frame, rng)
         self.params.data_bits_k = 1
 
         if self.code_blocks < 1:
