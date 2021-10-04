@@ -49,42 +49,13 @@ scenario.channel(transmitterB, receiverB).active = True
 scenario.init_drop()
 # signals = scenario.transmit()
 
-
-# Simulate a configuration dump
-yaml = YAML(typ='unsafe')
-yaml.default_flow_style = False
-yaml.compact(seq_seq=False, seq_map=False)
-yaml.encoding = None
-
-# def strip_python_tags(s):
-#     result = []
-#
-#     for line in s.splitlines():
-#
-#         idx = line.find(": !<")
-#         if idx > -1:
-#            line = line[:idx+1]
-#
-#        idx = line.find("- !<")
-#        if idx > -1:
-#            line = line[:idx+2] + line[idx+4:-1]
-#
-#       result.append(line)
-#
-#   return '\n'.join(result)
-
-serializable_classes = [Scenario, BitsSource, Transmitter, Receiver, EncoderManager, Encoder, RfChain, PowerAmplifier,
-                        Beamformer, Channel, WaveformGeneratorChirpFsk, Precoding, Precoder,
-                        DFT, Interleaver, RepetitionEncoder]
-
-for serializable_class in serializable_classes:
-    yaml.register_class(serializable_class)
-
-stream = StringIO()
-yaml.dump(scenario, stream)
-print(stream.getvalue())
-scenarioImport = yaml.load(stream.getvalue())
-
+# Print scenario serialization
 factory = Factory()
-dump = factory.to_str(scenarioImport)
-print(dump)
+dump = factory.to_str(scenario)
+dump = """Scenario:
+    Modems:
+        - Transmitter
+"""
+
+load = factory.from_str(dump)
+print(load)

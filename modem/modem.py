@@ -34,7 +34,7 @@ class Modem:
     """
 
     yaml_tag = 'Modem'
-    __scenario: Scenario
+    __scenario: Optional[Scenario]
     __position: np.array
     __orientation: np.array
     __topology: np.ndarray
@@ -48,7 +48,7 @@ class Modem:
     __rf_chain: RfChain
 
     def __init__(self,
-                 scenario: Scenario,
+                 scenario: Scenario = None,
                  position: np.array = None,
                  orientation: np.array = None,
                  topology: np.ndarray = None,
@@ -68,7 +68,7 @@ class Modem:
             topology (np.ndarray, optional)
         """
 
-        self.__scenario = scenario
+        self.__scenario = None
         self.__carrier_frequency = 2.4e9
         self.__sampling_rate = 2 * 2.5e9
         self.__linear_topology = False
@@ -77,6 +77,9 @@ class Modem:
         self.__precoding = Precoding()
         self.__waveform_generator = None
         self.__rf_chain = RfChain()
+
+        if scenario is not None:
+            self.scenario = scenario
 
         if position is not None:
             self.position = position
@@ -150,9 +153,33 @@ class Modem:
         Returns:
             Scenario:
                 The referenced scenario.
+
+        Raises:
+            RuntimeError: If the modem is currently floating.
         """
 
+        if self.__scenario is None:
+            raise RuntimeError("Error trying to access the scenario of a floating modem")
+
         return self.__scenario
+
+    @scenario.setter
+    def scenario(self, scenario: Scenario) -> None:
+        """Attach the modem to a specific scenario.
+
+        This can only be done once to a floating modem.
+
+        Args:
+            scenario (Scenario): The scenario this modem should be attached to.
+
+        Raises:
+            RuntimeError: If the modem is already attached to a scenario.
+        """
+
+        if self.__scenario is not None:
+            raise RuntimeError("Error trying to modify the scenario of an already attached modem")
+
+        self.__scenario = scenario
 
     @property
     @abstractmethod

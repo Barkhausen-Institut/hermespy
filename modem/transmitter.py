@@ -1,6 +1,6 @@
 from __future__ import annotations
-from ruamel.yaml import SafeConstructor, Node
-from typing import Type, List, TYPE_CHECKING
+from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
+from typing import Type, List, TYPE_CHECKING, Any
 
 from modem import Modem
 from source import BitsSource
@@ -14,14 +14,41 @@ class Transmitter(Modem):
 
     yaml_tag = 'Transmitter'
 
-    def __init__(self, scenario: Scenario, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
+        """Object initialization.
 
-        Modem.__init__(self, scenario, **kwargs)
+        Args:
+            **kwargs (Any): Transmitter configuration.
+        """
+        Modem.__init__(self, **kwargs)
 
     @classmethod
     def from_yaml(cls: Type[Transmitter], constructor: SafeConstructor, node: Node) -> Transmitter:
+        """Recall a new `Transmitter` instance from YAML.
 
-        scenario = [scene for node, scene in constructor.constructed_objects.items() if node.tag == 'Scenario'][0]
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Transmitter` serialization.
+
+        Returns:
+            Transmitter:
+                Newly created `Transmitter` instance.
+
+        Raises:
+            RuntimeError: If `node` is neither a scalar or a map.
+        """
+
+        # If the transmitter is not a map, create a default object and warn the user
+        if not isinstance(node, MappingNode):
+
+            if isinstance(node, ScalarNode):
+                return Transmitter()
+
+            else:
+                raise RuntimeError("Transmitters must be configured as YAML maps")
 
         constructor.add_multi_constructor(WaveformGenerator.yaml_tag, WaveformGenerator.from_yaml)
         state = constructor.construct_mapping(node, deep=True)
@@ -35,14 +62,15 @@ class Transmitter(Modem):
                 break
 
         args = dict((k.lower(), v) for k, v in state.items())
-        transmitter = Transmitter(scenario, **args)
-        yield transmitter
+        transmitter = Transmitter(**args)
 
         if bits_source is not None:
             transmitter.bits_source = bits_source
 
         if waveform_generator is not None:
             transmitter.waveform_generator = waveform_generator
+
+        return transmitter
 
     @property
     def index(self) -> int:
