@@ -27,7 +27,7 @@ class TestLdpcEncoder(unittest.TestCase):
         self.source_bits = self.no_code_blocks * self.kActual
         self.bits_in_frame = self.no_code_blocks * self.nActual
 
-        self.encoder = LdpcEncoder(self.params, self.bits_in_frame)
+        self.encoder = LdpcEncoder(self.params, self.bits_in_frame, np.random.RandomState())
         self.encoderTestResultsDir = os.path.join(
             os.path.dirname(__file__), 'res', 'ldpc')
 
@@ -47,7 +47,7 @@ class TestLdpcEncoder(unittest.TestCase):
         bits_in_frame = len(ldpc_results_mat['code_words'][0])
         data_word = ldpc_results_mat['bit_words']
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        encoder = LdpcEncoder(params, bits_in_frame, np.random.RandomState())
         encoded_word = encoder.encode([data_word[0]])
         encoder.params.use_binding = True
         encoded_word_binding = encoder.encode([data_word[0]])
@@ -69,7 +69,7 @@ class TestLdpcEncoder(unittest.TestCase):
         bits_in_frame = len(ldpc_results_mat['llrs'][0])
         llrs = -ldpc_results_mat['llrs'][0]
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        encoder = LdpcEncoder(params, bits_in_frame, np.random.RandomState())
         decoded_word = encoder.decode([llrs])
         encoder.params.use_binding = True
         decoded_word_binding = encoder.decode([llrs])
@@ -90,7 +90,7 @@ class TestLdpcEncoder(unittest.TestCase):
 
         bits_in_frame = len(ldpc_results_mat['code_words'][0])
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        encoder = LdpcEncoder(params, bits_in_frame, np.random.RandomState())
 
         expected_encoded_word = ldpc_results_mat['code_words'][0]
         data_word = ldpc_results_mat['bit_words']
@@ -107,7 +107,7 @@ class TestLdpcEncoder(unittest.TestCase):
         self.params.code_rate_fraction = Fraction(9, 10)
         self.params.block_size = 123
 
-        encoder = LdpcEncoder(self.params, 1000)
+        encoder = LdpcEncoder(self.params, 1000, np.random.RandomState())
         self.assertEqual(encoder.Z, 6)
 
     def test_properEncoding_multipleBlocks(self) -> None:
@@ -125,7 +125,7 @@ class TestLdpcEncoder(unittest.TestCase):
 
         bits_in_frame = len(ldpc_results_mat['code_words'][0])
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        encoder = LdpcEncoder(params, bits_in_frame, np.random.RandomState())
 
         expected_encoded_words = ldpc_results_mat['code_words']
         data_words = ldpc_results_mat['bit_words']
@@ -148,7 +148,7 @@ class TestLdpcEncoder(unittest.TestCase):
 
         bits_in_frame = len(ldpc_results_mat['llrs'][0])
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        encoder = LdpcEncoder(params, bits_in_frame, np.random.RandomState())
 
         expected_decoded_word = ldpc_results_mat['est_bit_words'][0]
         llrs = -ldpc_results_mat['llrs']
@@ -171,7 +171,7 @@ class TestLdpcEncoder(unittest.TestCase):
 
         bits_in_frame = len(ldpc_results_mat['llrs'][0])
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        encoder = LdpcEncoder(params, bits_in_frame, np.random.RandomState())
 
         expected_decoded_words = ldpc_results_mat['est_bit_words']
         llrs = -ldpc_results_mat['llrs']
@@ -194,7 +194,7 @@ class TestLdpcEncoder(unittest.TestCase):
 
         bits_in_frame = len(ldpc_results_mat['llrs'][0])
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        encoder = LdpcEncoder(params, bits_in_frame, np.random.RandomState())
 
         expected_decoded_words = ldpc_results_mat['est_bit_words']
         llrs = -ldpc_results_mat['llrs']
@@ -219,7 +219,7 @@ class TestLdpcEncoder(unittest.TestCase):
         no_bits_filled_up = 10
         self.bits_in_frame += no_bits_filled_up
 
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
+        encoder = LdpcEncoder(self.params, self.bits_in_frame, np.random.RandomState())
         encoded_bits = []
 
         for block_idx in range(self.no_code_blocks):
@@ -235,7 +235,7 @@ class TestLdpcEncoder(unittest.TestCase):
         self.bits_in_frame += no_bits_filled_up
         self.params.use_binding = True
 
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
+        encoder = LdpcEncoder(self.params, self.bits_in_frame, np.random.RandomState())
         encoded_bits = []
 
         for block_idx in range(self.no_code_blocks):
@@ -251,7 +251,7 @@ class TestLdpcEncoder(unittest.TestCase):
         self.bits_in_frame += no_bits_frame_too_long
         no_data_bits = self.no_code_blocks * self.kActual
 
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
+        encoder = LdpcEncoder(self.params, self.bits_in_frame, np.random.RandomState())
 
         data_bits_frame = np.random.randint(2, size=no_data_bits)
         encoded_frame = encoder.encode([data_bits_frame])
@@ -264,7 +264,7 @@ class TestLdpcEncoder(unittest.TestCase):
         no_data_bits = self.no_code_blocks * self.kActual
         self.params.use_binding = True
 
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
+        encoder = LdpcEncoder(self.params, self.bits_in_frame, np.random.RandomState())
 
         data_bits_frame = np.random.randint(2, size=no_data_bits)
         encoded_frame = encoder.encode([data_bits_frame])
@@ -273,6 +273,6 @@ class TestLdpcEncoder(unittest.TestCase):
 
     def test_noCodeBlocksCalculation_bitsInFrame_noMultipleOfN(self) -> None:
         self.bits_in_frame = 2 * self.bits_in_frame + 1
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
+        encoder = LdpcEncoder(self.params, self.bits_in_frame, np.random.RandomState())
 
         self.assertEqual(encoder.code_blocks, int(self.bits_in_frame / self.nActual))
