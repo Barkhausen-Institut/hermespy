@@ -61,6 +61,8 @@ class Factory:
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
 
+        self.__yaml.representer
+
     @staticmethod
     def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Any:
 
