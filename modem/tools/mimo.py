@@ -97,9 +97,11 @@ class Mimo:
             output, channel_estimation, noise_var = self._decode_sc(input_data, channel_estimation, noise_var)
         elif self.method in {"STBC", "SFBC"}:
             if self.number_tx_antennas == 2:
-                output, channel_estimation = self._decode_stbc_2_tx_antennas(input_data, channel_estimation)
+                output, channel_estimation, noise_var = self._decode_stbc_2_tx_antennas(input_data, channel_estimation,
+                                                                                        noise_var)
             elif self.number_tx_antennas == 4:
-                output, channel_estimation = self._decode_stbc_4_tx_antennas(input_data, channel_estimation)
+                output, channel_estimation, noise_var = self._decode_stbc_4_tx_antennas(input_data, channel_estimation,
+                                                                                        noise_var)
         elif self.method in {"SM-ZF", "SM-MMSE"}:
             if input_data.shape[0] < self.number_tx_antennas:
                 raise ValueError("Number of rx antennas must be larger than number of tx ant.")
@@ -236,51 +238,57 @@ class Mimo:
         return output, channel_estimation, noise_var
 
     def _decode_stbc_2_tx_antennas(self, input_data: np.ndarray,
-                                   channel_estimation: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+                                   channel_estimation: np.ndarray, noise_var) -> Tuple[np.ndarray, np.ndarray,
+                                                                                       np.ndarray]:
         """Decode data for STBC with 2 transmit antennas
 
-        Received signal with equal noise power is assumed, the decoded signal has same noise
-        level as input.
+        Received signal with equal noise power is assumed, the decoded signal has same noise level as input.
+        If more than 2 receive antennas are employed, then MRC is applied on the STBC decoding output of all antennas.
 
         Args:
             input_data(np.ndarray): Input signal with N_rx x N symbols.
-            channel_estimation(np.ndarray): Channel estimation with 1 x N_tx x N symbols.
+            channel_estimation(np.ndarray): Channel estimation with N_rx x N_tx x N symbols.
 
         Returns:
             (np.ndarray, np.ndarray):
                 output: Decoded data with size 1 x N.
-                channel_estimation_out: updated channel estmation with size 1 x N.
+                channel_estimation_out: updated channel estimation with size 1 x N.
         """
 
-        N = input_data.size
-        output = np.zeros((1, N), dtype=complex)
-        channel_estimation_out = np.zeros((1, N), dtype=complex)
+        number_of_rx_antennas = input_data.shape[0]
+        number_of_symbols = input_data.shape[1]
+        output = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
+        channel_estimation_out = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
 
-        channel_estimation = np.squeeze(channel_estimation) / np.sqrt(2)
+        channel = channel_estimation / np.sqrt(2)
 
-        even_idx = np.arange(0, N, 2)
+        even_idx = np.arange(0, number_of_symbols, 2)
         odd_idx = even_idx + 1
 
-        h = channel_estimation
+        y_even = (np.conj(channel[:, 0, even_idx]) * input_data[:, even_idx] +
+                  channel[:, 1, odd_idx] * np.conj(input_data[:, odd_idx]))
+        y_odd = (-channel[:, 1, even_idx] * np.conj(input_data[:, even_idx]) +
+                 np.conj(channel[:, 0, odd_idx]) * input_data[:, odd_idx])
 
-        y_even = np.conj(h[0, even_idx]) * input_data[0, even_idx] + h[1, odd_idx] * np.conj(input_data[0, odd_idx])
-        y_odd = -h[1, even_idx] * np.conj(input_data[0, even_idx]) + np.conj(h[0, odd_idx]) * input_data[0, odd_idx]
+        norm = np.sqrt(np.abs(channel[:, 0, even_idx]) ** 2 + np.abs(channel[:, 1, even_idx]) ** 2)
 
-        norm = np.sqrt(np.abs(h[0, even_idx]) ** 2 +
-                       np.abs(h[1, even_idx]) ** 2)
+        output[:, even_idx] = y_even / norm
+        output[:, odd_idx] = y_odd / norm
 
-        output[0, even_idx] = y_even / norm
-        output[0, odd_idx] = y_odd / norm
+        # the channel coefficient is the norm
+        channel_estimation_out[:, even_idx] = norm
+        channel_estimation_out[:, odd_idx] = norm
 
-        # the channel coefficient is the as as norm
-        channel_estimation_out[0, even_idx] = norm
-        channel_estimation_out[0, odd_idx] = norm
+        if number_of_rx_antennas > 1:
+            output, channel_estimation_out, noise_var = self._decode_mrc(output,
+                                                                         channel_estimation_out[:, np.newaxis, :],
+                                                                         noise_var)
 
-        return output, channel_estimation_out
+        return output, channel_estimation_out, noise_var
 
     def _decode_stbc_4_tx_antennas(self, input_data: np.ndarray,
-                                   channel_estimation: np.ndarray) -> Tuple[np.ndarray,
-                                                                            np.ndarray]:
+                                   channel_estimation: np.ndarray,
+                                   noise_var) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Decode data for STBC with 4 transmit antennas.
 
         Received signal with equal noise power is assumed, the decoded signal has same noise
@@ -288,7 +296,7 @@ class Mimo:
 
         Args:
             input_data(np.ndarray): Input signal with N symbols.
-            channel_estimation(np.ndarray): Input signal with 1 x N_tx x N symbols.
+            channel_estimation(np.ndarray): Input signal with N_rx x N_tx x N symbols.
 
         Returns:
             (np.ndarray, np.ndarray):
@@ -296,59 +304,75 @@ class Mimo:
                 channel_estimation_out (np.ndarray): Updated channel estimation.
         """
 
-        N = input_data.size
+        number_of_rx_antennas = input_data.shape[0]
+        number_of_symbols = input_data.shape[1]
 
-        channel_estimation = np.squeeze(channel_estimation)
+        if isinstance(noise_var, float):
+            noise_var = noise_var * np.ones(input_data.shape)
 
-        tx0_idx = np.arange(0, N, 4)
+        # channel_estimation = np.squeeze(channel_estimation)
+
+        tx0_idx = np.arange(0, number_of_symbols, 4)
         tx1_idx = tx0_idx + 1
         tx2_idx = tx0_idx + 2
         tx3_idx = tx0_idx + 3
 
         # antenna 0 and 2
-        input_stbc_tx_antennas_0_2 = np.zeros(
-            (1, len(tx0_idx) + len(tx1_idx)), dtype=complex)
-        input_stbc_tx_antennas_0_2[0, ::2] = input_data[0, tx0_idx]
-        input_stbc_tx_antennas_0_2[0, 1::2] = input_data[0, tx1_idx]
+        input_stbc_tx_antennas_0_2 = np.zeros((number_of_rx_antennas, len(tx0_idx) + len(tx1_idx)), dtype=complex)
+        input_stbc_tx_antennas_0_2[:, ::2] = input_data[:, tx0_idx]
+        input_stbc_tx_antennas_0_2[:, 1::2] = input_data[:, tx1_idx]
 
-        ce_0_2 = np.zeros((2, (len(tx0_idx) + len(tx1_idx))), dtype=complex)
-        ce_0_2[0, ::2] = channel_estimation[0, tx0_idx]
-        ce_0_2[0, 1::2] = channel_estimation[0, tx1_idx]
-        ce_0_2[1, ::2] = channel_estimation[2, tx0_idx]
-        ce_0_2[1, 1::2] = channel_estimation[2, tx1_idx]
+        noise_var_0_2 = np.zeros(input_stbc_tx_antennas_0_2.shape)
+        noise_var_0_2[:, ::2] = noise_var[:, tx0_idx]
+        noise_var_0_2[:, 1::2] = noise_var[:, tx1_idx]
 
-        out_tx_0_2, ce_0_2 = self._decode_stbc_2_tx_antennas(
-            input_stbc_tx_antennas_0_2, ce_0_2)
+        ce_0_2 = np.zeros((number_of_rx_antennas, 2, (len(tx0_idx) + len(tx1_idx))), dtype=complex)
+        ce_0_2[:, 0, ::2] = channel_estimation[:, 0, tx0_idx]
+        ce_0_2[:, 0, 1::2] = channel_estimation[:, 0, tx1_idx]
+        ce_0_2[:, 1, ::2] = channel_estimation[:, 2, tx0_idx]
+        ce_0_2[:, 1, 1::2] = channel_estimation[:, 2, tx1_idx]
+
+        out_tx_0_2, ce_0_2, noise_var_0_2 = self._decode_stbc_2_tx_antennas(input_stbc_tx_antennas_0_2, ce_0_2,
+                                                                            noise_var_0_2)
 
         # reshape, so that we can concatenate t and t+1 accordingly
         out_tx_0_2 = np.reshape(out_tx_0_2, (-1, 2))
         ce_0_2 = np.reshape(ce_0_2, (-1, 2))
+        noise_var_0_2 = np.reshape(noise_var_0_2, (-1, 2))
 
         # antenna 1 and 3
-        input_stbc_tx_antennas_1_3 = np.zeros(
-            (1, len(tx2_idx) + len(tx3_idx)), dtype=complex)
-        input_stbc_tx_antennas_1_3[0, ::2] = input_data[0, tx2_idx]
-        input_stbc_tx_antennas_1_3[0, 1::2] = input_data[0, tx3_idx]
+        input_stbc_tx_antennas_1_3 = np.zeros((number_of_rx_antennas, len(tx2_idx) + len(tx3_idx)), dtype=complex)
+        input_stbc_tx_antennas_1_3[:, ::2] = input_data[:, tx2_idx]
+        input_stbc_tx_antennas_1_3[:, 1::2] = input_data[:, tx3_idx]
 
-        ce_1_3 = np.zeros((2, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
-        ce_1_3[0, ::2] = channel_estimation[1, tx2_idx]
-        ce_1_3[0, 1::2] = channel_estimation[1, tx3_idx]
-        ce_1_3[1, ::2] = channel_estimation[3, tx2_idx]
-        ce_1_3[1, 1::2] = channel_estimation[3, tx3_idx]
+        noise_var_1_3 = np.zeros(input_stbc_tx_antennas_0_2.shape)
+        noise_var_1_3[:, ::2] = noise_var[:, tx2_idx]
+        noise_var_1_3[:, 1::2] = noise_var[:, tx3_idx]
 
-        out_tx_1_3, ce_1_3 = self._decode_stbc_2_tx_antennas(
-            input_stbc_tx_antennas_1_3, ce_1_3)
+        ce_1_3 = np.zeros((number_of_rx_antennas, 2, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
+        ce_1_3[:, 0, ::2] = channel_estimation[:, 1, tx2_idx]
+        ce_1_3[:, 0, 1::2] = channel_estimation[:, 1, tx3_idx]
+        ce_1_3[:, 1, ::2] = channel_estimation[:, 3, tx2_idx]
+        ce_1_3[:, 1, 1::2] = channel_estimation[:, 3, tx3_idx]
+
+        out_tx_1_3, ce_1_3, noise_var_1_3 = self._decode_stbc_2_tx_antennas(input_stbc_tx_antennas_1_3,
+                                                                            ce_1_3, noise_var_1_3)
 
         # reshape so that we can concatenate t and t+1 accordingly
         out_tx_1_3 = np.reshape(out_tx_1_3, (-1, 2))
         ce_1_3 = np.reshape(ce_1_3, (-1, 2))
+        noise_var_1_3 = np.reshape(noise_var_1_3, (-1, 2))
 
         output = np.hstack((out_tx_0_2, out_tx_1_3))
         output = np.reshape(output, (1, -1))
 
         channel_estimation_out = np.hstack((ce_0_2, ce_1_3))
         channel_estimation_out = np.reshape(channel_estimation_out, (1, -1))
-        return output, channel_estimation_out
+
+        noise_var = np.hstack((noise_var_0_2, noise_var_1_3))
+        noise_var = np.reshape(noise_var, (1, -1))
+
+        return output, channel_estimation_out, noise_var
 
     def _decode_sm(self, input_data: np.ndarray, channel_estimation: np.ndarray,
                    noise_var: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
