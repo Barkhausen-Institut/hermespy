@@ -6,12 +6,14 @@ from parameters_parser.parameters_block_interleaver import ParametersBlockInterl
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 from parameters_parser.parameters_crc_encoder import ParametersCrcEncoder
+from parameters_parser.parameters_scrambler import ParametersScrambler
 from modem.coding.encoder_factory import EncoderFactory
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.interleaver import BlockInterleaver
 from modem.coding.crc_encoder import CrcEncoder
+from modem.coding.scrambler import Scrambler3GPP, Scrambler80211a
 
 
 class TestEncoderFactory(unittest.TestCase):
@@ -49,3 +51,15 @@ class TestEncoderFactory(unittest.TestCase):
             ParametersCrcEncoder(), "crc_encoder", 30, None
         )
         self.assertTrue(isinstance(encoder, CrcEncoder))
+
+    def test_scrambler_80211a_return(self) -> None:
+        encoder = self.factory.get_encoder(
+            ParametersScrambler(), Scrambler80211a.factory_tag, 30, None
+        )
+        self.assertTrue(isinstance(encoder, Scrambler80211a))
+
+    def test_scrambler_3GPP_return(self) -> None:
+        encoder = self.factory.get_encoder(
+            ParametersScrambler(), Scrambler3GPP.factory_tag, 30, None
+        )
+        self.assertTrue(isinstance(encoder, Scrambler3GPP))

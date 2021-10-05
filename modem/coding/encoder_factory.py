@@ -7,12 +7,14 @@ from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
 from parameters_parser.parameters_crc_encoder import ParametersCrcEncoder
+from parameters_parser.parameters_scrambler import ParametersScrambler
 
 from modem.coding.repetition_encoder import RepetitionEncoder
 from modem.coding.ldpc_encoder import LdpcEncoder
 from modem.coding.encoder import Encoder
 from modem.coding.interleaver import BlockInterleaver
 from modem.coding.crc_encoder import CrcEncoder
+from modem.coding.scrambler import Scrambler80211a, Scrambler3GPP
 
 
 class EncoderFactory:
@@ -33,6 +35,10 @@ class EncoderFactory:
             encoder = BlockInterleaver(encoding_params, bits_in_frame, rng)
         elif type == "CRC_ENCODER":
             encoder = CrcEncoder(encoding_params, bits_in_frame, rng)
+        elif type == Scrambler80211a.factory_tag:
+            encoder = Scrambler80211a(encoding_params, bits_in_frame, rng)
+        elif type == Scrambler3GPP.factory_tag:
+            encoder = Scrambler3GPP(encoding_params, bits_in_frame, rng)
         else:
             encoder = RepetitionEncoder(ParametersRepetitionEncoder(), bits_in_frame, None)
         return encoder
@@ -43,7 +49,9 @@ class EncoderFactory:
             'REPETITION': ParametersRepetitionEncoder,
             'LDPC': ParametersLdpcEncoder,
             'BLOCK_INTERLEAVER': ParametersBlockInterleaver,
-            'CRC_ENCODER': ParametersCrcEncoder
+            'CRC_ENCODER': ParametersCrcEncoder,
+            Scrambler3GPP.factory_tag: ParametersScrambler,
+            Scrambler80211a.factory_tag: ParametersScrambler
         }
 
         if type.upper() in VALID_COMBINATIONS.keys():
