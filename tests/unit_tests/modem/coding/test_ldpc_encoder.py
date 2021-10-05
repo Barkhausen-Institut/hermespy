@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy as np
 from scipy.io import loadmat
 
-from modem.coding.ldpc_encoder import LdpcEncoder
+from modem.coding import LDPC
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 
 
@@ -27,7 +27,7 @@ class TestLdpcEncoder(unittest.TestCase):
         self.source_bits = self.no_code_blocks * self.kActual
         self.bits_in_frame = self.no_code_blocks * self.nActual
 
-        self.encoder = LdpcEncoder(self.params, self.bits_in_frame)
+        self.encoder = LDPC(self.params, self.bits_in_frame)
         self.encoderTestResultsDir = os.path.join(
             os.path.dirname(__file__), 'res', 'ldpc')
 
