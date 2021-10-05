@@ -1,20 +1,27 @@
-from typing import List
+# -*- coding: utf-8 -*-
+"""LDPC Encoding."""
+
+from __future__ import annotations
+from typing import List, Tuple
 from scipy.io import loadmat
 import os
 import warnings
-
 import numpy as np
 
-
 from modem.coding.encoder import Encoder
-from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
-try:
-    from modem.coding import ldpc_binding
-except ImportError:
-    pass
 
 
-class LdpcEncoder(Encoder):
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer, Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
+
+
+class LDPC(Encoder):
     """Implementation of an LDPC Encoder.
 
     LDPC decoder using a serial C (check node) schedule and  message-passing as introduced in
@@ -24,14 +31,26 @@ class LdpcEncoder(Encoder):
     """
 
     yaml_tag = u'LDPC'
+    __block_size: int
+    __iterations: int
 
-    def __init__(self, params: ParametersLdpcEncoder, bits_in_frame: int) -> None:
+    def __init__(self,
+                 block_size: int = 1,
+                 iterations: int = 20,
+                 custom_codes: Tuple[str] = ()) -> None:
+        """Object initialization.
 
-        self.__block_size = 1
-        self.__
+        Args:
+            block_size (int, optional): Number of input / output bits.
+            iterations (int, optional): Number of iterations.
+            custom_codes (Tuple[str], optional): Discovery paths for custom LDPC codings.
+        """
 
-        self.params = params
-        self.bits_in_frame = bits_in_frame
+        Encoder.__init__(self)
+
+        self.block_size = block_size
+        self.iterations = iterations
+
         self._read_precalculated_codes()
 
         if self.params.use_binding and 'ldpc_binding' not in globals():
