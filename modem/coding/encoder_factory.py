@@ -53,4 +53,4 @@ class EncoderFactory:
             wrong_parameter = True
 
         if wrong_parameter:
-            raise ValueError("Wrong parameter type.")
+            raise ValueError(f"Wrong parameter type for {type}.")
