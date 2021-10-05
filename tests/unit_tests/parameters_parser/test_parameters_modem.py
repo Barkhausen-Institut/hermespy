@@ -62,9 +62,9 @@ class TestParametersModem(unittest.TestCase):
         self.stubbed_params_modem._encoder_param_file = "NONE"
         self.stubbed_params_modem.check_params()
 
-        self.assertTrue(isinstance(self.stubbed_params_modem.encoding_params, ParametersRepetitionEncoder))
-        self.assertEqual(self.stubbed_params_modem.encoding_params.data_bits_k, 1)
-        self.assertEqual(self.stubbed_params_modem.encoding_params.encoded_bits_n, 1)
+        self.assertTrue(isinstance(self.stubbed_params_modem.encoding_params[0], ParametersRepetitionEncoder))
+        self.assertEqual(self.stubbed_params_modem.encoding_params[0].data_bits_k, 1)
+        self.assertEqual(self.stubbed_params_modem.encoding_params[0].encoded_bits_n, 1)
 
     def test_invalid_antenna_spacing(self) -> None:
         self.stubbed_params_modem.antenna_spacing = -1
@@ -79,7 +79,6 @@ class TestParametersModem(unittest.TestCase):
             ValueError,
             lambda: self.stubbed_params_modem.check_params()
         )
-
 
     def test_crc_bits_set_too_zero_if_no_encoder(self) -> None:
         self.stubbed_params_modem.encoding_type = ""

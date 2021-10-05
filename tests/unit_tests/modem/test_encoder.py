@@ -1,10 +1,12 @@
 import unittest
 from unittest.mock import Mock
 from typing import List
+from abc import abstractmethod
 
 import numpy as np
 
 from modem.coding.encoder import Encoder
+from .utils import assert_frame_equality
 
 
 class StubEncoder(Encoder):

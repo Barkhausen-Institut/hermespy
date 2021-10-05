@@ -7,11 +7,13 @@ from typing import List, Any
 import numpy as np
 
 from parameters_parser.parameters_crc_encoder import ParametersCrcEncoder
+from modem.coding.scrambler import Scrambler80211a, Scrambler3GPP
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 from parameters_parser.parameters_block_interleaver import ParametersBlockInterleaver
 from parameters_parser.parameters_rf_chain import ParametersRfChain
 from parameters_parser.parameters_encoder import ParametersEncoder
+from parameters_parser.parameters_scrambler import ParametersScrambler
 
 
 class ParametersModem(ABC):
@@ -32,7 +34,7 @@ class ParametersModem(ABC):
     """
 
     technology_val = ["PSK_QAM", "CHIRP_FSK", "OFDM"]
-    supported_encoders = ["REPETITION", "LDPC"]
+    supported_encoders = ["REPETITION", "LDPC", Scrambler3GPP.factory_tag, Scrambler80211a.factory_tag]
     device_type_val = ["BASE_STATION", "UE"]
 
     def __init__(self) -> None:
@@ -178,6 +180,10 @@ class ParametersModem(ABC):
             encoding_parameters = ParametersRepetitionEncoder()
         elif self.encoding_type[-1] == "LDPC":
             encoding_parameters = ParametersLdpcEncoder()
+        elif self.encoding_type[-1] == Scrambler80211a.factory_tag:
+            encoding_parameters = ParametersScrambler()
+        elif self.encoding_type[-1] == Scrambler3GPP.factory_tag:
+            encoding_parameters = ParametersScrambler()
 
         self._encoded_bits_n = config["General"].getint("encoded_bits_n", fallback=1)
         self._data_bits_k = config["General"].getint("data_bits_k", fallback=1)
