@@ -52,10 +52,7 @@ scenario.init_drop()
 # Print scenario serialization
 factory = Factory()
 dump = factory.to_str(scenario)
-dump = """Scenario:
-    Modems:
-        - Transmitter
-"""
+print(dump)
 
 load = factory.from_str(dump)
 print(load)
