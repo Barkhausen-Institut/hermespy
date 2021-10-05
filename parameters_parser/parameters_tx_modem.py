@@ -29,7 +29,6 @@ class ParametersTxModem(ParametersModem):
 
         self._technology_param_file = section.get("technology_param_file")
         self.carrier_frequency = section.getfloat("carrier_frequency")
-        self.crc_bits = section.getint("crc_bits", 1)
 
     def check_params(self, param_path: str = "") -> None:
         try:
