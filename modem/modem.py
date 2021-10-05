@@ -63,8 +63,7 @@ class Modem(Generic[P]):
         elif isinstance(param.technology, ParametersChirpFsk):
             self.waveform_generator = WaveformGeneratorChirpFsk(param.technology)
         elif isinstance(param.technology, ParametersOfdm):
-            self.waveform_generator = WaveformGeneratorOfdm(
-                param.technology, rng_hardware)
+            self.waveform_generator = WaveformGeneratorOfdm(param.technology)
         else:
             raise ValueError(
                 "invalid technology in constructor of Modem class")
