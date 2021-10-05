@@ -23,6 +23,8 @@ class LdpcEncoder(Encoder):
     2004, pp. 223-226].
     """
 
+    yaml_tag = u'LDPC'
+
     def __init__(self, params: ParametersLdpcEncoder, bits_in_frame: int) -> None:
 
         self.__block_size = 1

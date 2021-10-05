@@ -34,7 +34,6 @@ receiverB = scenario.add_receiver(**modem_configuration)
 transmitterA.waveform_generator = WaveformGeneratorChirpFsk()
 transmitterB.waveform_generator = WaveformGeneratorChirpFsk()
 transmitterA.precoding[0] = DFT()
-transmitterA.precoding[1] = Beamformer()
 receiverB.rf_chain.power_amplifier = PowerAmplifier()
 transmitterA.encoder_manager.add_encoder(Interleaver())
 transmitterA.encoder_manager.add_encoder(RepetitionEncoder())
@@ -51,6 +50,7 @@ scenario.init_drop()
 
 # Print scenario serialization
 factory = Factory()
+
 dump = factory.to_str(scenario)
 print(dump)
 

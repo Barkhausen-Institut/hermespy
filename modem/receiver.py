@@ -14,8 +14,8 @@ class Receiver(Modem):
 
     yaml_tag = 'Receiver'
 
-    def __init__(self, scenario: Scenario, **kwargs) -> None:
-        Modem.__init__(self, scenario, **kwargs)
+    def __init__(self, **kwargs) -> None:
+        Modem.__init__(self, **kwargs)
 
     @classmethod
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:

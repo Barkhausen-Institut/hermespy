@@ -20,6 +20,8 @@ class HardwareLoop(Executable):
     """Hermespy hardware loop configuration.
     """
 
+    yaml_tag = u'Loop'
+
     def __init__(self) -> None:
         """Object initialization.
         """

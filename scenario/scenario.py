@@ -114,7 +114,7 @@ class Scenario:
             """
 
         constructor.add_multi_constructor("Channel", Channel.from_yaml)
-        state_scenario = constructor.construct_non_recursive_object(node)
+        state_scenario = constructor.construct_mapping(node, deep=True)
 
         modems = state_scenario.pop('Modems', None)
         channels = state_scenario.pop('Channels', None)
@@ -446,7 +446,8 @@ class Scenario:
         """
 
         receiver_index = len(self.__receivers)
-        receiver = Receiver(self, **kwargs)
+        kwargs['scenario'] = self
+        receiver = Receiver(**kwargs)
 
         self.__receivers.append(receiver)
 

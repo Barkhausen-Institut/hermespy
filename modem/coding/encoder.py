@@ -14,6 +14,7 @@ class Encoder(ABC):
     `decode(encoded_bits)` function.
     """
 
+    yaml_tag = u'Encoder'
     __manager: Optional[EncoderManager]
 
     def __init__(self, manager: EncoderManager = None) -> None:
