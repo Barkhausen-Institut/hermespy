@@ -27,8 +27,6 @@ class LdpcEncoder(Encoder):
                        bits_in_frame: int,
                        rng: np.random.RandomState=None) -> None:
         super().__init__(params, bits_in_frame, rng)
-        self.params = params
-        self.bits_in_frame = bits_in_frame
         self._read_precalculated_codes()
 
         if self.params.use_binding and 'ldpc_binding' not in globals():
@@ -74,7 +72,9 @@ class LdpcEncoder(Encoder):
                 no_bits += self.encoded_bits_n
 
         if (self.bits_in_frame - no_bits) > 0:
-            encoded_words.append(np.zeros(2, size=self.bits_in_frame - no_bits))
+            encoded_words.append(
+                self.rng.randint(
+                    2, size=self.bits_in_frame - no_bits))
 
         return encoded_words
 
