@@ -17,6 +17,7 @@ class Precoder(ABC):
     `NotImplementedError` exception.
     """
 
+    yaml_tag = 'Precoder'
     __precoding = Optional[Precoding]
 
     def __init__(self,

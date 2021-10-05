@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Type, List, Tuple, TYPE_CHECKING, Optional
 from abc import abstractmethod
 import numpy as np
-from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, Node
+from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, ScalarNode, MappingNode
 from ruamel.yaml.comments import CommentedOrderedMap
 
 if TYPE_CHECKING:
@@ -71,7 +71,7 @@ class Channel:
             self.gain = gain
 
     @classmethod
-    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> Node:
+    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> ScalarNode:
         """Serialize a channel object to YAML.
 
         Args:
@@ -93,7 +93,8 @@ class Channel:
         }
 
         transmitter_index, receiver_index = node.indices
-        yaml = representer.represent_mapping(cls.yaml_tag + "_{}_{}".format(transmitter_index, receiver_index), state)
+
+        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
         return yaml
 
     @classmethod
@@ -124,7 +125,7 @@ class Channel:
                 Receiver index of modem receiving from this channel.
             """
 
-        indices = tag_suffix.split('_')
+        indices = tag_suffix.split(' ')
         if indices[0] == '':
             indices.pop(0)
 

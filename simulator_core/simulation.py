@@ -17,8 +17,10 @@ __status__ = "Prototype"
 
 
 class Simulation(Executable):
-    """Hermespy simulation configuration.
+    """HermesPy simulation configuration.
     """
+
+    yaml_tag = u'Simulation'
 
     def __init__(self) -> None:
         """Object initialization.

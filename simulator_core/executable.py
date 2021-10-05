@@ -18,6 +18,8 @@ __status__ = "Prototype"
 class Executable(ABC):
     """Abstract base class for executable configurations."""
 
+    yaml_tag = u'Executable'
+
     @abstractmethod
     def run(self) -> None:
         """Execute the configuration."""
