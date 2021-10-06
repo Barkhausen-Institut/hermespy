@@ -1,8 +1,6 @@
 import unittest
 from fractions import Fraction
-from tests.unit_tests.modem.utils import flatten_blocks
 import os
-import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.io import loadmat
 
@@ -23,63 +21,27 @@ class TestLDPC(unittest.TestCase):
 
         self.encoderTestResultsDir = os.path.join(os.path.dirname(__file__), 'res', 'ldpc')
 
-        """self.params = ParametersLdpcEncoder()
-        self.params.code_rate = 2 / 3
-        self.params.block_size =
-        self.params.code_rate_fraction = Fraction(2, 3)
-        self.params.no_iterations = 20
-        self.params.custom_ldpc_codes = ""
-        self.params.use_binding = False
+    def test_init(self) -> None:
+        """Test the init parameter adoptions."""
 
-        self.nActual = 528
-        self.kActual = 352
-        self.no_code_blocks = 2
-        self.source_bits = self.no_code_blocks * self.kActual
-        self.bits_in_frame = self.no_code_blocks * self.nActual"""
+        self.assertEqual(self.iterations, self.encoder.iterations, "Iterations not properly initialized")
+        self.assertAlmostEqual(float(self.rate), self.encoder.rate, msg="Rate not properly initialized")
 
-    def test_ldpcBindingEncodingYieldsSameResultsAsPythonCode(self) -> None:
-        params = ParametersLdpcEncoder()
-        params.code_ratio = 2 / 3
-        params.block_size = 256
-        params.code_rate_fraction = Fraction(2, 3)
-        params.custom_ldpc_codes = ""
-        params.use_binding = False
+    def test_iterations_get_set(self) -> None:
+        """Iterations property getter must return setter argument."""
 
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
-            ), squeeze_me=True)
-        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
+        iterations = 25
+        self.encoder.iterations = iterations
+        self.assertEqual(iterations, self.encoder.iterations)
 
-        bits_in_frame = len(ldpc_results_mat['code_words'][0])
-        data_word = ldpc_results_mat['bit_words']
+    def test_iterations_validation(self) -> None:
+        """Iterations setter must raise Exception on invalid arguments."""
 
-        encoder = LdpcEncoder(params, bits_in_frame)
-        encoded_word = encoder.encode([data_word[0]])
-        encoder.params.use_binding = True
-        encoded_word_binding = encoder.encode([data_word[0]])
+        with self.assertRaises(ValueError):
+            self.encoder.iterations = -1
 
-        np.testing.assert_array_almost_equal(encoded_word[0], encoded_word_binding[0])
-
-    def test_ldpcBindingDecodingYieldsSameResultsAsPythonCode(self) -> None:
-        params = ParametersLdpcEncoder()
-        params.code_ratio = 2 / 3
-        params.block_size = 256
-        params.code_rate_fraction = Fraction(2, 3)
-        params.custom_ldpc_codes = ""
-        params.use_binding = False
-
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
-            ), squeeze_me=True)
-        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
-        bits_in_frame = len(ldpc_results_mat['llrs'][0])
-        llrs = -ldpc_results_mat['llrs'][0]
-
-        encoder = LdpcEncoder(params, bits_in_frame)
-        decoded_word = encoder.decode([llrs])
-        encoder.params.use_binding = True
-        decoded_word_binding = encoder.decode([llrs])
-        np.testing.assert_array_almost_equal(decoded_word[0], decoded_word_binding[0])
+        with self.assertRaises(ValueError):
+            self.encoder.iterations = 0
 
     def test_encoding(self) -> None:
         """Test encoding behaviour against a pre-calculated set of data-code pairs."""
@@ -129,177 +91,56 @@ class TestLDPC(unittest.TestCase):
                                "LDPC decoding produced unexpected result in block {}".format(n))
 
     def test_readCustomLdpcEncoder_fileExists(self) -> None:
-        self.params.custom_ldpc_codes = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "res", "ldpc", "custom_ldpc_codes"
-        )
-        self.params.code_rate = 9/10
-        self.params.code_rate_fraction = Fraction(9, 10)
-        self.params.block_size = 123
+        """Test the LDPC code lookup from custom directories."""
 
-        encoder = LdpcEncoder(self.params, 1000)
-        self.assertEqual(encoder.Z, 6)
+        custom_codes = os.path.join(os.path.dirname(os.path.abspath(__file__)),  "res", "ldpc", "custom_ldpc_codes")
+        block_size = 123
+        rate = Fraction(9, 10)
+        file_location = os.path.join(custom_codes, "BS{}_CR{}_{}.mat".format(
+            block_size,
+            rate.numerator,
+            rate.denominator
+        ))
 
-    def test_properEncoding_multipleBlocks(self) -> None:
+        mat = loadmat(file_location, squeeze_me=True)
+        Z = mat['LDPC']['Z'].item()
+        H = mat['LDPC']['H'].item()
+        G = mat['LDPC']['G'].item()
+        G = G[:, 2*Z:]
 
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
-            ), squeeze_me=True)
-        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
+        self.encoder.custom_codes.add(custom_codes)
+        self.encoder.set_rate(block_size, rate)
 
-        bits_in_frame = len(ldpc_results_mat['code_words'][0])
+        self.assertEqual(G.shape[0], self.encoder.bit_block_size, "Custom LDPC import produced unexpected result")
+        self.assertEqual(G.shape[1], self.encoder.code_block_size, "Custom LDPC import produced unexpected result")
+        self.assertEqual(H.shape[1] - 2 * Z, self.encoder.code_block_size, "Custom LDPC import produced unexpected result")
+        self.assertEqual(H.shape[1] - G.shape[1], 2 * Z, "Custom LDPC import produced unexpected result")
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+    def test_rate(self) -> None:
+        """Test the rate property getter."""
 
-        expected_encoded_words = ldpc_results_mat['code_words']
-        data_words = ldpc_results_mat['bit_words']
-        encoded_words = encoder.encode(data_words)
-        np.testing.assert_array_almost_equal(encoded_words, expected_encoded_words)
+        self.assertAlmostEqual(float(self.rate), self.encoder.rate, msg="Rate computation produced unexpected result")
 
-    def test_properDecoding_oneBlock(self) -> None:
-        params = ParametersLdpcEncoder()
-        params.code_ratio = 2 / 3
-        params.block_size = 256
-        params.code_rate_fraction = Fraction(2, 3)
-        params.custom_ldpc_codes = ""
-        params.use_binding = False
+    def test_set_rate(self) -> None:
+        """Test the rate set routine."""
 
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
-            ), squeeze_me=True)
+        block_size = 512
+        rate = Fraction(1, 2)
 
-        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
+        self.encoder.set_rate(block_size, rate)
+        self.assertAlmostEqual(float(rate), self.encoder.rate, msg="Rate set unexpected result")
 
-        bits_in_frame = len(ldpc_results_mat['llrs'][0])
+    def test_set_rate_assert(self) -> None:
+        """Rate set routine should raise ValueError on unsupported parameters."""
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        with self.assertRaises(ValueError):
+            self.encoder.set_rate(1, Fraction(1, 2))
 
-        expected_decoded_word = ldpc_results_mat['est_bit_words'][0]
-        llrs = -ldpc_results_mat['llrs']
-        decoded_word = encoder.decode([llrs[0]])
+        with self.assertRaises(ValueError):
+            self.encoder.set_rate(512, Fraction(2, 1))
 
-        np.testing.assert_array_almost_equal(decoded_word[0], expected_decoded_word)
-
-    def test_properDecoding_multipleBlocks(self) -> None:
-        params = ParametersLdpcEncoder()
-        params.code_ratio = 2 / 3
-        params.block_size = 256
-        params.code_rate_fraction = Fraction(2, 3)
-        params.custom_ldpc_codes = ""
-        params.use_binding = False
-
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
-            ), squeeze_me=True)
-        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
-
-        bits_in_frame = len(ldpc_results_mat['llrs'][0])
-
-        encoder = LdpcEncoder(params, bits_in_frame)
-
-        expected_decoded_words = ldpc_results_mat['est_bit_words']
-        llrs = -ldpc_results_mat['llrs']
-        decoded_words = encoder.decode(llrs)
-
-        np.testing.assert_array_almost_equal(decoded_words, expected_decoded_words)
-
-    def test_properDecoding_multipleBlocks_pythonBinding(self) -> None:
-        params = ParametersLdpcEncoder()
-        params.code_ratio = 2 / 3
-        params.block_size = 256
-        params.code_rate_fraction = Fraction(2, 3)
-        params.custom_ldpc_codes = ""
-        params.use_binding = True
-
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_decoder_256_2_3.mat'
-            ), squeeze_me=True)
-        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
-
-        bits_in_frame = len(ldpc_results_mat['llrs'][0])
-
-        encoder = LdpcEncoder(params, bits_in_frame)
-
-        expected_decoded_words = ldpc_results_mat['est_bit_words']
-        llrs = -ldpc_results_mat['llrs']
-        decoded_words = encoder.decode(llrs)
-
-        np.testing.assert_array_almost_equal(decoded_words, expected_decoded_words)
-
-    def test_noDataBitsLongerThanCodeBlock(self) -> None:
-        data_word_too_long = np.random.randint(2, size=self.encoder.data_bits_k + 3)
-
-        self.assertRaises(
-            ValueError,
-            lambda: self.encoder.encode([data_word_too_long])
-        )
-
-    def test_paramCalculation(self) -> None:
-        self.assertEqual(self.encoder.encoded_bits_n, self.nActual)
-        self.assertEqual(self.encoder.data_bits_k, self.kActual)
-        self.assertEqual(self.encoder.source_bits, self.no_code_blocks * self.kActual)
-
-    def test_decoding_checkIfFillUpBitsAreDiscarded(self) -> None:
-        no_bits_filled_up = 10
-        self.bits_in_frame += no_bits_filled_up
-
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
-        encoded_bits = []
-
-        for block_idx in range(self.no_code_blocks):
-            encoded_bits.append(np.random.randint(2, size=self.nActual))
-
-        encoded_bits.append(np.random.randint(2, size=no_bits_filled_up))
-        decoded_bits = encoder.decode([flatten_blocks(encoded_bits)])
-
-        self.assertEqual(len(decoded_bits[0]), self.no_code_blocks * self.kActual)
-
-    def test_decoding_checkIfFillUpBitsAreDiscarded_pythonBinding(self) -> None:
-        no_bits_filled_up = 10
-        self.bits_in_frame += no_bits_filled_up
-        self.params.use_binding = True
-
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
-        encoded_bits = []
-
-        for block_idx in range(self.no_code_blocks):
-            encoded_bits.append(np.random.randint(2, size=self.nActual))
-
-        encoded_bits.append(np.random.randint(2, size=no_bits_filled_up))
-        decoded_bits = encoder.decode([flatten_blocks(encoded_bits)])
-
-        self.assertEqual(len(decoded_bits[0]), self.no_code_blocks * self.kActual)
-
-    def test_ifCodeBlocksDoNotFillUpFrame(self) -> None:
-        no_bits_frame_too_long = 10
-        self.bits_in_frame += no_bits_frame_too_long
-        no_data_bits = self.no_code_blocks * self.kActual
-
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
-
-        data_bits_frame = np.random.randint(2, size=no_data_bits)
-        encoded_frame = encoder.encode([data_bits_frame])
-
-        self.assertEqual(len(encoded_frame[-1]), no_bits_frame_too_long)
-
-    def test_ifCodeBlocksDoNotFillUpFrame_pythonBinding(self) -> None:
-        no_bits_frame_too_long = 10
-        self.bits_in_frame += no_bits_frame_too_long
-        no_data_bits = self.no_code_blocks * self.kActual
-        self.params.use_binding = True
-
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
-
-        data_bits_frame = np.random.randint(2, size=no_data_bits)
-        encoded_frame = encoder.encode([data_bits_frame])
-
-        self.assertEqual(len(encoded_frame[-1]), no_bits_frame_too_long)
-
-    def test_noCodeBlocksCalculation_bitsInFrame_noMultipleOfN(self) -> None:
-        self.bits_in_frame = 2 * self.bits_in_frame + 1
-        encoder = LdpcEncoder(self.params, self.bits_in_frame)
-
-        self.assertEqual(encoder.code_blocks, int(self.bits_in_frame / self.nActual))
+        with self.assertRaises(ValueError):
+            self.encoder.set_rate(1, Fraction(1, 1))
 
 
 class TestLDPCBinding(unittest.TestCase):
