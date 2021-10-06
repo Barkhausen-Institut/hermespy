@@ -37,6 +37,7 @@ transmitterA.precoding[0] = DFT()
 receiverB.rf_chain.power_amplifier = PowerAmplifier()
 transmitterA.encoder_manager.add_encoder(Interleaver())
 transmitterA.encoder_manager.add_encoder(RepetitionEncoder())
+transmitterB.encoder_manager.add_encoder(LDPC())
 
 # Configure channels
 scenario.channel(transmitterA, receiverA).active = True
@@ -50,6 +51,7 @@ scenario.init_drop()
 
 # Print scenario serialization
 factory = Factory()
+factory.clean = True
 
 dump = factory.to_str(scenario)
 print(dump)
