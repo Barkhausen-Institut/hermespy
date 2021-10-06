@@ -6,10 +6,11 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.io import loadmat
 
-from modem.coding import LDPC
+from modem.coding.ldpc import LDPC
+from modem.coding.ldpc_binding.ldpc import LDPCBinding
 
 
-class TestLdpcEncoder(unittest.TestCase):
+class TestLDPC(unittest.TestCase):
     """Test LDPC encoding behaviour."""
 
     def setUp(self) -> None:
@@ -299,3 +300,65 @@ class TestLdpcEncoder(unittest.TestCase):
         encoder = LdpcEncoder(self.params, self.bits_in_frame)
 
         self.assertEqual(encoder.code_blocks, int(self.bits_in_frame / self.nActual))
+
+
+class TestLDPCBinding(unittest.TestCase):
+    """Test Cpp bindings of the LDPC encoder."""
+
+    def setUp(self) -> None:
+
+        self.block_size = 256
+        self.rate = Fraction(2, 3)
+        self.iterations = 20
+
+        self.encoder = LDPCBinding(self.block_size, self.rate, self.iterations)
+
+        self.encoderTestResultsDir = os.path.join(os.path.dirname(__file__), 'res', 'ldpc')
+
+    def test_encoding(self) -> None:
+        """Test encoding behaviour against a pre-calculated set of data-code pairs."""
+
+        ldpc_results_mat = loadmat(os.path.join(
+                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
+            ), squeeze_me=True)
+
+        iterations = ldpc_results_mat['LDPC']['iterations'].item()
+        bit_blocks = ldpc_results_mat['bit_words'].astype(int)
+        expected_codes = ldpc_results_mat['code_words'].astype(int)
+        num_blocks = expected_codes.shape[0]
+
+        self.encoder.set_rate(256, Fraction(2, 3))
+        self.encoder.iterations = iterations
+
+        for n in range(num_blocks):
+
+            bit_block = bit_blocks[n, :]
+            expected_code = expected_codes[n, :]
+            code = self.encoder.encode(bit_block)
+
+            assert_array_equal(code, expected_code,
+                               "LDPC Cpp binding encoding produced unexpected result in block {}".format(n))
+
+    def test_decoding(self) -> None:
+        """Test decoding behaviour against a pre-calculated set of data-code pairs."""
+
+        ldpc_results_mat = loadmat(os.path.join(
+                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
+            ), squeeze_me=True)
+
+        iterations = ldpc_results_mat['LDPC']['iterations'].item()
+        expected_bit_blocks = ldpc_results_mat['bit_words'].astype(int)
+        codes = ldpc_results_mat['code_words'].astype(int)
+        num_blocks = codes.shape[0]
+
+        self.encoder.set_rate(256, Fraction(2, 3))
+        self.encoder.iterations = iterations
+
+        for n in range(num_blocks):
+
+            code = codes[n, :]
+            expected_bit_block = expected_bit_blocks[n, :]
+            bit_block = self.encoder.decode(code)
+
+            assert_array_equal(bit_block, expected_bit_block,
+                               "LDPC Cpp binding decoding produced unexpected result in block {}".format(n))

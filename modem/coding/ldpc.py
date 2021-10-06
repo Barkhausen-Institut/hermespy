@@ -43,8 +43,8 @@ class LDPC(Encoder):
 
     yaml_tag = u'LDPC'
     __rate: Fraction
-    __G: np.ndarray
-    __H: np.ndarray
+    _G: np.ndarray
+    _H: np.ndarray
     __iterations: int
     __custom_codes: Set[str]
 
@@ -67,8 +67,8 @@ class LDPC(Encoder):
         # Will be initialized and managed by set_rate
         if custom_codes is None:
             custom_codes = set()
-        self.__G = np.empty(0)
-        self.__H = np.empty(0)
+        self._G = np.empty(0)
+        self._H = np.empty(0)
         self.__rate = Fraction(1, 2)    # Directly overwritten by set_rate, so value does not matter
 
         self.iterations = iterations
@@ -107,16 +107,17 @@ class LDPC(Encoder):
         self.__iterations = num
 
     def encode(self, bits: np.array) -> np.array:
-        return (bits @ self.__G) % 2
+        return (bits @ self._G) % 2
 
     def decode(self, encoded_bits: np.array) -> np.array:
 
+        # Transform bits from {0, 1} format to {-1, 1}
         codes = -encoded_bits.copy()
         codes[codes > -.5] = 1.
         eps = 2.22045e-16
 
-        Rcv = np.zeros(self.__H.shape)
-        punc_bits = np.zeros(self.__H.shape[1] - self.__G.shape[1])
+        Rcv = np.zeros(self._H.shape)
+        punc_bits = np.zeros(self._H.shape[1] - self._G.shape[1])
         Qv = np.concatenate((punc_bits, codes))
 
         # Loop over the number of iteration in the SPA algorithm
@@ -126,7 +127,7 @@ class LDPC(Encoder):
             for check_ind in range(self.num_parity_bits):
 
                 # Finds the neighbouring variable nodes connected to the current check node
-                nb_var_nodes = np.nonzero(self.__H[check_ind, :])
+                nb_var_nodes = np.nonzero(self._H[check_ind, :])
 
                 # Temporary updated of encoded_bits
                 temp_llr = Qv[nb_var_nodes] - Rcv[check_ind, nb_var_nodes]
@@ -153,16 +154,16 @@ class LDPC(Encoder):
                     # Update Qv
                     Qv[var_pos] = Q_temp + Rcv[check_ind, var_pos]
 
-        dec_code_block = np.array(Qv[:self.bit_block_size] < 0, dtype=int)
-        return dec_code_block
+        # Return bit format from {-1, 1} format to {0, 1}
+        return np.array(Qv[:self.bit_block_size] < 0, dtype=int)
 
     @property
     def bit_block_size(self) -> int:
-        return self.__G.shape[0]
+        return self._G.shape[0]
 
     @property
     def code_block_size(self) -> int:
-        return self.__G.shape[1]
+        return self._G.shape[1]
 
     @property
     def num_parity_bits(self) -> int:
@@ -173,7 +174,7 @@ class LDPC(Encoder):
         """
 
         # The number of parity bits is identical to the first dimension of the parity check matrix H
-        return self.__H.shape[0]
+        return self._H.shape[0]
 
     @property
     def rate(self) -> float:
@@ -200,7 +201,7 @@ class LDPC(Encoder):
                                                                                                 rate.denominator))
 
         # Update internal coding matrices
-        self.__G, self.__H = self.__read_precalculated_codes(block_size, rate)
+        self._G, self._H = self.__read_precalculated_codes(block_size, rate)
         self.__rate = rate
 
     def __read_precalculated_codes(self, block_size: int, rate: Fraction) -> Tuple[np.array, np.array]:
@@ -242,11 +243,6 @@ class LDPC(Encoder):
 
         if mat is None:
             raise RuntimeError('Matlab file for selected code parameters not found')
-
-        rate = mat['LDPC']['rate'].item()
-        num_parity_bits = mat['LDPC']['numParBits'].item()
-        num_total_bits = mat['LDPC']['numTotBits'].item()
-        num_information_bits = mat['LDPC']['numInfBits'].item()
 
         Z = mat['LDPC']['Z'].item()
         H = mat['LDPC']['H'].item()

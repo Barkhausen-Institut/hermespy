@@ -21,7 +21,7 @@ __status__ = "Prototype"
 class LDPCBinding(LDPC):
     """Cpp binding of the LDPC encoder."""
 
-    def __init__(self, **args: Any) -> None:
+    def __init__(self, *args: Any) -> None:
         """Object initialization.
 
         Shadows the base constructor.
@@ -33,16 +33,17 @@ class LDPCBinding(LDPC):
 
     def encode(self, bits: np.array) -> np.array:
 
-        encoded_words = ldpc_binding.encode(
-            data_bits, self.G, self.Z, self.num_info_bits, self.encoded_bits_n,
-            self.data_bits_k, self.code_blocks, self.bits_in_frame
-        )
+        return ldpc_binding.encode(
+            [bits], self._G, 0, self.bit_block_size, self.code_block_size,
+            self.bit_block_size, 1, self.bit_block_size
+        )[0]
 
     def decode(self, encoded_bits: np.array) -> np.array:
-        decoded_blocks = ldpc_binding.decode(
-            encoded_bits, self.encoded_bits_n, self.code_blocks, self.number_parity_bits,
-            self.num_total_bits, self.Z, self.params.no_iterations, self.H, self.num_info_bits
-        )
-        return decoded_blocks
 
+        codes = encoded_bits.copy()
+        codes[codes < .5] = -1.
 
+        return ldpc_binding.decode(
+            [codes], self.code_block_size, 1, self.num_parity_bits,
+            self.code_block_size, int(.5 * (self._H.shape[1] - self._G.shape[1])), self.iterations,
+            self._H, self.bit_block_size)[0]
