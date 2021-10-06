@@ -105,8 +105,7 @@ class Modem(Generic[P]):
         frame_index = 1
 
         while timestamp < number_of_samples:
-            data_bits_per_frame = self.source.get_bits(
-                self.encoder_manager.encoders[0].source_bits)
+            data_bits_per_frame = self.source.get_bits(self.encoder_manager.source_bits)
 
             encoded_bits_per_frame = self.encoder_manager.encode(data_bits_per_frame)
             encoded_bits_per_frame_flattened = np.array([], dtype=int)
