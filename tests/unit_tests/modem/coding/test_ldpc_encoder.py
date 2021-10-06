@@ -2,20 +2,29 @@ import unittest
 from fractions import Fraction
 from tests.unit_tests.modem.utils import flatten_blocks
 import os
-from datetime import datetime
-
 import numpy as np
+from numpy.testing import assert_array_equal
 from scipy.io import loadmat
 
 from modem.coding import LDPC
-from parameters_parser.parameters_ldpc_encoder import ParametersLdpcEncoder
 
 
 class TestLdpcEncoder(unittest.TestCase):
+    """Test LDPC encoding behaviour."""
+
     def setUp(self) -> None:
-        self.params = ParametersLdpcEncoder()
+
+        self.block_size = 256
+        self.rate = Fraction(2, 3)
+        self.iterations = 20
+
+        self.encoder = LDPC(self.block_size, self.rate, self.iterations)
+
+        self.encoderTestResultsDir = os.path.join(os.path.dirname(__file__), 'res', 'ldpc')
+
+        """self.params = ParametersLdpcEncoder()
         self.params.code_rate = 2 / 3
-        self.params.block_size = 512
+        self.params.block_size =
         self.params.code_rate_fraction = Fraction(2, 3)
         self.params.no_iterations = 20
         self.params.custom_ldpc_codes = ""
@@ -25,11 +34,7 @@ class TestLdpcEncoder(unittest.TestCase):
         self.kActual = 352
         self.no_code_blocks = 2
         self.source_bits = self.no_code_blocks * self.kActual
-        self.bits_in_frame = self.no_code_blocks * self.nActual
-
-        self.encoder = LDPC(self.params, self.bits_in_frame)
-        self.encoderTestResultsDir = os.path.join(
-            os.path.dirname(__file__), 'res', 'ldpc')
+        self.bits_in_frame = self.no_code_blocks * self.nActual"""
 
     def test_ldpcBindingEncodingYieldsSameResultsAsPythonCode(self) -> None:
         params = ParametersLdpcEncoder()
@@ -75,28 +80,52 @@ class TestLdpcEncoder(unittest.TestCase):
         decoded_word_binding = encoder.decode([llrs])
         np.testing.assert_array_almost_equal(decoded_word[0], decoded_word_binding[0])
 
-    def test_properEncoding_oneBlock(self) -> None:
-        params = ParametersLdpcEncoder()
-        params.code_ratio = 2 / 3
-        params.block_size = 256
-        params.code_rate_fraction = Fraction(2, 3)
-        params.custom_ldpc_codes = ""
-        params.use_binding = False
+    def test_encoding(self) -> None:
+        """Test encoding behaviour against a pre-calculated set of data-code pairs."""
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
             ), squeeze_me=True)
-        params.no_iterations = ldpc_results_mat['LDPC']['iterations'].item()
 
-        bits_in_frame = len(ldpc_results_mat['code_words'][0])
+        iterations = ldpc_results_mat['LDPC']['iterations'].item()
+        bit_blocks = ldpc_results_mat['bit_words'].astype(int)
+        expected_codes = ldpc_results_mat['code_words'].astype(int)
+        num_blocks = expected_codes.shape[0]
 
-        encoder = LdpcEncoder(params, bits_in_frame)
+        self.encoder.set_rate(256, Fraction(2, 3))
+        self.encoder.iterations = iterations
 
-        expected_encoded_word = ldpc_results_mat['code_words'][0]
-        data_word = ldpc_results_mat['bit_words']
-        encoded_word = encoder.encode([data_word[0]])
+        for n in range(num_blocks):
 
-        np.testing.assert_array_almost_equal(encoded_word[0], expected_encoded_word)
+            bit_block = bit_blocks[n, :]
+            expected_code = expected_codes[n, :]
+            code = self.encoder.encode(bit_block)
+
+            assert_array_equal(code, expected_code, "LDPC encoding produced unexpected result in block {}".format(n))
+
+    def test_decoding(self) -> None:
+        """Test decoding behaviour against a pre-calculated set of data-code pairs."""
+
+        ldpc_results_mat = loadmat(os.path.join(
+                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
+            ), squeeze_me=True)
+
+        iterations = ldpc_results_mat['LDPC']['iterations'].item()
+        expected_bit_blocks = ldpc_results_mat['bit_words'].astype(int)
+        codes = ldpc_results_mat['code_words'].astype(int)
+        num_blocks = codes.shape[0]
+
+        self.encoder.set_rate(256, Fraction(2, 3))
+        self.encoder.iterations = iterations
+
+        for n in range(num_blocks):
+
+            code = codes[n, :]
+            expected_bit_block = expected_bit_blocks[n, :]
+            bit_block = self.encoder.decode(code)
+
+            assert_array_equal(bit_block, expected_bit_block,
+                               "LDPC decoding produced unexpected result in block {}".format(n))
 
     def test_readCustomLdpcEncoder_fileExists(self) -> None:
         self.params.custom_ldpc_codes = os.path.join(
@@ -111,12 +140,6 @@ class TestLdpcEncoder(unittest.TestCase):
         self.assertEqual(encoder.Z, 6)
 
     def test_properEncoding_multipleBlocks(self) -> None:
-        params = ParametersLdpcEncoder()
-        params.code_ratio = 2 / 3
-        params.block_size = 256
-        params.code_rate_fraction = Fraction(2, 3)
-        params.custom_ldpc_codes = ""
-        params.use_binding = False
 
         ldpc_results_mat = loadmat(os.path.join(
                 self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
