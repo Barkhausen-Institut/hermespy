@@ -4,7 +4,7 @@ import numpy as np
 import scipy.constants as const
 from source.bits_source import BitsSource
 from modem import Transmitter, Receiver
-from modem.coding import EncoderManager, Encoder, Interleaver, RepetitionEncoder
+from modem.coding import EncoderManager, Encoder, Interleaver, RepetitionEncoder, LDPC
 from modem import RfChain
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
 from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk

@@ -2,14 +2,13 @@
 """LDPC Encoding."""
 
 from __future__ import annotations
-from typing import List, Tuple
+from typing import Tuple, Set, Optional
 from scipy.io import loadmat
+from fractions import Fraction
 import os
-import warnings
 import numpy as np
 
 from modem.coding.encoder import Encoder
-
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -28,180 +27,231 @@ class LDPC(Encoder):
     [E. Sharon, S. Litsyn and J. Goldberger, "An efficient message-passing schedule for LDPC
     decoding," 2004 23rd IEEE Convention of Electrical and Electronics Engineers in Israel,
     2004, pp. 223-226].
+
+    Attributes:
+        CODE_RATES (Set[Fraction]): The supported code rates.
+        BLOCK_SIZES (Set[int]): The supported input block sizes.
     """
 
+    CODE_RATES: Set[Fraction] = [Fraction(1, 3),
+                                 Fraction(1, 2),
+                                 Fraction(2, 3),
+                                 Fraction(3, 4),
+                                 Fraction(4, 5),
+                                 Fraction(5, 6)]
+    BLOCK_SIZES: Set[int] = [256, 512, 1024, 2048, 4096, 8192]
+
     yaml_tag = u'LDPC'
-    __block_size: int
+    __rate: Fraction
+    __G: np.ndarray
+    __H: np.ndarray
     __iterations: int
+    __custom_codes: Set[str]
 
     def __init__(self,
-                 block_size: int = 1,
+                 block_size: int = 256,
+                 rate: Fraction = Fraction(2, 3),
                  iterations: int = 20,
-                 custom_codes: Tuple[str] = ()) -> None:
+                 custom_codes: Set[str] = None) -> None:
         """Object initialization.
 
         Args:
-            block_size (int, optional): Number of input / output bits.
-            iterations (int, optional): Number of iterations.
-            custom_codes (Tuple[str], optional): Discovery paths for custom LDPC codings.
+            block_size (int, optional): LDPC coding matrix block size.
+            rate: (Fraction, optional): Coding rate.
+            iterations (int, optional): Number of decoding iterations.
+            custom_codes (Set[str], optional): Discovery path for custom LDPC codings.
         """
 
         Encoder.__init__(self)
 
-        self.block_size = block_size
+        # Will be initialized and managed by set_rate
+        if custom_codes is None:
+            custom_codes = set()
+        self.__G = np.empty(0)
+        self.__H = np.empty(0)
+        self.__rate = Fraction(1, 2)    # Directly overwritten by set_rate, so value does not matter
+
         self.iterations = iterations
 
-        self._read_precalculated_codes()
-
-        if self.params.use_binding and 'ldpc_binding' not in globals():
-            self.params.use_binding = False
-            warnings.warn("LDPC C++ binding could not ne imported, falling back to slower Python LDPC implementation")
-
-        if self.code_blocks < 1:
-            raise ValueError("Code block must not be longer than bits in frame")
-
-    @property
-    def source_bits(self) -> int:
-        return self.code_blocks * self.data_bits_k
-
-    @property
-    def encoded_bits_n(self) -> int:
-        return self.num_total_bits
-
-    @property
-    def data_bits_k(self) -> int:
-        return self.num_info_bits
-
-    def encode(self, data_bits: List[np.array]) -> List[np.array]:
-        if self.params.use_binding:
-            return self.__encode_binding(data_bits)
+        if custom_codes is not None:
+            self.__custom_codes = custom_codes
         else:
-            return self.__encode_python(data_bits)
+            self.__custom_codes = set()
 
-    def __encode_python(self, data_bits: List[np.array]) -> List[np.array]:
-        no_bits = 0
-        encoded_words = []
-        for block in data_bits:
-            if not (len(block) % self.data_bits_k == 0):
-                raise ValueError("Block length must be an integer multiple of k")
-            for code_block_idx in range(self.code_blocks):
-                code_word = (block[:self.num_info_bits] @ self.G) % 2
-                # Puncturing the 2*Z first systematic bits to ensure the correct code rate
-                code_word = code_word[2 * self.Z:]
-                encoded_words.append(code_word)
+        self.set_rate(block_size, rate)
 
-                block = block[self.num_info_bits:]
-                no_bits += self.encoded_bits_n
+    @property
+    def iterations(self) -> int:
+        """Access the configured number of coding iterations.
 
-        if (self.bits_in_frame - no_bits) > 0:
-            encoded_words.append(np.random.randint(2, size=self.bits_in_frame - no_bits))
+        Returns:
+            int: The number of coding iterations.
+        """
 
-        return encoded_words
+        return self.__iterations
 
-    def __encode_binding(self, data_bits: List[np.array]) -> List[np.array]:
-        encoded_words = ldpc_binding.encode(
-            data_bits, self.G, self.Z, self.num_info_bits, self.encoded_bits_n,
-            self.data_bits_k, self.code_blocks, self.bits_in_frame
-        )
-        return encoded_words
+    @iterations.setter
+    def iterations(self, num: int) -> None:
+        """Modify the configured number of coding iterations.
 
-    def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
-        if self.params.use_binding:
-            return self.__decode_binding(encoded_bits)
-        else:
-            return self.__decode_python(encoded_bits)
+        Args:
+            num (int): The new number of coding iterations.
 
-    def __decode_python(self, encoded_bits: List[np.array]) -> List[np.array]:
+        Raises:
+            ValueError: If the number of iterations is less than one.
+        """
+
+        if num < 1:
+            raise ValueError("Number of iterations must be greater or equal to zero")
+
+        self.__iterations = num
+
+    def encode(self, bits: np.array) -> np.array:
+        return (bits @ self.__G) % 2
+
+    def decode(self, encoded_bits: np.array) -> np.array:
+
+        codes = -encoded_bits.copy()
+        codes[codes > -.5] = 1.
         eps = 2.22045e-16
-        decoded_blocks: List[np.array] = []
-        for block in encoded_bits:
-            dec_block: np.array = np.array([])
-            for code_block in range(self.code_blocks):
-                curr_code_block = -block[:self.encoded_bits_n]
 
-                Rcv = np.zeros((self.number_parity_bits, self.num_total_bits + 2 * self.Z))
-                punc_bits = np.zeros(2 * self.Z)
-                Qv = np.concatenate((punc_bits, curr_code_block))
-                # Loop over the number of iteration in the SPA algorithm
-                for spa_ind in range(self.params.no_iterations):
+        Rcv = np.zeros(self.__H.shape)
+        punc_bits = np.zeros(self.__H.shape[1] - self.__G.shape[1])
+        Qv = np.concatenate((punc_bits, codes))
 
-                    # Loop over the check nodes
-                    for check_ind in range(self.number_parity_bits):
+        # Loop over the number of iteration in the SPA algorithm
+        for spa_ind in range(self.iterations):
 
-                        # Finds the neighbouring variable nodes connected to the current check node
-                        nb_var_nodes = np.nonzero(self.H[check_ind, :])
+            # Loop over the check nodes
+            for check_ind in range(self.num_parity_bits):
 
-                        # Temporary updated of encoded_bits
-                        temp_llr = Qv[nb_var_nodes] - Rcv[check_ind, nb_var_nodes]
+                # Finds the neighbouring variable nodes connected to the current check node
+                nb_var_nodes = np.nonzero(self.__H[check_ind, :])
 
-                        # Magnitude of S
-                        S_mag = np.sum(-np.log(eps + np.tanh(np.abs(temp_llr) / 2)))
+                # Temporary updated of encoded_bits
+                temp_llr = Qv[nb_var_nodes] - Rcv[check_ind, nb_var_nodes]
 
-                        # Sign of S - counting the number of negative elements in temp_llr
-                        if np.sum(temp_llr < 0) % 2 == 0:
-                            S_sign = +1
-                        else:
-                            S_sign = -1
-                        # Loop over the variable nodes
-                        for var_ind in range(len(nb_var_nodes[0])):
-                            var_pos = nb_var_nodes[0][var_ind]
-                            Q_temp = Qv[var_pos] - Rcv[check_ind, var_pos]
-                            Q_temp_mag = -np.log(eps + np.tanh(np.abs(Q_temp) / 2))
-                            Q_temp_sign = np.sign(Q_temp + eps)
+                # Magnitude of S
+                S_mag = np.sum(-np.log(eps + np.tanh(np.abs(temp_llr) / 2)))
 
-                            # Update message passing matrix
-                            Rcv[check_ind, var_pos] = S_sign * Q_temp_sign * (
-                                -np.log(eps + np.tanh(np.abs(S_mag - Q_temp_mag) / 2)))
+                # Sign of S - counting the number of negative elements in temp_llr
+                if np.sum(temp_llr < 0) % 2 == 0:
+                    S_sign = +1
+                else:
+                    S_sign = -1
+                # Loop over the variable nodes
+                for var_ind in range(len(nb_var_nodes[0])):
+                    var_pos = nb_var_nodes[0][var_ind]
+                    Q_temp = Qv[var_pos] - Rcv[check_ind, var_pos]
+                    Q_temp_mag = -np.log(eps + np.tanh(np.abs(Q_temp) / 2))
+                    Q_temp_sign = np.sign(Q_temp + eps)
 
-                            # Update Qv
-                            Qv[var_pos] = Q_temp + Rcv[check_ind, var_pos]
+                    # Update message passing matrix
+                    Rcv[check_ind, var_pos] = S_sign * Q_temp_sign * (
+                        -np.log(eps + np.tanh(np.abs(S_mag - Q_temp_mag) / 2)))
 
-                dec_code_block = np.array(Qv[:self.num_info_bits] < 0, dtype=int)
-                dec_block = np.append(dec_block, dec_code_block)
+                    # Update Qv
+                    Qv[var_pos] = Q_temp + Rcv[check_ind, var_pos]
 
-                block = block[self.encoded_bits_n:]
-            decoded_blocks.append(dec_block)
+        dec_code_block = np.array(Qv[:self.bit_block_size] < 0, dtype=int)
+        return dec_code_block
 
-        return decoded_blocks
+    @property
+    def bit_block_size(self) -> int:
+        return self.__G.shape[0]
 
-    def __decode_binding(self, encoded_bits: List[np.array]) -> List[np.array]:
-        decoded_blocks = ldpc_binding.decode(
-            encoded_bits, self.encoded_bits_n, self.code_blocks, self.number_parity_bits,
-            self.num_total_bits, self.Z, self.params.no_iterations, self.H, self.num_info_bits
+    @property
+    def code_block_size(self) -> int:
+        return self.__G.shape[1]
+
+    @property
+    def num_parity_bits(self) -> int:
+        """The number of parity bis introduced by the LDPC coding.
+
+        Returns:
+            int: the number of parity bits.
+        """
+
+        # The number of parity bits is identical to the first dimension of the parity check matrix H
+        return self.__H.shape[0]
+
+    @property
+    def rate(self) -> float:
+        return float(self.__rate)
+
+    def set_rate(self, block_size: int, rate: Fraction) -> None:
+        """Configure the coding rate.
+
+        Args:
+            block_size (int): LDPC matrix coding block size.
+            rate (Fraction): Code rate, i.e. the relation between number of data and code bits.
+
+        Raises:
+            ValueError: If the requested `bit_block_size` is not supported.
+            ValueError: If the requested `rate` is not supported
+        """
+
+        if block_size not in self.BLOCK_SIZES:
+            raise ValueError("Code block size of {} codewords is currently not supported by the LDPC encoder"
+                             .format(block_size))
+
+        if rate not in self.CODE_RATES:
+            raise ValueError("Rate of {}/{} currently not supported by the LDPC encoder".format(rate.numerator,
+                                                                                                rate.denominator))
+
+        # Update internal coding matrices
+        self.__G, self.__H = self.__read_precalculated_codes(block_size, rate)
+        self.__rate = rate
+
+    def __read_precalculated_codes(self, block_size: int, rate: Fraction) -> Tuple[np.array, np.array]:
+        """Read precalculated LDPC coding matrices from a Matlab save file.
+
+        The function expects save files to be named after the scheme `BS*_*_*.mat`,
+        the first wildcard being the bit block size, the following ones the rate numerator
+        and denominator respectively, i.e. BS256_1_2.mat for block size 256 and rate 1/2.
+
+        Args:
+            block_size (int): LDPC matrix coding block size.
+            rate (Fraction): Code rate, i.e. the relation between number of data and code bits.
+
+        Raises:
+            RuntimeError: If a valid save file could not be detected in all lookup paths.
+
+        Returns:
+            Tuple[np.array, np.array]: LDPC coding and decoding matrices.
+        """
+
+        lookup_paths = {
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'precalculated_codes')
+        }.union(self.__custom_codes)
+
+        mat_filename = "BS{}_CR{}_{}.mat".format(
+            block_size,
+            rate.numerator,
+            rate.denominator
         )
-        return decoded_blocks
 
-    def _read_precalculated_codes(self):
-        # Supports code rates Rc = ['1/3', '1/2', '2/3', '3/4', '5/6']
-        # and codeword block size n = [256, 512, 1024, 2048, 4096, 8192]
-        precalculated_codes_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            'precalculated_codes'
-        )
-        mat_filename = "BS{0}_CR{1}_{2}.mat".format(
-                            self.params.block_size,
-                            self.params.code_rate_fraction.numerator,
-                            self.params.code_rate_fraction.denominator
-                        )
-        path_mat_files: List[str] = [os.path.join(precalculated_codes_dir, mat_filename)]
+        # Search for the mat file in all possible locations
+        mat: Optional[dict] = None
+        for lookup_path in lookup_paths:
 
-        if self.params.custom_ldpc_codes != "":
-            path_mat_files.append(
-                os.path.join(self.params.custom_ldpc_codes, mat_filename))
+            lookup_file = os.path.join(lookup_path, mat_filename)
 
-        ldpc_file_found = False
-        for path in path_mat_files:
-            if os.path.exists(path):
-                LDPC = loadmat(path, squeeze_me=True)
-                ldpc_file_found = True
+            if os.path.exists(lookup_path):
+                mat = loadmat(lookup_file, squeeze_me=True)
 
-        if not ldpc_file_found:
-            raise ValueError('Error: The specified block size or code rate are not supported.')
+        if mat is None:
+            raise RuntimeError('Matlab file for selected code parameters not found')
 
-        self.H = LDPC['LDPC']['H'].item()
-        self.G = LDPC['LDPC']['G'].item()
+        rate = mat['LDPC']['rate'].item()
+        num_parity_bits = mat['LDPC']['numParBits'].item()
+        num_total_bits = mat['LDPC']['numTotBits'].item()
+        num_information_bits = mat['LDPC']['numInfBits'].item()
 
-        self.number_parity_bits = LDPC['LDPC']['numParBits'].item()
-        self.num_total_bits = LDPC['LDPC']['numTotBits'].item()
-        self.Z = LDPC['LDPC']['Z'].item()
-        self.num_info_bits = LDPC['LDPC']['numInfBits'].item()
+        Z = mat['LDPC']['Z'].item()
+        H = mat['LDPC']['H'].item()
+
+        G = mat['LDPC']['G'].item()
+        G = G[:, 2*Z:]
+
+        return G, H
