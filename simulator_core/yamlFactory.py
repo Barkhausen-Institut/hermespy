@@ -75,7 +75,7 @@ class Factory:
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
 
         # Construct regular expressions for purging
-        self.__purge_regex_alpha = compile(r': !.*')
+        self.__purge_regex_alpha = compile(r': !<.*')
         self.__purge_regex_beta = compile(r"- !<([^']+)>")
         self.__restore_regex_alpha = compile(r"([ ]*)([a-zA-Z]+):\n$")
         self.__restore_regex_beta = compile(r"([ ]*)- ([^\s]+)([^']*)\n$")

@@ -2,9 +2,10 @@
 """LDPC Encoding."""
 
 from __future__ import annotations
-from typing import Tuple, Set, Optional
+from typing import Tuple, Set, Optional, Type
 from scipy.io import loadmat
 from fractions import Fraction
+from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
 import os
 import numpy as np
 
@@ -43,6 +44,7 @@ class LDPC(Encoder):
 
     yaml_tag = u'LDPC'
     __rate: Fraction
+    __block_size: int
     _G: np.ndarray
     _H: np.ndarray
     __iterations: int
@@ -69,6 +71,7 @@ class LDPC(Encoder):
             custom_codes = set()
         self._G = np.empty(0)
         self._H = np.empty(0)
+        self.__block_size = block_size
         self.__rate = Fraction(1, 2)    # Directly overwritten by set_rate, so value does not matter
 
         self.iterations = iterations
@@ -202,6 +205,7 @@ class LDPC(Encoder):
 
             # Update internal coding matrices
             self._G, self._H = self.__read_precalculated_codes(block_size, rate)
+            self.__block_size = block_size
             self.__rate = rate
 
         except RuntimeError as error:
@@ -263,3 +267,57 @@ class LDPC(Encoder):
         G = G[:, 2*Z:]
 
         return G, H
+
+    @classmethod
+    def to_yaml(cls: Type[LDPC], representer: SafeRepresenter, node: LDPC) -> MappingNode:
+        """Serialize an `LDPC` encoder to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (RepetitionEncoder):
+                The `LDPC` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            "block_size": node.__block_size,
+            "rate": (node.__rate.numerator, node.__rate.denominator),
+            "iterations": node.iterations
+        }
+
+        if len(node.custom_codes) > 0:
+            state["custom_codes"] = node.custom_codes
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[LDPC], constructor: SafeConstructor, node: MappingNode) -> LDPC:
+        """Recall a new `LDPC` encoder from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `LDPC` serialization.
+
+        Returns:
+            RepetitionEncoder:
+                Newly created `LDPC` encoder instance.
+
+        Note that the created instance is floating by default.
+        """
+
+        state = constructor.construct_mapping(node)
+
+        rate = state.pop("rate", None)
+        if rate is not None:
+            state["rate"] = Fraction(rate[0], rate[1])
+
+        return cls(**state)
