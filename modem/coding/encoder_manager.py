@@ -29,6 +29,7 @@ class EncoderManager:
 
     @property
     def source_bits(self) -> int:
+        """Returns lowest number of source bits of all of the encoders."""
         min_source_bits_encoder = min(self._encoders, key=lambda encoder: encoder.source_bits)
         return min_source_bits_encoder.source_bits
 
