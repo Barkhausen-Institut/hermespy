@@ -32,8 +32,10 @@ class TestEncoderManager(unittest.TestCase):
         self.params_encoder2.data_bits_k = 6
         self.params_encoder2.encoded_bits_n = 7
 
-        self.encoder1 = StubEncoder(self.params_encoder1, 100, None)
-        self.encoder2 = StubEncoder(self.params_encoder2, 100, None)
+        self.bits_in_frame = 100
+
+        self.encoder1 = StubEncoder(self.params_encoder1, self.bits_in_frame, None)
+        self.encoder2 = StubEncoder(self.params_encoder2, self.bits_in_frame, None)
 
         self.encoder_manager = EncoderManager()
 
@@ -99,7 +101,6 @@ class TestEncoderManager(unittest.TestCase):
             )]
         )
 
-
     def test_code_rate_calculation(self) -> None:
         self.encoder_manager.add_encoder(self.encoder1)
         self.encoder_manager.add_encoder(self.encoder2)
@@ -108,3 +109,11 @@ class TestEncoderManager(unittest.TestCase):
             * self.params_encoder2.data_bits_k / self.params_encoder2.encoded_bits_n
         )
         self.assertAlmostEqual(expected_code_rate, self.encoder_manager.code_rate)
+
+    def test_source_bits_calculation(self) -> None:
+        self.encoder_manager.add_encoder(self.encoder2)
+        self.encoder_manager.add_encoder(self.encoder1)
+        self.assertEqual(
+            self.encoder_manager.source_bits,
+            self.encoder1.source_bits
+        )

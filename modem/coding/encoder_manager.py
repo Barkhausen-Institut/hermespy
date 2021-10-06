@@ -18,6 +18,7 @@ class EncoderManager:
     @property
     def encoders(self) -> List[Encoder]:
         return self._encoders
+
     @property
     def code_rate(self) -> float:
         R = 1
@@ -25,6 +26,11 @@ class EncoderManager:
             R *= encoder.data_bits_k / encoder.encoded_bits_n
 
         return R
+
+    @property
+    def source_bits(self) -> int:
+        min_source_bits_encoder = min(self._encoders, key=lambda encoder: encoder.source_bits)
+        return min_source_bits_encoder.source_bits
 
     def encode(self, data_bits: List[np.array]) -> List[np.array]:
         encoded_bits: List[np.array] = data_bits
