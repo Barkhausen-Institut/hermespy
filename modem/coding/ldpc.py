@@ -106,6 +106,12 @@ class LDPC(Encoder):
 
         self.__iterations = num
 
+    @property
+    def custom_codes(self) -> Set[str]:
+        """Access and modify custom code lookup paths."""
+
+        return self.__custom_codes
+
     def encode(self, bits: np.array) -> np.array:
         return (bits @ self._G) % 2
 
@@ -192,17 +198,23 @@ class LDPC(Encoder):
             ValueError: If the requested `rate` is not supported
         """
 
-        if block_size not in self.BLOCK_SIZES:
-            raise ValueError("Code block size of {} codewords is currently not supported by the LDPC encoder"
-                             .format(block_size))
+        try:
 
-        if rate not in self.CODE_RATES:
-            raise ValueError("Rate of {}/{} currently not supported by the LDPC encoder".format(rate.numerator,
-                                                                                                rate.denominator))
+            # Update internal coding matrices
+            self._G, self._H = self.__read_precalculated_codes(block_size, rate)
+            self.__rate = rate
 
-        # Update internal coding matrices
-        self._G, self._H = self.__read_precalculated_codes(block_size, rate)
-        self.__rate = rate
+        except RuntimeError as error:
+
+            if block_size not in self.BLOCK_SIZES:
+                raise ValueError("Code block size of {} codewords is currently not supported by the LDPC encoder"
+                                 .format(block_size))
+
+            if rate not in self.CODE_RATES:
+                raise ValueError("Rate of {}/{} currently not supported by the LDPC encoder".format(rate.numerator,
+                                                                                                    rate.denominator))
+            # The error was unexpected, re-raise it
+            raise error
 
     def __read_precalculated_codes(self, block_size: int, rate: Fraction) -> Tuple[np.array, np.array]:
         """Read precalculated LDPC coding matrices from a Matlab save file.
@@ -238,7 +250,7 @@ class LDPC(Encoder):
 
             lookup_file = os.path.join(lookup_path, mat_filename)
 
-            if os.path.exists(lookup_path):
+            if os.path.exists(lookup_file):
                 mat = loadmat(lookup_file, squeeze_me=True)
 
         if mat is None:
