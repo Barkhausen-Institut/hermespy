@@ -178,22 +178,48 @@ class EncoderManager:
             code[b*code_block_size:(b+1)*code_block_size] = code_state
 
         # Pad overall result with zeros if some bits are missing at the end
-        code[-num_code_padding_bits:] = np.zeros(num_code_padding_bits, dtype=int)
+        if num_code_padding_bits > 0:
+            code[-num_code_padding_bits:] = np.zeros(num_code_padding_bits, dtype=int)
 
         # Return resulting overall code
         return code
 
     @staticmethod
     def __encoding_step(encoder: Encoder, data_bits: np.array) -> np.array:
+        """Internal function running a single encoding.
 
-        num_padding_bits = encoder.bit_block_size - data_bits.shape[0]
+        Incoming `data_bits` may be padded with zeros to match the encoder
+        `bit_block_size` specifications.
+
+        Args:
+            encoder (Encoder): The encoder processing the incoming data.
+            data_bits (np.array): Data feeding into the encoder.
+
+        Returns:
+            np.array: Bits of encoded data processed by the encoder.
+        """
+
+        bit_block_size = encoder.bit_block_size
+        code_block_size = encoder.code_block_size
+
+        num_blocks = int(ceil(data_bits.shape[0] / bit_block_size))
+        num_input_bits = bit_block_size * num_blocks
+        num_padding_bits = num_input_bits - data_bits.shape[0]
+        num_output_bits = code_block_size * num_blocks
 
         if num_padding_bits < 0:
             raise ValueError("Encoder chain configuration invalid, "
                              "since an output produces more bits than required at the next input")
 
-        padded_input = np.concatenate((data_bits, np.zeros(num_padding_bits, dtype=int)))
-        return encoder.encode(padded_input)
+        data_bits = np.append(data_bits, np.zeros(num_padding_bits, dtype=int))
+        code_bits = np.empty(num_output_bits, dtype=int)
+
+        for b in range(num_blocks):
+
+            input_bits = data_bits[b*bit_block_size:(b+1)*bit_block_size]
+            code_bits[b*code_block_size:(b+1)*code_block_size] = encoder.encode(input_bits)
+
+        return code_bits
 
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
         decoded_bits: List[np.array] = encoded_bits
