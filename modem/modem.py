@@ -211,87 +211,36 @@ class Modem:
         The signal may be distorted by RF impairments.
 
         Args:
-            drop_duration (float, optional): Length of signal in seconds.
+            drop_duration (float): Length of signal in seconds.
 
         Returns:
             np.ndarray:
                 Complex baseband samples, rows denoting transmitter antennas and
                 columns denoting samples.
         """
-
-        # Use the global scenario drop duration by default
-        if drop_duration is None:
-            drop_duration = self.scenario.drop_duration
-
-        # Number of required samples over the whole drop duration
-        sample_count = int(drop_duration * self.sampling_rate)
-
-        # Sample distance in seconds
-        sample_time = self.sampling_rate**-1
-
-        # Collect MIMO parameters
-        num_streams = self.precoding.num_transmit_streams
-
-        # Collect frame parameters
-        frame_length = self.waveform_generator.frame_length
-        frame_bit_count = self.waveform_generator.frame_bit_count
-        num_frames = int(ceil(drop_duration / frame_length))        # Number of dedicated frames within drop_duration
-        frames_sample_count = int(num_frames * frame_length * self.sampling_rate)
-        frame_sample_count = int(frames_sample_count / num_frames)
-        frames_bit_count = frame_bit_count * num_frames             # Number of bits required to generate all frames
-
-        # Generate frame input bits
-        frame_bits = self.bits_source.get_bits(frames_bit_count)[0].reshape(num_frames, frame_bit_count)
-
-        # Generate frame sample timestamps
-        frame_timestamps = (sample_time * np.arange(frames_sample_count).reshape((num_frames, frame_sample_count))) % frame_length
-
-        # Generate samples
-        frame_samples = np.empty((num_frames, frame_sample_count), dtype=complex)
-        for frame_index in range(num_frames):   # TODO: Possible parallel computation
-            frame_samples[frame_index, :] = self.waveform_generator.create_frame()
-
-        # Collect encoder parameters
-        # encoder_block_bit_count = self.encoder_manager.num_input_bits
-        # encoder_block_count = int(ceil(frame_bit_count / self.encoder_manager.))
-        # encoder_input_bit_count = encoder_block_count * encoder_block_bit_count
-
-        current_frame_index = -1
-        frame_bits = np.empty(0, dtype=int)
-
-        for sample_index in range(sample_count):
-
-            timestamp = sample_index * sample_time       # Global drop sample timestamp
-            frame_timestamp = timestamp % frame_length   # Local frame sample timestamp
-            frame_index = int(timestamp / frame_length)  # Global frame index within this drop
-
-            # Generate a new set of frame bits every time a new frame is sampled
-            if current_frame_index < frame_index:
-
-                current_frame_index = frame_index
-
-                encoder_input_bits = self.bits_source.get_bits()
-                frame_bits = self.encoder_manager.encode()
-
-
+        # coded_bits = self.encoder.encoder(data_bits)
         number_of_samples = int(
             np.ceil(
-                ))
+                drop_duration *
+                self.sampling_rate))
         timestamp = 0
         frame_index = 1
 
+        num_code_bits = self.waveform_generator.frame_bit_count
+        num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
+
         while timestamp < number_of_samples:
-            data_bits_per_frame = self.bits_source.get_bits(self.encoder_manager.num_input_bits)
 
-            encoded_bits_per_frame = self.encoder_manager.encode(data_bits_per_frame)
-            encoded_bits_per_frame_flattened = np.array([], dtype=int)
-            for block in encoded_bits_per_frame:
-                encoded_bits_per_frame_flattened = np.append(
-                    encoded_bits_per_frame_flattened, block
-                )
+            # Generate source data bits
+            data_bits = self.__bits_source.get_bits(num_data_bits)[0]
 
+            # Apply channel coding to the source bits
+            code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
+
+            # Generate base-band waveforms
             frame, timestamp, initial_sample_num = self.waveform_generator.create_frame(
-                timestamp, encoded_bits_per_frame_flattened)
+                timestamp, code_bits)
+
             if frame_index == 1:
                 tx_signal, samples_delay = self._allocate_drop_size(
                     initial_sample_num, number_of_samples)

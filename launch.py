@@ -47,7 +47,7 @@ scenario.channel(transmitterB, receiverB).active = True
 
 # Drop
 scenario.init_drop()
-# signals = scenario.transmit()
+signals = scenario.transmit()
 
 # Print scenario serialization
 factory = Factory()

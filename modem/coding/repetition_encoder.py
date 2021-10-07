@@ -51,8 +51,12 @@ class RepetitionEncoder(Encoder):
             np.array: The encoded `bits` block.
         """
 
-        code = np.zeros(self.code_block_size)
-        code[(self.bit_block_size * self.repetitions):] = np.repeat(bits, self.repetitions)
+        num_code_bits = self.bit_block_size * self.repetitions
+        num_padding_bits = self.code_block_size - num_code_bits
+
+        code = np.empty(self.code_block_size)
+        code[:num_code_bits] = np.repeat(bits, self.repetitions)
+        code[-num_padding_bits:] = np.zeros(num_padding_bits, dtype=int)
 
         return code
 

@@ -123,29 +123,77 @@ class EncoderManager:
 
         return self._encoders
 
-    def encode(self, data_bits: np.array) -> np.array:
+    def encode(self, data_bits: np.array, num_code_bits: Optional[int] = None) -> np.array:
         """Encode a stream of source bits.
 
         By default, the input `data_bits` will be padded with zeros
         to match the next integer multiple of the expected `bit_block_size`.
 
+        The resulting code will be padded with zeros to match the requested `num_code_bits`.
+
         Args:
             data_bits (np.array): The data bits to be encoded.
+            num_code_bits (int, optional): The expected number of code bits.
 
         Returns:
             np.array: The encoded source bits.
+
+        Raises:
+            ValueError: If `num_code_bits` is smaller than the resulting code bits after encoding.
         """
 
-        bits: np.ndarray = data_bits.copy()
+        bit_block_size = self.bit_block_size
+        code_block_size = self.code_block_size
+        num_blocks = int(ceil(data_bits.shape[0] / self.bit_block_size))
 
-        for encoder in self._encoders:
+        num_data_bits = num_blocks * bit_block_size
+        num_data_padding_bits = num_data_bits - data_bits.shape[0]
 
-            num_input_blocks = int(ceil(bits.shape[0] / encoder.bit_block_size))
-            # num_padding_bits = input_bits.shape[0] % encoder.bit_block_size
+        if num_code_bits is None:
 
-            bits = encoder.encode(bits)
+            num_code_bits = num_blocks * code_block_size
+            num_code_padding_bits = 0
 
-        return bits
+        else:
+
+            num_minimal_code_bits = num_blocks * code_block_size  # Number of bits required to completely encode data
+            num_code_padding_bits = num_code_bits - num_minimal_code_bits
+
+            if num_code_bits < num_minimal_code_bits:
+                raise ValueError("The requested number of code bits would discard parts for vital recoverability")
+
+        padded_bits = np.concatenate((data_bits, np.zeros(num_data_padding_bits, dtype=int)))
+        code = np.empty(num_code_bits, dtype=int)
+
+        for b in range(num_blocks):
+
+            # Initialize the encoding configuration input
+            code_state = padded_bits[b*bit_block_size:(b+1)*bit_block_size]
+
+            # Loop through the encoders and encode the data, using the output of the last encoder as input to the next
+            for encoder in self._encoders:
+                code_state = self.__encoding_step(encoder, code_state)
+
+            # Save result in the respective code block
+            code[b*code_block_size:(b+1)*code_block_size] = code_state
+
+        # Pad overall result with zeros if some bits are missing at the end
+        code[-num_code_padding_bits:] = np.zeros(num_code_padding_bits, dtype=int)
+
+        # Return resulting overall code
+        return code
+
+    @staticmethod
+    def __encoding_step(encoder: Encoder, data_bits: np.array) -> np.array:
+
+        num_padding_bits = encoder.bit_block_size - data_bits.shape[0]
+
+        if num_padding_bits < 0:
+            raise ValueError("Encoder chain configuration invalid, "
+                             "since an output produces more bits than required at the next input")
+
+        padded_input = np.concatenate((data_bits, np.zeros(num_padding_bits, dtype=int)))
+        return encoder.encode(padded_input)
 
     def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
         decoded_bits: List[np.array] = encoded_bits
@@ -212,3 +260,16 @@ class EncoderManager:
             code_rate *= encoder.rate
 
         return code_rate
+
+    def required_num_data_bits(self, num_code_bits: int) -> int:
+        """Compute the number of input bits required to produce a certain number of output bits.
+
+        Args:
+            num_code_bits (int): The expected number of output bits.
+
+        Returns:
+            int: The required number of input bits.
+        """
+
+        num_blocks = int(num_code_bits / self.code_block_size)
+        return self.bit_block_size * num_blocks
