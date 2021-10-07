@@ -143,16 +143,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return self.chirp_duration * (self.num_data_chirps + self.num_pilot_chirps) + self.guard_interval
 
     @property
-    def frame_bit_count(self) -> int:
-        """Number of bits required to generate a single data frame.
-
-        Returns:
-            int: Number of bits
-        """
-
-        return self.num_data_chirps + self.bits_per_symbol
-
-    @property
     def chirp_duration(self) -> float:
         """Access the chirp duration.
 
@@ -342,13 +332,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return int(np.log2(self.modulation_order))
 
     @property
-    def bits_in_frame(self) -> int:
-        """The number of bits per generated frame.
-
-        Returns:
-            int:
-                The number of bits.
-        """
+    def frame_bit_count(self) -> int:
 
         return self.num_data_chirps * self.bits_per_symbol
 
@@ -383,7 +367,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 Chirp timestamps.
         """
 
-        return np.arange(self.samples_in_chirp) / self.__sampling_rate
+        return np.arange(self.samples_in_chirp) / self.sampling_rate
 
     @property
     def samples_in_frame(self) -> int:
@@ -395,7 +379,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         """
 
         return (self.samples_in_chirp * self.chirps_in_frame +
-                int((np.around(self.__guard_interval * self.__sampling_rate))))
+                int((np.around(self.__guard_interval * self.sampling_rate))))
 
     @property
     def symbol_energy(self) -> float:
@@ -434,7 +418,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             integrate.cumtrapz(
                 frequency,
                 dx=1 /
-                self.__sampling_rate,
+                self.sampling_rate,
                 initial=0)
 
         output_signal = amplitude * np.exp(1j * phase)
@@ -472,7 +456,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         """Calculates the chirp frequencies.
 
         Args:
-            initial_frequency (np.array): Initial frquencies of chirps.
+            initial_frequency (np.array): Initial frequencies of chirps.
 
         Returns:
             (np.array, np.array):
