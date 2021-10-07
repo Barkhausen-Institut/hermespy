@@ -45,6 +45,7 @@ class Modem:
     __precoding: Precoding
     __bits_source: BitsSource
     __waveform_generator: Optional[WaveformGenerator]
+    __tx_power: float
     __rf_chain: RfChain
 
     def __init__(self,
@@ -58,6 +59,7 @@ class Modem:
                  encoding: EncoderManager = None,
                  precoding: Precoding = None,
                  waveform_generator: WaveformGenerator = None,
+                 tx_power: float = None,
                  rfchain: RfChain = None) -> None:
         """Object initialization.
 
@@ -69,13 +71,14 @@ class Modem:
         """
 
         self.__scenario = None
-        self.__carrier_frequency = 2.4e9
-        self.__sampling_rate = 2 * 2.5e9
+        self.__carrier_frequency = 800e6
+        self.__sampling_rate = 1e3
         self.__linear_topology = False
         self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
         self.__precoding = Precoding()
         self.__waveform_generator = None
+        self.__tx_power = 1.0
         self.__rf_chain = RfChain()
 
         if scenario is not None:
@@ -108,6 +111,9 @@ class Modem:
         if waveform_generator is not None:
             self.waveform_generator = waveform_generator
 
+        if tx_power is not None:
+            self.tx_power = tx_power
+
         if rfchain is not None:
             self.rf_chain = rfchain
 
@@ -131,6 +137,7 @@ class Modem:
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
             "sampling_rate": node.__sampling_rate,
+            "tx_power": node.__tx_power,
             BitsSource.yaml_tag: node.__bits_source,
             EncoderManager.yaml_tag: node.__encoder_manager,
             Precoding.yaml_tag: node.__precoding,
@@ -219,10 +226,7 @@ class Modem:
                 columns denoting samples.
         """
         # coded_bits = self.encoder.encoder(data_bits)
-        number_of_samples = int(
-            np.ceil(
-                drop_duration *
-                self.sampling_rate))
+        number_of_samples = int(np.ceil(drop_duration * self.sampling_rate))
         timestamp = 0
         frame_index = 1
 
@@ -263,7 +267,7 @@ class Modem:
             # last frame may be larger than allocated space, because of
             # filtering
             tx_signal = np.append(
-                tx_signal, np.zeros((self.param.number_of_antennas, end_sample_idx - tx_signal.shape[1])), axis=1)
+                tx_signal, np.zeros((self.num_antennas, end_sample_idx - tx_signal.shape[1])), axis=1)
 
         tx_signal[:, initial_sample_idx:end_sample_idx] += frame
         return tx_signal, samples_delay
@@ -276,16 +280,16 @@ class Modem:
         else:
             samples_delay = 0
 
-        tx_signal = np.zeros((self.param.number_of_antennas, number_of_samples - initial_sample_num),
+        tx_signal = np.zeros((self.num_antennas, number_of_samples - initial_sample_num),
                              dtype=complex)
         return tx_signal, samples_delay
 
     def _adjust_tx_power(self, tx_signal: np.ndarray) -> np.ndarray:
         """Adjusts power of tx_signal by power factor."""
-        if self.param.tx_power != 0:
+        if self.tx_power != 0:
             power = self.waveform_generator.get_power()
 
-            self.power_factor = self.param.tx_power / power
+            self.power_factor = self.tx_power / power
             tx_signal = tx_signal * np.sqrt(self.power_factor)
 
         return tx_signal
@@ -590,6 +594,32 @@ class Modem:
 
         self.__waveform_generator = waveform_generator
         self.__waveform_generator.modem = self
+
+    @property
+    def tx_power(self) -> float:
+        """Power of the transmitted signal.
+
+        Returns:
+            float: Transmit power.
+        """
+
+        return self.__tx_power
+
+    @tx_power.setter
+    def tx_power(self, power: float) -> None:
+        """Modify the power of the transmitted signal.
+
+        Args:
+            power (float): The new signal transmit power in Watts?.
+
+        Raises:
+            ValueError: If transmit power is negative.
+        """
+
+        if power < 0.0:
+            return ValueError("Transmit power must be greater or equal to zero")
+
+        self.__tx_power = power
 
     @property
     def rf_chain(self) -> RfChain:
