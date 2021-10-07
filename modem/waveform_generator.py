@@ -4,9 +4,6 @@ from typing import List, Tuple, TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
-from parameters_parser.parameters_waveform_generator import ParametersWaveformGenerator
-from channel.channel import Channel
-
 if TYPE_CHECKING:
     from modem import Modem
 
@@ -358,11 +355,11 @@ class WaveformGenerator(ABC):
         return self.__modem
 
     @modem.setter
-    def modem(self, modem: Modem) -> None:
+    def modem(self, handle: Modem) -> None:
         """Modify the modem this generator is attached to.
 
         Args:
-            modem (Modem):
+            handle (Modem):
                 Handle to a modem.
 
         Raises:
@@ -370,7 +367,7 @@ class WaveformGenerator(ABC):
                 If the `modem` does not reference this generator.
         """
 
-        if modem.waveform_generator is not self:
+        if handle.waveform_generator is not self:
             raise RuntimeError("Invalid modem attachment routine")
 
-        self.__modem = modem
+        self.__modem = handle
