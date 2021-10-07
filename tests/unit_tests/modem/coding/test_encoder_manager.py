@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 from ruamel.yaml import SafeRepresenter
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -23,6 +23,8 @@ class TestEncoderManager(unittest.TestCase):
 
         self.assertIs(self.modem, self.encoder_manager.modem, "Modem not properly initialized")
         self.assertIs(0, len(self.encoder_manager.encoders), "Encoder list not properly initialized")
+        self.assertEqual(True, self.encoder_manager.allow_truncating, "Truncating flag not properly initialized")
+        self.assertEqual(True, self.encoder_manager.allow_padding, "Padding flag not properly initialized")
 
     def test_to_yaml(self) -> None:
         """Serialization to YAML."""
@@ -106,16 +108,27 @@ class TestEncoderManager(unittest.TestCase):
         self.assertEquals(self.encoder_manager.rate, self.encoder_alpha.rate * self.encoder_beta.rate,
                           "Coding rate calculation produced unexpected result")
 
-    def test_encoding(self) -> None:
-        """Test the encoding behaviour."""
+    def test_empty_encoding(self) -> None:
+        """Test proper encoding without an encoder."""
 
-        # Default (empty) encoder manager
         data = np.arange(10)
         expected_code = data.copy()
         code = self.encoder_manager.encode(data)
         assert_array_equal(expected_code, code, "Default encoding behaviour unexpected")
 
-        # Configured (mocked) encoder manager
+    def test_single_encoding(self) -> None:
+        """Test proper encoding with a single encoder."""
+
+        self.encoder_manager.add_encoder(self.encoder_alpha)
+
+        data = ((np.arange(self.encoder_manager.bit_block_size) % 2) == 1).astype(int)
+        expected_code = data.repeat(2)
+        code = self.encoder_manager.encode(data)
+        assert_array_equal(code, expected_code, "Encode mocking produced unexpected result")
+
+    def test_chained_encodings(self) -> None:
+        """Test proper encoding with multiple chained encoders."""
+
         self.encoder_manager.add_encoder(self.encoder_alpha)
         self.encoder_manager.add_encoder(self.encoder_beta)
 
@@ -124,14 +137,26 @@ class TestEncoderManager(unittest.TestCase):
         code = self.encoder_manager.encode(data)
         assert_array_equal(code, expected_code, "Encode mocking produced unexpected result")
 
-    def test_decoding(self) -> None:
-        """Test the decoding behaviour."""
+    def test_empty_decoding(self) -> None:
+        """Test proper decoding without an encoder."""
 
-        # Default (empty) encoder manager
         code = np.arange(10)
         expected_data = code.copy()
         data = self.encoder_manager.decode(code)
         assert_array_equal(expected_data, data, "Default decoding behaviour unexpected")
+
+    def test_single_decoding(self) -> None:
+        """Test proper decoding with a single decoder"""
+
+        self.encoder_manager.add_encoder(self.encoder_alpha)
+
+        expected_data = ((np.arange(self.encoder_manager.bit_block_size) % 2) == 1).astype(int)
+        code = expected_data.repeat(2)
+        data = self.encoder_manager.decode(code)
+        assert_array_equal(data, expected_data, "Decode mocking produced unexpected result")
+
+    def test_chained_decoding(self) -> None:
+        """Test proper decoding with multiple chained encoders."""
 
         # Configured (mocked) encoder manager
         self.encoder_manager.add_encoder(self.encoder_alpha)
@@ -141,3 +166,23 @@ class TestEncoderManager(unittest.TestCase):
         code = expected_data.repeat(4)
         data = self.encoder_manager.decode(code)
         assert_array_equal(data, expected_data, "Decode mocking produced unexpected result")
+
+    def test_padding(self) -> None:
+        """Test the padding of zeros on insufficient code lengths."""
+
+        self.encoder_manager.add_encoder(self.encoder_alpha)
+
+        data = np.ones(self.encoder_manager.bit_block_size, dtype=int)
+        expected_code = np.append(data.repeat(2), np.zeros(2, dtype=int))
+        code = self.encoder_manager.encode(data, expected_code.shape[0])
+        assert_array_equal(code, expected_code, "Encode padding unexpected result")
+
+    def test_truncating(self) -> None:
+        """Test the truncating of bits on overflowing data lengths"""
+
+        self.encoder_manager.add_encoder(self.encoder_alpha)
+
+        expected_data = ((np.arange(self.encoder_manager.bit_block_size) % 2) == 1).astype(int)
+        code = expected_data.repeat(2)
+        data = self.encoder_manager.decode(code, expected_data.shape[0]-2)
+        assert_array_equal(data, expected_data[:-2], "Decode truncating produced unexpected results")

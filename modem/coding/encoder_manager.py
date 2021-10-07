@@ -15,18 +15,26 @@ class EncoderManager:
     yaml_tag = 'Encoding'
     __modem: Optional[Modem]
     _encoders: List[Encoder]
+    allow_padding: bool
+    allow_truncating: bool
 
     def __init__(self,
-                 modem: Modem = None) -> None:
+                 modem: Modem = None,
+                 allow_padding: bool = True,
+                 allow_truncating: bool = True) -> None:
         """Object initialization.
 
         Args:
             modem (Modem, optional): The modem this `EncoderManager` belongs to.
+            allow_padding(bool, optional): Allow the addition of padding during encoding.
+            allow_truncating(bool, optional): Allow the truncating of codes during decoding.
         """
 
         # Default parameters
         self.__modem = None
         self._encoders: List[Encoder] = []
+        self.allow_padding = allow_padding
+        self.allow_truncating = allow_truncating
 
         if modem is not None:
             self.modem = modem
@@ -165,6 +173,7 @@ class EncoderManager:
         padded_bits = np.concatenate((data_bits, np.zeros(num_data_padding_bits, dtype=int)))
         code = np.empty(num_code_bits, dtype=int)
 
+        # Iterate over data blocks to be individually encoded
         for b in range(num_blocks):
 
             # Initialize the encoding configuration input
@@ -184,8 +193,7 @@ class EncoderManager:
         # Return resulting overall code
         return code
 
-    @staticmethod
-    def __encoding_step(encoder: Encoder, data_bits: np.array) -> np.array:
+    def __encoding_step(self, encoder: Encoder, data_bits: np.array) -> np.array:
         """Internal function running a single encoding.
 
         Incoming `data_bits` may be padded with zeros to match the encoder
@@ -208,8 +216,11 @@ class EncoderManager:
         num_output_bits = code_block_size * num_blocks
 
         if num_padding_bits < 0:
-            raise ValueError("Encoder chain configuration invalid, "
-                             "since an output produces more bits than required at the next input")
+            raise RuntimeError("Encoder chain configuration invalid, "
+                               "since an output produces more bits than required at the next input")
+
+        if not self.allow_padding and num_padding_bits > 0:
+            raise RuntimeError("Padding required but not allowed")
 
         data_bits = np.append(data_bits, np.zeros(num_padding_bits, dtype=int))
         code_bits = np.empty(num_output_bits, dtype=int)
@@ -221,12 +232,97 @@ class EncoderManager:
 
         return code_bits
 
-    def decode(self, encoded_bits: List[np.array]) -> List[np.array]:
-        decoded_bits: List[np.array] = encoded_bits
-        for encoder in reversed(self._encoders):
-            decoded_bits = encoder.decode(decoded_bits)
+    def decode(self, encoded_bits: np.array, num_data_bits: Optional[int] = None) -> np.array:
+        """Decode a stream of code bits to plain data bits.
 
-        return decoded_bits
+        By default, decoding `encoded_bits` may ignore bits in order
+        to match the next integer multiple of the expected `code_block_size`.
+
+        The resulting data might be cut to match the requested `num_data_bits`.
+
+        Args:
+            encoded_bits (np.array): The encoded code bits to be decoded to data.
+            num_data_bits (int, optional): The expected number of resulting data bits
+
+        Returns:
+            np.array: The decoded code bits as plain data bits.
+
+        Raises:
+            RuntimeError: If `num_data_bits` is bigger than the resulting data bits after decoding.
+            RuntimeError: If truncating is required but not allowed.
+        """
+
+        bit_block_size = self.bit_block_size
+        code_block_size = self.code_block_size
+        num_blocks = int(encoded_bits.shape[0] / self.code_block_size)  # Float to int conversion floors by default
+
+        if num_data_bits is not None:
+
+            num_data_bits_full = num_blocks * bit_block_size
+
+            if num_data_bits > num_data_bits_full:
+                raise RuntimeError("The requested number of data bits is larger than number "
+                                   "of bits recovered by decoding")
+
+            if not self.allow_truncating and num_data_bits != num_data_bits_full:
+                raise RuntimeError("Data truncating is required but not allowed")
+
+        else:
+            num_data_bits = num_blocks * bit_block_size
+
+        data_bits = np.empty(num_blocks * bit_block_size, dtype=int)
+
+        # Iterate over code blocks to be individually decoded
+        for b in range(num_blocks):
+
+            # Initialize the decoding "pipeline" input
+            data_state = encoded_bits[b*code_block_size:(b+1)*code_block_size]
+
+            # Loop through the encoders decode the code using the output of the last encoder as input to the next
+            for encoder in reversed(self._encoders):
+                data_state = self.__decoding_step(encoder, data_state)
+
+            # Save resulting decoded data block
+            data_bits[b*bit_block_size:(b+1)*bit_block_size] = data_state
+
+        # Return resulting data, truncate if required
+        return data_bits[:num_data_bits]
+
+    def __decoding_step(self, encoder: Encoder, code_bits: np.array) -> np.array:
+        """Internal function running a single decoding.
+
+        Args:
+            encoder (Encoder): The encoder processing the incoming code.
+            code_bits (np.array): Code block feeding into the encoder.
+
+        Returns:
+            np.array: Bits of decoded codes processed by the encoder.
+
+        Raises:
+            RuntimeError: If truncating is required but not allowed.
+        """
+
+        bit_block_size = encoder.bit_block_size
+        code_block_size = encoder.code_block_size
+
+        num_blocks = int(code_bits.shape[0] / code_block_size)
+        num_data_bits = bit_block_size * num_blocks
+
+        if not self.allow_truncating:
+
+            num_code_bits = code_block_size * num_blocks
+
+            if num_code_bits != code_bits.shape[0]:
+                raise ValueError("Code truncating required but not allowed")
+
+        data_bits = np.empty(num_data_bits, dtype=int)
+
+        for b in range(num_blocks):
+
+            code_block = code_bits[b*code_block_size:(b+1)*code_block_size]
+            data_bits[b*bit_block_size:(b+1)*bit_block_size] = encoder.decode(code_block)
+
+        return data_bits
 
     @property
     def bit_block_size(self) -> int:

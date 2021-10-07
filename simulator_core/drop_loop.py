@@ -137,7 +137,8 @@ class DropLoop:
             list(np.ndarray):
                 List of length `#tx_modems` containing np.ndarray of sent signals.
         """
-        tx_signal = []
+
+        tx_signal = self._scenario.transmit(self.params.drop_length)
 
         for source, modem in zip(self._scenario.sources,
                                  self._scenario.tx_modems):
