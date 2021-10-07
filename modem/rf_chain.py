@@ -81,11 +81,10 @@ class RfChain:
 
         According to transmission impairments.
         """
-        if self.param is not None:
-            output_signal = self.power_amplifier.send(input_signal)
-        else:
-            output_signal = input_signal
-        return output_signal
+        if self.power_amplifier is not None:
+            return self.power_amplifier.send(input_signal)
+
+        return input_signal
 
     def receive(self, input_signal: np.ndarray) -> np.ndarray:
         """Returns the distorted version of signal in "input_signal".
