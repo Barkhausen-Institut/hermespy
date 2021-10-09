@@ -179,7 +179,7 @@ class WaveformGenerator(ABC):
 
     @property
     @abstractmethod
-    def frame_bit_count(self) -> int:
+    def bits_per_frame(self) -> int:
         """Number of bits required to generate a single data frame.
 
         Returns:
@@ -216,14 +216,15 @@ class WaveformGenerator(ABC):
 
         return self.__modem
 
+    @property
     @abstractmethod
-    def get_bit_energy(self) -> float:
+    def bit_energy(self) -> float:
         """Returns the theoretical average (discrete-time) bit energy of the modulated signal.
 
         Energy of signal x[k] is defined as \\sum{|x[k]}^2
         Only data bits are considered, i.e., reference, guard intervals are ignored.
         """
-        pass
+        ...
 
     @property
     @abstractmethod
@@ -236,17 +237,17 @@ class WaveformGenerator(ABC):
         Returns:
             The average symbol energy in UNIT.
         """
-        pass
+        ...
 
+    @property
     @abstractmethod
-    def get_power(self) -> float:
+    def power(self) -> float:
         """Returns the theoretical average symbol (unitless) power,
 
-        Power of signal x[k] is defined as \\sum_{k=1}^N{|x[k]}^2 / N
+        Power of signal x[k] is defined as \\sum_{k=1}^N{|x[k]|}^2 / N
         Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate
         """
-
-        return 0.0
+        ...
 
     @abstractmethod
     def create_frame(self, old_timestamp: int,
@@ -264,7 +265,7 @@ class WaveformGenerator(ABC):
                 `int`: timestamp(in sample number) of frame end.
                 `int`: Sample number of first sample in frame (to account for possible filtering).
         """
-        pass
+        ...
 
     @abstractmethod
     def receive_frame(self,

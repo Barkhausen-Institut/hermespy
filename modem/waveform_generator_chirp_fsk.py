@@ -4,9 +4,19 @@ from functools import lru_cache
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 from scipy import integrate
+from math import ceil
 
 from modem import Modem
 from modem.waveform_generator import WaveformGenerator
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class WaveformGeneratorChirpFsk(WaveformGenerator):
@@ -40,12 +50,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                  guard_interval: float = None) -> None:
         """Object initialization."""
 
-        WaveformGenerator.__init__(self,
-                                   modem=modem,
-                                   sampling_rate=sampling_rate,
-                                   oversampling_factor=oversampling_factor,
-                                   modulation_order=modulation_order)
-
         # Default parameters
         self.__chirp_duration = 512e-6
         self.__chirp_bandwidth = 500e3
@@ -53,10 +57,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         self.__num_pilot_chirps = 0
         self.__num_data_chirps = 20
         self.__guard_interval = 0.0
-        self.sampling_rate = 10 / self.__chirp_duration  # 10 samples per chirp
-
-        if modulation_order is not None:
-            self.modulation_order = modulation_order
 
         if chirp_duration is not None:
             self.chirp_duration = chirp_duration
@@ -78,6 +78,16 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         if guard_interval is not None:
             self.guard_interval = guard_interval
+
+        WaveformGenerator.__init__(self,
+                                   modem=modem,
+                                   sampling_rate=sampling_rate,
+                                   oversampling_factor=oversampling_factor,
+                                   modulation_order=modulation_order)
+
+        # Guess sampling rate if not explicitly configured
+        if not sampling_rate:
+            self.sampling_rate = self.chirp_bandwidth * self.oversampling_factor
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorChirpFsk],
@@ -133,7 +143,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return cls(**state)
 
     @property
-    def frame_length(self) -> float:
+    def frame_duration(self) -> float:
         """Length of one data frame in seconds.
 
         Returns:
@@ -166,7 +176,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 If the duration is less or equal to zero.
         """
 
-        if duration < 0:
+        if duration < 0.0:
             raise ValueError("Chirp duration must be greater than zero")
 
         self.__chirp_duration = duration
@@ -332,7 +342,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return int(np.log2(self.modulation_order))
 
     @property
-    def frame_bit_count(self) -> int:
+    def bits_per_frame(self) -> int:
 
         return self.num_data_chirps * self.bits_per_symbol
 
@@ -345,11 +355,11 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 The number of samples.
         """
 
-        return int(np.around(self.chirp_duration * self.sampling_rate))
+        return int(ceil(self.chirp_duration * self.sampling_rate))
 
     @property
     def chirps_in_frame(self) -> int:
-        """The number of chirps per generated chirp.
+        """The number of chirps per generated frame.
 
         Returns:
             int:
@@ -392,14 +402,19 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             The average symbol energy in UNIT.
         """
 
-        _, _, energy = self._prototypes(self.bits_per_symbol,
-                                        self.samples_in_chirp,
-                                        self.modulation_order,
-                                        self.sampling_rate,
-                                        self.chirp_bandwidth,
-                                        self.chirp_duration,
-                                        self.freq_difference)
+        _, _, energy = self._prototypes()
         return energy
+
+    @property
+    def bit_energy(self) -> float:
+        """Theoretical average bit energy of the modulated signal.
+
+        Returns:
+            The average bit energy in UNIT.
+        """
+
+        _, _, symbol_energy = self._prototypes()
+        return symbol_energy / self.bits_per_symbol
 
     def create_frame(self, timestamp: int,
                      data_bits: np.array) -> Tuple[np.ndarray, int, int]:
@@ -429,7 +444,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return output_signal[np.newaxis, :], timestamp, initial_sample_num
 
     def _calculate_frequency_offsets(
-            self, data_bits: List[np.array]) -> np.ndarray:
+            self, data_bits: np.array) -> np.ndarray:
         """Calculates the frequency offsets on frame creation.
 
         Args:
@@ -502,13 +517,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             frame_signal = frame_signal[self.samples_in_chirp *
                                         self.num_pilot_chirps:]
 
-            cos_prototype, sin_prototype, _ = self._prototypes(self.bits_per_symbol,
-                                                               self.samples_in_chirp,
-                                                               self.modulation_order,
-                                                               self.sampling_rate,
-                                                               self.chirp_bandwidth,
-                                                               self.chirp_duration,
-                                                               self.freq_difference)
+            cos_prototype, sin_prototype, _ = self._prototypes()
 
             for symbol_idx in range(self.num_data_chirps):
                 symbol_signal = frame_signal[:self.samples_in_chirp]
@@ -544,22 +553,12 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         return bits, rx_signal
 
-    def get_bit_energy(self) -> float:
-        return self.symbol_energy / self.bits_per_symbol
-
-    def get_power(self) -> float:
+    @property
+    def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
 
-    @lru_cache(maxsize=1, typed=True)
-    def _prototypes(self,
-                    bits_per_symbol: int,
-                    samples_in_chirp: int,
-                    modulation_order: int,
-                    sampling_rate: float,
-                    chirp_bandwidth: float,
-                    chirp_duration: float,
-                    freq_difference: float
-                    ) -> Tuple[np.array, np.array, float]:
+    # @lru_cache(maxsize=1, typed=True)
+    def _prototypes(self) -> Tuple[np.array, np.array, float]:
         """Generate chirp prototypes.
 
         This method generates the prototype chirps for all possible modulation symbols, that will be correlated with the
@@ -577,32 +576,21 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         """
 
         # Chirp parameter inference
-        slope = chirp_bandwidth / chirp_duration
-        chirp_time = np.arange(samples_in_chirp) / sampling_rate
-        f0 = -.5 * chirp_bandwidth
+        slope = self.chirp_bandwidth / self.chirp_duration
+        chirp_time = self.chirp_time
+        f0 = -.5 * self.chirp_bandwidth
         f1 = -f0
 
         # non-coherent detection
-        cos_signal = np.zeros(
-            (2 ** bits_per_symbol,
-             samples_in_chirp),
-            dtype=complex)
-        sin_signal = np.zeros(
-            (2 ** bits_per_symbol,
-             samples_in_chirp),
-            dtype=complex)
+        cos_signal = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
+        sin_signal = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
 
-        for idx in range(modulation_order):
-            initial_frequency = f0 + idx * freq_difference
+        for idx in range(self.modulation_order):
+            initial_frequency = f0 + idx * self.freq_difference
             frequency = initial_frequency + chirp_time * slope
-            frequency[frequency > f1] -= chirp_bandwidth
+            frequency[frequency > f1] -= self.chirp_bandwidth
 
-            phase = 2 * np.pi * \
-                integrate.cumtrapz(
-                    frequency,
-                    dx=1 /
-                    sampling_rate,
-                    initial=0)
+            phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
             cos_signal[idx, :] = np.exp(1j * phase)
             sin_signal[idx, :] = np.exp(1j * (phase - np.pi / 2))
 
