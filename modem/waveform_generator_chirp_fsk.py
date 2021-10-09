@@ -53,6 +53,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         self.__num_pilot_chirps = 0
         self.__num_data_chirps = 20
         self.__guard_interval = 0.0
+        self.sampling_rate = 10 / self.__chirp_duration  # 10 samples per chirp
 
         if modulation_order is not None:
             self.modulation_order = modulation_order
@@ -107,7 +108,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         }
 
         mapping = representer.represent_mapping(cls.yaml_tag, state)
-        #mapping = representer.represent_omap(cls.yaml_tag, state)
         mapping.value.extend(WaveformGenerator.to_yaml(representer, node).value)
 
         return mapping
@@ -484,13 +484,15 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     def receive_frame(self,
                       rx_signal: np.ndarray,
                       timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[List[np.array], np.ndarray]:
+                      noise_var: float) -> Tuple[np.array, np.ndarray]:
 
-        useful_signal_length = self.samples_in_chirp * self.chirps_in_frame
+        useful_signal_length = self.samples_in_frame
 
+        # Received signal is too short to recover a full frame
         if rx_signal.shape[1] < useful_signal_length:
             bits = None
             rx_signal = np.array([])
+
         else:
             bits = np.zeros(
                 (self.num_data_chirps, self.bits_per_symbol), dtype=int)
@@ -511,9 +513,9 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             for symbol_idx in range(self.num_data_chirps):
                 symbol_signal = frame_signal[:self.samples_in_chirp]
                 frame_signal = frame_signal[self.samples_in_chirp:]
-                symbol_metric = np.zeros(self.__modulation_order)
+                symbol_metric = np.zeros(self.modulation_order)
 
-                for signal_idx in range(self.__modulation_order):
+                for signal_idx in range(self.modulation_order):
                     real_signal = np.real(symbol_signal)
                     imag_signal = np.imag(symbol_signal)
                     cos_metric = np.sum(
@@ -540,7 +542,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         bits = np.ravel(bits)
 
-        return list([bits]), rx_signal
+        return bits, rx_signal
 
     def get_bit_energy(self) -> float:
         return self.symbol_energy / self.bits_per_symbol

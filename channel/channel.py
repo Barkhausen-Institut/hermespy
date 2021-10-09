@@ -289,36 +289,39 @@ class Channel:
         pass
 
     @abstractmethod
-    def propagate(self, tx_signal: np.ndarray) -> np.ndarray:
+    def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
         """Modifies the input signal and returns it after channel propagation.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of one's.
 
-        If 'tx_signal' is an array of size `number_tx_antennas` X `number_of_samples`,
-        then the output `rx_signal` will be an array of size
-        `number_rx_antennas` X `number_of_samples`.
-
         Args:
-            tx_signal (np.ndarray): Input signal.
+            transmitted_signal (np.ndarray): Input signal antenna signals to be propagated of this channel instance.
 
         Returns:
             np.ndarray:
-                The distorted signal after propagation. The output depends
-                on the channel model employed.
+                The distorted signal after propagation.
+                The output depends on the channel model employed.
+
+        Raises:
+            ValueError: If the first dimension of `transmitted_signal` is not one or the number of transmitting antennas.
+            RuntimeError: If the scenario configuration is not supported by the default channel model.
         """
 
-        # Convert input arrays to 1D-matrices
-        if tx_signal.ndim == 1:
-            tx_signal = np.reshape(tx_signal, (1, -1))
+        if transmitted_signal.ndim != 2:
+            raise ValueError("Transmitted signal must be a matrix (an array of two dimensions)")
 
-        if tx_signal.ndim != 2 or tx_signal.shape[0] != self.transmitter.num_streams:
-            raise ValueError(
-                'tx_signal must be an array with {:d} rows'.format(
-                    self.transmitter.num_streams))
+        # If just on stream feeds into the channel, the output shall be the repeated stream by default.
+        # Note: This might not be accurate physical behaviour for some sensor array topologies!
+        if transmitted_signal.shape[0] == 1:
+            return self.gain * transmitted_signal.repeat(self.receiver.num_antennas, axis=0)
 
-        # By default, we assume an ideal MIMO response
-        rx_signal = np.ones((self.receiver.num_antennas, self.transmitter.num_antennas), dtype=complex) @ tx_signal
-        return rx_signal * self.gain
+        if transmitted_signal.shape[0] != self.transmitter.num_antennas:
+            raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+
+        if self.transmitter.num_antennas != self.receiver.num_antennas:
+            raise ValueError("The default channel only supports links between modems with identical antenna count")
+
+        return self.gain * transmitted_signal
 
     @abstractmethod
     def get_impulse_response(self, timestamps: np.array) -> np.ndarray:

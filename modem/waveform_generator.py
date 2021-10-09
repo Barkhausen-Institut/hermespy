@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List, Tuple, TYPE_CHECKING, Optional, Type
+from typing import Tuple, TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
@@ -179,16 +179,6 @@ class WaveformGenerator(ABC):
 
     @property
     @abstractmethod
-    def frame_length(self) -> float:
-        """Length of one data frame in seconds.
-
-        Returns:
-            float: Frame length in seconds.
-        """
-        ...
-
-    @property
-    @abstractmethod
     def frame_bit_count(self) -> int:
         """Number of bits required to generate a single data frame.
 
@@ -198,9 +188,21 @@ class WaveformGenerator(ABC):
         ...
 
     @property
-    def max_frame_length(self) -> float:
+    def frame_duration(self) -> float:
+        """Length of one data frame in seconds.
+
+        Returns:
+            float: Frame length in seconds.
+        """
+
+        return self.samples_in_frame / self.sampling_rate
+
+    @property
+    def max_frame_duration(self) -> float:
         """float: Maximum length of a data frame (in seconds)"""
-        return (self.samples_in_frame + self._samples_overhead_in_frame) / self.sampling_rate
+
+        # TODO: return (self.samples_in_frame + self._samples_overhead_in_frame) / self.sampling_rate
+        return self.samples_in_frame / self.sampling_rate
 
     @property
     def modem(self) -> Modem:
@@ -268,7 +270,7 @@ class WaveformGenerator(ABC):
     def receive_frame(self,
                       rx_signal: np.ndarray,
                       timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[List[np.array], np.ndarray]:
+                      noise_var: float) -> Tuple[np.array, np.ndarray]:
         """Receives and detects the bits from a new received frame.
 
 
@@ -286,12 +288,12 @@ class WaveformGenerator(ABC):
                 ES/NO required for equalization.
 
         Returns:
-            (List[np.narray], np.ndarray):
-                `List[np.array]`: Detected bits as a list of data blocks.
+            (np.ndarray, np.ndarray):
+                `np.array`: Detected bits.
                 `np.ndarray`: remeaining received signal corresponding to the
                 following frames.
         """
-        pass
+        ...
 
     @property
     def sampling_rate(self) -> float:

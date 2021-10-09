@@ -3,11 +3,9 @@ from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import Type, List, TYPE_CHECKING
 
-from modem import Modem
 from source import BitsSource
-
-if TYPE_CHECKING:
-    from scenario import Scenario
+from modem import Modem
+from modem.waveform_generator import WaveformGenerator
 
 
 class Receiver(Modem):
@@ -21,15 +19,25 @@ class Receiver(Modem):
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
 
         state = constructor.construct_mapping(node, CommentedOrderedMap)
-        bits_source = state.pop(BitsSource.yaml_tag, None)
+
+        waveform_generator = None
+        bits_source = None
+
+        for key in state.keys():
+            if key.startswith(WaveformGenerator.yaml_tag):
+                waveform_generator = state.pop(key)
+                break
+
+        for key in state.keys():
+            if key.startswith(BitsSource.yaml_tag):
+                bits_source = state.pop(key)
+                break
+
+        state[WaveformGenerator.yaml_tag] = waveform_generator
+        state[BitsSource.yaml_tag] = bits_source
 
         args = dict((k.lower(), v) for k, v in state.items())
-        receiver = Receiver(**args)
-
-        if bits_source is not None:
-            receiver.bits_source = bits_source
-
-        return receiver
+        return Receiver(**args)
 
     @property
     def index(self) -> int:
