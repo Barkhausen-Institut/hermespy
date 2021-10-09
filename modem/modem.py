@@ -55,10 +55,10 @@ class Modem:
                  topology: np.ndarray = None,
                  carrier_frequency: float = None,
                  sampling_rate: float = None,
-                 bits_source: BitsSource = None,
+                 bits: BitsSource = None,
                  encoding: EncoderManager = None,
                  precoding: Precoding = None,
-                 waveform_generator: WaveformGenerator = None,
+                 waveform: WaveformGenerator = None,
                  tx_power: float = None,
                  rfchain: RfChain = None) -> None:
         """Object initialization.
@@ -99,8 +99,8 @@ class Modem:
         if sampling_rate is not None:
             self.sampling_rate = sampling_rate
 
-        if bits_source is not None:
-            self.bits_source = bits_source
+        if bits is not None:
+            self.bits_source = bits
 
         if encoding is not None:
             self.__encoder_manager = encoding
@@ -108,8 +108,8 @@ class Modem:
         if precoding is not None:
             self.__precoding = precoding
 
-        if waveform_generator is not None:
-            self.waveform_generator = waveform_generator
+        if waveform is not None:
+            self.waveform_generator = waveform
 
         if tx_power is not None:
             self.tx_power = tx_power
@@ -212,18 +212,24 @@ class Modem:
 
         pass
 
-    def send(self, drop_duration: float = None) -> np.ndarray:
+    def send(self,
+             drop_duration: Optional[float] = None,
+             data_bits: Optional[np.array] = None) -> np.ndarray:
         """Returns an array with the complex baseband samples of a waveform generator.
 
         The signal may be distorted by RF impairments.
 
         Args:
-            drop_duration (float): Length of signal in seconds.
+            drop_duration (float, optional): Length of signal in seconds.
+            data_bits (np.array, optional): Data bits to be sent via this transmitter.
 
         Returns:
             np.ndarray:
                 Complex baseband samples, rows denoting transmitter antennas and
                 columns denoting samples.
+
+        Raises:
+            ValueError: If not enough data bits were provided to generate as single frame.
         """
         # coded_bits = self.encoder.encoder(data_bits)
         number_of_samples = int(np.ceil(drop_duration * self.sampling_rate))
@@ -233,13 +239,18 @@ class Modem:
         num_code_bits = self.waveform_generator.frame_bit_count
         num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
 
-        while timestamp < number_of_samples:
-
-            # Generate source data bits
+        # Generate source data bits if none are provided
+        if data_bits is None:
             data_bits = self.__bits_source.get_bits(num_data_bits)[0]
 
-            # Apply channel coding to the source bits
-            code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
+        # Make sure enough data bits were provided
+        elif len(data_bits) < num_data_bits:
+            raise ValueError("Number of provided data bits is insufficient to generate a single frame")
+
+        # Apply channel coding to the source bits
+        code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
+
+        while timestamp < number_of_samples:
 
             # Generate base-band waveforms
             frame, timestamp, initial_sample_num = self.waveform_generator.create_frame(
@@ -294,7 +305,7 @@ class Modem:
 
         return tx_signal
 
-    def receive(self, input_signal: np.ndarray, noise_var: float) -> List[np.array]:
+    def receive(self, input_signal: np.ndarray, noise_var: float) -> np.ndarray:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
@@ -309,8 +320,8 @@ class Modem:
         rx_signal = self.rf_chain.receive(input_signal)
 
         # normalize signal to expected input power
-        rx_signal = rx_signal / np.sqrt(self.paired_tx_modem.power_factor)
-        noise_var = noise_var / self.paired_tx_modem.power_factor
+        rx_signal = rx_signal / np.sqrt(1.0)  # TODO: Re-implement pair power factor
+        noise_var = noise_var / 1.0           # TODO: Re-implement pair power factor
 
         all_bits = list()
         timestamp_in_samples = 0
@@ -652,3 +663,14 @@ class Modem:
         """
 
         return self.__precoding
+
+    @property
+    def num_data_bits_per_frame(self) -> int:
+        """Compute the number of required data bits to generate a single frame.
+
+        Returns:
+            int: The number of data bits.
+        """
+
+        num_code_bits = self.waveform_generator.frame_bit_count
+        return self.encoder_manager.required_num_data_bits(num_code_bits)

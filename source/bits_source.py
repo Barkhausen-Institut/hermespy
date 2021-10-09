@@ -14,7 +14,7 @@ ErrorStats = namedtuple(
 class BitsSource:
     """Implements a random bit source, with calculation of error statistics."""
 
-    yaml_tag = "BitsSource"
+    yaml_tag = "Bits"
     __random_state: rnd.RandomState
     bits_in_drop: List[np.array]
 
