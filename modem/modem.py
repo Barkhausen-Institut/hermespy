@@ -2,16 +2,13 @@ from __future__ import annotations
 from typing import Tuple, Generic, TypeVar, List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
-from numpy import random as rnd
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, Node
-from math import ceil
 
 from modem.precoding import Precoding
 from modem.coding import EncoderManager
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
-from channel.channel import Channel
 from source.bits_source import BitsSource
 
 if TYPE_CHECKING:
@@ -236,7 +233,7 @@ class Modem:
         timestamp = 0
         frame_index = 1
 
-        num_code_bits = self.waveform_generator.frame_bit_count
+        num_code_bits = self.waveform_generator.bits_per_frame
         num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
 
         # Generate source data bits if none are provided
@@ -342,17 +339,14 @@ class Modem:
     def get_bit_energy(self) -> float:
         """Returns the average bit energy of the modulated signal.
         """
-        R = self.encoder_manager.code_rate
+        R = self.encoder_manager.rate
         return self.waveform_generator.get_bit_energy() * self.power_factor / R
 
     def get_symbol_energy(self) -> float:
         """Returns the average symbol energy of the modulated signal.
         """
-        R = self.encoder_manager.code_rate
-        return self.waveform_generator.get_symbol_energy() * self.power_factor / R
-
-    def set_channel(self, channel: Channel):
-        self.waveform_generator.set_channel(channel)
+        R = self.encoder_manager.rate
+        return self.waveform_generator.symbol_energy * self.power_factor / R
 
     @property
     def position(self) -> np.array:
@@ -628,7 +622,7 @@ class Modem:
         """
 
         if power < 0.0:
-            return ValueError("Transmit power must be greater or equal to zero")
+            raise ValueError("Transmit power must be greater or equal to zero")
 
         self.__tx_power = power
 
@@ -672,5 +666,5 @@ class Modem:
             int: The number of data bits.
         """
 
-        num_code_bits = self.waveform_generator.frame_bit_count
+        num_code_bits = self.waveform_generator.bits_per_frame
         return self.encoder_manager.required_num_data_bits(num_code_bits)
