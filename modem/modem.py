@@ -295,7 +295,7 @@ class Modem:
     def _adjust_tx_power(self, tx_signal: np.ndarray) -> np.ndarray:
         """Adjusts power of tx_signal by power factor."""
         if self.tx_power != 0:
-            power = self.waveform_generator.get_power()
+            power = self.waveform_generator.power
 
             self.power_factor = self.tx_power / power
             tx_signal = tx_signal * np.sqrt(self.power_factor)

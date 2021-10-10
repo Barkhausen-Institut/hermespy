@@ -7,7 +7,3 @@ from .waveform_generator import WaveformGenerator
 from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 
 __all__ = [Modem, Transmitter, Receiver, RfChain, WaveformGenerator, WaveformGeneratorChirpFsk]
-
-# Register serializable classes to YAML factory
-import simulator_core as core
-core.SerializableClasses.update(__all__)

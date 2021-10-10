@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from ruamel.yaml import YAML, Node
 from io import StringIO
 import sys
+import os
 
 # 8x8 MIMO arrays at 60Ghz
 carrier_frequency = 60e9
@@ -54,10 +55,6 @@ received_bits = scenario.receive(propagated_signals)
 
 # Print scenario serialization
 factory = Factory()
-factory.clean = True
+executable = factory.load(os.path.join(os.path.dirname(os.path.realpath(__file__)), "_examples", "_yaml"))
 
-dump = factory.to_str(scenario)
-print(dump)
-
-load = factory.from_str(dump)
-print(load)
+print(executable)

@@ -1,0 +1,43 @@
+!<Scenario>
+Channels:
+  - Channel 0 0
+    active: true
+    gain: 1.0
+Modems:
+  - Transmitter
+    Bits: null
+    Encoding: null
+    Precoding: null
+    RfChain: null
+    WaveformChirpFsk:
+        chirp_bandwidth: 500000.0
+        chirp_duration: 0.000512
+        freq_difference: 1953.125
+        guard_interval: 0.0
+        num_data_chirps: 20
+        num_pilot_chirps: 0
+        modulation_order: 256
+        oversampling_factor: 4
+        sampling_rate: 2000000.0
+    carrier_frequency: 60000000000.0
+    sampling_rate: 1000.0
+    tx_power: 1.0
+  - Receiver
+    Bits: null
+    Encoding: null
+    Precoding: null
+    RfChain: null
+    WaveformChirpFsk:
+        chirp_bandwidth: 500000.0
+        chirp_duration: 0.000512
+        freq_difference: 1953.125
+        guard_interval: 0.0
+        num_data_chirps: 20
+        num_pilot_chirps: 0
+        modulation_order: 256
+        oversampling_factor: 4
+        sampling_rate: 2000000.0
+    carrier_frequency: 60000000000.0
+    sampling_rate: 1000.0
+    tx_power: 1.0
+drop_duration: 0.0

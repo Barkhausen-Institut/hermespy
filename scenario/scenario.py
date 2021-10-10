@@ -7,18 +7,16 @@ from collections.abc import Iterable
 from parameters_parser.parameters_channel import ParametersChannel
 from simulator_core.random_streams import RandomStreams
 import simulator_core.tools.constants as constants
-from source.bits_source import BitsSource
 
-from channel.multipath_fading_channel import MultipathFadingChannel
-# from channel.quadriga_channel import QuadrigaChannel
-# from channel.quadriga_interface import QuadrigaInterface
-from channel.noise import Noise
-from channel.rx_sampler import RxSampler
 
 if TYPE_CHECKING:
 
+    from source.bits_source import BitsSource
     from modem import Modem, Transmitter, Receiver
     from channel import Channel
+    from channel.multipath_fading_channel import MultipathFadingChannel
+    from channel.noise import Noise
+    from channel.rx_sampler import RxSampler
 
 
 class Scenario:

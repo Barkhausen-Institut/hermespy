@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from . import Executable
+from .executable import Executable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -25,7 +25,8 @@ class Simulation(Executable):
     def __init__(self) -> None:
         """Object initialization.
         """
-        pass
+
+        Executable.__init__(self)
 
     def run(self) -> None:
         """Run the full simulation configuration.
