@@ -34,7 +34,7 @@ import argparse
 from typing import List
 
 from simulator_core.random_streams import RandomStreams
-from scenario.scenario import Scenario
+from simulator_core import Factory, Executable
 from simulator_core.drop_loop import DropLoop
 
 
@@ -81,21 +81,21 @@ def hermes(args: List[str]) -> None:
 
     ######################################
     # initialize random number generation
-    random_number_gen = RandomStreams(parameters.general.seed)
+    # random_number_gen = RandomStreams(parameters.general.seed)
 
     ##################
     # run simulation
-    scenario = Scenario(
-        parameters.scenario,
-        parameters.general,
-        random_number_gen)
+    factory = Factory()
+    executable: Executable = factory.load(input_parameters_dir)
 
-    simulation_loop = DropLoop(parameters.general, scenario)
-    statistics = simulation_loop.run_loop()
+    executable.run()
 
-    statistics.save(results_dir)
-
-    print('results saved in ' + results_dir)
+    #simulation_loop = DropLoop(parameters.general, scenario)
+    #statistics = simulation_loop.run_loop()
+#
+    #statistics.save(results_dir)
+#
+    #print('results saved in ' + results_dir)
 
 
 if __name__ == "__main__":
