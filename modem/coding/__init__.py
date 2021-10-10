@@ -15,7 +15,3 @@ except ImportError:
     warnings.warn("LDPC C++ binding could not be imported, falling back to slower Python LDPC implementation")
 
 __all__ = [Encoder, EncoderManager, Interleaver, LDPC, RepetitionEncoder]
-
-# Register serializable classes to YAML factory
-import simulator_core as core
-core.SerializableClasses.update(__all__)

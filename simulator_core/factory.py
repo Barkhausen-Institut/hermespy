@@ -19,11 +19,15 @@ This module implements the main interface for loading and dumping HermesPy confi
 
 from __future__ import annotations
 from ruamel.yaml import YAML, SafeConstructor, MappingNode, SequenceNode
-from typing import Any, Set, Sequence, Mapping
+from typing import Any, Set, Sequence, Mapping, Union, List, Optional
 from io import TextIOBase, StringIO
 from re import compile, Pattern, Match
+from collections.abc import Iterable
+import os
 
-from . import Simulation
+from .executable import Executable
+from .simulation import Simulation
+from scenario import Scenario
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -40,8 +44,12 @@ SerializableClasses: Set = set()
 
 class Factory:
     """Helper class to load HermesPy simulation scenarios from YAML configuration files.
+
+    Attributes:
+        extensions (Set[str]): List of recognized filename extensions for serialization files.
     """
 
+    extensions: Set[str] = ['.yml', '.yaml', '.cfg']
     __yaml: YAML
     __clean: bool
     __purge_regex_alpha: Pattern
@@ -91,14 +99,14 @@ class Factory:
         return self.__clean
 
     @clean.setter
-    def clean(self, new: bool) -> None:
+    def clean(self, flag: bool) -> None:
         """Modify clean flag.
 
         Args:
-            new (bool): New clean flag.
+            flag (bool): New clean flag.
         """
 
-        self.__clean = new
+        self.__clean = flag
 
     @property
     def registered_tags(self) -> Set[str]:
@@ -109,6 +117,53 @@ class Factory:
         """
 
         return self.__registered_tags
+
+    def load(self, path: str) -> Executable:
+        """Load a serialized executable configuration from a filesystem location.
+
+        Args:
+            path (str): Path to a file or a folder featuring serialization files.
+
+        Returns:
+            Executable: An executable HermesPy object.
+
+        Raises:
+            RuntimeError: If `path` does not contain an executable object.
+            RuntimeError: If `path` contains more than one executable object.
+        """
+
+        # Recover serialized objects
+        hermes_objects: List[Any] = self.from_path(path)
+
+        executable: Optional[Executable] = None
+        scenarios: List[Scenario] = []
+
+        for hermes_object in hermes_objects:
+
+            if isinstance(hermes_object, Executable):
+
+                if executable is None:
+                    executable = hermes_object
+
+                else:
+                    raise RuntimeError("Ambiguous configuration containing more than one executable")
+
+            elif isinstance(hermes_object, Scenario):
+                scenarios.append(hermes_object)
+
+            else:
+                raise RuntimeError("Unsupported class type in configuration")
+
+        # Default executable is a simulation
+        if executable is None:
+            executable = Simulation()
+
+        # Register scenarios with executable
+        for scenario in scenarios:
+            executable.add_scenario(scenario)
+
+        # Return fully configured executable
+        return executable
 
     @staticmethod
     def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:
@@ -182,16 +237,74 @@ class Factory:
         """Callback to restore explicit YAML tags to serialization streams."""
         pass
 
-    def from_folder(self, path: str) -> Simulation:
+    def from_path(self, paths: Union[str, Set[str]]) -> List[Any]:
+        """Load a configuration from an arbitrary file system path.
+
+        Args:
+            paths (Union[str, Set[str]]): Paths to a file or a folder featuring .yml config files.
+
+        Returns:
+            List[Any]: List of serializable objects recalled from `paths`.
+
+        Raises:
+            ValueError: If the provided `path` does not exist on the filesystem.
+        """
+
+        # Convert single path to a set if required
+        if isinstance(paths, str):
+            paths = [paths]
+
+        hermes_objects = []
+        for path in paths:
+
+            if not os.path.exists(path):
+                raise ValueError("Lookup path '{}' not found".format(path))
+
+            if os.path.isdir(path):
+                hermes_objects += self.from_folder(path)
+
+            elif os.path.isfile(path):
+                hermes_objects += self.from_file(path)
+
+            else:
+                raise ValueError("Lookup location '{}' not recognized".format(path))
+
+        return hermes_objects
+
+    def from_folder(self, path: str, recurse: bool = True, follow_links: bool = False) -> List[Any]:
         """Load a configuration from a folder.
 
         Args:
             path (str): Path to the folder configuration.
+            recurse (bool, optional): Recurse into sub-folders within `path`.
+            follow_links (bool, optional): Follow links within `path`.
 
         Returns:
-            Simulation: A configured simulation.
+            List[Any]: List of serializable objects recalled from `path`.
+
+        Raises:
+            ValueError: If `path` is not a directory.
         """
-        pass
+
+        if not os.path.exists(path):
+            raise ValueError("Lookup path '{}' not found".format(path))
+
+        if not os.path.isdir(path):
+            raise ValueError("Lookup path '{}' is not a directory".format(path))
+
+        hermes_objects: List[Any] = []
+
+        for directory, _, files in os.walk(path, followlinks=follow_links):
+            for file in files:
+
+                _, extension = os.path.splitext(file)
+                if extension in self.extensions:
+                    hermes_objects += self.from_file(os.path.join(directory, file))
+
+            if not recurse:
+                break
+
+        return hermes_objects
 
     def to_folder(self, path: str, *args: Any) -> None:
         """Dump a configuration to a folder.
@@ -203,14 +316,14 @@ class Factory:
         """
         pass
 
-    def from_str(self, config: str) -> Simulation:
+    def from_str(self, config: str) -> List[Any]:
         """Load a configuration from a string object.
 
         Args:
             config (str): The configuration to be loaded.
 
         Returns:
-            Simulation: A configured simulation.
+            List[Any]: List of serialized objects within `path`.
         """
 
         stream = StringIO(config)
@@ -233,16 +346,18 @@ class Factory:
         self.to_stream(stream, args)
         return stream.getvalue()
 
-    def from_file(self, config: str) -> Simulation:
+    def from_file(self, file: str) -> List[Any]:
         """Load a configuration from a single YAML file.
 
         Args:
-            config (str): The configuration to be loaded.
+            file (str): Path to the folder configuration.
 
         Returns:
-            Simulation: A configured simulation.
+            List[Any]: List of serialized objects within `path`.
         """
-        pass
+
+        with open(file, mode='r') as file_stream:
+            return self.from_stream(file_stream)
 
     def to_file(self, path: str, *args: Any) -> None:
         """Dump a configuration to a single YML file.
@@ -290,14 +405,14 @@ class Factory:
         else:
             return m.string
 
-    def from_stream(self, stream: TextIOBase) -> Simulation:
+    def from_stream(self, stream: TextIOBase) -> List[Any]:
         """Load a configuration from an arbitrary text stream.
 
         Args:
             stream (TextIOBase): Text stream containing the configuration.
 
         Returns:
-            Simulation: A configured simulation.
+            List[Any]: List of serialized objects within `stream`.
         """
 
         if not self.__clean:
@@ -309,7 +424,16 @@ class Factory:
             clean_line = self.__restore_regex_beta.sub(self.__restore_callback_beta, clean_line)
             clean_stream += clean_line
 
-        return self.__yaml.load(StringIO(clean_stream))
+        hermes_objects = self.__yaml.load(StringIO(clean_stream))
+
+        if hermes_objects is None:
+            return []
+
+        if isinstance(hermes_objects, Iterable):
+            return hermes_objects
+
+        else:
+            return [hermes_objects]
 
     def to_stream(self, stream: TextIOBase, *args: Any) -> None:
         """Dump a configuration to an arbitrary text stream.

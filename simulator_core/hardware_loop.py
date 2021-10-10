@@ -25,7 +25,8 @@ class HardwareLoop(Executable):
     def __init__(self) -> None:
         """Object initialization.
         """
-        pass
+
+        Executable.__init__(self)
 
     def run(self) -> None:
         """Run the full loop configuration.
