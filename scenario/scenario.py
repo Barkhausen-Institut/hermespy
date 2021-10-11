@@ -285,6 +285,16 @@ class Scenario:
 
         return channel
 
+    def generate_data_bits(self) -> List[np.array]:
+        """Generate a set of data bits required to generate a single drop within this scenario.
+
+        Returns:
+            List[np.array]: Data bits required to generate a single drop.
+        """
+
+        data_bits = [np.random.randint(0, 2, transmitter.num_data_bits_per_frame) for transmitter in self.__transmitters]
+        return data_bits
+
     @property
     def receivers(self) -> List[Receiver]:
         """Access receiving modems within this scenario.
@@ -318,7 +328,7 @@ class Scenario:
 
         return self.__channels
 
-    def channel(self, transmitter: Modem, receiver: Modem) -> Channel:
+    def channel(self, transmitter: Transmitter, receiver: Receiver) -> Channel:
         """Access a specific channel between two modems.
 
         Args:

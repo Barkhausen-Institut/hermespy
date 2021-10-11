@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""HermesPy base for executable configurations.
-"""
+"""HermesPy base for executable configurations."""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -42,3 +41,13 @@ class Executable(ABC):
         """
 
         self.__scenarios.append(scenario)
+
+    @property
+    def scenarios(self) -> List[Scenario]:
+        """Access scenarios within this executable.
+
+        Returns:
+            List[Scenario]: Scenarios within this executable.
+        """
+
+        return self.__scenarios
