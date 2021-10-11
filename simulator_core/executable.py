@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 from scenario import Scenario
 
@@ -22,11 +22,19 @@ class Executable(ABC):
 
     yaml_tag = u'Executable'
     __scenarios: List[Scenario]
+    plot_drop: bool
 
-    def __init__(self) -> None:
-        """Object initialization."""
+    def __init__(self,
+                 plot_drop: bool = False) -> None:
+        """Object initialization.
 
+        Args:
+            plot_drop (bool): Pause to plot each drop during execution.
+        """
+
+        # Default parameters
         self.__scenarios = []
+        self.plot_drop = plot_drop
 
     @abstractmethod
     def run(self) -> None:
