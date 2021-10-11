@@ -216,3 +216,37 @@ class Drop:
             else:
                 axes[reception_index, 0].stem(bits)
                 axes[reception_index, 0].set(ylabel="Tx {}".format(reception_index))
+
+    def plot_bit_errors(self) -> None:
+        """Plot bit errors into a grid."""
+
+        grid_width = len(self.__received_bits)
+        grid_height = len(self.__transmitted_bits)
+
+        # Abort without error if no transmission is available
+        if grid_height < 1:
+            return
+
+        figure, axes = plt.subplots(grid_height, 1, squeeze=False)
+        figure.suptitle("Bit Errors")
+
+        for transimission_index, transmitted_bits in enumerate(self.__transmitted_bits):
+            for reception_index, received_bits in enumerate(self.__received_bits):
+
+                if len(received_bits) < 1 or len(received_bits) < 1:
+                    axes[transimission_index, reception_index].text(0, 0, "No bits exchanged")
+
+                else:
+
+                    num_bits = max(len(received_bits), len(transmitted_bits))
+                    padded_transmission = np.append(transmitted_bits, np.zeros(num_bits - len(transmitted_bits)))
+                    padded_reception = np.append(received_bits, np.zeros(num_bits - len(received_bits)))
+
+                    delta = np.abs(padded_transmission - padded_reception)
+
+                    axes[transimission_index, reception_index].stem(delta)
+
+            axes[transimission_index, 0].set(ylabel="Tx {}".format(transimission_index))
+
+        for reception_index in range(len(self.received_bits)):
+            axes[-1, reception_index].set(xlabel="Rx {}".format(reception_index))

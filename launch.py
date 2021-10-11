@@ -16,6 +16,7 @@ from ruamel.yaml import YAML, Node
 from io import StringIO
 import sys
 import os
+from simulator_core import Simulation
 
 # 8x8 MIMO arrays at 60Ghz
 carrier_frequency = 60e9
@@ -28,13 +29,14 @@ scenario = Scenario()
 # Add modems
 modem_configuration = {'carrier_frequency': carrier_frequency, 'topology': topology}
 transmitterA = scenario.add_transmitter(**modem_configuration)
+transmitterA.encoder_manager.add_encoder(Interleaver())
 #transmitterB = scenario.add_transmitter(**modem_configuration)
 receiverA = scenario.add_receiver(**modem_configuration)
 #receiverB = scenario.add_receiver(**modem_configuration)
 
-transmitterA.waveform_generator = WaveformGeneratorChirpFsk()
-#transmitterB.waveform_generator = WaveformGeneratorChirpFsk()
-receiverA.waveform_generator = WaveformGeneratorChirpFsk()
+transmitterA.waveform_generator = WaveformGeneratorChirpFsk(num_data_chirps=4)
+#transmitterB.waveform_generator = WaveformGeneratorChirpFsk(num_data_chirps=2)
+receiverA.waveform_generator = WaveformGeneratorChirpFsk(num_data_chirps=4)
 #receiverB.waveform_generator = WaveformGeneratorChirpFsk()
 #transmitterA.encoder_manager.add_encoder(Interleaver())
 #transmitterA.encoder_manager.add_encoder(RepetitionEncoder())
@@ -47,11 +49,9 @@ scenario.channel(transmitterA, receiverA).active = True
 #scenario.channel(transmitterB, receiverB).active = True
 
 # Drop
-scenario.init_drop()
-data_bits = [np.random.randint(0, 2, transmitter.num_data_bits_per_frame) for transmitter in scenario.transmitters]
-transmitted_signals = scenario.transmit(data_bits=data_bits)
-propagated_signals = scenario.propagate(transmitted_signals)
-received_bits = scenario.receive(propagated_signals)
+simulation = Simulation()
+simulation.add_scenario(scenario)
+#simulation.run()
 
 # Print scenario serialization
 factory = Factory()
