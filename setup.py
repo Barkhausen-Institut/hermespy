@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="hermespy",
-    version="0.1.1.5",
+    version="0.1.1.6",
     author="Jan Adler",
     author_email="jan.adler@barkhauseninstitut.org",
     description="The Heterogeneous Mobile Radio Simulator",
@@ -26,9 +26,12 @@ setup(
         "Natural Language :: English",
         "Topic :: Scientific/Engineering",
     ],
-    packages=find_packages('.', exclude=("tests",)),
+    packages=find_packages(exclude=("tests", "3rdparty")),
     package_dir={"": ""},
     include_package_data=True,
+    exclude_package_data={
+        '': ['3rdparty', 'tests'],
+    },
     extras_require={"test": ["pytest"]},
     zip_safe=False,
     python_requires=">=3.7",
