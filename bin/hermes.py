@@ -62,6 +62,9 @@ def hermes(args: Optional[List[str]] = None) -> None:
     if not input_parameters_dir:
         input_parameters_dir = os.path.join(os.getcwd(), '_settings')
 
+    elif not(os.path.isabs(input_parameters_dir)):
+        input_parameters_dir = os.path.join(os.getcwd(), input_parameters_dir)
+
     print('Parameters will be read from ' + input_parameters_dir)
 
     if not results_dir:
@@ -107,3 +110,10 @@ def hermes(args: Optional[List[str]] = None) -> None:
 #
     #print('results saved in ' + results_dir)
     print('Configuration executed. Goodbye.')
+
+
+if __name__ == "__main__":
+
+    ################################################################
+    # read command line parameters and initialize simulation folders
+    hermes()
