@@ -96,7 +96,7 @@ def hermes(args: List[str]) -> None:
     #statistics.save(results_dir)
 #
     #print('results saved in ' + results_dir)
-
+    print('Configuration executed. Goodbye.')
 
 if __name__ == "__main__":
 

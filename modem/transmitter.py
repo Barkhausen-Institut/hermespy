@@ -32,6 +32,7 @@ class Transmitter(Modem):
         Args:
             **kwargs (Any): Transmitter configuration.
         """
+
         Modem.__init__(self, **kwargs)
 
     @classmethod
