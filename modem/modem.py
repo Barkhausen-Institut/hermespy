@@ -68,7 +68,7 @@ class Modem:
         """
 
         self.__scenario = None
-        self.__topology: np.zeros((1, 3), dtype=float)
+        self.__topology = np.zeros((1, 3), dtype=float)
         self.__carrier_frequency = 800e6
         self.__sampling_rate = 1e3
         self.__linear_topology = False
