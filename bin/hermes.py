@@ -31,14 +31,24 @@ import shutil
 import datetime
 import sys
 import argparse
-from typing import List
+from typing import List, Optional
 
 from simulator_core.random_streams import RandomStreams
 from simulator_core import Factory, Executable
 from simulator_core.drop_loop import DropLoop
 
 
-def hermes(args: List[str]) -> None:
+def hermes(args: Optional[List[str]] = None) -> None:
+    """HermesPy command line routine.
+
+    Args:
+        args ([List[str], optional): Command line arguments.
+    """
+
+    # Recover command line arguments from system if none are provided
+    if args is None:
+        args = sys.argv[1:]
+
     print("Welcome to HermesPy")
     parser = argparse.ArgumentParser(
         description="usage: hermes.py -p <settings_dir> -o <output_dir>")
@@ -97,9 +107,3 @@ def hermes(args: List[str]) -> None:
 #
     #print('results saved in ' + results_dir)
     print('Configuration executed. Goodbye.')
-
-if __name__ == "__main__":
-
-    ################################################################
-    # read command line parameters and initialize simulation folders
-    hermes(sys.argv[1:])
