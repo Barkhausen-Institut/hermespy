@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from modem.coding.repetition_encoder import RepetitionEncoder
+from coding.repetition_encoder import RepetitionEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from .utils import assert_frame_equality
 

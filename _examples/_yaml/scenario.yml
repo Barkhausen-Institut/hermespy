@@ -14,8 +14,6 @@ Modems:
         modulation_order: 256
         oversampling_factor: 4
         sampling_rate: 2000000.0
-    Encoding:
-      - LDPC
 
   - Receiver
     carrier_frequency: 0.0

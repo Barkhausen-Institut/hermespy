@@ -3,7 +3,7 @@ from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
-from modem.coding.encoder import Encoder
+from coding.encoder import Encoder
 
 
 class RepetitionEncoder(Encoder):

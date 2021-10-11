@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any
 import numpy as np
 
-from modem.coding.ldpc import LDPC
-from modem.coding.ldpc_binding.bin import ldpc_binding
+from coding.ldpc import LDPC
+from coding.ldpc_binding.bin import ldpc_binding
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

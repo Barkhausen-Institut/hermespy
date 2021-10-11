@@ -3,7 +3,7 @@ from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
-from modem.coding import Encoder
+from coding import Encoder
 
 
 class Interleaver(Encoder):

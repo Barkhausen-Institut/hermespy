@@ -1,5 +1,4 @@
-from modem.coding.encoder_factory import EncoderFactory
-import unittest
+from coding import EncoderFactory
 import numpy as np
 import unittest.mock
 from unittest.mock import patch, Mock
@@ -11,8 +10,7 @@ from modem.modem import Modem
 from parameters_parser.parameters_tx_modem import ParametersTxModem
 from parameters_parser.parameters_psk_qam import ParametersPskQam
 from source.bits_source import BitsSource
-from modem.coding.encoder_manager import EncoderManager
-from modem.coding.repetition_encoder import RepetitionEncoder
+from coding import EncoderManager
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 
 class TestModem(unittest.TestCase):

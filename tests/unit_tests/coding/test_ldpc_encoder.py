@@ -93,7 +93,7 @@ class TestLDPC(unittest.TestCase):
     def test_readCustomLdpcEncoder_fileExists(self) -> None:
         """Test the LDPC code lookup from custom directories."""
 
-        custom_codes = os.path.join(os.path.dirname(os.path.abspath(__file__)),  "res", "ldpc", "custom_ldpc_codes")
+        custom_codes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "res", "ldpc", "custom_ldpc_codes")
         block_size = 123
         rate = Fraction(9, 10)
         file_location = os.path.join(custom_codes, "BS{}_CR{}_{}.mat".format(
