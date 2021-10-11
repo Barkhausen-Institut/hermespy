@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Tuple, Generic, TypeVar, List, Type, TYPE_CHECKING, Optional
+from typing import Tuple, List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
 import numpy as np
@@ -68,6 +68,7 @@ class Modem:
         """
 
         self.__scenario = None
+        self.__topology: np.zeros((1, 3), dtype=float)
         self.__carrier_frequency = 800e6
         self.__sampling_rate = 1e3
         self.__linear_topology = False
@@ -340,7 +341,7 @@ class Modem:
         """Returns the average bit energy of the modulated signal.
         """
         R = self.encoder_manager.rate
-        return self.waveform_generator.get_bit_energy() * self.power_factor / R
+        return self.waveform_generator.bit_energy * self.power_factor / R
 
     def get_symbol_energy(self) -> float:
         """Returns the average symbol energy of the modulated signal.

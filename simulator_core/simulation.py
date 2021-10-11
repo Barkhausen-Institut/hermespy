@@ -17,18 +17,29 @@ __status__ = "Prototype"
 
 
 class Simulation(Executable):
-    """HermesPy simulation configuration.
-    """
+    """HermesPy simulation configuration."""
 
     yaml_tag = u'Simulation'
 
     def __init__(self) -> None:
-        """Object initialization.
-        """
+        """Object initialization."""
 
         Executable.__init__(self)
 
     def run(self) -> None:
-        """Run the full simulation configuration.
-        """
-        pass
+        """Run the full simulation configuration."""
+
+        # Iterate over scenarios
+        for scenario in self.scenarios:
+
+            # Generate data bits to be transmitted
+            data_bits = scenario.generate_data_bits()
+
+            # Generate radio-frequency band signal emitted from each transmitter
+            transmitted_signals = scenario.transmit(data_bits=data_bits)
+
+            # Simulate propagation over channel models
+            propagated_signals = scenario.propagate(transmitted_signals)
+
+            # Receive and demodulate signal
+            received_bits = scenario.receive(propagated_signals)
