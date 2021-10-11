@@ -9,7 +9,7 @@ from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
 import os
 import numpy as np
 
-from modem.coding.encoder import Encoder
+from coding import Encoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

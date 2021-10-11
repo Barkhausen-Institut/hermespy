@@ -6,7 +6,7 @@ import numpy as np
 from ruamel.yaml import RoundTripRepresenter, Node
 
 from modem.precoding import Precoding
-from modem.coding import EncoderManager
+from coding import EncoderManager
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
 from source.bits_source import BitsSource
