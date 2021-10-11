@@ -148,7 +148,6 @@ class Modem:
         """if node.beamformer.__class__ is not Beamformer:
             serialization['Beamformer'] = node.__beamformer"""
 
-        # return representer.represent_omap(cls.yaml_tag, serialization)
         return representer.represent_mapping(cls.yaml_tag, serialization)
 
     @property
@@ -313,29 +312,33 @@ class Modem:
             noise_var (float): noise variance (for equalization).
 
         Returns:
-            List[np.array]: Detected bits as a list of data blocks for the drop.
+            np.array: Detected bits as a list of data blocks for the drop.
         """
         rx_signal = self.rf_chain.receive(input_signal)
+
+        # If no receiving waveform generator is configured, no signal is being received
+        if self.waveform_generator is None:
+            return np.empty(0, dtype=complex)
 
         # normalize signal to expected input power
         rx_signal = rx_signal / np.sqrt(1.0)  # TODO: Re-implement pair power factor
         noise_var = noise_var / 1.0           # TODO: Re-implement pair power factor
 
-        all_bits = list()
+        received_bits = np.empty(0, dtype=int)
         timestamp_in_samples = 0
 
         while rx_signal.size:
             initial_size = rx_signal.shape[1]
-            bits_rx, rx_signal = self.waveform_generator.receive_frame(
+            frame_bits, rx_signal = self.waveform_generator.receive_frame(
                 rx_signal, timestamp_in_samples, noise_var)
 
             if rx_signal.size:
                 timestamp_in_samples += initial_size - rx_signal.shape[1]
 
-            if not bits_rx[0] is None:
-                bits_rx_decoded = self.encoder_manager.decode(bits_rx)
-                all_bits.extend(bits_rx_decoded)
-        return all_bits
+            received_bits = np.append(received_bits, frame_bits)
+
+        decoded_bits = self.encoder_manager.decode(received_bits)
+        return decoded_bits
 
     def get_bit_energy(self) -> float:
         """Returns the average bit energy of the modulated signal.
@@ -466,11 +469,11 @@ class Modem:
 
         Raises:
             ValueError:
-                If center frequency is less or equal to zero.
+                If center frequency is less than zero.
         """
 
-        if carrier_frequency <= 0.0:
-            raise ValueError("Carrier frequency must be greater than zero")
+        if carrier_frequency < 0.0:
+            raise ValueError("Carrier frequency must be greater or equal to zero")
 
         self.__carrier_frequency = carrier_frequency
 

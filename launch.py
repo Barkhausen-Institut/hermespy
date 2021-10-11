@@ -57,4 +57,4 @@ received_bits = scenario.receive(propagated_signals)
 factory = Factory()
 executable = factory.load(os.path.join(os.path.dirname(os.path.realpath(__file__)), "_examples", "_yaml"))
 
-print(executable)
+print(factory.to_str(scenario))
