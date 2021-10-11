@@ -4,6 +4,7 @@
 from __future__ import annotations
 from typing import List
 import numpy as np
+import matplotlib.pyplot as plt
 
 from .executable import Executable
 from .drop import Drop
@@ -20,11 +21,6 @@ __status__ = "Prototype"
 
 class SimulationDrop(Drop):
     """Data generated within a single simulation drop."""
-
-    transmitted_bits: List[np.ndarray]
-    transmitted_signals: List[np.ndarray]
-    received_signals: List[np.ndarray]
-    received_bits: List[np.ndarray]
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
@@ -48,10 +44,15 @@ class Simulation(Executable):
 
     yaml_tag = u'Simulation'
 
-    def __init__(self) -> None:
-        """Object initialization."""
+    def __init__(self,
+                 plot_drop: bool = True) -> None:
+        """Object initialization.
 
-        Executable.__init__(self)
+        Args:
+            plot_drop (bool, optional): Pause to plot each drop during execution.
+        """
+
+        Executable.__init__(self, plot_drop)
 
     def run(self) -> None:
         """Run the full simulation configuration."""
@@ -76,3 +77,11 @@ class Simulation(Executable):
             # Save generated signals
             drop = SimulationDrop(data_bits, transmitted_signals, propagated_signals, received_bits)
             drops.append(drop)
+
+            # Visualize plot if requested
+            if self.plot_drop:
+
+                drop.plot_transmitted_signals()
+                drop.plot_received_signals()
+
+                plt.show()
