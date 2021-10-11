@@ -611,6 +611,10 @@ class Scenario:
                 # Select responsible channel between respective transmitter and receiver
                 channel: Channel = self.__channels[transmitter_id, receiver_id]
 
+                # Skip propagation over channels flagged as inactive
+                if not channel.active:
+                    continue
+
                 # Propagate signal emerging from transmitter over the channel
                 propagated_signal = channel.propagate(transmitted_signal)
 

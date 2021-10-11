@@ -215,7 +215,7 @@ class Drop:
 
             else:
                 axes[reception_index, 0].stem(bits)
-                axes[reception_index, 0].set(ylabel="Tx {}".format(reception_index))
+                axes[reception_index, 0].set(ylabel="Rx {}".format(reception_index))
 
     def plot_bit_errors(self) -> None:
         """Plot bit errors into a grid."""
@@ -227,7 +227,7 @@ class Drop:
         if grid_height < 1:
             return
 
-        figure, axes = plt.subplots(grid_height, 1, squeeze=False)
+        figure, axes = plt.subplots(grid_height, grid_width, squeeze=False)
         figure.suptitle("Bit Errors")
 
         for transimission_index, transmitted_bits in enumerate(self.__transmitted_bits):

@@ -5,22 +5,42 @@ Modems:
   - Transmitter
     carrier_frequency: 0.0
     WaveformChirpFsk:
-        chirp_bandwidth: 500000.0
-        chirp_duration: 0.000512
+        chirp_bandwidth: 5e5
+        chirp_duration: 512e-6
         freq_difference: 1953.125
         num_data_chirps: 4
         modulation_order: 256
     Encoding:
       - Interleaver
-
 
   - Receiver
     carrier_frequency: 0.0
     WaveformChirpFsk:
-        chirp_bandwidth: 500000.0
-        chirp_duration: 0.000512
+        chirp_bandwidth: 5e5
+        chirp_duration: 512e-6
         freq_difference: 1953.125
         num_data_chirps: 4
         modulation_order: 256
     Encoding:
       - Interleaver
+
+  - Transmitter
+    WaveformChirpFsk:
+        chirp_bandwidth: 5e5
+        chirp_duration: 512e-6
+        freq_difference: 1953.125
+        num_data_chirps: 2
+        modulation_order: 16
+
+  - Receiver
+    WaveformChirpFsk:
+        chirp_bandwidth: 5e5
+        chirp_duration: 512e-6
+        freq_difference: 1953.125
+        num_data_chirps: 2
+        modulation_order: 16
+
+Channels:
+
+  - Channel 1 0
+    active: false
