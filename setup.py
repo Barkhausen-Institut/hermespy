@@ -6,9 +6,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="hermespy",
-    version="0.1.1.3",
-    author="Tobias Kronauer",
-    author_email="tobias.kronauer@barkhauseninstitut.org",
+    version="0.1.1.4",
+    author="Jan Adler",
+    author_email="jan.adler@barkhauseninstitut.org",
     description="The Heterogeneous Mobile Radio Simulator",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -33,5 +33,6 @@ setup(
     python_requires=">=3.7",
     entry_points={
         'console_scripts': ['hermes=bin:hermes'],
-    }
+    },
+    install_requires=['matplotlib', 'numpy', 'scipy', 'ruamel.yaml'],
 )
