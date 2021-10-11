@@ -22,6 +22,10 @@ wheel/
 *.egg-info/
 *.pyd
 _skbuild/
+build/
+dist/
+.coverage
+MANIFEST
 
 # misc
 *~
