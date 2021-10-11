@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from unittest.mock import Mock
 
-from modem.coding.encoder import Encoder
+from coding.encoder import Encoder
 
 
 class StubEncoder(Encoder):

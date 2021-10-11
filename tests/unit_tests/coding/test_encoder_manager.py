@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from .test_encoder import StubEncoder
-from modem.coding.encoder_manager import EncoderManager
+from coding.encoder_manager import EncoderManager
 
 
 class TestEncoderManager(unittest.TestCase):
