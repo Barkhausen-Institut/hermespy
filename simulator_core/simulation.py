@@ -2,8 +2,11 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
+from typing import List
+import numpy as np
 
 from .executable import Executable
+from .drop import Drop
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -13,6 +16,31 @@ __version__ = "0.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class SimulationDrop(Drop):
+    """Data generated within a single simulation drop."""
+
+    transmitted_bits: List[np.ndarray]
+    transmitted_signals: List[np.ndarray]
+    received_signals: List[np.ndarray]
+    received_bits: List[np.ndarray]
+
+    def __init__(self,
+                 transmitted_bits: List[np.ndarray],
+                 transmitted_signals: List[np.ndarray],
+                 received_signals: List[np.ndarray],
+                 received_bits: List[np.ndarray]) -> None:
+        """Object initialization.
+
+        Args:
+            transmitted_bits (List[np.ndarray]): Bits fed into the transmitting modems.
+            transmitted_signals (List[np.ndarray]): Modulated signals emitted by transmitting modems.
+            received_signals (List[np.ndarray]): Modulated signals impinging onto receiving modems.
+            received_bits (List[np.ndarray]): Bits output by receiving modems.
+        """
+
+        Drop.__init__(self, transmitted_bits, transmitted_signals, received_signals, received_bits)
 
 
 class Simulation(Executable):
@@ -28,6 +56,8 @@ class Simulation(Executable):
     def run(self) -> None:
         """Run the full simulation configuration."""
 
+        drops: List[SimulationDrop] = []
+
         # Iterate over scenarios
         for scenario in self.scenarios:
 
@@ -42,3 +72,7 @@ class Simulation(Executable):
 
             # Receive and demodulate signal
             received_bits = scenario.receive(propagated_signals)
+
+            # Save generated signals
+            drop = SimulationDrop(data_bits, transmitted_signals, propagated_signals, received_bits)
+            drops.append(drop)
