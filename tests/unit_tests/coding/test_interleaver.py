@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from modem.coding.interleaver import Interleaver
+from coding.interleaver import Interleaver
 
 
 class TestBlockInterleaver(unittest.TestCase):

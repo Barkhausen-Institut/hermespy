@@ -6,7 +6,7 @@ import numpy as np
 
 from coding.repetition_encoder import RepetitionEncoder
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
-from .utils import assert_frame_equality
+from tests.unit_tests.utils import assert_frame_equality
 
 
 class TestRepetitionEncoder(unittest.TestCase):
