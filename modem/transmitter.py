@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""HermesPy transmitting modem."""
+
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import Type, List, TYPE_CHECKING, Any
@@ -8,6 +11,15 @@ from modem.waveform_generator import WaveformGenerator
 
 if TYPE_CHECKING:
     from scenario import Scenario
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class Transmitter(Modem):
