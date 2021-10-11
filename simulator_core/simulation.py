@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""HermesPy simulation configuration.
-"""
+"""HermesPy simulation configuration."""
 
 from __future__ import annotations
 
