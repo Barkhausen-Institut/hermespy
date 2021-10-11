@@ -6,7 +6,7 @@ __all__ = ['Executable', 'Simulation', 'Factory', 'SerializableClasses']
 
 import sys
 from inspect import getmembers
-modules = ['channel', 'modem', 'scenario', 'simulator_core', 'source']
+modules = ['channel', 'modem', 'scenario', 'simulator_core', 'source', 'coding', 'modem.precoding']
 for module in modules:
     for _, member in getmembers(sys.modules[module]):
 

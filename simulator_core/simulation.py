@@ -86,6 +86,7 @@ class Simulation(Executable):
                 drop.plot_transmitted_signals()
                 drop.plot_received_signals()
                 drop.plot_received_bits()
+                drop.plot_bit_errors()
 
                 plt.show()
 

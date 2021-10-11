@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
 import numpy as np
 
 from coding import Encoder
@@ -68,7 +68,7 @@ class Interleaver(Encoder):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[Interleaver], constructor: SafeConstructor, node: Node) -> Interleaver:
+    def from_yaml(cls: Type[Interleaver], constructor: SafeConstructor, node: MappingNode) -> Interleaver:
         """Recall a new `Interleaver` encoder from YAML.
 
         Args:
@@ -84,6 +84,9 @@ class Interleaver(Encoder):
 
         Note that the created instance is floating by default.
         """
+
+        if isinstance(node, ScalarNode):
+            return cls()
 
         state = constructor.construct_mapping(node)
         return cls(**state)
