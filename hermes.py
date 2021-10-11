@@ -74,7 +74,7 @@ def hermes(args: List[str]) -> None:
                 '_' +
                 '{:03d}'.format(dir_index))
 
-    print('Results will be saved in ' + results_dir)
+    #print('Results will be saved in ' + results_dir)
 
     shutil.copytree(input_parameters_dir, results_dir)
 

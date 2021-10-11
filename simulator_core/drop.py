@@ -101,7 +101,7 @@ class Drop:
     def received_signals(self) -> List[np.ndarray]:
         """Access received signals."""
 
-        return self.__received_bits
+        return self.__received_signals
 
     @property
     def received_bits(self) -> List[np.ndarray]:
@@ -136,7 +136,7 @@ class Drop:
                 visualization.plot(axes[transmission_index, antenna_index], antenna_emission)
 
             # Add y-label
-            axes[transmission_index, transmission_index].set(ylabel="Tx {}".format(transmission_index))
+            axes[transmission_index, 0].set(ylabel="Tx {}".format(transmission_index))
 
         # Add labels
         figure.suptitle("Transmitted Signals")
@@ -156,7 +156,7 @@ class Drop:
         grid_height = len(self.__received_signals)
         grid_width = 0
 
-        # Abort without error if no transmission is available
+        # Abort without error if no received signal is available
         if grid_height < 1:
             return
 
@@ -171,10 +171,48 @@ class Drop:
                 visualization.plot(axes[transmission_index, antenna_index], antenna_emission)
 
             # Add y-label
-            axes[transmission_index, transmission_index].set(ylabel="Tx {}".format(transmission_index))
+            axes[transmission_index, 0].set(ylabel="Tx {}".format(transmission_index))
 
         # Add labels
         figure.suptitle("Received Signals")
 
         for antenna_index in range(grid_width):
             axes[-1, antenna_index].set(xlabel="N {}".format(antenna_index))
+
+    def plot_transmitted_bits(self) -> None:
+        """Plot transmitted bits into a grid."""
+
+        grid_height = len(self.__transmitted_bits)
+
+        # Abort without error if no transmission is available
+        if grid_height < 1:
+            return
+
+        figure, axes = plt.subplots(grid_height, 1, squeeze=False)
+        figure.suptitle("Transmitted Bits")
+
+        for transmission_index, bits in enumerate(self.__transmitted_bits):
+
+            axes[transmission_index, 0].stem(bits)
+            axes[transmission_index, 0].set(ylabel="Tx {}".format(transmission_index))
+
+    def plot_received_bits(self) -> None:
+        """Plot transmitted bits into a grid."""
+
+        grid_height = len(self.__received_bits)
+
+        # Abort without error if no transmission is available
+        if grid_height < 1:
+            return
+
+        figure, axes = plt.subplots(grid_height, 1, squeeze=False)
+        figure.suptitle("Received Bits")
+
+        for reception_index, bits in enumerate(self.__received_bits):
+
+            if len(bits) < 1:
+                axes[reception_index, 0].text(0, 0, "No bits received")
+
+            else:
+                axes[reception_index, 0].stem(bits)
+                axes[reception_index, 0].set(ylabel="Tx {}".format(reception_index))

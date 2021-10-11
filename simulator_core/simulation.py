@@ -2,9 +2,10 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
-from typing import List
+from typing import List, Type
 import numpy as np
 import matplotlib.pyplot as plt
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 from .executable import Executable
 from .drop import Drop
@@ -81,7 +82,55 @@ class Simulation(Executable):
             # Visualize plot if requested
             if self.plot_drop:
 
+                drop.plot_transmitted_bits()
                 drop.plot_transmitted_signals()
                 drop.plot_received_signals()
+                drop.plot_received_bits()
 
                 plt.show()
+
+    @classmethod
+    def to_yaml(cls: Type[Simulation],
+                representer: SafeRepresenter,
+                node: Simulation) -> MappingNode:
+        """Serialize an `Simulation` object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (WaveformGenerator):
+                The `Simulation` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node
+        """
+
+        state = {
+            "plot_drop": node.plot_drop,
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[Simulation],
+                  constructor: SafeConstructor,
+                  node: MappingNode) -> Simulation:
+        """Recall a new `Simulation` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Simulation` serialization.
+
+        Returns:
+            WaveformGenerator:
+                Newly created `Simulation` instance.
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)
