@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Type, List, Tuple, TYPE_CHECKING, Optional
+from typing import Type, Tuple, TYPE_CHECKING, Optional
 from abc import abstractmethod
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, ScalarNode, MappingNode
@@ -71,7 +71,7 @@ class Channel:
             self.gain = gain
 
     @classmethod
-    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> ScalarNode:
+    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> MappingNode:
         """Serialize a channel object to YAML.
 
         Args:
@@ -98,7 +98,7 @@ class Channel:
         return yaml
 
     @classmethod
-    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: Node)\
+    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: MappingNode)\
             -> Tuple[Channel, int, int]:
         """Recall a new `Channel` instance from YAML.
 
@@ -129,8 +129,12 @@ class Channel:
         if indices[0] == '':
             indices.pop(0)
 
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            return cls(), int(indices[0]), int(indices[1])
+
         state = constructor.construct_mapping(node, CommentedOrderedMap)
-        return Channel(**state), int(indices[0]), int(indices[1])
+        return cls(**state), int(indices[0]), int(indices[1])
 
     def move_to(self, transmitter: Transmitter, receiver: Receiver) -> None:
         """Move the channel to a new matrix position.
@@ -303,8 +307,10 @@ class Channel:
                 The output depends on the channel model employed.
 
         Raises:
-            ValueError: If the first dimension of `transmitted_signal` is not one or the number of transmitting antennas.
-            RuntimeError: If the scenario configuration is not supported by the default channel model.
+            ValueError:
+                If the first dimension of `transmitted_signal` is not one or the number of transmitting antennas.
+            RuntimeError:
+                If the scenario configuration is not supported by the default channel model.
         """
 
         if transmitted_signal.ndim != 2:
