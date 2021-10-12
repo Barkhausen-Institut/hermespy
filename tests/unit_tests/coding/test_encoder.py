@@ -55,4 +55,4 @@ class TestEncoder(unittest.TestCase):
         """Rate property check."""
 
         expected_rate = 0.5
-        self.assertAlmostEquals(expected_rate, self.encoder.rate, "Rate produced unexpected value")
+        self.assertAlmostEqual(expected_rate, self.encoder.rate, "Rate produced unexpected value")
