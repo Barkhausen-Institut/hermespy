@@ -1,32 +1,40 @@
+# -*- coding: utf-8 -*-
+"""Repetition encoder."""
+
+
 from __future__ import annotations
 from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import numpy as np
 
 from coding.encoder import Encoder
 
 
-class RepetitionEncoder(Encoder):
-    """Exemplary implementation of a repetition channel encoder.
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
-    This shows how a new encoder is to implemented. It's a three-step process:
-    """
+
+class RepetitionEncoder(Encoder):
+    """Exemplary implementation of a repetition channel encoder."""
 
     yaml_tag = 'Repetition'
     __bit_block_size: int
     __repetitions: int
-    __code_block_size: int
 
     def __init__(self,
                  bit_block_size: int = 32,
-                 repetitions: int = 2,
-                 code_block_size: int = 70) -> None:
+                 repetitions: int = 2) -> None:
         """Object initialization.
 
         Args:
             bit_block_size (int, optional): The number of input bits per data block.
             repetitions (int, optional): The number of times the input bit block is repeated.
-            code_block_size (int, optional): The number of output bits per encoded data block.
 
         Raises:
             ValueError: If `bit_block_size` times `repetitions` is smaller than `code_block_size`.
@@ -36,7 +44,6 @@ class RepetitionEncoder(Encoder):
         Encoder.__init__(self)
         self.bit_block_size = bit_block_size
         self.repetitions = repetitions
-        self.code_block_size = code_block_size
 
         if self.bit_block_size * repetitions > self.code_block_size:
             raise ValueError("The number of generated bits must be smaller or equal to the configured code block size")
@@ -51,13 +58,7 @@ class RepetitionEncoder(Encoder):
             np.array: The encoded `bits` block.
         """
 
-        num_code_bits = self.bit_block_size * self.repetitions
-        num_padding_bits = self.code_block_size - num_code_bits
-
-        code = np.empty(self.code_block_size)
-        code[:num_code_bits] = np.repeat(bits, self.repetitions)
-        code[-num_padding_bits:] = np.zeros(num_padding_bits, dtype=int)
-
+        code = np.repeat(bits, self.repetitions)
         return code
 
     def decode(self, encoded_bits: np.array) -> np.array:
@@ -70,8 +71,8 @@ class RepetitionEncoder(Encoder):
             np.array: A decoded block of bits.
         """
 
-        code = encoded_bits[(self.bit_block_size * self.repetitions):].reshape((self.repetitions, self.bit_block_size))
-        bits = (np.sum(code, axis=0) / self.repetitions) >= 0.5
+        code = encoded_bits.reshape((self.repetitions, self.bit_block_size), order='F')
+        bits = (np.sum(code, axis=0) / self.repetitions) >= 0.5  # Majority voting
 
         return bits.astype(int)
 
@@ -109,23 +110,7 @@ class RepetitionEncoder(Encoder):
             int: The number of bits.
         """
 
-        return self.__code_block_size
-
-    @code_block_size.setter
-    def code_block_size(self, num_bits: int) -> None:
-        """Configure the number of resulting bits after encoding / the number of bits required before decoding.
-
-        Args:
-            num_bits (int): The number of bits.
-
-        Raises:
-            ValueError: If `num_bits` is smaller than one.
-        """
-
-        if num_bits < 1:
-            raise ValueError("Number data bits must be greater or equal to one")
-
-        self.__code_block_size = num_bits
+        return self.__repetitions * self.__bit_block_size
 
     @property
     def repetitions(self) -> int:
@@ -154,7 +139,7 @@ class RepetitionEncoder(Encoder):
         self.__repetitions = num
 
     @classmethod
-    def to_yaml(cls: Type[RepetitionEncoder], representer: SafeRepresenter, node: RepetitionEncoder) -> Node:
+    def to_yaml(cls: Type[RepetitionEncoder], representer: SafeRepresenter, node: RepetitionEncoder) -> MappingNode:
         """Serialize a `RepetitionEncoder` to YAML.
 
         Args:
@@ -172,14 +157,13 @@ class RepetitionEncoder(Encoder):
 
         state = {
             "bit_block_size": node.bit_block_size,
-            "repetitions": node.repetitions,
-            "code_block_size": node.code_block_size,
+            "repetitions": node.repetitions
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[RepetitionEncoder], constructor: SafeConstructor, node: Node) -> RepetitionEncoder:
+    def from_yaml(cls: Type[RepetitionEncoder], constructor: SafeConstructor, node: MappingNode) -> RepetitionEncoder:
         """Recall a new `RepetitionEncoder` from YAML.
 
         Args:
