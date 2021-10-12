@@ -84,8 +84,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         expected_data = code.copy()
 
         data = self.encoder.decode(code)
-        assert_array_equal(expected_data, data,
-                           err_msg="Decoding produced unexpected result")
+        assert_array_equal(expected_data, data)
 
     def test_decode_block_length(self) -> None:
         """Length of the data block after decoding must match the bit block size property."""
