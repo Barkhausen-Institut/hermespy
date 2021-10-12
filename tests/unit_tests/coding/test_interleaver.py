@@ -1,7 +1,20 @@
+# -*- coding: utf-8 -*-
+"""Interleaver encoder testing."""
+
 import unittest
 import numpy as np
 
 from coding.interleaver import Interleaver
+
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestBlockInterleaver(unittest.TestCase):
@@ -41,7 +54,7 @@ class TestBlockInterleaver(unittest.TestCase):
         """The interleaver init must raise a `ValueError` if blocks can't be sectioned properly"""
 
         with self.assertRaises(ValueError):
-            self.interleaver.__init__(1, 2)
+            _ = Interleaver(1, 2)
 
     def test_bit_block_size(self) -> None:
         """Bit block size must be equal to the configured block size."""
