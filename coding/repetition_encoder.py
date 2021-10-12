@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Repetition encoder."""
+"""Repetition Encoder."""
 
 from __future__ import annotations
 from typing import Type
@@ -47,27 +47,27 @@ class RepetitionEncoder(Encoder):
         if self.bit_block_size * repetitions > self.code_block_size:
             raise ValueError("The number of generated bits must be smaller or equal to the configured code block size")
 
-    def encode(self, bits: np.array) -> np.array:
+    def encode(self, bits: np.ndarray) -> np.ndarray:
         """Encodes a single block of bits.
 
         Args:
-            bits (np.array): A block of bits to be encoded by this `Encoder`.
+            bits (np.ndarray): A block of bits to be encoded by this `Encoder`.
 
         Returns:
-            np.array: The encoded `bits` block.
+            np.ndarray: The encoded `bits` block.
         """
 
         code = np.repeat(bits, self.repetitions)
         return code
 
-    def decode(self, encoded_bits: np.array) -> np.array:
+    def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
         """Decodes a single block of encoded bits.
 
         Args:
-            encoded_bits (np.array): An encoded block of bits.
+            encoded_bits (np.ndarray): An encoded block of bits.
 
         Returns:
-            np.array: A decoded block of bits.
+            np.ndarray: A decoded block of bits.
         """
 
         code = encoded_bits.reshape((self.repetitions, self.bit_block_size), order='F')

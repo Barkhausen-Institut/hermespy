@@ -34,13 +34,15 @@ class LDPC(Encoder):
         BLOCK_SIZES (Set[int]): The supported input block sizes.
     """
 
-    CODE_RATES: Set[Fraction] = [Fraction(1, 3),
-                                 Fraction(1, 2),
-                                 Fraction(2, 3),
-                                 Fraction(3, 4),
-                                 Fraction(4, 5),
-                                 Fraction(5, 6)]
-    BLOCK_SIZES: Set[int] = [256, 512, 1024, 2048, 4096, 8192]
+    CODE_RATES: Set[Fraction] = {
+        Fraction(1, 3),
+        Fraction(1, 2),
+        Fraction(2, 3),
+        Fraction(3, 4),
+        Fraction(4, 5),
+        Fraction(5, 6)
+    }
+    BLOCK_SIZES: Set[int] = {256, 512, 1024, 2048, 4096, 8192}
 
     yaml_tag = u'LDPC'
     __rate: Fraction
@@ -115,10 +117,10 @@ class LDPC(Encoder):
 
         return self.__custom_codes
 
-    def encode(self, bits: np.array) -> np.array:
+    def encode(self, bits: np.ndarray) -> np.ndarray:
         return (bits @ self._G) % 2
 
-    def decode(self, encoded_bits: np.array) -> np.array:
+    def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
 
         # Transform bits from {0, 1} format to {-1, 1}
         codes = -encoded_bits.copy()
@@ -164,7 +166,7 @@ class LDPC(Encoder):
                     Qv[var_pos] = Q_temp + Rcv[check_ind, var_pos]
 
         # Return bit format from {-1, 1} format to {0, 1}
-        return np.array(Qv[:self.bit_block_size] < 0, dtype=int)
+        return np.ndarray(Qv[:self.bit_block_size] < 0, dtype=int)
 
     @property
     def bit_block_size(self) -> int:
@@ -220,7 +222,7 @@ class LDPC(Encoder):
             # The error was unexpected, re-raise it
             raise error
 
-    def __read_precalculated_codes(self, block_size: int, rate: Fraction) -> Tuple[np.array, np.array]:
+    def __read_precalculated_codes(self, block_size: int, rate: Fraction) -> Tuple[np.ndarray, np.ndarray]:
         """Read precalculated LDPC coding matrices from a Matlab save file.
 
         The function expects save files to be named after the scheme `BS*_*_*.mat`,
@@ -235,7 +237,7 @@ class LDPC(Encoder):
             RuntimeError: If a valid save file could not be detected in all lookup paths.
 
         Returns:
-            Tuple[np.array, np.array]: LDPC coding and decoding matrices.
+            Tuple[np.ndarray, np.ndarray]: LDPC coding and decoding matrices.
         """
 
         lookup_paths = {

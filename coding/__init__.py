@@ -14,4 +14,4 @@ except ImportError:
 
     warnings.warn("LDPC C++ binding could not be imported, falling back to slower Python LDPC implementation")
 
-__all__ = [Encoder, EncoderManager, Interleaver, LDPC, RepetitionEncoder]
+__all__ = ['Encoder', 'EncoderManager', 'Interleaver', 'LDPC', 'RepetitionEncoder']

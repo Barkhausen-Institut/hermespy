@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Encoder."""
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
@@ -5,6 +8,16 @@ import numpy as np
 
 if TYPE_CHECKING:
     from . import EncoderManager
+
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class Encoder(ABC):
@@ -59,14 +72,14 @@ class Encoder(ABC):
             self.__manager = manager
 
     @abstractmethod
-    def encode(self, bits: np.array) -> np.array:
+    def encode(self, bits: np.ndarray) -> np.ndarray:
         """Encodes a single block of bits.
 
         Args:
-            bits (np.array): A block of bits to be encoded by this `Encoder`.
+            bits (np.ndarray): A block of bits to be encoded by this `Encoder`.
 
         Returns:
-            np.array: The encoded `bits` block.
+            np.ndarray: The encoded `bits` block.
 
         Raises:
             ValueError: If the number of `bits` does not match the `Encoder` requirements.
@@ -74,14 +87,14 @@ class Encoder(ABC):
         ...
 
     @abstractmethod
-    def decode(self, encoded_bits: np.array) -> np.array:
+    def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
         """Decodes a single block of encoded bits.
 
         Args:
-            encoded_bits (np.array): An encoded block of bits.
+            encoded_bits (np.ndarray): An encoded block of bits.
 
         Returns:
-            np.array: A decoded block of bits.
+            np.ndarray: A decoded block of bits.
 
         Raises:
             ValueError: If the number of `bits` does not match the `Encoder` requirements.
