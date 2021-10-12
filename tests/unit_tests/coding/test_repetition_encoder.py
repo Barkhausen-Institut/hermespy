@@ -45,8 +45,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         expected_code = np.repeat(data, self.repetitions)
 
         code = self.encoder.encode(deepcopy(data))
-        assert_array_equal(expected_code, code,
-                           err_msg="Encoding a single block produced an unexpected result")
+        assert_array_equal(expected_code, code)
 
     def test_encoding_default(self) -> None:
         """Test the encoding behaviour of a single data block without repetitions."""
@@ -57,15 +56,13 @@ class TestRepetitionEncoder(unittest.TestCase):
         data = np.arange(self.encoder.bit_block_size)
         code = self.encoder.encode(deepcopy(data))
 
-        assert_array_equal(data, code,
-                           err_msg="Encoding a single block produced an unexpected result")
+        assert_array_equal(data, code)
 
     def test_encode_block_length(self) -> None:
         """Length of the code block after encoding must match the code block size property."""
 
         code = self.encoder.encode(np.random.randint(0, 2, self.encoder.bit_block_size))
-        self.assertEqual(len(code), self.encoder.code_block_size,
-                         "Encoded code block length does not match property")
+        self.assertEqual(len(code), self.encoder.code_block_size)
 
     def test_decoding_repetitions(self) -> None:
         """Test the decoding behaviour of a single code block
@@ -77,8 +74,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         code[0::self.repetitions] = np.array([0, 1, 0, 1, 0, 1, 1, 0])
 
         data = self.encoder.decode(code)
-        assert_array_equal(expected_data, data,
-                           err_msg="Decoding produced unexpected result")
+        assert_array_equal(expected_data, data)
 
     def test_decoding_default(self) -> None:
         """Test the decoding behaviour of a single code block without repetitions."""
@@ -95,8 +91,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         """Length of the data block after decoding must match the bit block size property."""
 
         data = self.encoder.decode(np.random.randint(0, 2, self.encoder.code_block_size))
-        self.assertEqual(len(data), self.encoder.bit_block_size,
-                         "Decoded data block length does not match property")
+        self.assertEqual(len(data), self.encoder.bit_block_size)
 
     def test_bit_block_size_setget(self) -> None:
         """Test that the bit block size getter returns the setter value."""
@@ -104,8 +99,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         bit_block_size = 99
         self.encoder.bit_block_size = bit_block_size
 
-        self.assertEqual(bit_block_size, self.encoder.bit_block_size,
-                         "Bit block size set/get unexpected result")
+        self.assertEqual(bit_block_size, self.encoder.bit_block_size)
 
     def test_bit_block_size_validation(self) -> None:
         """Bit block size setter must raise exception on invalid arguments."""
@@ -126,8 +120,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         self.encoder.bit_block_size = bit_block_size
         self.encoder.repetitions = repetitions
 
-        self.assertEqual(expected_code_block_size, self.encoder.code_block_size,
-                         "Code block size calculation produced unexpected result")
+        self.assertEqual(expected_code_block_size, self.encoder.code_block_size)
 
     def test_repetitions_setget(self) -> None:
         """Repetitions property getter must return setter value."""
@@ -135,8 +128,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         repetitions = 5
         self.encoder.repetitions = repetitions
 
-        self.assertEqual(repetitions, self.encoder.repetitions,
-                         "Repetitions set/get produced unexpected result")
+        self.assertEqual(repetitions, self.encoder.repetitions)
 
     def test_repetitions_validation(self) -> None:
         """Repetitions property setter must raise exception on invalid arguments"""

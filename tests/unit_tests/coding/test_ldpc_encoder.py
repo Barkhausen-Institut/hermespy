@@ -46,9 +46,8 @@ class TestLDPC(unittest.TestCase):
     def test_encoding(self) -> None:
         """Test encoding behaviour against a pre-calculated set of data-code pairs."""
 
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
-            ), squeeze_me=True)
+        ldpc_results_mat = loadmat(os.path.join(self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'),
+                                   squeeze_me=True)
 
         iterations = ldpc_results_mat['LDPC']['iterations'].item()
         bit_blocks = ldpc_results_mat['bit_words'].astype(int)
@@ -64,14 +63,13 @@ class TestLDPC(unittest.TestCase):
             expected_code = expected_codes[n, :]
             code = self.encoder.encode(bit_block)
 
-            assert_array_equal(code, expected_code, "LDPC encoding produced unexpected result in block {}".format(n))
+            assert_array_equal(code, expected_code)
 
     def test_decoding(self) -> None:
         """Test decoding behaviour against a pre-calculated set of data-code pairs."""
 
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
-            ), squeeze_me=True)
+        ldpc_results_mat = loadmat(os.path.join(self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'),
+                                   squeeze_me=True)
 
         iterations = ldpc_results_mat['LDPC']['iterations'].item()
         expected_bit_blocks = ldpc_results_mat['bit_words'].astype(int)
@@ -87,8 +85,7 @@ class TestLDPC(unittest.TestCase):
             expected_bit_block = expected_bit_blocks[n, :]
             bit_block = self.encoder.decode(code)
 
-            assert_array_equal(bit_block, expected_bit_block,
-                               "LDPC decoding produced unexpected result in block {}".format(n))
+            assert_array_equal(bit_block, expected_bit_block)
 
     def test_readCustomLdpcEncoder_fileExists(self) -> None:
         """Test the LDPC code lookup from custom directories."""
@@ -159,9 +156,8 @@ class TestLDPCBinding(unittest.TestCase):
     def test_encoding(self) -> None:
         """Test encoding behaviour against a pre-calculated set of data-code pairs."""
 
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
-            ), squeeze_me=True)
+        ldpc_results_mat = loadmat(os.path.join(self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'),
+                                   squeeze_me=True)
 
         iterations = ldpc_results_mat['LDPC']['iterations'].item()
         bit_blocks = ldpc_results_mat['bit_words'].astype(int)
@@ -177,15 +173,13 @@ class TestLDPCBinding(unittest.TestCase):
             expected_code = expected_codes[n, :]
             code = self.encoder.encode(bit_block)
 
-            assert_array_equal(code, expected_code,
-                               "LDPC Cpp binding encoding produced unexpected result in block {}".format(n))
+            assert_array_equal(code, expected_code)
 
     def test_decoding(self) -> None:
         """Test decoding behaviour against a pre-calculated set of data-code pairs."""
 
-        ldpc_results_mat = loadmat(os.path.join(
-                self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'
-            ), squeeze_me=True)
+        ldpc_results_mat = loadmat(os.path.join(self.encoderTestResultsDir, 'test_data_encoder_256_2_3.mat'),
+                                   squeeze_me=True)
 
         iterations = ldpc_results_mat['LDPC']['iterations'].item()
         expected_bit_blocks = ldpc_results_mat['bit_words'].astype(int)
@@ -201,5 +195,4 @@ class TestLDPCBinding(unittest.TestCase):
             expected_bit_block = expected_bit_blocks[n, :]
             bit_block = self.encoder.decode(code)
 
-            assert_array_equal(bit_block, expected_bit_block,
-                               "LDPC Cpp binding decoding produced unexpected result in block {}".format(n))
+            assert_array_equal(bit_block, expected_bit_block)
