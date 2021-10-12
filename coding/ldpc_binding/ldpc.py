@@ -10,7 +10,7 @@ import coding.ldpc_binding.bin.ldpc_binding as ldpc_binding  # type: ignore
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer, Jan Adler"]
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.1.0"
 __maintainer__ = "Tobias Kronauer"

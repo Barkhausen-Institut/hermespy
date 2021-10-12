@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+"""Channel model for wireless transmission links."""
+
 from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
-from abc import abstractmethod
+from abc import ABC
 import numpy as np
 from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, ScalarNode, MappingNode
 from ruamel.yaml.comments import CommentedOrderedMap
@@ -8,8 +11,17 @@ from ruamel.yaml.comments import CommentedOrderedMap
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver
 
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
 
-class Channel:
+
+class Channel(ABC):
     """Implements an ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
@@ -23,7 +35,7 @@ class Channel:
     samples/second.
     """
 
-    yaml_tag = 'Channel'
+    yaml_tag = u'Channel'
     __active: bool
     __transmitter: Optional[Transmitter]
     __receiver: Optional[Receiver]
@@ -69,85 +81,6 @@ class Channel:
 
         if gain is not None:
             self.gain = gain
-
-    @classmethod
-    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> MappingNode:
-        """Serialize a channel object to YAML.
-
-        Args:
-            representer (RoundTripRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Channel):
-                The channel instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {
-            'active': node.__active,
-            'gain': node.__gain
-        }
-
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
-
-    @classmethod
-    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: MappingNode)\
-            -> Tuple[Channel, int, int]:
-        """Recall a new `Channel` instance from YAML.
-
-        Args:
-            constructor (RoundTripConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            tag_suffix (str):
-                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
-                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
-
-            node (Node):
-                YAML node representing the `Channel` serialization.
-
-        Returns:
-            Channel:
-                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
-                initialized by the `scenario` YAML constructor.
-
-            int:
-                Transmitter index of modem transmitting into this channel.
-
-            int:
-                Receiver index of modem receiving from this channel.
-            """
-
-        indices = tag_suffix.split(' ')
-        if indices[0] == '':
-            indices.pop(0)
-
-        # Handle empty yaml nodes
-        if isinstance(node, ScalarNode):
-            return cls(), int(indices[0]), int(indices[1])
-
-        state = constructor.construct_mapping(node, CommentedOrderedMap)
-        return cls(**state), int(indices[0]), int(indices[1])
-
-    def move_to(self, transmitter: Transmitter, receiver: Receiver) -> None:
-        """Move the channel to a new matrix position.
-
-        transmitter (Transmitter):
-            New transmitting modem.
-
-        receiver (Receiver):
-            New receiving modem.
-        """
-
-        self.__transmitter = transmitter
-        self.__receiver = receiver
 
     @property
     def active(self) -> bool:
@@ -244,7 +177,13 @@ class Channel:
         Args:
             value (float):
                 The new channel gain.
+
+        Raises:
+            ValueError: If gain is smaller than zero.
         """
+
+        if value < 0.0:
+            raise ValueError("Channel gain must be greater or equal to zero")
 
         self.__gain = value
 
@@ -259,7 +198,7 @@ class Channel:
                 The number of input streams.
         """
 
-        return self.__transmitter.num_streams
+        return self.__transmitter.num_antennas
 
     @property
     def num_outputs(self) -> int:
@@ -272,7 +211,7 @@ class Channel:
                 The number of output streams.
         """
 
-        return self.__receiver.num_streams
+        return self.__receiver.num_antennas
 
     @property
     def indices(self) -> Tuple[int, int]:
@@ -287,12 +226,12 @@ class Channel:
 
         return self.__transmitter.index, self.__receiver.index
 
-    @abstractmethod
+#    @abstractmethod
     def init_drop(self) -> None:
         """Initializes random channel parameters for each drop, if required by model."""
         pass
 
-    @abstractmethod
+#    @abstractmethod
     def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
         """Modifies the input signal and returns it after channel propagation.
 
@@ -307,19 +246,31 @@ class Channel:
                 The output depends on the channel model employed.
 
         Raises:
+
             ValueError:
                 If the first dimension of `transmitted_signal` is not one or the number of transmitting antennas.
+
             RuntimeError:
                 If the scenario configuration is not supported by the default channel model.
+
+            RuntimeError:
+                If the channel is currently floating.
         """
 
         if transmitted_signal.ndim != 2:
             raise ValueError("Transmitted signal must be a matrix (an array of two dimensions)")
 
+        if self.transmitter is None or self.receiver is None:
+            raise RuntimeError("Channel is floating, making propagation simulation impossible")
+
         # If just on stream feeds into the channel, the output shall be the repeated stream by default.
         # Note: This might not be accurate physical behaviour for some sensor array topologies!
         if transmitted_signal.shape[0] == 1:
             return self.gain * transmitted_signal.repeat(self.receiver.num_antennas, axis=0)
+
+        # MISO case, results in a superposition at the receiver
+        if self.receiver.num_antennas == 1:
+            return self.gain * np.sum(transmitted_signal, axis=0, keepdims=True)
 
         if transmitted_signal.shape[0] != self.transmitter.num_antennas:
             raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
@@ -329,8 +280,8 @@ class Channel:
 
         return self.gain * transmitted_signal
 
-    @abstractmethod
-    def get_impulse_response(self, timestamps: np.array) -> np.ndarray:
+#    @abstractmethod
+    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
         """Calculate the channel impulse responses.
 
         This method can be used for instance by the transceivers to obtain the channel state
@@ -347,9 +298,78 @@ class Channel:
                 where `L` is the maximum path delay (in samples). For the ideal
                 channel in the base class, `L = 0`.
         """
-        impulse_responses = np.tile(
-            np.ones((self.receiver.num_antennas, self.transmitter.num_antennas), dtype=complex),
-            (timestamps.size, 1, 1))
 
+        if self.transmitter is None or self.receiver is None:
+            raise RuntimeError("Channel is floating, making impulse response simulation impossible")
+
+        impulse_responses = np.tile(np.ones((self.receiver.num_antennas, self.transmitter.num_antennas), dtype=complex),
+                                    (timestamps.size, 1, 1))
         impulse_responses = np.expand_dims(impulse_responses, axis=3)
-        return impulse_responses * self.gain
+
+        return self.gain * impulse_responses
+
+    @classmethod
+    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> MappingNode:
+        """Serialize a channel object to YAML.
+
+        Args:
+            representer (RoundTripRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Channel):
+                The channel instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'active': node.__active,
+            'gain': node.__gain
+        }
+
+        transmitter_index, receiver_index = node.indices
+
+        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
+        return yaml
+
+    @classmethod
+    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: MappingNode)\
+            -> Tuple[Channel, int, int]:
+        """Recall a new `Channel` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            tag_suffix (str):
+                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
+                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
+
+            node (Node):
+                YAML node representing the `Channel` serialization.
+
+        Returns:
+            Channel:
+                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+
+            int:
+                Transmitter index of modem transmitting into this channel.
+
+            int:
+                Receiver index of modem receiving from this channel.
+            """
+
+        indices = tag_suffix.split(' ')
+        if indices[0] == '':
+            indices.pop(0)
+
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            return cls(), int(indices[0]), int(indices[1])
+
+        state = constructor.construct_mapping(node, CommentedOrderedMap)
+        return cls(**state), int(indices[0]), int(indices[1])
