@@ -15,10 +15,10 @@ class StubEncoder(Encoder):
         Encoder.__init__(self, manager)
         self.__block_size = block_size
 
-    def encode(self, bits: np.array) -> np.array:
+    def encode(self, bits: np.ndarray) -> np.ndarray:
         return bits.repeat(2)
 
-    def decode(self, encoded_bits: np.array) -> np.array:
+    def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
         return encoded_bits[::2]
 
     @property
@@ -55,4 +55,5 @@ class TestEncoder(unittest.TestCase):
         """Rate property check."""
 
         expected_rate = 0.5
-        self.assertAlmostEqual(expected_rate, self.encoder.rate, "Rate produced unexpected value")
+        self.assertAlmostEqual(expected_rate, self.encoder.rate,
+                               msg="Rate produced unexpected value")

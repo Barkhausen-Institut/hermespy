@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Repetition encoder."""
 
-
 from __future__ import annotations
 from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
