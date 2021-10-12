@@ -1,215 +1,305 @@
-import unittest
-import numpy as np
-import numpy.testing as npt
+# -*- coding: utf-8 -*-
+"""Test channel model for wireless transmission links."""
 
-from parameters_parser.parameters_channel import ParametersChannel
-from parameters_parser.parameters_rx_modem import ParametersRxModem
-from parameters_parser.parameters_tx_modem import ParametersTxModem
-from channel.channel import Channel
+import unittest
+from unittest.mock import Mock
+import numpy as np
+from numpy.testing import assert_array_equal
+
+from channel import Channel
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestChannel(unittest.TestCase):
+    """Test the channel model base class."""
 
     def setUp(self) -> None:
-        self.rnd = np.random.RandomState()
-        self.param = ParametersChannel(ParametersRxModem(), ParametersTxModem())
-        self.param.gain = 1
-        self.param.multipath_model = 'NONE'
 
-    def test_propagate(self) -> None:
-        """
-        Test if the signal at the output of the channel is the same as in the input of the channel.
-        Consider different number of transmit and receive antennas.
-        """
-        signal_length_min = 100
-        signal_length_max = 1000
+        self.transmitter = Mock()
+        self.receiver = Mock()
+        self.active = True
+        self.gain = 1.0
 
-        max_ants = 10
+        self.channel = Channel(self.transmitter, self.receiver, self.active, self.gain)
 
-        sampling_rate = 1e6
+        # Number of discrete-time samples generated for signal propagation testing
+        self.propagate_signal_lengths = [0, 1, 10, 100, 1000]
+        self.propagate_signal_gains = [1.0, 0.5]
 
-        ###########
-        # test SISO
-        channel = Channel(self.param, self.rnd, sampling_rate)
+        # Number of discrete-time timestamps generated for impulse response testing
+        self.impulse_response_sampling_rate = 1e6
+        self.impulse_response_lengths = [0, 1, 10, 100, 1000]
+        self.impulse_response_gains = [1.0, 0.5]
 
-        # with real-valued 1D-array
-        signal_length = self.rnd.randint(
-            signal_length_min, signal_length_max + 1)
-        signal_in = self.rnd.normal(size=signal_length)
-        signal_out = channel.propagate(signal_in)
-        npt.assert_array_almost_equal(
-            np.reshape(signal_in, (1, -1)), signal_out)
+    def test_init(self) -> None:
+        """Test that the init properly stores all parameters."""
 
-        # with complex-valued 2D-array
-        signal_length = self.rnd.randint(signal_length_min, signal_length_max)
-        signal_in = self.rnd.normal(
-            size=(1, signal_length)) + 1j * self.rnd.normal(size=(1, signal_length))
-        signal_out = channel.propagate(signal_in)
-        npt.assert_array_almost_equal(signal_in, signal_out)
+        self.assertIs(self.transmitter, self.channel.transmitter, "Unexpected transmitter parameter initialization")
+        self.assertIs(self.receiver, self.channel.receiver, "Unexpected receiver parameter initialization")
+        self.assertEqual(self.active, self.channel.active, "Unexpected active parameter initialization")
+        self.assertEqual(self.gain, self.channel.gain, "Unexpected gain parameter initialization")
 
-        ############
-        # test MIMO
+    def test_active_setget(self) -> None:
+        """Active property getter must return setter parameter."""
 
-        # test MIMO with Ntx = Nrx
-        self.param.params_tx_modem.number_of_antennas = self.rnd.randint(2, max_ants + 1)
-        self.param.params_rx_modem.number_of_antennas = self.param.params_tx_modem.number_of_antennas
+        active = not self.active
+        self.channel.active = active
 
-        channel = Channel(self.param, self.rnd, sampling_rate)
+        self.assertEqual(active, self.channel.active, "Active property set/get produced unexpected result")
 
-        signal_length = self.rnd.randint(signal_length_min, signal_length_max)
-        frame_size = (self.param.params_tx_modem.number_of_antennas, signal_length)
-        signal_in = self.rnd.normal(
-            size=frame_size) + 1j * self.rnd.normal(size=frame_size)
-        signal_out = channel.propagate(signal_in)
+    def test_transmitter_setget(self) -> None:
+        """Transmitter property getter must return setter parameter."""
 
-        npt.assert_array_almost_equal(
-            np.ones(
-                (self.param.params_rx_modem.number_of_antennas,
-                 self.param.params_tx_modem.number_of_antennas)) @ signal_in,
-            signal_out
-        )
+        channel = Channel()
+        channel.transmitter = self.transmitter
 
-        # test MIMO with Ntx > Nrx
-        self.param.params_rx_modem.number_of_antennas = self.rnd.randint(2, max_ants + 1)
-        self.param.params_tx_modem.number_of_antennas = self.param.params_rx_modem.number_of_antennas + self.rnd.randint(2, max_ants + 1)
-        channel = Channel(self.param, self.rnd, sampling_rate)
+        self.assertIs(self.transmitter, channel.transmitter, "Transmitter property set/get produced unexpected result")
 
-        signal_length = self.rnd.randint(signal_length_min, signal_length_max)
-        frame_size = (self.param.params_tx_modem.number_of_antennas, signal_length)
-        signal_in = self.rnd.normal(
-            size=frame_size) + 1j * self.rnd.normal(size=frame_size)
-        signal_out = channel.propagate(signal_in)
-        npt.assert_array_almost_equal(
-            np.ones(
-                (self.param.params_rx_modem.number_of_antennas,
-                 self.param.params_tx_modem.number_of_antennas)) @ signal_in,
-            signal_out
-        )
+    def test_transmitter_validation(self) -> None:
+        """Transmitter property setter must raise exception if already configured."""
 
-        # test MIMO with Nrx > Ntx
-        self.param.params_tx_modem.number_of_antennas = self.rnd.randint(2, max_ants + 1)
-        self.param.params_rx_modem.number_of_antennas = self.param.params_tx_modem.number_of_antennas + self.rnd.randint(2, max_ants + 1)
-        channel = Channel(self.param, self.rnd, sampling_rate)
+        with self.assertRaises(RuntimeError):
+            self.channel.transmitter = Mock()
 
-        signal_length = self.rnd.randint(signal_length_min, signal_length_max)
-        frame_size = (self.param.params_tx_modem.number_of_antennas, signal_length)
-        signal_in = self.rnd.normal(
-            size=frame_size) + 1j * self.rnd.normal(size=frame_size)
-        signal_out = channel.propagate(signal_in)
-        npt.assert_array_almost_equal(
-            np.ones(
-                (self.param.params_rx_modem.number_of_antennas,
-                 self.param.params_tx_modem.number_of_antennas)) @ signal_in,
-            signal_out
-        )
+    def test_receiver_setget(self) -> None:
+        """Receiver property getter must return setter parameter."""
 
-    def test_impulse_response(self) -> None:
-        """
-        Test if the impulse response is given correctly with the right number of dimensions.
-        """
+        channel = Channel()
+        channel.receiver = self.receiver
 
-        max_number_instants = 100
-        max_ants = 10
-        sampling_rate = 1e6
+        self.assertIs(self.receiver, channel.receiver, "Receiver property set/get produced unexpected result")
 
-        # SISO
-        channel = Channel(self.param, self.rnd, sampling_rate)
-        timestamps = self.rnd.random_sample(
-            self.rnd.randint(max_number_instants))
-        channel_state_info = channel.get_impulse_response(timestamps)
-        npt.assert_array_almost_equal(
-            channel_state_info, np.ones(
-                (timestamps.size, 1, 1, 1)))
+    def test_receiver_validation(self) -> None:
+        """Receiver property setter must raise exception if already configured."""
 
-        # MIMO with Ntx = Nrx
-        self.param.params_tx_modem.number_of_antennas = self.rnd.randint(2, max_ants + 1)
-        self.param.params_rx_modem.number_of_antennas = self.param.params_tx_modem.number_of_antennas
-        channel = Channel(self.param, self.rnd, sampling_rate)
-        timestamps = self.rnd.random_sample(
-            self.rnd.randint(max_number_instants))
+        with self.assertRaises(RuntimeError):
+            self.channel.receiver = Mock()
 
-        channel_state_info = channel.get_impulse_response(timestamps)
+    def test_gain_setget(self) -> None:
+        """Gain property getter must return setter parameter."""
 
-        desired_size = (
-            timestamps.size,
-            self.param.params_rx_modem.number_of_antennas,
-            self.param.params_tx_modem.number_of_antennas, 1)
-        self.assertEqual(desired_size, channel_state_info.shape)
+        gain = 5.0
+        self.channel.gain = 5.0
 
-        for idx_time in range(timestamps.size):
-            npt.assert_array_almost_equal(
-                np.ones(
-                    (self.param.params_rx_modem.number_of_antennas,
-                     self.param.params_tx_modem.number_of_antennas)),
-                np.squeeze(channel_state_info[idx_time, :, :, :])
-            )
+        self.assertIs(gain, self.channel.gain, "Gain property set/get produced unexpected result")
 
-        # MIMO with Ntx > NRx
-        self.param.params_rx_modem.number_of_antennas = self.rnd.randint(2, max_ants + 1)
-        self.param.params_tx_modem.number_of_antennas = self.param.params_rx_modem.number_of_antennas + self.rnd.randint(2, max_ants + 1)
-        channel = Channel(self.param, self.rnd, sampling_rate)
-        timestamps = self.rnd.random_sample(
-            self.rnd.randint(max_number_instants))
+    def test_gain_validation(self) -> None:
+        """Gain property setter must raise exception on arguments smaller than zero."""
 
-        channel_state_info = channel.get_impulse_response(timestamps)
+        with self.assertRaises(ValueError):
+            self.channel.gain = -1.0
 
-        desired_size = (timestamps.size, self.param.params_rx_modem.number_of_antennas, self.param.params_tx_modem.number_of_antennas, 1)
-        self.assertEqual(desired_size, channel_state_info.shape)
+        try:
+            self.channel.gain = 0.0
 
-        for idx_time in range(timestamps.size):
-            npt.assert_array_almost_equal(
-                np.ones(
-                    (self.param.params_rx_modem.number_of_antennas,
-                     self.param.params_tx_modem.number_of_antennas)),
-                np.squeeze(channel_state_info[idx_time, :, :, :])
-            )
+        except ValueError:
+            self.fail("Gain property set to zero raised unexpected exception")
 
-        # MIMO with Nrx > Ntx
-        self.param.params_tx_modem.number_of_antennas = self.rnd.randint(2, max_ants + 1)
-        self.param.params_rx_modem.number_of_antennas = self.param.params_tx_modem.number_of_antennas + self.rnd.randint(2, max_ants + 1)
-        channel = Channel(self.param, self.rnd, sampling_rate)
-        timestamps = self.rnd.random_sample(
-            self.rnd.randint(max_number_instants))
+    def test_num_inputs(self) -> None:
+        """Number of inputs property must return number of transmitting antennas."""
 
-        channel_state_info = channel.get_impulse_response(timestamps)
+        num_inputs = 5
+        self.transmitter.num_antennas = num_inputs
 
-        desired_size = (
-            timestamps.size,
-            self.param.params_rx_modem.number_of_antennas,
-            self.param.params_tx_modem.number_of_antennas, 1)
-        self.assertEqual(desired_size, channel_state_info.shape)
+        self.assertEqual(num_inputs, self.channel.num_inputs, "Number of inputs property returned unexpected result")
 
-        for idx_time in range(timestamps.size):
-            npt.assert_array_almost_equal(
-                np.ones(
-                    (self.param.params_rx_modem.number_of_antennas,
-                     self.param.params_tx_modem.number_of_antennas)),
-                np.squeeze(channel_state_info[idx_time, :, :, :])
-            )
+    def test_num_outputs(self) -> None:
+        """Number of outputs property must return number of receiving antennas."""
 
-    def test_channel_gain(self) -> None:
-        """
-        Test if channel gain is applied correctly on both propagation and channel impulse response
-        """
-        self.param.gain = 2
-        sampling_rate = 1e6
-        signal_length = 1000
+        num_outputs = 5
+        self.receiver.num_antennas = num_outputs
 
-        channel = Channel(self.param, self.rnd, sampling_rate)
+        self.assertEqual(num_outputs, self.channel.num_outputs, "Number of outputs property returned unexpected result")
 
-        frame_size = (1, signal_length)
-        signal_in = self.rnd.normal(
-            size=frame_size) + 1j * self.rnd.normal(size=frame_size)
-        signal_out = channel.propagate(signal_in)
-        npt.assert_array_equal(signal_in * self.param.gain, signal_out)
+    def test_indices(self) -> None:
+        """Indices property must return respective transmitter and receiver indices."""
 
-        timestamps = np.asarray([0, 100, 500]) / sampling_rate
-        channel_state_info = channel.get_impulse_response(timestamps)
+        expected_indices = (6, 7)
+        self.transmitter.index = expected_indices[0]
+        self.receiver.index = expected_indices[1]
 
-        npt.assert_array_equal(channel_state_info, self.param.gain)
+        self.assertEqual(expected_indices, self.channel.indices, "Channel indices property returned unexpected result")
 
-        self.param.gain = 1
+    def test_propagate_SISO(self) -> None:
+        """Test valid propagation for the Single-Input-Single-Output channel."""
 
+        self.transmitter.num_antennas = 1
+        self.receiver.num_antennas = 1
 
-if __name__ == '__main__':
-    unittest.main()
+        for num_samples in self.propagate_signal_lengths:
+            for gain in self.propagate_signal_gains:
+
+                signal = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
+                self.channel.gain = gain
+
+                expected_propagated_signal = gain * signal
+                propagated_signal = self.channel.propagate(signal)
+
+                assert_array_equal(expected_propagated_signal, propagated_signal)
+
+    def test_propagate_SIMO(self) -> None:
+        """Test valid propagation for the Single-Input-Multiple-Output channel."""
+
+        self.transmitter.num_antennas = 1
+        self.receiver.num_antennas = 3
+
+        for num_samples in self.propagate_signal_lengths:
+            for gain in self.propagate_signal_gains:
+
+                signal = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
+                self.channel.gain = gain
+
+                expected_propagated_signal = np.repeat(gain * signal, self.receiver.num_antennas, axis=0)
+                propagated_signal = self.channel.propagate(signal)
+
+                assert_array_equal(expected_propagated_signal, propagated_signal)
+
+    def test_propagate_MISO(self) -> None:
+        """Test valid propagation for the Multiple-Input-Single-Output channel."""
+
+        num_transmit_antennas = 3
+        self.transmitter.num_antennas = num_transmit_antennas
+        self.receiver.num_antennas = 1
+
+        for num_samples in self.propagate_signal_lengths:
+            for gain in self.propagate_signal_gains:
+
+                signal = np.random.rand(num_transmit_antennas, num_samples) + 1j * np.random.rand(num_transmit_antennas,
+                                                                                                  num_samples)
+                self.channel.gain = gain
+
+                expected_propagated_signal = gain * np.sum(signal, axis=0, keepdims=True)
+                propagated_signal = self.channel.propagate(signal)
+
+                assert_array_equal(expected_propagated_signal, propagated_signal)
+
+    def test_propagate_MIMO(self) -> None:
+        """Test valid propagation for the Multiple-Input-Multiple-Output channel."""
+
+        num_antennas = 3
+        self.transmitter.num_antennas = num_antennas
+        self.receiver.num_antennas = num_antennas
+
+        for num_samples in self.propagate_signal_lengths:
+            for gain in self.propagate_signal_gains:
+
+                signal = np.random.rand(num_antennas, num_samples) + 1j * np.random.rand(num_antennas,
+                                                                                         num_samples)
+                self.channel.gain = gain
+
+                expected_propagated_signal = gain * signal
+                propagated_signal = self.channel.propagate(signal)
+
+                assert_array_equal(expected_propagated_signal, propagated_signal)
+
+    def test_propagate_validation(self) -> None:
+        """Propagation routine must raise errors in case of unsupported scenarios."""
+
+        with self.assertRaises(ValueError):
+            self.channel.propagate(np.array([1, 2, 3]))
+
+        with self.assertRaises(ValueError):
+
+            self.transmitter.num_antennas = 1
+            self.channel.propagate(np.array([[1, 2, 3], [4, 5, 6]]))
+
+        with self.assertRaises(ValueError):
+
+            self.transmitter.num_antennas = 2
+            self.receiver.num_antennas = 3
+            self.channel.propagate(np.array([[1, 2, 3], [4, 5, 6]]))
+
+        with self.assertRaises(RuntimeError):
+
+            floating_channel = Channel()
+            floating_channel.propagate(np.array([[1, 2, 3]]))
+
+    def test_impulse_response_SISO(self) -> None:
+        """Test the impulse response generation for the Single-Input-Single-Output case."""
+
+        self.transmitter.num_antennas = 1
+        self.receiver.num_antennas = 1
+
+        for response_length in self.impulse_response_lengths:
+            for gain in self.impulse_response_gains:
+
+                self.channel.gain = gain
+                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
+                expected_impulse_response = gain * np.ones((response_length, 1, 1, 1), dtype=float)
+
+                impulse_response = self.channel.impulse_response(timestamps)
+                assert_array_equal(expected_impulse_response, impulse_response)
+
+    def test_impulse_response_SIMO(self) -> None:
+        """Test the impulse response generation for the Single-Input-Multiple-Output case."""
+
+        self.transmitter.num_antennas = 1
+        self.receiver.num_antennas = 3
+
+        for response_length in self.impulse_response_lengths:
+            for gain in self.impulse_response_gains:
+
+                self.channel.gain = gain
+                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
+                expected_impulse_response = gain * np.ones((response_length, 3, 1, 1), dtype=float)
+
+                impulse_response = self.channel.impulse_response(timestamps)
+                assert_array_equal(expected_impulse_response, impulse_response)
+
+    def test_impulse_response_MISO(self) -> None:
+        """Test the impulse response generation for the Multiple-Input-Single-Output case."""
+
+        self.transmitter.num_antennas = 3
+        self.receiver.num_antennas = 1
+
+        for response_length in self.impulse_response_lengths:
+            for gain in self.impulse_response_gains:
+
+                self.channel.gain = gain
+                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
+                expected_impulse_response = gain * np.ones((response_length, 1, 3, 1), dtype=float)
+
+                impulse_response = self.channel.impulse_response(timestamps)
+                assert_array_equal(expected_impulse_response, impulse_response)
+
+    def test_impulse_response_MIMO(self) -> None:
+        """Test the impulse response generation for the Multiple-Input-Multiple-Output case."""
+
+        num_antennas = 3
+        self.transmitter.num_antennas = num_antennas
+        self.receiver.num_antennas = num_antennas
+
+        for response_length in self.impulse_response_lengths:
+            for gain in self.impulse_response_gains:
+
+                self.channel.gain = gain
+                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
+                expected_impulse_response = gain * np.ones((response_length, num_antennas, num_antennas, 1),
+                                                           dtype=float)
+
+                impulse_response = self.channel.impulse_response(timestamps)
+                assert_array_equal(expected_impulse_response, impulse_response)
+
+    def test_impulse_response_validation(self) -> None:
+        """Impulse response routine must raise errors in case of unsupported scenarios."""
+
+        with self.assertRaises(RuntimeError):
+
+            floating_channel = Channel()
+            floating_channel.impulse_response(np.empty(0, dtype=complex))
+
+    def test_to_yaml(self) -> None:
+        """Test YAML serialization dump validity."""
+        pass
+
+    def test_from_yaml(self) -> None:
+        """Test YAML serialization recall validity."""
+        pass
