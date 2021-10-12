@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Encoder Manager."""
+
 from __future__ import annotations
 from typing import Type, List, Optional, TYPE_CHECKING
 import numpy as np
@@ -7,6 +10,16 @@ from math import ceil
 if TYPE_CHECKING:
     from modem import Modem
     from . import Encoder
+
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class EncoderManager:
@@ -131,7 +144,7 @@ class EncoderManager:
 
         return self._encoders
 
-    def encode(self, data_bits: np.array, num_code_bits: Optional[int] = None) -> np.array:
+    def encode(self, data_bits: np.ndarray, num_code_bits: Optional[int] = None) -> np.ndarray:
         """Encode a stream of source bits.
 
         By default, the input `data_bits` will be padded with zeros
@@ -140,11 +153,11 @@ class EncoderManager:
         The resulting code will be padded with zeros to match the requested `num_code_bits`.
 
         Args:
-            data_bits (np.array): The data bits to be encoded.
+            data_bits (np.ndarray): The data bits to be encoded.
             num_code_bits (int, optional): The expected number of code bits.
 
         Returns:
-            np.array: The encoded source bits.
+            np.ndarray: The encoded source bits.
 
         Raises:
             ValueError: If `num_code_bits` is smaller than the resulting code bits after encoding.
@@ -193,7 +206,7 @@ class EncoderManager:
         # Return resulting overall code
         return code
 
-    def __encoding_step(self, encoder: Encoder, data_bits: np.array) -> np.array:
+    def __encoding_step(self, encoder: Encoder, data_bits: np.ndarray) -> np.ndarray:
         """Internal function running a single encoding.
 
         Incoming `data_bits` may be padded with zeros to match the encoder
@@ -201,10 +214,10 @@ class EncoderManager:
 
         Args:
             encoder (Encoder): The encoder processing the incoming data.
-            data_bits (np.array): Data feeding into the encoder.
+            data_bits (np.ndarray): Data feeding into the encoder.
 
         Returns:
-            np.array: Bits of encoded data processed by the encoder.
+            np.ndarray: Bits of encoded data processed by the encoder.
         """
 
         bit_block_size = encoder.bit_block_size
@@ -232,7 +245,7 @@ class EncoderManager:
 
         return code_bits
 
-    def decode(self, encoded_bits: np.array, num_data_bits: Optional[int] = None) -> np.array:
+    def decode(self, encoded_bits: np.ndarray, num_data_bits: Optional[int] = None) -> np.ndarray:
         """Decode a stream of code bits to plain data bits.
 
         By default, decoding `encoded_bits` may ignore bits in order
@@ -241,11 +254,11 @@ class EncoderManager:
         The resulting data might be cut to match the requested `num_data_bits`.
 
         Args:
-            encoded_bits (np.array): The encoded code bits to be decoded to data.
+            encoded_bits (np.ndarray): The encoded code bits to be decoded to data.
             num_data_bits (int, optional): The expected number of resulting data bits
 
         Returns:
-            np.array: The decoded code bits as plain data bits.
+            np.ndarray: The decoded code bits as plain data bits.
 
         Raises:
             RuntimeError: If `num_data_bits` is bigger than the resulting data bits after decoding.
@@ -288,15 +301,15 @@ class EncoderManager:
         # Return resulting data, truncate if required
         return data_bits[:num_data_bits]
 
-    def __decoding_step(self, encoder: Encoder, code_bits: np.array) -> np.array:
+    def __decoding_step(self, encoder: Encoder, code_bits: np.ndarray) -> np.ndarray:
         """Internal function running a single decoding.
 
         Args:
             encoder (Encoder): The encoder processing the incoming code.
-            code_bits (np.array): Code block feeding into the encoder.
+            code_bits (np.ndarray): Code block feeding into the encoder.
 
         Returns:
-            np.array: Bits of decoded codes processed by the encoder.
+            np.ndarray: Bits of decoded codes processed by the encoder.
 
         Raises:
             RuntimeError: If truncating is required but not allowed.

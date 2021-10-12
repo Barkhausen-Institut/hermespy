@@ -1,9 +1,22 @@
+# -*- coding: utf-8 -*-
+"""Interleaving Encoder."""
+
 from __future__ import annotations
 from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
 import numpy as np
 
 from coding import Encoder
+
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class Interleaver(Encoder):
@@ -44,7 +57,7 @@ class Interleaver(Encoder):
             raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
 
     @classmethod
-    def to_yaml(cls: Type[Interleaver], representer: SafeRepresenter, node: Interleaver) -> Node:
+    def to_yaml(cls: Type[Interleaver], representer: SafeRepresenter, node: Interleaver) -> MappingNode:
         """Serialize a `Interleaver` encoder to YAML.
 
         Args:
@@ -91,14 +104,14 @@ class Interleaver(Encoder):
         state = constructor.construct_mapping(node)
         return cls(**state)
 
-    def encode(self, bits: np.array) -> np.array:
+    def encode(self, bits: np.ndarray) -> np.ndarray:
         """Interleaves a single block of bits.
 
         Args:
-            bits (np.array): A block of bits to be encoded by this `Encoder`.
+            bits (np.ndarray): A block of bits to be encoded by this `Encoder`.
 
         Returns:
-            np.array: The encoded `bits` block.
+            np.ndarray: The encoded `bits` block.
 
         Raises:
             ValueError: If the number of `bits` does not match the `Encoder` requirements.
@@ -106,14 +119,14 @@ class Interleaver(Encoder):
 
         return bits.reshape((self.interleave_blocks, -1)).T.flatten()
 
-    def decode(self, encoded_bits: np.array) -> np.array:
+    def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
         """De-interleaves a single block of encoded bits.
 
         Args:
-            encoded_bits (np.array): An encoded block of bits.
+            encoded_bits (np.ndarray): An encoded block of bits.
 
         Returns:
-            np.array: A decoded block of bits.
+            np.ndarray: A decoded block of bits.
 
         Raises:
             ValueError: If the number of `bits` does not match the `Encoder` requirements.
