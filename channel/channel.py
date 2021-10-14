@@ -42,10 +42,10 @@ class Channel(ABC):
     __gain: float
 
     def __init__(self,
-                 transmitter: Transmitter = None,
-                 receiver: Receiver = None,
-                 active: bool = None,
-                 gain: float = None) -> None:
+                 transmitter: Optional[Transmitter] = None,
+                 receiver: Optional[Receiver] = None,
+                 active: Optional[bool] = None,
+                 gain: Optional[float] = None) -> None:
         """Class constructor.
 
         Args:

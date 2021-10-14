@@ -1,4 +1,4 @@
-from __future__ import annotations
 from .channel import Channel
+from .multipath_fading_channel import MultipathFadingChannel
 
-__all__ = [Channel]
+__all__ = ['Channel', 'MultipathFadingChannel']
