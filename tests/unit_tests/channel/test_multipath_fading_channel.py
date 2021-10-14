@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Test Multipath Fading Channel Model."""
+
 import unittest
 import numpy as np
 import numpy.testing as npt
@@ -8,10 +11,17 @@ from matplotlib import pyplot as plt
 import copy
 from typing import Tuple, Any
 
-from parameters_parser.parameters_channel import ParametersChannel
-from parameters_parser.parameters_rx_modem import ParametersRxModem
-from parameters_parser.parameters_tx_modem import ParametersTxModem
-from channel.multipath_fading_channel import MultipathFadingChannel
+
+from channel import MultipathFadingChannel
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestMultipathFadingChannel(unittest.TestCase):
@@ -148,7 +158,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
              channel.max_delay_in_samples))
 
         desired_output = np.zeros(output.shape, dtype=float)
-        for path_idx in range(channel.number_of_paths):
+        for path_idx in range(channel.__num_paths):
             desired_output[0, sampling_indices + self.path_delay_in_samples[path_idx]] = \
                 np.sqrt(self.param.power_delay_profile[path_idx])
 
@@ -175,7 +185,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
                          (timestamps.size, 1, 1, channel.max_delay_in_samples + 1))
 
         desired_output = np.zeros(output.shape, dtype=complex)
-        for path_idx in range(channel.number_of_paths):
+        for path_idx in range(channel.__num_paths):
             desired_output[0, sampling_indices + self.path_delay_in_samples[path_idx]] = \
                 channel_impulse_response[:, 0, 0,
                                          self.path_delay_in_samples[path_idx]]
