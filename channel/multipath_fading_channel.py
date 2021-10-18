@@ -126,11 +126,27 @@ class MultipathFadingChannel(Channel):
             receive_postcoding (np.ndarray): Receive postcoding matrix.
 
         Raises:
-            ValueError: If the length of `delays`, `power_profile` and `rice_factors` is not identical.
+            ValueError:
+                If the length of `delays`, `power_profile` and `rice_factors` is not identical.
+                If delays are smaller than zero.
+                If power factors are smaller than zero.
+                If rice factors are smaller than zero.
         """
 
-        if len(delays) != len(power_profile) != len(rice_factors):
+        if delays.ndim != 1 or power_profile.ndim != 1 or rice_factors.ndim != 1:
+            raise ValueError("Delays, power profile and rice factors must be vectors")
+
+        if len(delays) != len(power_profile) or len(power_profile) != len(rice_factors):
             raise ValueError("Delays, power profile and rice factor vectors must be of equal length")
+
+        if np.any(delays < 0.0):
+            raise ValueError("Delays must be greater or equal to zero")
+
+        if np.any(power_profile < 0.0):
+            raise ValueError("Power profile factors must be greater or equal to zero")
+
+        if np.any(rice_factors < 0.0):
+            raise ValueError("Rice factors must be greater or equal to zero")
 
         # Init base class
         Channel.__init__(self, transmitter, receiver, active, gain)
@@ -138,7 +154,7 @@ class MultipathFadingChannel(Channel):
         self.__delays = delays
         self.__power_profile = power_profile
         self.__rice_factors = rice_factors
-        self.__num_sinusoids = 10
+        self.__num_sinusoids = 10       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
         self.__los_angle = None
         self.__transmit_precoding = None
         self.__receive_postcoding = None
@@ -166,9 +182,17 @@ class MultipathFadingChannel(Channel):
         # Infer additional parameters
         self.__max_delay = max(delays)
         self.__num_sequences = len(delays)
-        self.__los_gains: np.array = np.sqrt(rice_factors) / np.sqrt(1 + rice_factors)
-        self.__los_gains[np.isposinf(rice_factors)] = 1.
-        self.__non_los_gains = 1 / np.sqrt(1 + rice_factors)
+
+        rice_inf_pos = np.isposinf(rice_factors)
+        rice_num_pos = np.invert(rice_inf_pos)
+        self.__los_gains = np.empty(self.num_sequences, dtype=float)
+        self.__non_los_gains = np.empty(self.num_sequences, dtype=float)
+
+        self.__los_gains[rice_inf_pos] = 1.0
+        self.__los_gains[rice_num_pos] = np.sqrt(rice_factors[rice_num_pos]) / np.sqrt(1 + rice_factors[rice_num_pos])
+
+        self.__non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + rice_factors[rice_num_pos])
+        self.__non_los_gains[rice_inf_pos] = 0.0
 
     @property
     def delays(self) -> np.ndarray:
@@ -383,7 +407,17 @@ class MultipathFadingChannel(Channel):
             angle (Optional[float]): The new angle of arrival in radians.
         """
 
-        self.__angle = angle
+        self.__los_angle = angle
+
+    @property
+    def max_delay_in_samples(self) -> int:
+        """Maximum input shift caused by the channel delay in samples.
+
+        Returns:
+            int: Delay in samples.
+        """
+
+        return int(self.max_delay * self.transmitter.sampling_rate)
 
     def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
         """Modifies the input signal and returns it after channel propagation.
@@ -421,7 +455,7 @@ class MultipathFadingChannel(Channel):
         # Calculate number of discrete-time samples,
         # the propagated signal may require additional samples to account for delays
         num_samples_in = transmitted_signal.shape[1]
-        num_samples_out = num_samples_in + int(ceil(self.max_delay / self.transmitter.sampling_rate))
+        num_samples_out = num_samples_in + self.max_delay_in_samples
 
         received_signals = np.zeros((self.receiver.num_antennas, num_samples_out), dtype=complex)
 
@@ -432,19 +466,19 @@ class MultipathFadingChannel(Channel):
         timestamps = np.arange(num_samples_out) / self.transmitter.sampling_rate
 
         # Add paths to form received signal
-        for receive_antenna_idx in range(self.receiver.num_antennas):
-            for transmit_antenna_idx in range(self.transmitter.num_antennas):
+        for transmit_antenna_idx in range(self.transmitter.num_antennas):
+            for receive_antenna_idx in range(self.receiver.num_antennas):
 
                 impulse_response = self.siso_impulse_response(timestamps)
-                propagated_signal = convolve(impulse_response, transmitted_signal[transmit_antenna_idx, :])
+                propagated_signal = convolve(impulse_response, transmitted_signal[transmit_antenna_idx, :], 'full')
 
-                received_signals[receive_antenna_idx, :] += propagated_signal
+                received_signals[receive_antenna_idx, :] += propagated_signal[:num_samples_out]
 
         # Receive antenna correlation
         if self.receive_postcoding is not None:
             received_signals = self.receive_postcoding @  received_signals
 
-        return self.gain * received_signals
+        return received_signals
 
     def siso_impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
         """Generate a single SISO channel impulse response.
@@ -453,17 +487,17 @@ class MultipathFadingChannel(Channel):
             timestamps (np.ndarray): Timestamps at which to sample the generated response.
         """
 
-        response = np.zeros(len(timestamps), dtype=float)
+        response = np.zeros(len(timestamps) + self.max_delay_in_samples, dtype=complex)
         for s in range(self.num_sequences):
 
             # TODO: Check if it should be the square root of the power profile
-            sequence = self.__power_profile[s] * self.__fading_sequence(timestamps, s)
-            response += sequence
+            sequence = self.__power_profile[s] * self.__tap(timestamps, s)
+            response[:len(sequence)] += sequence
 
-        return response
+        return self.gain * response
 
-    def __fading_sequence(self, timestamps: np.ndarray, sequence_index: int) -> np.ndarray:
-        """Generate a single fading sequence.
+    def __tap(self, timestamps: np.ndarray, sequence_index: int) -> np.ndarray:
+        """Generate a single fading sequence tap.
 
         Implements equation (18) of the underlying paper.
 
@@ -477,17 +511,22 @@ class MultipathFadingChannel(Channel):
         if sequence_index >= self.num_sequences:
             raise ValueError("Requested sequence index higher than maximum number of available paths")
 
-        time = timestamps - self.__delays[sequence_index]
+        delay = self.__delays[sequence_index]
+        num_delay_pads = int(delay * self.transmitter.sampling_rate)
+        delay_delta = delay - num_delay_pads / self.transmitter.sampling_rate
+        time = timestamps - delay_delta
 
-        doppler = self.doppler_frequency
-        sinusoid_angle = np.random.uniform(0, 2*pi, self.num_sinusoids)
-        sinusoid_phase = np.random.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_doppler = self.doppler_frequency
+        nlos_angles = np.random.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_phases = np.random.uniform(0, 2*pi, self.num_sinusoids)
 
-        sinusoid_sum = np.zeros(len(timestamps))
+        nlos_component = np.zeros(len(time), dtype=complex)
         for s in range(self.num_sinusoids):
 
-            sinusoid_sum += exp(1j * (doppler * time * cos((2*pi*s + sinusoid_angle[s]) / self.num_sinusoids) +
-                                      sinusoid_phase[s]))
+            nlos_component += exp(1j * (nlos_doppler * time * cos((2*pi*s + nlos_angles[s]) / self.num_sinusoids) +
+                                        nlos_phases[s]))
+
+        nlos_component *= self.__non_los_gains[sequence_index] * (self.num_sinusoids ** -.5)
 
         if self.los_angle is not None:
             los_angle = self.los_angle
@@ -497,11 +536,12 @@ class MultipathFadingChannel(Channel):
 
         los_doppler = self.los_doppler_frequency
         los_phase = np.random.uniform(0, 2*pi)
-        los_component = exp(1j * (los_doppler * time * cos(los_angle) + los_phase))
+        los_component = self.__los_gains[sequence_index] * exp(1j * (los_doppler * time * cos(los_angle) + los_phase))
 
-        sequence = self.__non_los_gains[sequence_index] * self.num_sinusoids ** -.5 * sinusoid_sum + \
-                   self.__los_gains[sequence_index] * los_component
-        return self.__power_profile[sequence_index] * sequence
+        tap = self.__power_profile[sequence_index] * (los_component + nlos_component)
+        padded_tap = np.append(np.zeros(num_delay_pads, dtype=complex), tap)
+
+        return padded_tap
 
     @classmethod
     def to_yaml(cls: Type[MultipathFadingChannel], representer: SafeRepresenter,
