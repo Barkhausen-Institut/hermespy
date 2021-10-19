@@ -117,11 +117,16 @@ class MultipathFadingChannel(Channel):
         """Object initialization.
 
         Args:
+            delays (np.ndarray): Delay in seconds of each individual multipath tap.
+            power_profile (np.ndarray): Power loss factor of each individual multipath tap.
+            rice_factors (np.ndarray): Rice factor balancing line of sight and multipath in each individual channel tap.
             transmitter (Transmitter, optional): The modem transmitting into this channel.
             receiver (Receiver, optional): The modem receiving from this channel.
             active (bool, optional): Channel activity flag.
             gain (float, optional): Channel power gain.
-            doppler_frequency (float, optional): Doppler frequency.
+            num_sinusoids (int, optional): Number of sinusoids used to sample the statistical distribution.
+            los_angle (float, optional): Angle phase of the line of sight component within the statistical distribution.
+            doppler_frequency (float, optional): Doppler frequency shift of the statistical distribution.
             transmit_precoding (np.ndarray): Transmit precoding matrix.
             receive_postcoding (np.ndarray): Receive postcoding matrix.
 
@@ -562,19 +567,16 @@ class MultipathFadingChannel(Channel):
         """
 
         state = {
-            'delays': node.__delays,
-            'power_profile': node.__power_profile,
-            'rice_factors': node.__rice_factors,
-            'transmitter': node.__transmitter,
-            'receiver': node.__receiver,
-            'active': node.__active,
-            'gain': node.__gain,
-            'num_sinusoids': node.__num_sinusoids,
-            'los_angle': node.__los_angle,
-            'doppler_frequency': node.__doppler_frequency,
-            'los_doppler_frequency': node.__los_doppler_frequency,
-            'transmit_precoding': node.__transmit_precoding,
-            'receive_postcoding': node.__receive_postcoding,
+            'delays': node.delays.tolist(),
+            'power_profile': node.power_profile.tolist(),
+            'active': node.active,
+            'gain': node.gain,
+            'num_sinusoids': node.num_sinusoids,
+            'los_angle': node.los_angle,
+            'doppler_frequency': node.doppler_frequency,
+            'los_doppler_frequency': node.los_doppler_frequency,
+            'transmit_precoding': node.transmit_precoding,
+            'receive_postcoding': node.receive_postcoding,
         }
 
         transmitter_index, receiver_index = node.indices

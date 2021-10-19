@@ -435,8 +435,9 @@ class Scenario:
                 The channel instance to be set at position (`transmitter_index`, `receiver_index`).
         """
 
-        channel = self.__channels[transmitter_index, receiver_index]
         self.__channels[transmitter_index, receiver_index] = channel
+        channel.transmitter = self.transmitters[transmitter_index]
+        channel.receiver = self.receivers[receiver_index]
 
     def add_receiver(self, **kwargs) -> Receiver:
         """Add a new receiving modem to the simulated scenario.
