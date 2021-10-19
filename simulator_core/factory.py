@@ -20,10 +20,11 @@ This module implements the main interface for loading and dumping HermesPy confi
 from __future__ import annotations
 from ruamel.yaml import YAML, SafeConstructor, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
-from typing import Any, Set, Sequence, Mapping, Union, List, Optional
+from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple
 from io import TextIOBase, StringIO
 from re import compile, Pattern, Match
 from collections.abc import Iterable
+from functools import partial
 import os
 
 from .executable import Executable
@@ -42,10 +43,6 @@ __status__ = "Prototype"
 
 SerializableClasses: Set = set()
 
-
-class FactoryImportError(Exception):
-    """Exception raised on errors occurring during factory YAML imports."""
-    pass
 
 class Factory:
     """Helper class to load HermesPy simulation scenarios from YAML configuration files.
@@ -80,8 +77,14 @@ class Factory:
 
             self.__yaml.register_class(serializable_class)
 
-            if hasattr(serializable_class, 'yaml_tag'):                 # Dirty. Very dirty.
+            if hasattr(serializable_class, 'yaml_tag'):    # Dirty. Very dirty.
+
                 self.__registered_tags.add(serializable_class.yaml_tag)
+
+                if hasattr(serializable_class, 'yaml_matrix') and serializable_class.yaml_matrix is True:
+
+                    matrix_constructor = partial(Factory.__construct_matrix, serializable_class)
+                    self.__yaml.constructor.add_multi_constructor(serializable_class.yaml_tag, matrix_constructor)
 
         # Add constructors for untagged classes
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
@@ -169,6 +172,43 @@ class Factory:
 
         # Return fully configured executable
         return executable
+
+    @staticmethod
+    def __construct_matrix(cls: Any, constructor: SafeConstructor, tag_suffix: str, node: Any)\
+            -> Tuple[Any, int, int]:
+        """Construct a matrix node from YAML.
+
+        Args:
+
+            cls (Any):
+                The type of class to be constructed. This argument will be managed by ruamel.
+                The class `cls` must define a `from_yaml` routine.
+
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            tag_suffix (str):
+                Tag suffix in the YAML config describing the channel position within the matrix.
+
+            node (Node):
+                YAML node representing the `cls` serialization.
+
+        Returns:
+            cls:
+                Newly created `cls` instance.
+
+            int:
+                First dimension position within the matrix.
+
+            int:
+                Second dimension within the matrix.
+            """
+
+        indices = tag_suffix.split(' ')
+        if indices[0] == '':
+            indices.pop(0)
+
+        return cls.from_yaml(constructor, node), int(indices[0]), int(indices[1])
 
     @staticmethod
     def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:

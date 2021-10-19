@@ -4,7 +4,7 @@
 from __future__ import annotations
 import numpy as np
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Type, Tuple
+from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 
 from channel import MultipathFadingChannel
@@ -169,43 +169,29 @@ class MultipathFadingCost256(MultipathFadingChannel):
         return yaml
 
     @classmethod
-    def from_yaml(cls: Type[MultipathFading5GTDL], constructor: SafeConstructor, tag_suffix: str, node: MappingNode)\
-            -> Tuple[MultipathFading5GTDL, int, int]:
-        """Recall a new `Channel` instance from YAML.
+    def from_yaml(cls: Type[MultipathFadingCost256], constructor: SafeConstructor, node: MappingNode) -> \
+            MultipathFadingCost256:
+        """Recall a new `MultipathFadingCost256` instance from YAML.
 
         Args:
-            constructor (RoundTripConstructor):
+            constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
-            tag_suffix (str):
-                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
-                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
-
             node (Node):
-                YAML node representing the `Channel` serialization.
+                YAML node representing the `MultipathFadingCost256` serialization.
 
         Returns:
             Channel:
-                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
+                Newly created `MultipathFadingCost256` instance. The internal references to modems will be `None` and need to be
                 initialized by the `scenario` YAML constructor.
-
-            int:
-                Transmitter index of modem transmitting into this channel.
-
-            int:
-                Receiver index of modem receiving from this channel.
-            """
-
-        indices = tag_suffix.split(' ')
-        if indices[0] == '':
-            indices.pop(0)
+        """
 
         # Handle empty yaml nodes
         if isinstance(node, ScalarNode):
             raise RuntimeError("Cost256 channel configurations require at least a model specification")
 
         state = constructor.construct_mapping(node)
-        return cls(**state), int(indices[0]), int(indices[1])
+        return cls(**state)
 
 
 class MultipathFading5GTDL(MultipathFadingChannel):
@@ -384,40 +370,26 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         return yaml
 
     @classmethod
-    def from_yaml(cls: Type[MultipathFading5GTDL], constructor: SafeConstructor, tag_suffix: str, node: MappingNode)\
-            -> Tuple[MultipathFading5GTDL, int, int]:
-        """Recall a new `Channel` instance from YAML.
+    def from_yaml(cls: Type[MultipathFading5GTDL], constructor: SafeConstructor, node: MappingNode) -> \
+            MultipathFading5GTDL:
+        """Recall a new `MultipathFading5GTDL` instance from YAML.
 
         Args:
-            constructor (RoundTripConstructor):
+            constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
-            tag_suffix (str):
-                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
-                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
-
             node (Node):
-                YAML node representing the `Channel` serialization.
+                YAML node representing the `MultipathFading5GTDL` serialization.
 
         Returns:
             Channel:
-                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
+                Newly created `MultipathFading5GTDL` instance. The internal references to modems will be `None` and need to be
                 initialized by the `scenario` YAML constructor.
-
-            int:
-                Transmitter index of modem transmitting into this channel.
-
-            int:
-                Receiver index of modem receiving from this channel.
-            """
-
-        indices = tag_suffix.split(' ')
-        if indices[0] == '':
-            indices.pop(0)
+        """
 
         # Handle empty yaml nodes
         if isinstance(node, ScalarNode):
-            raise RuntimeError("5GTDL channel configurations require at least a model specification")
+            raise RuntimeError("5G TDL channel configurations require at least a model specification")
 
         state = constructor.construct_mapping(node)
-        return cls(**state), int(indices[0]), int(indices[1])
+        return cls(**state)
