@@ -42,5 +42,14 @@ Modems:
 
 Channels:
 
-  - Channel 1 0
+  - COST256 0 0
+    modle_type: HILLY
+
+  - 5GTDL 1 1
+    model_type: E
+
+  - Channel 0 1
+    active: false
+
+  - Channel 0 1
     active: false
