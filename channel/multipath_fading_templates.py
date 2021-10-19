@@ -33,6 +33,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
         HILLY = 2
 
     yaml_tag = u'COST256'
+    yaml_matrix = True
     __model_type: TYPE
 
     def __init__(self,
@@ -191,6 +192,12 @@ class MultipathFadingCost256(MultipathFadingChannel):
             raise RuntimeError("Cost256 channel configurations require at least a model specification")
 
         state = constructor.construct_mapping(node)
+
+        model_type = state.pop('model_type', None)
+        if model_type is None:
+            raise RuntimeError("Cost256 channel configurations require at least a model specification")
+
+        state['model_type'] = cls.TYPE[model_type]
         return cls(**state)
 
 
@@ -207,6 +214,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         E = 5
 
     yaml_tag = u'5GTDL'
+    yaml_matrix = True
     model_type: TYPE
 
     def __init__(self,
@@ -392,4 +400,10 @@ class MultipathFading5GTDL(MultipathFadingChannel):
             raise RuntimeError("5G TDL channel configurations require at least a model specification")
 
         state = constructor.construct_mapping(node)
+
+        model_type = state.pop('model_type', None)
+        if model_type is None:
+            raise RuntimeError("5G TDL channel configurations require at least a model specification")
+
+        state['model_type'] = cls.TYPE[model_type]
         return cls(**state)

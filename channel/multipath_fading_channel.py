@@ -87,6 +87,8 @@ class MultipathFadingChannel(Channel):
         __los_doppler_frequency (Optional[float]): Optional doppler frequency for the line of sight component.
     """
 
+    yaml_tag = u'MultipathFading'
+    yaml_matrix = True
     __delays: np.ndarray
     __power_profile: np.ndarray
     __rice_factors: np.ndarray
