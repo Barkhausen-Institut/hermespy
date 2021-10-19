@@ -505,7 +505,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         # Received signal is too short to recover a full frame
         if rx_signal.shape[1] < useful_signal_length:
-            bits = None
+            bits = np.empty(0, dtype=int)
             rx_signal = np.array([])
 
         else:
