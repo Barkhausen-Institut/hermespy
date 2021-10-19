@@ -5,8 +5,7 @@ from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
 from abc import ABC
 import numpy as np
-from ruamel.yaml import RoundTripRepresenter, RoundTripConstructor, ScalarNode, MappingNode
-from ruamel.yaml.comments import CommentedOrderedMap
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver
@@ -36,6 +35,7 @@ class Channel(ABC):
     """
 
     yaml_tag = u'Channel'
+    yaml_matrix = True
     __active: bool
     __transmitter: Optional[Transmitter]
     __receiver: Optional[Receiver]
@@ -309,11 +309,11 @@ class Channel(ABC):
         return self.gain * impulse_responses
 
     @classmethod
-    def to_yaml(cls: Type[Channel], representer: RoundTripRepresenter, node: Channel) -> MappingNode:
+    def to_yaml(cls: Type[Channel], representer: SafeRepresenter, node: Channel) -> MappingNode:
         """Serialize a channel object to YAML.
 
         Args:
-            representer (RoundTripRepresenter):
+            representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
@@ -336,17 +336,12 @@ class Channel(ABC):
         return yaml
 
     @classmethod
-    def from_yaml(cls: Type[Channel], constructor: RoundTripConstructor, tag_suffix: str, node: MappingNode)\
-            -> Tuple[Channel, int, int]:
+    def from_yaml(cls: Type[Channel], constructor: SafeConstructor,  node: MappingNode) -> Channel:
         """Recall a new `Channel` instance from YAML.
 
         Args:
-            constructor (RoundTripConstructor):
+            constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
-
-            tag_suffix (str):
-                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
-                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
 
             node (Node):
                 YAML node representing the `Channel` serialization.
@@ -356,20 +351,11 @@ class Channel(ABC):
                 Newly created `Channel` instance. The internal references to modems will be `None` and need to be
                 initialized by the `scenario` YAML constructor.
 
-            int:
-                Transmitter index of modem transmitting into this channel.
-
-            int:
-                Receiver index of modem receiving from this channel.
-            """
-
-        indices = tag_suffix.split(' ')
-        if indices[0] == '':
-            indices.pop(0)
+        """
 
         # Handle empty yaml nodes
         if isinstance(node, ScalarNode):
-            return cls(), int(indices[0]), int(indices[1])
+            return cls()
 
-        state = constructor.construct_mapping(node, CommentedOrderedMap)
-        return cls(**state), int(indices[0]), int(indices[1])
+        state = constructor.construct_mapping(node)
+        return cls(**state)

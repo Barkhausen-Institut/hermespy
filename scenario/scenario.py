@@ -108,7 +108,6 @@ class Scenario:
                 Newly created `Scenario` instance.
             """
 
-        constructor.add_multi_constructor("Channel", Channel.from_yaml)
         state_scenario = constructor.construct_mapping(node, deep=True)
 
         modems = state_scenario.pop('Modems', None)
