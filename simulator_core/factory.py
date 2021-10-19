@@ -19,6 +19,7 @@ This module implements the main interface for loading and dumping HermesPy confi
 
 from __future__ import annotations
 from ruamel.yaml import YAML, SafeConstructor, MappingNode, SequenceNode
+from ruamel.yaml.constructor import ConstructorError
 from typing import Any, Set, Sequence, Mapping, Union, List, Optional
 from io import TextIOBase, StringIO
 from re import compile, Pattern, Match
@@ -41,6 +42,10 @@ __status__ = "Prototype"
 
 SerializableClasses: Set = set()
 
+
+class FactoryImportError(Exception):
+    """Exception raised on errors occurring during factory YAML imports."""
+    pass
 
 class Factory:
     """Helper class to load HermesPy simulation scenarios from YAML configuration files.
@@ -357,7 +362,15 @@ class Factory:
         """
 
         with open(file, mode='r') as file_stream:
-            return self.from_stream(file_stream)
+
+            try:
+                return self.from_stream(file_stream)
+
+            # Re-raise constructor errors with the correct file name
+            except ConstructorError as constructor_error:
+
+                constructor_error.problem_mark.name = file
+                raise constructor_error
 
     def to_file(self, path: str, *args: Any) -> None:
         """Dump a configuration to a single YML file.
@@ -413,6 +426,9 @@ class Factory:
 
         Returns:
             List[Any]: List of serialized objects within `stream`.
+
+        Raises:
+            ConstructorError: If YAML parsing fails.
         """
 
         if not self.__clean:

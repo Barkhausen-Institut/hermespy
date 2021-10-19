@@ -32,6 +32,7 @@ import datetime
 import sys
 import argparse
 from typing import List, Optional
+from ruamel.yaml.constructor import ConstructorError
 
 from simulator_core.random_streams import RandomStreams
 from simulator_core import Factory, Executable
@@ -91,16 +92,27 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
     shutil.copytree(input_parameters_dir, results_dir)
 
-
     ######################################
     # initialize random number generation
     # random_number_gen = RandomStreams(parameters.general.seed)
 
     ##################
-    # run simulation
+    # Import executable from YAML config dump
     factory = Factory()
-    executable: Executable = factory.load(input_parameters_dir)
 
+    try:
+        executable: Executable = factory.load(input_parameters_dir)
+
+    except ConstructorError as error:
+
+        print("\nYAML import failed during parsing of line {} in file '{}':\n\t{}".format(error.problem_mark.line,
+                                                                                          error.problem_mark.name,
+                                                                                          error.problem,
+                                                                                          file=sys.stderr))
+        exit(-1)
+
+    ##################
+    # run simulation
     executable.run()
 
     #simulation_loop = DropLoop(parameters.general, scenario)
