@@ -10,7 +10,7 @@ from modem.rf_chain_models.power_amplifier import PowerAmplifier
 from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from modem.precoding import Precoding, Precoder, DFT
 from beamformer import Beamformer
-from channel import Channel
+from channel import Channel, MultipathFadingCost256
 import matplotlib.pyplot as plt
 from ruamel.yaml import YAML, Node
 from io import StringIO
@@ -43,7 +43,7 @@ receiverA.waveform_generator = WaveformGeneratorChirpFsk(num_data_chirps=4)
 #transmitterB.encoder_manager.add_encoder(LDPC())
 
 # Configure channels
-scenario.channel(transmitterA, receiverA).active = True
+scenario.set_channel(0, 0, MultipathFadingCost256(MultipathFadingCost256.TYPE.HILLY))
 #scenario.channel(transmitterA, receiverB).active = False
 #scenario.channel(transmitterB, receiverA).active = False
 #scenario.channel(transmitterB, receiverB).active = True

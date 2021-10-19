@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """Multipath Fading Channel prebuilt templates."""
 
+from __future__ import annotations
 import numpy as np
-from enum import IntEnum
-from typing import TYPE_CHECKING, Optional
+from enum import Enum
+from typing import TYPE_CHECKING, Optional, Type, Tuple
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 
 from channel import MultipathFadingChannel
 
@@ -23,38 +25,46 @@ __status__ = "Prototype"
 class MultipathFadingCost256(MultipathFadingChannel):
     """COST256 Multipath Fading Channel models."""
 
-    yaml_tag = u'COST256'
-
-    class TYPE(IntEnum):
+    class TYPE(Enum):
         """Supported model types."""
 
         URBAN = 0
         RURAL = 1
         HILLY = 2
 
+    yaml_tag = u'COST256'
+    __model_type: TYPE
+
     def __init__(self,
-                 model_type: TYPE,
+                 model_type: TYPE = 0,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
+                 num_sinusoids: Optional[float] = None,
+                 los_angle: Optional[float] = None,
                  doppler_frequency: Optional[float] = None,
+                 los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None) -> None:
         """Model initialization.
 
         Args:
-            model_type (TYPE): The model type.
+            model_type (TYPE): The model type..
             transmitter (Transmitter, optional): The modem transmitting into this channel.
             receiver (Receiver, optional): The modem receiving from this channel.
             active (bool, optional): Channel activity flag.
             gain (float, optional): Channel power gain.
-            doppler_frequency (float, optional): Doppler frequency.
+            num_sinusoids (int, optional): Number of sinusoids used to sample the statistical distribution.
+            los_angle (float, optional): Angle phase of the line of sight component within the statistical distribution.
+            doppler_frequency (float, optional): Doppler frequency shift of the statistical distribution.
             transmit_precoding (np.ndarray): Transmit precoding matrix.
             receive_postcoding (np.ndarray): Receive postcoding matrix.
 
         Raises:
-            ValueError: If `model_type` is not supported.
+           ValueError:
+                If `model_type` is not supported.
+                If `los_angle` is defined in HILLY model type.
 
         TODO: Delays not yet normalized????
         """
@@ -75,31 +85,133 @@ class MultipathFadingCost256(MultipathFadingChannel):
 
         elif model_type == self.TYPE.HILLY:
 
+            if los_angle is not None:
+                raise ValueError("Model type HILLY does not support line of sight angle configuration")
+
             delays = 1e-6 * np.asarray([0, .356, .441, .528, .546, .609, .625, .842, .916, .941, 15.0,
                                         16.172, 16.492, 16.876, 16.882, 16.978, 17.615, 17.827, 17.849, 18.016])
             power_db = np.asarray([-3.6, -8.9, -10.2, -11.5, -11.8, -12.7, -13.0, -16.2, -17.3, -17.7,
                                    -17.6, -22.7, -24.1, -25.8, -25.8, -26.2, -29.0, -29.9, -30.0, -30.7])
-            rice_factors = np.hstack((np.inf, np.zeros(self.delays.size - 1)))
-            # los_theta_0 = np.arccos(.7)  # TODO: Not yet supported by base class
+            rice_factors = np.hstack((np.inf, np.zeros(delays.size - 1)))
+            los_angle = np.arccos(.7)
 
         else:
             raise ValueError("Requested model type not supported")
 
+        self.__model_type = model_type
+
         # Convert power and normalize
-        power = 10 ** (power_db / 10)
-        power /= sum(power)
+        power_profile = 10 ** (power_db / 10)
+        power_profile /= sum(power_profile)
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, delays, power, rice_factors, transmitter, receiver, active,
-                                        gain, doppler_frequency, transmit_precoding, receive_postcoding)
+        MultipathFadingChannel.__init__(self,
+                                        delays,
+                                        power_profile,
+                                        rice_factors,
+                                        transmitter,
+                                        receiver,
+                                        active,
+                                        gain,
+                                        num_sinusoids,
+                                        los_angle,
+                                        doppler_frequency,
+                                        los_doppler_frequency,
+                                        transmit_precoding,
+                                        receive_postcoding)
+
+    @property
+    def model_type(self) -> TYPE:
+        """Access the configured model type.
+
+        Returns:
+            MultipathFadingCost256.TYPE: The configured model type.
+        """
+
+        return self.__model_type
+
+    @classmethod
+    def to_yaml(cls: Type[MultipathFadingCost256], representer: SafeRepresenter,
+                node: MultipathFadingCost256) -> MappingNode:
+        """Serialize a channel object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (MultipathFadingCost256):
+                The channel instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'type': node.model_type.name,
+            'active': node.active,
+            'gain': node.gain,
+            'num_sinusoids': node.num_sinusoids,
+            'los_angle': node.los_angle,
+            'doppler_frequency': node.doppler_frequency,
+            'los_doppler_frequency': node.los_doppler_frequency,
+            'transmit_precoding': node.transmit_precoding,
+            'receive_postcoding': node.receive_postcoding,
+        }
+
+        if node.model_type is MultipathFadingCost256.TYPE.HILLY:
+            state.pop('los_angle')
+
+        transmitter_index, receiver_index = node.indices
+
+        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
+        return yaml
+
+    @classmethod
+    def from_yaml(cls: Type[MultipathFading5GTDL], constructor: SafeConstructor, tag_suffix: str, node: MappingNode)\
+            -> Tuple[MultipathFading5GTDL, int, int]:
+        """Recall a new `Channel` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            tag_suffix (str):
+                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
+                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
+
+            node (Node):
+                YAML node representing the `Channel` serialization.
+
+        Returns:
+            Channel:
+                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+
+            int:
+                Transmitter index of modem transmitting into this channel.
+
+            int:
+                Receiver index of modem receiving from this channel.
+            """
+
+        indices = tag_suffix.split(' ')
+        if indices[0] == '':
+            indices.pop(0)
+
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            raise RuntimeError("Cost256 channel configurations require at least a model specification")
+
+        state = constructor.construct_mapping(node)
+        return cls(**state), int(indices[0]), int(indices[1])
 
 
 class MultipathFading5GTDL(MultipathFadingChannel):
     """5G TDL Multipath Fading Channel models."""
 
-    yaml_tag = u'5GTDL'
-
-    class TYPE(IntEnum):
+    class TYPE(Enum):
         """Supported model types."""
 
         A = 0
@@ -108,29 +220,39 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         D = 4
         E = 5
 
+    yaml_tag = u'5GTDL'
+    model_type: TYPE
+
     def __init__(self,
-                 model_type: TYPE,
+                 model_type: TYPE = 0,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
+                 num_sinusoids: Optional[float] = None,
+                 los_angle: Optional[float] = None,
                  doppler_frequency: Optional[float] = None,
+                 los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None) -> None:
         """Model initialization.
 
         Args:
-            model_type (TYPE): The model type.
+            model_type (TYPE): The model type..
             transmitter (Transmitter, optional): The modem transmitting into this channel.
             receiver (Receiver, optional): The modem receiving from this channel.
             active (bool, optional): Channel activity flag.
             gain (float, optional): Channel power gain.
-            doppler_frequency (float, optional): Doppler frequency.
+            num_sinusoids (int, optional): Number of sinusoids used to sample the statistical distribution.
+            los_angle (float, optional): Angle phase of the line of sight component within the statistical distribution.
+            doppler_frequency (float, optional): Doppler frequency shift of the statistical distribution.
             transmit_precoding (np.ndarray): Transmit precoding matrix.
             receive_postcoding (np.ndarray): Receive postcoding matrix.
 
         Raises:
-            ValueError: If `model_type` is not supported.
+            ValueError:
+                If `model_type` is not supported.
+                If `los_angle` is specified in combination with `model_type` D or E.
         """
 
         if model_type == self.TYPE.A:
@@ -142,7 +264,6 @@ class MultipathFading5GTDL(MultipathFadingChannel):
                                    -7.5, -15.9, -6.6, -16.7, -12.4, -15.2, -10.8,
                                    -11.3, -12.7, -16.2, -18.3, -18.9, -16.6, -19.9, -29.7])
             rice_factors = np.zeros(delays.shape)
-            los_doppler_frequency = None
 
         elif model_type == self.TYPE.B:
 
@@ -152,7 +273,6 @@ class MultipathFading5GTDL(MultipathFadingChannel):
             power_db = np.asarray([0, -2.2, -4, -3.2, -9.8, -3.2, -3.4, -5.2, -7.6, -3, -8.9, -9, -4.8,
                                    -5.7, -7.5, -1.9, -7.6, -12.2, -9.8, -11.4, -14.9, -9.2, -11.3])
             rice_factors = np.zeros(delays.shape)
-            los_doppler_frequency = None
 
         elif model_type == self.TYPE.C:
 
@@ -163,9 +283,11 @@ class MultipathFading5GTDL(MultipathFadingChannel):
                                    -5.1, -6.8, -8.7, -13.2, -13.9, -13.9, -15.8, -17.1, -16, -15.7, -21.6,
                                    -22.8])
             rice_factors = np.zeros(delays.shape)
-            los_doppler_frequency = None
 
         elif model_type == self.TYPE.D:
+
+            if los_doppler_frequency is not None:
+                raise ValueError("Model type D does not support line of sight doppler frequency configuration")
 
             delays = np.asarray([0, 0.035, 0.612, 1.363, 1.405, 1.804, 2.596, 1.775, 4.042, 7.937, 9.424,
                                  9.708, 12.525])
@@ -176,6 +298,9 @@ class MultipathFading5GTDL(MultipathFadingChannel):
             los_doppler_frequency = 0.7
 
         elif model_type == self.TYPE.E:
+
+            if los_doppler_frequency is not None:
+                raise ValueError("Model type E does not support line of sight doppler frequency configuration")
 
             delays = np.asarray([0, 0.5133, 0.5440, 0.5630, 0.5440, 0.7112, 1.9092, 1.9293, 1.9589,
                                  2.6426, 3.7136, 5.4524, 12.0034, 20.6519])
@@ -188,11 +313,111 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         else:
             raise ValueError("Requested model type not supported")
 
+        self.__model_type = model_type
+
         # Convert power and normalize
-        power = 10 ** (power_db / 10)
-        power /= sum(power)
+        power_profile = 10 ** (power_db / 10)
+        power_profile /= sum(power_profile)
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, delays, power, rice_factors, transmitter, receiver, active,
-                                        gain, doppler_frequency, transmit_precoding, receive_postcoding)
+        MultipathFadingChannel.__init__(self,
+                                        delays,
+                                        power_profile,
+                                        rice_factors,
+                                        transmitter,
+                                        receiver,
+                                        active,
+                                        gain,
+                                        num_sinusoids,
+                                        los_angle,
+                                        doppler_frequency,
+                                        los_doppler_frequency,
+                                        transmit_precoding,
+                                        receive_postcoding)
 
+    @property
+    def model_type(self) -> TYPE:
+        """Access the configured model type.
+
+        Returns:
+            MultipathFading5gTDL.TYPE: The configured model type.
+        """
+
+        return self.__model_type
+
+    @classmethod
+    def to_yaml(cls: Type[MultipathFading5GTDL], representer: SafeRepresenter,
+                node: MultipathFading5GTDL) -> MappingNode:
+        """Serialize a channel object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (MultipathFading5GTDL):
+                The channel instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'type': node.model_type.name,
+            'active': node.active,
+            'gain': node.gain,
+            'num_sinusoids': node.num_sinusoids,
+            'los_angle': node.los_angle,
+            'doppler_frequency': node.doppler_frequency,
+            'los_doppler_frequency': node.los_doppler_frequency,
+            'transmit_precoding': node.transmit_precoding,
+            'receive_postcoding': node.receive_postcoding,
+        }
+
+        if node.model_type is MultipathFading5GTDL.TYPE.C or MultipathFading5GTDL.TYPE.E:
+            state.pop('los_doppler_frequency')
+
+        transmitter_index, receiver_index = node.indices
+
+        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
+        return yaml
+
+    @classmethod
+    def from_yaml(cls: Type[MultipathFading5GTDL], constructor: SafeConstructor, tag_suffix: str, node: MappingNode)\
+            -> Tuple[MultipathFading5GTDL, int, int]:
+        """Recall a new `Channel` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            tag_suffix (str):
+                Optional tag suffix in the YAML config describing the channel position within the channel matrix.
+                Syntax is Channel_`(transmitter index)`_`(receiver_index)`.
+
+            node (Node):
+                YAML node representing the `Channel` serialization.
+
+        Returns:
+            Channel:
+                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+
+            int:
+                Transmitter index of modem transmitting into this channel.
+
+            int:
+                Receiver index of modem receiving from this channel.
+            """
+
+        indices = tag_suffix.split(' ')
+        if indices[0] == '':
+            indices.pop(0)
+
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            raise RuntimeError("5GTDL channel configurations require at least a model specification")
+
+        state = constructor.construct_mapping(node)
+        return cls(**state), int(indices[0]), int(indices[1])
