@@ -32,7 +32,7 @@ class Modem:
 
     yaml_tag = 'Modem'
     __scenario: Optional[Scenario]
-    __position: np.array
+    __position: Optional[np.array]
     __orientation: np.array
     __topology: np.ndarray
     __carrier_frequency: float
@@ -68,6 +68,7 @@ class Modem:
         """
 
         self.__scenario = None
+        self.__position = None
         self.__topology = np.zeros((1, 3), dtype=float)
         self.__carrier_frequency = 800e6
         self.__sampling_rate = 1e3
