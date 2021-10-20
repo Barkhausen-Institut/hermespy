@@ -4,6 +4,7 @@
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import Type, List, TYPE_CHECKING, Any
+import numpy as np
 
 from modem import Modem
 from source import BitsSource
@@ -75,6 +76,15 @@ class Transmitter(Modem):
                 break
 
         args = dict((k.lower(), v) for k, v in state.items())
+
+        position = args.pop('position', None)
+        if position is not None:
+            args['position'] = np.array(position)
+
+        orientation = args.pop('orientation', None)
+        if position is not None:
+            args['orientation'] = np.array(orientation)
+
         transmitter = Transmitter(**args)
 
         if bits_source is not None:

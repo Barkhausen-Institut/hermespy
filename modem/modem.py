@@ -3,7 +3,7 @@ from typing import Tuple, List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
 import numpy as np
-from ruamel.yaml import RoundTripRepresenter, Node
+from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
 
 from modem.precoding import Precoding
 from coding import EncoderManager
@@ -32,8 +32,8 @@ class Modem:
 
     yaml_tag = 'Modem'
     __scenario: Optional[Scenario]
-    __position: Optional[np.array]
-    __orientation: np.array
+    __position: Optional[np.ndarray]
+    __orientation: Optional[np.ndarray]
     __topology: np.ndarray
     __carrier_frequency: float
     __sampling_rate: float
@@ -69,6 +69,7 @@ class Modem:
 
         self.__scenario = None
         self.__position = None
+        self.__orientation = None
         self.__topology = np.zeros((1, 3), dtype=float)
         self.__carrier_frequency = 800e6
         self.__sampling_rate = 1e3
@@ -117,11 +118,11 @@ class Modem:
             self.rf_chain = rfchain
 
     @classmethod
-    def to_yaml(cls: Type[Modem], representer: RoundTripRepresenter, node: Modem) -> Node:
+    def to_yaml(cls: Type[Modem], representer: SafeRepresenter, node: Modem) -> MappingNode:
         """Serialize a modem object to YAML.
 
         Args:
-            representer (RoundTripRepresenter):
+            representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
@@ -146,10 +147,21 @@ class Modem:
         if node.waveform_generator is not None:
             serialization[node.waveform_generator.yaml_tag] = node.waveform_generator
 
-        """if node.beamformer.__class__ is not Beamformer:
-            serialization['Beamformer'] = node.__beamformer"""
+        mapping: MappingNode = representer.represent_mapping(cls.yaml_tag, serialization)
 
-        return representer.represent_mapping(cls.yaml_tag, serialization)
+        if node.__position is not None:
+
+            sequence = representer.represent_list(node.__position.tolist())
+            sequence.flow_style = True
+            mapping.value.append((ScalarNode('tag:yaml.org,2002:str', 'position'), sequence))
+
+        if node.__orientation is not None:
+
+            sequence = representer.represent_list(node.__orientation.tolist())
+            sequence.flow_style = True
+            mapping.value.append((ScalarNode('tag:yaml.org,2002:str', 'orientation'), sequence))
+
+        return mapping
 
     @property
     def scenario(self) -> Scenario:

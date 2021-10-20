@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 from typing import Optional, List, Any, Type
+
+import numpy as np
 from oct2py import Oct2Py, Oct2PyError
 
 from .quadriga_interface import QuadrigaInterface
@@ -50,6 +52,11 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
 
         # Push parameters to quadriga
         for key, value in parameters.items():
+
+            # Convert numpy arrays to lists since Octave can't seem to handle them
+            if isinstance(value, np.ndarray):
+                value = value.tolist()
+
             self.__octave.push(key, value)
 
         # Launch octave

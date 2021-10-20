@@ -2,6 +2,7 @@ from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import Type, List, TYPE_CHECKING
+import numpy as np
 
 from source import BitsSource
 from modem import Modem
@@ -37,6 +38,15 @@ class Receiver(Modem):
         state[BitsSource.yaml_tag] = bits_source
 
         args = dict((k.lower(), v) for k, v in state.items())
+
+        position = args.pop('position', None)
+        if position is not None:
+            args['position'] = np.array(position)
+
+        orientation = args.pop('orientation', None)
+        if position is not None:
+            args['orientation'] = np.array(orientation)
+
         return Receiver(**args)
 
     @property

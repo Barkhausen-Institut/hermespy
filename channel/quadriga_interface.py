@@ -61,8 +61,8 @@ class QuadrigaInterface:
             scenario_label (str, optional): Scenario label.
         """
 
-        self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '..', '3rdparty', 'quadriga_srcs')
-        self.__antenna_kind = ""
+        self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '..', '3rdparty', 'quadriga_src')
+        self.__antenna_kind = 'lhcp-rhcp-dipole'
         self.__scenario_label = ""
         self.__channels = []
         self.__fetched_channels = []
@@ -236,7 +236,7 @@ class QuadrigaInterface:
             self.__launch_quadriga()
 
         # Launch the simulator if the specific channel has already been fetched
-        elif channel in self.__channels:
+        elif channel in self.__fetched_channels:
 
             self.__launch_quadriga()
             self.__fetched_channels = []
@@ -281,14 +281,10 @@ class QuadrigaInterface:
         if len(self.__channels) < 1:
             raise RuntimeError("Attempting to launch Quadriga simulation without registered channels")
 
-        sampling_rate = self.__channels[0].transmitter.sampling_rate
         transmitters: List[Transmitter] = []
         receivers: List[Receiver] = []
 
         for channel in self.__channels:
-
-            if channel.transmitter.sampling_rate != sampling_rate:
-                raise RuntimeError("Varying sampling rates are not supported by Quadriga")
 
             if channel.transmitter not in transmitters:
                 transmitters.append(channel.transmitter)
@@ -297,24 +293,34 @@ class QuadrigaInterface:
                 receivers.append(channel.receiver)
 
         carriers = np.empty(len(self.__channels), dtype=float)
-        tx_positions = np.empty((3, len(transmitters)), dtype=float)
-        rx_positions = np.empty((3, len(receivers)), dtype=float)
+        tx_positions = np.empty((len(transmitters), 3), dtype=float)
+        rx_positions = np.empty((len(receivers), 3), dtype=float)
         tx_num_antennas = np.empty(len(receivers), dtype=float)
         rx_num_antennas = np.empty(len(receivers), dtype=float)
+        sampling_rates = np.empty(len(transmitters), dtype=float)
 
         for t, transmitter in enumerate(transmitters):
 
+            position = transmitter.position
+            if position is None:
+                raise RuntimeError("Quadriga channel model requires transmitter position definitions")
+
+            sampling_rates[t] = transmitter.sampling_rate
             carriers[t] = transmitter.carrier_frequency
-            tx_positions[:, t] = transmitter.position
+            tx_positions[t, :] = position
             tx_num_antennas[t] = transmitter.num_antennas
 
         for r, receiver in enumerate(receivers):
 
-            rx_positions[:, r] = receiver.position
+            position = receiver.position
+            if position is None:
+                raise RuntimeError("Quadriga channel model requires receiver position definitions")
+
+            rx_positions[r, :] = receiver.position
             rx_num_antennas[r] = receiver.num_antennas
 
         parameters = {
-            "sampling_rate": sampling_rate,
+            "sampling_rate": sampling_rates,
             "carriers": carriers,
             "tx_position": tx_positions,
             "rx_position": rx_positions,
@@ -326,9 +332,9 @@ class QuadrigaInterface:
             "rx_antenna_kind": self.__antenna_kind,
             "number_tx": len(transmitters),
             "number_rx": len(receivers),
-            "tracks_speed": self._tracks_speed,
-            "tracks_length": self._tracks_length,
-            "tracks_angle": self._tracks_angle,
+            "tracks_speed": np.zeros(len(receivers)),
+            "tracks_length": np.zeros(len(receivers)),
+            "tracks_angle": np.zeros(len(receivers)),
             "seed": np.random.rand(),
         }
 
