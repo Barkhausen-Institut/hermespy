@@ -1,70 +1,107 @@
+# -*- coding: utf-8 -*-
+"""Single Channel of the Quadriga Channel Model Interface."""
+
+from __future__ import annotations
+from typing import Type, Tuple, TYPE_CHECKING, Optional
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 import numpy as np
 
-from modem import Modem
-from channel.channel import Channel
-from parameters_parser.parameters_channel import ParametersChannel
-from channel.quadriga_interface import QuadrigaInterface
+from channel import Channel, QuadrigaInterface
+
+if TYPE_CHECKING:
+    from modem import Transmitter, Receiver
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class QuadrigaChannel(Channel):
-    def __init__(self, modem_tx: Modem, modem_rx: Modem, sampling_rate: float,
-                 rng: np.random.RandomState, quadriga_interface: QuadrigaInterface) -> None:
-        """Maps the output of the QuadrigaInterface to fit into hermes software architecture.
+    """Quadriga Channel Model.
+
+    Maps the output of the QuadrigaInterface to fit into hermes software architecture.
+    """
+
+    yaml_tag = u'Quadriga'
+    yaml_matrix = True
+    quadriga_interface: QuadrigaInterface
+    __quadriga_interface: QuadrigaInterface
+
+    def __init__(self,
+                 transmitter: Optional[Transmitter] = None,
+                 receiver: Optional[Receiver] = None,
+                 active: Optional[bool] = None,
+                 gain: Optional[float] = None,
+                 interface: Optional[QuadrigaInterface] = None) -> None:
+        """Quadriga Channel object initialization.
+
+        Automatically registers channel objects at the interface.
 
         Args:
-            modem_tx(Modem): Transmitter modem.
-            modem_rx(Modem): Receiver Modem.
-            sampling_rate(float): Sampling rate in Hertz.
-            rng(np.random.RandomState): Random number generator.
-            quadriga_interface(QuadrigaInterface): Interface to the actual
-                quadriga backend.
+            transmitter (Transmitter, optional):
+                The modem transmitting into this channel.
+
+            receiver (Receiver, optional):
+                The modem receiving from this channel.
+
+            active (bool, optional):
+                Channel activity flag.
+                Activated by default.
+
+            gain (float, optional):
+                Channel power gain.
+                1.0 by default.
+
+            interface (QuadrigaInterface, optional):
+                Interface handle to the quadriga backend.
         """
-        self.params = ParametersChannel(modem_rx.param, modem_tx.param)
-        self.params.gain = 1
-        super().__init__(self.params, rng, sampling_rate)
 
-        self._quadriga_interface = quadriga_interface
-        self._quadriga_interface.update_quadriga_parameters(modem_tx, modem_rx)
+        # Init base channel class
+        Channel.__init__(self, transmitter, receiver, active, gain)
 
-        self._modem_tx = modem_tx
-        self._modem_rx = modem_rx
+        # Find a valid quadriga interface instance
+        if interface is None:
+            self.__quadriga_interface = QuadrigaInterface.GlobalInstance()
 
-    def init_drop(self) -> None:
-        """Initializes random channel parameters for each drop"""
-        seed = self.random.random_sample(1)
-        self._quadriga_interface.init_drop(seed)
+        else:
+            self.__quadriga_interface = interface
 
-    def propagate(self, tx_signal: np.ndarray) -> np.ndarray:
-        """Modifies the input signal and returns it after channel propagation.
+        # Register this channel at the interface
+        self.__quadriga_interface.register_channel(self)
 
-        Args:
-            tx_signal(np.ndarray):
-                array of size `number_tx_antennas` X `number_of_samples`.
+    def __del__(self) -> None:
+        """Quadriga channel object destructor.
 
-        Returns:
-            np.ndarray:
-                Output signal after propagation through quadriga channel
-                with `number_rx_antennas` rows and `samples` columns.
+        Automatically un-registers channel objects at the interface.
         """
-        cir, tau = self._quadriga_interface.get_impulse_response(
-            self._modem_tx, self._modem_rx)
 
-        if tx_signal.ndim == 1:
-            tx_signal = np.reshape(tx_signal, (1, -1))
+        self.__quadriga_interface.unregister_channel(self)
 
-        number_of_samples_in = tx_signal.shape[1]
-        self.max_delay_in_samples = np.around(
-            np.max(tau) * self.sampling_rate).astype(int)
-        number_of_samples_out = number_of_samples_in + self.max_delay_in_samples
+    def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
 
-        rx_signal = np.zeros(
-            (self.number_rx_antennas, number_of_samples_out), dtype=complex)
+        if transmitted_signal.ndim != 2:
+            raise ValueError("Transmitted signal must be a matrix (an array of two dimensions)")
 
-        for rx_antenna in range(self.number_rx_antennas):
+        if self.transmitter is None or self.receiver is None:
+            raise RuntimeError("Channel is floating, making propagation simulation impossible")
+
+        cir, tau = self.__quadriga_interface.get_impulse_response(self)
+
+        max_delay_in_samples = int(max(tau) * self.transmitter.sampling_rate)
+        number_of_samples_out = transmitted_signal.shape[1] + max_delay_in_samples
+
+        rx_signal = np.zeros((self.receiver.num_antennas, number_of_samples_out), dtype=complex)
+        for rx_antenna in range(self.receiver.num_antennas):
+
             rx_signal_ant = np.zeros(number_of_samples_out, dtype=complex)
 
-            for tx_antenna in range(self.number_tx_antennas):
-                tx_signal_ant = tx_signal[tx_antenna, :]
+            for tx_antenna in range(self.transmitter.num_antennas):
+                tx_signal_ant = transmitted_signal[tx_antenna, :]
 
                 # of dimension, #paths x #snap_shots, along the third dimension are the samples
                 # choose first snapshot, i.e. assume static
@@ -74,13 +111,11 @@ class QuadrigaChannel(Channel):
                 # cir from quadriga corresponds to impulse_response_siso of
                 # MultiPathFadingChannel
 
-                time_delay_in_samples_vec = np.around(
-                    tau_txa_rxa * self.sampling_rate).astype(int)
+                time_delay_in_samples_vec = (tau_txa_rxa * self.transmitter.sampling_rate).astype(int)
 
-                for delay_idx, delay_in_samples in enumerate(
-                        time_delay_in_samples_vec):
+                for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
+
                     padding = self.max_delay_in_samples - delay_in_samples
-
                     path_response_at_delay = cir_txa_rxa[delay_idx]
 
                     signal_path = tx_signal_ant * path_response_at_delay
@@ -93,7 +128,7 @@ class QuadrigaChannel(Channel):
 
             rx_signal[rx_antenna, :] = rx_signal_ant
 
-        return rx_signal * self.param.gain
+        return rx_signal * self.gain
 
     def get_impulse_response(self, timestamps: np.array) -> np.ndarray:
         """Calculates the channel impulse response.
@@ -114,8 +149,7 @@ class QuadrigaChannel(Channel):
                 (in samples)
                 The shape is T x number_rx_antennas x number_tx_antennas x (L+1)
         """
-        cir, tau = self._quadriga_interface.get_impulse_response(
-            self._modem_tx, self._modem_rx)
+        cir, tau = self.__quadriga_interface.get_impulse_response(self.transmitter, self.receiver)
         self.max_delay_in_samples = np.around(
             np.max(tau) * self.sampling_rate).astype(int)
 
@@ -141,3 +175,55 @@ class QuadrigaChannel(Channel):
                         cir_txa_rxa[delay_idx]
                     )
         return impulse_response
+    
+    @classmethod
+    def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:
+        """Serialize a QuadrigaChannel object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (QuadrigaChannel):
+                The QuadrigaChannel instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'active': node.__active,
+            'gain': node.__gain
+        }
+
+        transmitter_index, receiver_index = node.indices
+
+        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
+        return yaml
+
+    @classmethod
+    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor,  node: MappingNode) -> QuadrigaChannel:
+        """Recall a new `QuadrigaChannel` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `QuadrigaChannel` serialization.
+
+        Returns:
+            QuadrigaChannel:
+                Newly created `QuadrigaChannel` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+
+        """
+
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)

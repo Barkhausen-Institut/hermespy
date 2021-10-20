@@ -42,11 +42,11 @@ Modems:
 
 Channels:
 
-  - COST256 0 0
-    model_type: HILLY
+  - Quadriga 0 0
+    active: True
 
-  - 5GTDL 1 1
-    model_type: E
+  - Quadriga 1 1
+    active: True
 
   - Channel 0 1
     active: false

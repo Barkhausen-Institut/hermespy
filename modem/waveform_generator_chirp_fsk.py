@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Chirp Frequency Shift Keying Waveform Generator."""
+
 from __future__ import annotations
 from typing import Tuple, List, Type
 from functools import lru_cache
