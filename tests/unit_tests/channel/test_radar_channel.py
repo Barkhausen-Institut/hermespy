@@ -3,7 +3,7 @@ import numpy as np
 from unittest.mock import Mock
 
 from channel.radar_channel import RadarChannel
-from tools import constants
+from scipy import constants
 
 
 class TestRadarChannel(unittest.TestCase):
@@ -27,14 +27,16 @@ class TestRadarChannel(unittest.TestCase):
                                     receiver=self.receiver)
         self.expected_delay = 2 * self.range / constants.speed_of_light
 
-    def _create_impulse_train(self, interval: float, number_of_pulses: int):
+    def _create_impulse_train(self, interval_in_samples: int, number_of_pulses: int):
+
+        interval = interval_in_samples / self.transmitter.sampling_rate
 
         number_of_samples = int(np.ceil(interval * self.transmitter.sampling_rate * number_of_pulses))
-        output_signal = np.zeros(number_of_samples, dtype=complex)
+        output_signal = np.zeros((1, number_of_samples), dtype=complex)
 
-        interval_in_samples = int(np.around(interval / self.transmitter.sampling_rate))
+        interval_in_samples = int(np.around(interval * self.transmitter.sampling_rate))
 
-        output_signal[:number_of_samples:interval_in_samples] = 1.0
+        output_signal[:, :number_of_samples:interval_in_samples] = 1.0
 
         return output_signal
 
@@ -47,8 +49,7 @@ class TestRadarChannel(unittest.TestCase):
         num_pulses = 10
         delay_in_samples = 507
 
-        interval = samples_per_symbol / self.transmitter.sampling_rate
-        input_signal = self._create_impulse_train(interval, num_pulses)
+        input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         expected_range = constants.speed_of_light * delay_in_samples / self.transmitter.sampling_rate / 2
         old_range = self.channel.target_range
@@ -57,18 +58,58 @@ class TestRadarChannel(unittest.TestCase):
         self.channel.init_drop()
         output = self.channel.propagate(input_signal)
 
-        expected_output = np.concatenate((np.zeros(delay_in_samples), input_signal))
+        self.channel.target_range = old_range
 
-        np.testing.assert_array_almost_equal(expected_output, output.flatten()[:expected_output.size])
+        expected_output = np.hstack((np.zeros((1, delay_in_samples)), input_signal))
+
+        np.testing.assert_array_almost_equal(expected_output, np.abs(output[:, :expected_output.size]))
 
     def test_propagation_delay_noninteger_num_samples(self):
-        pass
+        """
+        Test if the received signal corresponds to the expected delayed version, given that the delay falls in the
+        middle of two sampling instants.
+        """
+        samples_per_symbol = 800
+        num_pulses = 20
+        delay_in_samples = 312
+
+        input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
+
+        expected_range = constants.speed_of_light * (delay_in_samples + .5) / self.transmitter.sampling_rate / 2
+        old_range = self.channel.target_range
+        self.channel.target_range = expected_range
+
+        self.channel.init_drop()
+        output = self.channel.propagate(input_signal)
+
+        self.channel.target_range = old_range
+
+        straddle_loss = np.sinc(.5)
+        peaks = np.abs(output[:, delay_in_samples:input_signal.size:samples_per_symbol])
+
+        np.testing.assert_array_almost_equal(peaks, straddle_loss * np.ones(peaks.shape))
 
     def test_propagation_doppler(self):
         pass
 
-
     def test_propagation_leakage(self):
+        pass
+
+    def test_no_echo(self):
+        samples_per_symbol = 500
+        num_pulses = 15
+
+        input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
+
+        self.channel.target_exists = False
+
+        output = self.channel.propagate(input_signal)
+
+        self.channel.target_exists = True
+
+        np.testing.assert_array_equal(output, np.zeros(output.shape))
+
+    def test_get_impulse_response(self):
         pass
 
 
