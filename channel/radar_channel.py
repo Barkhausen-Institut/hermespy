@@ -3,9 +3,8 @@ from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
 
 from channel.channel import Channel
-from simulator_core.tools.math import db2lin
-from simulator_core.tools import constants
-
+from tools.math import db2lin
+from tools import constants
 
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver

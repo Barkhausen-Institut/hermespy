@@ -3,7 +3,7 @@ import numpy as np
 from unittest.mock import Mock
 
 from channel.radar_channel import RadarChannel
-from simulator_core.tools import constants
+from tools import constants
 
 
 class TestRadarChannel(unittest.TestCase):
