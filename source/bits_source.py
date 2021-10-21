@@ -1,5 +1,7 @@
-from typing import List, Dict
+from __future__ import annotations
+from typing import List, Dict, Type
 from collections import namedtuple
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 import numpy as np
 from numpy import random as rnd
@@ -12,11 +14,63 @@ ErrorStats = namedtuple(
 class BitsSource:
     """Implements a random bit source, with calculation of error statistics."""
 
-    def __init__(self, rng: rnd.RandomState) -> None:
+    yaml_tag = "Bits"
+    __random_state: rnd.RandomState
+    bits_in_drop: List[np.array]
 
-        self.bits_in_drop: List[np.array] = []
+    def __init__(self, random_state: rnd.RandomState = None) -> None:
+        """BitSource initialization.
 
-        self._random: rnd.RandomState = rng
+        Args:
+            random_state (RandomState):
+                State of the underlying random generator.
+        """
+
+        self.__random_state = rnd.RandomState()
+        self.bits_in_drop = []
+
+        if random_state is not None:
+            self.__random_state = random_state
+
+    @classmethod
+    def to_yaml(cls: Type[BitsSource], representer: SafeRepresenter, node: BitsSource) -> Node:
+        """Serialize a `BitsSource` object to YAML.
+
+        Currently a stub.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (BitsSource):
+                The `BitsSource` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+                None if the object state is default.
+        """
+
+        return representer.represent_none(None)
+
+    @classmethod
+    def from_yaml(cls: Type[BitsSource], constructor: SafeConstructor, node: Node) -> BitsSource:
+        """Recall a new `BitsSource` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `BitsSource` serialization.
+
+        Returns:
+            BitsSource:
+                Newly created `BitsSource` instance.
+        """
+
+        return cls()
 
     def init_drop(self) -> None:
         self.bits_in_drop.clear()
@@ -29,7 +83,7 @@ class BitsSource:
         """
         bits_in_frame: List[np.array] = []
         for block in range(number_of_blocks):
-            bits_in_frame.append(self._random.randint(2, size=number_of_bits))
+            bits_in_frame.append(self.random_state.randint(2, size=number_of_bits))
 
         self.bits_in_drop.extend(bits_in_frame)
 
@@ -87,3 +141,25 @@ class BitsSource:
             number_of_block_errors)
 
         return output
+
+    @property
+    def random_state(self) -> rnd.RandomState:
+        """Access the current random state.
+
+        Returns:
+            RandomState:
+                The current random state.
+        """
+
+        return self.__random_state
+
+    @random_state.setter
+    def random_state(self, state: rnd.RandomState) -> None:
+        """Configure the random state.
+
+        Args:
+            state (RandomState):
+                The new random state.
+        """
+
+        self.__random_state = state

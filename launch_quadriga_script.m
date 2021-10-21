@@ -177,7 +177,6 @@ view(0,90);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Channels generation
-
 if ( all(track_speed_rx)  ) %mobile case   
     %Generating a layout.channel impulse responses
     [channels, builder] = layout.get_channels(sec_per_snap, 1 );
