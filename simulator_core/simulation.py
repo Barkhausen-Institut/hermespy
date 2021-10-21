@@ -2,13 +2,14 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
-from typing import List, Type
+from typing import List, Type, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 from .executable import Executable
 from .drop import Drop
+from channel import QuadrigaInterface
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -101,7 +102,7 @@ class Simulation(Executable):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
-            node (WaveformGenerator):
+            node (Simulation):
                 The `Simulation` instance to be serialized.
 
         Returns:
@@ -112,6 +113,11 @@ class Simulation(Executable):
         state = {
             "plot_drop": node.plot_drop,
         }
+
+        # If a global quadriga interface exists,
+        # add its configuration to the simulation section
+        if QuadrigaInterface.GlobalInstanceExists():
+            state[QuadrigaInterface.yaml_tag] = QuadrigaInterface.GlobalInstance()
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
@@ -134,4 +140,10 @@ class Simulation(Executable):
         """
 
         state = constructor.construct_mapping(node)
+
+        # Launch a global quadriga instance
+        quadriga_interface: Optional[QuadrigaInterface] = state.pop(QuadrigaInterface.yaml_tag, None)
+        if quadriga_interface is not None:
+            QuadrigaInterface.SetGlobalInstance(quadriga_interface)
+
         return cls(**state)

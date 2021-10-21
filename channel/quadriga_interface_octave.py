@@ -22,7 +22,6 @@ __status__ = "Prototype"
 class QuadrigaOctaveInterface(QuadrigaInterface):
     """Quadriga Octave Interface."""
 
-    yaml_tag = u'Quadriga'
     __octave: Oct2Py
 
     def __init__(self,
@@ -48,12 +47,12 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         # Add quadriga source folder to octave lookup paths
         self.__octave.addpath(self.path_quadriga_src)
 
-    def _run_quadriga(self, **parameters) -> List[Any, Any]:
+    def _run_quadriga(self, **parameters) -> List[Any]:
 
         # Push parameters to quadriga
         for key, value in parameters.items():
 
-            # Convert numpy arrays to lists since Octave can't seem to handle them
+            # Convert numpy arrays to lists
             if isinstance(value, np.ndarray):
                 value = value.tolist()
 
@@ -67,5 +66,4 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
             raise RuntimeError(error)
 
         # Pull & return results
-        cirs = self.__octave.pull("cirs")
-        return cirs
+        return self.__octave.pull("cirs")

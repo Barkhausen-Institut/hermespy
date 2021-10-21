@@ -298,6 +298,7 @@ end
 if verbose
     disp('Initializing random generators')
 end
+
 init_sos( h_builder);
 
 % Split builder object for multi-frequency simulations (3GPP Baseline simulations)
