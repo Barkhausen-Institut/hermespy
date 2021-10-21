@@ -85,7 +85,6 @@ class WaveformGenerator(ABC):
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
-        #return representer.represent_omap(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[WaveformGenerator], constructor: SafeConstructor, node: Node) -> WaveformGenerator:
@@ -203,18 +202,6 @@ class WaveformGenerator(ABC):
 
         # TODO: return (self.samples_in_frame + self._samples_overhead_in_frame) / self.sampling_rate
         return self.samples_in_frame / self.sampling_rate
-
-    @property
-    def modem(self) -> Modem:
-        """Access the `Modem` this waveform generator is attached to.
-
-        Returns:
-            Modem:
-                Handle to the `Modem`.
-                None if the generator is floating.
-        """
-
-        return self.__modem
 
     @property
     @abstractmethod
