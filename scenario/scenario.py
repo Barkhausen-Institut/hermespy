@@ -5,7 +5,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 
 from parameters_parser.parameters_channel import ParametersChannel
-import tools.constants as constants
+from scipy import constants
 
 
 if TYPE_CHECKING:
