@@ -61,7 +61,8 @@ class Simulation(Executable):
                  calc_receive_spectrum: bool = False,
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
-                 snr_type: Union[str, SNRType] = SNRType.EBN0) -> None:
+                 snr_type: Union[str, SNRType] = SNRType.EBN0,
+                 noise_loop: Union[List[float], np.ndarray] = np.array([0.0])) -> None:
         """Simulation object initialization.
 
         Args:
@@ -70,12 +71,15 @@ class Simulation(Executable):
             calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
             calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
             calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
+            snr_type (Union[str, SNRType]): The signal to noise ratio metric to be used.
+            noise_loop (Union[List[float], np.ndarray]): Loop over different noise levels.
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
                             calc_transmit_stft, calc_receive_stft)
 
         self.snr_type = snr_type
+        self.noise_loop = noise_loop
 
     def run(self) -> None:
         """Run the full simulation configuration."""
@@ -136,6 +140,39 @@ class Simulation(Executable):
 
         self.__snr_type = snr_type
 
+    @property
+    def noise_loop(self) -> np.ndarray:
+        """Access the configured signal to noise ratios over which the simulation iterates.
+
+        Returns:
+            np.ndarray: The signal to noise ratios.
+        """
+
+        return self.__noise_loop
+
+    @noise_loop.setter
+    def noise_loop(self, loop: Union[List[float], np.ndarray]) -> None:
+        """Modify the configured signal to noise ratios over which the simulation iterates.
+        
+        Args:
+            loop (Union[List[float], np.ndarray]): The new noise loop.
+
+        Raises:
+            ValueError: If `loop` does not represent a vector with at least one entry.
+        """
+
+        # Convert lists to arrays
+        if isinstance(loop, List):
+            loop = np.array(loop, dtype=float)
+
+        if loop.ndim != 1:
+            raise ValueError("The noise loop must be a vector")
+
+        if len(loop) < 1:
+            raise ValueError("The noise loop must contain at least one SNR entry")
+
+        self.__noise_loop = loop
+
     @classmethod
     def to_yaml(cls: Type[Simulation],
                 representer: SafeRepresenter,
@@ -157,9 +194,11 @@ class Simulation(Executable):
 
         state = {
             "plot_drop": node.plot_drop,
+            "snr_type": node.snr_type.value,
+            "noise_loop": node.noise_loop.tolist()
         }
 
-        # If a global quadriga interface exists,
+        # If a global Quadriga interface exists,
         # add its configuration to the simulation section
         if QuadrigaInterface.GlobalInstanceExists():
             state[QuadrigaInterface.yaml_tag] = QuadrigaInterface.GlobalInstance()
