@@ -2,9 +2,10 @@
 """Matlab interface to the Quadriga channel model."""
 
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, List, Any
 from matlab.engine import MatlabEngine, start_matlab
 import matlab
+import numpy as np
 
 from .quadriga_interface import QuadrigaInterface
 
@@ -41,13 +42,30 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
         # Start the matlab engine
         self.__engine = start_matlab()
 
-    def _run_quadriga(self, **parameters) -> List[np.ndarray, np.ndarray]:
+    def _run_quadriga(self, **parameters) -> List[Any]:
 
         # Create the Matlab workspace from the given parameters
         for key, value in parameters:
 
-            if isinstance(value, float):
+            if isinstance(value, np.ndarray):
+
+                if value.dtype is float:
+                    value = matlab.double(value.tolist())
+
+                elif value.dtype is int:
+                    value = matlab.int32(value.tolist())
+
+                else:
+                    value = matlab.object(value.tolist())
+
+            elif isinstance(value, float):
                 value = matlab.double(value)
+
+            elif isinstance(value, int):
+                value = matlab.int32(value)
+
+            else:
+                value = matlab.object(value)
 
             self.__engine.workspace[key] = value
 
@@ -55,5 +73,4 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
         self.__engine.launch_quadriga_script(nargout=0)
 
         # Fetch & return results
-        cirs = self.__engine.workspace["cirs"]
-        return cirs
+        return self.__engine.workspace["cirs"]

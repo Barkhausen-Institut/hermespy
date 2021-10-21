@@ -29,15 +29,12 @@ class QuadrigaChannel(Channel):
 
     yaml_tag = u'Quadriga'
     yaml_matrix = True
-    quadriga_interface: QuadrigaInterface
-    __quadriga_interface: QuadrigaInterface
 
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
-                 gain: Optional[float] = None,
-                 interface: Optional[QuadrigaInterface] = None) -> None:
+                 gain: Optional[float] = None) -> None:
         """Quadriga Channel object initialization.
 
         Automatically registers channel objects at the interface.
@@ -64,13 +61,6 @@ class QuadrigaChannel(Channel):
         # Init base channel class
         Channel.__init__(self, transmitter, receiver, active, gain)
 
-        # Find a valid quadriga interface instance
-        if interface is None:
-            self.__quadriga_interface = QuadrigaInterface.GlobalInstance()
-
-        else:
-            self.__quadriga_interface = interface
-
         # Register this channel at the interface
         self.__quadriga_interface.register_channel(self)
 
@@ -81,6 +71,16 @@ class QuadrigaChannel(Channel):
         """
 
         self.__quadriga_interface.unregister_channel(self)
+
+    @property
+    def __quadriga_interface(self) -> QuadrigaInterface:
+        """Access global Quadriga interface as property.
+
+        Returns:
+            QuadrigaInterface: Global Quadriga interface.
+        """
+
+        return QuadrigaInterface.GlobalInstance()
 
     def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
 

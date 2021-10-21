@@ -2,9 +2,9 @@
 """Interface prototype to the Quadriga channel model."""
 
 from __future__ import annotations
-import os
 from typing import List, Tuple, Optional, Type, TYPE_CHECKING, Any
-
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+import os
 import numpy as np
 
 if TYPE_CHECKING:
@@ -33,13 +33,9 @@ class QuadrigaInterface:
     modem pairs and the Quadriga simulation which runs in the background.
 
     This mapping is done in that class.
-
-    Attributes:
-        api_script_path(str): Path of the quadriga script to start.
-        tx_modem_ids(List[int]): List of transmitter modems saved as ids.
-        rx_modem_ids(List[int]): List of receiver modems saved as ids.
     """
 
+    yaml_tag = u'QuadrigaInterface'
     __instance: Optional[QuadrigaInterface] = None
     __path_quadriga_src: str
     __antenna_kind: str         # TODO: Implement Enumeration for possible types of antennas
@@ -61,9 +57,10 @@ class QuadrigaInterface:
             scenario_label (str, optional): Scenario label.
         """
 
-        self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '..', '3rdparty', 'quadriga_src')
+        self.__path_quadriga_src = 'D:\\quadriga\\quadriga_src'
+        # self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '..', '3rdparty', 'quadriga_src')
         self.__antenna_kind = 'lhcp-rhcp-dipole'
-        self.__scenario_label = ""
+        self.__scenario_label = '3GPP_38.901_UMa_LOS'
         self.__channels = []
         self.__fetched_channels = []
         self.__impulse_responses = []
@@ -78,25 +75,9 @@ class QuadrigaInterface:
         if scenario_label is not None:
             self.scenario_label = scenario_label
 
-        # intialize empty parameters
-        self.tx_modem_ids: List[int] = []
-        self.rx_modem_ids: List[int] = []
-
-        self._sampling_rate: List[float] = []
-        self._number_tx: int = 0
-        self._number_rx: int = 0
-        self._carrier_frequency: List[float] = []
-        self._tx_position: List[np.array] = []
-        self._rx_position: List[np.array] = []
-        self._tracks_length: List[float] = []
-        self._tracks_speed: List[float] = []
-        self._tracks_angle: List[float] = []
-        self._tx_number_antennas: List[int] = []
-        self._rx_number_antennas: List[int] = []
-
     @classmethod
     def GlobalInstance(cls: Type[QuadrigaInterface]) -> QuadrigaInterface:
-        """Access the global quadriga interface instance.
+        """Access the global Quadriga interface instance.
 
         Returns:
             QuadrigaInterface: Handle to the quadriga interface.
@@ -106,6 +87,33 @@ class QuadrigaInterface:
             QuadrigaInterface.__instance = cls()
 
         return QuadrigaInterface.__instance
+
+    @classmethod
+    def GlobalInstanceExists(cls: Type[QuadrigaInterface]) -> bool:
+        """Checks if a global Quadriga interface instance exists.
+
+        Returns:
+            bool: If a global instance exists.
+        """
+
+        return QuadrigaInterface.__instance is None
+
+    @classmethod
+    def SetGlobalInstance(cls: Type[QuadrigaInterface], new_instance: QuadrigaInterface) -> None:
+        """Set the new global quadriga instance.
+
+        Copies registered channels to the new instance if a global instance already exists.
+
+        Args:
+            new_instance (QuadrigaInterface): The Quadriga interface instance to be made global.
+        """
+
+        if QuadrigaInterface.__instance is not None:
+
+            for channel in QuadrigaInterface.__instance.__channels:
+                new_instance.register_channel(channel)
+
+        QuadrigaInterface.__instance = new_instance
 
     @property
     def path_quadriga_src(self) -> str:
@@ -211,7 +219,7 @@ class QuadrigaInterface:
         if channel not in self.__channels:
             raise ValueError("Channel is currently not registered")
 
-        self.__channels.pop(channel)
+        self.__channels.pop(self.__channels.index(channel))
 
     def get_impulse_response(self, channel: QuadrigaChannel) -> Tuple[np.ndarray, float]:
         """Get the impulse response for a specific quadriga channel.
@@ -245,7 +253,7 @@ class QuadrigaInterface:
         self.__fetched_channels.append(channel)
 
         channel_index = self.__channels.index(channel)
-        return self.__impulse_responses[channel_index], self.__delays[channel]
+        return self.__impulse_responses[channel_index], self.__delays[channel_index]
 
         #self._launch_quadriga()
         #if self._number_rx == 1 and self._number_tx == 1:
@@ -342,10 +350,11 @@ class QuadrigaInterface:
         cirs = self._run_quadriga(**parameters)
 
         # Recover the relevant simulation results
+        # TODO converter cirs to responses / delays
         self.__impulse_responses = []
         self.__delays = []
 
-    def _run_quadriga(self, **parameters) -> List[Any, Any]:
+    def _run_quadriga(self, **parameters) -> List[Any]:
         """Run the quadriga model.
 
         Must be realised by interface implementations.
@@ -355,3 +364,49 @@ class QuadrigaInterface:
         """
 
         raise NotImplementedError("Neither a Matlab or Octave interface was found during Quadriga execution")
+
+    @classmethod
+    def to_yaml(cls: Type[QuadrigaInterface], representer: SafeRepresenter, node: QuadrigaInterface) -> MappingNode:
+        """Serialize a QuadrigaInterface object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (QuadrigaInterface):
+                The QuadrigaInterface instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'path_quadriga_src': node.path_quadriga_src,
+            'antenna_kind': node.antenna_kind,
+            'scenario_label': node.scenario_label,
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[QuadrigaInterface], constructor: SafeConstructor,  node: MappingNode) -> QuadrigaInterface:
+        """Recall a new `QuadrigaInterface` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `QuadrigaInterface` serialization.
+
+        Returns:
+            QuadrigaInterface:
+                Newly created `QuadrigaInterface` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)
