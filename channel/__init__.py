@@ -1,6 +1,7 @@
 from .channel import Channel
 from .multipath_fading_channel import MultipathFadingChannel
 from .multipath_fading_templates import MultipathFadingCost256, MultipathFading5GTDL
+from .radar_channel import RadarChannel
 
 try:
     from .quadriga_interface_matlab import QuadrigaMatlabInterface as QuadrigaInterface
@@ -16,4 +17,4 @@ except ImportError:
 from .quadriga_channel import QuadrigaChannel
 
 __all__ = ['Channel', 'MultipathFadingChannel', 'MultipathFading5GTDL', 'MultipathFadingCost256',
-           'QuadrigaChannel', 'QuadrigaInterface']
+           'QuadrigaChannel', 'QuadrigaInterface', 'RadarChannel']
