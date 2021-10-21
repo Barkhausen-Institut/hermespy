@@ -2,10 +2,11 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
-from typing import List, Type, Optional
+from typing import List, Type, Optional, Union
 import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from enum import Enum
 
 from .executable import Executable
 from .drop import Drop
@@ -19,6 +20,14 @@ __version__ = "0.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class SNRType(Enum):
+    """Supported signal-to-noise ratio types."""
+
+    EBN0 = 0
+    ESN0 = 1
+    CUSTOM = 2
 
 
 class SimulationDrop(Drop):
@@ -47,14 +56,26 @@ class Simulation(Executable):
     yaml_tag = u'Simulation'
 
     def __init__(self,
-                 plot_drop: bool = True) -> None:
-        """Object initialization.
+                 plot_drop: bool = False,
+                 calc_transmit_spectrum: bool = False,
+                 calc_receive_spectrum: bool = False,
+                 calc_transmit_stft: bool = False,
+                 calc_receive_stft: bool = False,
+                 snr_type: Union[str, SNRType] = SNRType.EBN0) -> None:
+        """Simulation object initialization.
 
         Args:
-            plot_drop (bool, optional): Pause to plot each drop during execution.
+            plot_drop (bool): Plot each drop during execution of scenarios.
+            calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
+            calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
+            calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
+            calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         """
 
-        Executable.__init__(self, plot_drop)
+        Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
+                            calc_transmit_stft, calc_receive_stft)
+
+        self.snr_type = snr_type
 
     def run(self) -> None:
         """Run the full simulation configuration."""
@@ -90,6 +111,30 @@ class Simulation(Executable):
                 drop.plot_bit_errors()
 
                 plt.show()
+
+    @property
+    def snr_type(self) -> SNRType:
+        """Type of signal-to-noise ratio.
+
+        Returns:
+            SNRType: The SNR type.
+        """
+
+        return self.__snr_type
+
+    @snr_type.setter
+    def snr_type(self, snr_type: Union[str, SNRType]) -> None:
+        """Modify the type of signal-to-noise ratio.
+
+        Args:
+            snr_type (Union[str, SNRType]):
+                The new type of signal to noise ratio, string or enum representation.
+        """
+
+        if isinstance(snr_type, str):
+            snr_type = SNRType[snr_type]
+
+        self.__snr_type = snr_type
 
     @classmethod
     def to_yaml(cls: Type[Simulation],
