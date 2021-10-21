@@ -31,15 +31,25 @@ import shutil
 import datetime
 import sys
 import argparse
-from typing import List
+from typing import List, Optional
+from ruamel.yaml.constructor import ConstructorError
 
-from parameters_parser.parameters import Parameters
 from simulator_core.random_streams import RandomStreams
-from scenario.scenario import Scenario
+from simulator_core import Factory, Executable
 from simulator_core.drop_loop import DropLoop
 
 
-def hermes(args: List[str]) -> None:
+def hermes(args: Optional[List[str]] = None) -> None:
+    """HermesPy command line routine.
+
+    Args:
+        args ([List[str], optional): Command line arguments.
+    """
+
+    # Recover command line arguments from system if none are provided
+    if args is None:
+        args = sys.argv[1:]
+
     print("Welcome to HermesPy")
     parser = argparse.ArgumentParser(
         description="usage: hermes.py -p <settings_dir> -o <output_dir>")
@@ -52,6 +62,9 @@ def hermes(args: List[str]) -> None:
     # validate commandline parameters
     if not input_parameters_dir:
         input_parameters_dir = os.path.join(os.getcwd(), '_settings')
+
+    elif not(os.path.isabs(input_parameters_dir)):
+        input_parameters_dir = os.path.join(os.getcwd(), input_parameters_dir)
 
     print('Parameters will be read from ' + input_parameters_dir)
 
@@ -75,36 +88,44 @@ def hermes(args: List[str]) -> None:
                 '_' +
                 '{:03d}'.format(dir_index))
 
-    print('Results will be saved in ' + results_dir)
+    #print('Results will be saved in ' + results_dir)
 
     shutil.copytree(input_parameters_dir, results_dir)
 
-    #########################
-    # initialize parameters
-    parameters: Parameters = Parameters(results_dir)
-    parameters.read_params()
-
     ######################################
     # initialize random number generation
-    random_number_gen = RandomStreams(parameters.general.seed)
+    # random_number_gen = RandomStreams(parameters.general.seed)
+
+    ##################
+    # Import executable from YAML config dump
+    factory = Factory()
+
+    try:
+        executable: Executable = factory.load(input_parameters_dir)
+
+    except ConstructorError as error:
+
+        print("\nYAML import failed during parsing of line {} in file '{}':\n\t{}".format(error.problem_mark.line,
+                                                                                          error.problem_mark.name,
+                                                                                          error.problem,
+                                                                                          file=sys.stderr))
+        exit(-1)
 
     ##################
     # run simulation
-    scenario = Scenario(
-        parameters.scenario,
-        parameters.general,
-        random_number_gen)
+    executable.run()
 
-    simulation_loop = DropLoop(parameters.general, scenario)
-    statistics = simulation_loop.run_loop()
-
-    statistics.save(results_dir)
-
-    print('results saved in ' + results_dir)
+    #simulation_loop = DropLoop(parameters.general, scenario)
+    #statistics = simulation_loop.run_loop()
+#
+    #statistics.save(results_dir)
+#
+    #print('results saved in ' + results_dir)
+    print('Configuration executed. Goodbye.')
 
 
 if __name__ == "__main__":
 
     ################################################################
     # read command line parameters and initialize simulation folders
-    hermes(sys.argv[1:])
+    hermes()

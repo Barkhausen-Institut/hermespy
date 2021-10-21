@@ -1,8 +1,28 @@
+# -*- coding: utf-8 -*-
+"""Multipath Fading Channel Model."""
+
+from __future__ import annotations
 import numpy as np
-import scipy
+from scipy.constants import pi
+from scipy.signal import convolve
+from numpy import cos, exp
+from math import ceil
+from typing import TYPE_CHECKING, Optional, Type
+from ruamel.yaml import SafeRepresenter, MappingNode
 
 from channel.channel import Channel
-from parameters_parser.parameters_channel import ParametersChannel
+
+if TYPE_CHECKING:
+    from modem import Transmitter, Receiver
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class MultipathFadingChannel(Channel):
@@ -52,125 +72,365 @@ class MultipathFadingChannel(Channel):
     and receiver.
 
     Attributes:
-        number_of_paths(int): Number of paths in the multipath channel.
-        los_phi(np.array): initial phase of line-of-sight (LOS) components
-        los_theta(np.array): angle of arrival of LOS component(default=0)
-        los_gain(np.array): path gains for LOS
-        non_los_gain(np.array): path gains for NLOS
-        doppler_frequency(float): doppler frequency in Hz.
-        postcoding_matrix(np.ndarray): for receive antenna correlation.
-        precoding_matrix(np.ndarray): transmit antenna correlation.
-        phi (np.array): random phases of paths in Jake's model
-        theta(np.array): random angles of paths of sinusoids in Jake's model
-        interpolation_filter(np.array): Filter to apply if sampling instants are not
-            at time delay instants.
-        max_delay_in_samples(int): Maximum delay of all paths in samples.
+        __delays (np.ndarray): Delay per propagation case in seconds.
+        __power_profile (np.ndarray): Power per propagation case.
+        __rice_factors (np.ndarray): Rice factor per propagation case.
+        __max_delay (float): Maximum propagation delay in seconds.
+        __num_sequences (int): Number of fading sample sequences per impulse response.
+        __num_sinusoids (int): Number of sinusoids components per sample sequence.
+        __los_angle (Optional[float]): Line of sight angle of arrival.
+        __los_gains (np.array): Path gains for line of sight component in sample sequence, derived from rice factor
+        __non_los_gains (np.array): Path gains for non-line of sight in sample sequence, derived from rice factor
+        __transmit_precoding (np.ndarray): Precoding matrix for antenna streams before propagation.
+        __receive_postcoding (np.ndarray): Postcoding matrix for antenna streams after propagation.
+        __doppler_frequency (float): Doppler frequency in Hz.
+        __los_doppler_frequency (Optional[float]): Optional doppler frequency for the line of sight component.
     """
 
-    number_of_sinewaves = 20  # to be used in Jake's model
+    yaml_tag = u'MultipathFading'
+    yaml_matrix = True
+    __delays: np.ndarray
+    __power_profile: np.ndarray
+    __rice_factors: np.ndarray
+    __max_delay: float
+    __num_sequences: int
+    __num_sinusoids: int
+    __los_angle: Optional[float]
+    __los_gains: np.ndarray
+    __transmit_precoding: Optional[np.ndarray]
+    __receive_postcoding: Optional[np.ndarray]
+    __doppler_frequency: float
+    __los_doppler_frequency: Optional[float]
 
-    def __init__(self, parameters: ParametersChannel, random_number_gen: np.random.RandomState,
-                 sampling_rate: float, doppler_frequency: float = None) -> None:
-        super().__init__(parameters,
-                         random_number_gen,
-                         sampling_rate)
+    def __init__(self,
+                 delays: np.ndarray,
+                 power_profile: np.ndarray,
+                 rice_factors: np.ndarray,
+                 transmitter: Optional[Transmitter] = None,
+                 receiver: Optional[Receiver] = None,
+                 active: Optional[bool] = None,
+                 gain: Optional[float] = None,
+                 num_sinusoids: Optional[float] = None,
+                 los_angle: Optional[float] = None,
+                 doppler_frequency: Optional[float] = None,
+                 los_doppler_frequency: Optional[float] = None,
+                 transmit_precoding: Optional[np.ndarray] = None,
+                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+        """Object initialization.
 
-        self.number_of_paths = parameters.delays.size
-        self.los_phi = np.array([])
-        self.los_theta = np.array([])
+        Args:
+            delays (np.ndarray): Delay in seconds of each individual multipath tap.
+            power_profile (np.ndarray): Power loss factor of each individual multipath tap.
+            rice_factors (np.ndarray): Rice factor balancing line of sight and multipath in each individual channel tap.
+            transmitter (Transmitter, optional): The modem transmitting into this channel.
+            receiver (Receiver, optional): The modem receiving from this channel.
+            active (bool, optional): Channel activity flag.
+            gain (float, optional): Channel power gain.
+            num_sinusoids (int, optional): Number of sinusoids used to sample the statistical distribution.
+            los_angle (float, optional): Angle phase of the line of sight component within the statistical distribution.
+            doppler_frequency (float, optional): Doppler frequency shift of the statistical distribution.
+            transmit_precoding (np.ndarray): Transmit precoding matrix.
+            receive_postcoding (np.ndarray): Receive postcoding matrix.
 
-        self.los_gain: np.array = np.sqrt(
-            self.param.k_factor_rice) / np.sqrt(1 + self.param.k_factor_rice)
-        self.los_gain[np.isposinf(self.param.k_factor_rice)] = 1.
+        Raises:
+            ValueError:
+                If the length of `delays`, `power_profile` and `rice_factors` is not identical.
+                If delays are smaller than zero.
+                If power factors are smaller than zero.
+                If rice factors are smaller than zero.
+        """
 
-        self.non_los_gain: np.array = 1 / np.sqrt(1 + self.param.k_factor_rice)
+        if delays.ndim != 1 or power_profile.ndim != 1 or rice_factors.ndim != 1:
+            raise ValueError("Delays, power profile and rice factors must be vectors")
 
-        self.doppler_frequency = doppler_frequency
+        if len(delays) != len(power_profile) or len(power_profile) != len(rice_factors):
+            raise ValueError("Delays, power profile and rice factor vectors must be of equal length")
 
-        # normalization
-        self.param.power_delay_profile = np.abs(
-            self.param.power_delay_profile) / np.sum(self.param.power_delay_profile)
+        if np.any(delays < 0.0):
+            raise ValueError("Delays must be greater or equal to zero")
 
-        # postcoding matrix for receive antenna correlation
-        if self.param.rx_cov_matrix.size == 0:
-            self.postcoding_matrix = np.array([])
-        else:
-            if not np.array_equal(self.param.rx_cov_matrix, np.transpose(self.param.rx_cov_matrix)):
-                raise ValueError('rx covariance matrix must be Hermitian')
-            if np.any(np.linalg.eigvals(self.param.rx_cov_matrix) <= 0):
-                raise ValueError(
-                    'rx covariance matrix must be positive definite')
+        if np.any(power_profile < 0.0):
+            raise ValueError("Power profile factors must be greater or equal to zero")
 
-            self.postcoding_matrix = scipy.linalg.sqrtm(self.param.rx_cov_matrix)
+        if np.any(rice_factors < 0.0):
+            raise ValueError("Rice factors must be greater or equal to zero")
 
-        # precoding matrix for transmit antenna correlation
-        if self.param.tx_cov_matrix.size == 0:
-            self.precoding_matrix = np.array([])
-        else:
-            if not np.array_equal(self.param.tx_cov_matrix, np.transpose(self.param.tx_cov_matrix)):
-                raise ValueError('tx covariance matrix must be Hermitian')
-            if np.any(np.linalg.eigvals(self.param.tx_cov_matrix) <= 0):
-                raise ValueError(
-                    'tx covariance matrix must be positive definite')
+        # Init base class
+        Channel.__init__(self, transmitter, receiver, active, gain)
 
-            self.precoding_matrix = scipy.linalg.sqrtm(self.param.tx_cov_matrix)
+        self.__delays = delays
+        self.__power_profile = power_profile
+        self.__rice_factors = rice_factors
+        self.__num_sinusoids = 10       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
+        self.__los_angle = None
+        self.__transmit_precoding = None
+        self.__receive_postcoding = None
+        self.__doppler_frequency = 0.0
+        self.__los_doppler_frequency = None
 
-        self._number_of_sinewaves = [self.number_of_paths,
-                                     MultipathFadingChannel.number_of_sinewaves,
-                                     self.number_rx_antennas, self.number_tx_antennas]
-        self._number_of_los_components = [
-            self.number_of_paths, self.number_rx_antennas, self.number_tx_antennas]
+        if num_sinusoids is not None:
+            self.num_sinusoids = num_sinusoids
 
-        self.phi = np.array([])
-        self.theta = np.array([])
+        if los_angle is not None:
+            self.los_angle = los_angle
 
-        # check if filtering is needed (if delays are not in sampling instants)
-        self.interpolation_filter = np.array([])
-        delay_sample = np.around(self.param.delays * self.sampling_rate)
-        self.max_delay_in_samples = int(
-            np.ceil(self.param.delays.max() * self.sampling_rate))
+        if doppler_frequency is not None:
+            self.doppler_frequency = doppler_frequency
 
-        # if discrete delays are not very close to the desired delay, use filters for
-        # intermediate delays. Close means that they ar within 5% of the minimum delay
-        # difference
-        if self.param.delays.size > 1:
-            atol = 0.05 * np.min(np.diff(self.param.delays))
-        else:
-            atol = 0.05 * self.param.delays
-        if not np.allclose(delay_sample / self.sampling_rate,
-                           self.param.delays, atol=atol):
-            self.max_delay_in_samples += 1
-            self.interpolation_filter = np.zeros(
-                (self.max_delay_in_samples + 1, self.number_of_paths))
-            delays = np.arange(self.max_delay_in_samples +
-                               1) / self.sampling_rate
-            for path in range(self.number_of_paths):
-                interp_filter = np.sinc(
-                    (delays - self.param.delays[path]) * self.sampling_rate)
-                interp_filter = interp_filter / \
-                    np.sqrt(np.sum(interp_filter ** 2))
-                self.interpolation_filter[:, path] = interp_filter
+        if los_doppler_frequency is not None:
+            self.los_doppler_frequency = los_doppler_frequency
 
-    def init_drop(self) -> None:
-        """Initializes random channel parameters for each drop, by selecting random phases."""
-        # initial phase of sinusoids
-        self.phi = self.random.random_sample(
-            self._number_of_sinewaves) * 2 * np.pi - np.pi
-        self.theta = self.random.random_sample(
-            self._number_of_sinewaves) * 2 * np.pi - np.pi
-        self.los_phi = self.random.random_sample(
-            self._number_of_los_components) * 2 * np.pi - np.pi
-        self.los_theta = self.random.random_sample(
-            self._number_of_los_components) * 2 * np.pi - np.pi
+        if transmit_precoding is not None:
+            self.transmit_precoding = transmit_precoding
 
-        if self.param.los_theta_0 != 0.:
-            self.los_theta[0, :, :] = self.param.los_theta_0
+        if receive_postcoding is not None:
+            self.receive_postcoding = receive_postcoding
 
-    def propagate(self, tx_signal: np.ndarray) -> np.ndarray:
+        # Infer additional parameters
+        self.__max_delay = max(delays)
+        self.__num_sequences = len(delays)
+
+        rice_inf_pos = np.isposinf(rice_factors)
+        rice_num_pos = np.invert(rice_inf_pos)
+        self.__los_gains = np.empty(self.num_sequences, dtype=float)
+        self.__non_los_gains = np.empty(self.num_sequences, dtype=float)
+
+        self.__los_gains[rice_inf_pos] = 1.0
+        self.__los_gains[rice_num_pos] = np.sqrt(rice_factors[rice_num_pos]) / np.sqrt(1 + rice_factors[rice_num_pos])
+
+        self.__non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + rice_factors[rice_num_pos])
+        self.__non_los_gains[rice_inf_pos] = 0.0
+
+    @property
+    def delays(self) -> np.ndarray:
+        """Access configured path delays.
+
+        Returns:
+            np.ndarray: Path delays.
+        """
+
+        return self.__delays
+
+    @property
+    def power_profile(self) -> np.ndarray:
+        """Access configured power profile.
+
+        Returns:
+            np.ndarray: Power profile.
+        """
+
+        return self.__power_profile
+
+    @property
+    def rice_factors(self) -> np.ndarray:
+        """Access configured rice factors.
+
+        Returns:
+            np.ndarray: Rice factors.
+        """
+
+        return self.__rice_factors
+
+    @property
+    def doppler_frequency(self) -> float:
+        """Access doppler frequency shift.
+
+        Returns:
+            float: Doppler frequency shift in Hz.
+        """
+
+        return self.__doppler_frequency
+
+    @doppler_frequency.setter
+    def doppler_frequency(self, frequency: float) -> None:
+        """Modify doppler frequency shift configuration.
+
+        Args:
+            frequency (float): New doppler frequency shift in Hz.
+        """
+
+        self.__doppler_frequency = frequency
+
+    @property
+    def los_doppler_frequency(self) -> float:
+        """Access doppler frequency shift of the line of sight component.
+
+        Returns:
+            float: Doppler frequency shift in Hz.
+        """
+
+        if self.__los_doppler_frequency is None:
+            return self.doppler_frequency
+
+        return self.__los_doppler_frequency
+
+    @los_doppler_frequency.setter
+    def los_doppler_frequency(self, frequency: Optional[float]) -> None:
+        """Modify doppler frequency shift configuration of the line of sigh component.
+
+        Args:
+            frequency (Optional[float]): New doppler frequency shift in Hz.
+        """
+
+        self.__los_doppler_frequency = frequency
+
+    @property
+    def transmit_precoding(self) -> Optional[np.ndarray]:
+        """Access transmit precoding matrix.
+
+        Returns:
+            Optional[np.ndarray]: Transmit precoding matrix, None if no matrix ix configured.
+        """
+
+        return self.__transmit_precoding
+
+    @transmit_precoding.setter
+    def transmit_precoding(self, matrix: Optional[np.ndarray]) -> None:
+        """Configure transmit precoding matrix.
+
+        Args:
+            matrix (Optional[np.ndarray]): New transmit precoding matrix.
+
+        Raises:
+            ValueError: If `matrix` is not a matrix (does not have two dimensions).
+            ValueError: If `matrix` is not positive definite or hermitian.
+        """
+
+        if matrix is None:
+
+            self.__transmit_precoding = None
+            return
+
+        if matrix.ndim != 2:
+            raise ValueError("Transmit precoding must be a matrix (an array with two dimensions)")
+
+        if not np.array_equal(matrix, matrix.conj().transpose()):
+            raise ValueError("Transmit precoding matrix must be hermitian")
+
+        if not np.all(np.linalg.eigvals(matrix) > 0):
+            raise ValueError("Transmit precoding matrix must be positive definite")
+
+        self.__transmit_precoding = matrix
+
+    @property
+    def receive_postcoding(self) -> Optional[np.ndarray]:
+        """Access receive postcoding matrix.
+
+        Returns:
+            Optional[np.ndarray]: Receive postcoding matrix, None if no matrix ix configured.
+        """
+
+        return self.__receive_postcoding
+    
+    @receive_postcoding.setter
+    def receive_postcoding(self, matrix: Optional[np.ndarray]) -> None:
+        """Configure receive postcoding matrix.
+
+        Args:
+            matrix (Optional[np.ndarray]): New receive postcoding matrix.
+
+        Raises:
+            ValueError: If `matrix` is not a matrix (does not have two dimensions).
+            ValueError: If `matrix` is not positive definite or hermitian.
+        """
+
+        if matrix is None:
+
+            self.__receive_postcoding = None
+            return
+
+        if matrix.ndim != 2:
+            raise ValueError("Receive postcoding must be a matrix (an array with two dimensions)")
+
+        if not np.array_equal(matrix, matrix.conj().transpose()):
+            raise ValueError("Receive postcoding matrix must be hermitian")
+
+        if not np.all(np.linalg.eigvals(matrix) > 0):
+            raise ValueError("Receive postcoding matrix must be positive definite")
+
+        self.__receive_postcoding = matrix
+
+    @property
+    def max_delay(self) -> float:
+        """Access the maximum multipath delay.
+
+        Returns:
+            float: The maximum delay.
+        """
+
+        return self.__max_delay
+
+    @property
+    def num_sequences(self) -> int:
+        """Access the configured number of fading sequences generating a single impulse response.
+
+        Returns:
+            int: The number of sequences.
+        """
+
+        return self.__num_sequences
+
+    @property
+    def num_sinusoids(self) -> int:
+        """Access the configured number of sinusoids within one fading sequence.
+
+        Returns:
+            int: The number of sinusoids.
+        """
+
+        return self.__num_sinusoids
+
+    @num_sinusoids.setter
+    def num_sinusoids(self, num: int) -> None:
+        """Modify the configured number of sinusoids within one fading sequence.
+
+        Args:
+            num (int): The new number of sinusoids.
+
+        Raises:
+            ValueError: If `num` is smaller than zero.
+        """
+
+        if num < 0:
+            raise ValueError("Number of sinusoids must be greater or equal to zero")
+
+        self.__num_sinusoids = num
+
+    @property
+    def los_angle(self) -> Optional[float]:
+        """Access configured angle of arrival of the specular model component.
+
+        Returns:
+            Optional[float]: The AoA in radians, `None` if it is not configured.
+        """
+
+        return self.__los_angle
+
+    @los_angle.setter
+    def los_angle(self, angle: Optional[float]) -> None:
+        """Access configured angle of arrival of the specular model component.
+
+        Args:
+            angle (Optional[float]): The new angle of arrival in radians.
+        """
+
+        self.__los_angle = angle
+
+    @property
+    def max_delay_in_samples(self) -> int:
+        """Maximum input shift caused by the channel delay in samples.
+
+        Returns:
+            int: Delay in samples.
+        """
+
+        return int(self.max_delay * self.transmitter.sampling_rate)
+
+    def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
         """Modifies the input signal and returns it after channel propagation.
 
         Args:
-            tx_signal (np.ndarray):
+            transmitted_signal (np.ndarray):
                 Input signal to channel with shape of `N_tx_antennas x n_samples`.
 
         Returns:
@@ -181,187 +441,147 @@ class MultipathFadingChannel(Channel):
                 + L, with L denoting the maximum excess delay of the power
                 delay profile, in samples.
 
+        Raises:
+            ValueError:
+                If `transmitted_signal` is not a matrix.
+                If the first dimension of `transmitted_signal` does not equal the number of transmitter antennas.
+
+            RuntimeError:
+                If the channel is currently floating.
         """
-        if tx_signal.ndim == 1:
-            if self.number_tx_antennas > 1:
-                raise ValueError(f'tx signal has 1 spatial dimension, {self.number_tx_antennas} expected')
-            tx_signal = np.reshape(tx_signal, (1, -1))
 
-        if (tx_signal.ndim > 2) or (tx_signal.ndim == 2 and
-                                    tx_signal.shape[0] != self.number_tx_antennas):
-            raise ValueError('input vector has wrong number of antennas')
+        if transmitted_signal.ndim != 2:
+            raise ValueError("Transmitted signal must be a matrix (an array with two dimensions)")
 
-        # calculate number of samples and time reference (output may have more samples on
-        # account of delayed paths
-        number_of_samples_in = tx_signal.shape[1]
-        number_of_samples_out = number_of_samples_in + self.max_delay_in_samples
+        if self.transmitter is None or self.receiver is None:
+            raise RuntimeError("Channel is floating, making propagation simulation impossible")
 
-        rx_signal = np.zeros(
-            (self.number_rx_antennas, number_of_samples_out), dtype=complex)
+        if transmitted_signal.shape[0] != self.transmitter.num_antennas:
+            raise ValueError("Number of transmitted signal streams must equal the number of transmitting antennas")
 
-        # transmit antenna correlation
-        if self.precoding_matrix.size != 0:
-            tx_signal = self.precoding_matrix @ tx_signal
+        # Calculate number of discrete-time samples,
+        # the propagated signal may require additional samples to account for delays
+        num_samples_in = transmitted_signal.shape[1]
+        num_samples_out = num_samples_in + self.max_delay_in_samples
+
+        received_signals = np.zeros((self.receiver.num_antennas, num_samples_out), dtype=complex)
+
+        # Transmit antenna correlation
+        if self.transmit_precoding is not None:
+            transmitted_signal = self.transmit_precoding @ transmitted_signal
+
+        timestamps = np.arange(num_samples_out) / self.transmitter.sampling_rate
 
         # Add paths to form received signal
-        for rx_antenna in range(self.number_rx_antennas):
-            rx_signal_ant = np.zeros(number_of_samples_out, dtype=complex)
+        for transmit_antenna_idx in range(self.transmitter.num_antennas):
+            for receive_antenna_idx in range(self.receiver.num_antennas):
 
-            for tx_antenna in range(self.number_tx_antennas):
-                tx_signal_antenna = tx_signal[tx_antenna, :]
+                impulse_response = self.siso_impulse_response(timestamps)
+                propagated_signal = convolve(impulse_response, transmitted_signal[transmit_antenna_idx, :], 'full')
 
-                impulse_response_siso = (
-                    self._get_path_responses(rx_antenna, tx_antenna,
-                                             np.arange(number_of_samples_in)
-                                             / self.sampling_rate)
-                )
-                if self.interpolation_filter.size == 0:
-                    delay_in_samples_vec = np.around(
-                        self.param.delays * self.sampling_rate).astype(int)
-                else:
-                    delay_in_samples_vec = np.arange(
-                        self.max_delay_in_samples + 1)
+                received_signals[receive_antenna_idx, :] += propagated_signal[:num_samples_out]
 
-                for delay_idx, delay_in_samples in enumerate(
-                        delay_in_samples_vec):
-                    padding = self.max_delay_in_samples - delay_in_samples
+        # Receive antenna correlation
+        if self.receive_postcoding is not None:
+            received_signals = self.receive_postcoding @  received_signals
 
-                    # add faded path to received signal
-                    if self.interpolation_filter.size == 0:
-                        path_response_at_delay = impulse_response_siso[delay_idx, :]
-                    else:
-                        path_response_at_delay = (
-                            self.interpolation_filter[delay_idx,
-                                                      :] @ impulse_response_siso
-                        )
-                    signal_path = tx_signal_antenna * path_response_at_delay
-                    signal_path = np.concatenate(
-                        (np.zeros(delay_in_samples), signal_path, np.zeros(padding)))
+        return received_signals
 
-                    rx_signal_ant += signal_path
-
-            rx_signal[rx_antenna, :] = rx_signal_ant
-
-        # receive antenna correlation
-        if self.postcoding_matrix.size != 0:
-            rx_signal = np.matmul(self.postcoding_matrix, rx_signal)
-
-        return rx_signal * self.param.gain
-
-    def get_impulse_response(self, timestamps: np.array) -> np.ndarray:
-        """Calculates the channel impulse response.
-
-        This method can be used for instance by the transceivers to obtain the
-        channel state information.
+    def siso_impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+        """Generate a single SISO channel impulse response.
 
         Args:
-            timestamps (np.array): Time instants with length T to calculate the
-                response for.
-
-        Returns:
-            np.ndarray:
-                Impulse response in all 'number_rx_antennas' x 'number_tx_antennas' channels
-                at the time instants given in vector 'timestamps'.
-                `impulse_response` is a 4D-array, with the following dimensions:
-                1- sampling instants, 2 - Rx antennas, 3 - Tx antennas, 4 - delays
-                (in samples)
-                The shape is T x number_rx_antennas x number_tx_antennas x (L+1)
+            timestamps (np.ndarray): Timestamps at which to sample the generated response.
         """
 
-        impulse_response = np.zeros((timestamps.size,
-                                     self.number_rx_antennas,
-                                     self.number_tx_antennas,
-                                     self.max_delay_in_samples + 1), dtype=complex)
+        response = np.zeros(len(timestamps) + self.max_delay_in_samples, dtype=complex)
+        for s in range(self.num_sequences):
 
-        if self.interpolation_filter.size == 0:
-            delay_in_samples_vec = np.around(
-                self.param.delays * self.sampling_rate).astype(int)
+            # TODO: Check if it should be the square root of the power profile
+            sequence = self.__power_profile[s] * self.__tap(timestamps, s)
+            response[:len(sequence)] += sequence
+
+        return self.gain * response
+
+    def __tap(self, timestamps: np.ndarray, sequence_index: int) -> np.ndarray:
+        """Generate a single fading sequence tap.
+
+        Implements equation (18) of the underlying paper.
+
+        Args:
+            timestamps (np.ndarray)
+
+        Raises:
+            ValueError: If the sequence does not match a profile.
+        """
+
+        if sequence_index >= self.num_sequences:
+            raise ValueError("Requested sequence index higher than maximum number of available paths")
+
+        delay = self.__delays[sequence_index]
+        num_delay_pads = int(delay * self.transmitter.sampling_rate)
+        delay_delta = delay - num_delay_pads / self.transmitter.sampling_rate
+        time = timestamps - delay_delta
+
+        nlos_doppler = self.doppler_frequency
+        nlos_angles = np.random.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_phases = np.random.uniform(0, 2*pi, self.num_sinusoids)
+
+        nlos_component = np.zeros(len(time), dtype=complex)
+        for s in range(self.num_sinusoids):
+
+            nlos_component += exp(1j * (nlos_doppler * time * cos((2*pi*s + nlos_angles[s]) / self.num_sinusoids) +
+                                        nlos_phases[s]))
+
+        nlos_component *= self.__non_los_gains[sequence_index] * (self.num_sinusoids ** -.5)
+
+        if self.los_angle is not None:
+            los_angle = self.los_angle
+
         else:
-            delay_in_samples_vec = np.arange(self.max_delay_in_samples + 1)
+            los_angle = np.random.uniform(0, 2*pi)
 
-        for tx_antenna in range(self.number_tx_antennas):
-            for rx_antenna in range(self.number_rx_antennas):
-                path_gains = self._get_path_responses(
-                    rx_antenna, tx_antenna, timestamps)
+        los_doppler = self.los_doppler_frequency
+        los_phase = np.random.uniform(0, 2*pi)
+        los_component = self.__los_gains[sequence_index] * exp(1j * (los_doppler * time * cos(los_angle) + los_phase))
 
-                for delay_idx, delay_in_samples in enumerate(
-                        delay_in_samples_vec):
-                    # add faded path to received signal
-                    # impulse response dimensions are explained in method
-                    # header
-                    if self.interpolation_filter.size == 0:
-                        impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] = \
-                            impulse_response[:, rx_antenna, tx_antenna,
-                                             delay_in_samples] + path_gains[delay_idx, :]
-                    else:
-                        impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += \
-                            (impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] +
-                             self.interpolation_filter[delay_idx, :] @ path_gains)
+        tap = self.__power_profile[sequence_index] * (los_component + nlos_component)
+        padded_tap = np.append(np.zeros(num_delay_pads, dtype=complex), tap)
 
-        if self.precoding_matrix.size > 0 or self.postcoding_matrix.size > 0:
-            for instant in range(timestamps.size):
-                for delay in delay_in_samples_vec:
-                    mimo_channel = impulse_response[instant, :, :, delay]
-                    mimo_channel = (
-                        self.postcoding_matrix
-                        @ mimo_channel
-                        @ self.precoding_matrix
-                    )
-                    impulse_response[instant, :, :, delay] = mimo_channel
+        return padded_tap
 
-        return impulse_response * self.param.gain
-
-    def _get_path_responses(
-            self, rx_antenna: int, tx_antenna: int, time: np.array) -> np.ndarray:
-        """Returns the channel gain of all relevant paths.
-
-        Between transmitting and receiving antennas. antenna 'tx_antenna' and receive antenna
+    @classmethod
+    def to_yaml(cls: Type[MultipathFadingChannel], representer: SafeRepresenter,
+                node: MultipathFadingChannel) -> MappingNode:
+        """Serialize a channel object to YAML.
 
         Args:
-            rx_antenna(int): Receiving antenna.
-            tx_antenna(int): Transmitting antenna.
-            time(np.array): Time instants (in s) of size T to calculate the responses for.
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (MultipathFadingChannel):
+                The channel instance to be serialized.
 
         Returns:
-            np.ndarray:
-                Gains vector with shape L x T, L+1 being the number of
-                relevant paths in the model, .
+            Node:
+                The serialized YAML node.
         """
 
-        path_gain = np.zeros((self.number_of_paths, time.size), dtype=complex)
+        state = {
+            'delays': node.delays.tolist(),
+            'power_profile': node.power_profile.tolist(),
+            'active': node.active,
+            'gain': node.gain,
+            'num_sinusoids': node.num_sinusoids,
+            'los_angle': node.los_angle,
+            'doppler_frequency': node.doppler_frequency,
+            'los_doppler_frequency': node.los_doppler_frequency,
+            'transmit_precoding': node.transmit_precoding,
+            'receive_postcoding': node.receive_postcoding,
+        }
 
-        # Rayleigh-fading component
-        norm_factor = np.sqrt(1 / MultipathFadingChannel.number_of_sinewaves)
+        transmitter_index, receiver_index = node.indices
 
-        for path in range(self.number_of_paths):
-            for sinewave_idx in range(
-                    MultipathFadingChannel.number_of_sinewaves):
-                # add random sinewaves to generate Rayleigh fading
-                phi = self.phi[path, sinewave_idx, rx_antenna, tx_antenna]
-                theta = self.theta[path, sinewave_idx, rx_antenna, tx_antenna]
-                alpha = (2 * np.pi * (sinewave_idx + 1) + theta) / \
-                    MultipathFadingChannel.number_of_sinewaves
-
-                path_gain_real = np.cos(
-                    2 * np.pi * self.doppler_frequency * time * np.cos(alpha) + phi)
-                path_gain_imag = np.sin(
-                    2 * np.pi * self.doppler_frequency * time * np.cos(alpha) + phi)
-                path_gain[path, :] += (path_gain_real +
-                                       1j * path_gain_imag) * norm_factor
-
-            # add line-of-sight component and adjust power according to power
-            # delay profile
-            los_component = np.exp(1j * (2 * np.pi
-                                         * self.param.los_doppler_factor
-                                         * self.doppler_frequency
-                                         * np.cos(
-                                             self.los_theta[path, rx_antenna, tx_antenna])
-                                         * time
-                                         + self.los_phi[path, rx_antenna, tx_antenna]))
-            path_gain[path, :] = ((los_component
-                                   * self.los_gain[path]
-                                   + path_gain[path, :]
-                                   * self.non_los_gain[path])
-                                  * np.sqrt(self.param.power_delay_profile[path]))
-
-        return path_gain
+        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
+        return yaml
