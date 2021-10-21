@@ -4,6 +4,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Optional
+from enum import Enum
 
 from scenario import Scenario
 
@@ -18,23 +19,47 @@ __status__ = "Prototype"
 
 
 class Executable(ABC):
-    """Abstract base class for executable configurations."""
+    """Abstract base class for executable configurations.
+
+    Attributes:
+        plot_drop (bool): Plot each drop during execution of scenarios.
+        calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
+        calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
+        calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
+        calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
+    """
 
     yaml_tag = u'Executable'
     __scenarios: List[Scenario]
     plot_drop: bool
+    calc_transmit_spectrum: bool
+    calc_receive_spectrum: bool
+    calc_transmit_stft: bool
+    calc_receive_stft: bool
 
     def __init__(self,
-                 plot_drop: bool = False) -> None:
+                 plot_drop: bool = False,
+                 calc_transmit_spectrum: bool = False,
+                 calc_receive_spectrum: bool = False,
+                 calc_transmit_stft: bool = False,
+                 calc_receive_stft: bool = False) -> None:
         """Object initialization.
 
         Args:
-            plot_drop (bool): Pause to plot each drop during execution.
+            plot_drop (bool): Plot each drop during execution of scenarios.
+            calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
+            calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
+            calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
+            calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         """
 
         # Default parameters
         self.__scenarios = []
         self.plot_drop = plot_drop
+        self.calc_transmit_spectrum = calc_transmit_spectrum
+        self.calc_receive_spectrum = calc_receive_spectrum
+        self.calc_transmit_stft = calc_transmit_stft
+        self.calc_receive_stft = calc_receive_stft
 
     @abstractmethod
     def run(self) -> None:
