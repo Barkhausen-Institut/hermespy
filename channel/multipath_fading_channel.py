@@ -6,7 +6,6 @@ import numpy as np
 from scipy.constants import pi
 from scipy.signal import convolve
 from numpy import cos, exp
-from math import ceil
 from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
 

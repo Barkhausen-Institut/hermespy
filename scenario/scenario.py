@@ -5,8 +5,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 
 from parameters_parser.parameters_channel import ParametersChannel
-from simulator_core.random_streams import RandomStreams
-import simulator_core.tools.constants as constants
+import tools.constants as constants
 
 
 if TYPE_CHECKING:
@@ -171,7 +170,7 @@ class Scenario:
                     relative_speed = np.linalg.norm(
                         modem_rx.param.velocity - modem_tx.param.velocity)
                     doppler_freq = relative_speed * \
-                        modem_tx.param.carrier_frequency / constants.speed_of_light
+                                   modem_tx.param.carrier_frequency / constants.speed_of_light
                     channel = MultipathFadingChannel(channel_params, self.random.get_rng('channel'),
                                                      modem_tx.waveform_generator.param.sampling_rate, doppler_freq)
 
@@ -185,7 +184,7 @@ class Scenario:
                     relative_speed = np.linalg.norm(
                         modem_rx.param.velocity - modem_tx.param.velocity)
                     doppler_freq = relative_speed * \
-                        modem_tx.param.carrier_frequency / constants.speed_of_light
+                                   modem_tx.param.carrier_frequency / constants.speed_of_light
                     channel = MultipathFadingChannel(channel_params, self.random.get_rng('channel'),
                                                      modem_tx.waveform_generator.param.sampling_rate, doppler_freq)
 
