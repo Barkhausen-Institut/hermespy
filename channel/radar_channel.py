@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
 
 from channel.channel import Channel
-from tools.math import db2lin
+from tools.math import db2lin, lin2db
 
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver
@@ -200,10 +200,10 @@ class RadarChannel(Channel):
 
     @target_exists.setter
     def target_exists(self, value: bool) -> None:
-        """Modify the configured number of the target exists
+        """Modify the configured number of the target flag
 
         Args:
-            value (bool): The new target exists
+            value (bool): The new target flag
         """
         self.__target_exists = value
 
@@ -223,7 +223,7 @@ class RadarChannel(Channel):
         Returns:
             float: carrier frequency [Hz]
         """
-        return self.__radar_cross_section
+        return self.__carrier_frequency
 
     @property
     def tx_rx_isolation_db(self) -> float:
@@ -233,6 +233,15 @@ class RadarChannel(Channel):
             float: TX/RX isolation [dB]
         """
         return self.__tx_rx_isolation_db
+
+    @tx_rx_isolation_db.setter
+    def tx_rx_isolation_db(self, value: bool) -> None:
+        """Modify the configured tx/rx isolation
+
+        Args:
+            value (bool): The new tx/rx isolation
+        """
+        self.__tx_rx_isolation_db = value
 
     @property
     def tx_antenna_gain_db(self) -> float:
@@ -250,7 +259,7 @@ class RadarChannel(Channel):
         Returns:
             float: RX antenna gain [dBi]
         """
-        return self.__tx_antenna_gain_db
+        return self.__rx_antenna_gain_db
 
     @property
     def losses_db(self) -> float:
@@ -259,7 +268,7 @@ class RadarChannel(Channel):
         Returns:
             float: losses [dB]
         """
-        return self.__tx_antenna_gain_db
+        return self.__losses_db
 
     @property
     def velocity(self) -> float:
@@ -270,6 +279,16 @@ class RadarChannel(Channel):
         """
         return self.__velocity
 
+    @velocity.setter
+    def velocity(self, value: float) -> None:
+        """Modify the configured velocity
+
+        Args:
+            value (float): The new velocity
+        """
+        self.__velocity = value
+        self._calculate_derived_parameters()
+
     @property
     def filter_response_in_samples(self) -> int:
         """Access configured interpolation filter response length
@@ -278,6 +297,15 @@ class RadarChannel(Channel):
             int: length of interpolation filter in samples
         """
         return self.__filter_response_in_samples
+
+    @property
+    def attenuation_db(self) -> float:
+        """Get attenuation of returned echo in dB
+
+        Returns:
+            float: attenuation [dB]
+        """
+        return lin2db(self._attenuation)
 
     def init_drop(self) -> None:
         """Initializes random channel parameters for each drop, by selecting random phases"""
