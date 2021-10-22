@@ -6,19 +6,6 @@ Modems:
     carrier_frequency: 0.0
     position: [0, 0, 0]
     WaveformChirpFsk:
-    def __get_channel_instance(
-            self, channel_params: ParametersChannel, modem_tx: Modem, modem_rx: Modem) -> Channel:
-        channel = None
-        if channel_params.multipath_model == 'NONE':
-            channel = Channel(channel_params, self.random.get_rng("channel"),
-                              modem_rx.waveform_generator.param.sampling_rate)
-        elif channel_params.multipath_model == 'STOCHASTIC':
-            channel = MultipathFadingChannel(channel_params, self.random.get_rng("channel"),
-                                             modem_rx.waveform_generator.param.sampling_rate)
-        elif channel_params.multipath_model == 'QUADRIGA':
-            pass
-
-        return channel
         chirp_bandwidth: 5e5
         chirp_duration: 512e-6
         freq_difference: 1953.125

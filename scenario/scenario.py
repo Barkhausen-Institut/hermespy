@@ -4,8 +4,6 @@ from typing import List, Tuple, Type, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 
-from parameters_parser.parameters_channel import ParametersChannel
-from simulator_core.random_streams import RandomStreams
 import simulator_core.tools.constants as constants
 
 
@@ -27,25 +25,24 @@ class Scenario:
 
 
     Attributes:
-        tx_modems (list(Modem)): list of all modems to be used for transmission with
-            'number_of_tx_modems' elements.
-        rx_modems (list(Modem)): list of all modems to be used for reception with
-            'number_of_rx_modems' elements.
-        sources (list(BitsSource)): list of all bits sources. Each bit source will
-            be associated to one transmit modem.
-        rx_samplers (list(RxSampler)): list of all receive re-samplers. Each resampler
-            will be associated to one receive modem
-        channels (list(list(Channel))): list of all propagation channels.
-            channels[i][j] contains the channel from transmit modem 'i' to receive modem 'j'
-        noise (list(Noise)): list of all noise sources. Each noise source is
-            associated to one receive modem
+        __transmitters (List[Transmitter]):
+            Modems transmitting electromagnetic waves within this scenario.
+
+        __receivers (List[Receiver]);
+            Modems receiving electromagnetic waves within this scenario.
+
+        __channels (np.ndarray):
+            MxN Matrix containing the channel configuration between all M transmitters and N receivers.
+
+        __drop_duration (float):
+            The physical simulation time of one scenario run in seconds.
 
     """
 
     yaml_tag = u'Scenario'
     __transmitters: List[Transmitter]
     __receivers: List[Receiver]
-    __channels: np.matrix
+    __channels: np.ndarray
     __drop_duration: float
 
     def __init__(self,
@@ -58,7 +55,7 @@ class Scenario:
 
         self.__transmitters = []
         self.__receivers = []
-        self.__channels = np.ndarray((0, 0), dtype=Channel)
+        self.__channels = np.ndarray((0, 0), dtype=object)
         self.drop_duration = drop_duration
 
         self.sources: List[BitsSource] = []
@@ -71,7 +68,7 @@ class Scenario:
         """Serialize a scenario object to YAML.
 
         Args:
-            representer (BaseRepresenter):
+            representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
@@ -132,9 +129,10 @@ class Scenario:
                 modem.scenario = scenario
 
         # Add default channel matrix
-        scenario.__channels = np.array(
-            [[Channel(transmitter, receiver) for receiver in scenario.__receivers]
-             for transmitter in scenario.__transmitters], dtype=object)
+        scenario.__channels = np.empty((len(scenario.__transmitters), len(scenario.__receivers)), dtype=object)
+        for t, transmitter in enumerate(scenario.__transmitters):
+            for r, receiver in enumerate(scenario.__receivers):
+                scenario.__channels[t, r] = Channel(transmitter, receiver)
 
         # Integrate configured channels into the default matrix
         if isinstance(channels, Iterable):
@@ -145,83 +143,6 @@ class Scenario:
                 scenario.__channels[transmitter_index, receiver_index] = channel
 
         return scenario
-
-    def _create_channels(self) -> List[List[Channel]]:
-        """Creates channels according to parameters specification.
-
-        Returns:
-            channels (List[List[Channel]]):
-                List of channels between the modems. Nested list:
-                `[ tx1, .. txN] x no_rx_modems`.
-        """
-        channels: List[List[Channel]] = []
-        for modem_rx, rx_channel_params in zip(
-                self.rx_modems, self.params.channel_model_params):
-            channels_rx: List[Channel] = []
-
-            for modem_tx, channel_params in zip(
-                    self.tx_modems, rx_channel_params):
-
-                if channel_params.multipath_model == 'NONE':
-                    channel = Channel(channel_params, self.random.get_rng('channel'),
-                                      modem_tx.waveform_generator.param.sampling_rate)
-
-                elif channel_params.multipath_model == 'STOCHASTIC':
-                    relative_speed = np.linalg.norm(
-                        modem_rx.param.velocity - modem_tx.param.velocity)
-                    doppler_freq = relative_speed * \
-                        modem_tx.param.carrier_frequency / constants.speed_of_light
-                    channel = MultipathFadingChannel(channel_params, self.random.get_rng('channel'),
-                                                     modem_tx.waveform_generator.param.sampling_rate, doppler_freq)
-
-                elif channel_params.multipath_model == 'QUADRIGA':
-                    channel = QuadrigaChannel(
-                        modem_tx, modem_rx,
-                        modem_tx.waveform_generator.param.sampling_rate,
-                        self.random.get_rng('channel'), self._quadriga_interface)
-
-                elif channel_params.multipath_model == '5G_TDL':
-                    relative_speed = np.linalg.norm(
-                        modem_rx.param.velocity - modem_tx.param.velocity)
-                    doppler_freq = relative_speed * \
-                        modem_tx.param.carrier_frequency / constants.speed_of_light
-                    channel = MultipathFadingChannel(channel_params, self.random.get_rng('channel'),
-                                                     modem_tx.waveform_generator.param.sampling_rate, doppler_freq)
-
-                else:
-                    raise ValueError(
-                        'channel "' +
-                        channel_params.multipath_model +
-                        '" not supported')
-
-                channels_rx.append(channel)
-                modem_tx.set_channel(channel)
-            modem_rx.set_channel(channels_rx[modem_rx.param.tx_modem])
-
-            channels.append(channels_rx)
-        return channels
-
-    def _create_transmit_modems(self) -> Tuple[List[BitsSource], List[Modem]]:
-        """Creates Tx Modems.
-
-        Returns:
-            (List[BitsSource], List[Modem]):
-                `List[BitsSource]`: list of bitssources for each transmit modem.
-                `List[Modem]`: List of transmit modems.
-        """
-        sources = []
-        tx_modems = []
-
-        for modem_count in range(self.params.number_of_tx_modems):
-            modem_parameters = self.params.tx_modem_params[modem_count]
-            sources.append(BitsSource(self.random.get_rng("source")))
-            tx_modems.append(
-                Modem(
-                    modem_parameters,
-                    sources[modem_count],
-                    self.random.get_rng("hardware")))
-
-        return sources, tx_modems
 
     def generate_data_bits(self) -> List[np.array]:
         """Generate a set of data bits required to generate a single drop within this scenario.
@@ -256,11 +177,11 @@ class Scenario:
         return self.__transmitters
 
     @property
-    def channels(self) -> np.matrix:
+    def channels(self) -> np.ndarray:
         """Access full channel matrix.
 
         Returns:
-            np.matrix:
+            np.ndarray:
                 A numpy array containing channels between sender and receiver modems.
         """
 
@@ -401,7 +322,7 @@ class Scenario:
 
         elif self.__channels.shape[1] == 0:
 
-            self.__channels = np.array(
+            self.__channels = np.ndarray(
                 [[Channel(transmitter, receiver)] for transmitter in self.transmitters], dtype=object)
 
         else:
