@@ -89,7 +89,6 @@ class Scenario:
             'drop_duration': node.__drop_duration
         }
 
-        # return representer.represent_omap(cls.yaml_tag, serialization)
         return representer.represent_mapping(cls.yaml_tag, serialization)
 
     @classmethod
@@ -223,66 +222,6 @@ class Scenario:
                     self.random.get_rng("hardware")))
 
         return sources, tx_modems
-
-    def _create_receiver_modems(
-            self) -> Tuple[List[RxSampler], List[Modem], List[Noise]]:
-        """Creates receiver modems.
-
-        Returns:
-            (List[RxSampler], List[Modem], List[Noise]):
-                `list(RxSampler)`: List of RxSamplers
-                `list(Modem)`: List of created rx modems.
-                `list(Noise)`:
-        """
-
-        noise = []
-        rx_modems = []
-        rx_samplers = []
-
-        for modem_count in range(self.params.number_of_rx_modems):
-            modem_parameters = self.params.rx_modem_params[modem_count]
-            rx_modems.append(Modem(modem_parameters, self.sources[modem_parameters.tx_modem],
-                                   self.random.get_rng("hardware"), self.tx_modems[modem_parameters.tx_modem]))
-
-            noise.append(
-                Noise(
-                    self.param_general.snr_type,
-                    self.random.get_rng("noise")))
-            rx_samplers.append(RxSampler(
-                modem_parameters.technology.sampling_rate,
-                modem_parameters.carrier_frequency))
-            tx_sampling_rates = [
-                tx_modem.param.technology.sampling_rate for tx_modem in self.tx_modems]
-            tx_center_frequencies = [
-                tx_modem.param.carrier_frequency for tx_modem in self.tx_modems]
-            rx_samplers[modem_count].set_tx_sampling_rate(np.asarray(tx_sampling_rates),
-                                                          np.asarray(tx_center_frequencies))
-
-        return rx_samplers, rx_modems, noise
-
-    def init_drop(self) -> None:
-        """Initializes variables for each drop or creates new random numbers.
-        """
-
-        for source in self.sources:
-            source.init_drop()
-
-        for channel in self.channels.ravel():
-            channel.init_drop()
-
-    def __get_channel_instance(
-            self, channel_params: ParametersChannel, modem_tx: Modem, modem_rx: Modem) -> Channel:
-        channel = None
-        if channel_params.multipath_model == 'NONE':
-            channel = Channel(channel_params, self.random.get_rng("channel"),
-                              modem_rx.waveform_generator.param.sampling_rate)
-        elif channel_params.multipath_model == 'STOCHASTIC':
-            channel = MultipathFadingChannel(channel_params, self.random.get_rng("channel"),
-                                             modem_rx.waveform_generator.param.sampling_rate)
-        elif channel_params.multipath_model == 'QUADRIGA':
-            pass
-
-        return channel
 
     def generate_data_bits(self) -> List[np.array]:
         """Generate a set of data bits required to generate a single drop within this scenario.
