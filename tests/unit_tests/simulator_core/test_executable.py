@@ -64,3 +64,23 @@ class TestExecutable(unittest.TestCase):
             self.executable.add_scenario(scenario)
 
         self.assertCountEqual(scenarios, self.executable.scenarios)
+
+    def test_spectrum_fft_size_setget(self) -> None:
+        """Spectrum FFT size property getter should return setter argument."""
+
+        fft_size = 50
+        self.executable.spectrum_fft_size = fft_size
+
+        self.assertEqual(fft_size, self.executable.spectrum_fft_size)
+
+    def test_spectrum_fft_size_validation(self) -> None:
+        """Spectrum FFT size property setter should raise ValueError on negative arguments,"""
+
+        with self.assertRaises(ValueError):
+            self.executable.spectrum_fft_size = -1
+
+        try:
+            self.executable.spectrum_fft_size = 0
+
+        except ValueError:
+            self.fail("Spectrum FFT size setter should not raise ValueError on zero argument")
