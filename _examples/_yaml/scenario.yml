@@ -29,5 +29,5 @@ Modems:
 
 Channels:
 
-  - Quadriga 0 0
+  - Channel 0 0
     active: True
