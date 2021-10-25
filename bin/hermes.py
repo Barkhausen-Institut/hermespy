@@ -89,7 +89,7 @@ def hermes(args: Optional[List[str]] = None) -> None:
     print("Results will be saved in '{}'".format(executable.results_dir))
 
     # Dump current configuration to results directory
-    shutil.copytree(input_parameters_dir, executable.results_dir)
+    shutil.copytree(input_parameters_dir, executable.results_dir, dirs_exist_ok=True)
 
     ##################
     # run simulation

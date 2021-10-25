@@ -6,10 +6,10 @@ from typing import List, Type, Optional, Union
 import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
-from enum import Enum
 
 from .executable import Executable
 from .drop import Drop
+from .statistics import SNRType, Statistics
 from scenario import Scenario
 from channel import QuadrigaInterface, Channel
 
@@ -21,14 +21,6 @@ __version__ = "0.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class SNRType(Enum):
-    """Supported signal-to-noise ratio types."""
-
-    EBN0 = 0
-    ESN0 = 1
-    CUSTOM = 2
 
 
 class SimulationDrop(Drop):
@@ -55,6 +47,8 @@ class Simulation(Executable):
     """HermesPy simulation configuration."""
 
     yaml_tag = u'Simulation'
+    snr_type: SNRType
+    noise_loop: List[float]
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -65,7 +59,7 @@ class Simulation(Executable):
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
                  noise_loop: Union[List[float], np.ndarray] = np.array([0.0])) -> None:
         """Simulation object initialization.
-
++
         Args:
             plot_drop (bool): Plot each drop during execution of scenarios.
             calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
@@ -80,42 +74,57 @@ class Simulation(Executable):
                             calc_transmit_stft, calc_receive_stft)
 
         self.snr_type = snr_type
-        self.noise_loop = noise_loop
+
+        if isinstance(noise_loop, np.ndarray):
+            self.noise_loop = noise_loop.tolist()
+
+        else:
+            self.noise_loop = noise_loop
 
     def run(self) -> None:
         """Run the full simulation configuration."""
 
-        drops: List[SimulationDrop] = []
-
         # Iterate over scenarios
         for scenario in self.scenarios:
 
-            # Generate data bits to be transmitted
-            data_bits = scenario.generate_data_bits()
+            # Initialize plot statistics with current scenario state
+            statistics = Statistics(scenario, [0.0], self.calc_transmit_spectrum, self.calc_receive_spectrum,
+                                    self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size)
 
-            # Generate radio-frequency band signal emitted from each transmitter
-            transmitted_signals = Simulation.transmit(scenario, data_bits=data_bits)
+            # Iterate over configured number of required simulation drops
+            for _ in range(self.num_drops):
 
-            # Simulate propagation over channel models
-            propagated_signals = Simulation.propagate(scenario, transmitted_signals)
+                # Generate data bits to be transmitted
+                data_bits = scenario.generate_data_bits()
 
-            # Receive and demodulate signal
-            received_bits = Simulation.receive(scenario, propagated_signals)
+                # Generate radio-frequency band signal emitted from each transmitter
+                transmitted_signals = Simulation.transmit(scenario, data_bits=data_bits)
 
-            # Save generated signals
-            drop = SimulationDrop(data_bits, transmitted_signals, propagated_signals, received_bits)
-            drops.append(drop)
+                # Simulate propagation over channel model
+                propagated_signals = Simulation.propagate(scenario, transmitted_signals)
 
-            # Visualize plot if requested
-            if self.plot_drop:
+                # Receive and demodulate signal
+                received_bits = Simulation.receive(scenario, propagated_signals)
 
-                drop.plot_transmitted_bits()
-                drop.plot_transmitted_signals()
-                drop.plot_received_signals()
-                drop.plot_received_bits()
-                drop.plot_bit_errors()
+                # Save generated signals
+                drop = SimulationDrop(data_bits, transmitted_signals, propagated_signals, received_bits)
 
-                plt.show()
+                # Visualize plot if requested
+                if self.plot_drop:
+
+                    drop.plot_transmitted_bits()
+                    drop.plot_transmitted_signals()
+                    drop.plot_received_signals()
+                    drop.plot_received_bits()
+                    drop.plot_bit_errors()
+
+                    plt.show()
+
+                # Add drop to the statistics
+                statistics.add_drop(drop)
+
+            # Dump statistics results
+            statistics.save(self.results_dir)
 
     @property
     def snr_type(self) -> SNRType:
