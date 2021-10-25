@@ -3,6 +3,7 @@ from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import Type, List, TYPE_CHECKING
 import numpy as np
+import numpy.random as rnd
 
 from source import BitsSource
 from modem import Modem
@@ -46,6 +47,12 @@ class Receiver(Modem):
         orientation = args.pop('orientation', None)
         if position is not None:
             args['orientation'] = np.array(orientation)
+
+
+        # Convert the random seed to a new random generator object if its specified within the config
+        random_seed = args.pop('random_seed', None)
+        if random_seed is not None:
+            args['random_generator'] = rnd.default_rng(random_seed)
 
         return Receiver(**args)
 
