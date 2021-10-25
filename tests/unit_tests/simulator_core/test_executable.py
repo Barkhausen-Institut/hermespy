@@ -2,6 +2,7 @@
 """Test HermesPy base executable."""
 
 import unittest
+import tempfile
 from unittest.mock import Mock
 
 from simulator_core import Executable
@@ -31,27 +32,29 @@ class TestExecutable(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        self.executable = ExecutableStub()
+        self.plot_drop = True
+        self.calc_transmit_spectrum = True
+        self.calc_receive_spectrum = True
+        self.calc_transmit_stft = True
+        self.calc_receive_stft = True
+        self.spectrum_fft_size = 20
+        self.num_drops = 1
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            self.executable = ExecutableStub(self.plot_drop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
+                                             self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size,
+                                             self.num_drops, tempdir)
 
     def test_init(self) -> None:
         """Executable initialization parameters should be properly stored."""
 
-        plot_drop = True
-        calc_transmit_spectrum = True
-        calc_receive_spectrum = True
-        calc_transmit_stft = True
-        calc_receive_stft = True
-        spectrum_fft_size = 20
-
-        executable = ExecutableStub(plot_drop, calc_transmit_spectrum, calc_receive_spectrum, calc_transmit_stft,
-                                    calc_receive_stft, spectrum_fft_size)
-
-        self.assertEqual(plot_drop, executable.plot_drop)
-        self.assertEqual(calc_transmit_spectrum, executable.calc_transmit_spectrum)
-        self.assertEqual(calc_receive_spectrum, executable.calc_receive_spectrum)
-        self.assertEqual(calc_transmit_stft, executable.calc_transmit_stft)
-        self.assertEqual(calc_receive_stft, executable.calc_receive_stft)
-        self.assertEqual(spectrum_fft_size, executable.spectrum_fft_size)
+        self.assertEqual(self.plot_drop, self.executable.plot_drop)
+        self.assertEqual(self.calc_transmit_spectrum, self.executable.calc_transmit_spectrum)
+        self.assertEqual(self.calc_receive_spectrum, self.executable.calc_receive_spectrum)
+        self.assertEqual(self.calc_transmit_stft, self.executable.calc_transmit_stft)
+        self.assertEqual(self.calc_receive_stft, self.executable.calc_receive_stft)
+        self.assertEqual(self.spectrum_fft_size, self.executable.spectrum_fft_size)
+        self.assertEqual(self.num_drops, self.executable.num_drops)
 
     def test_add_scenario(self) -> None:
         """Scenario property should return scenarios added by the add_scenario function."""
@@ -99,3 +102,21 @@ class TestExecutable(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.executable.num_drops = -1
+
+    def test_results_dir_setget(self) -> None:
+        """Results directory property getter should return setter argument."""
+
+        with tempfile.TemporaryDirectory() as dirname:
+
+            self.executable.results_dir = dirname
+            self.assertEqual(dirname, self.executable.results_dir)
+
+    def test_results_dir_validation(self) -> None:
+        """Results directory property setter should throw ValueError on invalid arguments."""
+
+        with tempfile.NamedTemporaryFile() as file:
+            with self.assertRaises(ValueError):
+                self.executable.results_dir = file.name
+
+        with self.assertRaises(ValueError):
+            self.executable.results_dir = "ad213ijt0923h1o2i3hnjqnda"

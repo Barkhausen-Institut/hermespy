@@ -68,39 +68,13 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
     print('Parameters will be read from ' + input_parameters_dir)
 
-    if not results_dir:
-        today = str(datetime.date.today())
-
-        dir_index = 0
-        results_dir = os.path.join(
-            os.getcwd(),
-            "results",
-            today +
-            '_' +
-            '{:03d}'.format(dir_index))
-
-        while os.path.exists(results_dir):
-            dir_index += 1
-            results_dir = os.path.join(
-                os.getcwd(),
-                "results",
-                today +
-                '_' +
-                '{:03d}'.format(dir_index))
-
-    #print('Results will be saved in ' + results_dir)
-
-    shutil.copytree(input_parameters_dir, results_dir)
-
-    ######################################
-    # initialize random number generation
-    # random_number_gen = RandomStreams(parameters.general.seed)
-
     ##################
     # Import executable from YAML config dump
     factory = Factory()
 
     try:
+
+        # Create executable
         executable: Executable = factory.load(input_parameters_dir)
 
     except ConstructorError as error:
@@ -111,16 +85,18 @@ def hermes(args: Optional[List[str]] = None) -> None:
                                                                                           file=sys.stderr))
         exit(-1)
 
+    # Inform about the results directory
+    print("Results will be saved in '{}'".format(executable.results_dir))
+
+    # Dump current configuration to results directory
+    shutil.copytree(input_parameters_dir, executable.results_dir)
+
     ##################
     # run simulation
     executable.run()
 
-    #simulation_loop = DropLoop(parameters.general, scenario)
-    #statistics = simulation_loop.run_loop()
-#
-    #statistics.save(results_dir)
-#
-    #print('results saved in ' + results_dir)
+    ###########
+    # Goodbye :)
     print('Configuration executed. Goodbye.')
 
 

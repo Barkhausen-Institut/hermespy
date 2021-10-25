@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
-from enum import Enum
+from typing import List, Optional
+from os import getcwd, mkdir
+import os.path as path
+import datetime
 
 from scenario import Scenario
 
@@ -29,6 +31,7 @@ class Executable(ABC):
         calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int): Number of FFT bins considered during computation.
         __num_drops (int): Number of executions per scenario.
+        __results_dir (str): Directory in which execution results will be saved.
     """
 
     yaml_tag = u'Executable'
@@ -40,6 +43,7 @@ class Executable(ABC):
     calc_receive_stft: bool
     __spectrum_fft_size: int
     __num_drops: int
+    __results_dir: str
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -48,7 +52,8 @@ class Executable(ABC):
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
                  spectrum_fft_size: int = 0,
-                 num_drops: int = 1) -> None:
+                 num_drops: int = 1,
+                 results_dir: Optional[str] = None) -> None:
         """Object initialization.
 
         Args:
@@ -70,6 +75,11 @@ class Executable(ABC):
         self.calc_receive_stft = calc_receive_stft
         self.spectrum_fft_size = spectrum_fft_size
         self.num_drops = num_drops
+
+        if results_dir is None:
+            results_dir = Executable.__default_results_dir()
+
+        self.results_dir = results_dir
 
     @abstractmethod
     def run(self) -> None:
@@ -146,3 +156,53 @@ class Executable(ABC):
             raise ValueError("Number of drops must be greater than zero")
 
         self .__num_drops = num
+
+    @property
+    def results_dir(self) -> str:
+        """Directory in which the execution results will be saved.
+
+        Returns:
+            str: The directory.
+        """
+
+        return self.__results_dir
+
+    @results_dir.setter
+    def results_dir(self, directory: str) -> None:
+        """Modify the directory in which the execution results will be saved.
+
+        Args:
+            directory (str): New directory.
+
+        Raises:
+            ValueError: If `directory` does not exist within the filesystem.
+        """
+
+        if not path.exists(directory):
+            raise ValueError("The provided results directory does not exist")
+
+        if not path.isdir(directory):
+            raise ValueError("The provided results directory path is not a directory")
+
+        self.__results_dir = directory
+
+    @staticmethod
+    def __default_results_dir() -> str:
+        """Create a default directory to store execution results.
+
+        Returns:
+            str: Path to the newly created directory.
+        """
+
+        today = str(datetime.date.today())
+
+        dir_index = 0
+        results_dir = path.join(getcwd(), "results", today + '_' + '{:03d}'.format(dir_index))
+
+        while path.exists(results_dir):
+
+            dir_index += 1
+            results_dir = path.join(getcwd(), "results", today + '_' + '{:03d}'.format(dir_index))
+
+        mkdir(results_dir)
+        return results_dir
