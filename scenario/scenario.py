@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 import numpy.random as rnd
-from typing import List, Tuple, Type, TYPE_CHECKING, Optional
+from typing import List, Type, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 
@@ -297,22 +297,25 @@ class Scenario:
                 If the provided `modem` is not registered with this scenario.
         """
 
+        modem_deleted = False
+
         if modem in self.__transmitters:
 
             index = self.__transmitters.index(modem)
 
             del self.__transmitters[index]                            # Remove the actual modem
             self.__channels = np.delete(self.__channels, index, 0)    # Remove its departing channels
+            modem_deleted = True
 
-        elif modem in self.__receivers:
+        if modem in self.__receivers:
 
             index = self.__receivers.index(modem)
 
             del self.__receivers[index]                               # Remove the actual modem
             self.__channels = np.delete(self.__channels, index, 1)    # Remove its arriving channels
+            modem_deleted = True
 
-        else:
-
+        if not modem_deleted:
             raise ValueError("The provided modem handle was not registered with this scenario")
 
     @property
