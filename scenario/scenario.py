@@ -93,6 +93,26 @@ class Scenario:
         return self.__transmitters
 
     @property
+    def num_receivers(self) -> int:
+        """Count the number of registered receivers within this scenario.
+
+        Returns:
+            int: The number of receivers.
+        """
+
+        return len(self.__receivers)
+
+    @property
+    def num_transmitters(self) -> int:
+        """Count the number of registered transmitters within this scenario.
+
+        Returns:
+            int: The number of transmitters
+        """
+
+        return len(self.__transmitters)
+
+    @property
     def channels(self) -> np.ndarray:
         """Access full channel matrix.
 
