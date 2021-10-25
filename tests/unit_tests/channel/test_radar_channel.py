@@ -154,13 +154,12 @@ class TestRadarChannel(unittest.TestCase):
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         expected_range = constants.speed_of_light * delay_in_samples / self.transmitter.sampling_rate / 2
-        old_range = self.channel.target_range
-        self.channel.target_range = expected_range
 
-        self.channel.init_drop()
-        output = self.channel.propagate(input_signal)
+        channel = deepcopy(self.channel)
+        channel.target_range = expected_range
 
-        self.channel.target_range = old_range
+        channel.init_drop()
+        output = channel.propagate(input_signal)
 
         expected_output = np.hstack((np.zeros((1, delay_in_samples)), input_signal))
 
@@ -178,13 +177,12 @@ class TestRadarChannel(unittest.TestCase):
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         expected_range = constants.speed_of_light * (delay_in_samples + .5) / self.transmitter.sampling_rate / 2
-        old_range = self.channel.target_range
-        self.channel.target_range = expected_range
 
-        self.channel.init_drop()
-        output = self.channel.propagate(input_signal)
+        channel = deepcopy(self.channel)
+        channel.target_range = expected_range
 
-        self.channel.target_range = old_range
+        channel.init_drop()
+        output = channel.propagate(input_signal)
 
         straddle_loss = np.sinc(.5)
         peaks = np.abs(output[:, delay_in_samples:input_signal.size:samples_per_symbol])
@@ -216,17 +214,14 @@ class TestRadarChannel(unittest.TestCase):
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         expected_range = constants.speed_of_light * initial_delay_in_samples / self.transmitter.sampling_rate / 2
-        old_range = self.channel.target_range
-        self.channel.target_range = expected_range
 
-        old_velocity = self.channel.velocity
-        self.channel.velocity = velocity
+        channel = deepcopy(self.channel)
+        channel.target_range = expected_range
+        channel.velocity = velocity
 
-        self.channel.init_drop()
+        channel.init_drop()
 
-        output = self.channel.propagate(input_signal)
-        self.channel.velocity = old_velocity
-        self.channel.target_range = old_range
+        output = channel.propagate(input_signal)
 
         np.testing.assert_array_almost_equal(np.abs(output[0, peaks_in_samples].flatten()), expected_straddle_amplitude)
 
@@ -242,11 +237,12 @@ class TestRadarChannel(unittest.TestCase):
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         self.channel.init_drop()
-
         output_ideal_isolation = self.channel.propagate(input_signal)
-        old_isolation = self.channel.tx_rx_isolation_db
-        self.channel.tx_rx_isolation_db = isolation_db
-        output = self.channel.propagate(input_signal)
+
+        channel = deepcopy(self.channel)
+        channel.tx_rx_isolation_db = isolation_db
+
+        output = channel.propagate(input_signal)
 
         self_interference = output - output_ideal_isolation
         norm_factor = db2lin(-self.channel.attenuation_db - isolation_db, conversion_type='amplitude')
@@ -268,12 +264,10 @@ class TestRadarChannel(unittest.TestCase):
 
         input_signal = np.sin(2 * np.pi * sinewave_frequency * time)
 
-        old_velocity = self.channel.velocity
-        self.channel.velocity = velocity
+        channel = deepcopy(self.channel)
+        channel.velocity = velocity
 
-        output = self.channel.propagate(input_signal[np.newaxis, :])
-
-        self.channel.velocity = old_velocity
+        output = channel.propagate(input_signal[np.newaxis, :])
 
         input_freq = np.fft.fft(input_signal)
         output_freq = np.fft.fft(output.flatten()[-num_samples:])
@@ -294,16 +288,16 @@ class TestRadarChannel(unittest.TestCase):
 
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
-        self.channel.target_exists = False
+        channel = deepcopy(self.channel)
+        channel.target_exists = False
 
-        self.channel.init_drop()
-        output = self.channel.propagate(input_signal)
-
-        self.channel.target_exists = True
+        channel.init_drop()
+        output = channel.propagate(input_signal)
 
         np.testing.assert_array_equal(output, np.zeros(output.shape))
 
     def test_get_impulse_response(self):
+
         pass
 
 
