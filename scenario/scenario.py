@@ -415,6 +415,12 @@ class Scenario:
         modems = state_scenario.pop('Modems', None)
         channels = state_scenario.pop('Channels', None)
 
+        # Convert the random seed to a new random generator object if its specified within the config
+        random_seed = state_scenario.pop('random_seed', None)
+        if random_seed is not None:
+            state_scenario['random_generator'] = rnd.default_rng(random_seed)
+
+        # Create new scenario object
         scenario = cls(**state_scenario)
 
         # Integrate modems
