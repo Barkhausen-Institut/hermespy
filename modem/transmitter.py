@@ -5,6 +5,7 @@ from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import Type, List, TYPE_CHECKING, Any
 import numpy as np
+import numpy.random as rnd
 
 from modem import Modem
 from source import BitsSource
@@ -84,6 +85,12 @@ class Transmitter(Modem):
         orientation = args.pop('orientation', None)
         if position is not None:
             args['orientation'] = np.array(orientation)
+
+
+        # Convert the random seed to a new random generator object if its specified within the config
+        random_seed = args.pop('random_seed', None)
+        if random_seed is not None:
+            args['random_generator'] = rnd.default_rng(random_seed)
 
         transmitter = Transmitter(**args)
 
