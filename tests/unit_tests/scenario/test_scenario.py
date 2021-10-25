@@ -69,6 +69,21 @@ class TestScenario(unittest.TestCase):
 
         self.assertCountEqual(self.transmitters, self.scenario.transmitters)
 
+    def test_num_receivers(self) -> None:
+        """The number of receivers property should return the correct number of registered receive modems."""
+
+        for t in range(1, 3):
+
+            self.scenario.add_receiver(Mock())
+            self.assertEqual(self.num_receivers + t, self.scenario.num_receivers)
+
+    def test_num_transmitters(self) -> None:
+        """The number of transmitters property should return the correct number of registered transmit modems."""
+
+        for r in range(1, 3):
+            self.scenario.add_transmitter(Mock())
+            self.assertEqual(self.num_transmitters + r, self.scenario.num_transmitters)
+
     def test_channel_search(self) -> None:
         """The channel function should return the specific channel instance,
         connecting the transmitter argument to the receiver argument."""
