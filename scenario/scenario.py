@@ -1,18 +1,15 @@
 from __future__ import annotations
 import numpy as np
+import numpy.random as rnd
 from typing import List, Tuple, Type, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
-
-import simulator_core.tools.constants as constants
-
 
 if TYPE_CHECKING:
 
     from source.bits_source import BitsSource
     from modem import Modem, Transmitter, Receiver
     from channel import Channel
-    from channel.multipath_fading_channel import MultipathFadingChannel
     from channel.noise import Noise
     from channel.rx_sampler import RxSampler
 
@@ -37,6 +34,9 @@ class Scenario:
         __drop_duration (float):
             The physical simulation time of one scenario run in seconds.
 
+        random_generator (rnd.Generator):
+            Generator used to create random sequences.
+
     """
 
     yaml_tag = u'Scenario'
@@ -44,115 +44,31 @@ class Scenario:
     __receivers: List[Receiver]
     __channels: np.ndarray
     __drop_duration: float
+    random_generator: rnd.Generator
 
     def __init__(self,
-                 drop_duration: float = 0.0) -> None:
+                 drop_duration: float = 0.0,
+                 random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
 
         Args:
-            drop_duration (float, optional): The default drop duration in seconds.
+            drop_duration (float, optional):
+                The default drop duration in seconds.
+
+            random_generator (rnd.Generator, optional):
+                The generator object used to create pseudo-random number sequences.
         """
 
         self.__transmitters = []
         self.__receivers = []
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.drop_duration = drop_duration
+        self.random_generator = rnd.default_rng(random_generator)
 
         self.sources: List[BitsSource] = []
         self.rx_samplers: List[RxSampler] = []
 
         self.noise: List[Noise] = []
-
-    @classmethod
-    def to_yaml(cls: Type[Scenario], representer: SafeRepresenter, node: Scenario) -> Node:
-        """Serialize a scenario object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Scenario):
-                The scenario instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        serialization = {
-            'Modems': [*node.__transmitters, *node.__receivers],
-            'Channels': node.__channels.flatten().tolist(),
-            'drop_duration': node.__drop_duration
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, serialization)
-
-    @classmethod
-    def from_yaml(cls: Type[Scenario], constructor: SafeConstructor, node: Node) -> Scenario:
-        """Recall a new `Scenario` instance from YAML.
-
-        Args:
-            constructor (RoundTripConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Scenario` serialization.
-
-        Returns:
-            Scenario:
-                Newly created `Scenario` instance.
-            """
-
-        state_scenario = constructor.construct_mapping(node, deep=True)
-
-        modems = state_scenario.pop('Modems', None)
-        channels = state_scenario.pop('Channels', None)
-
-        scenario = cls(**state_scenario)
-
-        # Integrate modems
-        if isinstance(modems, Iterable):
-            for modem in modems:
-
-                # Integrate modem into scenario
-                if isinstance(modem, Transmitter):
-                    scenario.__transmitters.append(modem)
-
-                elif isinstance(modem, Receiver):
-                    scenario.__receivers.append(modem)
-
-                else:
-                    raise RuntimeWarning("Unknown modem type encountered")
-
-                # Register scenario instance to the modems
-                modem.scenario = scenario
-
-        # Add default channel matrix
-        scenario.__channels = np.empty((len(scenario.__transmitters), len(scenario.__receivers)), dtype=object)
-        for t, transmitter in enumerate(scenario.__transmitters):
-            for r, receiver in enumerate(scenario.__receivers):
-                scenario.__channels[t, r] = Channel(transmitter, receiver)
-
-        # Integrate configured channels into the default matrix
-        if isinstance(channels, Iterable):
-            for channel, transmitter_index, receiver_index in channels:
-
-                channel.transmitter = scenario.transmitters[transmitter_index]
-                channel.receiver = scenario.receivers[receiver_index]
-                scenario.__channels[transmitter_index, receiver_index] = channel
-
-        return scenario
-
-    def generate_data_bits(self) -> List[np.array]:
-        """Generate a set of data bits required to generate a single drop within this scenario.
-
-        Returns:
-            List[np.array]: Data bits required to generate a single drop.
-        """
-
-        data_bits = [np.random.randint(0, 2, transmitter.num_data_bits_per_frame) for transmitter in self.__transmitters]
-        return data_bits
 
     @property
     def receivers(self) -> List[Receiver]:
@@ -217,18 +133,18 @@ class Scenario:
 
         return self.__channels[index_transmitter, index_receiver]
 
-    def departing_channels(self, transmitter: Modem, active_only: bool = False) -> List[Channel]:
+    def departing_channels(self, transmitter: Transmitter, active_only: bool = False) -> List[Channel]:
         """Collect all channels departing from a `transmitter`.
 
         Args:
-            transmitter (Modem):
+            transmitter (Transmitter):
                 The transmitting modem.
 
             active_only (bool, optional):
                 Consider only active channels.
 
         Returns:
-            List[Modem]:
+            List[Channel]:
                 A list of departing channels.
 
         Raises:
@@ -240,25 +156,25 @@ class Scenario:
             raise ValueError("The provided transmitter is not registered with this scenario.")
 
         transmitter_index = self.__transmitters.index(transmitter)
-        channels = self.__channels[transmitter_index, :].tolist()
+        channels: List[Channel] = self.__channels[transmitter_index, :].tolist()
 
         if active_only:
             channels = [channel for channel in channels if channel.active]
 
         return channels
 
-    def arriving_channels(self, receiver: Modem, active_only: bool = False) -> List[Channel]:
+    def arriving_channels(self, receiver: Receiver, active_only: bool = False) -> List[Channel]:
         """Collect all channels arriving at a `receiver`.
 
         Args:
-            receiver (Modem):
+            receiver (Receiver):
                 The receiving modem.
 
             active_only (bool, optional):
                 Consider only active channels.
 
         Returns:
-            List[Modem]:
+            List[Channel]:
                 A list of arriving channels.
 
         Raises:
@@ -270,7 +186,7 @@ class Scenario:
             raise ValueError("The provided transmitter is not registered with this scenario.")
 
         receiver_index = self.__receivers.index(receiver)
-        channels = self.__channels[receiver_index, :].tolist()
+        channels: List[Channel] = self.__channels[:, receiver_index].tolist()
 
         if active_only:
             channels = [channel for channel in channels if channel.active]
@@ -279,9 +195,6 @@ class Scenario:
 
     def set_channel(self, transmitter_index: int, receiver_index: int, channel: Channel) -> None:
         """Specify a channel within the channel matrix.
-
-        Warning:
-            This function will expand the channel matrix dimension if insufficient.
 
         Args:
             transmitter_index (int):
@@ -292,79 +205,83 @@ class Scenario:
 
             channel (Channel):
                 The channel instance to be set at position (`transmitter_index`, `receiver_index`).
+
+        Raises:
+            ValueError:
+                If `transmitter_index` or `receiver_index` are greater than the channel matrix dimensions.
         """
 
+        if self.__channels.shape[0] <= transmitter_index or 0 < transmitter_index:
+            raise ValueError("Transmitter index greater than channel matrix dimension")
+
+        if self.__channels.shape[1] <= receiver_index or 0 < receiver_index:
+            raise ValueError("Receiver index greater than channel matrix dimension")
+
+        # Update channel field within the matrix
         self.__channels[transmitter_index, receiver_index] = channel
+
+        # Set proper receiver and transmitter fields
         channel.transmitter = self.transmitters[transmitter_index]
         channel.receiver = self.receivers[receiver_index]
 
-    def add_receiver(self, **kwargs) -> Receiver:
+    def add_receiver(self, receiver: Receiver) -> None:
         """Add a new receiving modem to the simulated scenario.
 
         Args:
-            **kwargs:
-                Modem configuration arguments.
-
-        Returns:
-            Modem:
-                A handle to the newly created modem instance.
+            receiver (Receiver): The receiver modem to be attached to this scenario.
         """
 
-        receiver_index = len(self.__receivers)
-        kwargs['scenario'] = self
-        receiver = Receiver(**kwargs)
+        # Register scenario to this transmit modem
+        receiver.scenario = self
 
+        # Store transmitter within internal transmit modem list
+        receiver_index = len(self.__receivers)
         self.__receivers.append(receiver)
 
+        # Adapt internal channel matrix
         if self.__channels.shape[0] == 0:
 
-            self.__channels = np.empty((0, receiver_index + 1), dtype=object)
+            self.__channels = np.empty((0, receiver_index + 1), dtype=np.object_)
 
         elif self.__channels.shape[1] == 0:
 
-            self.__channels = np.ndarray(
-                [[Channel(transmitter, receiver)] for transmitter in self.transmitters], dtype=object)
+            self.__channels = np.array(
+                [[Channel(transmitter, receiver)] for transmitter in self.__transmitters], dtype=Channel)
 
         else:
 
             self.__channels = np.append(
                 self.__channels, [[Channel(transmitter, receiver)] for transmitter in self.transmitters], axis=1)
 
-        return receiver
-
-    def add_transmitter(self, **kwargs) -> Transmitter:
+    def add_transmitter(self, transmitter: Transmitter) -> None:
         """Add a new transmitting modem to the simulated scenario.
 
         Args:
-            **kwargs:
-                Modem configuration arguments.
+            transmitter (Transmitter): The transmitter modem to be attached to this scenario.
 
-        Returns:
-            Modem:
-                A handle to the newly created modem instance.
         """
 
-        transmitter_index = len(self.__transmitters)
-        kwargs['scenario'] = self
-        transmitter = Transmitter(**kwargs)
+        # Register scenario to this transmit modem
+        transmitter.scenario = self
 
+        # Store transmitter within internal transmit modem list
+        transmitter_index = len(self.__transmitters)
         self.__transmitters.append(transmitter)
 
+        # Adapt internal channel matrix
         if self.__channels.shape[1] == 0:
 
-            self.__channels = np.empty((transmitter_index + 1, 0), dtype=object)
+            self.__channels = np.empty((transmitter_index + 1, 0), dtype=np.object_)
 
         elif self.__channels.shape[0] == 0:
 
             self.__channels = np.array(
-                [[Channel(transmitter, receiver) for receiver in self.receivers]], dtype=object)
+                [[Channel(transmitter, receiver) for receiver in self.__receivers]], dtype=np.object_)
 
         else:
 
             np.insert(self.__channels, transmitter_index,
                       [[Channel(transmitter, receiver) for receiver in self.receivers]], axis=0)
-
-        return transmitter
 
     def remove_modem(self, modem: Modem) -> None:
         """Remove a modem from the scenario.
@@ -382,15 +299,15 @@ class Scenario:
 
             index = self.__transmitters.index(modem)
 
-            del self.__transmitters[index]          # Remove the actual modem
-            np.delete(self.__channels, index, 0)    # Remove its departing channels
+            del self.__transmitters[index]                            # Remove the actual modem
+            self.__channels = np.delete(self.__channels, index, 0)    # Remove its departing channels
 
         elif modem in self.__receivers:
 
             index = self.__receivers.index(modem)
 
-            del self.__receivers[index]             # Remove the actual modem
-            np.delete(self.__channels, index, 1)    # Remove its arriving channels
+            del self.__receivers[index]                               # Remove the actual modem
+            self.__channels = np.delete(self.__channels, index, 1)    # Remove its arriving channels
 
         else:
 
@@ -528,6 +445,9 @@ class Scenario:
     def drop_duration(self) -> float:
         """The scenario's default drop duration in seconds.
 
+        If the drop duration is set to zero, the property will return the maximum frame duration
+        over all registered transmitting modems as drop duration!
+
         Returns:
             float: The default drop duration.
         """
@@ -562,6 +482,96 @@ class Scenario:
             raise ValueError("Drop duration must be greater or equal to zero")
 
         self.__drop_duration = duration
+
+    def generate_data_bits(self) -> List[np.array]:
+        """Generate a set of data bits required to generate a single drop within this scenario.
+
+        Returns:
+            List[np.array]: Data bits required to generate a single drop.
+        """
+
+        return [np.random.randint(0, 2, transmitter.num_data_bits_per_frame) for transmitter in self.__transmitters]
+
+    @classmethod
+    def to_yaml(cls: Type[Scenario], representer: SafeRepresenter, node: Scenario) -> Node:
+        """Serialize a scenario object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Scenario):
+                The scenario instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        serialization = {
+            'Modems': [*node.__transmitters, *node.__receivers],
+            'Channels': node.__channels.flatten().tolist(),
+            'drop_duration': node.__drop_duration
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, serialization)
+
+    @classmethod
+    def from_yaml(cls: Type[Scenario], constructor: SafeConstructor, node: Node) -> Scenario:
+        """Recall a new `Scenario` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Scenario` serialization.
+
+        Returns:
+            Scenario:
+                Newly created `Scenario` instance.
+            """
+
+        state_scenario = constructor.construct_mapping(node, deep=True)
+
+        modems = state_scenario.pop('Modems', None)
+        channels = state_scenario.pop('Channels', None)
+
+        scenario = cls(**state_scenario)
+
+        # Integrate modems
+        if isinstance(modems, Iterable):
+            for modem in modems:
+
+                # Integrate modem into scenario
+                if isinstance(modem, Transmitter):
+                    scenario.__transmitters.append(modem)
+
+                elif isinstance(modem, Receiver):
+                    scenario.__receivers.append(modem)
+
+                else:
+                    raise RuntimeWarning("Unknown modem type encountered")
+
+                # Register scenario instance to the modems
+                modem.scenario = scenario
+
+        # Add default channel matrix
+        scenario.__channels = np.empty((len(scenario.__transmitters), len(scenario.__receivers)), dtype=object)
+        for t, transmitter in enumerate(scenario.__transmitters):
+            for r, receiver in enumerate(scenario.__receivers):
+                scenario.__channels[t, r] = Channel(transmitter, receiver)
+
+        # Integrate configured channels into the default matrix
+        if isinstance(channels, Iterable):
+            for channel, transmitter_index, receiver_index in channels:
+
+                channel.transmitter = scenario.transmitters[transmitter_index]
+                channel.receiver = scenario.receivers[receiver_index]
+                scenario.__channels[transmitter_index, receiver_index] = channel
+
+        return scenario
 
 
 from modem import Modem, Transmitter, Receiver
