@@ -116,3 +116,12 @@ class Transmitter(Modem):
         """
 
         return [channel.receiver for channel in self.scenario.departing_channels(self, True)]
+
+    def generate_data_bits(self) -> np.ndarray:
+        """Generate data bits required to build a single transmit data frame for this modem.
+
+        Returns:
+            numpy.ndarray: A vector of hard data bits in 0/1 format.
+        """
+
+        return self.random_generator.integers(0, 2, self.num_data_bits_per_frame)
