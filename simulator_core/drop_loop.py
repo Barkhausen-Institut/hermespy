@@ -160,7 +160,7 @@ class DropLoop:
             done = done | np.all(
                 self._statistics.get_snr_list(rx_modem_idx) == 0)
 
-        if self._statistics.num_drops >= self.params.max_num_drops:
+        if self._statistics.__num_drops >= self.params.max_num_drops:
             done = True
 
         return done

@@ -43,7 +43,7 @@ class TestDropLoop(unittest.TestCase):
     def test_drop_loop_end_command_on_exceeding_num_drops(self) -> None:
         self.drop_loop._scenario.rx_modems = []
 
-        self.drop_loop.params.max_num_drops = self.drop_loop._statistics.num_drops - 1
+        self.drop_loop.params.max_num_drops = self.drop_loop._statistics.__num_drops - 1
 
         self.assertTrue(self.drop_loop.verify_drop_loop())
 

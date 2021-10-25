@@ -91,8 +91,6 @@ class Transmitter(Modem):
         tx_signal = self._adjust_tx_power(tx_signal)
         return tx_signal
 
-
-
     @classmethod
     def from_yaml(cls: Type[Transmitter], constructor: SafeConstructor, node: Node) -> Transmitter:
         """Recall a new `Transmitter` instance from YAML.
@@ -141,7 +139,6 @@ class Transmitter(Modem):
         orientation = args.pop('orientation', None)
         if position is not None:
             args['orientation'] = np.array(orientation)
-
 
         # Convert the random seed to a new random generator object if its specified within the config
         random_seed = args.pop('random_seed', None)
