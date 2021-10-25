@@ -257,62 +257,6 @@ class Modem:
 
         self.__random_generator = generator
 
-    def send(self,
-             drop_duration: Optional[float] = None,
-             data_bits: Optional[np.array] = None) -> np.ndarray:
-        """Returns an array with the complex baseband samples of a waveform generator.
-
-        The signal may be distorted by RF impairments.
-
-        Args:
-            drop_duration (float, optional): Length of signal in seconds.
-            data_bits (np.array, optional): Data bits to be sent via this transmitter.
-
-        Returns:
-            np.ndarray:
-                Complex baseband samples, rows denoting transmitter antennas and
-                columns denoting samples.
-
-        Raises:
-            ValueError: If not enough data bits were provided to generate as single frame.
-        """
-        # coded_bits = self.encoder.encoder(data_bits)
-        number_of_samples = int(np.ceil(drop_duration * self.sampling_rate))
-        timestamp = 0
-        frame_index = 1
-
-        num_code_bits = self.waveform_generator.bits_per_frame
-        num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
-
-        # Generate source data bits if none are provided
-        if data_bits is None:
-            data_bits = self.__bits_source.get_bits(num_data_bits)[0]
-
-        # Make sure enough data bits were provided
-        elif len(data_bits) < num_data_bits:
-            raise ValueError("Number of provided data bits is insufficient to generate a single frame")
-
-        # Apply channel coding to the source bits
-        code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
-
-        while timestamp < number_of_samples:
-
-            # Generate base-band waveforms
-            frame, timestamp, initial_sample_num = self.waveform_generator.create_frame(
-                timestamp, code_bits)
-
-            if frame_index == 1:
-                tx_signal, samples_delay = self._allocate_drop_size(
-                    initial_sample_num, number_of_samples)
-
-            tx_signal, samples_delay = self._add_frame_to_drop(
-                initial_sample_num, samples_delay, tx_signal, frame)
-            frame_index += 1
-
-        tx_signal = self.rf_chain.send(tx_signal)
-        tx_signal = self._adjust_tx_power(tx_signal)
-        return tx_signal
-
     def _add_frame_to_drop(self, initial_sample_num: int,
                            samples_delay: int, tx_signal: np.ndarray,
                            frame: np.ndarray) -> Tuple[np.ndarray, int]:
@@ -350,55 +294,19 @@ class Modem:
 
         return tx_signal
 
-    def receive(self, input_signal: np.ndarray, noise_var: float) -> np.ndarray:
-        """Demodulates the signal received.
-
-        The received signal may be distorted by RF imperfections before demodulation and decoding.
-
-        Args:
-            input_signal (np.ndarray): Received signal.
-            noise_var (float): noise variance (for equalization).
-
-        Returns:
-            np.array: Detected bits as a list of data blocks for the drop.
-        """
-        rx_signal = self.rf_chain.receive(input_signal)
-
-        # If no receiving waveform generator is configured, no signal is being received
-        if self.waveform_generator is None:
-            return np.empty(0, dtype=complex)
-
-        # normalize signal to expected input power
-        rx_signal = rx_signal / np.sqrt(1.0)  # TODO: Re-implement pair power factor
-        noise_var = noise_var / 1.0           # TODO: Re-implement pair power factor
-
-        received_bits = np.empty(0, dtype=int)
-        timestamp_in_samples = 0
-
-        while rx_signal.size:
-            initial_size = rx_signal.shape[1]
-            frame_bits, rx_signal = self.waveform_generator.receive_frame(
-                rx_signal, timestamp_in_samples, noise_var)
-
-            if rx_signal.size:
-                timestamp_in_samples += initial_size - rx_signal.shape[1]
-
-            received_bits = np.append(received_bits, frame_bits)
-
-        decoded_bits = self.encoder_manager.decode(received_bits)
-        return decoded_bits
-
     def get_bit_energy(self) -> float:
         """Returns the average bit energy of the modulated signal.
         """
-        R = self.encoder_manager.rate
-        return self.waveform_generator.bit_energy * self.power_factor / R
+
+        rate = self.encoder_manager.rate
+        return self.waveform_generator.bit_energy * self.power_factor / rate
 
     def get_symbol_energy(self) -> float:
         """Returns the average symbol energy of the modulated signal.
         """
-        R = self.encoder_manager.rate
-        return self.waveform_generator.symbol_energy * self.power_factor / R
+
+        rate = self.encoder_manager.rate
+        return self.waveform_generator.symbol_energy * self.power_factor / rate
 
     @property
     def position(self) -> np.array:
@@ -481,12 +389,12 @@ class Modem:
             if topology.shape[1] > 3:
                 raise ValueError("The second topology dimension must contain 3 fields (xyz)")
 
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
+            self.__topology = np.zeros((topology.shape[0], 3), dtype=np.float32)
             self.__topology[:, :topology.shape[1]] = topology
 
         else:
 
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
+            self.__topology = np.zeros((topology.shape[0], 3), dtype=np.float32)
             self.__topology[:, 0] = topology
 
         # Automatically detect linearity in default configurations, where all sensor elements
