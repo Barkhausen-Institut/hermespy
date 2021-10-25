@@ -28,6 +28,7 @@ class Executable(ABC):
         calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
         calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int): Number of FFT bins considered during computation.
+        __num_drops (int): Number of executions per scenario.
     """
 
     yaml_tag = u'Executable'
@@ -38,6 +39,7 @@ class Executable(ABC):
     calc_transmit_stft: bool
     calc_receive_stft: bool
     __spectrum_fft_size: int
+    __num_drops: int
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -45,7 +47,8 @@ class Executable(ABC):
                  calc_receive_spectrum: bool = False,
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
-                 spectrum_fft_size: int = 0) -> None:
+                 spectrum_fft_size: int = 0,
+                 num_drops: int = 1) -> None:
         """Object initialization.
 
         Args:
@@ -54,6 +57,8 @@ class Executable(ABC):
             calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
             calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
             calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
+            spectrum_fft_size (int): Number of discrete frequency bins computed within the Fast Fourier Transforms.
+            num_drops (int): Number of drops per executed scenario.
         """
 
         # Default parameters
@@ -64,6 +69,7 @@ class Executable(ABC):
         self.calc_transmit_stft = calc_transmit_stft
         self.calc_receive_stft = calc_receive_stft
         self.spectrum_fft_size = spectrum_fft_size
+        self.num_drops = num_drops
 
     @abstractmethod
     def run(self) -> None:
@@ -114,3 +120,29 @@ class Executable(ABC):
             raise ValueError("Number of bins must be greater or equal to zero")
 
         self.__spectrum_fft_size = bins
+
+    @property
+    def num_drops(self) -> int:
+        """Access number of drops per executed scenario.
+
+        Returns:
+            int: Number of drops.
+        """
+
+        return self.__num_drops
+
+    @num_drops.setter
+    def num_drops(self, num: int) -> None:
+        """Modify number of drops per executed scenario.
+
+        Args:
+            num (int): New number of drops.
+
+        Raises:
+            ValueError: If `num` is smaller than one.
+        """
+
+        if num < 1:
+            raise ValueError("Number of drops must be greater than zero")
+
+        self .__num_drops = num
