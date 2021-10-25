@@ -29,7 +29,7 @@ class TestRadarChannel(unittest.TestCase):
         self.rx_antenna_gain_db = 0
         self.losses_db = 0
         self.velocity = 0
-        self.filter_response_in_samples = 7
+        self.filter_response_in_samples = 21
 
         self.channel = RadarChannel(self.range, self.radar_cross_section, self.carrier_frequency,
                                     random_number_gen=self.random_number_gen,
@@ -297,6 +297,35 @@ class TestRadarChannel(unittest.TestCase):
         np.testing.assert_array_equal(output, np.zeros(output.shape))
 
     def test_get_impulse_response(self):
+        samples_per_symbol = 1200
+        num_pulses = 20
+
+        isolation_db = 150
+        velocity = 20
+
+        input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
+
+        channel = deepcopy(self.channel)
+        channel.velocity = velocity
+        channel.tx_rx_isolation_db = isolation_db
+
+        channel.init_drop()
+
+        output = channel.propagate(input_signal)
+
+        sample_idx_last_symbol = (num_pulses - 1) * samples_per_symbol
+        timestamps = np.array([0, sample_idx_last_symbol / self.transmitter.sampling_rate])
+        channel_state_info = channel.get_impulse_response(timestamps).squeeze()
+
+        num_samples_in_csi = channel_state_info.shape[1]
+
+        observed_csi = np.vstack((output[0, :num_samples_in_csi],
+                                  output[0, sample_idx_last_symbol: sample_idx_last_symbol + num_samples_in_csi]))
+
+        # interpolation filter for propagation will be truncated, must be taken into account in absolute tolerance
+        atol = np.maximum(np.abs(np.sinc(channel.filter_response_in_samples/2)),
+                          np.abs(np.sinc(np.floor(channel.filter_response_in_samples/2))))
+        np.testing.assert_allclose(channel_state_info, observed_csi, atol=atol)
 
         pass
 
