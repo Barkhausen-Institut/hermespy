@@ -2,10 +2,12 @@
 """Test HermesPy scenario description class."""
 
 import unittest
+import numpy as np
 import numpy.random as rnd
 from typing import List
 from unittest.mock import Mock
 from itertools import product
+from numpy.testing import assert_array_equal
 
 from scenario.scenario import Scenario
 
@@ -38,6 +40,7 @@ class TestScenario(unittest.TestCase):
 
             # Mock waveform generator max frame duration property
             modem.waveform_generator.max_frame_duration = (1+t) * 1e-4
+            modem.generate_data_bits.return_value = np.ones(1+t)
 
             self.transmitters.append(modem)
             self.scenario.add_transmitter(modem)
@@ -247,7 +250,14 @@ class TestScenario(unittest.TestCase):
     def test_generate_data_bits(self) -> None:
         """The data bit generation routine should create sets of source bits required by all registered
         transmitters in order to compute a single data frame."""
-        pass
+
+        expected_data_bits: List[np.ndarray] = []
+        for t in range(self.num_transmitters):
+            expected_data_bits.append(np.ones(1+t))     # From Mock generation
+
+        data_bits = self.scenario.generate_data_bits()
+        for b, expected_bits in enumerate(expected_data_bits):
+            assert_array_equal(expected_bits, data_bits[b])
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
