@@ -116,7 +116,7 @@ class RadarChannel(Channel):
         self.__rx_antenna_gain_db = 0
         self.__losses_db = 0
         self.__velocity = 0
-        self.__filter_response_in_samples = 7
+        self.__filter_response_in_samples = 15
 
         if target_exists is not None:
             self.__target_exists = target_exists
@@ -357,8 +357,8 @@ class RadarChannel(Channel):
                     tx_signal.flatten() * delay_gain
 
             # random phase and Doppler shift
-            delayed_signal = delayed_signal * np.exp(1j * (-2 * np.pi * self._doppler_frequency * time
-                                                           + self._phase_echo))
+            delayed_signal = delayed_signal * np.exp(-1j * (2 * np.pi * self._doppler_frequency * time
+                                                            + self._phase_echo))
 
         # add self interference
         self_interference = (np.hstack((tx_signal, np.zeros((1, max_delay_in_samples))))
@@ -396,17 +396,18 @@ class RadarChannel(Channel):
         impulse_response = np.zeros((timestamps.size, self.num_outputs, self.num_inputs,
                                      max_delay_in_samples), dtype=complex)
 
-        for idx, time in enumerate(timestamps):
+        for idx, timestamp in enumerate(timestamps):
             delay = np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
 
             if self.__target_exists:
-                echo_delay = self._delay + 2 * self.velocity * time / constants.speed_of_light
+                echo_delay = self._delay + 2 * self.velocity * timestamp / constants.speed_of_light
+                time = timestamp + np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
                 echo_phase = np.exp(-1j * (2 * np.pi * self._doppler_frequency * time + self._phase_echo))
 
                 impulse_response[idx, 0, 0, :] = (np.sinc(self.transmitter.sampling_rate * (delay - echo_delay))
                                                   * echo_phase)
 
-            impulse_response[idx, 0, 0, 0] += (np.exp(1j * 2 * np.pi * self._phase_self_interference)
+            impulse_response[idx, 0, 0, 0] += (np.exp(1j * self._phase_self_interference)
                                                / np.sqrt(self._attenuation)
                                                / db2lin(self.tx_rx_isolation_db, conversion_type="amplitude"))
 
