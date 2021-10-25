@@ -2,9 +2,7 @@
 """Test HermesPy base executable."""
 
 import unittest
-import numpy as np
 from unittest.mock import Mock
-from numpy.testing import assert_array_equal
 
 from simulator_core import Executable
 
@@ -84,3 +82,20 @@ class TestExecutable(unittest.TestCase):
 
         except ValueError:
             self.fail("Spectrum FFT size setter should not raise ValueError on zero argument")
+
+    def test_num_drops_setget(self) -> None:
+        """Number of drops property getter should return setter argument."""
+
+        num_drops = 20
+        self.executable.num_drops = num_drops
+
+        self.assertEqual(num_drops, self.executable.num_drops)
+
+    def test_num_drops_validation(self) -> None:
+        """Number of drops property setter should raise ValueError on arguments smaller than one."""
+
+        with self.assertRaises(ValueError):
+            self.executable.num_drops = 0
+
+        with self.assertRaises(ValueError):
+            self.executable.num_drops = -1
