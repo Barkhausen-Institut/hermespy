@@ -360,14 +360,14 @@ class Scenario:
 
         self.__drop_duration = duration
 
-    def generate_data_bits(self) -> List[np.array]:
+    def generate_data_bits(self) -> List[np.ndarray]:
         """Generate a set of data bits required to generate a single drop within this scenario.
 
         Returns:
-            List[np.array]: Data bits required to generate a single drop.
+            List[np.ndarray]: Data bits required to generate a single drop.
         """
 
-        return [np.random.randint(0, 2, transmitter.num_data_bits_per_frame) for transmitter in self.__transmitters]
+        return [transmitter.generate_data_bits() for transmitter in self.__transmitters]
 
     @classmethod
     def to_yaml(cls: Type[Scenario], representer: SafeRepresenter, node: Scenario) -> Node:

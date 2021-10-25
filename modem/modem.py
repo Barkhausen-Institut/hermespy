@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import Tuple, List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
-import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
+import numpy as np
+import numpy.random as rnd
 
 from modem.precoding import Precoding
 from coding import EncoderManager
@@ -44,6 +45,7 @@ class Modem:
     __waveform_generator: Optional[WaveformGenerator]
     __tx_power: float
     __rf_chain: RfChain
+    __random_generator: Optional[rnd.Generator]
 
     def __init__(self,
                  scenario: Scenario = None,
@@ -57,7 +59,8 @@ class Modem:
                  precoding: Precoding = None,
                  waveform: WaveformGenerator = None,
                  tx_power: float = None,
-                 rfchain: RfChain = None) -> None:
+                 rfchain: RfChain = None,
+                 random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
 
         Args:
@@ -80,6 +83,7 @@ class Modem:
         self.__waveform_generator = None
         self.__tx_power = 1.0
         self.__rf_chain = RfChain()
+        self.__random_generator = random_generator
 
         if scenario is not None:
             self.scenario = scenario
@@ -221,6 +225,37 @@ class Modem:
         """
 
         pass
+
+    @property
+    def random_generator(self) -> rnd.Generator:
+        """Access the random number generator assigned to this modem.
+
+        This property will return the scenarios random generator if no random generator has been specifically set.
+
+        Returns:
+            numpy.random.Generator: The random generator.
+
+        Raises:
+            RuntimeError: If trying to access the random generator of a floating modem.
+        """
+
+        if self.__scenario is None:
+            raise RuntimeError("Trying to access the random generator of a floating modem")
+
+        if self.__random_generator is None:
+            return self.__scenario.random_generator
+
+        return self.__random_generator
+
+    @random_generator.setter
+    def random_generator(self, generator: Optional[rnd.Generator]) -> None:
+        """Modify the configured random number generator assigned to this modem.
+
+        Args:
+            generator (Optional[numpy.random.generator]): The random generator. None if not specified.
+        """
+
+        self.__random_generator = generator
 
     def send(self,
              drop_duration: Optional[float] = None,
