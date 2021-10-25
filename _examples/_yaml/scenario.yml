@@ -1,5 +1,7 @@
 !<Scenario>
 
+random_seed: 0
+
 Modems:
 
   - Transmitter
