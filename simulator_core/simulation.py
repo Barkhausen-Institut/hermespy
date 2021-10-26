@@ -115,6 +115,8 @@ class Simulation(Executable):
                     drop.plot_block_errors()
                     drop.plot_transmit_stft()
                     drop.plot_receive_stft()
+                    drop.plot_transmit_spectrum()
+                    drop.plot_receive_spectrum()
 
                     plt.show()
 
