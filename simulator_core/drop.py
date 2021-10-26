@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from typing import List, Optional, Tuple
-from scipy.signal import stft
+from scipy.signal import stft, welch
 from scipy.fft import fftshift
 import numpy as np
 import matplotlib.pyplot as plt
@@ -114,7 +114,17 @@ class Drop:
         __receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
             Short time fourier transform of the transmitted antenna signals.
             By default only the first antenna within an array is considered.
-            For each transmitter, a tuple of frequency bins, timestamps and respective stft matrix is cached.
+            For each receiver, a tuple of frequency bins, timestamps and respective stft matrix is cached.
+            If no result has been computed yet, the attribute is None.
+
+        __transmit_spectrum (Optional[List[Tuple[np.ndarray, np.ndarray]]]):
+            Spectral analysis of the transmitted signals.
+            For each transmitter, a tuple of frequency bins, and frequency transform nodes is cached.
+            If no result has been computed yet, the attribute is None.
+            
+        __receive_spectrum (Optional[List[Tuple[np.ndarray, np.ndarray]]]):
+            Spectral analysis of the transmitted signals.
+            For each receiver, a tuple of frequency bins, and frequency transform nodes is cached.
             If no result has been computed yet, the attribute is None.
     """
 
@@ -130,7 +140,8 @@ class Drop:
     __spectrum_fft_size: Optional[int]
     __transmit_stft = Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
     __receive_stft = Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
-
+    __transmit_spectrum = Optional[List[Tuple[np.ndarray, np.ndarray]]]
+    __receive_spectrum = Optional[List[Tuple[np.ndarray, np.ndarray]]]
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
@@ -174,6 +185,8 @@ class Drop:
         self.__spectrum_fft_size = spectrum_fft_size
         self.__transmit_stft = None
         self.__receive_stft = None
+        self.__transmit_spectrum = None
+        self.__receive_spectrum = None
 
         # Infer parameters
         self.__num_transmissions = len(self.transmitted_bits)
@@ -347,7 +360,7 @@ class Drop:
                 - np.ndarray: Fourier transform frequency bins.
                 - np.ndarray: Timestamps
                 - np.ndarray: Complex fourier transform matrix.
-            for each receiveing modem.
+            for each receiving modem.
         """
 
         # Return the cached result if already computed
@@ -377,6 +390,88 @@ class Drop:
             self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
 
         return self.__receive_stft
+
+    @property
+    def transmit_spectrum(self) -> List[Tuple[np.ndarray, np.ndarray]]:
+        """Spectral analysis of the transmitted signals.
+
+        Welch's method is employed for spectral analysis.
+        For multiple antennas, only the first antenna is considered.
+        The computation result gets cached, meaning only the first call is computationally expensive.
+
+        Returns:
+            List of
+                - np.ndarray: Frequency bins.
+                - np.ndarray: Complex fourier transform bins.
+            for each receiving modem.
+        """
+
+        # Return the cached result if already computed
+        if self.__transmit_spectrum is not None:
+            return self.__transmit_spectrum
+
+        self.__transmit_spectrum: List[Tuple[np.ndarray, np.ndarray]] = []
+        for antenna_signals in self.__transmitted_signals:
+
+            # Consider only the first antenna signal
+            signal: np.ndarray = antenna_signals[0]
+            window_size = len(signal)
+
+            # Make sure that signal is at least as long as FFT and pad it
+            # with zeros is needed
+            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+
+                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                window_size = self.__spectrum_fft_size
+
+            # TODO: Integrate sampling rate
+            frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
+                                           return_onesided=False) # , fs=sampling_rate,
+
+            self.__transmit_spectrum.append((frequency, periodogram))
+
+        return self.__transmit_spectrum
+    
+    @property
+    def receive_spectrum(self) -> List[Tuple[np.ndarray, np.ndarray]]:
+        """Spectral analysis of the received signals.
+
+        Welch's method is employed for spectral analysis.
+        For multiple antennas, only the first antenna is considered.
+        The computation result gets cached, meaning only the first call is computationally expensive.
+
+        Returns:
+            List of
+                - np.ndarray: Frequency bins.
+                - np.ndarray: Complex fourier transform bins.
+            for each receiving modem.
+        """
+
+        # Return the cached result if already computed
+        if self.__receive_spectrum is not None:
+            return self.__receive_spectrum
+
+        self.__receive_spectrum: List[Tuple[np.ndarray, np.ndarray]] = []
+        for antenna_signals in self.__received_signals:
+
+            # Consider only the first antenna signal
+            signal: np.ndarray = antenna_signals[0]
+            window_size = len(signal)
+
+            # Make sure that signal is at least as long as FFT and pad it
+            # with zeros is needed
+            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+
+                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                window_size = self.__spectrum_fft_size
+
+            # TODO: Integrate sampling rate
+            frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
+                                           return_onesided=False) # , fs=sampling_rate,
+
+            self.__receive_spectrum.append((frequency, periodogram))
+
+        return self.__receive_spectrum
 
     def plot_transmitted_signals(self,
                                  visualization: ComplexVisualization = ComplexVisualization.REAL) -> None:
@@ -558,7 +653,7 @@ class Drop:
 
             time, frequency, transform = stft[transmission_index]
 
-            axes[transmission_index, 0].pcolormesh(frequency, time, abs(transform))
+            axes[transmission_index, 0].pcolormesh(frequency, time, abs(transform), shading='auto')
             axes[transmission_index, 0].set(ylabel="Frequency [Hz]")
             axes[transmission_index, 0].set(xlabel="Time [sec]")
             
@@ -575,6 +670,40 @@ class Drop:
 
             time, frequency, transform = stft[reception_index]
 
-            axes[reception_index, 0].pcolormesh(frequency, time, abs(transform))
+            axes[reception_index, 0].pcolormesh(frequency, time, abs(transform), shading='auto')
             axes[reception_index, 0].set(ylabel="Frequency [Hz]")
             axes[reception_index, 0].set(xlabel="Time [sec]")
+
+    def plot_transmit_spectrum(self) -> None:
+        """Plot the spectral analysis of transmitted waveforms."""
+
+        # Fetch stft
+        spectrum = self.transmit_spectrum
+
+        figure, axes = plt.subplots(self.__num_transmissions, 1, squeeze=False)
+        figure.suptitle("Transmit Spectral Analysis")
+
+        for transmission_index in range(self.__num_transmissions):
+
+            frequency, periodogram = spectrum[transmission_index]
+
+            axes[transmission_index, 0].plot(fftshift(frequency), fftshift(10 * np.log10(periodogram)))
+            axes[transmission_index, 0].set(xlabel="Frequency [Hz]")
+            axes[transmission_index, 0].set(ylabel="Power [dB]")
+
+    def plot_receive_spectrum(self) -> None:
+        """Plot the spectral analysis of received waveforms."""
+
+        # Fetch stft
+        spectrum = self.receive_spectrum
+
+        figure, axes = plt.subplots(self.__num_receptions, 1, squeeze=False)
+        figure.suptitle("Receive Spectral Analysis")
+
+        for reception_index in range(self.__num_receptions):
+
+            frequency, periodogram = spectrum[reception_index]
+
+            axes[reception_index, 0].plot(fftshift(frequency), fftshift(10 * np.log10(periodogram)))
+            axes[reception_index, 0].set(xlabel="Frequency [Hz]")
+            axes[reception_index, 0].set(ylabel="Power [dB]")
