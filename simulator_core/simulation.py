@@ -26,21 +26,11 @@ __status__ = "Prototype"
 class SimulationDrop(Drop):
     """Data generated within a single simulation drop."""
 
-    def __init__(self,
-                 transmitted_bits: List[np.ndarray],
-                 transmitted_signals: List[np.ndarray],
-                 received_signals: List[np.ndarray],
-                 received_bits: List[np.ndarray]) -> None:
-        """Object initialization.
-
-        Args:
-            transmitted_bits (List[np.ndarray]): Bits fed into the transmitting modems.
-            transmitted_signals (List[np.ndarray]): Modulated signals emitted by transmitting modems.
-            received_signals (List[np.ndarray]): Modulated signals impinging onto receiving modems.
-            received_bits (List[np.ndarray]): Bits output by receiving modems.
+    def __init__(self, *args) -> None:
+        """Simulation drop object initialization.
         """
 
-        Drop.__init__(self, transmitted_bits, transmitted_signals, received_signals, received_bits)
+        Drop.__init__(self, *args)
 
 
 class Simulation(Executable):
@@ -106,8 +96,13 @@ class Simulation(Executable):
                 # Receive and demodulate signal
                 received_bits = Simulation.receive(scenario, propagated_signals)
 
+                # Collect block sizes
+                transmit_block_sizes = scenario.transmit_block_sizes
+                receive_block_sizes = scenario.receive_block_sizes
+
                 # Save generated signals
-                drop = SimulationDrop(data_bits, transmitted_signals, propagated_signals, received_bits)
+                drop = SimulationDrop(data_bits, transmitted_signals, transmit_block_sizes, propagated_signals,
+                                      received_bits, receive_block_sizes)
 
                 # Visualize plot if requested
                 if self.plot_drop:
@@ -117,6 +112,7 @@ class Simulation(Executable):
                     drop.plot_received_signals()
                     drop.plot_received_bits()
                     drop.plot_bit_errors()
+                    drop.plot_block_errors()
 
                     plt.show()
 

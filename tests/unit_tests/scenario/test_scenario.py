@@ -41,6 +41,7 @@ class TestScenario(unittest.TestCase):
             # Mock waveform generator max frame duration property
             modem.waveform_generator.max_frame_duration = (1+t) * 1e-4
             modem.generate_data_bits.return_value = np.ones(1+t)
+            modem.encoder_manager.bit_block_size = 1 + t
 
             self.transmitters.append(modem)
             self.scenario.add_transmitter(modem)
@@ -49,6 +50,7 @@ class TestScenario(unittest.TestCase):
         for r in range(self.num_receivers):
 
             modem = Mock()
+            modem.encoder_manager.bit_block_size = 1 + r
 
             self.receivers.append(modem)
             self.scenario.add_receiver(modem)
@@ -273,6 +275,24 @@ class TestScenario(unittest.TestCase):
         data_bits = self.scenario.generate_data_bits()
         for b, expected_bits in enumerate(expected_data_bits):
             assert_array_equal(expected_bits, data_bits[b])
+
+    def test_transmit_block_sizes(self) -> None:
+        """Transmit blocks sizes property should return a list of all transmitters respective block sizes."""
+
+        expected_block_sizes: List[int] = []
+        for transmitter in self.transmitters:
+            expected_block_sizes.append(transmitter.encoder_manager.bit_block_size)
+
+        self.assertCountEqual(expected_block_sizes, self.scenario.transmit_block_sizes)
+
+    def test_receive_block_sizes(self) -> None:
+        """Receive blocks sizes property should return a list of all receivers respective block sizes."""
+
+        expected_block_sizes: List[int] = []
+        for receiver in self.receivers:
+            expected_block_sizes.append(receiver.encoder_manager.bit_block_size)
+
+        self.assertCountEqual(expected_block_sizes, self.scenario.receive_block_sizes)
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""

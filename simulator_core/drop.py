@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 from typing import List, Optional
+from itertools import product
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import IntEnum
@@ -69,11 +70,17 @@ class Drop:
         __transmitted_signals (List[np.ndarray]):
             Modulated signals emitted by transmitting modems.
 
+        __transmit_block_sizes (List[int]):
+            Bit block sizes for each transmitter.
+
         __received_signals (List[np.ndarray]):
             Modulated signals impinging onto receiving modems.
 
         __received_bits (List[np.ndarray]):
             Bits output by receiving modems.
+
+        __receive_block_sizes (List[int]):
+            Bit block sizes for each receiver.
 
         __bit_errors (Optional[List[List[Optional[np.ndarray]]]]):
             Bit errors which occurred during transmission.
@@ -87,37 +94,66 @@ class Drop:
             If enabled, bit streams of different length between transmitter and receiver will be extended by zeros,
             in order to match the maximum dimension and subsequently compared.
             If disabled, bit streams of different length will be ignored during bit error computation.
+
+        __block_errors (Optional[List[List[Optional[np.ndarray]]]]):
+            Bit block errors which occurred during transmission.
+            The attribute is None if the block errors have not been calculated yet.
+            Contains a matrix of dimensions `num_transmitters`x`num_receivers`x`block_deltas`.
+            `block_deltas` are optional, if a computation is not feasible the matrix field is set to None.
     """
 
     __transmitted_bits: List[np.ndarray]
     __transmitted_signals: List[np.ndarray]
+    __transmit_block_sizes: List[int]
     __received_signals: List[np.ndarray]
     __received_bits: List[np.ndarray]
+    __receive_block_sizes: List[int]
     __bit_errors: Optional[List[List[Optional[np.ndarray]]]]
     __pad_bit_errors: bool
+    __block_errors: Optional[List[List[Optional[np.ndarray]]]]
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
                  transmitted_signals: List[np.ndarray],
+                 transmit_block_sizes: List[int],
                  received_signals: List[np.ndarray],
                  received_bits: List[np.ndarray],
+                 receive_block_sizes: List[int],
                  pad_bit_errors: bool = True) -> None:
         """Object initialization.
 
         Args:
             transmitted_bits (List[np.ndarray]): Bits fed into the transmitting modems.
             transmitted_signals (List[np.ndarray]): Modulated signals emitted by transmitting modems.
+            transmit_block_sizes (List[int]): Bit block sizes for each transmitter.
             received_signals (List[np.ndarray]): Modulated signals impinging onto receiving modems.
             received_bits (List[np.ndarray]): Bits output by receiving modems.
+            receive_block_sizes (List[int]): Bit block sizes for each receiver.
             pad_bit_errors (bool, optional): Pad bit streams during error computation.
+
+        Raises:
+            ValueError: If argument List dimensions do not match.
         """
+
+        if len(transmitted_bits) != len(transmitted_signals) or len(transmitted_signals) != len(transmit_block_sizes):
+            raise ValueError("Transmit argument lists must be of identical length")
+
+        if len(received_bits) != len(received_signals) or len(received_signals) != len(receive_block_sizes):
+            raise ValueError("Receive argument lists must be of identical length")
 
         self.__transmitted_bits = transmitted_bits
         self.__transmitted_signals = transmitted_signals
+        self.__transmit_block_sizes = transmit_block_sizes
         self.__received_signals = received_signals
         self.__received_bits = received_bits
+        self.__receive_block_sizes = receive_block_sizes
         self.__bit_errors = None
         self.__pad_bit_errors = pad_bit_errors
+        self.__block_errors = None
+
+        # Infer parameters
+        self.__num_transmissions = len(self.transmitted_bits)
+        self.__num_receptions = len(self.received_bits)
 
     @property
     def transmitted_bits(self) -> List[np.ndarray]:
@@ -147,19 +183,20 @@ class Drop:
     def bit_errors(self) -> List[List[Optional[np.ndarray]]]:
         """Detect the bit transmission deltas between all transmitting and receiving modems.
 
-        The computation result gets so buffered, meaning only the first call is computationally expensive.
+        The computation result gets buffered, meaning only the first call is computationally expensive.
 
         Returns:
-            List[List[np.ndarray]]:
-                A numpy of dimensions `num_transmitters`x`num_receivers`x`bit_deltas`.
+            List[List[Optional[np.ndarray]]]:
+                A matrix of dimensions `num_transmitters`x`num_receivers`x`bit_deltas`.
                 The length `bit_deltas` is the maximum of all transmitted and received bits.
+                Matrix fields representing invalid links will be set to None.
         """
 
         # Return the cached result if already computed
         if self.__bit_errors is not None:
             return self.__bit_errors
 
-        self.__bit_errors: List[List[np.ndarray]] = []
+        self.__bit_errors: List[List[Optional[np.ndarray]]] = []
         for transmitter_bits in self.transmitted_bits:
 
             transmit_errors: List[Optional[np.ndarray]] = []
@@ -184,6 +221,52 @@ class Drop:
             self.__bit_errors.append(transmit_errors)
 
         return self.__bit_errors
+
+    @property
+    def block_errors(self) -> List[List[Optional[np.ndarray]]]:
+        """Detect the block transmission deltas between all transmitting and receiving modems.
+
+        The computation result gets buffered, meaning only the first call is computationally expensive.
+
+        Returns:
+            List[List[Optional[np.ndarray]]]:
+                A matrix of dimensions `num_transmitters`x`num_receivers`x`bit_deltas`.
+                The length `bit_deltas` is the maximum of all transmitted and received bits.
+                Matrix fields representing invalid links will be set to None.
+        """
+
+        # Return the cached result if already computed
+        if self.__block_errors is not None:
+            return self.__block_errors
+
+        # Fetch bit errors
+        bit_errors = self.bit_errors
+
+        # Calculate block errors from bit errors
+
+        self.__block_errors: List[List[Optional[np.ndarray]]] = []
+        for transmitter_index, transmitter_block_size in enumerate(self.__transmit_block_sizes):
+
+            block_error_row: List[Optional[np.ndarray]] = []
+            for receiver_index, receiver_block_size in enumerate(self.__receive_block_sizes):
+
+                # Fetch link bit errors
+                link_bit_errors = bit_errors[transmitter_index][receiver_index]
+
+                block_errors = None
+
+                # Ignore links with block sizes which are not identical
+                # Ignore links which have already been ignored by the bit error algorithm
+                if transmitter_block_size == receiver_block_size and link_bit_errors is not None:
+
+                    bit_error_blocks = link_bit_errors.reshape((-1, transmitter_block_size))
+                    block_errors = (bit_error_blocks.sum(axis=1, keepdims=False) > 0).astype(int)
+
+                block_error_row.append(block_errors)
+
+            self.__block_errors.append(block_error_row)
+
+        return self.__block_errors
 
     def plot_transmitted_signals(self,
                                  visualization: ComplexVisualization = ComplexVisualization.REAL) -> None:
@@ -296,8 +379,8 @@ class Drop:
     def plot_bit_errors(self) -> None:
         """Plot bit errors into a grid."""
 
-        grid_width = len(self.__received_bits)
-        grid_height = len(self.__transmitted_bits)
+        grid_width = self.__num_receptions
+        grid_height = self.__num_transmissions
 
         # Abort without error if no transmission is available
         if grid_height < 1:
@@ -310,13 +393,39 @@ class Drop:
         figure, axes = plt.subplots(grid_height, grid_width, squeeze=False)
         figure.suptitle("Bit Errors")
 
-        for transmission_index in range(len(self.__transmitted_bits)):
-            for reception_index in range(len(self.__received_bits)):
+        for transmission_index in range(self.__num_transmissions):
+            for reception_index in range(self.__num_receptions):
 
                 link_errors: Optional[np.ndarray] = bit_errors[transmission_index][reception_index]
 
                 if link_errors is None:
                     axes[transmission_index, reception_index].text(0, 0, "No bits exchanged")
+
+                else:
+                    axes[transmission_index, reception_index].stem(link_errors)
+
+            axes[transmission_index, 0].set(ylabel="Tx {}".format(transmission_index))
+
+        for reception_index in range(len(self.received_bits)):
+            axes[-1, reception_index].set(xlabel="Rx {}".format(reception_index))
+
+    def plot_block_errors(self) -> None:
+        """Plot block errors into a grid."""
+
+        # Fetch bit errors
+        block_errors = self.block_errors
+
+        # Plot bit errors
+        figure, axes = plt.subplots(self.__num_transmissions, self.__num_receptions, squeeze=False)
+        figure.suptitle("Block Errors")
+
+        for transmission_index in range(self.__num_transmissions):
+            for reception_index in range(self.__num_receptions):
+
+                link_errors: Optional[np.ndarray] = block_errors[transmission_index][reception_index]
+
+                if link_errors is None:
+                    axes[transmission_index, reception_index].text(0, 0, "No blocks exchanged")
 
                 else:
                     axes[transmission_index, reception_index].stem(link_errors)
