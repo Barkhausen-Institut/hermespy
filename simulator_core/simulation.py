@@ -113,6 +113,8 @@ class Simulation(Executable):
                     drop.plot_received_bits()
                     drop.plot_bit_errors()
                     drop.plot_block_errors()
+                    drop.plot_transmit_stft()
+                    drop.plot_receive_stft()
 
                     plt.show()
 

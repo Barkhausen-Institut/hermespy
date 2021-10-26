@@ -309,7 +309,6 @@ class Statistics:
                 raise ValueError(
                     "'detected_bits' and 'snr_vector' must have the same length"
                 )
-        self.__num_drops += 1
 
         # iterate over receivers and its signals received
         for rx_modem_idx, received_signals in enumerate(received_bits):

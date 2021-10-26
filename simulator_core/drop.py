@@ -2,8 +2,9 @@
 """HermesPy data drop."""
 
 from __future__ import annotations
-from typing import List, Optional
-from itertools import product
+from typing import List, Optional, Tuple
+from scipy.signal import stft
+from scipy.fft import fftshift
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import IntEnum
@@ -100,6 +101,21 @@ class Drop:
             The attribute is None if the block errors have not been calculated yet.
             Contains a matrix of dimensions `num_transmitters`x`num_receivers`x`block_deltas`.
             `block_deltas` are optional, if a computation is not feasible the matrix field is set to None.
+
+        __spectrum_fft_size (Optional[int]):
+            Number of discrete frequency bins within time-frequency transformations.
+
+        __transmit_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
+            Short time fourier transform of the transmitted antenna signals.
+            By default only the first antenna within an array is considered.
+            For each transmitter, a tuple of frequency bins, timestamps and respective stft matrix is cached.
+            If no result has been computed yet, the attribute is None.
+
+        __receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
+            Short time fourier transform of the transmitted antenna signals.
+            By default only the first antenna within an array is considered.
+            For each transmitter, a tuple of frequency bins, timestamps and respective stft matrix is cached.
+            If no result has been computed yet, the attribute is None.
     """
 
     __transmitted_bits: List[np.ndarray]
@@ -111,6 +127,10 @@ class Drop:
     __bit_errors: Optional[List[List[Optional[np.ndarray]]]]
     __pad_bit_errors: bool
     __block_errors: Optional[List[List[Optional[np.ndarray]]]]
+    __spectrum_fft_size: Optional[int]
+    __transmit_stft = Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
+    __receive_stft = Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
+
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
@@ -119,7 +139,8 @@ class Drop:
                  received_signals: List[np.ndarray],
                  received_bits: List[np.ndarray],
                  receive_block_sizes: List[int],
-                 pad_bit_errors: bool = True) -> None:
+                 pad_bit_errors: bool = True,
+                 spectrum_fft_size: Optional[int] = None) -> None:
         """Object initialization.
 
         Args:
@@ -130,7 +151,7 @@ class Drop:
             received_bits (List[np.ndarray]): Bits output by receiving modems.
             receive_block_sizes (List[int]): Bit block sizes for each receiver.
             pad_bit_errors (bool, optional): Pad bit streams during error computation.
-
+            spectrum_fft_size (int, optional): Number of discrete frequency bins within time-frequency transformations.
         Raises:
             ValueError: If argument List dimensions do not match.
         """
@@ -150,6 +171,9 @@ class Drop:
         self.__bit_errors = None
         self.__pad_bit_errors = pad_bit_errors
         self.__block_errors = None
+        self.__spectrum_fft_size = spectrum_fft_size
+        self.__transmit_stft = None
+        self.__receive_stft = None
 
         # Infer parameters
         self.__num_transmissions = len(self.transmitted_bits)
@@ -267,6 +291,92 @@ class Drop:
             self.__block_errors.append(block_error_row)
 
         return self.__block_errors
+
+    @property
+    def transmit_stft(self) -> List[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        """Short time fourier transform of the transmitted antenna signals.
+
+        By default only the first antenna within an array is considered.
+        The computation result gets cached, meaning only the first call is computationally expensive.
+
+        Returns:
+            List of
+                - np.ndarray: Fourier transform frequency bins.
+                - np.ndarray: Timestamps
+                - np.ndarray: Complex fourier transform matrix.
+            for each transmitting modem.
+        """
+
+        # Return the cached result if already computed
+        if self.__transmit_stft is not None:
+            return self.__transmit_stft
+
+        self.__transmit_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+        for antenna_signals in self.__transmitted_signals:
+
+            # Consider only the first antenna signal
+            signal: np.ndarray = antenna_signals[0]
+            window_size = len(signal)
+
+            # Make sure that signal is at least as long as FFT and pad it
+            # with zeros is needed
+            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+
+                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                window_size = self.__spectrum_fft_size
+
+            # Compute stft TODO: Add sampling rate
+            frequency, time, transform = stft(signal, nperseg=window_size,
+                                              noverlap=int(.5 * window_size),
+                                              return_onesided=False)
+
+            # Append result tuple
+            self.__transmit_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
+
+        return self.__transmit_stft
+    
+    @property
+    def receive_stft(self) -> List[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+        """Short time fourier transform of the received antenna signals.
+
+        By default only the first antenna within an array is considered.
+        The computation result gets cached, meaning only the first call is computationally expensive.
+
+        Returns:
+            List of
+                - np.ndarray: Fourier transform frequency bins.
+                - np.ndarray: Timestamps
+                - np.ndarray: Complex fourier transform matrix.
+            for each receiveing modem.
+        """
+
+        # Return the cached result if already computed
+        if self.__receive_stft is not None:
+            return self.__receive_stft
+
+        self.__receive_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+        for antenna_signals in self.__received_signals:
+
+            # Consider only the first antenna signal
+            signal: np.ndarray = antenna_signals[0]
+            window_size = len(signal)
+
+            # Make sure that signal is at least as long as FFT and pad it
+            # with zeros is needed
+            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+
+                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                window_size = self.__spectrum_fft_size
+
+            # Compute stft TODO: Add sampling rate
+            frequency, time, transform = stft(signal, nperseg=window_size,
+                                              noverlap=int(.5 * window_size),
+                                              return_onesided=False)
+
+            # Append result tuple
+            self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
+
+        return self.__receive_stft
 
     def plot_transmitted_signals(self,
                                  visualization: ComplexVisualization = ComplexVisualization.REAL) -> None:
@@ -434,3 +544,37 @@ class Drop:
 
         for reception_index in range(len(self.received_bits)):
             axes[-1, reception_index].set(xlabel="Rx {}".format(reception_index))
+
+    def plot_transmit_stft(self) -> None:
+        """Plot the short-time Fourier transform of transmitted waveforms."""
+
+        # Fetch stft
+        stft = self.transmit_stft
+
+        figure, axes = plt.subplots(self.__num_transmissions, 1, squeeze=False)
+        figure.suptitle("Transmit Short-Time Fourier Transform")
+
+        for transmission_index in range(self.__num_transmissions):
+
+            time, frequency, transform = stft[transmission_index]
+
+            axes[transmission_index, 0].pcolormesh(frequency, time, abs(transform))
+            axes[transmission_index, 0].set(ylabel="Frequency [Hz]")
+            axes[transmission_index, 0].set(xlabel="Time [sec]")
+            
+    def plot_receive_stft(self) -> None:
+        """Plot the short-time Fourier transform of received waveforms."""
+
+        # Fetch stft
+        stft = self.receive_stft
+
+        figure, axes = plt.subplots(self.__num_receptions, 1, squeeze=False)
+        figure.suptitle("Receive Short-Time Fourier Transform")
+
+        for reception_index in range(self.__num_receptions):
+
+            time, frequency, transform = stft[reception_index]
+
+            axes[reception_index, 0].pcolormesh(frequency, time, abs(transform))
+            axes[reception_index, 0].set(ylabel="Frequency [Hz]")
+            axes[reception_index, 0].set(xlabel="Time [sec]")
