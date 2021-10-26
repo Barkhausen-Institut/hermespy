@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
-from typing import Type, List, Optional
+from typing import Type, List
 import numpy as np
 import numpy.random as rnd
 
@@ -86,7 +86,6 @@ class Receiver(Modem):
         if position is not None:
             args['orientation'] = np.array(orientation)
 
-
         # Convert the random seed to a new random generator object if its specified within the config
         random_seed = args.pop('random_seed', None)
         if random_seed is not None:
@@ -114,4 +113,4 @@ class Receiver(Modem):
                 A list of paired modems.
         """
 
-        return [channel.receiver for channel in self.scenario.departing_channels(self, True)]
+        return [channel.receiver for channel in self.scenario.arriving_channels(self, True)]
