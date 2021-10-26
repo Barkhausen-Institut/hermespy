@@ -312,9 +312,10 @@ class Statistics:
         self.__num_drops += 1
 
         # iterate over receivers and its signals received
-        for rx_modem_idx, received_signals in enumerate(detected_bits):
+        for rx_modem_idx, received_signals in enumerate(received_bits):
+
             # get respective snr indices
-            snr_indices = list(np.where(self.run_flag[rx_m+odem_idx])[0])
+            snr_indices = list(np.where(self.run_flag[rx_modem_idx])[0])
 
             # get respective tx_modem
             tx_modem = self.param_scenario.rx_modem_params[rx_modem_idx].tx_modem
