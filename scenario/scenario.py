@@ -481,7 +481,7 @@ class Scenario:
         """Bit block sizes required by registered transmitting modems.
 
         Returns:
-            List[int]: Block size for each transmitting modem.
+            List[int]: Block size for each modem.
         """
 
         block_sizes: List[int] = []
@@ -495,7 +495,7 @@ class Scenario:
         """Bit block sizes required by registered receiving modems.
 
         Returns:
-            List[int]: Block size for eachr modem.
+            List[int]: Block size for each modem.
         """
 
         block_sizes: List[int] = []
