@@ -476,6 +476,34 @@ class Scenario:
 
         return scenario
 
+    @property
+    def transmit_block_sizes(self) -> List[int]:
+        """Bit block sizes required by registered transmitting modems.
+
+        Returns:
+            List[int]: Block size for each transmitting modem.
+        """
+
+        block_sizes: List[int] = []
+        for transmitter in self.__transmitters:
+            block_sizes.append(transmitter.encoder_manager.bit_block_size)
+
+        return block_sizes
+
+    @property
+    def receive_block_sizes(self) -> List[int]:
+        """Bit block sizes required by registered receiving modems.
+
+        Returns:
+            List[int]: Block size for eachr modem.
+        """
+
+        block_sizes: List[int] = []
+        for receiver in self.__receivers:
+            block_sizes.append(receiver.encoder_manager.bit_block_size)
+
+        return block_sizes
+
 
 from modem import Modem, Transmitter, Receiver
 from channel import Channel
