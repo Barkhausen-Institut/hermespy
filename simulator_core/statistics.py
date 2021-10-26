@@ -68,10 +68,10 @@ class Statistics:
     def __init__(self,
                  scenario: Scenario,
                  snrs: List[float],
-                 calc_transmit_spectrum: bool = False,
-                 calc_receive_spectrum: bool = False,
-                 calc_transmit_stft: bool = False,
-                 calc_receive_stft: bool = False,
+                 calc_transmit_spectrum: bool = True,
+                 calc_receive_spectrum: bool = True,
+                 calc_transmit_stft: bool = True,
+                 calc_receive_stft: bool = True,
                  spectrum_fft_size: int = 0,
                  snr_type: SNRType = SNRType.EBN0) -> None:
         """Transmission statistics object initialization.
@@ -176,7 +176,14 @@ class Statistics:
             drop (Drop): The drop to be added.
         """
 
-        self.update_tx_spectrum(drop.transmitted_signals)
+        if self.__calc_transmit_spectrum:
+
+            spectra = drop.transmit_spectrum
+            """for frequencies, periodogram, transmit_spectrum in\
+                    zip(self._frequency_range_tx, self._periodogram_tx, spectra):
+
+                frequencies = transmit_spectrum[0]
+                periodogram += transmit_spectrum[1]"""
 
         for r, received_signal in enumerate(drop.received_signals):
             self.update_rx_spectrum(received_signal, r)
@@ -209,27 +216,15 @@ class Statistics:
         Welch's method is employed for spectral analysis. For multiple antennas, onl the first antenna is considered.
         """
         if self.__calc_transmit_spectrum:
+
             for sampling_rate, frequency_range, periodogram, tx_signal in zip(
                 self._tx_sampling_rate,
                 self._frequency_range_tx,
                 self._periodogram_tx,
                 all_tx_signals,
             ):
-                # make sure that signal is at least as long as FFT and pad it
-                # with zeros is needed
-                if tx_signal.shape[1] < self.__spectrum_fft_size:
-                    number_of_antennas = tx_signal.shape[0]
-                    tx_signal = np.concatenate((tx_signal,
-                                                np.zeros((number_of_antennas, self.__spectrum_fft_size -
-                                                         tx_signal.size))))
 
-                freq, new_periodogram = signal.welch(
-                    tx_signal[0, :],
-                    fs=sampling_rate,
-                    nperseg=self.__spectrum_fft_size,
-                    noverlap=int(.5 * self.__spectrum_fft_size),
-                    return_onesided=False,
-                )
+
                 frequency_range[:] = freq
                 periodogram += new_periodogram
 
