@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from channel.noise import Noise
+from noise.noise import Noise
 
 
 class TestNoise(unittest.TestCase):

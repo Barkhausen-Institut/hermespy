@@ -67,13 +67,15 @@ class Simulation(Executable):
                  calc_receive_spectrum: bool = False,
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
+                 spectrum_fft_size: int = 0,
+                 num_drops: int = 1,
                  plot_bit_error: bool = True,
                  plot_block_error: bool = True,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
                  noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED) -> None:
         """Simulation object initialization.
-+
+
         Args:
             plot_drop (bool, optional):
                 Plot each drop during execution of scenarios.
@@ -89,6 +91,12 @@ class Simulation(Executable):
 
             calc_receive_stft (bool):
                 Compute the short time Fourier transform of received signals.
+
+            spectrum_fft_size (int):
+                Number of discrete frequency bins computed within the Fast Fourier Transforms.
+
+            num_drops (int):
+                Number of drops per executed scenario.
 
             plot_bit_error (bool, optional):
                 Plot resulting bit error rate after simulation.
@@ -107,7 +115,7 @@ class Simulation(Executable):
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
-                            calc_transmit_stft, calc_receive_stft)
+                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops)
 
         self.snr_type = snr_type
         self.plot_bit_error = plot_bit_error
@@ -134,7 +142,8 @@ class Simulation(Executable):
         for scenario in self.scenarios:
 
             # Initialize plot statistics with current scenario state
-            statistics = Statistics(scenario, self.noise_loop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
+            snr = (10 * (np.log10(np.array(self.noise_loop)))).tolist()
+            statistics = Statistics(scenario, snr, self.calc_transmit_spectrum, self.calc_receive_spectrum,
                                     self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size)
 
             # Save most recent drop
@@ -156,7 +165,7 @@ class Simulation(Executable):
                     propagated_signals = Simulation.propagate(scenario, transmitted_signals)
 
                     # Receive and demodulate signal
-                    received_bits = Simulation.receive(scenario, propagated_signals)
+                    received_bits = Simulation.receive(scenario, propagated_signals, self.snr_type, snr)
 
                     # Collect block sizes
                     transmit_block_sizes = scenario.transmit_block_sizes
@@ -371,12 +380,16 @@ class Simulation(Executable):
 
     @staticmethod
     def receive(scenario: Scenario,
-                arriving_signals: List[np.ndarray]) -> List[np.ndarray]:
+                arriving_signals: List[np.ndarray],
+                snr_type: SNRType = SNRType.EBN0,
+                snr: float = 0.0) -> List[np.ndarray]:
         """Generate signals received by all receivers registered with this scenario.
 
         Args:
             scenario (Scenario): The scenario for which to simulate the received signals.
             arriving_signals (List[np.ndarray]): List of signal streams arriving at each receiving modem.
+            snr_type (SNRType, optional): Type of noise.
+            snr (float, optional): Noise.
 
         Returns:
             List[np.ndarray]: A list containing the the signals emitted by each transmitting modem.
@@ -394,7 +407,19 @@ class Simulation(Executable):
 
         for receiver_index, receiver in enumerate(scenario.receivers):
 
+            # Compute noise variance at the receiver
             noise_variance = 0.0
+
+            if snr_type == SNRType.EBN0:
+                noise_variance = receiver.waveform_generator.bit_energy / snr
+
+            elif snr_type == SNRType.ESN0:
+                noise_variance = receiver.waveform_generator.symbol_energy / snr
+
+            elif snr_type == SNRType.CUSTOM:  # TODO: What is custom exactly supposed to do?
+                noise_variance = snr
+
+            # Receive data bits
             data = receiver.receive(arriving_signals[receiver_index], noise_variance)
             data_bits.append(data)
 
@@ -422,7 +447,7 @@ class Simulation(Executable):
         state = {
             "plot_drop": node.plot_drop,
             "snr_type": node.snr_type.value,
-            "noise_loop": node.noise_loop.tolist()
+            "noise_loop": node.noise_loop
         }
 
         # If a global Quadriga interface exists,
@@ -456,5 +481,10 @@ class Simulation(Executable):
         quadriga_interface: Optional[QuadrigaInterface] = state.pop(QuadrigaInterface.yaml_tag, None)
         if quadriga_interface is not None:
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
+
+        # Convert noise loop dB to linear
+        noise_loop = state.pop('noise_loop', None)
+        if noise_loop is not None:
+            state['noise_loop'] = 10 ** (np.array(noise_loop) / 10)
 
         return cls(**state)

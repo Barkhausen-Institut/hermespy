@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from source.bits_source import BitsSource
     from modem import Modem, Transmitter, Receiver
     from channel import Channel
-    from channel.noise import Noise
+    from noise.noise import Noise
     from channel.rx_sampler import RxSampler
 
 

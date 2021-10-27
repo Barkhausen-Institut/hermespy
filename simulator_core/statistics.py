@@ -689,7 +689,7 @@ class Statistics:
 
                 lower = bit_error_rates[:, tx_idx, rx_idx] - self.bit_error_min[:, tx_idx, rx_idx]
                 upper = self.bit_error_max[:, tx_idx, rx_idx] - bit_error_rates[:, tx_idx, rx_idx]
-                error = np.vstack((upper, lower))
+                error = np.vstack((lower, upper))
 
                 # Plot error-bar representation with upper and lower error limits
                 axes[tx_idx, rx_idx].errorbar(self.snr_loop, bit_error_rates[:, tx_idx, rx_idx], error,
@@ -699,7 +699,7 @@ class Statistics:
 
                 # Scale to log if possible
                 if np.any(bit_error_rates[:, tx_idx, rx_idx] > 0.0):
-                    axes[tx_idx, rx_idx].set_yscale("log", nonposy="mask")
+                    axes[tx_idx, rx_idx].set_yscale("log", nonpositive="mask")
 
         # Add outer labeling
         for tx_idx in range(self.__scenario.num_transmitters):
@@ -736,7 +736,7 @@ class Statistics:
 
                 lower = block_error_rates[:, tx_idx, rx_idx] - self.block_error_min[:, tx_idx, rx_idx]
                 upper = self.block_error_max[:, tx_idx, rx_idx] - block_error_rates[:, tx_idx, rx_idx]
-                error = np.vstack((upper, lower))
+                error = np.vstack((lower, upper))
 
                 # Plot error-bar representation with upper and lower error limits
                 axes[tx_idx, rx_idx].errorbar(self.snr_loop, block_error_rates[:, tx_idx, rx_idx], error,
@@ -746,7 +746,7 @@ class Statistics:
 
                 # Scale to log if possible
                 if np.any(block_error_rates[:, tx_idx, rx_idx] > 0.0):
-                    axes[tx_idx, rx_idx].set_yscale("log", nonposy="mask")
+                    axes[tx_idx, rx_idx].set_yscale("log", nonpositive="mask")
 
         # Add outer labeling
         for tx_idx in range(self.__scenario.num_transmitters):

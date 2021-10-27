@@ -6,7 +6,7 @@ from parameters_parser.parameters_general import ParametersGeneral
 from scenario.scenario import Scenario
 from simulator_core.statistics import Statistics
 from modem.modem import Modem
-from channel.noise import Noise
+from noise.noise import Noise
 
 
 class DropLoop:

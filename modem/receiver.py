@@ -8,28 +8,44 @@ import numpy.random as rnd
 from source import BitsSource
 from modem import Modem
 from modem.waveform_generator import WaveformGenerator
+from noise import Noise
 
 
 class Receiver(Modem):
+    """Receiving modem within a scenario configuration.
+
+    Attributes:
+
+        __noise: The noise model.
+    """
 
     yaml_tag = 'Receiver'
+    __noise: Noise
 
     def __init__(self, **kwargs) -> None:
-        Modem.__init__(self, **kwargs)
+        """Receiver modem object initialization."""
 
-    def receive(self, input_signal: np.ndarray, noise_var: float) -> np.ndarray:
+        Modem.__init__(self, **kwargs)
+        self.noise = Noise()
+
+    def receive(self, input_signal: np.ndarray, noise_power: float) -> np.ndarray:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
 
         Args:
             input_signal (np.ndarray): Received signal.
-            noise_var (float): noise variance (for equalization).
+            noise_power (float): Power of the incoming noise, for simulation and possible equalization.
 
         Returns:
             np.array: Detected bits as a list of data blocks for the drop.
         """
-        rx_signal = self.rf_chain.receive(input_signal)
+
+        # Add receive noise
+        noisy_signal = self.__noise.add_noise(input_signal, noise_power)
+
+        # Simulate receive radio chain
+        rx_signal = self.rf_chain.receive(noisy_signal)
 
         # If no receiving waveform generator is configured, no signal is being received
         if self.waveform_generator is None:
@@ -37,7 +53,7 @@ class Receiver(Modem):
 
         # normalize signal to expected input power
         rx_signal = rx_signal / np.sqrt(1.0)  # TODO: Re-implement pair power factor
-        noise_var = noise_var / 1.0  # TODO: Re-implement pair power factor
+        noise_var = noise_power / 1.0  # TODO: Re-implement pair power factor
 
         received_bits = np.empty(0, dtype=int)
         timestamp_in_samples = 0
@@ -79,19 +95,28 @@ class Receiver(Modem):
         args = dict((k.lower(), v) for k, v in state.items())
 
         position = args.pop('position', None)
+        orientation = args.pop('orientation', None)
+        random_seed = args.pop('random_seed', None)
+        noise = args.pop('Noise', None)
+
         if position is not None:
             args['position'] = np.array(position)
 
-        orientation = args.pop('orientation', None)
-        if position is not None:
+        if orientation is not None:
             args['orientation'] = np.array(orientation)
 
         # Convert the random seed to a new random generator object if its specified within the config
-        random_seed = args.pop('random_seed', None)
         if random_seed is not None:
             args['random_generator'] = rnd.default_rng(random_seed)
 
-        return Receiver(**args)
+        # Create new receiver object
+        receiver = Receiver(**args)
+
+        # Update noise model if specified by the configuration
+        if noise is not None:
+            receiver.noise = noise
+
+        return receiver
 
     @property
     def index(self) -> int:
@@ -114,3 +139,27 @@ class Receiver(Modem):
         """
 
         return [channel.receiver for channel in self.scenario.arriving_channels(self, True)]
+
+    @property
+    def noise(self) -> Noise:
+        """Access this receiver's noise model configuration.
+
+        Returns:
+            Noise: Handle the noise model.
+        """
+
+        return self.__noise
+
+    @noise.setter
+    def noise(self, model: Noise) -> None:
+        """Modify this receiver's noise model configuration.
+
+        Args:
+            model (Noise): The new noise model instance.
+
+        Raises:
+            RuntimeError: If the `model` is already attached to a different receiver.
+        """
+
+        self.__noise = model
+        model.receiver = self
