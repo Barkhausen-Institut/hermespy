@@ -29,6 +29,8 @@ Modems:
         modulation_order: 256
     Encoding:
       - Interleaver
+    Noise:
+      seed: 20
 
 
 Channels:

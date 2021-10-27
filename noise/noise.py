@@ -220,7 +220,7 @@ class Noise:
         state = constructor.construct_mapping(node)
 
         # Convert the random seed to a new random generator object if its specified within the config
-        random_seed = state.pop('random_seed', None)
+        random_seed = state.pop('seed', None)
         if random_seed is not None:
             state['random_generator'] = rnd.default_rng(random_seed)
 
