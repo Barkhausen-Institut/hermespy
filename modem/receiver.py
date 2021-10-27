@@ -97,7 +97,7 @@ class Receiver(Modem):
         position = args.pop('position', None)
         orientation = args.pop('orientation', None)
         random_seed = args.pop('random_seed', None)
-        noise = args.pop('Noise', None)
+        noise = args.pop('noise', None)
 
         if position is not None:
             args['position'] = np.array(position)
