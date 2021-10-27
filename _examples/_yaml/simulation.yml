@@ -1,8 +1,8 @@
 !<Simulation>
-  plot_drop: true
+  plot_drop: false
   calc_transmit_spectrum: true
   calc_receive_spectrum: true
   calc_transmit_stft: true
   calc_receive_stft: true
-  noise_loop: [-2] # dB
-  num_drops: 20
+  noise_loop: [-10, 0, 10] # dB
+  num_drops: 5
