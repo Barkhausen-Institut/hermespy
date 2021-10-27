@@ -177,6 +177,16 @@ class WaveformGenerator(ABC):
         self.__modulation_order = order
 
     @property
+    def bits_per_symbol(self) -> int:
+        """Number of bits transmitted per modulated symbol.
+
+        Returns:
+            int: Number of bits per symbol
+        """
+
+        return 2 ** self.__modulation_order
+
+    @property
     @abstractmethod
     def bits_per_frame(self) -> int:
         """Number of bits required to generate a single data frame.

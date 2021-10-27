@@ -65,6 +65,7 @@ class Statistics:
     snr_loop: List[float]
     __num_snr_loops: int
     snr_type: SNRType
+    __theory: TheoreticalResults = TheoreticalResults()
 
     def __init__(self,
                  scenario: Scenario,
@@ -74,17 +75,19 @@ class Statistics:
                  calc_transmit_stft: bool = True,
                  calc_receive_stft: bool = True,
                  spectrum_fft_size: int = 0,
-                 snr_type: SNRType = SNRType.EBN0) -> None:
+                 snr_type: SNRType = SNRType.EBN0,
+                 calc_theory: bool = True) -> None:
         """Transmission statistics object initialization.
 
         Args:
             scenario (Scenario): The scenario for which to generate statistics.
-            snr_loop (List[float]): The signal to noise ratios for which to generate statistics.
+            snr_loop (List[float]): The (linear) signal to noise ratios for which to generate statistics.
             calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
             calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
             calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
             calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
             spectrum_fft_size (int): Number of discrete frequency bins computed within the Fast Fourier Transforms.
+            calc_theory (bool, optional): Calculate theoretical results, if possible.
         """
 
         self.__scenario = scenario
@@ -94,7 +97,7 @@ class Statistics:
         self.__calc_transmit_stft = calc_transmit_stft
         self.__calc_receive_stft = calc_receive_stft
         self.__spectrum_fft_size = spectrum_fft_size
-        self.__calc_theory = False
+        self.__calc_theory = calc_theory
         self.snr_type = snr_type
         
         # Inferred attributes
@@ -142,7 +145,8 @@ class Statistics:
         self._stft_rx: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
 
         if self.__calc_theory:
-            self.theoretical_results = TheoreticalResults(scenario)
+            self.theoretical_results = self.__theory.theory(scenario, np.array(snr_loop))
+
         else:
             self.theoretical_results = None
 
@@ -672,6 +676,7 @@ class Statistics:
 
         # Fetch bit error rates
         bit_error_rates = self.average_bit_error_rate
+        snr = 10 * np.log10(self.snr_loop)
 
         # Initialize plot window
         plot, axes = plt.subplots(self.__scenario.num_transmitters, self.__scenario.num_receivers, squeeze=False)
@@ -692,8 +697,15 @@ class Statistics:
                 error = np.vstack((lower, upper))
 
                 # Plot error-bar representation with upper and lower error limits
-                axes[tx_idx, rx_idx].errorbar(self.snr_loop, bit_error_rates[:, tx_idx, rx_idx], error,
+                axes[tx_idx, rx_idx].errorbar(snr, bit_error_rates[:, tx_idx, rx_idx], error,
                                               label="Simulation")
+
+                # Plot theory, if available
+                if self.theoretical_results is not None and self.theoretical_results[tx_idx, rx_idx] is not None:
+
+                    ber = self.theoretical_results[tx_idx, rx_idx]['ber']
+                    axes[tx_idx, rx_idx].plot(snr, ber, label="Theory")
+
                 axes[tx_idx, rx_idx].grid()
                 axes[tx_idx, rx_idx].legend()
 
@@ -719,6 +731,8 @@ class Statistics:
 
         # Fetch block error rates
         block_error_rates = self.average_block_error_rate
+        snr = 10 * np.log10(self.snr_loop)
+
 
         # Initialize plot window
         plot, axes = plt.subplots(self.__scenario.num_transmitters, self.__scenario.num_receivers, squeeze=False)
@@ -739,8 +753,15 @@ class Statistics:
                 error = np.vstack((lower, upper))
 
                 # Plot error-bar representation with upper and lower error limits
-                axes[tx_idx, rx_idx].errorbar(self.snr_loop, block_error_rates[:, tx_idx, rx_idx], error,
+                axes[tx_idx, rx_idx].errorbar(snr, block_error_rates[:, tx_idx, rx_idx], error,
                                               label="Simulation")
+
+                # Plot theory, if available
+                if self.theoretical_results is not None and self.theoretical_results[tx_idx, rx_idx] is not None:
+
+                    ber = self.theoretical_results[tx_idx, rx_idx]['ber']
+                    axes[tx_idx, rx_idx].plot(snr, ber, label="Theory")
+
                 axes[tx_idx, rx_idx].grid()
                 axes[tx_idx, rx_idx].legend()
 

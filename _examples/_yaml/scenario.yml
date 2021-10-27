@@ -30,7 +30,7 @@ Modems:
     Encoding:
       - Interleaver
     Noise:
-      seed: 20
+      random_seed: 20
 
 
 Channels:

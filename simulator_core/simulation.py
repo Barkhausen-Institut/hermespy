@@ -142,8 +142,7 @@ class Simulation(Executable):
         for scenario in self.scenarios:
 
             # Initialize plot statistics with current scenario state
-            snr = (10 * (np.log10(np.array(self.noise_loop)))).tolist()
-            statistics = Statistics(scenario, snr, self.calc_transmit_spectrum, self.calc_receive_spectrum,
+            statistics = Statistics(scenario, self.noise_loop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
                                     self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size)
 
             # Save most recent drop
