@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 from typing import List, Type, Optional, Union
+from enum import Enum
 import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
@@ -33,12 +34,32 @@ class SimulationDrop(Drop):
         Drop.__init__(self, *args)
 
 
+class ConfidenceMetric(Enum):
+    """Confidence metric for stopping criteria during simulation execution. """
+
+    DISABLED = 0        # No stopping criterion
+    BER = 1             # Bit Error Rate
+    FER = 2             # ? Error Rate
+
+
 class Simulation(Executable):
-    """HermesPy simulation configuration."""
+    """HermesPy simulation configuration.
+
+    Attributes:
+
+        plot_bit_error (bool):
+            Plot resulting bit error rate after simulation.
+
+        plot_block_error (bool):
+            Plot resulting block error rate after simulation.
+    """
 
     yaml_tag = u'Simulation'
     snr_type: SNRType
     noise_loop: List[float]
+    confidence_metric: ConfidenceMetric
+    plot_bit_error: bool
+    plot_block_error: bool
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -46,30 +67,65 @@ class Simulation(Executable):
                  calc_receive_spectrum: bool = False,
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
+                 plot_bit_error: bool = True,
+                 plot_block_error: bool = True,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
-                 noise_loop: Union[List[float], np.ndarray] = np.array([0.0])) -> None:
+                 noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
+                 confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED) -> None:
         """Simulation object initialization.
 +
         Args:
-            plot_drop (bool): Plot each drop during execution of scenarios.
-            calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
-            calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
-            calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
-            calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
-            snr_type (Union[str, SNRType]): The signal to noise ratio metric to be used.
-            noise_loop (Union[List[float], np.ndarray]): Loop over different noise levels.
+            plot_drop (bool, optional):
+                Plot each drop during execution of scenarios.
+
+            calc_transmit_spectrum (bool):
+                Compute the transmitted signals frequency domain spectra.
+
+            calc_receive_spectrum (bool):
+                Compute the received signals frequency domain spectra.
+
+            calc_transmit_stft (bool):
+                Compute the short time Fourier transform of transmitted signals.
+
+            calc_receive_stft (bool):
+                Compute the short time Fourier transform of received signals.
+
+            plot_bit_error (bool, optional):
+                Plot resulting bit error rate after simulation.
+
+            plot_block_error (bool, optional):
+                Plot resulting block error rate after simulation.
+
+            snr_type (Union[str, SNRType]):
+                The signal to noise ratio metric to be used.
+
+            noise_loop (Union[List[float], np.ndarray]):
+                Loop over different noise levels.
+
+            confidence_metric (Union[ConfidenceMetric, str], optional):
+                Metric for premature simulation stopping criterion
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
                             calc_transmit_stft, calc_receive_stft)
 
         self.snr_type = snr_type
+        self.plot_bit_error = plot_bit_error
+        self.plot_block_error = plot_block_error
 
+        # Convert noise loop from array to list if the provided argument is a numpy array
         if isinstance(noise_loop, np.ndarray):
             self.noise_loop = noise_loop.tolist()
 
         else:
             self.noise_loop = noise_loop
+
+        # Recover confidence metric enumeration from string value if the provided argument is a string
+        if isinstance(confidence_metric, str):
+            self.confidence_metric = ConfidenceMetric[confidence_metric]
+
+        else:
+            self.confidence_metric = confidence_metric
 
     def run(self) -> None:
         """Run the full simulation configuration."""
@@ -78,53 +134,73 @@ class Simulation(Executable):
         for scenario in self.scenarios:
 
             # Initialize plot statistics with current scenario state
-            statistics = Statistics(scenario, [0.0], self.calc_transmit_spectrum, self.calc_receive_spectrum,
+            statistics = Statistics(scenario, self.noise_loop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
                                     self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size)
 
-            # Iterate over configured number of required simulation drops
-            for _ in range(self.num_drops):
+            # Save most recent drop
+            drop: Optional[SimulationDrop] = None
 
-                # Generate data bits to be transmitted
-                data_bits = scenario.generate_data_bits()
+            # Iterate over required noise taps
+            for noise_index, snr in enumerate(self.noise_loop):
 
-                # Generate radio-frequency band signal emitted from each transmitter
-                transmitted_signals = Simulation.transmit(scenario, data_bits=data_bits)
+                # Iterate over configured number of required simulation drops
+                for d in range(self.num_drops):
 
-                # Simulate propagation over channel model
-                propagated_signals = Simulation.propagate(scenario, transmitted_signals)
+                    # Generate data bits to be transmitted
+                    data_bits = scenario.generate_data_bits()
 
-                # Receive and demodulate signal
-                received_bits = Simulation.receive(scenario, propagated_signals)
+                    # Generate radio-frequency band signal emitted from each transmitter
+                    transmitted_signals = Simulation.transmit(scenario, data_bits=data_bits)
 
-                # Collect block sizes
-                transmit_block_sizes = scenario.transmit_block_sizes
-                receive_block_sizes = scenario.receive_block_sizes
+                    # Simulate propagation over channel model
+                    propagated_signals = Simulation.propagate(scenario, transmitted_signals)
 
-                # Save generated signals
-                drop = SimulationDrop(data_bits, transmitted_signals, transmit_block_sizes, propagated_signals,
-                                      received_bits, receive_block_sizes)
+                    # Receive and demodulate signal
+                    received_bits = Simulation.receive(scenario, propagated_signals)
 
-                # Visualize plot if requested
-                if self.plot_drop:
+                    # Collect block sizes
+                    transmit_block_sizes = scenario.transmit_block_sizes
+                    receive_block_sizes = scenario.receive_block_sizes
 
-                    drop.plot_transmitted_bits()
-                    drop.plot_transmitted_signals()
-                    drop.plot_received_signals()
-                    drop.plot_received_bits()
-                    drop.plot_bit_errors()
-                    drop.plot_block_errors()
-                    drop.plot_transmit_stft()
-                    drop.plot_receive_stft()
-                    drop.plot_transmit_spectrum()
-                    drop.plot_receive_spectrum()
+                    # Save generated signals
+                    drop = SimulationDrop(data_bits, transmitted_signals, transmit_block_sizes, propagated_signals,
+                                          received_bits, receive_block_sizes)
 
-                    plt.show()
+                    # Visualize plot if requested
+                    if self.plot_drop:
 
-                # Add drop to the statistics
-                statistics.add_drop(drop)
+                        drop.plot()
+                        plt.show()
+
+                    # Add drop to the statistics
+                    statistics.add_drop(drop, noise_index)
 
             # Dump statistics results
             statistics.save(self.results_dir)
+
+            # Plot statistics results, if flags apply
+            if self.calc_transmit_spectrum:
+                statistics.plot_transmit_spectrum()
+
+            if self.calc_receive_spectrum:
+                statistics.plot_receive_spectrum()
+
+            if self.plot_bit_error:
+                statistics.plot_bit_error_rates()
+
+            if self.plot_block_error:
+                statistics.plot_block_error_rates()
+
+            # Plot the last drop to visualize stfts, if available
+            if drop is not None:
+
+                if self.calc_transmit_stft:
+                    drop.plot_transmit_stft()
+
+                if self.calc_receive_stft:
+                    drop.plot_receive_stft()
+
+            plt.show()
 
     @property
     def snr_type(self) -> SNRType:
@@ -151,7 +227,7 @@ class Simulation(Executable):
         self.__snr_type = snr_type
 
     @property
-    def noise_loop(self) -> np.ndarray:
+    def noise_loop(self) -> List[float]:
         """Access the configured signal to noise ratios over which the simulation iterates.
 
         Returns:
@@ -171,12 +247,13 @@ class Simulation(Executable):
             ValueError: If `loop` does not represent a vector with at least one entry.
         """
 
-        # Convert lists to arrays
-        if isinstance(loop, List):
-            loop = np.array(loop, dtype=float)
+        # Convert arrays to list
+        if isinstance(loop, np.ndarray):
 
-        if loop.ndim != 1:
-            raise ValueError("The noise loop must be a vector")
+            if loop.ndim != 1:
+                raise ValueError("The noise loop must be a vector")
+
+            loop = loop.tolist()
 
         if len(loop) < 1:
             raise ValueError("The noise loop must contain at least one SNR entry")
