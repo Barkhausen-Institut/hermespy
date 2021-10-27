@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import List, Optional, Tuple
 from scipy.signal import stft, welch
 from scipy.fft import fftshift
+from statistics import mean
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import IntEnum
@@ -126,6 +127,16 @@ class Drop:
             Spectral analysis of the transmitted signals.
             For each receiver, a tuple of frequency bins, and frequency transform nodes is cached.
             If no result has been computed yet, the attribute is None.
+
+        __bit_error_rates (Optional[List[List[Optional[float]]]]):
+            Rate of bit errors that occured during transmission.
+            A matrix of dimensions `num_transmitters`x`num_receivers`.
+            Matrix fields representing invalid links will be set to None.
+
+        __block_error_rates (Optional[List[List[Optional[float]]]]):
+            Rate of bit block errors that occured during transmission.
+            A matrix of dimensions `num_transmitters`x`num_receivers`.
+            Matrix fields representing invalid links will be set to None.
     """
 
     __transmitted_bits: List[np.ndarray]
@@ -138,10 +149,12 @@ class Drop:
     __pad_bit_errors: bool
     __block_errors: Optional[List[List[Optional[np.ndarray]]]]
     __spectrum_fft_size: Optional[int]
-    __transmit_stft = Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
-    __receive_stft = Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
-    __transmit_spectrum = Optional[List[Tuple[np.ndarray, np.ndarray]]]
-    __receive_spectrum = Optional[List[Tuple[np.ndarray, np.ndarray]]]
+    __transmit_stft: Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
+    __receive_stft: Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]
+    __transmit_spectrum: Optional[List[Tuple[np.ndarray, np.ndarray]]]
+    __receive_spectrum: Optional[List[Tuple[np.ndarray, np.ndarray]]]
+    __bit_error_rates: Optional[List[List[Optional[float]]]]
+    __block_error_rates: Optional[List[List[Optional[float]]]]
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
@@ -187,6 +200,8 @@ class Drop:
         self.__receive_stft = None
         self.__transmit_spectrum = None
         self.__receive_spectrum = None
+        self.__bit_error_rates = None
+        self.__block_error_rates = None
 
         # Infer parameters
         self.__num_transmissions = len(self.transmitted_bits)
@@ -258,6 +273,70 @@ class Drop:
             self.__bit_errors.append(transmit_errors)
 
         return self.__bit_errors
+
+    @property
+    def bit_error_rates(self) -> List[List[Optional[np.ndarray]]]:
+        """Detect the bit transmission error rates between all transmitting and receiving modems.
+
+        The computation result gets buffered, meaning only the first call is computationally expensive.
+
+        Returns:
+            List[List[Optional[float]]]:
+                A matrix of dimensions `num_transmitters`x`num_receivers`.
+                Matrix fields representing invalid links will be set to None.
+        """
+
+        # Return the cached result if already computed
+        if self.__bit_error_rates is not None:
+            return self.__bit_error_rates
+
+        self.__bit_error_rates: List[List[Optional[float]]] = []
+        for bit_error_row in self.bit_errors:
+
+            bit_error_rate_row = []
+            for bit_errors in bit_error_row:
+
+                bit_error_rate = None
+                if bit_errors is not None:
+                    bit_error_rate = mean(bit_errors)
+
+                bit_error_rate_row.append(bit_error_rate)
+
+            self.__bit_error_rates.append(bit_error_rate_row)
+
+        return self.__bit_error_rates
+
+    @property
+    def block_error_rates(self) -> List[List[Optional[np.ndarray]]]:
+        """Detect the bit block transmission error rates between all transmitting and receiving modems.
+
+        The computation result gets buffered, meaning only the first call is computationally expensive.
+
+        Returns:
+            List[List[Optional[float]]]:
+                A matrix of dimensions `num_transmitters`x`num_receivers`.
+                Matrix fields representing invalid links will be set to None.
+        """
+
+        # Return the cached result if already computed
+        if self.__block_error_rates is not None:
+            return self.__block_error_rates
+
+        self.__block_error_rates: List[List[Optional[float]]] = []
+        for block_error_row in self.block_errors:
+
+            block_error_rate_row = []
+            for block_errors in block_error_row:
+
+                block_error_rate = None
+                if block_errors is not None:
+                    block_error_rate = mean(block_errors)
+
+                block_error_rate_row.append(block_error_rate)
+
+            self.__block_error_rates.append(block_error_rate_row)
+
+        return self.__block_error_rates
 
     @property
     def block_errors(self) -> List[List[Optional[np.ndarray]]]:
@@ -707,3 +786,20 @@ class Drop:
             axes[reception_index, 0].plot(fftshift(frequency), fftshift(10 * np.log10(periodogram)))
             axes[reception_index, 0].set(xlabel="Frequency [Hz]")
             axes[reception_index, 0].set(ylabel="Power [dB]")
+
+    def plot(self) -> None:
+        """Use matplotlib to visualize the drop.
+
+        The plots will be buffered, call ``matplotlib.pyplot.show()`` in order to display them.
+        """
+
+        self.plot_transmitted_bits()
+        self.plot_transmitted_signals()
+        self.plot_received_signals()
+        self.plot_received_bits()
+        self.plot_bit_errors()
+        self.plot_block_errors()
+        self.plot_transmit_stft()
+        self.plot_receive_stft()
+        self.plot_transmit_spectrum()
+        self.plot_receive_spectrum()

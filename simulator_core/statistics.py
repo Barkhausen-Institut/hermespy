@@ -2,10 +2,11 @@
 """Transmission statistics computation."""
 
 import os
-from typing import List
+from typing import List, Tuple, Optional
 from matplotlib import pyplot as plt
 import scipy.io as sio
 from scipy import signal
+from scipy.fft import fftshift
 from enum import Enum
 from scipy import stats
 import scipy.fft as fft
@@ -45,8 +46,8 @@ class Statistics:
         __calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int); Number of discrete frequency bins computed within the Fast Fourier Transforms.
         __num_drops (int): Number of drops already added to the statistics.
-        __snrs (List[float]): List of signal to noise ratios.
-        __num_snrs (int): Different number of snrs to perform simulation for.
+        snr_loop (List[float]): List of signal to noise ratios.
+        __num_snr_loops (int): Different number of snrs to perform simulation for.
         number_of_tx_signals(int):
         run_flag[List[np.array]]:
             Each list item corresponds to one receiver modem.
@@ -61,13 +62,13 @@ class Statistics:
     __calc_receive_stft: bool
     __spectrum_fft_size: int
     __num_drops: int
-    __snrs: List[float]
-    __num_snrs: int
+    snr_loop: List[float]
+    __num_snr_loops: int
     snr_type: SNRType
 
     def __init__(self,
                  scenario: Scenario,
-                 snrs: List[float],
+                 snr_loop: List[float],
                  calc_transmit_spectrum: bool = True,
                  calc_receive_spectrum: bool = True,
                  calc_transmit_stft: bool = True,
@@ -78,7 +79,7 @@ class Statistics:
 
         Args:
             scenario (Scenario): The scenario for which to generate statistics.
-            snrs (List[float]): The signal to noise ratios for which to generate statistics.
+            snr_loop (List[float]): The signal to noise ratios for which to generate statistics.
             calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
             calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
             calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
@@ -87,7 +88,7 @@ class Statistics:
         """
 
         self.__scenario = scenario
-        self.__snrs = snrs
+        self.snr_loop = snr_loop
         self.__calc_transmit_spectrum = calc_transmit_spectrum
         self.__calc_receive_spectrum = calc_receive_spectrum
         self.__calc_transmit_stft = calc_transmit_stft
@@ -98,41 +99,24 @@ class Statistics:
         
         # Inferred attributes
         self.__num_drops = 0
-        self.__num_snrs = len(snrs)
+        self.__num_snr_loops = len(snr_loop)
 
         self.run_flag = [
-            np.ones(self.__num_snrs, dtype=np.bool_)
-            for _ in range(self.__scenario.num_transmitters)
-        ]
-        self.ber = [
-            [np.empty(0) for idx in range(self.__num_snrs)]
+            np.ones(self.__num_snr_loops, dtype=np.bool_)
             for _ in range(self.__scenario.num_transmitters)
         ]
 
-        self.fer = [
-            [np.empty(0) for idx in range(self.__num_snrs)]
-            for _ in range(self.__scenario.num_transmitters)
-        ]
+        self.bit_error_num_drops = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.block_error_num_drops = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
-        self.ber_mean = [
-            np.ones(self.__num_snrs) * np.nan for _ in range(self.__scenario.num_transmitters)
-        ]
-        self.ber_lower = [
-            np.ones(self.__num_snrs) * np.nan for _ in range(self.__scenario.num_transmitters)
-        ]
-        self.ber_upper = [
-            np.ones(self.__num_snrs) * np.nan for _ in range(self.__scenario.num_transmitters)
-        ]
+        self.bit_error_sum = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.block_error_sum = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
-        self.fer_mean = [
-            np.ones(self.__num_snrs) * np.nan for _ in range(self.__scenario.num_transmitters)
-        ]
-        self.fer_lower = [
-            np.ones(self.__num_snrs) * np.nan for _ in range(self.__scenario.num_transmitters)
-        ]
-        self.fer_upper = [
-            np.ones(self.__num_snrs) * np.nan for _ in range(self.__scenario.num_transmitters)
-        ]
+        self.bit_error_min = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.block_error_min = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+
+        self.bit_error_max = np.ones((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.block_error_max = np.ones((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
         self._tx_sampling_rate = [
             modem.waveform_generator.sampling_rate for modem in self.__scenario.transmitters
@@ -149,45 +133,42 @@ class Statistics:
 
         self._frequency_range_rx = [np.array([]) for _ in range(self.__scenario.num_transmitters)]
 
-        self._periodogram_tx = [
-            np.zeros(self.__spectrum_fft_size)
-            for _ in range(self.__scenario.num_transmitters)
-        ]
+        self._periodogram_tx: List[np.ndarray] = [np.empty(0, dtype=complex) for _ in
+                                                  range(self.__scenario.num_transmitters)]
+        self._periodogram_rx: List[np.ndarray] = [np.empty(0, dtype=complex) for _ in
+                                                  range(self.__scenario.num_receivers)]
 
-        self._periodogram_rx = [np.array([]) for _ in range(self.__scenario.num_transmitters)]
-
-        self._stft_freq_tx: List[np.array] = [np.array([])]
-        self._stft_time_tx: List[np.array] = [np.array([])]
-        self._stft_power_tx: List[np.array] = [np.array([])]
-
-        self._stft_freq_rx = [np.array([]) for _ in range(self.__scenario.num_transmitters)]
-        self._stft_time_rx = [np.array([]) for _ in range(self.__scenario.num_transmitters)]
-        self._stft_power_rx = [np.array([]) for _ in range(self.__scenario.num_transmitters)]
+        self._stft_tx: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+        self._stft_rx: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
 
         if self.__calc_theory:
             self.theoretical_results = TheoreticalResults(scenario)
         else:
             self.theoretical_results = None
 
-    def add_drop(self, drop: Drop) -> None:
+    def add_drop(self, drop: Drop, snr_index: int) -> None:
         """Add a new transmission drop to the statistics.
 
         Args:
             drop (Drop): The drop to be added.
+            snr_index (int): Index of the SNR within the configured loop.
         """
 
         if self.__calc_transmit_spectrum:
+            self.__add_transmit_spectrum(drop)
+                
+        if self.__calc_receive_spectrum:
+            self.__add_receive_spectrum(drop)
 
-            spectra = drop.transmit_spectrum
-            """for frequencies, periodogram, transmit_spectrum in\
-                    zip(self._frequency_range_tx, self._periodogram_tx, spectra):
+        if self.__calc_transmit_stft:
+            self._stft_tx = drop.transmit_stft
 
-                frequencies = transmit_spectrum[0]
-                periodogram += transmit_spectrum[1]"""
+        if self.__calc_receive_stft:
+            self._stft_rx = drop.receive_stft
 
-        for r, received_signal in enumerate(drop.received_signals):
-            self.update_rx_spectrum(received_signal, r)
+        self.__add_bit_error_rate(drop, snr_index)
 
+        # Increase internal drop counter
         self.__num_drops += 1
 
     def add_drops(self, drops: List[Drop]) -> None:
@@ -210,103 +191,101 @@ class Statistics:
 
         return self.__num_drops
 
-    def update_tx_spectrum(self, all_tx_signals: List[np.ndarray]) -> None:
-        """updates spectrum analysis for all the transmit signals in "all_tx_signals" at a drop.
-
-        Welch's method is employed for spectral analysis. For multiple antennas, onl the first antenna is considered.
-        """
-        if self.__calc_transmit_spectrum:
-
-            for sampling_rate, frequency_range, periodogram, tx_signal in zip(
-                self._tx_sampling_rate,
-                self._frequency_range_tx,
-                self._periodogram_tx,
-                all_tx_signals,
-            ):
-
-
-                frequency_range[:] = freq
-                periodogram += new_periodogram
-
-        if self.__calc_transmit_stft and self._stft_freq_tx[0].size == 0:
-            self._stft_freq_tx = []
-            self._stft_time_tx = []
-            self._stft_power_tx = []
-
-            for sampling_rate, tx_signal in zip(
-                    self._tx_sampling_rate, all_tx_signals):
-                # make sure that signal is at least as long as FFT and pad it
-                # with zeros is needed
-                if tx_signal.shape[1] < self.__spectrum_fft_size:
-                    number_of_antennas = tx_signal.shape[0]
-                    tx_signal = np.concatenate((tx_signal,
-                                                np.zeros((number_of_antennas, self.__spectrum_fft_size -
-                                                         tx_signal.size))))
-
-                f, t, zxx = signal.stft(tx_signal[0, :], sampling_rate,
-                                        nperseg=self.__spectrum_fft_size,
-                                        noverlap=int(.5 * self.__spectrum_fft_size),
-                                        return_onesided=False)
-                self._stft_freq_tx.append(fft.fftshift(f))
-                self._stft_time_tx.append(t)
-                self._stft_power_tx.append(fft.fftshift(zxx, axes=0))
-
-    def update_rx_spectrum(self, rx_signal: np.ndarray, rx_idx: int) -> None:
-        """updates spectrum analysis for a given received signal
-
-        Welch's method is employed for spectral analysis. For MIMO, only first antenna is considered.
+    def __add_transmit_spectrum(self, drop: Drop) -> None:
+        """Subroutine to add a new transmit spectral information from a new drop.
 
         Args:
-                rx_signal(numpy.ndarray): received signal
-
-                rx_idx(int): modem index of the received signal
+            drop (Drop): The new drop.
         """
 
-        rx_signal = rx_signal[0, :].ravel()
-        # make sure that signal is at least as long as FFT and pad it with
-        # zeros is needed
-        if rx_signal.size < self.__spectrum_fft_size:
-            rx_signal = np.concatenate((rx_signal, np.zeros(self.__spectrum_fft_size -
-                                                            rx_signal.size)))
+        # Fetch transmit spectra from drop
+        transmit_spectra = drop.transmit_spectrum
 
-        if self.__calc_receive_spectrum and self._periodogram_rx[rx_idx].size == 0:
+        # Initialize containers during first drop
+        if self.__num_drops < 1:
+            for transmitter_index in range(self.__scenario.num_transmitters):
+                self._frequency_range_tx[transmitter_index] = transmit_spectra[transmitter_index][0]
+                self._periodogram_tx[transmitter_index] = np.zeros(len(transmit_spectra[transmitter_index][0]),
+                                                                   dtype=float)
 
-            self._frequency_range_rx[rx_idx], self._periodogram_rx[rx_idx] = signal.welch(
-                rx_signal, fs=self._rx_sampling_rate[rx_idx],
-                nperseg=self.__spectrum_fft_size, return_onesided=False,
-            )
+        # Add new periodogram to the sum of periodograms
+        for periodogram, (_, new_periodogram) in zip(self._periodogram_tx, transmit_spectra):
+            periodogram += new_periodogram
 
-        if self.__calc_receive_stft and self._stft_freq_rx[rx_idx].size == 0:
-            f, self._stft_time_rx[rx_idx], zxx = signal.stft(rx_signal.ravel(), self._rx_sampling_rate[rx_idx],
-                                                             return_onesided=False)
-            self._stft_freq_rx[rx_idx] = fft.fftshift(f)
-            self._stft_power_rx[rx_idx] = fft.fftshift(zxx, axes=0)
+    def __add_receive_spectrum(self, drop: Drop) -> None:
+        """Subroutine to add a new receive spectral information from a new drop.
 
-    def update_error_rate(self,
-                          transmitted_bits: List[np.ndarray],
-                          received_bits: List[np.ndarray]) -> None:
+        Args:
+            drop (Drop): The new drop.
+        """
+
+        # Fetch receive spectra from drop
+        receive_spectra = drop.receive_spectrum
+
+        # Initialize containers during first drop
+        if self.__num_drops < 1:
+            for receiver_index in range(self.__scenario.num_receivers):
+                self._frequency_range_rx[receiver_index] = receive_spectra[receiver_index][0]
+                self._periodogram_rx[receiver_index] = np.zeros(len(receive_spectra[receiver_index][0]),
+                                                                dtype=float)
+
+        # Add new periodogram to the sum of periodograms
+        for periodogram, (_, new_periodogram) in zip(self._periodogram_rx, receive_spectra):
+            periodogram += new_periodogram
+
+    def __add_bit_error_rate(self, drop: Drop, snr_index: int) -> None:
         """Calculates error rate between received signal in bits and source bits.
 
-        It is also checked whether the stopping crtieria need to be updated.
+        It is also checked whether the stopping criteria need to be updated.
 
         Args:
-            sources (List[BitsSource]): list of sources for the tx modems
-            detected_bits (List[List[np.array]]):
-                List of bits received by the receiver. Each list item corresponds
-                to a receiving modem. A list item contains a list, which in turn
-                represents a frame. This np.array of the frame is of size
-                `self.__num_snrs x no_blocks x bits_length`
-                with the detoriated signals.
+            drop (Drop): The drop to be added.
+            snr_index (int): Index of the SNR within the configured loop.
         """
-        for rx_modem_idx in range(len(detected_bits)):
-            if detected_bits[rx_modem_idx][0].shape[0] != sum(
-                    self.run_flag[rx_modem_idx]):
-                raise ValueError(
-                    "'detected_bits' and 'snr_vector' must have the same length"
-                )
+
+        # Fetch bit and block errors grids from drop object
+        bit_error_rates: List[List[Optional[float]]] = drop.bit_error_rates
+        block_error_rates: List[List[Optional[np.ndarray]]] = drop.block_error_rates
+
+        # Enumerate over bit and block error grids simultaneously.
+        # Each respective grid entry may be None if no error rate computation is feasible.
+        for tx_modem, (bit_error_row, block_error_row) in enumerate(zip(bit_error_rates, block_error_rates)):
+            for rx_modem, (bit_error, block_error) in enumerate(zip(bit_error_row, block_error_row)):
+
+                if bit_error is not None:
+
+                    # Increase drop counter for the specific grid field
+                    self.bit_error_num_drops[snr_index, tx_modem, rx_modem] += 1
+
+                    # Sum up all error rates
+                    self.bit_error_sum[snr_index, tx_modem, rx_modem] += bit_error
+
+                    # Update minimal bit error over all drops
+                    bit_error_min = self.bit_error_min[snr_index, tx_modem, rx_modem]
+                    self.bit_error_min[snr_index, tx_modem, rx_modem] = min(bit_error_min, bit_error)
+
+                    # Update maximal bit error over all drops
+                    bit_error_max = self.bit_error_max[snr_index, tx_modem, rx_modem]
+                    self.bit_error_max[snr_index, tx_modem, rx_modem] = min(bit_error_max, bit_error)
+
+                if block_error is not None:
+
+                    # Increase drop counter for the specific grid field
+                    self.block_error_num_drops[snr_index, tx_modem, rx_modem] += 1
+                    
+                    # Sum up all error rates
+                    self.block_error_sum[snr_index, tx_modem, rx_modem] += block_error
+
+                    # Update minimal block error over all drops
+                    block_error_min = self.block_error_min[snr_index, tx_modem, rx_modem]
+                    self.block_error_min[snr_index, tx_modem, rx_modem] = min(block_error_min, block_error)
+
+                    # Update maximal block error over all drops
+                    block_error_max = self.block_error_max[snr_index, tx_modem, rx_modem]
+                    self.block_error_max[snr_index, tx_modem, rx_modem] = min(block_error_max, block_error)
 
         # iterate over receivers and its signals received
-        for rx_modem_idx, received_signals in enumerate(received_bits):
+        """for rx_modem_idx, received_signals in enumerate(received_bits):
 
             # get respective snr indices
             snr_indices = list(np.where(self.run_flag[rx_modem_idx])[0])
@@ -335,33 +314,33 @@ class Statistics:
                 )
 
                 # update b(l)er statistics
-                self.ber_mean[rx_modem_idx][snr_idx] = np.mean(
+                self.bit_error_sum[rx_modem_idx][snr_idx] = np.mean(
                     self.ber[rx_modem_idx][snr_idx]
                 )
-                self.ber_lower[rx_modem_idx][snr_idx] = np.min(
+                self.bit_error_min[rx_modem_idx][snr_idx] = np.min(
                     self.ber[rx_modem_idx][snr_idx]
                 )
-                self.ber_upper[rx_modem_idx][snr_idx] = np.max(
+                self.bit_error_max[rx_modem_idx][snr_idx] = np.max(
                     self.ber[rx_modem_idx][snr_idx]
                 )
 
-                self.fer_mean[rx_modem_idx][snr_idx] = np.mean(
+                self.block_error_sum[rx_modem_idx][snr_idx] = np.mean(
                     self.fer[rx_modem_idx][snr_idx]
                 )
-                self.fer_lower[rx_modem_idx][snr_idx] = np.min(
+                self.block_error_min[rx_modem_idx][snr_idx] = np.min(
                     self.fer[rx_modem_idx][snr_idx]
                 )
-                self.fer_upper[rx_modem_idx][snr_idx] = np.max(
+                self.block_error_max[rx_modem_idx][snr_idx] = np.max(
                     self.fer[rx_modem_idx][snr_idx]
                 )
 
                 # calculate confidence margins
                 if self.__num_drops >= self.param_general.min_num_drops:
                     # define those to save typing
-                    ber_lower = self.ber_lower[rx_modem_idx][snr_idx]
-                    fer_lower = self.fer_lower[rx_modem_idx][snr_idx]
-                    ber_upper = self.ber_upper[rx_modem_idx][snr_idx]
-                    fer_upper = self.fer_upper[rx_modem_idx][snr_idx]
+                    ber_lower = self.bit_error_min[rx_modem_idx][snr_idx]
+                    fer_lower = self.block_error_min[rx_modem_idx][snr_idx]
+                    ber_upper = self.bit_error_max[rx_modem_idx][snr_idx]
+                    fer_upper = self.block_error_max[rx_modem_idx][snr_idx]
 
                     # start with BER calculation
                     ber_rx = self.ber[rx_modem_idx][snr_idx]
@@ -396,10 +375,10 @@ class Statistics:
                         fer_lower = self.fer[rx_modem_idx][snr_idx]
                         fer_upper = self.fer[rx_modem_idx][snr_idx]
 
-                    self.ber_lower[rx_modem_idx][snr_idx] = ber_lower
-                    self.fer_lower[rx_modem_idx][snr_idx] = fer_lower
-                    self.ber_upper[rx_modem_idx][snr_idx] = ber_upper
-                    self.fer_upper[rx_modem_idx][snr_idx] = fer_upper
+                    self.bit_error_min[rx_modem_idx][snr_idx] = ber_lower
+                    self.block_error_min[rx_modem_idx][snr_idx] = fer_lower
+                    self.bit_error_max[rx_modem_idx][snr_idx] = ber_upper
+                    self.block_error_max[rx_modem_idx][snr_idx] = fer_upper
 
             # update stopping criteria
             if (
@@ -410,14 +389,14 @@ class Statistics:
 
                 if self.param_general.confidence_metric == "BER":
                     confidence_margin = (
-                        self.ber_upper[rx_modem_idx] -
-                        self.ber_lower[rx_modem_idx]
-                    ) / self.ber_mean[rx_modem_idx]
+                                                self.bit_error_max[rx_modem_idx] -
+                                                self.bit_error_min[rx_modem_idx]
+                    ) / self.bit_error_sum[rx_modem_idx]
                 elif self.param_general.confidence_metric == "fer":
                     confidence_margin = (
-                        self.fer_upper[rx_modem_idx] -
-                        self.fer_lower[rx_modem_idx]
-                    ) / self.fer_mean[rx_modem_idx]
+                                                self.block_error_max[rx_modem_idx] -
+                                                self.block_error_min[rx_modem_idx]
+                    ) / self.block_error_sum[rx_modem_idx]
 
                 self.run_flag[rx_modem_idx] = np.logical_or(
                     confidence_margin > self.param_general.confidence_margin,
@@ -435,7 +414,7 @@ class Statistics:
                             self.ber[rx_modem_idx][idx][-1],
                             self.fer[rx_modem_idx][idx][-1],
                         )
-                    )
+                    )"""
 
     def get_snr_list(self, rx_modem_idx: int) -> List[int]:
         return self.param_general.snr_vector[self.run_flag[rx_modem_idx]]
@@ -451,61 +430,52 @@ class Statistics:
         """
         filename = os.path.join(results_dir, "statistics.mat")
 
-        for rx_modem_idx in range(self.__scenario.num_transmitters):
+        """for rx_modem_idx in range(self.__scenario.num_transmitters):
             print(f"\n\tResults for Rx {rx_modem_idx}")
 
             for snr, ber, fer in zip(
-                self.__snrs, self.ber_mean[rx_modem_idx], self.fer_mean[rx_modem_idx]
+                self.snr_loop, self.bit_error_sum[rx_modem_idx], self.block_error_sum[rx_modem_idx]
             ):
-                print(f"\t{self.snr_type.value} = {snr}dB\tBER = {ber:e}, \tfer = {fer:e}")
+                print(f"\t{self.snr_type.value} = {snr}dB\tBER = {ber:e}, \tfer = {fer:e}")"""
 
         mat_dict = {
-            "snr_type": self.snr_type.value,
-            "snr_vector": self.__snrs,
-            "ber_mean": self.ber_mean,
-            "fer_mean": self.fer_mean,
-            "ber_lower": self.ber_lower,
-            "ber_upper": self.ber_upper,
-            "fer_lower": self.fer_lower,
-            "fer_upper": self.fer_upper,
+            "snr_type": self.snr_type.name,
+            "snr_vector": self.snr_loop,
+            "ber_mean": self.average_bit_error_rate,
+            "fer_mean": self.average_block_error_rate,
+            "ber_lower": self.bit_error_min,
+            "ber_upper": self.bit_error_max,
+            "fer_lower": self.block_error_min,
+            "fer_upper": self.block_error_max,
         }
+
         if self.__calc_transmit_spectrum:
-            for idx, (periodogram, frequency) in enumerate(
-                zip(self._periodogram_tx, self._frequency_range_tx)
-            ):
-                periodogram[:] = fft.fftshift(
-                    periodogram) / np.amax(periodogram)
-                frequency[:] = fft.fftshift(frequency)
-                mat_dict["frequency_tx_" + str(idx)] = frequency
-                mat_dict["power_spectral_density_tx_" + str(idx)] = periodogram
+            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_tx, self._frequency_range_tx)):
+
+                mat_dict["frequency_tx_" + str(idx)] = fft.fftshift(frequency)
+                mat_dict["power_spectral_density_tx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
 
         if self.__calc_transmit_stft:
-            for idx, (time, freq, power) in enumerate(
-                zip(self._stft_time_tx, self._stft_freq_tx, self._stft_power_tx)
-            ):
+            for idx, (time, freq, power) in enumerate(self._stft_tx):
+
                 mat_dict["stft_time_tx_" + str(idx)] = time
                 mat_dict["stft_frequency_tx" + str(idx)] = freq
                 mat_dict["stft_power_tx" + str(idx)] = power
 
         if self.__calc_receive_spectrum:
-            for idx, (periodogram, frequency) in enumerate(
-                zip(self._periodogram_rx, self._frequency_range_rx)
-            ):
-                periodogram[:] = fft.fftshift(
-                    periodogram) / np.amax(periodogram)
-                frequency[:] = fft.fftshift(frequency)
-                mat_dict["frequency_rx_" + str(idx)] = frequency
-                mat_dict["power_spectral_density_rx_" + str(idx)] = periodogram
+            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_rx, self._frequency_range_rx)):
+
+                mat_dict["frequency_rx_" + str(idx)] = fft.fftshift(frequency)
+                mat_dict["power_spectral_density_rx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
 
         if self.__calc_receive_stft:
-            for idx, (time, freq, power) in enumerate(
-                zip(self._stft_time_rx, self._stft_freq_rx, self._stft_power_rx)
-            ):
+            for idx, (time, freq, power) in enumerate(self._stft_rx):
+
                 mat_dict["stft_time_rx_" + str(idx)] = time
                 mat_dict["stft_frequency_rx_" + str(idx)] = freq
                 mat_dict["stft_power_rx_" + str(idx)] = power
 
-        theory = None
+        """theory = None
         if self.theoretical_results is not None:
             theory = self.theoretical_results.get_results(
                 self.snr_type, self.__snrs
@@ -533,6 +503,7 @@ class Statistics:
             mat_dict["fer_theory"] = fer_theory
             mat_dict["theory_notes"] = theory_notes
 
+        """
         sio.savemat(filename, mat_dict)
 
         """if self.param_general.plot:
@@ -647,3 +618,145 @@ class Statistics:
                     plt.savefig(filename)
 
             plt.show()"""
+
+    @property
+    def average_bit_error_rate(self) -> np.ndarray:
+        """The average bit error rate over all drops and SNRs.
+
+        Returns:
+            np.ndarray: A matrix of dimension `num_snr_loops`x`num_transmitters`x`num_receivers`.
+        """
+
+        return self.bit_error_sum / self.bit_error_num_drops
+
+    @property
+    def average_block_error_rate(self) -> np.ndarray:
+        """The average bit block error rate over all drops and SNRs.
+
+        Returns:
+            np.ndarray: A matrix of dimension `num_snr_loops`x`num_transmitters`x`num_receivers`.
+        """
+
+        return self.block_error_sum / self.bit_error_num_drops
+
+    def plot_transmit_spectrum(self) -> None:
+        """Plot the transmit spectral estimations."""
+
+        for transmitter, (frequency, periodogram) in enumerate(zip(self._frequency_range_tx, self._periodogram_tx)):
+
+            power = 10 * np.log10(periodogram / np.amax(periodogram))
+
+            figure, axes = plt.subplots()
+            figure.suptitle("Average PSD of TX #{}".format(transmitter))
+
+            axes.plot(fftshift(frequency), fftshift(power))
+            axes.set(xlabel="Frequency [Hz]")
+            axes.set(ylabel="Power [dB]")
+            
+    def plot_receive_spectrum(self) -> None:
+        """Plot the receive spectral estimations."""
+
+        for receiver, (frequency, periodogram) in enumerate(zip(self._frequency_range_rx, self._periodogram_rx)):
+
+            power = 10 * np.log10(periodogram / np.amax(periodogram))
+
+            figure, axes = plt.subplots()
+            figure.suptitle("Average PSD of RX #{}".format(receiver))
+
+            axes.plot(fftshift(frequency), fftshift(power))
+            axes.set(xlabel="Frequency [Hz]")
+            axes.set(ylabel="Power [dB]")
+
+    def plot_bit_error_rates(self) -> None:
+        """Plot the bit error rates."""
+
+        # Fetch bit error rates
+        bit_error_rates = self.average_bit_error_rate
+
+        # Initialize plot window
+        plot, axes = plt.subplots(self.__scenario.num_transmitters, self.__scenario.num_receivers, squeeze=False)
+        plot.suptitle("Bit Error Rate")
+
+        for tx_idx, rx_idx in zip(range(self.__scenario.num_transmitters),
+                                        range(self.__scenario.num_receivers)):
+
+            # Skip the link between this transmitter and receiver if it seems invalid
+            if np.any(self.bit_error_num_drops[:, tx_idx, rx_idx] < 1):
+
+                axes[tx_idx, rx_idx].text(0, 0, "Link invalid, no bit error rate available")
+
+            else:
+
+                lower = bit_error_rates[:, tx_idx, rx_idx] - self.bit_error_min[:, tx_idx, rx_idx]
+                upper = self.bit_error_max[:, tx_idx, rx_idx] - bit_error_rates[:, tx_idx, rx_idx]
+                error = np.vstack((upper, lower))
+
+                # Plot error-bar representation with upper and lower error limits
+                axes[tx_idx, rx_idx].errorbar(self.snr_loop, bit_error_rates[:, tx_idx, rx_idx], error,
+                                              label="Simulation")
+                axes[tx_idx, rx_idx].grid()
+                axes[tx_idx, rx_idx].legend()
+
+                # Scale to log if possible
+                if np.any(bit_error_rates[:, tx_idx, rx_idx] > 0.0):
+                    axes[tx_idx, rx_idx].set_yscale("log", nonposy="mask")
+
+        # Add outer labeling
+        for tx_idx in range(self.__scenario.num_transmitters):
+            axes[tx_idx, 0].set(ylabel="BER Tx #{}".format(tx_idx))
+
+        for rx_idx in range(self.__scenario.num_receivers):
+            axes[0, rx_idx].set(xlabel="{} [dB] Rx #{}, ".format(self.snr_type.name, rx_idx))
+
+            """if ber_theory[transmitter_index] is not np.nan:
+                plt.plot(
+                    self.param_general.snr_vector,
+                    ber_theory[transmitter_index],
+                    label="theory")"""
+
+    def plot_block_error_rates(self) -> None:
+        """Plot the block error rates."""
+
+        # Fetch block error rates
+        block_error_rates = self.average_block_error_rate
+
+        # Initialize plot window
+        plot, axes = plt.subplots(self.__scenario.num_transmitters, self.__scenario.num_receivers, squeeze=False)
+        plot.suptitle("Block Error Rate")
+
+        for tx_idx, rx_idx in zip(range(self.__scenario.num_transmitters),
+                                  range(self.__scenario.num_receivers)):
+
+            # Skip the link between this transmitter and receiver if it seems invalid
+            if np.any(self.block_error_num_drops[:, tx_idx, rx_idx] < 1):
+
+                axes[tx_idx, rx_idx].text(0, 0, "Link invalid, no block error rate available")
+
+            else:
+
+                lower = block_error_rates[:, tx_idx, rx_idx] - self.block_error_min[:, tx_idx, rx_idx]
+                upper = self.block_error_max[:, tx_idx, rx_idx] - block_error_rates[:, tx_idx, rx_idx]
+                error = np.vstack((upper, lower))
+
+                # Plot error-bar representation with upper and lower error limits
+                axes[tx_idx, rx_idx].errorbar(self.snr_loop, block_error_rates[:, tx_idx, rx_idx], error,
+                                              label="Simulation")
+                axes[tx_idx, rx_idx].grid()
+                axes[tx_idx, rx_idx].legend()
+
+                # Scale to log if possible
+                if np.any(block_error_rates[:, tx_idx, rx_idx] > 0.0):
+                    axes[tx_idx, rx_idx].set_yscale("log", nonposy="mask")
+
+        # Add outer labeling
+        for tx_idx in range(self.__scenario.num_transmitters):
+            axes[tx_idx, 0].set(ylabel="BLER Tx #{}".format(tx_idx))
+
+        for rx_idx in range(self.__scenario.num_receivers):
+            axes[0, rx_idx].set(xlabel="{} [dB] Rx #{}, ".format(self.snr_type.name, rx_idx))
+
+            """if ber_theory[transmitter_index] is not np.nan:
+                plt.plot(
+                    self.param_general.snr_vector,
+                    ber_theory[transmitter_index],
+                    label="theory")"""

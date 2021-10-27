@@ -132,15 +132,15 @@ class StatisticsTest(unittest.TestCase):
             )
             np.testing.assert_array_almost_equal(
                 np.array(self.BER_expected_mean[rx_modem_idx]),
-                np.array(self.stats.ber_mean[rx_modem_idx]),
+                np.array(self.stats.bit_error_sum[rx_modem_idx]),
             )
             np.testing.assert_array_almost_equal(
                 np.array(self.BER_expected_min[rx_modem_idx]),
-                np.array(self.stats.ber_lower[rx_modem_idx]),
+                np.array(self.stats.bit_error_min[rx_modem_idx]),
             )
             np.testing.assert_array_almost_equal(
                 np.array(self.BER_expected_max[rx_modem_idx]),
-                np.array(self.stats.ber_upper[rx_modem_idx]),
+                np.array(self.stats.bit_error_max[rx_modem_idx]),
             )
 
     def test_update_error_rate_stopping_criteria_one_frame(self) -> None:
