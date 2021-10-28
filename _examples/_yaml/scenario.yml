@@ -13,7 +13,7 @@ Modems:
         chirp_duration: 512e-6
         freq_difference: 1953.125
         num_data_chirps: 4
-        modulation_order: 32
+        modulation_order: 256
 
   - Receiver
     carrier_frequency: 0.0
@@ -24,6 +24,6 @@ Modems:
         chirp_duration: 512e-6
         freq_difference: 1953.125
         num_data_chirps: 4
-        modulation_order: 32
+        modulation_order: 256
     Noise:
       random_seed: 20

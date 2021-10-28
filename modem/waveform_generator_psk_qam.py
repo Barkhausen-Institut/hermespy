@@ -2,7 +2,7 @@
 """Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Tuple, Optional, Type
+from typing import TYPE_CHECKING, Tuple, Optional, Type, Union
 from enum import Enum
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
 import numpy as np
@@ -55,7 +55,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     __chirp_duration: float
     __chirp_bandwidth: float
     __pulse_width: float
-    __equalizer_type: Equalization
+    __equalization: Equalization
     __num_preamble_symbols: int
     __num_data_symbols: int
     __num_postamble_symbols: int
@@ -63,16 +63,21 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     __guard_interval: float
     __mapping: PskQamMapping
     complex_modulation: bool
+    _data_symbol_idx: Optional[np.ndarray]
+    _symbol_idx: Optional[np.ndarray]
+    _pulse_correlation_matrix: Optional[np.ndarray]
+    __symbol_rate: float
 
     def __init__(self,
                  modem: Optional[Modem] = None,
-                 sampling_rate: Optional[float] = None,
-                 oversampling_factor: Optional[int] = None,
+                 symbol_rate: float = 0.0,
+                 oversampling_factor: int = 2,
                  modulation_order: Optional[int] = None,
                  tx_filter: Optional[ShapingFilter] = None,
                  rx_filter: Optional[ShapingFilter] = None,
                  chirp_duration: float = 0.0,
                  chirp_bandwidth: float = 0.0,
+                 equalization: Union[str, WaveformGeneratorPskQam.Equalization] = 'NONE',
                  num_preamble_symbols: int = 0,
                  num_data_symbols: int = 1,
                  num_postamble_symbols: int = 0,
@@ -87,8 +92,8 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                 A modem this generator is attached to.
                 By default, the generator is considered to be floating.
 
-            sampling_rate (float, optional):
-                Rate at which the generated signals are sampled.
+            symbol_rate (float, optional):
+                Rate at which symbols are being generated.
 
             oversampling_factor (int, optional):
                 The factor at which the simulated signal is oversampled.
@@ -125,6 +130,9 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                 Guard interval between frames in seconds.
         """
 
+        # Legacy from old parmetrization
+        sampling_rate = symbol_rate * oversampling_factor
+
         # Initialize base class
         WaveformGenerator.__init__(self,
                                    modem=modem,
@@ -133,17 +141,18 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                                    modulation_order=modulation_order)
 
         if tx_filter is None:
-            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, 0)
+            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, oversampling_factor)
 
         else:
             self.tx_filter = tx_filter
             
         if rx_filter is None:
-            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, 0)
+            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, oversampling_factor)
 
         else:
             self.rx_filter = tx_filter
 
+        self.symbol_rate = symbol_rate
         self.chirp_duration = chirp_duration
         self.chirp_bandwidth = chirp_bandwidth
         self.num_preamble_symbols = num_preamble_symbols
@@ -152,11 +161,12 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         self.pilot_rate = pilot_rate
         self.guard_interval = guard_interval
         self.complex_modulation = complex_modulation
+        self.equalization = equalization
 
-        self.__mapping = PskQamMapping(self.modulation_order, is_complex=self.complex_modulation)
-
-        self._set_sampling_indices()
-        self._set_pulse_correlation_matrix()
+        self.__mapping = PskQamMapping(self.modulation_order, is_complex=self.complex_modulation, soft_output=False)
+        self._data_symbol_idx = None
+        self._symbol_idx = None
+        self._pulse_correlation_matrix = None
 
     @property
     def chirp_duration(self) -> float:
@@ -197,7 +207,23 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             float: Symbol rate in Hz.
         """
 
-        return self.__chirp_duration ** -1
+        return self.__symbol_rate
+
+    @symbol_rate.setter
+    def symbol_rate(self, rate: float) -> None:
+        """Modify rate of symbols.
+        
+        Args:
+            rate: New symbol rate in Hz.
+            
+        Raises:
+            ValueError: If symbol rate is smaller than zero.
+        """
+
+        if rate < 0.0:
+            raise ValueError("Symbol rate must be greater or equal to zero")
+
+        self.__symbol_rate = rate
 
     @property
     def chirp_bandwidth(self) -> float:
@@ -228,8 +254,35 @@ class WaveformGeneratorPskQam(WaveformGenerator):
 
         self.__chirp_bandwidth = bandwidth
 
+    @property
+    def equalization(self) -> WaveformGeneratorPskQam.Equalization:
+        """Equalization method.
+
+        Returns:
+            WaveformGeneratorPskQam.Equalization: Equalization method.
+        """
+
+        return self.__equalization
+
+    @equalization.setter
+    def equalization(self, method: Union[str, WaveformGeneratorPskQam.Equalization]) -> None:
+        """Modify equalization method.
+
+        Args:
+            method: Equalization method.
+        """
+
+        if isinstance(method, str):
+            self.__equalization = WaveformGeneratorPskQam.Equalization[method]
+
+        else:
+            self.__equalization = method
+
     def create_frame(self, timestamp: int,
                      data_bits: np.array) -> Tuple[np.ndarray, int, int]:
+
+        self._set_sampling_indices()
+        self._set_pulse_correlation_matrix()
 
         frame = np.zeros(self.samples_in_frame, dtype=complex)
         frame[self._symbol_idx[:self.num_preamble_symbols]] = 1
@@ -249,12 +302,15 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     def receive_frame(self,
                       rx_signal: np.ndarray,
                       timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[List[np.ndarray], np.ndarray]:
+                      noise_var: float) -> Tuple[np.ndarray, np.ndarray]:
+
+        self._set_sampling_indices()
+        self._set_pulse_correlation_matrix()
 
         useful_signal_length = self.samples_in_frame + self.rx_filter.delay_in_samples
 
         if rx_signal.shape[1] < useful_signal_length:
-            bits = None
+            bits = np.empty(0, dtype=int)
             rx_signal = np.array([])
         else:
             frame_signal = rx_signal[0, :useful_signal_length].ravel()
@@ -275,7 +331,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
 
             rx_signal = rx_signal[:, self.samples_in_frame:]
 
-        return list([bits]), rx_signal
+        return np.ravel(bits), rx_signal
 
     def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
         """Equalize the received data symbols
@@ -301,7 +357,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             h_matrix = self._pulse_correlation_matrix
             h_matrix_hermitian = h_matrix.conjugate().T
 
-            if self.__equalizer_type == WaveformGeneratorPskQam.Equalization.MMSE:
+            if self.equalization == WaveformGeneratorPskQam.Equalization.MMSE:
                 snr_factor = noise_var * h_matrix
 
             isi_equalizer = np.matmul(h_matrix_hermitian,
@@ -427,7 +483,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
 
     @property
     def bits_per_frame(self) -> int:
-        return self.__num_data_symbols * np.log2(self.modulation_order)
+        return self.__num_data_symbols * int(np.log2(self.modulation_order))
 
     @property
     def samples_overhead_in_frame(self) -> int:
@@ -442,56 +498,60 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     def _set_sampling_indices(self) -> None:
         """ Determines the sampling instants for pilots and data at a given frame
         """
-        # create a vector with the position of every pilot and data symbol in a
-        # frame
-        preamble_symbol_idx = np.arange(
-            self.num_preamble_symbols) * self.num_pilot_samples
-        start_idx = self.num_preamble_symbols * self.num_pilot_samples
-        self._data_symbol_idx = start_idx + \
-            np.arange(self.num_data_symbols) * \
-            self.oversampling_factor
-        start_idx += self.num_data_symbols * self.oversampling_factor
-        postamble_symbol_idx = start_idx + \
-            np.arange(self.num_postamble_symbols) * \
-            self.num_pilot_samples
-        self._symbol_idx = np.concatenate(
-            (preamble_symbol_idx, self._data_symbol_idx, postamble_symbol_idx))
 
-        self._data_symbol_idx += int(.5 * self.oversampling_factor)
-        self._symbol_idx += int(.5 * self.oversampling_factor)
+        if self._data_symbol_idx is None:
+            # create a vector with the position of every pilot and data symbol in a
+            # frame
+            preamble_symbol_idx = np.arange(
+                self.num_preamble_symbols) * self.num_pilot_samples
+            start_idx = self.num_preamble_symbols * self.num_pilot_samples
+            self._data_symbol_idx = start_idx + \
+                np.arange(self.num_data_symbols) * \
+                self.oversampling_factor
+            start_idx += self.num_data_symbols * self.oversampling_factor
+            postamble_symbol_idx = start_idx + \
+                np.arange(self.num_postamble_symbols) * \
+                self.num_pilot_samples
+            self._symbol_idx = np.concatenate(
+                (preamble_symbol_idx, self._data_symbol_idx, postamble_symbol_idx))
+
+            self._data_symbol_idx += int(.5 * self.oversampling_factor)
+            self._symbol_idx += int(.5 * self.oversampling_factor)
 
     def _set_pulse_correlation_matrix(self):
         """ Creates a matrix with autocorrelation among pulses at different instants
         """
 
-        if self.tx_filter.filter_type == ShapingFilter.FilterType.FMCW and \
-                self.__equalizer_type != WaveformGeneratorPskQam.Equalization.NONE:
-            ######################################################################################
-            # calculate the correlation matrix between data symbols sampled at different instants
-            ######################################################################################
+        if self._pulse_correlation_matrix is None:
 
-            # generate an NxN matrix with the time differences between the sampling instants of the N symbols
-            # i.e., time_delay_matrix(i,j) = T_i - T_j, with T_i the sampling instant of the i-th symbol
-            time_delay_matrix = np.zeros((self.num_data_symbols, self.num_data_symbols))
-            for row in range(self.num_data_symbols):
-                time_delay_matrix[row, :] = np.arange(row, row - self.num_data_symbols, -1)
-            time_delay_matrix = time_delay_matrix / self.symbol_rate
+            if self.tx_filter.filter_type == ShapingFilter.FilterType.FMCW and \
+                    self.equalization != WaveformGeneratorPskQam.Equalization.NONE:
+                ######################################################################################
+                # calculate the correlation matrix between data symbols sampled at different instants
+                ######################################################################################
 
-            # the correlation between two symbols r_i and r_j is obtained as a known function of the difference between
-            # their sampling instants
-            non_zero_idx = np.nonzero(time_delay_matrix)
-            isi_matrix = np.ones((self.num_data_symbols, self.num_data_symbols))
-            isi_matrix[non_zero_idx] = (np.sin(np.pi * self.chirp_bandwidth * time_delay_matrix[non_zero_idx] *
-                                               (1 - np.abs(time_delay_matrix[non_zero_idx]
-                                                           / self.chirp_duration))) /
-                                        (np.pi * self.chirp_bandwidth * time_delay_matrix[non_zero_idx]))
+                # generate an NxN matrix with the time differences between the sampling instants of the N symbols
+                # i.e., time_delay_matrix(i,j) = T_i - T_j, with T_i the sampling instant of the i-th symbol
+                time_delay_matrix = np.zeros((self.num_data_symbols, self.num_data_symbols))
+                for row in range(self.num_data_symbols):
+                    time_delay_matrix[row, :] = np.arange(row, row - self.num_data_symbols, -1)
+                time_delay_matrix = time_delay_matrix / self.symbol_rate
 
-            time_idx = np.nonzero(np.abs(time_delay_matrix) > self.chirp_duration)
-            isi_matrix[time_idx] = 0
+                # the correlation between two symbols r_i and r_j
+                # is obtained as a known function of the difference between their sampling instants
+                non_zero_idx = np.nonzero(time_delay_matrix)
+                isi_matrix = np.ones((self.num_data_symbols, self.num_data_symbols))
+                isi_matrix[non_zero_idx] = (np.sin(np.pi * self.chirp_bandwidth * time_delay_matrix[non_zero_idx] *
+                                                   (1 - np.abs(time_delay_matrix[non_zero_idx]
+                                                               / self.chirp_duration))) /
+                                            (np.pi * self.chirp_bandwidth * time_delay_matrix[non_zero_idx]))
 
-            self._pulse_correlation_matrix = isi_matrix
-        else:
-            self._pulse_correlation_matrix = np.array([])
+                time_idx = np.nonzero(np.abs(time_delay_matrix) > self.chirp_duration)
+                isi_matrix[time_idx] = 0
+
+                self._pulse_correlation_matrix = isi_matrix
+            else:
+                self._pulse_correlation_matrix = np.array([])
 
     @property
     def bit_energy(self) -> float:
@@ -525,18 +585,19 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         """
 
         state = {
-             "sampling_rate": node.sampling_rate,
-             "oversampling_factor": node.oversampling_factor,
-             "modulation_order": node.modulation_order,
-             "tx_filter": node.tx_filter,
-             "rx_filter": node.rx_filter,
-             "chirp_duration": node.chirp_duration,
-             "chirp_bandwidth": node.chirp_bandwidth,
-             "num_preamble_symbols": node.num_preamble_symbols,
-             "num_data_symbols": node.num_data_symbols,
-             "num_postamble_symbols": node.num_postamble_symbols,
-             "pilot_rate": node.pilot_rate,
-             "guard_interval": node.guard_interval
+            "sampling_rate": node.sampling_rate,
+            "oversampling_factor": node.oversampling_factor,
+            "modulation_order": node.modulation_order,
+            "tx_filter": node.tx_filter,
+            "rx_filter": node.rx_filter,
+            "chirp_duration": node.chirp_duration,
+            "chirp_bandwidth": node.chirp_bandwidth,
+            "num_preamble_symbols": node.num_preamble_symbols,
+            "num_data_symbols": node.num_data_symbols,
+            "num_postamble_symbols": node.num_postamble_symbols,
+            "pilot_rate": node.pilot_rate,
+            "guard_interval": node.guard_interval,
+            "equalization": node.equalization
         }
         return representer.represent_mapping(cls.yaml_tag, state)
 
@@ -559,14 +620,18 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         """
 
         state = constructor.construct_mapping(node)
-        shaping_filter: ShapingFilter = state.pop('filter', None)
+        shaping_filter = state.pop('filter', None)
 
         generator = cls(**state)
 
         if shaping_filter is not None:
 
+            # TODO: Patch-through for sampling rate
+            samples_per_symbol = generator.oversampling_factor # int(1e3 / generator.symbol_rate)
+            shaping_filter = ShapingFilter(**shaping_filter, samples_per_symbol=samples_per_symbol)
+
             tx_filter = ShapingFilter(shaping_filter.filter_type,
-                                      generator.oversampling_factor,
+                                      samples_per_symbol,
                                       is_matched=False,
                                       length_in_symbols=shaping_filter.length_in_symbols,
                                       roll_off=shaping_filter.roll_off,
@@ -577,14 +642,14 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                 # for raised cosine, receive filter is a low-pass filter with
                 # bandwidth Rs(1+roll-off)/2
                 rx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
-                                          generator.oversampling_factor,
+                                          samples_per_symbol,
                                           shaping_filter.length_in_symbols,
                                           0,
                                           1. + shaping_filter.roll_off)
             else:
                 # for all other filter types, receive filter is a matched filter
                 rx_filter = ShapingFilter(shaping_filter.filter_type,
-                                          generator.oversampling_factor,
+                                          samples_per_symbol,
                                           is_matched=True,
                                           length_in_symbols=shaping_filter.length_in_symbols,
                                           roll_off=shaping_filter.roll_off,
