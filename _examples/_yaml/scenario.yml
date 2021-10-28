@@ -27,3 +27,9 @@ Modems:
         modulation_order: 256
     Noise:
       random_seed: 20
+
+Channels:
+
+  - Exponential 0 0
+    tap_interval: 2e-6
+    rms_delay: 1e-6

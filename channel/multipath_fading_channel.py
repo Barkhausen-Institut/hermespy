@@ -146,6 +146,9 @@ class MultipathFadingChannel(Channel):
         if len(delays) != len(power_profile) or len(power_profile) != len(rice_factors):
             raise ValueError("Delays, power profile and rice factor vectors must be of equal length")
 
+        if len(delays) < 1:
+            raise ValueError("Configuration must contain at least one delay tap")
+
         if np.any(delays < 0.0):
             raise ValueError("Delays must be greater or equal to zero")
 
