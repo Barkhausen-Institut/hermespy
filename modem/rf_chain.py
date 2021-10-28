@@ -114,8 +114,7 @@ class RfChain:
 
         According to transmission impairments.
         """
-        #input_signal = add_iq_imbalance(input_signal)
-        # notation follows https://en.wikipedia.org/wiki/IQ_imbalance
+        input_signal = self.add_iq_imbalance(input_signal)
         if self.power_amplifier is not None:
             return self.power_amplifier.send(input_signal)
 
@@ -141,6 +140,7 @@ class RfChain:
 
         According to reception impairments.
         """
+        input_signal = self.add_iq_imbalance(input_signal)
         return input_signal
 
     @property
