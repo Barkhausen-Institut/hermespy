@@ -14,6 +14,7 @@ from source.bits_source import BitsSource
 
 if TYPE_CHECKING:
     from scenario import Scenario
+    from channel import Channel
 
 
 class TransmissionMode(Enum):
@@ -630,3 +631,15 @@ class Modem:
         """
 
         return self.tx_power / self.waveform_generator.power
+
+    @property
+    @abstractmethod
+    def reference_channel(self) -> Channel:
+        """Reference channel from the scenario channel matrix.
+
+        By default the first channel within the matrix.
+
+        Returns:
+            Channel: The reference channel.
+        """
+        ...

@@ -580,7 +580,7 @@ class Simulation(Executable):
                 YAML node representing the `Simulation` serialization.
 
         Returns:
-            WaveformGenerator:
+            Simulation:
                 Newly created `Simulation` instance.
         """
 
