@@ -1,5 +1,5 @@
 !<Simulation>
-  plot_drop: false
+  plot_drop: true
   calc_transmit_spectrum: true
   calc_receive_spectrum: false
   calc_transmit_stft: true

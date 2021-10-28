@@ -44,16 +44,21 @@ class Scenario:
     __receivers: List[Receiver]
     __channels: np.ndarray
     __drop_duration: float
+    __sampling_rate: float
     random_generator: rnd.Generator
 
     def __init__(self,
                  drop_duration: float = 0.0,
+                 sampling_rate: float = 1e6,
                  random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
 
         Args:
             drop_duration (float, optional):
                 The default drop duration in seconds.
+
+            sampling_rate (float, optional):
+                Rate at which simulated and generated signals will be digitally discretized in Hz.
 
             random_generator (rnd.Generator, optional):
                 The generator object used to create pseudo-random number sequences.
@@ -63,6 +68,7 @@ class Scenario:
         self.__receivers = []
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.drop_duration = drop_duration
+        self.sampling_rate = sampling_rate
         self.random_generator = rnd.default_rng(random_generator)
 
         self.sources: List[BitsSource] = []
@@ -380,6 +386,35 @@ class Scenario:
 
         self.__drop_duration = duration
 
+    @property
+    def sampling_rate(self) -> float:
+        """Access the rate at which the analog signals are sampled.
+
+        Returns:
+            float:
+                Signal sampling rate in Hz.
+        """
+
+        return self.__sampling_rate
+
+    @sampling_rate.setter
+    def sampling_rate(self, value: float) -> None:
+        """Modify the rate at which the analog signals are sampled.
+
+        Args:
+            value (float):
+                Signal sampling rate in Hz.
+
+        Raises:
+            ValueError:
+                If the sampling rate is less or equal to zero.
+        """
+
+        if value <= 0.0:
+            raise ValueError("Sampling rate must be greater than zero")
+
+        self.__sampling_rate = value
+
     def generate_data_bits(self) -> List[np.ndarray]:
         """Generate a set of data bits required to generate a single drop within this scenario.
 
@@ -409,7 +444,8 @@ class Scenario:
         serialization = {
             'Modems': [*node.__transmitters, *node.__receivers],
             'Channels': node.__channels.flatten().tolist(),
-            'drop_duration': node.__drop_duration
+            'drop_duration': node.__drop_duration,
+            "sampling_rate": node.__sampling_rate,
         }
 
         return representer.represent_mapping(cls.yaml_tag, serialization)

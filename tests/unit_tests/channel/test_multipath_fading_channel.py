@@ -235,7 +235,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.channel_params['rice_factors'] = np.ones(3)
 
         channel = MultipathFadingChannel(**self.channel_params)
-        self.assertEqual(len(self.channel_params['delays']), channel.num_sequences)
+        self.assertEqual(len(self.channel_params['delays']), channel.num_resolvable_paths)
 
     def test_num_sinusoids_setget(self) -> None:
         """Number of sinusoids property getter should return setter argument."""

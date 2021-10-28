@@ -130,13 +130,9 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                 Guard interval between frames in seconds.
         """
 
-        # Legacy from old parmetrization
-        sampling_rate = symbol_rate * oversampling_factor
-
         # Initialize base class
         WaveformGenerator.__init__(self,
                                    modem=modem,
-                                   sampling_rate=sampling_rate,
                                    oversampling_factor=oversampling_factor,
                                    modulation_order=modulation_order)
 
@@ -319,7 +315,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             frame_signal = self.rx_filter.filter(frame_signal)
 
             # get channel gains (first tap only)
-            timestamps = (timestamp_in_samples + symbol_idx) / self.sampling_rate
+            timestamps = (timestamp_in_samples + symbol_idx) / self.modem.scenario.sampling_rate
             channel = self.modem.reference_channel.impulse_response(timestamps)
             channel = channel[:, :, :, 0].ravel()
 
@@ -383,7 +379,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         if self.num_preamble_symbols < 1 and self.num_postamble_symbols < 1:
             return 0
 
-        return int(np.round(self.sampling_rate / self.pilot_rate))
+        return int(np.round(self.modem.scenario.sampling_rate / self.pilot_rate))
 
     @property
     def num_guard_samples(self) -> int:
@@ -393,7 +389,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             int: Number of samples.
         """
 
-        return int(np.round(self.guard_interval * self.sampling_rate))
+        return int(np.round(self.guard_interval * self.modem.scenario.sampling_rate))
 
     @property
     def guard_interval(self) -> float:
@@ -585,7 +581,6 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         """
 
         state = {
-            "sampling_rate": node.sampling_rate,
             "oversampling_factor": node.oversampling_factor,
             "modulation_order": node.modulation_order,
             "tx_filter": node.tx_filter,
