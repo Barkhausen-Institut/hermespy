@@ -3,7 +3,10 @@
 
 from __future__ import annotations
 from typing import Dict, Any, List, Optional
+
+import matplotlib.pyplot as plt
 import numpy as np
+from numpy import exp
 from scipy import stats
 from scipy.special import comb
 
@@ -68,7 +71,7 @@ class TheoreticalResults:
         self.__theory_grid[1, 0] = TheoreticalResults.__theory_pskquam_stochastic
         self.__theory_grid[1, 1] = TheoreticalResults.__theory_pskquam_channel
 
-    def theory(self, scenario: Scenario, snrs: np.ndarray) -> None:
+    def theory(self, scenario: Scenario, snrs: np.ndarray) -> np.ndarray:
 
         theoretical_results = np.empty((scenario.num_transmitters, scenario.num_receivers), dtype=object)
 
@@ -194,24 +197,61 @@ class TheoreticalResults:
     def __theory_chirpfsk_channel(transmitter: Transmitter,
                                   receiver: Receiver,
                                   channel: Channel,
-                                  snrs: np.ndarray) -> Optional[Dict[str, Any]]:
+                                  ebn0_linear: np.ndarray) -> Optional[Dict[str, Any]]:
 
-        ser = np.zeros(snrs.shape)  # symbol error rate
-        modulation_order = receiver.waveform_generator.modulation_order
-        bits_per_symbol = np.log2(modulation_order)
+        mod_order = receiver.waveform_generator.modulation_order
+
+        # For modulation orders greater than 64 the implemented method produces numerical errors
+        if mod_order > 64:
+            return None
+
+        n_bits = np.log2(mod_order)
 
         # calculate BER according do Proakis, Salehi, Digital
-        # Communications, 5th edition, Section 4.5
-        for idx in range(1, modulation_order):
+        # Communications, 5th edition, Section 4.5, Equations 44 and 47
+        ser = np.zeros(len(ebn0_linear))  # symbol error rate
+        for n in range(2, mod_order+1):
+            ser += (-1)**n / n * exp(- (n - 1) * n_bits / n * ebn0_linear) * comb(mod_order - 1, n - 1)
 
-            ser += ((-1)**(idx + 1) / (idx + 1) * comb(modulation_order - 1, idx, repetition=False)
-                    * np.exp(- (idx * bits_per_symbol) / (idx + 1) * snrs))
-
-        ber = 2**(bits_per_symbol - 1) / (2**bits_per_symbol - 1) * ser
+        # Bit error rate
+        ber = 2 ** (n_bits - 1) / (2 ** n_bits - 1) * ser
         fer = 1 - (1 - ser) ** receiver.waveform_generator.num_data_chirps
 
         return {'ber': ber, 'fer': fer,
                 'notes': 'AWGN channel, non-coherent detection, orthogonal modulation'}
+
+    @staticmethod
+    def plot_theory_chirpfsk(modulation_orders: np.ndarray, ebn0: np.ndarray) -> None:
+        """Visualize the chirp fsk theory via PyPlot.
+
+        Args:
+            modulation_orders (np.ndarray): Considered order of modulations.
+            ebn0 (np.ndarray): Bit energy to noise power ratios (in dB).
+        """
+
+        fig, axes = plt.subplots()
+        fig.suptitle("Error Probability Orthogonal Signaling, Noncoherent Detection")
+
+        ebn0_linear = 10 ** (ebn0 / 10)
+
+        for mod_order in modulation_orders:
+
+            n_bits = np.log2(mod_order)  # Number of bits per symbol
+
+            ser = np.zeros(len(ebn0_linear))  # symbol error rate
+            for n in range(2, mod_order+1):
+                ser += (-1)**n / n * exp(- (n - 1) * n_bits / n * ebn0_linear) * comb(mod_order - 1, n - 1)
+
+            # Bit error rate
+            ber = 2 ** (n_bits - 1) / (2 ** n_bits - 1) * ser
+
+            axes.plot(ebn0, ber, label="M = {}".format(mod_order))
+
+        axes.set_yscale('log')
+        axes.set(xlabel='SNR [dB]')
+        axes.set(ylabel='Probability of Bit Error')
+        axes.grid()
+        axes.legend()
 
     @staticmethod
     def __theory_ofdm_channel(transmitter: Transmitter,

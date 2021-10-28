@@ -5,10 +5,8 @@ import os
 from typing import List, Tuple, Optional
 from matplotlib import pyplot as plt
 import scipy.io as sio
-from scipy import signal
 from scipy.fft import fftshift
 from enum import Enum
-from scipy import stats
 import scipy.fft as fft
 import numpy as np
 
@@ -46,9 +44,8 @@ class Statistics:
         __calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int); Number of discrete frequency bins computed within the Fast Fourier Transforms.
         __num_drops (int): Number of drops already added to the statistics.
-        snr_loop (List[float]): List of signal to noise ratios.
+        snr_loop (List[float]): List of (linear) signal to noise ratios.
         __num_snr_loops (int): Different number of snrs to perform simulation for.
-        number_of_tx_signals(int):
         run_flag[List[np.array]]:
             Each list item corresponds to one receiver modem.
             Each list item is a np.array stating if results are to be calculated
@@ -115,11 +112,11 @@ class Statistics:
         self.bit_error_sum = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
         self.block_error_sum = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
-        self.bit_error_min = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
-        self.block_error_min = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.bit_error_min = np.ones((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.block_error_min = np.ones((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
-        self.bit_error_max = np.ones((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
-        self.block_error_max = np.ones((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.bit_error_max = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.block_error_max = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
         self._tx_sampling_rate = [
             modem.waveform_generator.sampling_rate for modem in self.__scenario.transmitters
@@ -175,15 +172,16 @@ class Statistics:
         # Increase internal drop counter
         self.__num_drops += 1
 
-    def add_drops(self, drops: List[Drop]) -> None:
+    def add_drops(self, drops: List[Drop], snr_index: int) -> None:
         """Add multiple transmission drops to the statistics.
 
         Args:
             drops (List[Drop]): List of drops to be added.
+            snr_index (int): Index of SNR tap.
         """
 
         for drop in drops:
-            self.add_drop(drop)
+            self.add_drop(drop, snr_index)
 
     @property
     def num_drops(self) -> int:
@@ -270,7 +268,7 @@ class Statistics:
 
                     # Update maximal bit error over all drops
                     bit_error_max = self.bit_error_max[snr_index, tx_modem, rx_modem]
-                    self.bit_error_max[snr_index, tx_modem, rx_modem] = min(bit_error_max, bit_error)
+                    self.bit_error_max[snr_index, tx_modem, rx_modem] = max(bit_error_max, bit_error)
 
                 if block_error is not None:
 
@@ -286,7 +284,7 @@ class Statistics:
 
                     # Update maximal block error over all drops
                     block_error_max = self.block_error_max[snr_index, tx_modem, rx_modem]
-                    self.block_error_max[snr_index, tx_modem, rx_modem] = min(block_error_max, block_error)
+                    self.block_error_max[snr_index, tx_modem, rx_modem] = max(block_error_max, block_error)
 
         # iterate over receivers and its signals received
         """for rx_modem_idx, received_signals in enumerate(received_bits):
@@ -420,9 +418,6 @@ class Statistics:
                         )
                     )"""
 
-    def get_snr_list(self, rx_modem_idx: int) -> List[int]:
-        return self.param_general.snr_vector[self.run_flag[rx_modem_idx]]
-
     def save(self, results_dir: str) -> None:
         """averages out the stored statistics from all the drops and store them in a matlab file.
 
@@ -432,6 +427,7 @@ class Statistics:
         Args:
             results_dir (str): the desired directory to save matlab file in.
         """
+
         filename = os.path.join(results_dir, "statistics.mat")
 
         """for rx_modem_idx in range(self.__scenario.num_transmitters):
@@ -479,149 +475,36 @@ class Statistics:
                 mat_dict["stft_frequency_rx_" + str(idx)] = freq
                 mat_dict["stft_power_rx_" + str(idx)] = power
 
-        """theory = None
+        ber_theory = np.nan * np.ones((self.__scenario.num_transmitters,
+                                      self.__scenario.num_receivers,
+                                      self.__num_snr_loops), dtype=float)
+        fer_theory = np.nan * np.ones((self.__scenario.num_transmitters,
+                                      self.__scenario.num_receivers,
+                                      self.__num_snr_loops), dtype=float)
+        theory_notes = [[np.nan for _ in self.__scenario.receivers] for _ in self.__scenario.transmitters]
+
         if self.theoretical_results is not None:
-            theory = self.theoretical_results.get_results(
-                self.snr_type, self.__snrs
-            )
 
-        ber_theory = []
-        fer_theory = []
-        theory_notes = []
+            for tx_idx, rx_idx in zip(range(self.__scenario.num_transmitters), range(self.__scenario.num_receivers)):
 
-        if theory is not None:
-            for rx_modem_idx in range(self.__scenario.num_receivers):
-                if not theory[rx_modem_idx]:
-                    ber_theory.append(np.nan)
-                    fer_theory.append(np.nan)
-                    theory_notes.append("")
-                else:
-                    ber_theory.append(theory[rx_modem_idx]["ber"])
-                    if "fer" in theory[rx_modem_idx].keys():
-                        fer_theory.append(theory[rx_modem_idx]["fer"])
-                    else:
-                        fer_theory.append(np.nan)
-                    theory_notes.append(theory[rx_modem_idx]["notes"])
+                link_theory = self.theoretical_results[tx_idx, rx_idx]
+                if link_theory is not None:
+
+                    if 'ber' in link_theory:
+                        ber_theory[tx_idx, rx_idx, :] = link_theory['ber']
+
+                    if 'fer' in link_theory:
+                        fer_theory[tx_idx, rx_idx, :] = link_theory['fer']
+
+                    if 'notes' in link_theory:
+                        theory_notes[tx_idx][rx_idx] = link_theory['notes']
 
             mat_dict["ber_theory"] = ber_theory
             mat_dict["fer_theory"] = fer_theory
             mat_dict["theory_notes"] = theory_notes
 
-        """
+        # Save results in matlab file
         sio.savemat(filename, mat_dict)
-
-        """if self.param_general.plot:
-
-            for rx_modem_idx in range(self.param_scenario.number_of_rx_modems):
-                plt.figure()
-                if ber_theory[rx_modem_idx] is not np.nan:
-                    plt.plot(
-                        self.param_general.snr_vector,
-                        ber_theory[rx_modem_idx],
-                        label="theory")
-
-                error = np.vstack(
-                    (self.ber_mean[rx_modem_idx] - self.ber_lower[rx_modem_idx],
-                     self.ber_upper[rx_modem_idx] - self.ber_mean[rx_modem_idx])
-                )
-                plt.errorbar(
-                    self.param_general.snr_vector, self.ber_mean[rx_modem_idx], error, label="simulation"
-                )
-                plt.yscale("log", nonposy="mask")
-                plt.title("Rx" + str(rx_modem_idx))
-                plt.xlabel(snr_str + "(dB)")
-                plt.ylabel("BER")
-                plt.grid()
-                plt.legend()
-
-                filename = os.path.join(
-                    results_dir, "BER_Rx" + str(rx_modem_idx) + ".png")
-                plt.savefig(filename)
-
-            for rx_modem_idx in range(self.param_scenario.number_of_rx_modems):
-                plt.figure()
-
-                if fer_theory[rx_modem_idx] is not np.nan:
-                    plt.plot(
-                        self.param_general.snr_vector,
-                        fer_theory[rx_modem_idx],
-                        label="theory")
-
-                error = np.vstack(
-                    (self.fer_mean[rx_modem_idx] - self.fer_lower[rx_modem_idx],
-                     self.fer_upper[rx_modem_idx] - self.fer_mean[rx_modem_idx])
-                )
-                plt.errorbar(
-                    self.param_general.snr_vector, self.fer_mean[rx_modem_idx], error, label="simulation"
-                )
-                plt.yscale("log", nonposy="mask")
-                plt.title("Rx" + str(rx_modem_idx))
-                plt.xlabel(snr_str + "(dB)")
-                plt.ylabel("fer")
-                plt.grid()
-                plt.legend()
-
-                filename = os.path.join(
-                    results_dir, "fer_" + str(rx_modem_idx) + ".png")
-                plt.savefig(filename)
-
-            if self.__calc_transmit_spectrum:
-                for idx, (periodogram, frequency) in enumerate(
-                    zip(self._periodogram_tx, self._frequency_range_tx)
-                ):
-                    plt.figure()
-                    plt.plot(frequency, 10 * np.log10(periodogram))
-                    plt.xlabel("frequency (Hz)")
-                    plt.ylabel("dB")
-                    plt.title(f"Power Spectral density of TX {idx} Signal")
-
-                    filename = os.path.join(
-                        results_dir, "PSD_TX_" + str(idx) + ".png")
-                    plt.savefig(filename)
-
-            if self.__calc_transmit_stft:
-                for idx, (t, f, Zxx) in enumerate(
-                    zip(self._stft_time_tx, self._stft_freq_tx, self._stft_power_tx)
-                ):
-                    plt.figure()
-                    plt.pcolormesh(t, f, np.abs(Zxx))
-                    plt.title(f"STFT of TX {idx} signal")
-                    plt.ylabel("Frequency [Hz]")
-                    plt.xlabel("Time [sec]")
-
-                    filename = os.path.join(
-                        results_dir, "STFT_TX_" + str(idx) + ".png")
-                    plt.savefig(filename)
-
-            if self.param_general.calc_spectrum_rx:
-                for idx, (periodogram, frequency) in enumerate(
-                    zip(self._periodogram_rx, self._frequency_range_rx)
-                ):
-                    plt.figure()
-                    plt.plot(frequency, 10 * np.log10(periodogram.ravel()))
-                    plt.xlabel("frequency (Hz)")
-                    plt.ylabel("dB")
-                    plt.title(f"Power Spectral density of RX {idx} Signal")
-
-                    filename = os.path.join(
-                        results_dir, "PSD_RX_" + str(idx) + ".png")
-                    plt.savefig(filename)
-
-            if self.param_general.calc_stft_rx:
-                for idx, (t, f, Zxx) in enumerate(
-                    zip(self._stft_time_rx, self._stft_freq_rx, self._stft_power_rx)
-                ):
-                    plt.figure()
-                    plt.pcolormesh(t, f, np.abs(Zxx))
-                    plt.title(f"STFT of RX {idx} Signal")
-                    plt.ylabel("Frequency [Hz]")
-                    plt.xlabel("Time [sec]")
-
-                    filename = os.path.join(
-                        results_dir, "STFT_RX_" + str(idx) + ".png")
-                    plt.savefig(filename)
-
-            plt.show()"""
 
     @property
     def average_bit_error_rate(self) -> np.ndarray:
@@ -683,7 +566,7 @@ class Statistics:
         plot.suptitle("Bit Error Rate")
 
         for tx_idx, rx_idx in zip(range(self.__scenario.num_transmitters),
-                                        range(self.__scenario.num_receivers)):
+                                  range(self.__scenario.num_receivers)):
 
             # Skip the link between this transmitter and receiver if it seems invalid
             if np.any(self.bit_error_num_drops[:, tx_idx, rx_idx] < 1):
@@ -733,7 +616,6 @@ class Statistics:
         block_error_rates = self.average_block_error_rate
         snr = 10 * np.log10(self.snr_loop)
 
-
         # Initialize plot window
         plot, axes = plt.subplots(self.__scenario.num_transmitters, self.__scenario.num_receivers, squeeze=False)
         plot.suptitle("Block Error Rate")
@@ -775,9 +657,3 @@ class Statistics:
 
         for rx_idx in range(self.__scenario.num_receivers):
             axes[0, rx_idx].set(xlabel="{} [dB] Rx #{}, ".format(self.snr_type.name, rx_idx))
-
-            """if ber_theory[transmitter_index] is not np.nan:
-                plt.plot(
-                    self.param_general.snr_vector,
-                    ber_theory[transmitter_index],
-                    label="theory")"""

@@ -284,22 +284,13 @@ class Modem:
                              dtype=complex)
         return tx_signal, samples_delay
 
-    def _adjust_tx_power(self, tx_signal: np.ndarray) -> np.ndarray:
-        """Adjusts power of tx_signal by power factor."""
-        if self.tx_power != 0:
-            power = self.waveform_generator.power
-
-            self.power_factor = self.tx_power / power
-            tx_signal = tx_signal * np.sqrt(self.power_factor)
-
-        return tx_signal
-
     def get_bit_energy(self) -> float:
         """Returns the average bit energy of the modulated signal.
         """
 
         rate = self.encoder_manager.rate
-        return self.waveform_generator.bit_energy * self.power_factor / rate
+        bit_energy = self.waveform_generator.bit_energy * self.power_factor / rate
+        return bit_energy
 
     def get_symbol_energy(self) -> float:
         """Returns the average symbol energy of the modulated signal.
@@ -628,3 +619,14 @@ class Modem:
 
         num_code_bits = self.waveform_generator.bits_per_frame
         return self.encoder_manager.required_num_data_bits(num_code_bits)
+        return self.encoder_manager.required_num_data_bits(num_code_bits)
+
+    @property
+    def power_factor(self) -> float:
+        """Factor by which the power of transmitted and received signals is scaled.
+
+        Returns:
+            float: The power scaling factor.
+        """
+
+        return self.tx_power / self.waveform_generator.power

@@ -41,8 +41,10 @@ class Receiver(Modem):
             np.array: Detected bits as a list of data blocks for the drop.
         """
 
+        noise_var = noise_power / 1.0  # TODO: Re-implement pair power factor
+
         # Add receive noise
-        noisy_signal = self.__noise.add_noise(input_signal, noise_power)
+        noisy_signal = self.__noise.add_noise(input_signal, noise_var)
 
         # Simulate receive radio chain
         rx_signal = self.rf_chain.receive(noisy_signal)
@@ -53,7 +55,6 @@ class Receiver(Modem):
 
         # normalize signal to expected input power
         rx_signal = rx_signal / np.sqrt(1.0)  # TODO: Re-implement pair power factor
-        noise_var = noise_power / 1.0  # TODO: Re-implement pair power factor
 
         received_bits = np.empty(0, dtype=int)
         timestamp_in_samples = 0
