@@ -417,7 +417,8 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         """
 
         _, _, symbol_energy = self._prototypes()
-        return symbol_energy / self.bits_per_symbol
+        bit_energy = symbol_energy / self.bits_per_symbol
+        return bit_energy
 
     def create_frame(self, timestamp: int,
                      data_bits: np.array) -> Tuple[np.ndarray, int, int]:

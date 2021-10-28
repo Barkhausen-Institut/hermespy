@@ -87,8 +87,12 @@ class Transmitter(Modem):
                 initial_sample_num, samples_delay, tx_signal, frame)
             frame_index += 1
 
+        # Simulate RF chain
         tx_signal = self.rf_chain.send(tx_signal)
-        tx_signal = self._adjust_tx_power(tx_signal)
+
+        # Scale resulting signal by configured power factor
+        tx_signal *= np.sqrt(self.power_factor)
+
         return tx_signal
 
     @classmethod

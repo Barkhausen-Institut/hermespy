@@ -330,7 +330,7 @@ class Drop:
 
                 block_error_rate = None
                 if block_errors is not None:
-                    block_error_rate = mean(block_errors)
+                    block_error_rate = np.mean(block_errors)
 
                 block_error_rate_row.append(block_error_rate)
 

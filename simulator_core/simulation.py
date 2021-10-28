@@ -39,7 +39,8 @@ class ConfidenceMetric(Enum):
 
     DISABLED = 0        # No stopping criterion
     BER = 1             # Bit Error Rate
-    FER = 2             # ? Error Rate
+    BLER = 2            # Block Error Rate
+#    FLER = 3            # Frame error rate
 
 
 class Simulation(Executable):
@@ -52,6 +53,15 @@ class Simulation(Executable):
 
         plot_block_error (bool):
             Plot resulting block error rate after simulation.
+
+        __min_num_drops (int):
+            Minimum number of drops before confidence check may prematurely abort execution.
+
+        __confidence_level (float):
+            Confidence at which execution should be terminated.
+
+        __confidence_margin (float):
+            Margin for the confidence check
     """
 
     yaml_tag = u'Simulation'
@@ -60,6 +70,9 @@ class Simulation(Executable):
     confidence_metric: ConfidenceMetric
     plot_bit_error: bool
     plot_block_error: bool
+    __min_num_drops: int
+    __confidence_level: float
+    __confidence_margin: float
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -73,7 +86,10 @@ class Simulation(Executable):
                  plot_block_error: bool = True,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
                  noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
-                 confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED) -> None:
+                 confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
+                 min_num_drops: int = 0,
+                 confidence_level: float = 1.0,
+                 confidence_margin: float = 0.0) -> None:
         """Simulation object initialization.
 
         Args:
@@ -112,6 +128,15 @@ class Simulation(Executable):
 
             confidence_metric (Union[ConfidenceMetric, str], optional):
                 Metric for premature simulation stopping criterion
+
+            min_num_drops (int, optional):
+                Minimum number of drops before confidence check may prematurely terminate execution.
+
+            confidence_level (float, optional):
+                Confidence at which execution should be terminated.
+
+            confidence_margin (float, optional):
+                Margin for the confidence check
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
@@ -120,6 +145,9 @@ class Simulation(Executable):
         self.snr_type = snr_type
         self.plot_bit_error = plot_bit_error
         self.plot_block_error = plot_block_error
+        self.min_num_drops = min_num_drops
+        self.confidence_level = confidence_level
+        self.confidence_margin = confidence_margin
 
         # Convert noise loop from array to list if the provided argument is a numpy array
         if isinstance(noise_loop, np.ndarray):
@@ -182,6 +210,10 @@ class Simulation(Executable):
 
                     # Add drop to the statistics
                     statistics.add_drop(drop, noise_index)
+
+                    # Check confidence if the routine is enabled and
+                    # the minimum number of configured drops has been reached
+                    # if self.confidence_metric is not ConfidenceMetric.DISABLED and d >= self.min_num_drops:
 
             # Dump statistics results
             statistics.save(self.results_dir)
@@ -267,6 +299,84 @@ class Simulation(Executable):
             raise ValueError("The noise loop must contain at least one SNR entry")
 
         self.__noise_loop = loop
+
+    @property
+    def min_num_drops(self) -> int:
+        """Minimum number of drops before confidence check may terminate execution.
+
+        Returns:
+            int: Minimum number of drops.
+        """
+
+        return self.__min_num_drops
+
+    @min_num_drops.setter
+    def min_num_drops(self, num_drops: int) -> None:
+        """Modify minimum number of drops before confidence check may terminate execution.
+
+        Args:
+            num_drops (int): Minim number of drops.
+
+        Raises:
+            ValueError: If `num_drops` is smaller than zero.
+        """
+
+        if num_drops < 0:
+            raise ValueError("Minimum number of drops must be greater or equal to zero.")
+
+        self.__min_num_drops = num_drops
+
+    @property
+    def confidence_level(self) -> float:
+        """Access confidence level at which execution may be prematurely terminated.
+
+        Return:
+            float: Confidence level between 0.0 and 1.0.
+        """
+
+        return self.__confidence_level
+
+    @confidence_level.setter
+    def confidence_level(self, level: float) -> None:
+        """Modify confidence level at which execution may be prematurely terminated.
+
+        Args:
+            level (float): Confidence level between 0.0 and 1.0.
+
+        Raises:
+            ValueError: If `level` is not between 0.0 and 1.0.
+        """
+
+        if not 0.0 <= level <= 1.0:
+            raise ValueError("Confidence level must be between zero and one")
+
+        self.__confidence_level = level
+        
+    @property
+    def confidence_margin(self) -> float:
+        """Access margin for confidence level at which execution may be prematurely terminated.
+
+        Return:
+            float: Absolute margin confidence margin.
+        """
+
+        return self.__confidence_margin
+
+    @confidence_margin.setter
+    def confidence_margin(self, margin: float) -> None:
+        """Modify margin for confidence level at which execution may be prematurely terminated.
+
+        Args:
+            margin (float): Absolute margin.
+
+        Raises:
+            ValueError: If `margin` is smaller than zero.
+        """
+
+        if margin < 0.0:
+            raise ValueError("Margin must be greater or equal to zero")
+
+        self.__confidence_margin = margin
 
     @staticmethod
     def transmit(scenario: Scenario,
@@ -407,19 +517,19 @@ class Simulation(Executable):
         for receiver_index, receiver in enumerate(scenario.receivers):
 
             # Compute noise variance at the receiver
-            noise_variance = 0.0
+            noise_power = 0.0
 
             if snr_type == SNRType.EBN0:
-                noise_variance = receiver.waveform_generator.bit_energy / snr
+                noise_power = receiver.waveform_generator.bit_energy / snr
 
             elif snr_type == SNRType.ESN0:
-                noise_variance = receiver.waveform_generator.symbol_energy / snr
+                noise_power = receiver.waveform_generator.symbol_energy / snr
 
             elif snr_type == SNRType.CUSTOM:  # TODO: What is custom exactly supposed to do?
-                noise_variance = snr
+                noise_power = 1 / snr
 
             # Receive data bits
-            data = receiver.receive(arriving_signals[receiver_index], noise_variance)
+            data = receiver.receive(arriving_signals[receiver_index], noise_power)
             data_bits.append(data)
 
         return data_bits
