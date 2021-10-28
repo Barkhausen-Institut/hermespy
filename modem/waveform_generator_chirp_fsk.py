@@ -18,7 +18,7 @@ __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.1.0"
 __maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -51,7 +51,16 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                  num_pilot_chirps: int = None,
                  num_data_chirps: int = None,
                  guard_interval: float = None) -> None:
-        """Object initialization."""
+        """Frequency Shift Keying Waveform Generator object initialization.
+
+        Args:
+
+            chirp_duration (float, optional):
+                Duration of a single chirp in seconds.
+
+            chirp_bandwidth (float, optional):
+                Bandwidth of a single chirp in Hz.
+        """
 
         # Default parameters
         self.__chirp_duration = 512e-6

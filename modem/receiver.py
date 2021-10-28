@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+"""HermesPy Receiving Modem."""
+
 from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
-from typing import Type, List
+from typing import TYPE_CHECKING, Type, List
 import numpy as np
 import numpy.random as rnd
 
@@ -9,6 +12,18 @@ from source import BitsSource
 from modem import Modem
 from modem.waveform_generator import WaveformGenerator
 from noise import Noise
+
+if TYPE_CHECKING:
+    from channel import Channel
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler", "Tobias Kronauer"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adlerr"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class Receiver(Modem):
@@ -164,3 +179,11 @@ class Receiver(Modem):
 
         self.__noise = model
         model.receiver = self
+
+    @property
+    def reference_channel(self) -> Channel:
+
+        if self.scenario is None:
+            raise RuntimeError("Attempting to access reference channel of a floating modem.")
+
+        return self.scenario.arriving_channels(self, active_only=True)[0]

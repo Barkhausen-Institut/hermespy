@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
-from typing import Type, List, Any, Optional
+from typing import TYPE_CHECKING, Type, List, Any, Optional
 import numpy as np
 import numpy.random as rnd
 
@@ -11,6 +11,8 @@ from modem import Modem
 from source import BitsSource
 from modem.waveform_generator import WaveformGenerator
 
+if TYPE_CHECKING:
+    from channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -189,3 +191,11 @@ class Transmitter(Modem):
         """
 
         return self.random_generator.integers(0, 2, self.num_data_bits_per_frame)
+
+    @property
+    def reference_channel(self) -> Channel:
+
+        if self.scenario is None:
+            raise RuntimeError("Attempting to access reference channel of a floating modem.")
+
+        return self.scenario.departing_channels(self, active_only=True)[0]

@@ -1,4 +1,20 @@
+# -*- coding: utf-8 -*-
+"""Shaping Filter for Communcation Links."""
+
+from __future__ import annotations
 import numpy as np
+from enum import Enum
+from typing import Type, Union
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class ShapingFilter:
@@ -16,9 +32,20 @@ class ShapingFilter:
         impulse_response (numpy.array): filter impulse response
     """
 
+    class FilterType(Enum):
+        """Type of filter applied to the signal."""
+
+        NONE = 0
+        ROOT_RAISED_COSINE = 1
+        RAISED_COSINE = 2
+        RECTANGULAR = 3
+        FMCW = 4
+
+    yaml_tag = u'ShapingFilter'
+
     def __init__(
             self,
-            filter_type: str,
+            filter_type: Union[str, FilterType],
             samples_per_symbol: int,
             length_in_symbols: float = 16,
             bandwidth_factor: float = 1.0,
@@ -47,28 +74,35 @@ class ShapingFilter:
             is_matched (bool): if True, then a matched filter is considered.
         """
 
+        if isinstance(filter_type, str):
+            filter_type = ShapingFilter.FilterType[filter_type]
+
+        self.filter_type = filter_type
+        self.samples_per_symbol = samples_per_symbol
+        self.length_in_symbols = length_in_symbols
+        self.bandwidth_factor = bandwidth_factor
+        self.roll_off = roll_off
+        self.is_matched = is_matched
+
         self.samples_per_symbol = samples_per_symbol
         self.number_of_samples = None
         self.delay_in_samples = None
         self.impulse_response = None
 
-        if filter_type == "NONE":
+        if filter_type == ShapingFilter.FilterType.NONE:
             self.impulse_response = 1.0
             self.delay_in_samples = 0
             self.number_of_samples = 1
 
-        elif filter_type == "RECTANGULAR":
-            self.number_of_samples = np.int(
-                np.round(
-                    self.samples_per_symbol /
-                    bandwidth_factor))
+        elif filter_type == ShapingFilter.FilterType.RECTANGULAR:
+            self.number_of_samples = np.round(self.samples_per_symbol / bandwidth_factor).astype(int)
             self.delay_in_samples = int(self.number_of_samples / 2)
             self.impulse_response = np.ones(self.number_of_samples)
 
             if is_matched:
                 self.delay_in_samples -= 1
 
-        elif filter_type == "RAISED_COSINE" or filter_type == "ROOT_RAISED_COSINE":
+        elif filter_type == ShapingFilter.FilterType.RAISED_COSINE or filter_type == ShapingFilter.FilterType.ROOT_RAISED_COSINE:
             self.number_of_samples = int(
                 self.samples_per_symbol * length_in_symbols)
             delay_in_symbols = int(
@@ -81,7 +115,7 @@ class ShapingFilter:
             self.impulse_response = self._get_raised_cosine(
                 filter_type, roll_off, bandwidth_factor)
 
-        elif filter_type == "FMCW":
+        elif filter_type == ShapingFilter.FilterType.FMCW:
             self.number_of_samples = int(
                 np.ceil(
                     self.samples_per_symbol *
@@ -192,3 +226,53 @@ class ShapingFilter:
             1j * np.pi * (-sign * bandwidth * time + chirp_slope * time**2))
 
         return impulse_response
+
+    @classmethod
+    def to_yaml(cls: Type[ShapingFilter],
+                representer: SafeRepresenter,
+                node: ShapingFilter) -> MappingNode:
+        """Serialize an `ShapingFilter` object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (ShapingFilter):
+                The `ShapingFilter` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node
+        """
+
+        state = {
+            "filter_type": node.filter_type.name,
+            "samples_per_symbol": node.samples_per_symbol,
+            "length_in_symbols": node.length_in_symbols,
+            "bandwidth_factor": node.bandwidth_factor,
+            "roll_off": node.roll_off,
+            "is_matched": node.is_matched,
+        }
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[ShapingFilter],
+                  constructor: SafeConstructor,
+                  node: MappingNode) -> ShapingFilter:
+        """Recall a new `ShapingFilter` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `ShapingFilter` serialization.
+
+        Returns:
+            ShapingFilter:
+                Newly created `ShapingFilter` instance.
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)
