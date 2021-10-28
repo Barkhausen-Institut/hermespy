@@ -4,7 +4,7 @@
 import unittest
 from unittest.mock import Mock
 
-from channel import MultipathFadingCost256, MultipathFading5GTDL
+from channel import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -55,12 +55,21 @@ class TestCost256(unittest.TestCase):
             channel = MultipathFadingCost256(model_type)
             self.assertEqual(model_type, channel.model_type)
 
+    def test_to_yaml(self) -> None:
+        """Test object serialization."""
+        pass
+
+    def test_from_yaml(self) -> None:
+        """Test object recall from yaml."""
+        pass
+
 
 class Test5GTDL(unittest.TestCase):
     """Test the 5GTDL template for the multipath fading channel model."""
 
     def setUp(self) -> None:
 
+        self.rms_delay = 1e-6
         self.transmitter = Mock()
         self.receiver = Mock()
         self.transmitter.num_antennas = 1
@@ -69,11 +78,11 @@ class Test5GTDL(unittest.TestCase):
     def test_init(self) -> None:
         """Test the template initializations."""
 
-        for model_type in MultipathFadingCost256.TYPE:
+        for model_type in MultipathFading5GTDL.TYPE:
 
             channel = MultipathFading5GTDL(model_type,
-                                           self.transmitter,
-                                           self.receiver)
+                                           transmitter=self.transmitter,
+                                           receiver=self.receiver)
 
             self.assertIs(self.transmitter, channel.transmitter)
             self.assertIs(self.receiver, channel.receiver)
@@ -85,15 +94,50 @@ class Test5GTDL(unittest.TestCase):
             _ = MultipathFading5GTDL(100000)
 
         with self.assertRaises(ValueError):
+            _ = MultipathFading5GTDL(rms_delay=-1.0)
+
+        with self.assertRaises(ValueError):
             _ = MultipathFading5GTDL(MultipathFading5GTDL.TYPE.D, los_doppler_frequency=0.0)
 
         with self.assertRaises(ValueError):
             _ = MultipathFading5GTDL(MultipathFading5GTDL.TYPE.E, los_doppler_frequency=0.0)
 
     def test_model_type(self) -> None:
-        """The model type property should return """
+        """The model type property should return the proper model type."""
 
-        for model_type in MultipathFadingCost256.TYPE:
+        for model_type in MultipathFading5GTDL.TYPE:
 
             channel = MultipathFading5GTDL(model_type)
             self.assertEqual(model_type, channel.model_type)
+
+    def test_to_yaml(self) -> None:
+        """Test object serialization."""
+        pass
+
+    def test_from_yaml(self) -> None:
+        """Test object recall from yaml."""
+        pass
+
+
+class TestExponential(unittest.TestCase):
+    """Test the exponential template for the multipath fading channel model."""
+
+    def setUp(self) -> None:
+        pass
+
+    def test_init_validation(self) -> None:
+        """Object initialization should raise ValueErrors on negative tap intervals and rms delays."""
+
+        with self.assertRaises(ValueError):
+            _ = MultipathFadingExponential(tap_interval=-1.0)
+
+        with self.assertRaises(ValueError):
+            _ = MultipathFadingExponential(rms_delay=-1.0)
+
+    def test_to_yaml(self) -> None:
+        """Test object serialization."""
+        pass
+
+    def test_from_yaml(self) -> None:
+        """Test object recall from yaml."""
+        pass
