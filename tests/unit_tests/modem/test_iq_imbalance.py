@@ -16,9 +16,9 @@ class TestIqImbalance(unittest.TestCase):
 
     def test_correct_calculation(self) -> None:
         phase_offset = np.pi
-        amplitude_offset = 0.5
+        amplitude_imbalance = 0.5
 
-        rf_chain = RfChain(None, phase_offset, amplitude_offset)
+        rf_chain = RfChain(None, phase_offset, amplitude_imbalance)
 
         expected_detoriated_x_t = 0.5j*self.x_t -1j*np.conj(self.x_t)
         
@@ -41,4 +41,4 @@ class TestIqImbalance(unittest.TestCase):
 
     def test_amplitude_imbalance_default_if_not_within_interval(self) -> None:
         rf_chain = RfChain(None, None, -3)
-        self.assertEqual(rf_chain.amplitude_error, 0)
+        self.assertEqual(rf_chain.amplitude_imbalance, 0)

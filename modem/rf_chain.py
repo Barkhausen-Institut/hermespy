@@ -15,18 +15,18 @@ class RfChain:
     yaml_tag = 'RfChain'
     __tx_power: float
     __phase_offset: float
-    __amplitude_error: float
+    __amplitude_imbalance: float
 
     __power_amplifier: Optional[PowerAmplifier]
 
     def __init__(self,
                  tx_power: float = None,
                  phase_offset: float = None,
-                 amplitude_error: float = None) -> None:
+                 amplitude_imbalance: float = None) -> None:
 
         self.__tx_power = 1.0
         self.__phase_offset = 0.0
-        self.__amplitude_error = 0.0
+        self.__amplitude_imbalance = 0.0
 
         self.__power_amplifier = None
 
@@ -36,21 +36,21 @@ class RfChain:
         if phase_offset is not None:
             self.__phase_offset = phase_offset
 
-        if amplitude_error is not None:
-            self.amplitude_error = amplitude_error
+        if amplitude_imbalance is not None:
+            self.amplitude_imbalance = amplitude_imbalance
 
     @property
-    def amplitude_error(self) -> float:
-        return self.__amplitude_error
+    def amplitude_imbalance(self) -> float:
+        return self.__amplitude_imbalance
 
-    @amplitude_error.setter
-    def amplitude_error(self, val) -> None:
+    @amplitude_imbalance.setter
+    def amplitude_imbalance(self, val) -> None:
         if abs(val) >= 1:
             warn("Amplitude imbalance must be within interval (-1, 1).")
             warn("Setting Amplitude imbalance to 0.")
-            self.__amplitude_error = 0
+            self.__amplitude_imbalance = 0
         else:
-            self.__amplitude_error = val
+            self.__amplitude_imbalance = val
 
     @property
     def phase_offset(self) -> float:
@@ -128,7 +128,7 @@ class RfChain:
         """
         x = input_signal
         eps_delta = self.__phase_offset
-        eps_a = self.__amplitude_error
+        eps_a = self.__amplitude_imbalance
 
         eta_alpha = np.cos(eps_delta/2) + 1j * eps_a * np.sin(eps_delta/2)
         eta_beta = eps_a * np.cos(eps_delta/2) - 1j * np.sin(eps_delta/2)
