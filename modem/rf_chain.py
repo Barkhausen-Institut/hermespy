@@ -13,15 +13,30 @@ class RfChain:
 
     yaml_tag = 'RfChain'
     __tx_power: float
+    __phase_offset: float
+    __amplitude_error: float
+
     __power_amplifier: Optional[PowerAmplifier]
 
-    def __init__(self, tx_power: float = None) -> None:
+    def __init__(self,
+                 tx_power: float = None,
+                 phase_offset: float = None,
+                 amplitude_error: float = None) -> None:
 
         self.__tx_power = 1.0
+        self.__phase_offset = 0.0
+        self.__amplitude_error = 1.0
+
         self.__power_amplifier = None
 
         if tx_power is not None:
             self.__tx_power = tx_power
+
+        if phase_offset is not None:
+            self.__phase_offset = phase_offset
+
+        if amplitude_error is not None:
+            self.__amplitude_error = amplitude_error
 
     @classmethod
     def to_yaml(cls: Type[RfChain], representer: SafeRepresenter, node: RfChain) -> Node:
