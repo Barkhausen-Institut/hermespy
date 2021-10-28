@@ -401,9 +401,149 @@ class MultipathFading5GTDL(MultipathFadingChannel):
 
         state = constructor.construct_mapping(node)
 
-        model_type = state.pop('model_type', None)
+        model_type = state.pop('type', None)
         if model_type is None:
             raise RuntimeError("5G TDL channel configurations require at least a model specification")
 
         state['model_type'] = cls.TYPE[model_type]
+        return cls(**state)
+
+
+class MultipathFadingExponential(MultipathFadingChannel):
+    """Exponential Multipath Fading Channel models."""
+
+    yaml_tag = u'Exponential'
+    yaml_matrix = True
+    __exponential_truncation: float = 1e-5
+    __tap_interval: float
+    __rms_delay: float
+
+    def __init__(self,
+                 tap_interval: float = 0.0,
+                 rms_delay: float = 0.0,
+                 transmitter: Optional[Transmitter] = None,
+                 receiver: Optional[Receiver] = None,
+                 active: Optional[bool] = None,
+                 gain: Optional[float] = None,
+                 num_sinusoids: Optional[float] = None,
+                 los_angle: Optional[float] = None,
+                 doppler_frequency: Optional[float] = None,
+                 los_doppler_frequency: Optional[float] = None,
+                 transmit_precoding: Optional[np.ndarray] = None,
+                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+        """Exponential Multipath Channel Model initialization.
+
+        Args:
+            tap_interval (float, optional): Tap interval in seconds.
+            rms_delay (float, optional): Root-Mean-Squared delay in seconds.
+            transmitter (Transmitter, optional): The modem transmitting into this channel.
+            receiver (Receiver, optional): The modem receiving from this channel.
+            active (bool, optional): Channel activity flag.
+            gain (float, optional): Channel power gain.
+            num_sinusoids (int, optional): Number of sinusoids used to sample the statistical distribution.
+            los_angle (float, optional): Angle phase of the line of sight component within the statistical distribution.
+            doppler_frequency (float, optional): Doppler frequency shift of the statistical distribution.
+            transmit_precoding (np.ndarray): Transmit precoding matrix.
+            receive_postcoding (np.ndarray): Receive postcoding matrix.
+
+        Raises:
+            ValueError: On invalid arguments.
+        """
+
+        if tap_interval <= 0.0:
+            raise ValueError("Tap interval must be greater than zero")
+
+        if rms_delay <= 0.0:
+            raise ValueError("Root-Mean-Squared delay must be greater than zero")
+
+        self.__tap_interval = tap_interval
+        self.__rms_delay = rms_delay
+
+        rms_norm = rms_delay / tap_interval
+
+        # Calculate the decay exponent alpha based on an infinite power delay profile, in which case
+        # rms_delay = exp(-alpha/2)/(1-exp(-alpha)), cf. geometric distribution.
+        # Truncate the distributions for paths whose average power is very
+        # small (less than exponential_truncation).
+
+        alpha = -2 * np.log((-1 + np.sqrt(1 + 4 * rms_norm ** 2)) / (2 * rms_norm))
+        max_delay_in_samples = int(np.ceil(np.log(MultipathFadingExponential.__exponential_truncation) / alpha))
+
+        delays = np.arange(max_delay_in_samples + 1) * tap_interval
+        power_profile = np.exp(-alpha * np.arange(max_delay_in_samples + 1))
+        rice_factors = np.zeros(delays.shape)
+
+        # Init base class with pre-defined model parameters
+        MultipathFadingChannel.__init__(self,
+                                        delays,
+                                        power_profile,
+                                        rice_factors,
+                                        transmitter,
+                                        receiver,
+                                        active,
+                                        gain,
+                                        num_sinusoids,
+                                        los_angle,
+                                        doppler_frequency,
+                                        los_doppler_frequency,
+                                        transmit_precoding,
+                                        receive_postcoding)
+
+    @classmethod
+    def to_yaml(cls: Type[MultipathFadingExponential], representer: SafeRepresenter,
+                node: MultipathFadingExponential) -> MappingNode:
+        """Serialize a channel object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (MultipathFadingExponential):
+                The channel instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'tap_interval': node.__tap_interval,
+            'rms_delay': node.__rms_delay,
+            'active': node.active,
+            'gain': node.gain,
+            'num_sinusoids': node.num_sinusoids,
+            'los_angle': node.los_angle,
+            'doppler_frequency': node.doppler_frequency,
+            'los_doppler_frequency': node.los_doppler_frequency,
+            'transmit_precoding': node.transmit_precoding,
+            'receive_postcoding': node.receive_postcoding,
+        }
+
+        transmitter_index, receiver_index = node.indices
+        return representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
+
+    @classmethod
+    def from_yaml(cls: Type[MultipathFadingExponential], constructor: SafeConstructor, node: MappingNode) -> \
+            MultipathFadingExponential:
+        """Recall a new `MultipathFadingExponential` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `MultipathFadingExponential` serialization.
+
+        Returns:
+            Channel:
+                Newly created `MultipathFadingExponential` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+        """
+
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        state = constructor.construct_mapping(node)
         return cls(**state)
