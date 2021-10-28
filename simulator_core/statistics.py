@@ -118,14 +118,6 @@ class Statistics:
         self.bit_error_max = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
         self.block_error_max = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
-        self._tx_sampling_rate = [
-            modem.waveform_generator.sampling_rate for modem in self.__scenario.transmitters
-        ]
-
-        self._rx_sampling_rate = [
-            modem.waveform_generator.sampling_rate for modem in self.__scenario.receivers
-        ]
-
         self._frequency_range_tx = [
             np.zeros(self.__spectrum_fft_size)
             for _ in range(self.__scenario.num_transmitters)

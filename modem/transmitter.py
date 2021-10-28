@@ -57,7 +57,7 @@ class Transmitter(Modem):
             ValueError: If not enough data bits were provided to generate as single frame.
         """
         # coded_bits = self.encoder.encoder(data_bits)
-        number_of_samples = int(np.ceil(drop_duration * self.sampling_rate))
+        number_of_samples = int(np.ceil(drop_duration * self.scenario.sampling_rate))
         timestamp = 0
         frame_index = 1
 

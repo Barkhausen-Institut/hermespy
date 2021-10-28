@@ -28,13 +28,11 @@ class WaveformGenerator(ABC):
 
     yaml_tag: str = "Waveform"
     __modem: Optional[Modem]
-    __sampling_rate: Optional[float]
     __oversampling_factor: int
     __modulation_order: int
 
     def __init__(self,
                  modem: Modem = None,
-                 sampling_rate: float = None,
                  oversampling_factor: int = None,
                  modulation_order: int = None) -> None:
         """Object initialization.
@@ -43,9 +41,6 @@ class WaveformGenerator(ABC):
             modem (Modem, optional):
                 A modem this generator is attached to.
                 By default, the generator is considered to be floating.
-
-            sampling_rate (float, optional):
-                Rate at which the generated signals are sampled.
 
             oversampling_factor (int, optional):
                 The factor at which the simulated signal is oversampled.
@@ -63,9 +58,6 @@ class WaveformGenerator(ABC):
 
         if modem is not None:
             self.modem = modem
-
-        if sampling_rate is not None:
-            self.sampling_rate = sampling_rate
 
         if oversampling_factor is not None:
             self.oversampling_factor = oversampling_factor
@@ -216,14 +208,14 @@ class WaveformGenerator(ABC):
             float: Frame length in seconds.
         """
 
-        return self.samples_in_frame / self.sampling_rate
+        return self.samples_in_frame / self.modem.scenario.sampling_rate
 
     @property
     def max_frame_duration(self) -> float:
         """float: Maximum length of a data frame (in seconds)"""
 
         # TODO: return (self.samples_in_frame + self._samples_overhead_in_frame) / self.sampling_rate
-        return self.samples_in_frame / self.sampling_rate
+        return self.samples_in_frame / self.modem.scenario.sampling_rate
 
     @property
     @abstractmethod
@@ -304,49 +296,6 @@ class WaveformGenerator(ABC):
                 following frames.
         """
         ...
-
-    @property
-    def sampling_rate(self) -> float:
-        """Access the configured sampling rate.
-
-        Returns:
-            float:
-                The configured sampling rate, alternatively the attached modem's sampling rate in Hz.
-
-        Raises:
-            RuntimeError:
-                If the sampling rate is not configured and the generator is floating.
-        """
-
-        if self.__sampling_rate is not None:
-            return self.__sampling_rate
-
-        if self.__modem is not None:
-            return self.__modem.sampling_rate
-
-        raise RuntimeError("Tried to access the unknown sampling rate of a floating generator")
-
-    @sampling_rate.setter
-    def sampling_rate(self, sampling_rate: Optional[float]) -> None:
-        """Modify the sampling rate configuration.
-
-        Args:
-            sampling_rate (Optional[float]):
-                The new sampling rate.
-                None, if the modem's sampling rate is identical.
-
-        Raises:
-            ValueError:
-                If the sampling rate is smaller or equal to zero.
-        """
-
-        if sampling_rate is None:
-            self.__sampling_rate = sampling_rate
-
-        if sampling_rate <= 0.0:
-            raise ValueError("Sampling rate must be greater than zero")
-
-        self.__sampling_rate = sampling_rate
 
     @property
     def modem(self) -> Modem:

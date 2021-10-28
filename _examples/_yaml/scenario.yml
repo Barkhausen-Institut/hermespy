@@ -1,34 +1,37 @@
 !<Scenario>
 
 random_seed: 0
+sampling_rate: 1e7
 
 Modems:
 
   - Transmitter
     carrier_frequency: 0.0
-    random_seed: 1
     position: [0, 0, 0]
     WaveformChirpFsk:
         chirp_bandwidth: 5e5
         chirp_duration: 512e-6
         freq_difference: 1953.125
         num_data_chirps: 4
-        modulation_order: 256
+        modulation_order: 32
+#    sampling_rate: 1e7
 
   - Receiver
     carrier_frequency: 0.0
-    random_seed: 2
     position: [10, 10, 10]
     WaveformChirpFsk:
         chirp_bandwidth: 5e5
         chirp_duration: 512e-6
         freq_difference: 1953.125
         num_data_chirps: 4
-        modulation_order: 256
-    Noise:
-      random_seed: 20
+        modulation_order: 32
 
 Channels:
 
-  - 5GTDL 0 0
-    type: A
+#  - COST256 0 0
+#    model_type: URBAN
+#  - 5GTDL 0 0
+#    type: A
+#    rms_delay: 0.0
+  - Channel 0 0
+    active: true

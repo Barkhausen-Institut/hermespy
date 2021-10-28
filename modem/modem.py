@@ -38,7 +38,6 @@ class Modem:
     __orientation: Optional[np.ndarray]
     __topology: np.ndarray
     __carrier_frequency: float
-    __sampling_rate: float
     __linear_topology: bool
     __encoder_manager: EncoderManager
     __precoding: Precoding
@@ -54,7 +53,6 @@ class Modem:
                  orientation: np.array = None,
                  topology: np.ndarray = None,
                  carrier_frequency: float = None,
-                 sampling_rate: float = None,
                  bits: BitsSource = None,
                  encoding: EncoderManager = None,
                  precoding: Precoding = None,
@@ -76,7 +74,6 @@ class Modem:
         self.__orientation = None
         self.__topology = np.zeros((1, 3), dtype=np.float64)
         self.__carrier_frequency = 800e6
-        self.__sampling_rate = 1e3
         self.__linear_topology = False
         self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
@@ -100,9 +97,6 @@ class Modem:
 
         if carrier_frequency is not None:
             self.carrier_frequency = carrier_frequency
-
-        if sampling_rate is not None:
-            self.sampling_rate = sampling_rate
 
         if bits is not None:
             self.bits_source = bits
@@ -141,7 +135,6 @@ class Modem:
 
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
-            "sampling_rate": node.__sampling_rate,
             "tx_power": node.__tx_power,
             BitsSource.yaml_tag: node.__bits_source,
             EncoderManager.yaml_tag: node.__encoder_manager,
@@ -426,35 +419,6 @@ class Modem:
         self.__carrier_frequency = carrier_frequency
 
     @property
-    def sampling_rate(self) -> float:
-        """Access the rate at which the analog signals are sampled.
-
-        Returns:
-            float:
-                Signal sampling rate in Hz.
-        """
-
-        return self.__sampling_rate
-
-    @sampling_rate.setter
-    def sampling_rate(self, value: float) -> None:
-        """Modify the rate at which the analog signals are sampled.
-
-        Args:
-            value (float):
-                Signal sampling rate in Hz.
-
-        Raises:
-            ValueError:
-                If the sampling rate is less or equal to zero.
-        """
-
-        if value <= 0.0:
-            raise ValueError("Sampling rate must be greater than zero")
-
-        self.__sampling_rate = value
-
-    @property
     def linear_topology(self) -> bool:
         """Access the configured linearity flag.
 
@@ -619,7 +583,6 @@ class Modem:
         """
 
         num_code_bits = self.waveform_generator.bits_per_frame
-        return self.encoder_manager.required_num_data_bits(num_code_bits)
         return self.encoder_manager.required_num_data_bits(num_code_bits)
 
     @property

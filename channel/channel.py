@@ -287,6 +287,8 @@ class Channel(ABC):
         This method can be used for instance by the transceivers to obtain the channel state
         information.
 
+        TODO: This does not actually seem to be model impulse responses!!!!!
+
         Args:
             timestamps (np.ndarray):
                 Time instants with length `T` to calculate the response for.

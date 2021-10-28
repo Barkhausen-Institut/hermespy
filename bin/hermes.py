@@ -28,15 +28,12 @@ Released under the Gnu Public License Version 3
 """
 import os
 import shutil
-import datetime
 import sys
 import argparse
 from typing import List, Optional
 from ruamel.yaml.constructor import ConstructorError
 
-from simulator_core.random_streams import RandomStreams
 from simulator_core import Factory, Executable
-from simulator_core.drop_loop import DropLoop
 
 
 def hermes(args: Optional[List[str]] = None) -> None:

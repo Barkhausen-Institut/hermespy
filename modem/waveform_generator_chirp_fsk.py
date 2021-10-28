@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 from typing import Tuple, List, Type
-from functools import lru_cache
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 from scipy import integrate
@@ -42,7 +41,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
     def __init__(self,
                  modem: Modem = None,
-                 sampling_rate: float = None,
                  oversampling_factor: float = None,
                  modulation_order: int = None,
                  chirp_duration: float = None,
@@ -93,13 +91,8 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         WaveformGenerator.__init__(self,
                                    modem=modem,
-                                   sampling_rate=sampling_rate,
                                    oversampling_factor=oversampling_factor,
                                    modulation_order=modulation_order)
-
-        # Guess sampling rate if not explicitly configured
-        if not sampling_rate:
-            self.sampling_rate = self.chirp_bandwidth * self.oversampling_factor
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorChirpFsk],
@@ -367,7 +360,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 The number of samples.
         """
 
-        return int(ceil(self.chirp_duration * self.sampling_rate))
+        return int(ceil(self.chirp_duration * self.modem.scenario.sampling_rate))
 
     @property
     def chirps_in_frame(self) -> int:
@@ -389,7 +382,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 Chirp timestamps.
         """
 
-        return np.arange(self.samples_in_chirp) / self.sampling_rate
+        return np.arange(self.samples_in_chirp) / self.modem.scenario.sampling_rate
 
     @property
     def samples_in_frame(self) -> int:
@@ -401,7 +394,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         """
 
         return (self.samples_in_chirp * self.chirps_in_frame +
-                int((np.around(self.__guard_interval * self.sampling_rate))))
+                int((np.around(self.__guard_interval * self.modem.scenario.sampling_rate))))
 
     @property
     def symbol_energy(self) -> float:
@@ -446,7 +439,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             integrate.cumtrapz(
                 frequency,
                 dx=1 /
-                self.sampling_rate,
+                self.modem.scenario.sampling_rate,
                 initial=0)
 
         output_signal = amplitude * np.exp(1j * phase)
@@ -603,7 +596,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             frequency = initial_frequency + chirp_time * slope
             frequency[frequency > f1] -= self.chirp_bandwidth
 
-            phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
+            phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.modem.scenario.sampling_rate, initial=0)
             cos_signal[idx, :] = np.exp(1j * phase)
             sin_signal[idx, :] = np.exp(1j * (phase - np.pi / 2))
 
