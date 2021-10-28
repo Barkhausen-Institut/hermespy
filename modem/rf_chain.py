@@ -38,6 +38,14 @@ class RfChain:
         if amplitude_error is not None:
             self.__amplitude_error = amplitude_error
 
+    @property
+    def amplitude_error(self) -> float:
+        return self.__amplitude_error
+
+    @property
+    def phase_offset(self) -> float:
+        return self.__phase_offset
+
     @classmethod
     def to_yaml(cls: Type[RfChain], representer: SafeRepresenter, node: RfChain) -> Node:
         """Serialize an RfChain object to YAML.
@@ -96,6 +104,7 @@ class RfChain:
 
         According to transmission impairments.
         """
+
         if self.power_amplifier is not None:
             return self.power_amplifier.send(input_signal)
 
