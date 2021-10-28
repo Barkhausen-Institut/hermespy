@@ -5,6 +5,7 @@ from .rf_chain import RfChain
 from .waveform_generator import WaveformGenerator
 from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from .waveform_generator_psk_qam import WaveformGeneratorPskQam
+from .tools.shaping_filter import ShapingFilter
 
 __all__ = ['Modem', 'Transmitter', 'Receiver', 'RfChain', 'WaveformGenerator', 'WaveformGeneratorChirpFsk',
-           'WaveformGeneratorPskQam']
+           'WaveformGeneratorPskQam', 'ShapingFilter']
