@@ -3,6 +3,7 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from typing import Type, Optional
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
+from warnings import warn
 
 
 class RfChain:
@@ -36,11 +37,20 @@ class RfChain:
             self.__phase_offset = phase_offset
 
         if amplitude_error is not None:
-            self.__amplitude_error = amplitude_error
+            self.amplitude_error = amplitude_error
 
     @property
     def amplitude_error(self) -> float:
         return self.__amplitude_error
+
+    @amplitude_error.setter
+    def amplitude_error(self, val) -> None:
+        if abs(val) >= 1:
+            warn("Amplitude imbalance must be within interval (-1, 1).")
+            warn("Setting Amplitude imbalance to 0.")
+            self.__amplitude_error = 0
+        else:
+            self.__amplitude_error = val
 
     @property
     def phase_offset(self) -> float:
@@ -116,7 +126,6 @@ class RfChain:
 
         Notation taken from https://en.wikipedia.org/wiki/IQ_imbalance.
         """
-
         x = input_signal
         eps_delta = self.__phase_offset
         eps_a = self.__amplitude_error
