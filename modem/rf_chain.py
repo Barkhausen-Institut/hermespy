@@ -104,11 +104,28 @@ class RfChain:
 
         According to transmission impairments.
         """
-
+        #input_signal = add_iq_imbalance(input_signal)
+        # notation follows https://en.wikipedia.org/wiki/IQ_imbalance
         if self.power_amplifier is not None:
             return self.power_amplifier.send(input_signal)
 
         return input_signal
+
+    def add_iq_imbalance(self, input_signal: np.ndarray) -> np.ndarray:
+        """Adds Phase offset and amplitude error to input signal.
+
+        Notation taken from https://en.wikipedia.org/wiki/IQ_imbalance.
+        """
+
+        x = input_signal
+        eps_delta = self.__phase_offset
+        eps_a = self.__amplitude_error
+
+        eta_alpha = np.cos(eps_delta/2) + 1j * eps_a * np.sin(eps_delta/2)
+        eta_beta = eps_a * np.cos(eps_delta/2) - 1j * np.sin(eps_delta/2)
+
+        return (eta_alpha * x + eta_beta * np.conj(x))
+
 
     def receive(self, input_signal: np.ndarray) -> np.ndarray:
         """Returns the distorted version of signal in "input_signal".
