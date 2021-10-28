@@ -25,7 +25,7 @@ class RfChain:
 
         self.__tx_power = 1.0
         self.__phase_offset = 0.0
-        self.__amplitude_error = 1.0
+        self.__amplitude_error = 0.0
 
         self.__power_amplifier = None
 
