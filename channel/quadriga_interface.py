@@ -313,7 +313,7 @@ class QuadrigaInterface:
             if position is None:
                 raise RuntimeError("Quadriga channel model requires transmitter position definitions")
 
-            sampling_rates[t] = transmitter.sampling_rate
+            sampling_rates[t] = transmitter.scenario.sampling_rate
             carriers[t] = transmitter.carrier_frequency
             tx_positions[t, :] = position
             tx_num_antennas[t] = transmitter.num_antennas
