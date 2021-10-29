@@ -36,16 +36,16 @@ class BlockInterleaver(Encoder):
     __interleave_blocks: int
 
     def __init__(self,
-                 block_size: int = 32,
-                 interleave_blocks: int = 4) -> None:
+                 block_size: int,
+                 interleave_blocks: int) -> None:
         """Block interleaving encoder object initialization.
 
         Args:
 
-            block_size (int, optional):
+            block_size (int):
                 The input / output number of bits the interleaver requires / generates.
 
-            interleave_blocks (int, optional):
+            interleave_blocks (int):
                 The number of sections being interleaved.
 
         The block interleaver accepts bit blocks of length `block_size` and divides them into `interleave_blocks`
