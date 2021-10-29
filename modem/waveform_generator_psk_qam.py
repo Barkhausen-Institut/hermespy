@@ -613,7 +613,6 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             WaveformGeneratorPskQam:
                 Newly created `WaveformGeneratorPskQam` instance.
         """
-
         state = constructor.construct_mapping(node)
         shaping_filter = state.pop('filter', None)
 
@@ -625,12 +624,17 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             samples_per_symbol = generator.oversampling_factor # int(1e3 / generator.symbol_rate)
             shaping_filter = ShapingFilter(**shaping_filter, samples_per_symbol=samples_per_symbol)
 
+            if shaping_filter.filter_type == ShapingFilter.FilterType.FMCW:
+                bandwidth_factor = generator.chirp_bandwidth / generator.symbol_rate
+            else:
+                bandwidth_factor = 1.
+
             tx_filter = ShapingFilter(shaping_filter.filter_type,
                                       samples_per_symbol,
                                       is_matched=False,
                                       length_in_symbols=shaping_filter.length_in_symbols,
                                       roll_off=shaping_filter.roll_off,
-                                      bandwidth_factor=generator.chirp_bandwidth / generator.symbol_rate)
+                                      bandwidth_factor=bandwidth_factor)
             # TODO: Check if chirp bandwidth is identical to full BW)
 
             if shaping_filter.filter_type == ShapingFilter.FilterType.RAISED_COSINE:
@@ -638,9 +642,9 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                 # bandwidth Rs(1+roll-off)/2
                 rx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
                                           samples_per_symbol,
-                                          shaping_filter.length_in_symbols,
-                                          0,
-                                          1. + shaping_filter.roll_off)
+                                          length_in_symbols=shaping_filter.length_in_symbols,
+                                          roll_off=0,
+                                          bandwidth_factor=1. + shaping_filter.roll_off)
             else:
                 # for all other filter types, receive filter is a matched filter
                 rx_filter = ShapingFilter(shaping_filter.filter_type,
@@ -648,7 +652,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                                           is_matched=True,
                                           length_in_symbols=shaping_filter.length_in_symbols,
                                           roll_off=shaping_filter.roll_off,
-                                          bandwidth_factor=generator.chirp_bandwidth / generator.symbol_rate)
+                                          bandwidth_factor=bandwidth_factor)
 
             generator.tx_filter = tx_filter
             generator.rx_filter = rx_filter
