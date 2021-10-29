@@ -24,16 +24,16 @@ class TestRepetitionEncoder(unittest.TestCase):
     def setUp(self) -> None:
 
         # Default parameters
-        self.bit_block_size = 8
+        self.block_size = 8
         self.repetitions = 3
 
-        self.encoder = RepetitionEncoder(self.bit_block_size,
+        self.encoder = RepetitionEncoder(self.block_size,
                                          self.repetitions)
 
     def test_init(self) -> None:
         """Test valid parameter initialization during object construction."""
 
-        self.assertEqual(self.bit_block_size, self.encoder.bit_block_size,
+        self.assertEqual(self.block_size, self.encoder.bit_block_size,
                          "Unexpected bit block size initialized")
         self.assertEqual(self.repetitions, self.encoder.repetitions,
                          "Unexpected repetition count initialized")
