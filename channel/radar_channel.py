@@ -35,6 +35,7 @@ class RadarChannel(Channel):
     """
     yaml_tag = u'RadarChannel'
     yaml_matrix = True
+
     __target_range: float
     __radar_cross_section: float
     __carrier_frequency: float
@@ -51,17 +52,17 @@ class RadarChannel(Channel):
                  target_range: float,
                  radar_cross_section: float,
                  target_exists: Optional[bool] = None,
-                 random_number_gen: np.random.RandomState = None,
-                 transmitter: Optional[Transmitter] = None,
-                 receiver: Optional[Receiver] = None,
-                 active: Optional[bool] = None,
-                 gain: Optional[float] = None,
                  tx_rx_isolation_db: Optional[float] = None,
                  tx_antenna_gain_db: Optional[float] = None,
                  rx_antenna_gain_db: Optional[float] = None,
                  losses_db: Optional[float] = None,
                  velocity: Optional[float] = None,
-                 filter_response_in_samples: Optional[int] = None
+                 filter_response_in_samples: Optional[int] = None,
+                 random_number_gen: np.random.RandomState = None,
+                 transmitter: Optional[Transmitter] = None,
+                 receiver: Optional[Receiver] = None,
+                 active: Optional[bool] = None,
+                 gain: Optional[float] = None,
                  ) -> None:
         """Object initialization.
 
