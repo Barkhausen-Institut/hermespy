@@ -7,6 +7,15 @@ from channel.radar_channel import RadarChannel
 from scipy import constants
 from tools.math import db2lin
 
+__author__ = "Andre Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Andre Noll Barreto"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class TestRadarChannel(unittest.TestCase):
 
