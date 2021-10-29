@@ -90,11 +90,6 @@ class RadarChannel(Channel):
                 If carrier_frequency <= 0.
                 If more than one antenna is considered.
         """
-        if target_range < 0:
-            raise ValueError(f"target_range ({target_range} must be non-negative")
-
-        if radar_cross_section < 0:
-            raise ValueError(f"radar_cross_section ({radar_cross_section} must be non-negative")
 
         # Init base class
         Channel.__init__(self, transmitter, receiver, active, gain)
@@ -102,7 +97,6 @@ class RadarChannel(Channel):
         if self.num_inputs > 1 or self.num_outputs > 1:
             raise ValueError("Multiple antennas are not supported")
 
-        self.__target_range = target_range
         self.__radar_cross_section = radar_cross_section
         self.__target_exists = True
         self.__random_number_gen = np.random.RandomState()
@@ -112,6 +106,9 @@ class RadarChannel(Channel):
         self.__losses_db = 0
         self.__velocity = 0
         self.__filter_response_in_samples = 15
+
+        self.target_range = target_range
+        self.radar_cross_section = radar_cross_section
 
         if target_exists is not None:
             self.__target_exists = target_exists
@@ -210,6 +207,23 @@ class RadarChannel(Channel):
             float: radar cross section [m**2]
         """
         return self.__radar_cross_section
+
+    @radar_cross_section.setter
+    def radar_cross_section(self, value: float) -> None:
+        """Modify the configured number of the radar cross section
+
+        Args:
+            value (float): The new RCS.
+
+        Raises:
+            ValueError: If `value` is less than zero.
+        """
+
+        if value < 0:
+            raise ValueError("Target range must be greater than or equal to zero")
+
+        self.__radar_cross_section = value
+        self._calculate_derived_parameters()
 
     @property
     def tx_rx_isolation_db(self) -> float:
