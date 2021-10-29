@@ -57,8 +57,7 @@ class QuadrigaInterface:
             scenario_label (str, optional): Scenario label.
         """
 
-        self.__path_quadriga_src = 'D:\\quadriga\\quadriga_src'
-        # self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '..', '3rdparty', 'quadriga_src')
+        self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '..', '3rdparty', 'quadriga_src')
         self.__antenna_kind = 'lhcp-rhcp-dipole'
         self.__scenario_label = '3GPP_38.901_UMa_LOS'
         self.__channels = []
