@@ -20,9 +20,15 @@ __status__ = "Prototype"
 
 
 class BlockInterleaver(Encoder):
-    """A bit interleaver.
+    """A bit block interleaving encoder.
 
-    TODO: Proper documentation.
+    Attributes:
+
+        __block_size (int):
+            The number of bits the interleaver operates on.
+
+        __interleave_blocks (int):
+            The number of sub-blocks the interleaver divides `__block_size` in.
     """
 
     yaml_tag = 'BlockInterleaver'
@@ -30,13 +36,22 @@ class BlockInterleaver(Encoder):
     __interleave_blocks: int
 
     def __init__(self,
-                 block_size: int = None,
-                 interleave_blocks: int = None) -> None:
-        """Object initialization.
+                 block_size: int = 32,
+                 interleave_blocks: int = 4) -> None:
+        """Block interleaving encoder object initialization.
 
         Args:
-            block_size (int, optional): The input / output number of bits the interleaver requires / generates.
-            interleave_blocks (int, optional): The number of sections being interleaved.
+
+            block_size (int, optional):
+                The input / output number of bits the interleaver requires / generates.
+
+            interleave_blocks (int, optional):
+                The number of sections being interleaved.
+
+        The block interleaver accepts bit blocks of length `block_size` and divides them into `interleave_blocks`
+        sections. Afterwards, bits within the sections will be swapped.
+        The first output section will contain the first bits of each input section,
+        the second output section the second bits of each input section, and so on.
 
         Raises:
             ValueError: If `block_size` is not dividable into `interleave_blocks`.
@@ -44,14 +59,8 @@ class BlockInterleaver(Encoder):
 
         # Default parameters
         Encoder.__init__(self)
-        self.__block_size = 32
-        self.__interleave_blocks = 4
-
-        if block_size is not None:
-            self.block_size = block_size
-
-        if interleave_blocks is not None:
-            self.interleave_blocks = interleave_blocks
+        self.__block_size = block_size
+        self.__interleave_blocks = interleave_blocks
 
         if self.block_size % self.interleave_blocks != 0:
             raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
