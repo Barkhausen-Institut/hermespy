@@ -4,7 +4,7 @@
 import unittest
 import numpy as np
 
-from coding.interleaver import Interleaver
+from coding import BlockInterleaver
 
 
 __author__ = "Jan Adler"
@@ -23,7 +23,7 @@ class TestBlockInterleaver(unittest.TestCase):
 
         self.block_size = 12
         self.interleave_blocks = 2
-        self.interleaver = Interleaver(self.block_size, self.interleave_blocks)
+        self.interleaver = BlockInterleaver(self.block_size, self.interleave_blocks)
 
     def test_init(self) -> None:
         """Test that the init properly stores all parameters."""
@@ -54,7 +54,7 @@ class TestBlockInterleaver(unittest.TestCase):
         """The interleaver init must raise a `ValueError` if blocks can't be sectioned properly"""
 
         with self.assertRaises(ValueError):
-            _ = Interleaver(1, 2)
+            _ = BlockInterleaver(1, 2)
 
     def test_bit_block_size(self) -> None:
         """Bit block size must be equal to the configured block size."""
