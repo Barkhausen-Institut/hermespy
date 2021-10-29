@@ -103,7 +103,7 @@ class TestChannel(unittest.TestCase):
         except ValueError:
             self.fail("Gain property set to zero raised unexpected exception")
 
-    def test_num_inputs(self) -> None:
+    def test_num_inputs_setget(self) -> None:
         """Number of inputs property must return number of transmitting antennas."""
 
         num_inputs = 5
@@ -111,13 +111,27 @@ class TestChannel(unittest.TestCase):
 
         self.assertEqual(num_inputs, self.channel.num_inputs, "Number of inputs property returned unexpected result")
 
-    def test_num_outputs(self) -> None:
+    def test_num_inputs_validation(self) -> None:
+        """Number of inputs property must raise RuntimeError if the channel is currently floating."""
+
+        floating_channel = Channel()
+        with self.assertRaises(RuntimeError):
+            _ = floating_channel.num_inputs
+
+    def test_num_outputs_setget(self) -> None:
         """Number of outputs property must return number of receiving antennas."""
 
         num_outputs = 5
         self.receiver.num_antennas = num_outputs
 
         self.assertEqual(num_outputs, self.channel.num_outputs, "Number of outputs property returned unexpected result")
+
+    def test_num_outputs_validation(self) -> None:
+        """Number of outputs property must raise RuntimeError if the channel is currently floating."""
+
+        floating_channel = Channel()
+        with self.assertRaises(RuntimeError):
+            _ = floating_channel.num_outputs
 
     def test_indices(self) -> None:
         """Indices property must return respective transmitter and receiver indices."""
