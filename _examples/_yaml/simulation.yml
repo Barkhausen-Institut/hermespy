@@ -15,3 +15,5 @@
   confidence_metric: BER
   plot_bit_error: true
   plot_block_error: false
+  QuadrigaInterface:
+    path_quadriga_src: '/home/kronauer/repos/hermespy/3rdparty/quadriga_src'
