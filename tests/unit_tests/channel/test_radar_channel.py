@@ -13,11 +13,11 @@ class TestRadarChannel(unittest.TestCase):
     def setUp(self) -> None:
         self.range = 100
         self.radar_cross_section = 1
-        self.carrier_frequency = 60e9
 
         self.random_number_gen = np.random.RandomState(42)
 
         self.transmitter = Mock()
+        self.transmitter.carrier_frequency = 60e9
         self.receiver = Mock()
         self.transmitter.sampling_rate = 1e9
         self.transmitter.num_antennas = 1
@@ -31,7 +31,7 @@ class TestRadarChannel(unittest.TestCase):
         self.velocity = 0
         self.filter_response_in_samples = 21
 
-        self.channel = RadarChannel(self.range, self.radar_cross_section, self.carrier_frequency,
+        self.channel = RadarChannel(self.range, self.radar_cross_section,
                                     random_number_gen=self.random_number_gen,
                                     transmitter=self.transmitter,
                                     receiver=self.receiver,
@@ -48,7 +48,7 @@ class TestRadarChannel(unittest.TestCase):
     def test_init(self) -> None:
         """The object initialization should properly store all parameters."""
 
-        channel = RadarChannel(self.range, self.radar_cross_section, self.carrier_frequency,
+        channel = RadarChannel(self.range, self.radar_cross_section,
                                random_number_gen=self.random_number_gen,
                                transmitter=self.transmitter,
                                receiver=self.receiver,
@@ -62,7 +62,6 @@ class TestRadarChannel(unittest.TestCase):
 
         self.assertIs(self.range, channel.target_range)
         self.assertIs(self.radar_cross_section, channel.radar_cross_section)
-        self.assertIs(self.carrier_frequency, channel.carrier_frequency)
         self.assertIs(self.transmitter, channel.transmitter)
         self.assertIs(self.receiver, channel.receiver)
         self.assertIs(self.target_exists, channel.target_exists)
@@ -92,10 +91,6 @@ class TestRadarChannel(unittest.TestCase):
     def test_radar_cross_section_get(self) -> None:
         """Radar cross section getter should return init param."""
         self.assertEqual(self.radar_cross_section, self.channel.radar_cross_section)
-
-    def test_carrier_frequency_get(self) -> None:
-        """Carrier frequency getter should return init param."""
-        self.assertEqual(self.carrier_frequency, self.channel.carrier_frequency)
 
     def test_tx_rx_isolation_db_setget(self) -> None:
         """tx/rx isolation getter should return setter argument."""
@@ -258,7 +253,7 @@ class TestRadarChannel(unittest.TestCase):
         velocity = -100
         num_samples = 100000
         sinewave_frequency = 100e6
-        doppler_shift = 2 * velocity / constants.speed_of_light * self.channel.carrier_frequency
+        doppler_shift = 2 * velocity / constants.speed_of_light * self.transmitter.carrier_frequency
 
         time = np.arange(num_samples) / self.transmitter.sampling_rate
 
@@ -328,8 +323,3 @@ class TestRadarChannel(unittest.TestCase):
         np.testing.assert_allclose(channel_state_info, observed_csi, atol=atol)
 
         pass
-
-
-if __name__ == '__main__':
-    unittest.main()
-

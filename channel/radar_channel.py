@@ -50,7 +50,6 @@ class RadarChannel(Channel):
     def __init__(self,
                  target_range: float,
                  radar_cross_section: float,
-                 carrier_frequency: float,
                  target_exists: Optional[bool] = None,
                  random_number_gen: np.random.RandomState = None,
                  transmitter: Optional[Transmitter] = None,
@@ -69,7 +68,6 @@ class RadarChannel(Channel):
         Args:
             target_range(float): distance from transmitter to target object
             radar_cross_section(float): in m**2
-            carrier_frequency(float): in Hz
             target_exists(bool, optional): True if there is a target, False if there is only noise/clutter
             random_number_gen(numpy.random.RandomState, optional): random number generator for the channel
             transmitter (Transmitter, optional): The modem transmitting into this channel.
@@ -97,9 +95,6 @@ class RadarChannel(Channel):
         if radar_cross_section < 0:
             raise ValueError(f"radar_cross_section ({radar_cross_section} must be non-negative")
 
-        if carrier_frequency <= 0:
-            raise ValueError(f"carrier_frequency ({carrier_frequency}) must be positive")
-
         # Init base class
         Channel.__init__(self, transmitter, receiver, active, gain)
 
@@ -108,7 +103,6 @@ class RadarChannel(Channel):
 
         self.__target_range = target_range
         self.__radar_cross_section = radar_cross_section
-        self.__carrier_frequency = carrier_frequency
         self.__target_exists = True
         self.__random_number_gen = np.random.RandomState()
         self.__tx_rx_isolation_db = float("inf")
@@ -154,11 +148,11 @@ class RadarChannel(Channel):
         self._phase_echo = 0
 
     def _calculate_derived_parameters(self):
-        self._doppler_frequency = 2 * self.__carrier_frequency * self.__velocity / constants.speed_of_light
+        self._doppler_frequency = 2 * self.transmitter.carrier_frequency * self.__velocity / constants.speed_of_light
         self._delay = 2 * self.__target_range / constants.speed_of_light
 
         # radar range equation
-        wavelength = constants.speed_of_light / self.__carrier_frequency
+        wavelength = constants.speed_of_light / self.transmitter.carrier_frequency
         self._attenuation = (db2lin(self.__tx_antenna_gain_db) * db2lin(self.__rx_antenna_gain_db) * wavelength**2
                              * self.__radar_cross_section / (4 * np.pi)**3 / self.__target_range**4
                              / db2lin(self.__losses_db))
@@ -215,15 +209,6 @@ class RadarChannel(Channel):
             float: radar cross section [m**2]
         """
         return self.__radar_cross_section
-
-    @property
-    def carrier_frequency(self) -> float:
-        """Access configured carrier frequency
-
-        Returns:
-            float: carrier frequency [Hz]
-        """
-        return self.__carrier_frequency
 
     @property
     def tx_rx_isolation_db(self) -> float:
@@ -434,7 +419,6 @@ class RadarChannel(Channel):
         state = {
             'target_range': node.target_range,
             'radar_cross_section': node.radar_cross_section,
-            'carrier_frequency': node.carrier_frequency,
             'gain': node.gain,
             'tx_rx_isolation_db': node.tx_rx_isolation_db,
             'tx_antenna_gain_db': node.tx_antenna_gain_db,
