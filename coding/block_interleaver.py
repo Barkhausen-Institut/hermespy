@@ -19,13 +19,13 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Interleaver(Encoder):
+class BlockInterleaver(Encoder):
     """A bit interleaver.
 
     TODO: Proper documentation.
     """
 
-    yaml_tag = 'Interleaver'
+    yaml_tag = 'BlockInterleaver'
     __block_size: int
     __interleave_blocks: int
 
@@ -57,7 +57,7 @@ class Interleaver(Encoder):
             raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
 
     @classmethod
-    def to_yaml(cls: Type[Interleaver], representer: SafeRepresenter, node: Interleaver) -> MappingNode:
+    def to_yaml(cls: Type[BlockInterleaver], representer: SafeRepresenter, node: BlockInterleaver) -> MappingNode:
         """Serialize a `Interleaver` encoder to YAML.
 
         Args:
@@ -65,7 +65,7 @@ class Interleaver(Encoder):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
-            node (Interleaver):
+            node (BlockInterleaver):
                 The `Interleaver` instance to be serialized.
 
         Returns:
@@ -81,7 +81,7 @@ class Interleaver(Encoder):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[Interleaver], constructor: SafeConstructor, node: MappingNode) -> Interleaver:
+    def from_yaml(cls: Type[BlockInterleaver], constructor: SafeConstructor, node: MappingNode) -> BlockInterleaver:
         """Recall a new `Interleaver` encoder from YAML.
 
         Args:
@@ -92,7 +92,7 @@ class Interleaver(Encoder):
                 YAML node representing the `Interleaver` serialization.
 
         Returns:
-            Interleaver:
+            BlockInterleaver:
                 Newly created `Interleaver` instance.
 
         Note that the created instance is floating by default.
