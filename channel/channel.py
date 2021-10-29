@@ -250,12 +250,17 @@ class Channel(ABC):
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of one's.
 
         Args:
-            transmitted_signal (np.ndarray): Input signal antenna signals to be propagated of this channel instance.
+
+            transmitted_signal (np.ndarray):
+                Input signal antenna signals to be propagated of this channel instance.
+                The array is expected to be two-dimensional with shape `num_transmit_antennas`x`num_samples`.
 
         Returns:
             np.ndarray:
                 The distorted signal after propagation.
-                The output depends on the channel model employed.
+                Two-dimensional array with shape `num_receive_antennas`x`num_propagated_samples`.
+                Note that the channel may append samples to the propagated signal,
+                so that `num_propagated_samples` is generally not equal to `num_samples`.
 
         Raises:
 
