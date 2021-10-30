@@ -3,10 +3,10 @@ from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
-from . import Precoder
+from . import SymbolPrecoder
 
 
-class DFT(Precoder):
+class DFT(SymbolPrecoder):
     """A precoder applying the Discrete Fourier Transform to each data stream.
     """
 
@@ -28,7 +28,7 @@ class DFT(Precoder):
         if fft_norm is not None:
             self.__fft_norm = fft_norm
 
-        Precoder.__init__(self)
+        SymbolPrecoder.__init__(self)
 
     @classmethod
     def to_yaml(cls: Type[DFT], representer: SafeRepresenter, node: DFT) -> Node:
@@ -104,27 +104,13 @@ class DFT(Precoder):
         return np.fft.ifft(input_stream, norm=self.__fft_norm)
 
     @property
-    def num_inputs(self) -> int:
-        """The required number of input symbol streams during encoding.
+    def num_input_streams(self) -> int:
 
-        DFT precoding does not alter the number of symbol streams,
-        therefore the number of inputs is equal to the number of outputs.
-
-        Returns:
-            int:
-                The number of symbol streams.
-        """
-        ...
+        # DFT precoding does not alter the number of symbol streams
+        return self.precoding.required_inputs(self)
 
     @property
-    def num_outputs(self) -> int:
-        """The generated number of output symbol streams after decoding.
+    def num_output_streams(self) -> int:
 
-        DFT precoding does not alter the number of symbol streams,
-        therefore the number of inputs is equal to the number of outputs.
-
-        Returns:
-            int:
-                The number of symbol streams.
-        """
-        ...
+        # DFT precoding does not alter the number of symbol streams
+        return self.precoding.required_inputs(self)

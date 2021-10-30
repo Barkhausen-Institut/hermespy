@@ -2,11 +2,12 @@
 """Chirp Frequency Shift Keying Waveform Generator."""
 
 from __future__ import annotations
-from typing import Tuple, List, Type
+from typing import Tuple, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
-import numpy as np
 from scipy import integrate
+from scipy.constants import pi
 from math import ceil
+import numpy as np
 
 from modem import Modem
 from modem.waveform_generator import WaveformGenerator
@@ -28,6 +29,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     yaml_tag = WaveformGenerator.yaml_tag + "ChirpFsk"
 
     # Modulation parameters
+    symbol_type: np.dtype = int
     __chirp_duration: float
     __chirp_bandwidth: float
     __freq_difference: float
@@ -352,6 +354,11 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return self.num_data_chirps * self.bits_per_symbol
 
     @property
+    def symbols_per_frame(self) -> int:
+
+        return self.num_data_chirps
+
+    @property
     def samples_in_chirp(self) -> int:
         """The number of discrete samples per generated chirp.
 
@@ -422,6 +429,74 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         bit_energy = symbol_energy / self.bits_per_symbol
         return bit_energy
 
+    def map(self, data_bits: np.ndarray) -> np.ndarray:
+
+        offset = self._calculate_frequency_offsets(data_bits)
+        return offset
+
+    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+
+        f0 = -.5 * self.chirp_bandwidth
+
+        # calculate initial frequencies of the chirps
+        initial_frequency = f0 + data_symbols * self.__freq_difference
+        initial_frequency = np.concatenate((np.ones(self.num_pilot_chirps) * f0, initial_frequency))
+        frequency, amplitude = self._calculate_chirp_frequencies(initial_frequency)
+
+        phase = integrate.cumtrapz(frequency, dx=1 / self.modem.scenario.sampling_rate, initial=0)
+        return np.exp(2j * pi * phase)
+
+    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+
+        # Assess number of frames contained within this signal
+        num_frames = round(timestamps[-1] / self.frame_duration)
+        samples_in_frame = self.samples_in_frame
+        samples_in_chirp = self.samples_in_chirp
+        samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
+        cos_prototype, sin_prototype, _ = self._prototypes()
+
+        symbols = np.empty(num_frames*self.num_data_chirps, dtype=int)
+
+        # TODO: There currently seems to be no routine implemented to detect pilot symbols and synchronize detection
+        for f in range(num_frames):
+
+            frame = signal[f*samples_in_frame:(f+1)*samples_in_frame]
+            data_frame = frame[samples_in_pilot_section:]
+
+            for c in range(self.num_data_chirps):
+
+                # Extract signal part of chirp c, representing a single symbol
+                symbol_signal = data_frame[c*samples_in_chirp:(c+1)*samples_in_chirp]
+
+                symbol_metric = np.zeros(self.modulation_order)
+
+                for signal_idx in range(self.modulation_order):
+
+                    real_signal = np.real(symbol_signal)
+                    imag_signal = np.imag(symbol_signal)
+
+                    cos_metric = np.sum(real_signal * np.real(cos_prototype[signal_idx]) +
+                                        imag_signal * np.imag(cos_prototype[signal_idx])) ** 2
+                    sin_metric = np.sum(real_signal * np.real(sin_prototype[signal_idx]) +
+                                        imag_signal * np.imag(sin_prototype[signal_idx]))**2
+                    symbol_metric[signal_idx] = cos_metric + sin_metric
+
+                symbols[f * self.num_data_chirps + c] = np.argmax(symbol_metric)
+
+        return symbols
+
+    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
+
+        bits_per_symbol = self.bits_per_symbol
+        bits = np.empty(data_symbols.shape[0] * self.bits_per_symbol)
+
+        for s, symbol in enumerate(data_symbols):
+
+            symbol_bits = [int(x) for x in list(np.binary_repr(symbol, width=bits_per_symbol))]
+            bits[s*bits_per_symbol:(s+1)*bits_per_symbol] = symbol_bits
+
+        return bits
+
     def create_frame(self, timestamp: int,
                      data_bits: np.array) -> Tuple[np.ndarray, int, int]:
 
@@ -449,12 +524,11 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         return output_signal[np.newaxis, :], timestamp, initial_sample_num
 
-    def _calculate_frequency_offsets(
-            self, data_bits: np.array) -> np.ndarray:
+    def _calculate_frequency_offsets(self, data_bits: np.ndarray) -> np.ndarray:
         """Calculates the frequency offsets on frame creation.
 
         Args:
-            data_bits(List[np.array]): Data bits to calculate the offsets for.
+            data_bits (np.ndarray): Data bits to calculate the offsets for.
 
         Returns:
             np.array: Array of length `number_data_chirps`.

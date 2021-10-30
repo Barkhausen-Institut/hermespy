@@ -378,3 +378,16 @@ class Channel(ABC):
 
         state = constructor.construct_mapping(node)
         return cls(**state)
+
+    def estimate(self, num_samples: int = 1) -> np.ndarray:
+        """Returns estimated channel responses.
+
+        Args:
+            num_samples (int, optional): Number of discrete time samples.
+
+        Unlike the impulse_response routine, errors may occur during channel estimation.
+        """
+
+        estimate = np.eye(self.transmitter.num_antennas, self.receiver.num_antennas, dtype=complex)
+        bloated_estimate = estimate[np.newaxis, :, :, np.newaxis].repeat(num_samples, axis=0)
+        return bloated_estimate
