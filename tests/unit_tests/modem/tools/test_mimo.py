@@ -4,7 +4,7 @@ import numpy as np
 import numpy.matlib
 import numpy.testing as nt
 
-from modem.tools.mimo import Mimo
+from modem.precoding.mimo import Mimo
 
 
 class TestMimo(unittest.TestCase):

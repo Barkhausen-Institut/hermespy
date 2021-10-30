@@ -5,11 +5,13 @@ from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import TYPE_CHECKING, Type, List
+from math import ceil
 import numpy as np
 import numpy.random as rnd
 
 from source import BitsSource
 from modem import Modem
+from modem.precoding import SymbolPrecoding
 from modem.waveform_generator import WaveformGenerator
 from noise import Noise
 
@@ -43,49 +45,90 @@ class Receiver(Modem):
         Modem.__init__(self, **kwargs)
         self.noise = Noise()
 
-    def receive(self, input_signal: np.ndarray, noise_power: float) -> np.ndarray:
+    def receive(self, input_signals: np.ndarray, noise_power: float) -> np.ndarray:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
 
         Args:
-            input_signal (np.ndarray): Received signal.
+            input_signals (np.ndarray): Received signal.
             noise_power (float): Power of the incoming noise, for simulation and possible equalization.
 
         Returns:
             np.array: Detected bits as a list of data blocks for the drop.
         """
 
-        noise_var = noise_power / 1.0  # TODO: Re-implement pair power factor
-
-        # Add receive noise
-        noisy_signal = self.__noise.add_noise(input_signal, noise_var)
-
-        # Simulate receive radio chain
-        rx_signal = self.rf_chain.receive(noisy_signal)
-
         # If no receiving waveform generator is configured, no signal is being received
+        # TODO: Check if this is really a valid case
         if self.waveform_generator is None:
             return np.empty(0, dtype=complex)
 
-        # normalize signal to expected input power
-        rx_signal = rx_signal / np.sqrt(1.0)  # TODO: Re-implement pair power factor
+        num_samples = input_signals.shape[1]
+        timestamps = np.arange(num_samples) / self.scenario.sampling_rate
 
-        received_bits = np.empty(0, dtype=int)
-        timestamp_in_samples = 0
+        # Number of frames within the received samples
+        frames_per_stream = int(ceil(num_samples / self.waveform_generator.samples_in_frame))
 
-        while rx_signal.size:
-            initial_size = rx_signal.shape[1]
-            frame_bits, rx_signal = self.waveform_generator.receive_frame(
-                rx_signal, timestamp_in_samples, noise_var)
+        # Number of simples pre received stream
+        symbols_per_stream = frames_per_stream * self.waveform_generator.symbols_per_frame
 
-            if rx_signal.size:
-                timestamp_in_samples += initial_size - rx_signal.shape[1]
+        # Number of code bits required to generate all frames for all streams
+        num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
 
-            received_bits = np.append(received_bits, frame_bits)
+        # Data bits required by the bit encoder to generate the input bits for the waveform generator
+        num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
 
-        decoded_bits = self.encoder_manager.decode(received_bits)
-        return decoded_bits
+        noise_var = noise_power / 1.0  # TODO: Re-implement pair power factor
+
+        # Add receive noise
+        noisy_signals = self.__noise.add_noise(input_signals, noise_var)
+
+        # Simulate the radio-frequency chain
+        received_signals = self.rf_chain.receive(noisy_signals)
+
+        # Scale resulting signal by configured power factor
+        received_signals /= np.sqrt(self.power_factor)  # TODO: Re-implement pair power factor
+
+        # Apply stream decoding, for instance beam-forming
+        # TODO: Not yet supported.
+
+        # Generate a symbol stream for each dedicated base-band signal
+        symbol_streams = np.empty((received_signals.shape[0], symbols_per_stream),
+                                  dtype=self.waveform_generator.symbol_type)
+
+        for stream_idx, signal in enumerate(input_signals):
+            symbol_streams[stream_idx, :] = self.waveform_generator.demodulate(signal, timestamps)
+
+        # Decode the symbol precoding
+        symbols = self.precoding.decode(symbol_streams)
+
+        # Map the symbols to code bits
+        code_bits = self.waveform_generator.unmap(symbols)
+
+        # Decode the coded bit stream to plain data bits
+        data_bits = self.encoder_manager.decode(code_bits)
+
+        # We're finally done, blow the fanfares, throw confetti, etc.
+        return data_bits
+
+#        # De-code the spatial precoding
+#        rx_streams = self.precoding.decode(rx_signal)
+#
+#        received_bits = np.empty(0, dtype=int)
+#        timestamp_in_samples = 0
+#
+#        while rx_streams.size:
+#            initial_size = rx_streams.shape[1]
+#            frame_bits, rx_streams = self.waveform_generator.receive_frame(
+#                rx_streams, timestamp_in_samples, noise_var)
+#
+#            if rx_streams.size:
+#                timestamp_in_samples += initial_size - rx_streams.shape[1]
+#
+#            received_bits = np.append(received_bits, frame_bits)
+#
+#        decoded_bits = self.encoder_manager.decode(received_bits)
+#        return decoded_bits
 
     @classmethod
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
@@ -94,6 +137,7 @@ class Receiver(Modem):
 
         waveform_generator = None
         bits_source = None
+        precoding = state.pop(SymbolPrecoding.yaml_tag, None)
 
         for key in state.keys():
             if key.startswith(WaveformGenerator.yaml_tag):
@@ -131,6 +175,9 @@ class Receiver(Modem):
         # Update noise model if specified by the configuration
         if noise is not None:
             receiver.noise = noise
+
+        if precoding is not None:
+            receiver.precoding = precoding
 
         return receiver
 

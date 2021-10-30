@@ -1,7 +1,7 @@
 !<Scenario>
 
 random_seed: 0
-sampling_rate: 1e7
+sampling_rate: 2e6
 
 Modems:
 
@@ -12,9 +12,17 @@ Modems:
         chirp_bandwidth: 5e5
         chirp_duration: 512e-6
         freq_difference: 1953.125
-        num_data_chirps: 4
+        num_data_chirps: 12
         modulation_order: 32
-#    sampling_rate: 1e7
+    Encoding:
+      - BlockInterleaver
+        block_size: 20
+        interleave_blocks: 4
+      - Repetition
+        block_size: 20
+        repetitions: 3
+    Precoding:
+      - SC
 
   - Receiver
     carrier_frequency: 0.0
@@ -23,8 +31,17 @@ Modems:
         chirp_bandwidth: 5e5
         chirp_duration: 512e-6
         freq_difference: 1953.125
-        num_data_chirps: 4
+        num_data_chirps: 12
         modulation_order: 32
+    Encoding:
+      - BlockInterleaver
+        block_size: 20
+        interleave_blocks: 4
+      - Repetition
+        block_size: 20
+        repetitions: 3
+    Precoding:
+      - SC
 
 Channels:
 

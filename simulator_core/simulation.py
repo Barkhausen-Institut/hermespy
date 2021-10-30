@@ -200,7 +200,8 @@ class Simulation(Executable):
 
                     # Save generated signals
                     drop = SimulationDrop(data_bits, transmitted_signals, transmit_block_sizes, propagated_signals,
-                                          received_bits, receive_block_sizes)
+                                          received_bits, receive_block_sizes, True, self.spectrum_fft_size,
+                                          scenario.sampling_rate)
 
                     # Visualize plot if requested
                     if self.plot_drop:

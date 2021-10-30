@@ -1,15 +1,27 @@
-from typing import List, Tuple
+# -*- coding: utf-8 -*-
+"""HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
+
+from __future__ import annotations
+from typing import TYPE_CHECKING, List, Tuple
 from copy import copy
-
-import numpy as np
 from scipy import signal
-from scipy import interpolate
+import numpy as np
 
-from modem.waveform_generator import WaveformGenerator
-from parameters_parser.parameters_ofdm import (
-    ParametersOfdm, OfdmSymbolConfig, GuardInterval, ResourceType, ResourcePattern)
-from modem.tools.psk_qam_mapping import PskQamMapping
-from modem.tools.mimo import Mimo
+
+from modem import WaveformGenerator
+from modem.tools import PskQamMapping, Mimo
+
+if TYPE_CHECKING:
+    from modem import Modem
+
+__author__ = "André Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["André Barreto", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "André Noll Barreto"
+__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class WaveformGeneratorOfdm(WaveformGenerator):
@@ -40,8 +52,18 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     channel_sampling_timestamps (numpy.ndarray): vector containing the timestamps (in terms of nor obersampled samples)
         of each OFDM symbol
     """
-    def __init__(self, param: ParametersOfdm) -> None:
-        super().__init__(param)
+
+    yaml_tag: str = WaveformGenerator.yaml_tag + u'OFDM'
+
+    def __init__(self,
+                 modem: Modem = None,
+                 oversampling_factor: int = 1,
+                 modulation_order: int = 64) -> None:
+
+        # Init base class
+        WaveformGenerator.__init__(self, modem=modem, oversampling_factor=oversampling_factor,
+                                   modulation_order=modulation_order)
+
         self.param = param
         self._samples_in_frame_no_oversampling = 0
 
