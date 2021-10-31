@@ -2,6 +2,7 @@
 """Single carrier encoding step of communication data symbols."""
 
 from __future__ import annotations
+from numpy import real, imag, sum, argmax, take_along_axis
 import numpy as np
 
 from .spatial_multiplexing import SpatialMultiplexing
@@ -39,12 +40,20 @@ class SingleCarrier(SpatialMultiplexing):
         channel_estimation = self.precoding.modem.reference_channel.estimate(symbol_stream.shape[1])
         noise_var = 1.0
 
-        channel_estimation = np.squeeze(channel_estimation, axis=1)
-        antenna_index = np.argmax(np.abs(channel_estimation) ** 2 / noise_var, axis=0)
+        # TODO: Check this approach with André
+        # channel_estimation = np.squeeze(channel_estimation, axis=1)
+        channel_estimation = sum(real(channel_estimation) ** 2 + imag(channel_estimation) ** 2, axis=-1)
+
+        # Select proper antenna for each symbol timestamp
+        antenna_selection = argmax(channel_estimation, axis=-1).T
+        # antenna_index = np.argmax(np.abs(channel_estimation) ** 2 / noise_var, axis=0)
 
         # Debug, for now, simply take all the symbols from the first stream
         # TODO: Re-implement proper symbol decoding
-        output_stream = symbol_stream[[0], :]
+        output_stream: np.ndarray = take_along_axis(symbol_stream, antenna_selection, 0)
+
+        # Flatten the output stream to a single dimension
+        output_stream = np.reshape(output_stream, (1, -1), 'F')
 
         # output_stream = np.take_along_axis(symbol_stream, antenna_index[np.newaxis, :], axis=0)
         # channel_estimation = np.take_along_axis(channel_estimation, antenna_index[np.newaxis, :], axis=0)
