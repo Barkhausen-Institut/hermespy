@@ -6,7 +6,6 @@ from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import TYPE_CHECKING, Type, List
 from math import ceil
-from scipy.constants import speed_of_light
 import numpy as np
 import numpy.random as rnd
 
@@ -107,7 +106,7 @@ class Receiver(Modem):
         code_bits = self.waveform_generator.unmap(symbols)
 
         # Decode the coded bit stream to plain data bits
-        data_bits = self.encoder_manager.decode(code_bits)
+        data_bits = self.encoder_manager.decode(code_bits, num_data_bits)
 
         # We're finally done, blow the fanfares, throw confetti, etc.
         return data_bits
