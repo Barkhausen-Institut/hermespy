@@ -536,14 +536,10 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         # convert bits to integer frequency offsets
         # e.g. [8, 4, 2, 1]
         power_of_2 = 2 ** np.arange(self.bits_per_symbol - 1, -1, -1)
-        bits = np.reshape(
-            data_bits,
-            (self.bits_per_symbol,
-             self.num_data_chirps),
-            order='F')
+        bits = np.reshape(data_bits, (self.bits_per_symbol, -1), order='F')
+
         # generate offset according to bits
         offset = np.matmul(power_of_2, bits)
-
         return offset
 
     def _calculate_chirp_frequencies(

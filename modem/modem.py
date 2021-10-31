@@ -3,6 +3,7 @@ from typing import Tuple, List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
 from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
+from scipy.constants import speed_of_light
 import numpy as np
 import numpy.random as rnd
 
@@ -48,17 +49,18 @@ class Modem:
     __random_generator: Optional[rnd.Generator]
 
     def __init__(self,
-                 scenario: Scenario = None,
-                 position: np.array = None,
-                 orientation: np.array = None,
-                 topology: np.ndarray = None,
-                 carrier_frequency: float = None,
-                 bits: BitsSource = None,
-                 encoding: EncoderManager = None,
-                 precoding: SymbolPrecoding = None,
-                 waveform: WaveformGenerator = None,
-                 tx_power: float = None,
-                 rfchain: RfChain = None,
+                 scenario: Optional[Scenario] = None,
+                 position: Optional[np.array] = None,
+                 orientation: Optional[np.array] = None,
+                 topology: Optional[np.ndarray] = None,
+                 num_antennas: Optional[np.ndarray] = None,
+                 carrier_frequency: Optional[float] = None,
+                 bits: Optional[BitsSource] = None,
+                 encoding: Optional[EncoderManager] = None,
+                 precoding: Optional[SymbolPrecoding] = None,
+                 waveform: Optional[WaveformGenerator] = None,
+                 tx_power: Optional[float] = None,
+                 rfchain: Optional[RfChain] = None,
                  random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
 
@@ -92,11 +94,25 @@ class Modem:
         if orientation is not None:
             self.orientation = orientation
 
-        if topology is not None:
-            self.topology = topology
-
         if carrier_frequency is not None:
             self.carrier_frequency = carrier_frequency
+
+        # If num_antennas is configured initialize the modem as a Uniform Linear Array
+        # with half wavelength element spacing
+        if num_antennas is not None:
+
+            if topology is not None:
+                raise ValueError("The num_antennas and topology parameters are mutually exclusive")
+
+            # For a carrier frequency of 0.0 we will initialize all antennas at the same position.
+            half_wavelength = 0.0
+            if self.__carrier_frequency > 0.0:
+                half_wavelength = .5 * speed_of_light / self.__carrier_frequency
+
+            self.topology = half_wavelength * np.outer(np.arange(num_antennas), np.array([1., 0., 0.]))
+
+        elif topology is not None:
+            self.topology = topology
 
         if bits is not None:
             self.bits_source = bits

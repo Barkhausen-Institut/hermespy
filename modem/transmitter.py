@@ -5,6 +5,7 @@ from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import TYPE_CHECKING, Type, List, Any, Optional
 from math import ceil
+from scipy.constants import speed_of_light
 import numpy as np
 import numpy.random as rnd
 
@@ -177,15 +178,16 @@ class Transmitter(Modem):
         args = dict((k.lower(), v) for k, v in state.items())
 
         position = args.pop('position', None)
+        orientation = args.pop('orientation', None)
+        random_seed = args.pop('random_seed', None)
+
         if position is not None:
             args['position'] = np.array(position)
 
-        orientation = args.pop('orientation', None)
-        if position is not None:
+        if orientation is not None:
             args['orientation'] = np.array(orientation)
 
         # Convert the random seed to a new random generator object if its specified within the config
-        random_seed = args.pop('random_seed', None)
         if random_seed is not None:
             args['random_generator'] = rnd.default_rng(random_seed)
 

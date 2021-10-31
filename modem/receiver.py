@@ -6,6 +6,7 @@ from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import TYPE_CHECKING, Type, List
 from math import ceil
+from scipy.constants import speed_of_light
 import numpy as np
 import numpy.random as rnd
 

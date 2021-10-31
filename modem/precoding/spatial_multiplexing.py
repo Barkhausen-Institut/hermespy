@@ -37,10 +37,9 @@ class SpatialMultiplexing(SymbolPrecoder):
         if symbol_stream.shape[0] > 1:
             raise ValueError("Spatial multiplexing supports only one-dimensional input symbol streams")
 
-        number_of_symbols = symbol_stream.shape[1]
         number_of_streams = self.num_output_streams
 
-        encoded_symbol_stream = np.reshape(symbol_stream, (number_of_streams, number_of_symbols), 'F')
+        encoded_symbol_stream = np.reshape(symbol_stream, (number_of_streams, -1), 'F')
         return encoded_symbol_stream
 
     def decode(self, symbol_stream: np.ndarray) -> np.ndarray:
