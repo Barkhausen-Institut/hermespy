@@ -2,14 +2,19 @@
 """HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union, Any
 from copy import copy
 from scipy import signal
+from functools import lru_cache
+from dataclasses import dataclass, field
+from abc import ABC
+from enum import Enum
+from collections import namedtuple
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 import numpy as np
 
-
 from modem import WaveformGenerator
-from modem.tools import PskQamMapping, Mimo
+from modem.tools import PskQamMapping
 
 if TYPE_CHECKING:
     from modem import Modem
@@ -22,6 +27,165 @@ __version__ = "0.1.0"
 __maintainer__ = "André Noll Barreto"
 __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class ElementType(Enum):
+
+    REFERENCE = 0
+    DATA = 1
+    NULL = 2
+
+
+class FrameElement:
+
+    type: ElementType
+    repetitions: int = 1
+
+    def __init__(self,
+                 type: Union[str, ElementType],
+                 repetitions: int = 1) -> None:
+
+        self.type = ElementType[type] if isinstance(type, str) else type
+        self.repetitions = repetitions
+
+
+class FrameResource:
+
+    num_blocks: int
+    elements: List[FrameElement]
+
+    def __init__(self,
+                 num_blocks: int = 1,
+                 elements: Optional[List[FrameElement]] = None) -> None:
+
+        self.num_blocks = num_blocks
+        self.elements = elements if elements is not None else []
+
+
+class FrameSection:
+
+    frame: Optional[Frame]
+    num_repetitions: int
+
+    def __init__(self,
+                 num_repetitions: int = 1) -> None:
+
+        self.frame = None
+        self.num_repetitions = num_repetitions
+
+
+class FrameSymbolSection(FrameSection):
+
+    yaml_tag: str = u'Symbol'
+    __pattern: List[int]
+    __cp_ratio: float   # Cyclic prefix ratio
+
+    def __init__(self,
+                 num_repetitions: int = 1,
+                 cp_ratio: float = 1.0,
+                 pattern: Optional[List[int]] = None) -> None:
+
+        FrameSection.__init__(self, num_repetitions=num_repetitions)
+        self.__cp_ratio = cp_ratio
+        self.__pattern = pattern if pattern is not None else []
+
+    @property
+    @lru_cache()
+    def subcarrier_indices(self) -> np.ndarray:
+        """Resource mask, mapping frame element types to slots
+
+        Returns:
+            A numpy matrix where each row represents an element type and each column represents a slot.
+            Each column, i.e. each slot contains a single True boolean flag indicating this slot contains the
+            resource type represented by the respective row.
+        """
+
+        resource_mask = np.empty((len(ElementType), 0), dtype=bool)
+
+        for resource_idx in self.__pattern:
+
+            resource_mask_section = np.empty((len(ElementType), 0), dtype=bool)
+
+            resource = self.frame.resources[resource_idx]
+            for element in resource.elements:
+
+                np.append(res)
+
+
+
+    @classmethod
+    def from_yaml(cls: Type[FrameSymbolSection],
+                  constructor: SafeConstructor,
+                  node: Union[ScalarNode, MappingNode]) -> FrameSymbolSection:
+
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        return cls(**constructor.construct_mapping(node))
+
+
+class FrameGuardSection(FrameSection):
+
+    yaml_tag: str = u'Guard'
+
+    def __init__(self,
+                 num_repetitions: int = 1) -> None:
+
+        FrameSection.__init__(self, num_repetitions=num_repetitions)
+
+    @classmethod
+    def from_yaml(cls: Type[FrameGuardSection],
+                  constructor: SafeConstructor,
+                  node: Union[ScalarNode, MappingNode]) -> FrameGuardSection:
+
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        return cls(**constructor.construct_mapping(node))
+
+
+class Frame:
+
+    yaml_tag = u'Frame'
+    resources: List[FrameResource]
+    structure: List[FrameSection]
+
+    def __init__(self,
+                 resources: Optional[List[FrameResource]] = None,
+                 structure: Optional[List[FrameSection]] = None) -> None:
+
+        self.resources = resources if resources is not None else []
+        self.structure = structure if structure is not None else []
+
+    def add_section(self, section: FrameSection) -> None:
+
+        self.structure.append(section)
+        section.frame = self
+
+    @classmethod
+    def from_yaml(cls: Type[Frame], constructor: SafeConstructor, node: MappingNode) -> Frame:
+
+        state: dict[str, Any] = constructor.construct_mapping(node, deep=True)
+        state = {k.lower(): v for k, v in state.items()}
+
+        structure: List[FrameSection] = state.pop('structure', None)
+
+        # Handle resource list to object conversion
+        resources = state.pop('resources', None)
+        if resources is not None:
+            for resource_idx, resource in enumerate(resources):
+                resources[resource_idx] = FrameResource(**resource)
+
+        state['resources'] = resources
+
+        # Create actual frame object from state dictionary
+        frame = cls(**state)
+
+        if structure is not None:
+            for section in structure:
+                frame.add_section(section)
+
+        return frame
 
 
 class WaveformGeneratorOfdm(WaveformGenerator):
@@ -53,37 +217,87 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         of each OFDM symbol
     """
 
+    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+        pass
+
     yaml_tag: str = WaveformGenerator.yaml_tag + u'OFDM'
 
+    __frame: Frame
+    pilot_subcarriers: List[np.ndarray]
+    pilot_symbols: List[np.ndarray]
+    reference_symbols: List[np.ndarray]
+    __guard_interval: float
+    __fft_size: int
+    __num_occupied_subcarriers: int
+    __subcarrier_spacing: float
+    dc_suppression: bool
+
     def __init__(self,
+                 frame: Optional[Frame] = None,
+                 pilot_subcarriers: Optional[List[np.ndarray]] = None,
+                 pilot_symbols: Optional[List[np.ndarray]] = None,
+                 reference_symbols: Optional[List[np.ndarray]] = None,
+                 guard_interval: float = 0.0,
+                 fft_size: int = 1,
+                 num_occupied_subcarriers: int = 1,
+                 subcarrier_spacing: float = 0.,
+                 dc_suppression: bool = True,
                  modem: Modem = None,
                  oversampling_factor: int = 1,
                  modulation_order: int = 64) -> None:
+        """Orthogonal Frequency Division Multiplexing Waveform Generator initialization.
+
+        Args:
+
+            frame_structure (List[FrameElement], optional):
+                Structure configuration of the generated frame.
+
+            guard_interval (float, optional):
+                Spacing between individual frame transmission in seconds.
+
+            fft_size (int, optional):
+                Number of frequency bins in the Fast Fourier Transform.
+
+            num_occupied_subcarriers (int, optional):
+                Number of subcarriers occupied within the frame structure??
+                TODO: Check.
+
+            subcarrier_spacing (float, optional):
+                Spacing between individual subcarriers in Hz. ToDo: Check.
+
+            dc_suppression (bool, optional):
+                Suppress the direct current component during waveform generation.
+
+        """
 
         # Init base class
         WaveformGenerator.__init__(self, modem=modem, oversampling_factor=oversampling_factor,
                                    modulation_order=modulation_order)
 
-        self.param = param
+        # Parameter initialization
+        self.__frame = frame if frame is not None else Frame()
+        self.pilot_subcarriers = pilot_subcarriers if pilot_subcarriers is not None else []
+        self.pilot_symbols = pilot_symbols if pilot_symbols is not None else []
+        self.reference_symbols = reference_symbols if reference_symbols is not None else []
+        self.guard_interval = guard_interval
+        self.fft_size = fft_size
+        self.num_occupied_subcarriers = num_occupied_subcarriers
+        self.subcarrier_spacing = subcarrier_spacing
+        self.dc_suppression = dc_suppression
+
+        # Initial parameter checks
+        # TODO
+
         self._samples_in_frame_no_oversampling = 0
+        self._mapping = PskQamMapping(self.modulation_order)
 
-        self._mapping = PskQamMapping(self.param.modulation_order)
-
-        self._mimo = Mimo(mimo_method=self.param.mimo_scheme,
-                          number_tx_antennas=self.param.number_tx_antennas,
-                          number_of_streams=self.param.number_streams)
         self._resource_element_mapping: np.array = self._calculate_resource_element_mapping()
         self._samples_in_frame_no_oversampling, self._cyclic_prefix_overhead = (
             self._calculate_samples_in_frame()
         )
 
-        self._number_ofdm_symbols = sum(isinstance(frame_element, OfdmSymbolConfig)
-                                        for frame_element in self.param.frame_structure)
-         
-        self.reference_frame = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
-                                         self.param.number_tx_antennas), dtype=complex)
-        self.data_frame_indices = np.zeros((self._number_ofdm_symbols, self.param.number_occupied_subcarriers,
-                                           self.param.number_tx_antennas), dtype=bool)
+        self.reference_frame = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=complex)
+        self.data_frame_indices = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=bool)
         self.guard_time_indices = np.array([], dtype=int)
         self.prefix_time_indices = np.array([], dtype=int)
         self.data_time_indices = np.array([], dtype=int)
@@ -91,8 +305,115 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # derived variables for precoding
         self._data_resource_elements_per_symbol = np.array([])
-
         self._generate_frame_structure()
+        
+    @property
+    def guard_interval(self) -> float:
+        """Guard interval between frames.
+
+        Returns:
+            float: Interval in seconds.
+        """
+
+        return self.__guard_interval
+
+    @guard_interval.setter
+    def guard_interval(self, interval: float) -> None:
+        """Modify the guard interval between frames.
+
+        Args:
+            interval (float): New interval in seconds.
+
+        Raises:
+            ValueError: If `interval` is smaller than zero.
+        """
+
+        if interval < 0.0:
+            raise ValueError("Guard interval must be greater or equal to zero")
+
+        self.__guard_interval = interval
+
+    @property
+    def fft_size(self) -> int:
+        """Number of frequency bins in the Fast Fourier Transform.
+
+        Returns:
+            int: Number of frequency bins
+        """
+
+        return self.__fft_size
+
+    @fft_size.setter
+    def fft_size(self, size: int) -> None:
+        """Modify the number of frequency bins in the Fast Fourier Transform.
+
+        Args:
+            size (int): New number of frequency bins.
+
+        Raises:
+            ValueError: If `size` is smaller than one.
+        """
+
+        if size < 1:
+            raise ValueError("Number of frequency bins must be greater or equal to one")
+
+        self.__fft_size = size
+
+    @property
+    def num_occupied_subcarriers(self) -> int:
+        """Number of occupied subcarrier bands within the bandwidth.
+
+        Returns:
+            int: Number of occupied subcarriers.
+        """
+
+        return self.__num_occupied_subcarriers
+
+    @num_occupied_subcarriers.setter
+    def num_occupied_subcarriers(self, num: int) -> None:
+        """Modify the number of occupied subcarrier bands within the bandwidth.
+
+        Args:
+            num (int): New number of occupied subcarriers.
+
+        Raises:
+            ValueError: If `num` is smaller than zero.
+        """
+
+        if num < 0:
+            raise ValueError("Number of occupied subcarriers must be greater or equal to zeros")
+
+        self.__num_occupied_subcarriers = num
+        
+    @property
+    def subcarrier_spacing(self) -> float:
+        """Subcarrier spacing between frames.
+
+        Returns:
+            float: Spacing in Hz.
+        """
+
+        return self.__subcarrier_spacing
+
+    @subcarrier_spacing.setter
+    def subcarrier_spacing(self, spacing: float) -> None:
+        """Modify the subcarrier spacing between frames.
+
+        Args:
+            spacing (float): New spacing in Hz.
+
+        Raises:
+            ValueError: If `spacing` is smaller than zero.
+        """
+
+        if spacing < 0.0:
+            raise ValueError("Subcarrier spacing must be greater or equal to zero")
+
+        self.__subcarrier_spacing = spacing
+
+    @property
+    def symbols_per_frame(self) -> int:
+        return sum(isinstance(frame_element, FrameSymbolSection) for frame_element in self.__frame.structure)
 
     def _generate_frame_structure(self):
         """Creates the OFDM frame structure in time, frequency and space.
@@ -105,19 +426,24 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         sample_idx = 0
         self.channel_sampling_timestamps = np.array([], dtype=int)
 
-        for frame_element in self.param.frame_structure:
-            if isinstance(frame_element, GuardInterval):
-                self.guard_time_indices = np.append(self.guard_time_indices,
-                                                    np.arange(sample_idx, sample_idx + frame_element.no_samples))
-                sample_idx += frame_element.no_samples
+        for frame_element in self.__frame.structure:
 
-            elif isinstance(frame_element, OfdmSymbolConfig):
+            if isinstance(frame_element, FrameGuardSection):
+
+                num_samples = self.guard_interval * self.subcarrier_spacing * self.fft_size
+
+                self.guard_time_indices = np.append(self.guard_time_indices,
+                                                    np.arange(sample_idx, sample_idx + num_samples))
+                sample_idx += num_samples
+
+            elif isinstance(frame_element, FrameSymbolSection):
+
                 ref_idxs = self._get_subcarrier_indices(frame_element, ResourceType.REFERENCE)
                 self.channel_sampling_timestamps = np.append(self.channel_sampling_timestamps, sample_idx)
 
                 # fill out resource elements with pilot symbols
-                ref_symbols = np.tile(self.param.reference_symbols,
-                                      int(np.ceil(ref_idxs.size / self.param.reference_symbols.size)))
+                ref_symbols = np.tile(self.reference_symbols,
+                                      int(np.ceil(ref_idxs.size / len(self.reference_symbols))))
                 ref_symbols = ref_symbols[:ref_idxs.size]
 
                 self.reference_frame[ofdm_symbol_idx, ref_idxs, 0] = ref_symbols
@@ -136,9 +462,9 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
                 ofdm_symbol_idx += 1
 
-        if self.param.precoding != "NONE":
-            # check if all symbols have the same number of data REs
-            self._data_resource_elements_per_symbol = np.sum(self.data_frame_indices[:, :, 0], axis=1)
+        #if self.param.precoding != "NONE":
+        #    # check if all symbols have the same number of data REs
+        #    self._data_resource_elements_per_symbol = np.sum(self.data_frame_indices[:, :, 0], axis=1)
 
     def _get_subcarrier_indices(self, frame_element, resource_type):
         #############################################################################
@@ -159,8 +485,9 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         number_cyclic_prefix_samples = 0
         number_of_data_samples = 0
 
-        for frame_element in self.param.frame_structure:
-            if isinstance(frame_element, GuardInterval):
+        for frame_element in self.__frame.structure:
+
+            if isinstance(frame_element, FrameGuardSection):
                 samples_in_frame_no_oversampling += frame_element.no_samples
             else:
                 samples_in_frame_no_oversampling += frame_element.cyclic_prefix_samples
@@ -169,19 +496,21 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 samples_in_frame_no_oversampling += frame_element.no_samples
                 number_of_data_samples += frame_element.no_samples
 
-        cyclic_prefix_overhead = (number_of_data_samples + number_cyclic_prefix_samples) / number_of_data_samples
+        cyclic_prefix_overhead = 0.0
+        if number_of_data_samples > 0.0:
+            cyclic_prefix_overhead = (number_of_data_samples + number_cyclic_prefix_samples) / number_of_data_samples
 
         return samples_in_frame_no_oversampling, cyclic_prefix_overhead
 
     def _calculate_resource_element_mapping(self) -> np.array:
-        initial_index = self.param.fft_size - \
-            int(np.ceil(self.param.number_occupied_subcarriers / 2))
+        initial_index = self.fft_size - \
+            int(np.ceil(self.num_occupied_subcarriers / 2))
         resource_element_mapping: np.array = np.arange(
-            initial_index, self.param.fft_size)
-        final_index = int(np.floor(self.param.number_occupied_subcarriers / 2))
+            initial_index, self.fft_size)
+        final_index = int(np.floor(self.num_occupied_subcarriers / 2))
         resource_element_mapping = np.append(
             resource_element_mapping, np.arange(
-                self.param.dc_suppression, final_index + self.param.dc_suppression))
+                self.dc_suppression, final_index + self.dc_suppression))
         return resource_element_mapping
 
     ###################################
@@ -189,12 +518,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     @property
     def samples_in_frame(self) -> int:
         """int: Returns read-only samples_in_frame"""
-        return self._samples_in_frame_no_oversampling * self.param.oversampling_factor
+        return self._samples_in_frame_no_oversampling * self.oversampling_factor
 
     @property
     def bits_in_frame(self) -> int:
         """int: Returns read-only bits_in_frame"""
-        return self.param.bits_in_frame
+        return self.symbols_per_frame * self._mapping.bits_per_symbol
 
     @property
     def cyclic_prefix_overhead(self) -> float:
@@ -203,6 +532,33 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     # property definitions END
     #############################################
+
+    def map(self, data_bits: np.ndarray) -> np.ndarray:
+        return self._mapping.get_symbols(data_bits)
+
+    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
+        return self._mapping.detect_bits(data_symbols)
+
+    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+
+        full_frame = copy(self.reference_frame)
+        full_frame[np.where(self.data_frame_indices)] = data_symbols
+
+        frame_in_freq_domain = np.zeros((self.symbols_per_frame, self.fft_size), dtype=complex)
+        frame_in_freq_domain[:, self._resource_element_mapping] = full_frame
+
+        frame_in_time_domain = np.fft.ifft(frame_in_freq_domain, norm='ortho', axis=1)
+        frame_in_time_domain = self._add_guard_intervals(frame_in_time_domain)
+
+        output_signal = np.zeros(self._samples_in_frame_no_oversampling, dtype=complex)
+
+        data_symbols = np.reshape(frame, (self.symbols_per_frame * self.fft_size,
+                                          self.param.number_tx_antennas))
+        data_symbols = data_symbols.transpose()
+        output_signal[:, self.data_time_indices] = data_symbols
+        output_signal[:, self.prefix_time_indices] = output_signal[:, self.prefix_time_indices + self.param.fft_size]
+
+        return output_signal
 
     def create_frame(self, timestamp: int, data_bits: np.array) -> Tuple[np.ndarray, int, int]:
         """Creates a modulated complex baseband signal for a whole transmit frame.
@@ -647,28 +1003,66 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return channel_estimation_freq
 
-    def get_bit_energy(self) -> float:
-        """returns the theoretical (discrete) bit energy.
+    @property
+    def bits_per_frame(self) -> int:
+        return self.symbols_per_frame * np.log2(self.modulation_order)
+
+    @property
+    def bit_energy(self) -> float:
+        return self.oversampling_factor / self._mapping.bits_per_symbol * self._cyclic_prefix_overhead
+
+    @property
+    def symbol_energy(self) -> float:
+        return self.oversampling_factor * self._cyclic_prefix_overhead
+
+    @property
+    def power(self) -> float:
+        return self.num_occupied_subcarriers / self.fft_size
+
+    @classmethod
+    def to_yaml(cls: Type[WaveformGeneratorOfdm],
+                representer: SafeRepresenter,
+                node: WaveformGeneratorOfdm) -> MappingNode:
+        """Serialize an `WaveformGenerator` object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (WaveformGeneratorOfdm):
+                The `WaveformGeneratorOfdm` instance to be serialized.
 
         Returns:
-            float:
-                raw bit energy. For the OFDM signal, the average bit energy of all data symbols, including
-                the cyclic prefix overhead, is considered.
+            Node:
+                The serialized YAML node
         """
 
-        return self.param.oversampling_factor / \
-            self._mapping.bits_per_symbol * self._cyclic_prefix_overhead
+        state = {
+            "guard_interval": node.guard_interval,
+        }
 
-    def get_symbol_energy(self) -> float:
-        """returns the theoretical symbol energy.
+        mapping = representer.represent_mapping(cls.yaml_tag, state)
+        mapping.value.extend(WaveformGenerator.to_yaml(representer, node).value)
+
+        return mapping
+
+    @classmethod
+    def from_yaml(cls: Type[WaveformGeneratorOfdm], constructor: SafeConstructor, node: MappingNode)\
+            -> WaveformGeneratorOfdm:
+        """Recall a new `WaveformGeneratorOfdm` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `WaveformGeneratorOfdm` serialization.
 
         Returns:
-            float:
-                raw symbol energy. For the OFDM signal, the average energy of a data resource element,
-                including the cyclic prefix overhead, is considered.
+            WaveformGeneratorOfdm:
+                Newly created `WaveformGeneratorOfdm` instance.
         """
 
-        return self.param.oversampling_factor * self._cyclic_prefix_overhead
-
-    def get_power(self) -> float:
-        return self.param.number_occupied_subcarriers / self.param.fft_size
+        state = constructor.construct_mapping(node)
+        return cls(**state)
