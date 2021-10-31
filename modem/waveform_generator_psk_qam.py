@@ -54,7 +54,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     rx_filter: ShapingFilter
     __chirp_duration: float
     __chirp_bandwidth: float
-    __pulse_width: float
+    __pulse_width: float  # ToDO: Check where pulse-width has to be used for initialization
     __equalization: Equalization
     __num_preamble_symbols: int
     __num_data_symbols: int
@@ -249,6 +249,18 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             raise ValueError("Chirp bandwidth must be greater than zero")
 
         self.__chirp_bandwidth = bandwidth
+
+    def map(self, data_bits: np.ndarray) -> np.ndarray:
+        pass
+
+    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
+        pass
+
+    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+        pass
+
+    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+        pass
 
     @property
     def equalization(self) -> WaveformGeneratorPskQam.Equalization:
@@ -550,6 +562,10 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                 self._pulse_correlation_matrix = np.array([])
 
     @property
+    def symbols_per_frame(self) -> int:
+        return self.__num_data_symbols
+
+    @property
     def bit_energy(self) -> float:
         return 1 / self.bits_per_symbol
 
@@ -621,7 +637,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         if shaping_filter is not None:
 
             # TODO: Patch-through for sampling rate
-            samples_per_symbol = generator.oversampling_factor # int(1e3 / generator.symbol_rate)
+            samples_per_symbol = generator.oversampling_factor  # int(1e3 / generator.symbol_rate)
             shaping_filter = ShapingFilter(**shaping_filter, samples_per_symbol=samples_per_symbol)
 
             if shaping_filter.filter_type == ShapingFilter.FilterType.FMCW:
