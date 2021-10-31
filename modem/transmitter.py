@@ -74,7 +74,7 @@ class Transmitter(Modem):
 
         # Generate source data bits if none are provided
         if data_bits is None:
-            data_bits = self.__bits_source.get_bits(num_data_bits)[0]
+            data_bits = self.generate_data_bits()
 
         # Encode the data bits
         code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
@@ -233,7 +233,9 @@ class Transmitter(Modem):
             numpy.ndarray: A vector of hard data bits in 0/1 format.
         """
 
-        return self.random_generator.integers(0, 2, self.num_data_bits_per_frame)
+        num_bits = self.num_data_bits_per_frame * self.num_streams
+        bits = self.bits_source.get_bits(num_bits)
+        return bits[0]
 
     @property
     def reference_channel(self) -> Channel:
