@@ -419,7 +419,5 @@ class Channel(ABC):
             (signal.shape[0],
              time_delay_samples)
         )
-        delayed_signal = np.append(
-            delay_samples, signal)
-
+        delayed_signal = np.hstack((delay_samples, signal))
         return delayed_signal
