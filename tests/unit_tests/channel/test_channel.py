@@ -338,3 +338,18 @@ class TestTimeoffset(unittest.TestCase):
         time_offset_s = -1
         with self.assertRaises(ValueError):
             ch = Channel(time_offset=time_offset_s)
+    
+    def test_time_offset_samples_are_filled_up_with_zeros_for_one_sample_offset(self) -> None:
+        time_offset_samples = 1
+        sampling_rate = 1e6
+        time_offset_s = time_offset_samples/sampling_rate
+        scenario = Scenario(sampling_rate=sampling_rate)
+        tx = Transmitter(scenario=scenario)
+        rx = Receiver(scenario=scenario)
+        ch = Channel(transmitter=tx, receiver=rx,
+                     active=True, time_offset=time_offset_s)
+
+        np.testing.assert_array_almost_equal(
+            ch.add_time_offset(self.x_t),
+            np.append(np.zeros(time_offset_samples), self.x_t)
+        )

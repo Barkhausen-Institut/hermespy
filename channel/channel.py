@@ -86,7 +86,7 @@ class Channel(ABC):
             self.gain = gain
 
         if time_offset is not None:
-            self.__time_offset = time_offset
+            self.time_offset = time_offset
 
     @property
     def active(self) -> bool:
@@ -199,6 +199,7 @@ class Channel(ABC):
 
     @time_offset.setter
     def time_offset(self, value: float) -> None:
+        breakpoint()
         if value < 0.0:
             raise ValueError("Time offset must be larger than zero.")
 
@@ -408,3 +409,17 @@ class Channel(ABC):
         estimate = np.eye(self.transmitter.num_antennas, self.receiver.num_antennas, dtype=complex)
         bloated_estimate = estimate[np.newaxis, :, :, np.newaxis].repeat(num_samples, axis=0)
         return bloated_estimate
+
+    def add_time_offset(self, signal: np.ndarray) -> np.ndarray:
+        """Introduces a time delay to the signal."""
+        sampling_rate = self.transmitter.scenario.sampling_rate
+        time_delay_samples = int(sampling_rate * self.time_offset)
+
+        delay_samples = np.zeros(
+            (signal.shape[0],
+             time_delay_samples)
+        )
+        delayed_signal = np.append(
+            delay_samples, signal)
+
+        return delayed_signal
