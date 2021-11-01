@@ -56,7 +56,13 @@ class Receiver(Modem):
 
         Returns:
             np.array: Detected bits as a list of data blocks for the drop.
+
+        Raises:
+            ValueError: If the first dimension of `input_signals` does not match the number of receive antennas.
         """
+
+        if input_signals.shape[0] != self.num_antennas:
+            raise ValueError("Number of input signals must be equal to the number of antennas")
 
         # If no receiving waveform generator is configured, no signal is being received
         # TODO: Check if this is really a valid case
@@ -96,8 +102,8 @@ class Receiver(Modem):
         symbol_streams = np.empty((received_signals.shape[0], symbols_per_stream),
                                   dtype=self.waveform_generator.symbol_type)
 
-        for stream_idx, signal in enumerate(input_signals):
-            symbol_streams[stream_idx, :] = self.waveform_generator.demodulate(signal, timestamps)
+        for stream_idx, noisy_signal in enumerate(noisy_signals):
+            symbol_streams[stream_idx, :] = self.waveform_generator.demodulate(noisy_signal, timestamps)
 
         # Decode the symbol precoding
         symbols = self.precoding.decode(symbol_streams)
