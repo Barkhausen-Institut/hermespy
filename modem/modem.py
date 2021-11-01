@@ -2,10 +2,12 @@ from __future__ import annotations
 from typing import Tuple, List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
-import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
+from scipy.constants import speed_of_light
+import numpy as np
+import numpy.random as rnd
 
-from modem.precoding import Precoding
+from modem.precoding import SymbolPrecoding
 from coding import EncoderManager
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
@@ -13,6 +15,7 @@ from source.bits_source import BitsSource
 
 if TYPE_CHECKING:
     from scenario import Scenario
+    from channel import Channel
 
 
 class TransmissionMode(Enum):
@@ -36,28 +39,27 @@ class Modem:
     __orientation: Optional[np.ndarray]
     __topology: np.ndarray
     __carrier_frequency: float
-    __sampling_rate: float
     __linear_topology: bool
     __encoder_manager: EncoderManager
-    __precoding: Precoding
+    __precoding: SymbolPrecoding
     __bits_source: BitsSource
     __waveform_generator: Optional[WaveformGenerator]
-    __tx_power: float
     __rf_chain: RfChain
+    __random_generator: Optional[rnd.Generator]
 
     def __init__(self,
-                 scenario: Scenario = None,
-                 position: np.array = None,
-                 orientation: np.array = None,
-                 topology: np.ndarray = None,
-                 carrier_frequency: float = None,
-                 sampling_rate: float = None,
-                 bits: BitsSource = None,
-                 encoding: EncoderManager = None,
-                 precoding: Precoding = None,
-                 waveform: WaveformGenerator = None,
-                 tx_power: float = None,
-                 rfchain: RfChain = None) -> None:
+                 scenario: Optional[Scenario] = None,
+                 position: Optional[np.array] = None,
+                 orientation: Optional[np.array] = None,
+                 topology: Optional[np.ndarray] = None,
+                 num_antennas: Optional[int] = None,
+                 carrier_frequency: Optional[float] = None,
+                 bits: Optional[BitsSource] = None,
+                 encoding: Optional[EncoderManager] = None,
+                 precoding: Optional[SymbolPrecoding] = None,
+                 waveform: Optional[WaveformGenerator] = None,
+                 rfchain: Optional[RfChain] = None,
+                 random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
 
         Args:
@@ -70,16 +72,16 @@ class Modem:
         self.__scenario = None
         self.__position = None
         self.__orientation = None
-        self.__topology = np.zeros((1, 3), dtype=float)
+        self.__topology = np.zeros((1, 3), dtype=np.float64)
         self.__carrier_frequency = 800e6
-        self.__sampling_rate = 1e3
         self.__linear_topology = False
         self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
-        self.__precoding = Precoding()
+        self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
-        self.__tx_power = 1.0
+        self.__power = 1.0
         self.__rf_chain = RfChain()
+        self.__random_generator = random_generator
 
         if scenario is not None:
             self.scenario = scenario
@@ -90,14 +92,25 @@ class Modem:
         if orientation is not None:
             self.orientation = orientation
 
-        if topology is not None:
-            self.topology = topology
-
         if carrier_frequency is not None:
             self.carrier_frequency = carrier_frequency
 
-        if sampling_rate is not None:
-            self.sampling_rate = sampling_rate
+        # If num_antennas is configured initialize the modem as a Uniform Linear Array
+        # with half wavelength element spacing
+        if num_antennas is not None:
+
+            if topology is not None:
+                raise ValueError("The num_antennas and topology parameters are mutually exclusive")
+
+            # For a carrier frequency of 0.0 we will initialize all antennas at the same position.
+            half_wavelength = 0.0
+            if self.__carrier_frequency > 0.0:
+                half_wavelength = .5 * speed_of_light / self.__carrier_frequency
+
+            self.topology = half_wavelength * np.outer(np.arange(num_antennas), np.array([1., 0., 0.]))
+
+        elif topology is not None:
+            self.topology = topology
 
         if bits is not None:
             self.bits_source = bits
@@ -110,9 +123,6 @@ class Modem:
 
         if waveform is not None:
             self.waveform_generator = waveform
-
-        if tx_power is not None:
-            self.tx_power = tx_power
 
         if rfchain is not None:
             self.rf_chain = rfchain
@@ -136,11 +146,10 @@ class Modem:
 
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
-            "sampling_rate": node.__sampling_rate,
-            "tx_power": node.__tx_power,
+            "tx_power": node.__power,
             BitsSource.yaml_tag: node.__bits_source,
             EncoderManager.yaml_tag: node.__encoder_manager,
-            Precoding.yaml_tag: node.__precoding,
+            SymbolPrecoding.yaml_tag: node.__precoding,
             RfChain.yaml_tag: node.__rf_chain,
         }
 
@@ -222,61 +231,36 @@ class Modem:
 
         pass
 
-    def send(self,
-             drop_duration: Optional[float] = None,
-             data_bits: Optional[np.array] = None) -> np.ndarray:
-        """Returns an array with the complex baseband samples of a waveform generator.
+    @property
+    def random_generator(self) -> rnd.Generator:
+        """Access the random number generator assigned to this modem.
 
-        The signal may be distorted by RF impairments.
-
-        Args:
-            drop_duration (float, optional): Length of signal in seconds.
-            data_bits (np.array, optional): Data bits to be sent via this transmitter.
+        This property will return the scenarios random generator if no random generator has been specifically set.
 
         Returns:
-            np.ndarray:
-                Complex baseband samples, rows denoting transmitter antennas and
-                columns denoting samples.
+            numpy.random.Generator: The random generator.
 
         Raises:
-            ValueError: If not enough data bits were provided to generate as single frame.
+            RuntimeError: If trying to access the random generator of a floating modem.
         """
-        # coded_bits = self.encoder.encoder(data_bits)
-        number_of_samples = int(np.ceil(drop_duration * self.sampling_rate))
-        timestamp = 0
-        frame_index = 1
 
-        num_code_bits = self.waveform_generator.bits_per_frame
-        num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
+        if self.__scenario is None:
+            raise RuntimeError("Trying to access the random generator of a floating modem")
 
-        # Generate source data bits if none are provided
-        if data_bits is None:
-            data_bits = self.__bits_source.get_bits(num_data_bits)[0]
+        if self.__random_generator is None:
+            return self.__scenario.random_generator
 
-        # Make sure enough data bits were provided
-        elif len(data_bits) < num_data_bits:
-            raise ValueError("Number of provided data bits is insufficient to generate a single frame")
+        return self.__random_generator
 
-        # Apply channel coding to the source bits
-        code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
+    @random_generator.setter
+    def random_generator(self, generator: Optional[rnd.Generator]) -> None:
+        """Modify the configured random number generator assigned to this modem.
 
-        while timestamp < number_of_samples:
+        Args:
+            generator (Optional[numpy.random.generator]): The random generator. None if not specified.
+        """
 
-            # Generate base-band waveforms
-            frame, timestamp, initial_sample_num = self.waveform_generator.create_frame(
-                timestamp, code_bits)
-
-            if frame_index == 1:
-                tx_signal, samples_delay = self._allocate_drop_size(
-                    initial_sample_num, number_of_samples)
-
-            tx_signal, samples_delay = self._add_frame_to_drop(
-                initial_sample_num, samples_delay, tx_signal, frame)
-            frame_index += 1
-
-        tx_signal = self.rf_chain.send(tx_signal)
-        tx_signal = self._adjust_tx_power(tx_signal)
-        return tx_signal
+        self.__random_generator = generator
 
     def _add_frame_to_drop(self, initial_sample_num: int,
                            samples_delay: int, tx_signal: np.ndarray,
@@ -304,66 +288,6 @@ class Modem:
         tx_signal = np.zeros((self.num_antennas, number_of_samples - initial_sample_num),
                              dtype=complex)
         return tx_signal, samples_delay
-
-    def _adjust_tx_power(self, tx_signal: np.ndarray) -> np.ndarray:
-        """Adjusts power of tx_signal by power factor."""
-        if self.tx_power != 0:
-            power = self.waveform_generator.power
-
-            self.power_factor = self.tx_power / power
-            tx_signal = tx_signal * np.sqrt(self.power_factor)
-
-        return tx_signal
-
-    def receive(self, input_signal: np.ndarray, noise_var: float) -> np.ndarray:
-        """Demodulates the signal received.
-
-        The received signal may be distorted by RF imperfections before demodulation and decoding.
-
-        Args:
-            input_signal (np.ndarray): Received signal.
-            noise_var (float): noise variance (for equalization).
-
-        Returns:
-            np.array: Detected bits as a list of data blocks for the drop.
-        """
-        rx_signal = self.rf_chain.receive(input_signal)
-
-        # If no receiving waveform generator is configured, no signal is being received
-        if self.waveform_generator is None:
-            return np.empty(0, dtype=complex)
-
-        # normalize signal to expected input power
-        rx_signal = rx_signal / np.sqrt(1.0)  # TODO: Re-implement pair power factor
-        noise_var = noise_var / 1.0           # TODO: Re-implement pair power factor
-
-        received_bits = np.empty(0, dtype=int)
-        timestamp_in_samples = 0
-
-        while rx_signal.size:
-            initial_size = rx_signal.shape[1]
-            frame_bits, rx_signal = self.waveform_generator.receive_frame(
-                rx_signal, timestamp_in_samples, noise_var)
-
-            if rx_signal.size:
-                timestamp_in_samples += initial_size - rx_signal.shape[1]
-
-            received_bits = np.append(received_bits, frame_bits)
-
-        decoded_bits = self.encoder_manager.decode(received_bits)
-        return decoded_bits
-
-    def get_bit_energy(self) -> float:
-        """Returns the average bit energy of the modulated signal.
-        """
-        R = self.encoder_manager.rate
-        return self.waveform_generator.bit_energy * self.power_factor / R
-
-    def get_symbol_energy(self) -> float:
-        """Returns the average symbol energy of the modulated signal.
-        """
-        R = self.encoder_manager.rate
-        return self.waveform_generator.symbol_energy * self.power_factor / R
 
     @property
     def position(self) -> np.array:
@@ -446,12 +370,12 @@ class Modem:
             if topology.shape[1] > 3:
                 raise ValueError("The second topology dimension must contain 3 fields (xyz)")
 
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
+            self.__topology = np.zeros((topology.shape[0], 3), dtype=np.float32)
             self.__topology[:, :topology.shape[1]] = topology
 
         else:
 
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=float)
+            self.__topology = np.zeros((topology.shape[0], 3), dtype=np.float32)
             self.__topology[:, 0] = topology
 
         # Automatically detect linearity in default configurations, where all sensor elements
@@ -491,35 +415,6 @@ class Modem:
         self.__carrier_frequency = carrier_frequency
 
     @property
-    def sampling_rate(self) -> float:
-        """Access the rate at which the analog signals are sampled.
-
-        Returns:
-            float:
-                Signal sampling rate in Hz.
-        """
-
-        return self.__sampling_rate
-
-    @sampling_rate.setter
-    def sampling_rate(self, value: float) -> None:
-        """Modify the rate at which the analog signals are sampled.
-
-        Args:
-            value (float):
-                Signal sampling rate in Hz.
-
-        Raises:
-            ValueError:
-                If the sampling rate is less or equal to zero.
-        """
-
-        if value <= 0.0:
-            raise ValueError("Sampling rate must be greater than zero")
-
-        self.__sampling_rate = value
-
-    @property
     def linear_topology(self) -> bool:
         """Access the configured linearity flag.
 
@@ -544,20 +439,19 @@ class Modem:
 
         return self.__topology.shape[0]
 
-#    @property
-#    def num_streams(self) -> int:
-#        """The number of data streams generated by the modem.
-#
-#        The number of data streams is always less or equal to the number of available antennas `num_antennas`.
-#
-#        Returns:
-#            int:
-#                The number of data streams generated by the modem.
-#        """
-#
-#        # For now, only beamforming influences the number of data streams.
-#        # This might change in future!
-#        return self.__beamformer.num_streams
+    @property
+    def num_streams(self) -> int:
+        """The number of data streams handled by the modem.
+
+        The number of data streams is always less or equal to the number of available antennas `num_antennas`.
+
+        Returns:
+            int:
+                The number of data streams generated by the modem.
+        """
+
+        # For now, stream compression will not be supported
+        return self.num_antennas
 
     @property
     def encoder_manager(self) -> EncoderManager:
@@ -618,32 +512,6 @@ class Modem:
         self.__waveform_generator.modem = self
 
     @property
-    def tx_power(self) -> float:
-        """Power of the transmitted signal.
-
-        Returns:
-            float: Transmit power.
-        """
-
-        return self.__tx_power
-
-    @tx_power.setter
-    def tx_power(self, power: float) -> None:
-        """Modify the power of the transmitted signal.
-
-        Args:
-            power (float): The new signal transmit power in Watts?.
-
-        Raises:
-            ValueError: If transmit power is negative.
-        """
-
-        if power < 0.0:
-            raise ValueError("Transmit power must be greater or equal to zero")
-
-        self.__tx_power = power
-
-    @property
     def rf_chain(self) -> RfChain:
         """Access the modem's configured RF chain.
 
@@ -666,14 +534,25 @@ class Modem:
         self.__rf_chain = rf_chain
 
     @property
-    def precoding(self) -> Precoding:
+    def precoding(self) -> SymbolPrecoding:
         """Access this modem's precoding configuration.
 
         Returns:
-            Precoding: Handle to the configuration.
+            SymbolPrecoding: Handle to the configuration.
         """
 
         return self.__precoding
+
+    @precoding.setter
+    def precoding(self, coding: SymbolPrecoding) -> None:
+        """Modify the modem's precoding configuration.
+
+        Args:
+            coding (SymbolPrecoding): The new precoding configuration.
+        """
+
+        self.__precoding = coding
+        self.__precoding.modem = self
 
     @property
     def num_data_bits_per_frame(self) -> int:
@@ -685,3 +564,16 @@ class Modem:
 
         num_code_bits = self.waveform_generator.bits_per_frame
         return self.encoder_manager.required_num_data_bits(num_code_bits)
+
+
+    @property
+    @abstractmethod
+    def reference_channel(self) -> Channel:
+        """Reference channel from the scenario channel matrix.
+
+        By default the first channel within the matrix.
+
+        Returns:
+            Channel: The reference channel.
+        """
+        ...

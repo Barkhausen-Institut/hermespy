@@ -1,9 +1,24 @@
-from typing import Tuple
+# -*- coding: utf-8 -*-
+"""HermesPy Multiple-Input-Multiple-Output spatial channel precodings."""
 
+from __future__ import annotations
+from typing import Tuple, Type
+from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 import numpy as np
 
+from .symbol_precoder import SymbolPrecoder
 
-class Mimo:
+__author__ = "André Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["André Barreto", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "André Noll Barreto"
+__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__status__ = "Prototype"
+
+
+class Mimo(SymbolPrecoder):
     """Implements a generic MIMO (multiple-input multiple-output) system
 
     This class implements the encoder and decoder for a narrowband MIMO system.
@@ -12,104 +27,7 @@ class Mimo:
     - Transmit diversity using Alamouti's space-time/frequency block codes scheme (STBC/SFBC) for 2 or 4 antennas
     - Spatial multiplexing with zero forcing receiver (SM-ZF)
     - Spatial multiplexing with zero MMSE receiver (SM-MMSE)
-
-    Attributes:
-        method (str): current MIMO method, can be one of the following:
-                      'NONE', 'SC', 'MRC', 'STBC', 'SFBC', 'SM-ZF', 'SM-MMSE'
-        number_tx_antennas (int): number of transmit antennas
-        number_of_streams (int): number of spatial streams (only relevant for 'SM'). Currently no precoding is supported
-                                 and number_tx_antennas must be equal to number_of_streams.
     """
-
-    def __init__(self,
-                 mimo_method: str,
-                 number_of_streams: int = 1,
-                 number_tx_antennas: int = 1) -> None:
-        self.method = mimo_method
-        self.number_of_streams = number_of_streams
-        self.number_tx_antennas = number_tx_antennas
-
-        if self.method in {'NONE', 'SC', 'MRC'} and self.number_tx_antennas > 1:
-            raise ValueError(f'Number of transmit antennas must ve equal to 1 with MIMO scheme {self.method}')
-
-        if self.number_of_streams > self.number_tx_antennas:
-            raise ValueError(f"Number of transmit antennas ({self.number_tx_antennas})"
-                             f" cannot be less than number of streams (self.number_of_streams)")
-
-        if self.method.find('SM') == 0 and self.number_of_streams != self.number_tx_antennas:
-            raise ValueError("In 'SM' Number of streams must be equal to number of transmit antennas")
-
-    def encode(self, input_data: np.array) -> np.ndarray:
-        """Encode data into multiple antennas.
-
-        Args:
-            input_data(np.array): Input signal with K symbols.
-
-        Returns:
-            output (np.array): Encoded data with size N_tx x (K/M),
-                               with N_tx the number of transmit antennas and M the number of spatial streams
-        """
-
-        if self.method in {"NONE", "SC", "MRC"}:
-            output = input_data
-        elif self.method in {"STBC", "SFBC"}:
-            output = self._encode_stbc(input_data)
-        elif self.method in {"SM-ZF", "SM-MMSE"}:
-            output = self._encode_sm(input_data)
-        else:
-            raise ValueError(f"MIMO encoding method '{self.method}' not supported")
-        return output
-
-    def decode(self, input_data: np.ndarray,
-               channel_estimation: np.ndarray,
-               noise_var: np.ndarray = 0) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Decode data with multiple antennas.
-
-        Args:
-            input_data (np.ndarray):
-                Input signal with N_rx x K symbols, with N_rx the number of receive antennas.
-            channel_estimation (np.ndarray):
-                channel estimation between every pair of antennas, of size N_rx x N_tx x K
-                values, with N_tx the number of transmit antennas.
-            noise_var (np.ndarray):
-                Noise variance at each output symbol, with either N_rx x K values, or a scalar.
-
-        Returns:
-            (np.ndarray, np.ndarray, np.ndarray):
-                output (np.ndarray): Decoded data with M x K symbols,
-                    with M the number of spatial streams.
-                channel_estimation (np.ndarray): post-processing channel estimation,
-                    with the same size as the output.
-                noise_var (np.ndarray): post-processing noise variance,
-                    with the same size as the output.
-        """
-        if isinstance(noise_var, float):
-            noise_var = np.ones(input_data.shape) * noise_var
-
-        if self.method == "NONE":
-            output = input_data
-            channel_estimation = np.squeeze(channel_estimation, axis=1)
-        elif self.method == "MRC":
-            # Maximum ratio Combining
-            output, channel_estimation, noise_var = self._decode_mrc(input_data, channel_estimation, noise_var)
-        elif self.method == "SC":
-            # SC: Selection Combining
-            output, channel_estimation, noise_var = self._decode_sc(input_data, channel_estimation, noise_var)
-        elif self.method in {"STBC", "SFBC"}:
-            if self.number_tx_antennas == 2:
-                output, channel_estimation, noise_var = self._decode_stbc_2_tx_antennas(input_data, channel_estimation,
-                                                                                        noise_var)
-            elif self.number_tx_antennas == 4:
-                output, channel_estimation, noise_var = self._decode_stbc_4_tx_antennas(input_data, channel_estimation,
-                                                                                        noise_var)
-        elif self.method in {"SM-ZF", "SM-MMSE"}:
-            if input_data.shape[0] < self.number_tx_antennas:
-                raise ValueError("Number of rx antennas must be larger than number of tx ant.")
-            output, channel_estimation, noise_var = self._decode_sm(
-                input_data, channel_estimation, noise_var)
-        else:
-            raise ValueError(f"MIMO decoding method '{self.method}' not supported")
-        return output, channel_estimation, noise_var
 
     def _encode_stbc(self, input_data: np.ndarray) -> np.ndarray:
         """Encode data into multiple antennas with space-time/frequency block codes
@@ -125,7 +43,7 @@ class Mimo:
         """
         number_of_symbols = input_data.size
 
-        if self.number_tx_antennas == 2:
+        if self.num_output_streams == 2:
 
             output = np.zeros((2, number_of_symbols), dtype=complex)
 
@@ -139,7 +57,7 @@ class Mimo:
 
             output = output / np.sqrt(2)
 
-        elif self.number_tx_antennas == 4:
+        elif self.num_output_streams == 4:
             output = np.zeros((4, number_of_symbols), dtype=complex)
 
             idx0 = np.arange(0, number_of_symbols, 4)
@@ -158,7 +76,7 @@ class Mimo:
 
             output = output / np.sqrt(2)
         else:
-            raise ValueError(f"number of transmit antennas ({self.number_tx_antennas}) "
+            raise ValueError(f"number of output streams ({self.num_output_streams}) "
                              "not supported in space-time/frequency code")
 
         return output
@@ -431,3 +349,215 @@ class Mimo:
             noise_var_out = np.real(np.diagonal(noise_covariance, axis1=1, axis2=2)).T
 
         return output, np.ones((self.number_of_streams, number_of_symbols)), noise_var_out
+
+
+class MaximumRatioCombining(Mimo):
+
+    yaml_tag: str = u'MRC'
+
+    def __init__(self) -> None:
+        """Maximum Ration Combining Precoding initialization."""
+
+        SymbolPrecoder.__init__(self)
+
+    def encode(self, input_data: np.array) -> np.ndarray:
+        return input_data
+
+    def decode(self, input_stream: np.ndarray) -> np.ndarray:
+        # Decode data using MRC receive diversity with N_rx received antennas.
+        #
+        # Received signal with equal noise power is assumed, the decoded signal has same noise
+        # level as input. It is assumed that all data have equal noise levels.
+
+        channel_estimation = self.precoding.modem.reference_channel.estimate()
+        noise_var = 0.0
+
+        channel_estimation = np.squeeze(channel_estimation, axis=1)
+        output_stream = np.sum(input_stream * channel_estimation.conj(), axis=0)[np.newaxis]
+        # noise_var = np.sum(noise_var * (np.abs(channel_estimation) ** 2), axis=0)[np.newaxis]
+        # channel_estimation = np.sum(np.abs(channel_estimation) ** 2, axis=0)[np.newaxis]
+
+        return output_stream
+
+    @classmethod
+    def to_yaml(cls: Type[MaximumRatioCombining], representer: SafeRepresenter, node: MaximumRatioCombining) -> ScalarNode:
+        """Serialize a MaximumRatioCombining object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (MaximumRatioCombining):
+                The MaximumRatioCombining instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        return representer.represent_scalar(cls.yaml_tag, None)
+
+    @classmethod
+    def from_yaml(cls: Type[MaximumRatioCombining], constructor: SafeConstructor, node: ScalarNode) -> MaximumRatioCombining:
+        """Recall a new `MaximumRatioCombining` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `MaximumRatioCombining` serialization.
+
+        Returns:
+            MaximumRatioCombining:
+                Newly created `MaximumRatioCombining` instance.
+            """
+
+        return cls()
+
+
+class SpaceTimeBlockCoding(Mimo):
+
+    yaml_tag: str = u'STBC'
+
+    def __init__(self) -> None:
+        """Space Time Block Coding initialization."""
+
+        SymbolPrecoder.__init__(self)
+
+    def encode(self, input_data: np.array) -> np.ndarray:
+        return self._encode_stbc(input_data)
+
+    def decode(self, input_stream: np.ndarray) -> np.ndarray:
+
+        num_input_streams = input_stream.shape[0]
+        channel_estimation = self.precoding.channel_estimate
+        noise_var = 0.0
+
+        if num_input_streams == 2:
+            output, _, _ = self._decode_stbc_2_tx_antennas(input_stream, channel_estimation, noise_var)
+
+        elif num_input_streams == 4:
+            output, _, _ = self._decode_stbc_4_tx_antennas(input_stream, channel_estimation, noise_var)
+
+        else:
+            raise RuntimeError("Space-Time Block decoding is currently only available for 2 and 4 input streams")
+
+
+class SpaceFrequencyBlockCoding(Mimo):
+
+    yaml_tag: str = u'SFBC'
+
+    def __init__(self) -> None:
+        """Space Frequency Block Coding initialization."""
+
+        SymbolPrecoder.__init__(self)
+
+    def encode(self, input_data: np.array) -> np.ndarray:
+        return self._encode_stbc(input_data)
+
+    def decode(self, input_stream: np.ndarray) -> np.ndarray:
+
+        num_input_streams = input_stream.shape[0]
+        channel_estimation = self.precoding.channel_estimate
+        noise_var = 0.0
+
+        if num_input_streams == 2:
+            output_stream, _, _ = self._decode_stbc_2_tx_antennas(input_stream, channel_estimation, noise_var)
+
+        elif num_input_streams == 4:
+            output_stream, _, _ = self._decode_stbc_4_tx_antennas(input_stream, channel_estimation, noise_var)
+
+        else:
+            raise RuntimeError("Space-Frequency Block decoding is currently only available for 2 and 4 input streams")
+
+        return output_stream
+
+
+class SpatialMultiplexingZeroForcing(Mimo):
+
+    yaml_tag: str = u'SM-ZF'
+
+    def __init__(self) -> None:
+        """Spatial Multiplexing Zero Forcing initialization."""
+
+        SymbolPrecoder.__init__(self)
+
+    def encode(self, input_data: np.array) -> np.ndarray:
+
+        number_of_symbols = np.int(input_data.size / self.number_of_streams)
+        output = np.reshape(input_data, (self.number_of_streams, number_of_symbols), 'F')
+        return output
+
+    def decode(self, input_stream: np.ndarray) -> np.ndarray:
+
+        channel_estimation = self.precoding.channel_estimate
+        # noise_var = 0.0
+
+        # number_of_symbols = input_stream.shape[1]
+        # number_rx_antennas = input_stream.shape[0]
+        ch = np.moveaxis(channel_estimation, -1, 0)
+
+        # convert noise variance into noise covariance diagonal matrices
+        # idx = np.arange(number_rx_antennas)
+        # idx = idx + number_rx_antennas * idx
+        # noise_covariance = np.zeros((number_of_symbols, number_rx_antennas * number_rx_antennas))
+        # noise_covariance[:, idx] = noise_var
+        # noise_covariance = np.reshape(noise_covariance, (number_of_symbols, number_rx_antennas,
+        #                                                  number_rx_antennas))
+
+        linear_decoder = np.linalg.pinv(ch)
+
+        output = np.matmul(linear_decoder, input_stream.T[:, :, np.newaxis])
+        output = output.squeeze(axis=2).T
+
+        # noise_covariance = (linear_decoder @ np.transpose(linear_decoder.conj(), axes=[0, 2, 1])
+        #                     @ noise_covariance)
+        # noise_var_out = np.real(np.diagonal(noise_covariance, axis1=1, axis2=2)).T
+        return output
+
+
+class SpatialMultiplexingMinimumMeanSquareError(Mimo):
+
+    yaml_tag: str = u'SM-MMSE'
+
+    def __init__(self) -> None:
+        """Spatial Multiplexing MMSE initialization."""
+
+        SymbolPrecoder.__init__(self)
+
+    def encode(self, input_data: np.array) -> np.ndarray:
+
+        number_of_symbols = np.int(input_data.size / self.number_of_streams)
+        output = np.reshape(input_data, (self.number_of_streams, number_of_symbols), 'F')
+        return output
+
+    def decode(self, input_stream: np.ndarray) -> np.ndarray:
+
+        channel_estimation = self.precoding.channel_estimate
+        noise_var = 0.0
+
+        number_of_symbols = input_stream.shape[1]
+        number_rx_antennas = input_stream.shape[0]
+        ch = np.moveaxis(channel_estimation, -1, 0)
+
+        # convert noise variance into noise covariance diagonal matrices
+        idx = np.arange(number_rx_antennas)
+        idx = idx + number_rx_antennas * idx
+        noise_covariance = np.zeros((number_of_symbols, number_rx_antennas * number_rx_antennas))
+        noise_covariance[:, idx] = noise_var
+        noise_covariance = np.reshape(noise_covariance, (number_of_symbols, number_rx_antennas,
+                                                         number_rx_antennas))
+
+        ch_hermitian = np.transpose(ch, axes=[0, 2, 1]).conj()
+
+        linear_decoder = ch_hermitian @ np.linalg.inv(ch @ ch_hermitian + noise_covariance)
+        norm = np.diagonal(linear_decoder @ ch, axis1=1, axis2=2).T
+
+        output = np.matmul(linear_decoder, input_stream.T[:, :, np.newaxis])
+        output = 1 / norm.T[:, :, np.newaxis] * output
+        output = output.squeeze(axis=2).T
+
+        # noise_var_out = 1./np.real(norm) - 1
+        return output

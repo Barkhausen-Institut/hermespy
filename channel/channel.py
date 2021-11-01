@@ -5,9 +5,11 @@ from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
 from abc import ABC
 import numpy as np
+import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 if TYPE_CHECKING:
+    from scenario import Scenario
     from modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
@@ -40,12 +42,16 @@ class Channel(ABC):
     __transmitter: Optional[Transmitter]
     __receiver: Optional[Receiver]
     __gain: float
+    __random_generator: Optional[rnd.Generator]
+    __scenario: Optional[Scenario]
 
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
-                 gain: Optional[float] = None) -> None:
+                 gain: Optional[float] = None,
+                 random_generator: Optional[rnd.Generator] = None,
+                 scenario: Optional[Scenario] = None) -> None:
         """Class constructor.
 
         Args:
@@ -62,6 +68,12 @@ class Channel(ABC):
             gain (float, optional):
                 Channel power gain.
                 1.0 by default.
+                
+            random_generator (rnd.Generator, optional):
+                Generator object for random number sequences.
+                
+            scenario (Scenario, optional):
+                Scenario this channel is attached to.
         """
 
         # Default parameters
@@ -69,6 +81,10 @@ class Channel(ABC):
         self.__transmitter = None
         self.__receiver = None
         self.__gain = 1.0
+        self.__scenario = None
+
+        self.random_generator = random_generator
+        self.scenario = scenario
 
         if transmitter is not None:
             self.transmitter = transmitter
@@ -186,6 +202,72 @@ class Channel(ABC):
             raise ValueError("Channel gain must be greater or equal to zero")
 
         self.__gain = value
+        
+    @property
+    def random_generator(self) -> rnd.Generator:
+        """Access the random number generator assigned to this channel.
+
+        This property will return the scenarios random generator if no random generator has been specifically set.
+
+        Returns:
+            numpy.random.Generator: The random generator.
+
+        Raises:
+            RuntimeError: If trying to access the random generator of a floating channel.
+        """
+
+        if self.__scenario is None:
+            raise RuntimeError("Trying to access the random generator of a floating channel")
+
+        if self.__random_generator is None:
+            return self.__scenario.random_generator
+
+        return self.__random_generator
+
+    @random_generator.setter
+    def random_generator(self, generator: Optional[rnd.Generator]) -> None:
+        """Modify the configured random number generator assigned to this channel.
+
+        Args:
+            generator (Optional[numpy.random.generator]): The random generator. None if not specified.
+        """
+
+        self.__random_generator = generator
+        
+    @property
+    def scenario(self) -> Scenario:
+        """Access the scenario this channel is attached to.
+
+        Returns:
+            Scenario:
+                The referenced scenario.
+
+        Raises:
+            RuntimeError: If the channel is currently floating.
+        """
+
+        if self.__scenario is None:
+            raise RuntimeError("Error trying to access the scenario of a floating channel")
+
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, scenario: Scenario) -> None:
+        """Attach the channel to a specific scenario.
+
+        This can only be done once to a floating channel.
+
+        Args:
+            scenario (Scenario): The scenario this channel should be attached to.
+
+        Raises:
+            RuntimeError: If the channel is already attached to a scenario.
+        """
+
+        if self.__scenario is not None:
+            raise RuntimeError("Error trying to modify the scenario of an already attached channel")
+
+        self.__scenario = scenario
 
     @property
     def num_inputs(self) -> int:
@@ -358,4 +440,22 @@ class Channel(ABC):
             return cls()
 
         state = constructor.construct_mapping(node)
+
+        seed = state.pop('seed', None)
+        if seed is not None:
+            state['random_generator'] = rnd.default_rng(seed)
+
         return cls(**state)
+
+    def estimate(self, num_samples: int = 1) -> np.ndarray:
+        """Returns estimated channel responses.
+
+        Args:
+            num_samples (int, optional): Number of discrete time samples.
+
+        Unlike the impulse_response routine, errors may occur during channel estimation.
+        """
+
+        estimate = np.eye(self.transmitter.num_antennas, self.receiver.num_antennas, dtype=complex)
+        bloated_estimate = estimate[np.newaxis, :, :, np.newaxis].repeat(num_samples, axis=0)
+        return bloated_estimate

@@ -161,7 +161,7 @@ class MultipathFadingChannel(Channel):
         self.__power_profile = power_profile
         self.__rice_factors = rice_factors
         self.__num_sinusoids = 10       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
-        self.__los_angle = None
+        self.los_angle = los_angle
         self.__transmit_precoding = None
         self.__receive_postcoding = None
         self.__doppler_frequency = 0.0
@@ -169,9 +169,6 @@ class MultipathFadingChannel(Channel):
 
         if num_sinusoids is not None:
             self.num_sinusoids = num_sinusoids
-
-        if los_angle is not None:
-            self.los_angle = los_angle
 
         if doppler_frequency is not None:
             self.doppler_frequency = doppler_frequency

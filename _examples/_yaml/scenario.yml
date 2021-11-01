@@ -1,33 +1,58 @@
 !<Scenario>
 
+# random_seed: 0
+sampling_rate: 2e6
+
 Modems:
 
   - Transmitter
+    power: 1e-3
     carrier_frequency: 0.0
+    num_antennas: 2
     position: [0, 0, 0]
     WaveformChirpFsk:
         chirp_bandwidth: 5e5
         chirp_duration: 512e-6
         freq_difference: 1953.125
-        num_data_chirps: 4
-        modulation_order: 256
+        num_data_chirps: 12
+        modulation_order: 32
     Encoding:
-      - Interleaver
+      - BlockInterleaver
+        block_size: 20
+        interleave_blocks: 4
+      - Repetition
+        block_size: 20
+        repetitions: 3
+    Precoding:
+      - SC
 
   - Receiver
     carrier_frequency: 0.0
+    num_antennas: 2
     position: [10, 10, 10]
     WaveformChirpFsk:
         chirp_bandwidth: 5e5
         chirp_duration: 512e-6
         freq_difference: 1953.125
-        num_data_chirps: 4
-        modulation_order: 256
+        num_data_chirps: 12
+        modulation_order: 32
     Encoding:
-      - Interleaver
-
+      - BlockInterleaver
+        block_size: 20
+        interleave_blocks: 4
+      - Repetition
+        block_size: 20
+        repetitions: 3
+    Precoding:
+      - SC
 
 Channels:
 
-  - Quadriga 0 0
-    active: True
+#  - COST256 0 0
+#    model_type: URBAN
+#  - 5GTDL 0 0
+#    type: A
+#    rms_delay: 0.0
+  - Channel 0 0
+    active: true
+    seed: 0
