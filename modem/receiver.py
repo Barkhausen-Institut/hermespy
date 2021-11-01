@@ -4,7 +4,7 @@
 from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
-from typing import TYPE_CHECKING, Type, List
+from typing import TYPE_CHECKING, Type, List, Optional
 from math import ceil
 import numpy as np
 import numpy.random as rnd
@@ -16,6 +16,7 @@ from modem.waveform_generator import WaveformGenerator
 from noise import Noise
 
 if TYPE_CHECKING:
+    from .transmitter import Transmitter
     from channel import Channel
 
 __author__ = "Jan Adler"
@@ -38,12 +39,22 @@ class Receiver(Modem):
 
     yaml_tag = 'Receiver'
     __noise: Noise
+    __reference_transmitter: Optional[Transmitter]
 
     def __init__(self, **kwargs) -> None:
-        """Receiver modem object initialization."""
+        """Receiver modem object initialization.
+
+        Args:
+
+            noise(Noise, optional): Noise generator.
+        """
+
+        noise = kwargs.pop('noise', None)
 
         Modem.__init__(self, **kwargs)
-        self.noise = Noise()
+
+        self.noise = Noise() if noise is None else noise
+        self.reference_transmitter = None
 
     def receive(self, input_signals: np.ndarray, noise_power: float) -> np.ndarray:
         """Demodulates the signal received.
@@ -67,7 +78,7 @@ class Receiver(Modem):
         # If no receiving waveform generator is configured, no signal is being received
         # TODO: Check if this is really a valid case
         if self.waveform_generator is None:
-            return np.empty(0, dtype=complex)
+            return np.empty((self.num_antennas, 0), dtype=complex)
 
         num_samples = input_signals.shape[1]
         timestamps = np.arange(num_samples) / self.scenario.sampling_rate
@@ -116,25 +127,6 @@ class Receiver(Modem):
 
         # We're finally done, blow the fanfares, throw confetti, etc.
         return data_bits
-
-#        # De-code the spatial precoding
-#        rx_streams = self.precoding.decode(rx_signal)
-#
-#        received_bits = np.empty(0, dtype=int)
-#        timestamp_in_samples = 0
-#
-#        while rx_streams.size:
-#            initial_size = rx_streams.shape[1]
-#            frame_bits, rx_streams = self.waveform_generator.receive_frame(
-#                rx_streams, timestamp_in_samples, noise_var)
-#
-#            if rx_streams.size:
-#                timestamp_in_samples += initial_size - rx_streams.shape[1]
-#
-#            received_bits = np.append(received_bits, frame_bits)
-#
-#        decoded_bits = self.encoder_manager.decode(received_bits)
-#        return decoded_bits
 
     @classmethod
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
@@ -234,9 +226,60 @@ class Receiver(Modem):
         model.receiver = self
 
     @property
+    def reference_transmitter(self) -> Optional[Transmitter]:
+        """Reference modem transmitting to this receiver.
+
+        Used to for channel estimation, noise estimation, power configuration etc.
+
+        Return:
+            Optional[Transmitter]: Transmitting reference modem. None if no reference is configured.
+        """
+
+        return self.__reference_transmitter
+
+    @reference_transmitter.setter
+    def reference_transmitter(self, new_reference: Optional[Transmitter]) -> None:
+        """Modify reference modem transmitting to this receiver.
+
+        Args:
+            Optional[Transmitter]: Transmitting reference modem.
+
+        Raises:
+
+            RuntimeError:
+                If this Receiver is currently floating.
+
+            ValueError:
+                If `new_reference` is not registered with the Receiver's scenario.
+        """
+
+        if new_reference is None:
+
+            self.__reference_transmitter = None
+
+        else:
+
+            if self.scenario is None:
+                raise RuntimeError("Error trying to modify the reference transmitter of a floating receiver")
+
+            if new_reference not in self.scenario.transmitters:
+                raise ValueError("Error trying to configure a reference transmitter not within a receiver's scenario")
+
+            self.__reference_transmitter = new_reference
+
+    @property
     def reference_channel(self) -> Channel:
 
         if self.scenario is None:
             raise RuntimeError("Attempting to access reference channel of a floating modem.")
 
-        return self.scenario.arriving_channels(self, active_only=True)[0]
+        # If no reference transmitter is configured, guess the paired modem's channel as the diagonal pair in the
+        # channel matrix
+        if self.__reference_transmitter is None:
+
+            guessed_pair_index = min(self.scenario.num_receivers-1, self.index)
+            return self.scenario.arriving_channels(self)[guessed_pair_index]
+
+        else:
+
+            return self.scenario.channel(self.__reference_transmitter, self)
