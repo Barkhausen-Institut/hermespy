@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple
 from scipy.signal import stft, welch
 from scipy.fft import fftshift
 from statistics import mean
+from numpy import real, imag
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import IntEnum
@@ -42,14 +43,14 @@ class ComplexVisualization(IntEnum):
             plot_data = np.abs(data)
 
         elif self == ComplexVisualization.REAL:
-            plot_data = np.real(data)
+            plot_data = real(data)
 
         elif self == ComplexVisualization.IMAGINARY:
-            plot_data = np.imag(data)
+            plot_data = imag(data)
 
         elif self == ComplexVisualization.DUAL:
 
-            plot_data = [np.real(data), np.imag(data)]
+            plot_data = [real(data), imag(data)]
 
         else:
             raise RuntimeError("Unsupported plot mode requested")
@@ -282,7 +283,7 @@ class Drop:
         return self.__bit_errors
 
     @property
-    def bit_error_rates(self) -> List[List[Optional[np.ndarray]]]:
+    def bit_error_rates(self) -> List[List[Optional[float]]]:
         """Detect the bit transmission error rates between all transmitting and receiving modems.
 
         The computation result gets buffered, meaning only the first call is computationally expensive.
