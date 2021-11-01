@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 """Test channel model for wireless transmission links."""
 
+from datetime import time
 import unittest
 from unittest.mock import Mock
+from modem.transmitter import Transmitter
+from modem.receiver import Receiver
 import numpy as np
 from numpy.testing import assert_array_equal
 
 from channel import Channel
+from scenario.scenario import Scenario
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -317,3 +321,15 @@ class TestChannel(unittest.TestCase):
     def test_from_yaml(self) -> None:
         """Test YAML serialization recall validity."""
         pass
+
+class TestTimeoffset(unittest.TestCase):
+    def setUp(self) -> None:
+        i_samples = np.random.randint(low=0, high=4, size=(1, 100))
+        q_samples = np.random.randint(low=0, high=4, size=(1, 100))
+
+        self.x_t = i_samples + 1j * q_samples
+
+    def test_channel_gets_created_with_proper_time_offset(self) -> None:
+        time_offset_s = 1e-6
+        ch = Channel(time_offset=time_offset_s)
+        self.assertAlmostEqual(ch.time_offset, time_offset_s)

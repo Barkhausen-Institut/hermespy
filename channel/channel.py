@@ -40,12 +40,14 @@ class Channel(ABC):
     __transmitter: Optional[Transmitter]
     __receiver: Optional[Receiver]
     __gain: float
+    __time_offset: float
 
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
-                 gain: Optional[float] = None) -> None:
+                 gain: Optional[float] = None,
+                 time_offset: Optional[float] = None) -> None:
         """Class constructor.
 
         Args:
@@ -69,6 +71,7 @@ class Channel(ABC):
         self.__transmitter = None
         self.__receiver = None
         self.__gain = 1.0
+        self.__time_offset = 0.0
 
         if transmitter is not None:
             self.transmitter = transmitter
@@ -81,6 +84,9 @@ class Channel(ABC):
 
         if gain is not None:
             self.gain = gain
+
+        if time_offset is not None:
+            self.__time_offset = time_offset
 
     @property
     def active(self) -> bool:
@@ -186,6 +192,17 @@ class Channel(ABC):
             raise ValueError("Channel gain must be greater or equal to zero")
 
         self.__gain = value
+
+    @property
+    def time_offset(self) -> float:
+        return self.__time_offset
+
+    @time_offset.setter
+    def time_offset(self, value: float) -> None:
+        if value < 0.0:
+            raise ValueError("Time offset must be larger than zero.")
+
+        self.__time_offset = value
 
     @property
     def num_inputs(self) -> int:
