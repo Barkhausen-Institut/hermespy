@@ -27,7 +27,7 @@ Modems:
 
   - Receiver
     carrier_frequency: 0.0
-#    num_antennas: 2
+    num_antennas: 2
     position: [10, 10, 10]
     WaveformChirpFsk:
         chirp_bandwidth: 5e5
