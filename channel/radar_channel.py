@@ -134,26 +134,9 @@ class RadarChannel(Channel):
         if filter_response_in_samples is not None:
             self.__filter_response_in_samples = filter_response_in_samples
 
-        # derived parameters
-        self._doppler_frequency = 0
-        self._delay = 0
-        self._attenuation = 0
-
-        self._calculate_derived_parameters()
-
         # random phases
         self._phase_self_interference = 0
         self._phase_echo = 0
-
-    def _calculate_derived_parameters(self):
-        self._doppler_frequency = 2 * self.transmitter.carrier_frequency * self.__velocity / constants.speed_of_light
-        self._delay = 2 * self.__target_range / constants.speed_of_light
-
-        # radar range equation
-        wavelength = constants.speed_of_light / self.transmitter.carrier_frequency
-        self._attenuation = (db2lin(self.__tx_antenna_gain_db) * db2lin(self.__rx_antenna_gain_db) * wavelength**2
-                             * self.__radar_cross_section / (4 * np.pi)**3 / self.__target_range**4
-                             / db2lin(self.__losses_db))
 
     @property
     def target_range(self) -> float:
@@ -179,7 +162,6 @@ class RadarChannel(Channel):
             raise ValueError("Target range must be greater than or equal to zero")
 
         self.__target_range = value
-        self._calculate_derived_parameters()
 
     @property
     def target_exists(self) -> bool:
@@ -223,7 +205,6 @@ class RadarChannel(Channel):
             raise ValueError("Target range must be greater than or equal to zero")
 
         self.__radar_cross_section = value
-        self._calculate_derived_parameters()
 
     @property
     def tx_rx_isolation_db(self) -> float:
@@ -287,7 +268,6 @@ class RadarChannel(Channel):
             value (float): The new velocity
         """
         self.__velocity = value
-        self._calculate_derived_parameters()
 
     @property
     def filter_response_in_samples(self) -> int:
@@ -299,13 +279,31 @@ class RadarChannel(Channel):
         return self.__filter_response_in_samples
 
     @property
-    def attenuation_db(self) -> float:
-        """Get attenuation of returned echo in dB
+    def delay(self) -> float:
+        """Get delay from target
 
         Returns:
-            float: attenuation [dB]
+            float: propagation delay [s]
         """
-        return lin2db(self._attenuation)
+        return 2 * self.__target_range / constants.speed_of_light
+
+
+    @property
+    def attenuation(self) -> float:
+        """Get attenuation of returned echo
+
+        Returns:
+            float: power attenuation in linear scale
+        """
+        wavelength = constants.speed_of_light / self.transmitter.carrier_frequency
+        attenuation = (db2lin(self.__tx_antenna_gain_db + self.__rx_antenna_gain_db - self.__losses_db)
+                       * wavelength ** 2 * self.__radar_cross_section / (4 * np.pi)**3 / self.__target_range**4)
+
+        return attenuation
+
+    @property
+    def attenuation_db(self) -> float:
+        return lin2db(self.attenuation)
 
     def init_drop(self) -> None:
         """Initializes random channel parameters for each drop, by selecting random phases"""
@@ -328,12 +326,14 @@ class RadarChannel(Channel):
                 'number_rx_antennas' X 'number_of_samples' + L, with L accounting for the propagation delay and filter
                 overhead.
         """
+        doppler_frequency = 2 * self.transmitter.carrier_frequency * self.__velocity / constants.speed_of_light
+
         samples_in_frame = tx_signal.shape[1]
         frame_length = samples_in_frame / self.transmitter.sampling_rate
 
         # minimum and maximum delay during whole drop
-        max_delay = np.maximum(self._delay, self._delay + 2 * self.velocity * frame_length / constants.speed_of_light)
-        min_delay = np.minimum(self._delay, self._delay + 2 * self.velocity * frame_length / constants.speed_of_light)
+        max_delay = np.maximum(self.delay, self.delay + 2 * self.velocity * frame_length / constants.speed_of_light)
+        min_delay = np.minimum(self.delay, self.delay + 2 * self.velocity * frame_length / constants.speed_of_light)
 
         # delay in samples considering filter overheads
         filter_overhead = int(self.__filter_response_in_samples / 2)
@@ -347,7 +347,7 @@ class RadarChannel(Channel):
             time = np.arange(samples_in_frame + max_delay_in_samples) / self.transmitter.sampling_rate
 
             # variable echo delay during drop
-            echo_delay = self._delay + 2 * self.velocity * time[:samples_in_frame] / constants.speed_of_light
+            echo_delay = self.delay + 2 * self.velocity * time[:samples_in_frame] / constants.speed_of_light
 
             # time-variant convolution
             for idx, delay_in_samples in enumerate(range(min_delay_in_samples, max_delay_in_samples + 1)):
@@ -357,12 +357,12 @@ class RadarChannel(Channel):
                     tx_signal.flatten() * delay_gain
 
             # random phase and Doppler shift
-            delayed_signal = delayed_signal * np.exp(-1j * (2 * np.pi * self._doppler_frequency * time
+            delayed_signal = delayed_signal * np.exp(-1j * (2 * np.pi * doppler_frequency * time
                                                             + self._phase_echo))
 
         # add self interference
         self_interference = (np.hstack((tx_signal, np.zeros((1, max_delay_in_samples))))
-                             / np.sqrt(self._attenuation) * np.exp(1j * self._phase_self_interference)
+                             / np.sqrt(self.attenuation) * np.exp(1j * self._phase_self_interference)
                              / db2lin(self.tx_rx_isolation_db, conversion_type="amplitude"))
         rx_signal = delayed_signal + self_interference
 
@@ -387,8 +387,10 @@ class RadarChannel(Channel):
                 (in samples)
                 The shape is T x number_rx_antennas x number_tx_antennas x (L+1)
         """
-        max_delay = np.maximum(self._delay,
-                               self._delay + 2 * self.velocity * np.max(timestamps) / constants.speed_of_light)
+        doppler_frequency = 2 * self.transmitter.carrier_frequency * self.__velocity / constants.speed_of_light
+
+        max_delay = np.maximum(self.delay,
+                               self.delay + 2 * self.velocity * np.max(timestamps) / constants.speed_of_light)
         filter_overhead = int(self.__filter_response_in_samples / 2)
 
         max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate)) + filter_overhead
@@ -400,15 +402,15 @@ class RadarChannel(Channel):
             delay = np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
 
             if self.__target_exists:
-                echo_delay = self._delay + 2 * self.velocity * timestamp / constants.speed_of_light
+                echo_delay = self.delay + 2 * self.velocity * timestamp / constants.speed_of_light
                 time = timestamp + np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
-                echo_phase = np.exp(-1j * (2 * np.pi * self._doppler_frequency * time + self._phase_echo))
+                echo_phase = np.exp(-1j * (2 * np.pi * doppler_frequency * time + self._phase_echo))
 
                 impulse_response[idx, 0, 0, :] = (np.sinc(self.transmitter.sampling_rate * (delay - echo_delay))
                                                   * echo_phase)
 
             impulse_response[idx, 0, 0, 0] += (np.exp(1j * self._phase_self_interference)
-                                               / np.sqrt(self._attenuation)
+                                               / np.sqrt(self.attenuation)
                                                / db2lin(self.tx_rx_isolation_db, conversion_type="amplitude"))
 
         return impulse_response
