@@ -329,6 +329,7 @@ class TestTimeoffset(unittest.TestCase):
         q_samples = np.random.randint(low=0, high=4, size=(1, 100))
 
         self.x_t = i_samples + 1j * q_samples
+        self.sampling_rate = 1e6
 
     def test_channel_gets_created_with_proper_time_offset(self) -> None:
         time_offset_s = 1e-6
@@ -342,9 +343,8 @@ class TestTimeoffset(unittest.TestCase):
 
     def test_time_offset_samples_are_filled_up_with_zeros_for_one_sample_offset(self) -> None:
         time_offset_samples = 1
-        sampling_rate = 1e6
-        time_offset_s = time_offset_samples/sampling_rate
-        scenario = Scenario(sampling_rate=sampling_rate)
+        time_offset_s = time_offset_samples/self.sampling_rate
+        scenario = Scenario(sampling_rate=self.sampling_rate)
         tx = Transmitter(scenario=scenario)
         rx = Receiver(scenario=scenario)
         ch = Channel(transmitter=tx, receiver=rx,
@@ -359,9 +359,8 @@ class TestTimeoffset(unittest.TestCase):
 
     def test_time_offset_samples_are_filled_up_with_zeros_for_uneven_sample_offset(self) -> None:
         time_offset_samples = 1.5
-        sampling_rate = 1e6
-        time_offset_s = time_offset_samples/sampling_rate
-        scenario = Scenario(sampling_rate=sampling_rate)
+        time_offset_s = time_offset_samples/self.sampling_rate
+        scenario = Scenario(sampling_rate=self.sampling_rate)
         tx = Transmitter(scenario=scenario)
         rx = Receiver(scenario=scenario)
         ch = Channel(transmitter=tx, receiver=rx,
@@ -376,8 +375,7 @@ class TestTimeoffset(unittest.TestCase):
 
     def test_multiple_antennas_signal(self) -> None:
         time_offset_s = 1e-6
-        sampling_rate = 1e6
-        scenario = Scenario(sampling_rate=sampling_rate)
+        scenario = Scenario(sampling_rate=self.sampling_rate)
         tx = Transmitter(scenario=scenario)
         rx = Receiver(scenario=scenario)
         ch = Channel(transmitter=tx, receiver=rx,
