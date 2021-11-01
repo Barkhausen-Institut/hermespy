@@ -5,7 +5,7 @@ from copy import deepcopy
 
 from channel.radar_channel import RadarChannel
 from scipy import constants
-from tools.math import db2lin
+from tools.math import db2lin, lin2db
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
