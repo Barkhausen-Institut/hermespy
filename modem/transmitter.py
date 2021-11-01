@@ -31,14 +31,51 @@ class Transmitter(Modem):
 
     yaml_tag = 'Transmitter'
 
+    __power: float
+
     def __init__(self, **kwargs: Any) -> None:
         """Object initialization.
 
         Args:
             **kwargs (Any): Transmitter configuration.
+
+            power (float, optional):
+                Average power of the transmitted signal. 1.0 By default.
         """
 
+        power = kwargs.pop('power', 1.0)
+
+        # Init base class
         Modem.__init__(self, **kwargs)
+
+        # Init parameters
+        self.power = power
+
+    @property
+    def power(self) -> float:
+        """Power of the transmitted signal.
+
+        Returns:
+            float: Transmit power in Watt.
+        """
+
+        return self.__power
+
+    @power.setter
+    def power(self, new_power: float) -> None:
+        """Modify the power of the transmitted signal.
+
+        Args:
+            new_power (float): The new signal transmit power in Watt.
+
+        Raises:
+            ValueError: If transmit power is negative.
+        """
+
+        if new_power < 0.0:
+            raise ValueError("Transmit power must be greater or equal to zero")
+
+        self.__power = new_power
 
     def send(self,
              drop_duration: Optional[float] = None,
@@ -98,7 +135,7 @@ class Transmitter(Modem):
         transmitted_signal = self.rf_chain.send(signal_streams)
 
         # Scale resulting signal by configured power factor
-        transmitted_signal *= np.sqrt(self.power_factor)
+        transmitted_signal *= np.sqrt(self.power)
 
         # We're finally done, blow the fanfares, throw confetti, etc.
         return transmitted_signal

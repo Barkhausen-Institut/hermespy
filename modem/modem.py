@@ -44,7 +44,6 @@ class Modem:
     __precoding: SymbolPrecoding
     __bits_source: BitsSource
     __waveform_generator: Optional[WaveformGenerator]
-    __power: float
     __rf_chain: RfChain
     __random_generator: Optional[rnd.Generator]
 
@@ -53,13 +52,12 @@ class Modem:
                  position: Optional[np.array] = None,
                  orientation: Optional[np.array] = None,
                  topology: Optional[np.ndarray] = None,
-                 num_antennas: Optional[np.ndarray] = None,
+                 num_antennas: Optional[int] = None,
                  carrier_frequency: Optional[float] = None,
                  bits: Optional[BitsSource] = None,
                  encoding: Optional[EncoderManager] = None,
                  precoding: Optional[SymbolPrecoding] = None,
                  waveform: Optional[WaveformGenerator] = None,
-                 tx_power: Optional[float] = None,
                  rfchain: Optional[RfChain] = None,
                  random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
@@ -125,9 +123,6 @@ class Modem:
 
         if waveform is not None:
             self.waveform_generator = waveform
-
-        if tx_power is not None:
-            self.power = tx_power
 
         if rfchain is not None:
             self.rf_chain = rfchain
@@ -293,21 +288,6 @@ class Modem:
         tx_signal = np.zeros((self.num_antennas, number_of_samples - initial_sample_num),
                              dtype=complex)
         return tx_signal, samples_delay
-
-    def get_bit_energy(self) -> float:
-        """Returns the average bit energy of the modulated signal.
-        """
-
-        rate = self.encoder_manager.rate
-        bit_energy = self.waveform_generator.bit_energy * self.power_factor / rate
-        return bit_energy
-
-    def get_symbol_energy(self) -> float:
-        """Returns the average symbol energy of the modulated signal.
-        """
-
-        rate = self.encoder_manager.rate
-        return self.waveform_generator.symbol_energy * self.power_factor / rate
 
     @property
     def position(self) -> np.array:
@@ -532,32 +512,6 @@ class Modem:
         self.__waveform_generator.modem = self
 
     @property
-    def power(self) -> float:
-        """Power of the transmitted signal.
-
-        Returns:
-            float: Transmit power.
-        """
-
-        return self.__power
-
-    @power.setter
-    def power(self, power: float) -> None:
-        """Modify the power of the transmitted signal.
-
-        Args:
-            power (float): The new signal transmit power in Watts?.
-
-        Raises:
-            ValueError: If transmit power is negative.
-        """
-
-        if power < 0.0:
-            raise ValueError("Transmit power must be greater or equal to zero")
-
-        self.__power = power
-
-    @property
     def rf_chain(self) -> RfChain:
         """Access the modem's configured RF chain.
 
@@ -611,15 +565,6 @@ class Modem:
         num_code_bits = self.waveform_generator.bits_per_frame
         return self.encoder_manager.required_num_data_bits(num_code_bits)
 
-    @property
-    def power_factor(self) -> float:
-        """Factor by which the power of transmitted and received signals is scaled.
-
-        Returns:
-            float: The power scaling factor.
-        """
-
-        return self.power / self.waveform_generator.power
 
     @property
     @abstractmethod
