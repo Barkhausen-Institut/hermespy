@@ -5,6 +5,7 @@ from __future__ import annotations
 from scipy import constants
 
 import numpy as np
+import numpy.random as rnd
 from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
 
@@ -13,6 +14,7 @@ from tools.math import db2lin, lin2db
 
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver
+    from scenario import Scenario
 
 
 class RadarChannel(Channel):
@@ -40,7 +42,6 @@ class RadarChannel(Channel):
     __radar_cross_section: float
     __carrier_frequency: float
     __target_exists: bool
-    __random_number_gen: np.random.RandomState
     __tx_rx_isolation_db: float
     __tx_antenna_gain_db: float
     __rx_antenna_gain_db: float
@@ -58,11 +59,12 @@ class RadarChannel(Channel):
                  losses_db: Optional[float] = None,
                  velocity: Optional[float] = None,
                  filter_response_in_samples: Optional[int] = None,
-                 random_number_gen: np.random.RandomState = None,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
+                 random_generator: Optional[rnd.Generator] = None,
+                 scenario: Optional[Scenario] = None
                  ) -> None:
         """Object initialization.
 
@@ -70,11 +72,6 @@ class RadarChannel(Channel):
             target_range(float): distance from transmitter to target object
             radar_cross_section(float): in m**2
             target_exists(bool, optional): True if there is a target, False if there is only noise/clutter
-            random_number_gen(numpy.random.RandomState, optional): random number generator for the channel
-            transmitter (Transmitter, optional): The modem transmitting into this channel.
-            receiver (Receiver, optional): The modem receiving from this channel.
-            active (bool, optional): Channel activity flag.
-            gain (float, optional): Channel power gain.
             tx_rx_isolation_db(float, optional): isolation between transmitter and receiver (leakage) in dB
                                                  (default = inf)
             tx_antenna_gain_db(float, optional):
@@ -82,6 +79,12 @@ class RadarChannel(Channel):
             losses_db(float, optional): any additional atmospheric and/or cable losses, in dB (default = 0)
             velocity(float, optional): radial velocity, in m/s (default = 0)
             filter_reponse_in_samples(int, optional): length of interpolation filter in samples (default = 7)
+            transmitter (Transmitter, optional): The modem transmitting into this channel.
+            receiver (Receiver, optional): The modem receiving from this channel.
+            active (bool, optional): Channel activity flag.
+            gain (float, optional): Channel power gain.
+            random_generator (rnd.Generator, optional): Generator object for random number sequences.
+            scenario (Scenario, optional): Scenario this channel is attached to.
 
         Raises:
             ValueError:
@@ -92,7 +95,13 @@ class RadarChannel(Channel):
         """
 
         # Init base class
-        Channel.__init__(self, transmitter, receiver, active, gain)
+        Channel.__init__(self,
+                         transmitter=transmitter,
+                         receiver=receiver,
+                         active=active,
+                         gain=gain,
+                         random_generator=random_generator,
+                         scenario=scenario)
 
         if self.num_inputs > 1 or self.num_outputs > 1:
             raise ValueError("Multiple antennas are not supported")
@@ -112,9 +121,6 @@ class RadarChannel(Channel):
 
         if target_exists is not None:
             self.__target_exists = target_exists
-
-        if random_number_gen is not None:
-            self.__random_number_gen = random_number_gen
 
         if tx_rx_isolation_db is not None:
             self.__tx_rx_isolation_db = tx_rx_isolation_db
@@ -307,8 +313,8 @@ class RadarChannel(Channel):
 
     def init_drop(self) -> None:
         """Initializes random channel parameters for each drop, by selecting random phases"""
-        self._phase_self_interference = self.__random_number_gen.random_sample() * 2 * np.pi - np.pi
-        self._phase_echo = self.__random_number_gen.random_sample() * 2 * np.pi - np.pi
+        self._phase_self_interference = self.random_generator.random() * 2 * np.pi - np.pi
+        self._phase_echo = self.random_generator.random() * 2 * np.pi - np.pi
 
     def propagate(self, tx_signal: np.ndarray) -> np.ndarray:
         """Modifies the input signal and returns it after channel propagation.
