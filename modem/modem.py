@@ -44,7 +44,7 @@ class Modem:
     __precoding: SymbolPrecoding
     __bits_source: BitsSource
     __waveform_generator: Optional[WaveformGenerator]
-    __tx_power: float
+    __power: float
     __rf_chain: RfChain
     __random_generator: Optional[rnd.Generator]
 
@@ -81,7 +81,7 @@ class Modem:
         self.__encoder_manager = EncoderManager()
         self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
-        self.__tx_power = 1.0
+        self.__power = 1.0
         self.__rf_chain = RfChain()
         self.__random_generator = random_generator
 
@@ -127,7 +127,7 @@ class Modem:
             self.waveform_generator = waveform
 
         if tx_power is not None:
-            self.tx_power = tx_power
+            self.power = tx_power
 
         if rfchain is not None:
             self.rf_chain = rfchain
@@ -151,7 +151,7 @@ class Modem:
 
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
-            "tx_power": node.__tx_power,
+            "tx_power": node.__power,
             BitsSource.yaml_tag: node.__bits_source,
             EncoderManager.yaml_tag: node.__encoder_manager,
             SymbolPrecoding.yaml_tag: node.__precoding,
@@ -532,17 +532,17 @@ class Modem:
         self.__waveform_generator.modem = self
 
     @property
-    def tx_power(self) -> float:
+    def power(self) -> float:
         """Power of the transmitted signal.
 
         Returns:
             float: Transmit power.
         """
 
-        return self.__tx_power
+        return self.__power
 
-    @tx_power.setter
-    def tx_power(self, power: float) -> None:
+    @power.setter
+    def power(self, power: float) -> None:
         """Modify the power of the transmitted signal.
 
         Args:
@@ -555,7 +555,7 @@ class Modem:
         if power < 0.0:
             raise ValueError("Transmit power must be greater or equal to zero")
 
-        self.__tx_power = power
+        self.__power = power
 
     @property
     def rf_chain(self) -> RfChain:
@@ -619,7 +619,7 @@ class Modem:
             float: The power scaling factor.
         """
 
-        return self.tx_power / self.waveform_generator.power
+        return self.power / self.waveform_generator.power
 
     @property
     @abstractmethod
