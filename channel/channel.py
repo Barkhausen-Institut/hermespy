@@ -8,6 +8,7 @@ from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNod
 
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver
+    from scenario.scenario import Scenario
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -39,14 +40,13 @@ class Channel:
     __transmitter: Optional[Transmitter]
     __receiver: Optional[Receiver]
     __gain: float
-    __time_offset: float
 
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
-                 time_offset: Optional[float] = None) -> None:
+                 scenario: Optional[Scenario] = None) -> None:
         """Class constructor.
 
         Args:
@@ -70,7 +70,7 @@ class Channel:
         self.__transmitter = None
         self.__receiver = None
         self.__gain = 1.0
-        self.__time_offset = 0.0
+        self.__scenario = None
 
         if transmitter is not None:
             self.transmitter = transmitter
@@ -84,8 +84,8 @@ class Channel:
         if gain is not None:
             self.gain = gain
 
-        if time_offset is not None:
-            self.time_offset = time_offset
+        if scenario is not None:
+            self.scenario = scenario
 
     @property
     def active(self) -> bool:
@@ -162,6 +162,14 @@ class Channel:
         self.__receiver = new_receiver
 
     @property
+    def scenario(self):
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, scenario) -> None:
+        self.__scenario = scenario
+
+    @property
     def gain(self) -> float:
         """Access the channel gain.
 
@@ -191,18 +199,6 @@ class Channel:
             raise ValueError("Channel gain must be greater or equal to zero")
 
         self.__gain = value
-
-    @property
-    def time_offset(self) -> float:
-        return self.__time_offset
-
-    @time_offset.setter
-    def time_offset(self, value: float) -> None:
-        breakpoint()
-        if value < 0.0:
-            raise ValueError("Time offset must be larger than zero.")
-
-        self.__time_offset = value
 
     @property
     def num_inputs(self) -> int:
@@ -411,8 +407,8 @@ class Channel:
 
     def add_time_offset(self, signal: np.ndarray) -> np.ndarray:
         """Introduces a time delay to the signal."""
-        sampling_rate = self.transmitter.scenario.sampling_rate
-        time_delay_samples = int(sampling_rate * self.time_offset)
+        sampling_rate = self.scenario.sampling_rate
+        time_delay_samples = int(sampling_rate * self.scenario.channel_time_offset)
 
         delay_samples = np.zeros(
             (signal.shape[0],

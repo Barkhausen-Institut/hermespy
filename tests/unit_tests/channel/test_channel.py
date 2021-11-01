@@ -331,25 +331,27 @@ class TestTimeoffset(unittest.TestCase):
         self.x_t = i_samples + 1j * q_samples
         self.sampling_rate = 1e6
 
-        scenario = Scenario(sampling_rate=self.sampling_rate)
-        self.tx = Transmitter(scenario=scenario)
-        self.rx = Receiver(scenario=scenario)
+    def create_channel(self, time_offset: float = None) -> Channel:
+        if time_offset is not None:
+            scenario = Scenario(sampling_rate=self.sampling_rate,
+                                channel_time_offset=time_offset)
+        else:
+            scenario = Scenario(sampling_rate=self.sampling_rate)
+
+        tx = Transmitter(scenario=scenario)
+        rx = Receiver(scenario=scenario)
+
+        return Channel(transmitter=tx, receiver=rx, active=True, scenario=scenario)
 
     def test_channel_gets_created_with_proper_time_offset(self) -> None:
         time_offset_s = 1e-6
-        ch = Channel(time_offset=time_offset_s)
-        self.assertAlmostEqual(ch.time_offset, time_offset_s)
-
-    def test_value_error_raised_if_negative_time_offset(self) -> None:
-        time_offset_s = -1
-        with self.assertRaises(ValueError):
-            ch = Channel(time_offset=time_offset_s)
+        ch = self.create_channel(time_offset=time_offset_s)
+        self.assertAlmostEqual(ch.scenario.channel_time_offset, time_offset_s)
 
     def test_time_offset_samples_are_filled_up_with_zeros_for_one_sample_offset(self) -> None:
         time_offset_samples = 1
         time_offset_s = time_offset_samples/self.sampling_rate
-        ch = Channel(transmitter=self.tx, receiver=self.rx,
-                     active=True, time_offset=time_offset_s)
+        ch = self.create_channel(time_offset=time_offset_s)
 
         np.testing.assert_array_almost_equal(
             ch.add_time_offset(self.x_t),
@@ -361,8 +363,7 @@ class TestTimeoffset(unittest.TestCase):
     def test_time_offset_samples_are_filled_up_with_zeros_for_uneven_sample_offset(self) -> None:
         time_offset_samples = 1.5
         time_offset_s = time_offset_samples/self.sampling_rate
-        ch = Channel(transmitter=self.tx, receiver=self.rx,
-                     active=True, time_offset=time_offset_s)
+        ch = self.create_channel(time_offset=time_offset_s)
 
         np.testing.assert_array_almost_equal(
             ch.add_time_offset(self.x_t),
@@ -375,8 +376,7 @@ class TestTimeoffset(unittest.TestCase):
 
     def test_multiple_antennas_signal(self) -> None:
         time_offset_s = 1e-6
-        ch = Channel(transmitter=self.tx, receiver=self.rx,
-                     active=True, time_offset=time_offset_s)
+        ch = self.create_channel(time_offset=time_offset_s)
 
         multiple_antennas_signal = np.ones((2, 100))
 
@@ -384,8 +384,7 @@ class TestTimeoffset(unittest.TestCase):
         self.assertEqual(delayed_signal.shape[0], multiple_antennas_signal.shape[0])
 
     def test_no_time_offset_for_default_parameters(self) -> None:
-        ch = Channel(transmitter=self.tx, receiver=self.rx,
-                     active=True)
+        ch = self.create_channel()
 
         np.testing.assert_array_almost_equal(
             ch.add_time_offset(self.x_t), self.x_t)
