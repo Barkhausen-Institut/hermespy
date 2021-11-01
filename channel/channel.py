@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
-from abc import ABC
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
@@ -20,7 +19,7 @@ __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel(ABC):
+class Channel:
     """Implements an ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
