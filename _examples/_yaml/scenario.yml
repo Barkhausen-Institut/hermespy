@@ -55,3 +55,4 @@ Channels:
 #    rms_delay: 0.0
   - Channel 0 0
     active: true
+    seed: 0
