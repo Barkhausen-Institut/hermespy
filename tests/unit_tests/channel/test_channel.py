@@ -367,7 +367,9 @@ class TestTimeoffset(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             ch.add_time_offset(self.x_t),
             np.hstack(
-                (np.zeros((1,int(time_offset_samples))),
+                (np.zeros(
+                    (self.x_t.shape[0],
+                     int(time_offset_samples))),
                  self.x_t))
         )
 
@@ -380,3 +382,10 @@ class TestTimeoffset(unittest.TestCase):
 
         delayed_signal = ch.add_time_offset(multiple_antennas_signal)
         self.assertEqual(delayed_signal.shape[0], multiple_antennas_signal.shape[0])
+
+    def test_no_time_offset_for_default_parameters(self) -> None:
+        ch = Channel(transmitter=self.tx, receiver=self.rx,
+                     active=True)
+
+        np.testing.assert_array_almost_equal(
+            ch.add_time_offset(self.x_t), self.x_t)
