@@ -331,6 +331,10 @@ class TestTimeoffset(unittest.TestCase):
         self.x_t = i_samples + 1j * q_samples
         self.sampling_rate = 1e6
 
+        scenario = Scenario(sampling_rate=self.sampling_rate)
+        self.tx = Transmitter(scenario=scenario)
+        self.rx = Receiver(scenario=scenario)
+
     def test_channel_gets_created_with_proper_time_offset(self) -> None:
         time_offset_s = 1e-6
         ch = Channel(time_offset=time_offset_s)
@@ -344,10 +348,7 @@ class TestTimeoffset(unittest.TestCase):
     def test_time_offset_samples_are_filled_up_with_zeros_for_one_sample_offset(self) -> None:
         time_offset_samples = 1
         time_offset_s = time_offset_samples/self.sampling_rate
-        scenario = Scenario(sampling_rate=self.sampling_rate)
-        tx = Transmitter(scenario=scenario)
-        rx = Receiver(scenario=scenario)
-        ch = Channel(transmitter=tx, receiver=rx,
+        ch = Channel(transmitter=self.tx, receiver=self.rx,
                      active=True, time_offset=time_offset_s)
 
         np.testing.assert_array_almost_equal(
@@ -360,10 +361,7 @@ class TestTimeoffset(unittest.TestCase):
     def test_time_offset_samples_are_filled_up_with_zeros_for_uneven_sample_offset(self) -> None:
         time_offset_samples = 1.5
         time_offset_s = time_offset_samples/self.sampling_rate
-        scenario = Scenario(sampling_rate=self.sampling_rate)
-        tx = Transmitter(scenario=scenario)
-        rx = Receiver(scenario=scenario)
-        ch = Channel(transmitter=tx, receiver=rx,
+        ch = Channel(transmitter=self.tx, receiver=self.rx,
                      active=True, time_offset=time_offset_s)
 
         np.testing.assert_array_almost_equal(
@@ -375,10 +373,7 @@ class TestTimeoffset(unittest.TestCase):
 
     def test_multiple_antennas_signal(self) -> None:
         time_offset_s = 1e-6
-        scenario = Scenario(sampling_rate=self.sampling_rate)
-        tx = Transmitter(scenario=scenario)
-        rx = Receiver(scenario=scenario)
-        ch = Channel(transmitter=tx, receiver=rx,
+        ch = Channel(transmitter=self.tx, receiver=self.rx,
                      active=True, time_offset=time_offset_s)
 
         multiple_antennas_signal = np.ones((2, 100))
