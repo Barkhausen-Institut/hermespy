@@ -333,3 +333,8 @@ class TestTimeoffset(unittest.TestCase):
         time_offset_s = 1e-6
         ch = Channel(time_offset=time_offset_s)
         self.assertAlmostEqual(ch.time_offset, time_offset_s)
+
+    def test_value_error_raised_if_negative_time_offset(self) -> None:
+        time_offset_s = -1
+        with self.assertRaises(ValueError):
+            ch = Channel(time_offset=time_offset_s)
