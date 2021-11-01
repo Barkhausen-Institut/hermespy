@@ -352,7 +352,9 @@ class TestTimeoffset(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(
             ch.add_time_offset(self.x_t),
-            np.append(np.zeros(time_offset_samples), self.x_t)
+            np.hstack(
+                (np.zeros((1,time_offset_samples)),
+                 self.x_t))
         )
 
     def test_time_offset_samples_are_filled_up_with_zeros_for_uneven_sample_offset(self) -> None:
@@ -367,5 +369,21 @@ class TestTimeoffset(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(
             ch.add_time_offset(self.x_t),
-            np.append(np.zeros(int(time_offset_samples)), self.x_t)
+            np.hstack(
+                (np.zeros((1,int(time_offset_samples))),
+                 self.x_t))
         )
+
+    def test_multiple_antennas_signal(self) -> None:
+        time_offset_s = 1e-6
+        sampling_rate = 1e6
+        scenario = Scenario(sampling_rate=sampling_rate)
+        tx = Transmitter(scenario=scenario)
+        rx = Receiver(scenario=scenario)
+        ch = Channel(transmitter=tx, receiver=rx,
+                     active=True, time_offset=time_offset_s)
+
+        multiple_antennas_signal = np.ones((2, 100))
+
+        delayed_signal = ch.add_time_offset(multiple_antennas_signal)
+        self.assertEqual(delayed_signal.shape[0], multiple_antennas_signal.shape[0])
