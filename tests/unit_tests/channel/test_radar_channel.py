@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from unittest.mock import Mock
 from copy import deepcopy
+from numpy.random import default_rng
 
 from channel.radar_channel import RadarChannel
 from scipy import constants
@@ -23,7 +24,7 @@ class TestRadarChannel(unittest.TestCase):
         self.range = 100
         self.radar_cross_section = 1
 
-        self.random_number_gen = np.random.RandomState(42)
+        self.random_number_gen = default_rng(42)
 
         self.transmitter = Mock()
         self.transmitter.carrier_frequency = 60e9
@@ -31,6 +32,7 @@ class TestRadarChannel(unittest.TestCase):
         self.transmitter.sampling_rate = 1e9
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
+        self.scenario = Mock()
 
         self.target_exists = True
         self.tx_rx_isolation_db = float("inf")
@@ -41,9 +43,10 @@ class TestRadarChannel(unittest.TestCase):
         self.filter_response_in_samples = 21
 
         self.channel = RadarChannel(self.range, self.radar_cross_section,
-                                    random_number_gen=self.random_number_gen,
+                                    random_generator=self.random_number_gen,
                                     transmitter=self.transmitter,
                                     receiver=self.receiver,
+                                    scenario=self.scenario,
                                     target_exists=self.target_exists,
                                     tx_rx_isolation_db=self.tx_rx_isolation_db,
                                     tx_antenna_gain_db=self.tx_antenna_gain_db,
@@ -58,7 +61,7 @@ class TestRadarChannel(unittest.TestCase):
         """The object initialization should properly store all parameters."""
 
         channel = RadarChannel(self.range, self.radar_cross_section,
-                               random_number_gen=self.random_number_gen,
+                               random_generator=self.random_number_gen,
                                transmitter=self.transmitter,
                                receiver=self.receiver,
                                target_exists=self.target_exists,
