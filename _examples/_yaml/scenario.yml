@@ -6,6 +6,7 @@ sampling_rate: 2e6
 Modems:
 
   - Transmitter
+    power: 1e-3
     carrier_frequency: 0.0
     num_antennas: 2
     position: [0, 0, 0]

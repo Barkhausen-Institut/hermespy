@@ -95,16 +95,14 @@ class Receiver(Modem):
         # Data bits required by the bit encoder to generate the input bits for the waveform generator
         num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
 
-        noise_var = noise_power / 1.0  # TODO: Re-implement pair power factor
+        # Scale resulting signal to unit power (relative to the configured transmitter reference)
+        scaled_signals = input_signals / np.sqrt(self.received_power)
 
         # Add receive noise
-        noisy_signals = self.__noise.add_noise(input_signals, noise_var)
+        noisy_signals = self.__noise.add_noise(scaled_signals, noise_power)
 
         # Simulate the radio-frequency chain
         received_signals = self.rf_chain.receive(noisy_signals)
-
-        # Scale resulting signal by configured power factor
-        received_signals /= np.sqrt(self.power_factor)  # TODO: Re-implement pair power factor
 
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
@@ -230,12 +228,29 @@ class Receiver(Modem):
         """Reference modem transmitting to this receiver.
 
         Used to for channel estimation, noise estimation, power configuration etc.
+        By default, returns the transmitter with the same index as this transmitter,
+        i.e. searches along the diagonal channel matrix.
 
         Return:
-            Optional[Transmitter]: Transmitting reference modem. None if no reference is configured.
+            Optional[Transmitter]:
+                Transmitting reference modem.
+                None if the scenario contains no transmitter.
+
+        Raises:
+            RuntimeError: If the receiver is currently floating.
         """
 
-        return self.__reference_transmitter
+        if self.__reference_transmitter is None:
+
+            if self.scenario.num_transmitters < 1:
+                return None
+
+            else:
+                guessed_pair_index = min(self.scenario.num_receivers-1, self.index)
+                return self.scenario.transmitters[guessed_pair_index]
+
+        else:
+            return self.__reference_transmitter
 
     @reference_transmitter.setter
     def reference_transmitter(self, new_reference: Optional[Transmitter]) -> None:
@@ -273,13 +288,20 @@ class Receiver(Modem):
         if self.scenario is None:
             raise RuntimeError("Attempting to access reference channel of a floating modem.")
 
-        # If no reference transmitter is configured, guess the paired modem's channel as the diagonal pair in the
-        # channel matrix
-        if self.__reference_transmitter is None:
+        return self.scenario.channel(self.reference_transmitter, self)
 
-            guessed_pair_index = min(self.scenario.num_receivers-1, self.index)
-            return self.scenario.arriving_channels(self)[guessed_pair_index]
+    @property
+    def received_power(self) -> float:
+        """Average signal power received by this modem for its reference peer.
 
-        else:
+        Assumes 1 Watt if no peer has been configured.
 
-            return self.scenario.channel(self.__reference_transmitter, self)
+        Returns:
+            float: The average power in Watts.
+        """
+
+        # Return unit power if no reference transmitter peer has been configured
+        if self.reference_transmitter is None:
+            return 1.0
+
+        return self.reference_transmitter.power
