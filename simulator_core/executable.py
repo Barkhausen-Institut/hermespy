@@ -24,10 +24,11 @@ __status__ = "Prototype"
 class Verbosity(Enum):
     """Information output behaviour configuration of an executable."""
 
-    NONE = 0     # Absolutely no output whatsoever
+    ALL = 0      # Print absolutely everything
     INFO = 1     # Information
     WARNING = 2  # Warnings only
     ERROR = 3    # Errors only
+    NONE = 4     # Print absolutely nothing
 
 
 class Executable(ABC):
