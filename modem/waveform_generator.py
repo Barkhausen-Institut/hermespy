@@ -15,6 +15,7 @@ class WaveformGenerator(ABC):
     """
 
     yaml_tag: str = "Waveform"
+    symbol_type: np.dtype = complex
     __modem: Optional[Modem]
     __sampling_rate: Optional[float]
     __oversampling_factor: int
@@ -188,6 +189,16 @@ class WaveformGenerator(ABC):
         ...
 
     @property
+    @abstractmethod
+    def symbols_per_frame(self) -> int:
+        """Number of dat symbols per transmitted frame.
+
+        Returns:
+            int: Number of data symbols
+        """
+        ...
+
+    @property
     def frame_duration(self) -> float:
         """Length of one data frame in seconds.
 
@@ -248,6 +259,73 @@ class WaveformGenerator(ABC):
         Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate
         """
         ...
+
+    @abstractmethod
+    def map(self, data_bits: np.ndarray) -> np.ndarray:
+        """Map a stream of bits to data symbols.
+
+        Args:
+            data_bits (np.ndarray):
+                Vector containing a sequence of L hard data bits to be mapped onto data symbols.
+
+        Returns:
+            np.ndarray:
+                Vector containing the resulting sequence of K data symbols.
+                In general, K is less or equal to L.
+        """
+        ...
+
+    @abstractmethod
+    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
+        """Map a stream of data symbols to data bits.
+
+        Args:
+            data_symbols (np.ndarray):
+                Vector containing a sequence of K data symbols to be mapped onto bit sequences.
+
+        Returns:
+            np.ndarray:
+                Vector containing the resulting sequence of L data bits
+                In general, L is greater or equal to K.
+        """
+        ...
+
+    @abstractmethod
+    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+        """Modulate a stream of data symbols to a base-band signal.
+
+        Args:
+
+            data_symbols (np.ndarray):
+                Vector of data symbols to be modulated.
+
+            timestamps (np.ndarray):
+                Vector if sample times in seconds, at which the resulting base-band signal should be sampled.
+
+        Returns:
+            np.ndarray:
+                Complex-valued vector containing samples of the modulated base-band signals.
+        """
+        ...
+
+    @abstractmethod
+    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+        """Demodulate a base-band signal to data symbols.
+
+        Args:
+
+            signal:
+                Vector of complex-valued base-band samples of a modulated signal.
+
+            timestamps (np.ndarray):
+                Vector if sample times in seconds, at which the ase-band signal was sampled.
+
+        Returns:
+            np.ndarray:
+                Vector of demodulated data symbols.
+        """
+        ...
+
 
     @abstractmethod
     def create_frame(self, old_timestamp: int,
