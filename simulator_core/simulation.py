@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from .executable import Executable
+from .executable import Executable, Verbosity
 from .drop import Drop
 from .statistics import SNRType, Statistics
 from scenario import Scenario
@@ -89,7 +89,9 @@ class Simulation(Executable):
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
                  min_num_drops: int = 0,
                  confidence_level: float = 1.0,
-                 confidence_margin: float = 0.0) -> None:
+                 confidence_margin: float = 0.0,
+                 results_dir: Optional[str] = None,
+                 verbosity: Union[str, Verbosity] = Verbosity.INFO) -> None:
         """Simulation object initialization.
 
         Args:
@@ -137,10 +139,17 @@ class Simulation(Executable):
 
             confidence_margin (float, optional):
                 Margin for the confidence check
+
+            results_dir (str, optional):
+                Directory in which all simulation artifacts will be dropped.
+
+            verbosity (Union[str, Verbosity], optional):
+                Information output behaviour during execution.
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
-                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops)
+                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops,
+                            results_dir, verbosity)
 
         self.snr_type = snr_type
         self.plot_bit_error = plot_bit_error
@@ -557,7 +566,8 @@ class Simulation(Executable):
         state = {
             "plot_drop": node.plot_drop,
             "snr_type": node.snr_type.value,
-            "noise_loop": node.noise_loop
+            "noise_loop": node.noise_loop,
+            "verbosity": node.verbosity.name
         }
 
         # If a global Quadriga interface exists,
