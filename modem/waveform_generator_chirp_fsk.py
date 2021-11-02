@@ -555,8 +555,8 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 `np.array`: corresponding amplitudes.
         """
 
-        amplitude = np.zeros(self.samples_in_frame, dtype=complex)
-        frequency = np.zeros(self.samples_in_frame, dtype=complex)
+        amplitude = np.zeros(self.samples_in_chirp * initial_frequency.shape[0], dtype=complex)
+        frequency = np.zeros(self.samples_in_chirp * initial_frequency.shape[0], dtype=complex)
         slope = self.__chirp_bandwidth / self.__chirp_duration
         f1 = .5 * self.chirp_bandwidth
 
@@ -565,8 +565,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             last_sample = first_sample + self.samples_in_chirp
 
             amplitude[first_sample:last_sample] = 1
-            frequency[first_sample:last_sample] = f0 + \
-                slope * self.chirp_time  # set (modulated) chirp
+            frequency[first_sample:last_sample] = f0 + slope * self.chirp_time  # set (modulated) chirp
 
         frequency[frequency > f1] -= self.__chirp_bandwidth  # wrap
 

@@ -1,10 +1,26 @@
-from __future__ import annotations
-from typing import List, Dict, Type
-from collections import namedtuple
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+# -*- coding: utf-8 -*-
+"""Source of bit streams to be transmitted."""
 
+from __future__ import annotations
+from typing import TYPE_CHECKING, Type, Optional, Union
+from collections import namedtuple
+from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
+from numpy.typing import ArrayLike
 import numpy as np
-from numpy import random as rnd
+import numpy.random as rnd
+
+if TYPE_CHECKING:
+    from modem import Transmitter
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 ErrorStats = namedtuple(
     'ErrorStats',
@@ -15,25 +31,122 @@ class BitsSource:
     """Implements a random bit source, with calculation of error statistics."""
 
     yaml_tag = "Bits"
-    __random_state: rnd.RandomState
-    bits_in_drop: List[np.array]
+    __random_generator: Optional[rnd.Generator]
 
-    def __init__(self, random_state: rnd.RandomState = None) -> None:
-        """BitSource initialization.
+    def __init__(self, 
+                 transmitter: Optional[Transmitter] = None,
+                 random_generator: Union[rnd.Generator, ArrayLike, None] = None) -> None:
+        """BitsSource object initialization.
 
         Args:
-            random_state (RandomState):
+        
+            transmitter (Scenario, optional):
+                The transmitter this bits source belongs to.
+        
+            random_generator (Union[numpy.random.Generator, ArrayLike], optional):
                 State of the underlying random generator.
         """
 
-        self.__random_state = rnd.RandomState()
-        self.bits_in_drop = []
+        self.__transmitter = None
 
-        if random_state is not None:
-            self.__random_state = random_state
+        self.transmitter = transmitter
+        self.random_generator = rnd.default_rng() if random_generator is None else random_generator
+
+    @property
+    def transmitter(self) -> Transmitter:
+        """Access the transmitter this bit source is attached to.
+
+        Returns:
+            Transmitter:
+                The referenced transmitter.
+
+        Raises:
+            RuntimeError: If the bit source is currently floating.
+        """
+
+        if self.__transmitter is None:
+            raise RuntimeError("Error trying to access the transmitter of a floating bit source")
+
+        return self.__transmitter
+
+    @transmitter.setter
+    def transmitter(self, transmitter: Transmitter) -> None:
+        """Attach the bit source to a specific transmitter.
+
+        This can only be done once to a floating bit source.
+
+        Args:
+            transmitter (Transmitter): The transmitter this bit source should be attached to.
+
+        Raises:
+            RuntimeError: If the bit source is already attached to a transmitter.
+        """
+
+        if self.__transmitter is not None:
+            raise RuntimeError("Error trying to modify the transmitter of an already attached bit source")
+
+        self.__transmitter = transmitter
+        
+    @property
+    def random_generator(self) -> rnd.Generator:
+        """Access the random number generator assigned to this bit source.
+
+        This property will return the scenarios random generator if no random generator has been specifically set.
+
+        Returns:
+            numpy.random.Generator: The random generator.
+
+        Raises:
+            RuntimeError: If trying to access the random generator of a floating bit source.
+        """
+
+        if self.__transmitter is None:
+            raise RuntimeError("Trying to access the random generator of a floating bit source")
+
+        if self.__random_generator is None:
+            return self.__transmitter.random_generator
+
+        return self.__random_generator
+
+    @random_generator.setter
+    def random_generator(self, generator: Union[rnd.Generator, ArrayLike, None]) -> None:
+        """Modify the configured random number generator assigned to this bit source.
+
+        Args:
+            generator (Union[rnd.Generator, ArrayLike, None]):
+                The random generator. None if not specified.
+        """
+
+        if generator is None:
+            self.__random_generator = None
+
+        elif isinstance(generator, rnd.Generator):
+            self.__random_generator = generator
+
+        # Try to initialize the random generator from an array-like seed
+        else:
+
+            # Convert strings to integer sequences by default, using them as generator seeds
+            if isinstance(generator, str):
+                self.__random_generator = rnd.default_rng([ord(c) for c in list(generator)])
+
+            else:
+                self.__random_generator = rnd.default_rng(generator)
+
+    def get_bits(self, number_of_bits: int) -> np.ndarray:
+        """Returns a vector of generated bits.
+
+        Args:
+            number_of_bits (int): Number of bits to be generated.
+
+        Returns:
+            np.ndarray: A vector containing `number_of_bits` generated bits.
+        """
+
+        return self.random_generator.integers(0, 2, size=number_of_bits, dtype=int)
 
     @classmethod
-    def to_yaml(cls: Type[BitsSource], representer: SafeRepresenter, node: BitsSource) -> Node:
+    def to_yaml(cls: Type[BitsSource], representer: SafeRepresenter, node: BitsSource) -> ScalarNode:
         """Serialize a `BitsSource` object to YAML.
 
         Currently a stub.
@@ -55,7 +168,9 @@ class BitsSource:
         return representer.represent_none(None)
 
     @classmethod
-    def from_yaml(cls: Type[BitsSource], constructor: SafeConstructor, node: Node) -> BitsSource:
+    def from_yaml(cls: Type[BitsSource],
+                  constructor: SafeConstructor,
+                  node: Union[ScalarNode, MappingNode]) -> BitsSource:
         """Recall a new `BitsSource` instance from YAML.
 
         Args:
@@ -70,96 +185,11 @@ class BitsSource:
                 Newly created `BitsSource` instance.
         """
 
-        return cls()
+        if isinstance(node, ScalarNode):
+            return cls()
 
-    def init_drop(self) -> None:
-        self.bits_in_drop.clear()
+        state = constructor.construct_mapping(node)
 
-    def get_bits(self, number_of_bits: int,
-                 number_of_blocks: int = 1) -> List[np.array]:
-        """Returns a list of bits with each list item being a block.
-
-        These bits are appended to the internal bits vector of the current drop.
-        """
-        bits_in_frame: List[np.array] = []
-        for block in range(number_of_blocks):
-            bits_in_frame.append(self.random_state.randint(2, size=number_of_bits))
-
-        self.bits_in_drop.extend(bits_in_frame)
-
-        return bits_in_frame
-
-    def get_number_of_generated_bits(self) -> Dict[str, int]:
-        """returns the number of bits that have been generated in the current drop."""
-        number_of_bits = 0
-        for block in self.bits_in_drop:
-            number_of_bits += block.size
-
-        output = {
-            'number_of_bits': number_of_bits,
-            'number_of_blocks': len(
-                self.bits_in_drop)}
-        return output
-
-    def get_number_of_errors(
-            self, received_bits: List[np.ndarray]) -> ErrorStats:
-        """returns the number of errors in 'received_bits', when compared with the generated bits inside the object.
-
-        Args:
-            received_bits(List[np.ndarray]):
-                Each list element corresponds to one frame. A frame is np.ndarray
-                of size `blocks x bits`.
-        """
-
-        number_of_block_errors = 0
-        number_of_bit_errors = 0
-
-        number_of_blocks = 0
-        number_of_bits = 0
-
-        if len(received_bits) == 1:
-            received_blocks = received_bits
-        elif received_bits[0].ndim == 1:
-            received_blocks = [frame for frame in received_bits]
-        else:
-            received_blocks = [frame_block.squeeze()
-                               for frame in received_bits for frame_block in frame]
-
-        for generated_block, received_block in zip(
-                self.bits_in_drop, received_blocks):
-            number_of_bit_errors += np.sum(generated_block != received_block)
-            number_of_bits += generated_block.size
-
-            number_of_block_errors += not np.array_equal(
-                generated_block, received_block)
-            number_of_blocks += 1
-
-        output = ErrorStats(
-            number_of_bits,
-            number_of_bit_errors,
-            number_of_blocks,
-            number_of_block_errors)
-
-        return output
-
-    @property
-    def random_state(self) -> rnd.RandomState:
-        """Access the current random state.
-
-        Returns:
-            RandomState:
-                The current random state.
-        """
-
-        return self.__random_state
-
-    @random_state.setter
-    def random_state(self, state: rnd.RandomState) -> None:
-        """Configure the random state.
-
-        Args:
-            state (RandomState):
-                The new random state.
-        """
-
-        self.__random_state = state
+        # Just mask the seed state if provided
+        state['random_generator'] = state.pop('seed', None)
+        return cls(**state)

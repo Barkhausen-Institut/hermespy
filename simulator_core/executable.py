@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Union
 from os import getcwd, mkdir
+from enum import Enum
 import os.path as path
 import datetime
 
@@ -20,6 +21,16 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class Verbosity(Enum):
+    """Information output behaviour configuration of an executable."""
+
+    ALL = 0      # Print absolutely everything
+    INFO = 1     # Information
+    WARNING = 2  # Warnings only
+    ERROR = 3    # Errors only
+    NONE = 4     # Print absolutely nothing
+
+
 class Executable(ABC):
     """Abstract base class for executable configurations.
 
@@ -31,7 +42,8 @@ class Executable(ABC):
         calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int): Number of FFT bins considered during computation.
         __num_drops (int): Number of executions per scenario.
-        __results_dir (str): Directory in which execution results will be saved.
+        __results_dir (str): Directory in which all execution artifacts will be dropped.
+        __verbosity (Verbosity): Information output behaviour during execution.
     """
 
     yaml_tag = u'Executable'
@@ -44,6 +56,7 @@ class Executable(ABC):
     __spectrum_fft_size: int
     __num_drops: int
     __results_dir: str
+    __verbosity: Verbosity
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -53,7 +66,8 @@ class Executable(ABC):
                  calc_receive_stft: bool = False,
                  spectrum_fft_size: int = 0,
                  num_drops: int = 1,
-                 results_dir: Optional[str] = None) -> None:
+                 results_dir: Optional[str] = None,
+                 verbosity: Union[Verbosity, str] = Verbosity.INFO) -> None:
         """Object initialization.
 
         Args:
@@ -64,6 +78,8 @@ class Executable(ABC):
             calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
             spectrum_fft_size (int): Number of discrete frequency bins computed within the Fast Fourier Transforms.
             num_drops (int): Number of drops per executed scenario.
+            results_dir(str, optional): Directory in which all execution artifacts will be dropped.
+            verbosity: (Union[str, Verbosity], optional): Information output behaviour during execution.
         """
 
         # Default parameters
@@ -75,11 +91,8 @@ class Executable(ABC):
         self.calc_receive_stft = calc_receive_stft
         self.spectrum_fft_size = spectrum_fft_size
         self.num_drops = num_drops
-
-        if results_dir is None:
-            results_dir = Executable.__default_results_dir()
-
-        self.results_dir = results_dir
+        self.results_dir = Executable.__default_results_dir() if results_dir is None else results_dir
+        self.verbosity = verbosity
 
     @abstractmethod
     def run(self) -> None:
@@ -185,6 +198,31 @@ class Executable(ABC):
             raise ValueError("The provided results directory path is not a directory")
 
         self.__results_dir = directory
+
+    @property
+    def verbosity(self) -> Verbosity:
+        """Information output behaviour during execution.
+
+        Returns:
+            Verbosity: Configuration flag.
+        """
+
+        return self.__verbosity
+
+    @verbosity.setter
+    def verbosity(self, new_verbosity: Union[str, Verbosity]) -> None:
+        """Modify the information output behaviour during execution.
+
+        Args:
+            new_verbosity (Union[str, Verbosity]): The new output behaviour.
+        """
+
+        # Convert string arguments to verbosity enum fields
+        if isinstance(new_verbosity, str):
+            self.__verbosity = Verbosity[new_verbosity.upper()]
+
+        else:
+            self.__verbosity = new_verbosity
 
     @staticmethod
     def __default_results_dir() -> str:

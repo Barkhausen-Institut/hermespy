@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from .executable import Executable
+from .executable import Executable, Verbosity
 from .drop import Drop
 from .statistics import SNRType, Statistics
 from scenario import Scenario
@@ -89,7 +89,9 @@ class Simulation(Executable):
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
                  min_num_drops: int = 0,
                  confidence_level: float = 1.0,
-                 confidence_margin: float = 0.0) -> None:
+                 confidence_margin: float = 0.0,
+                 results_dir: Optional[str] = None,
+                 verbosity: Union[str, Verbosity] = Verbosity.INFO) -> None:
         """Simulation object initialization.
 
         Args:
@@ -137,10 +139,17 @@ class Simulation(Executable):
 
             confidence_margin (float, optional):
                 Margin for the confidence check
+
+            results_dir (str, optional):
+                Directory in which all simulation artifacts will be dropped.
+
+            verbosity (Union[str, Verbosity], optional):
+                Information output behaviour during execution.
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
-                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops)
+                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops,
+                            results_dir, verbosity)
 
         self.snr_type = snr_type
         self.plot_bit_error = plot_bit_error
@@ -167,7 +176,14 @@ class Simulation(Executable):
         """Run the full simulation configuration."""
 
         # Iterate over scenarios
-        for scenario in self.scenarios:
+        for s, scenario in enumerate(self.scenarios):
+
+            # Plot scenario information +
+            if self.verbosity.value <= Verbosity.INFO.value:
+
+                print(f"\nScenario Simulation #{s}")
+                print(f"{'Noise':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
+                print("="*75)
 
             # Initialize plot statistics with current scenario state
             statistics = Statistics(scenario, self.noise_loop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
@@ -178,6 +194,9 @@ class Simulation(Executable):
 
             # Iterate over required noise taps
             for noise_index, snr in enumerate(self.noise_loop):
+
+                if self.verbosity.value <= Verbosity.INFO.value and noise_index > 0:
+                    print("-" * 75)
 
                 # Iterate over configured number of required simulation drops
                 for d in range(self.num_drops):
@@ -202,6 +221,27 @@ class Simulation(Executable):
                     drop = SimulationDrop(data_bits, transmitted_signals, transmit_block_sizes, propagated_signals,
                                           received_bits, receive_block_sizes, True, self.spectrum_fft_size,
                                           scenario.sampling_rate)
+
+                    # Print drop statistics if verbosity flag is set
+                    if self.verbosity.value <= Verbosity.INFO.value:
+
+                        bers = drop.bit_error_rates
+                        blers = drop.block_error_rates
+
+                        for (tx_id, tx_bers), tx_blers in zip(enumerate(bers), blers):
+                            for (rx_id, ber), bler in zip(enumerate(tx_bers), tx_blers):
+
+                                link_str = f"{tx_id}x{rx_id}"
+                                ber_str = "-" if ber is None else f"{bler:.4f}"
+                                bler_str = "-" if bler is None else f"{bler:.4f}"
+
+                                if tx_id == 0 and rx_id == 0:
+
+                                    snr_str = f"{snr:.4f}"
+                                    print(f"{snr_str:<15}{d:<15}{link_str:<15}{ber_str:<15}{bler_str:<15}")
+
+                                else:
+                                    print(" " * 30 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
                     # Visualize plot if requested
                     if self.plot_drop:
@@ -557,7 +597,8 @@ class Simulation(Executable):
         state = {
             "plot_drop": node.plot_drop,
             "snr_type": node.snr_type.value,
-            "noise_loop": node.noise_loop
+            "noise_loop": node.noise_loop,
+            "verbosity": node.verbosity.name
         }
 
         # If a global Quadriga interface exists,

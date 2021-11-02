@@ -11,7 +11,6 @@ from modem.precoding import SymbolPrecoding
 from coding import EncoderManager
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
-from source.bits_source import BitsSource
 
 if TYPE_CHECKING:
     from scenario import Scenario
@@ -42,9 +41,7 @@ class Modem:
     __linear_topology: bool
     __encoder_manager: EncoderManager
     __precoding: SymbolPrecoding
-    __bits_source: BitsSource
     __waveform_generator: Optional[WaveformGenerator]
-    __tx_power: float
     __rf_chain: RfChain
     __random_generator: Optional[rnd.Generator]
 
@@ -53,13 +50,11 @@ class Modem:
                  position: Optional[np.array] = None,
                  orientation: Optional[np.array] = None,
                  topology: Optional[np.ndarray] = None,
-                 num_antennas: Optional[np.ndarray] = None,
+                 num_antennas: Optional[int] = None,
                  carrier_frequency: Optional[float] = None,
-                 bits: Optional[BitsSource] = None,
                  encoding: Optional[EncoderManager] = None,
                  precoding: Optional[SymbolPrecoding] = None,
                  waveform: Optional[WaveformGenerator] = None,
-                 tx_power: Optional[float] = None,
                  rfchain: Optional[RfChain] = None,
                  random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
@@ -77,11 +72,10 @@ class Modem:
         self.__topology = np.zeros((1, 3), dtype=np.float64)
         self.__carrier_frequency = 800e6
         self.__linear_topology = False
-        self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
         self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
-        self.__tx_power = 1.0
+        self.__power = 1.0
         self.__rf_chain = RfChain()
         self.__random_generator = random_generator
 
@@ -114,9 +108,6 @@ class Modem:
         elif topology is not None:
             self.topology = topology
 
-        if bits is not None:
-            self.bits_source = bits
-
         if encoding is not None:
             self.__encoder_manager = encoding
 
@@ -125,9 +116,6 @@ class Modem:
 
         if waveform is not None:
             self.waveform_generator = waveform
-
-        if tx_power is not None:
-            self.tx_power = tx_power
 
         if rfchain is not None:
             self.rf_chain = rfchain
@@ -151,8 +139,7 @@ class Modem:
 
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
-            "tx_power": node.__tx_power,
-            BitsSource.yaml_tag: node.__bits_source,
+            "tx_power": node.__power,
             EncoderManager.yaml_tag: node.__encoder_manager,
             SymbolPrecoding.yaml_tag: node.__precoding,
             RfChain.yaml_tag: node.__rf_chain,
@@ -211,6 +198,16 @@ class Modem:
             raise RuntimeError("Error trying to modify the scenario of an already attached modem")
 
         self.__scenario = scenario
+
+    @property
+    def is_attached(self) -> bool:
+        """Is the modem currently attached to a scenario?
+
+        Returns:
+            bool: Attachment state.
+        """
+
+        return self.__scenario is not None
 
     @property
     @abstractmethod
@@ -293,21 +290,6 @@ class Modem:
         tx_signal = np.zeros((self.num_antennas, number_of_samples - initial_sample_num),
                              dtype=complex)
         return tx_signal, samples_delay
-
-    def get_bit_energy(self) -> float:
-        """Returns the average bit energy of the modulated signal.
-        """
-
-        rate = self.encoder_manager.rate
-        bit_energy = self.waveform_generator.bit_energy * self.power_factor / rate
-        return bit_energy
-
-    def get_symbol_energy(self) -> float:
-        """Returns the average symbol energy of the modulated signal.
-        """
-
-        rate = self.encoder_manager.rate
-        return self.waveform_generator.symbol_energy * self.power_factor / rate
 
     @property
     def position(self) -> np.array:
@@ -485,28 +467,6 @@ class Modem:
         return self.__encoder_manager
 
     @property
-    def bits_source(self) -> BitsSource:
-        """Access the modem's configured bits source.
-
-        Returns:
-            BitsSource:
-                Handle to the modem's bit source instance.
-        """
-
-        return self.__bits_source
-
-    @bits_source.setter
-    def bits_source(self, bits_source: BitsSource) -> None:
-        """Configure the modem's bits source.
-
-        Args:
-            bits_source (BitsSource):
-                The new bits source.
-        """
-
-        self.__bits_source = bits_source
-
-    @property
     def waveform_generator(self) -> WaveformGenerator:
         """Access the modem's configured waveform generator.
 
@@ -530,32 +490,6 @@ class Modem:
 
         self.__waveform_generator = waveform_generator
         self.__waveform_generator.modem = self
-
-    @property
-    def tx_power(self) -> float:
-        """Power of the transmitted signal.
-
-        Returns:
-            float: Transmit power.
-        """
-
-        return self.__tx_power
-
-    @tx_power.setter
-    def tx_power(self, power: float) -> None:
-        """Modify the power of the transmitted signal.
-
-        Args:
-            power (float): The new signal transmit power in Watts?.
-
-        Raises:
-            ValueError: If transmit power is negative.
-        """
-
-        if power < 0.0:
-            raise ValueError("Transmit power must be greater or equal to zero")
-
-        self.__tx_power = power
 
     @property
     def rf_chain(self) -> RfChain:
@@ -610,16 +544,6 @@ class Modem:
 
         num_code_bits = self.waveform_generator.bits_per_frame
         return self.encoder_manager.required_num_data_bits(num_code_bits)
-
-    @property
-    def power_factor(self) -> float:
-        """Factor by which the power of transmitted and received signals is scaled.
-
-        Returns:
-            float: The power scaling factor.
-        """
-
-        return self.tx_power / self.waveform_generator.power
 
     @property
     @abstractmethod

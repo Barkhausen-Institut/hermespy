@@ -5,7 +5,7 @@ import unittest
 import tempfile
 from unittest.mock import Mock
 
-from simulator_core import Executable
+from simulator_core import Executable, Verbosity
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -39,11 +39,12 @@ class TestExecutable(unittest.TestCase):
         self.calc_receive_stft = True
         self.spectrum_fft_size = 20
         self.num_drops = 1
+        self.verbosity = Verbosity.NONE
 
         with tempfile.TemporaryDirectory() as tempdir:
             self.executable = ExecutableStub(self.plot_drop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
                                              self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size,
-                                             self.num_drops, tempdir)
+                                             self.num_drops, tempdir, self.verbosity)
 
     def test_init(self) -> None:
         """Executable initialization parameters should be properly stored."""
@@ -55,6 +56,7 @@ class TestExecutable(unittest.TestCase):
         self.assertEqual(self.calc_receive_stft, self.executable.calc_receive_stft)
         self.assertEqual(self.spectrum_fft_size, self.executable.spectrum_fft_size)
         self.assertEqual(self.num_drops, self.executable.num_drops)
+        self.assertEqual(self.verbosity, self.executable.verbosity)
 
     def test_add_scenario(self) -> None:
         """Scenario property should return scenarios added by the add_scenario function."""
@@ -120,3 +122,19 @@ class TestExecutable(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.executable.results_dir = "ad213ijt0923h1o2i3hnjqnda"
+
+    def test_verbosity_setget(self) -> None:
+        """Verbosity property getter should return setter argument."""
+
+        for verbosity_option in Verbosity:
+
+            self.executable.verbosity = verbosity_option
+            self.assertEqual(verbosity_option, self.executable.verbosity)
+
+    def test_verbosity_setget_str(self) -> None:
+        """Verbosity property getter should return setter argument for strings."""
+
+        for verbosity_option in Verbosity:
+
+            self.executable.verbosity = verbosity_option.name
+            self.assertEqual(verbosity_option, self.executable.verbosity)

@@ -4,18 +4,19 @@
 from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
-from typing import TYPE_CHECKING, Type, List
+from typing import TYPE_CHECKING, Type, List, Optional, Union
 from math import ceil
 import numpy as np
 import numpy.random as rnd
 
-from source import BitsSource
 from modem import Modem
 from modem.precoding import SymbolPrecoding
 from modem.waveform_generator import WaveformGenerator
 from noise import Noise
 
 if TYPE_CHECKING:
+    from scenario import Scenario
+    from .transmitter import Transmitter
     from channel import Channel
 
 __author__ = "Jan Adler"
@@ -33,17 +34,32 @@ class Receiver(Modem):
 
     Attributes:
 
-        __noise: The noise model.
+        __noise:
+            The noise model for thermal effects during reception sampling.
+
+        __reference_transmitter:
+            Referenced transmit peer for this receiver.
     """
 
     yaml_tag = 'Receiver'
     __noise: Noise
+    __reference_transmitter: Union[int, Transmitter, None]
 
     def __init__(self, **kwargs) -> None:
-        """Receiver modem object initialization."""
+        """Receiver modem object initialization.
+
+        Args:
+
+            noise(Noise, optional): Noise generator.
+        """
+
+        noise = kwargs.pop('noise', None)
+        reference_transmitter = kwargs.pop('reference_transmitter', None)
 
         Modem.__init__(self, **kwargs)
-        self.noise = Noise()
+
+        self.noise = Noise() if noise is None else noise
+        self.reference_transmitter = reference_transmitter
 
     def receive(self, input_signals: np.ndarray, noise_power: float) -> np.ndarray:
         """Demodulates the signal received.
@@ -56,12 +72,18 @@ class Receiver(Modem):
 
         Returns:
             np.array: Detected bits as a list of data blocks for the drop.
+
+        Raises:
+            ValueError: If the first dimension of `input_signals` does not match the number of receive antennas.
         """
+
+        if input_signals.shape[0] != self.num_antennas:
+            raise ValueError("Number of input signals must be equal to the number of antennas")
 
         # If no receiving waveform generator is configured, no signal is being received
         # TODO: Check if this is really a valid case
         if self.waveform_generator is None:
-            return np.empty(0, dtype=complex)
+            return np.empty((self.num_antennas, 0), dtype=complex)
 
         num_samples = input_signals.shape[1]
         timestamps = np.arange(num_samples) / self.scenario.sampling_rate
@@ -78,16 +100,14 @@ class Receiver(Modem):
         # Data bits required by the bit encoder to generate the input bits for the waveform generator
         num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
 
-        noise_var = noise_power / 1.0  # TODO: Re-implement pair power factor
+        # Scale resulting signal to unit power (relative to the configured transmitter reference)
+        scaled_signals = input_signals / np.sqrt(self.received_power)
 
         # Add receive noise
-        noisy_signals = self.__noise.add_noise(input_signals, noise_var)
+        noisy_signals = self.__noise.add_noise(scaled_signals, noise_power)
 
         # Simulate the radio-frequency chain
         received_signals = self.rf_chain.receive(noisy_signals)
-
-        # Scale resulting signal by configured power factor
-        received_signals /= np.sqrt(self.power_factor)  # TODO: Re-implement pair power factor
 
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
@@ -96,8 +116,8 @@ class Receiver(Modem):
         symbol_streams = np.empty((received_signals.shape[0], symbols_per_stream),
                                   dtype=self.waveform_generator.symbol_type)
 
-        for stream_idx, signal in enumerate(input_signals):
-            symbol_streams[stream_idx, :] = self.waveform_generator.demodulate(signal, timestamps)
+        for stream_idx, noisy_signal in enumerate(noisy_signals):
+            symbol_streams[stream_idx, :] = self.waveform_generator.demodulate(noisy_signal, timestamps)
 
         # Decode the symbol precoding
         symbols = self.precoding.decode(symbol_streams)
@@ -111,32 +131,12 @@ class Receiver(Modem):
         # We're finally done, blow the fanfares, throw confetti, etc.
         return data_bits
 
-#        # De-code the spatial precoding
-#        rx_streams = self.precoding.decode(rx_signal)
-#
-#        received_bits = np.empty(0, dtype=int)
-#        timestamp_in_samples = 0
-#
-#        while rx_streams.size:
-#            initial_size = rx_streams.shape[1]
-#            frame_bits, rx_streams = self.waveform_generator.receive_frame(
-#                rx_streams, timestamp_in_samples, noise_var)
-#
-#            if rx_streams.size:
-#                timestamp_in_samples += initial_size - rx_streams.shape[1]
-#
-#            received_bits = np.append(received_bits, frame_bits)
-#
-#        decoded_bits = self.encoder_manager.decode(received_bits)
-#        return decoded_bits
-
     @classmethod
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
 
         state = constructor.construct_mapping(node, CommentedOrderedMap)
 
         waveform_generator = None
-        bits_source = None
         precoding = state.pop(SymbolPrecoding.yaml_tag, None)
 
         for key in state.keys():
@@ -144,13 +144,7 @@ class Receiver(Modem):
                 waveform_generator = state.pop(key)
                 break
 
-        for key in state.keys():
-            if key.startswith(BitsSource.yaml_tag):
-                bits_source = state.pop(key)
-                break
-
         state[WaveformGenerator.yaml_tag] = waveform_generator
-        state[BitsSource.yaml_tag] = bits_source
 
         args = dict((k.lower(), v) for k, v in state.items())
 
@@ -228,9 +222,109 @@ class Receiver(Modem):
         model.receiver = self
 
     @property
+    def reference_transmitter(self) -> Optional[Transmitter]:
+        """Reference modem transmitting to this receiver.
+
+        Used to for channel estimation, noise estimation, power configuration etc.
+        By default, returns the transmitter with the same index as this transmitter,
+        i.e. searches along the diagonal channel matrix.
+
+        Return:
+            Optional[Transmitter]:
+                Transmitting reference modem.
+                None if the scenario contains no transmitter.
+
+        Raises:
+            RuntimeError: If the receiver is currently floating.
+        """
+
+        if self.__reference_transmitter is None:
+
+            if self.scenario.num_transmitters < 1:
+                return None
+
+            else:
+                guessed_pair_index = min(self.scenario.num_receivers-1, self.index)
+                return self.scenario.transmitters[guessed_pair_index]
+
+        else:
+            return self.__reference_transmitter
+
+    @reference_transmitter.setter
+    def reference_transmitter(self, new_reference: Union[Transmitter, int, None]) -> None:
+        """Modify reference modem transmitting to this receiver.
+
+        Args:
+            new_reference (Union[Transmitter, int, None]):
+                Transmitting reference modem.
+                May be a direct handle to the receiver or the receivers ID.
+                None to remove the reference.
+
+        Raises:
+
+            ValueError:
+                If `new_reference` is not registered with the Receiver's scenario.
+        """
+
+        if new_reference is None:
+
+            self.__reference_transmitter = None
+
+        else:
+
+            if not self.is_attached:
+                self.__reference_transmitter = new_reference
+
+            else:
+
+                # Convert reference IDs to reference handles
+                if isinstance(new_reference, int):
+
+                    if new_reference >= self.scenario.num_transmitters or new_reference < 0:
+                        raise ValueError("Error trying to configure a reference transmitter ID not "
+                                         "within a receiver's scenario")
+
+                    # Convert the ID to an actual reference
+                    new_reference = self.scenario.transmitters[new_reference]
+
+                # Check if the handles are actually  transmitters within the scenario
+                if new_reference not in self.scenario.transmitters:
+                    raise ValueError("Error trying to configure a reference transmitter not "
+                                     "within a receiver's scenario")
+
+            self.__reference_transmitter = new_reference
+
+    @Modem.scenario.setter
+    def scenario(self, scenario: Scenario) -> None:
+
+        # Call base class property setter
+        Modem.scenario.fset(self, scenario)
+
+        # Update the reference transmitter, implicitly runs a check if the reference transmitter
+        # is contained within the set scenario
+        if self.__reference_transmitter is not None:
+            self.reference_transmitter = self.__reference_transmitter
+
+    @property
     def reference_channel(self) -> Channel:
 
         if self.scenario is None:
             raise RuntimeError("Attempting to access reference channel of a floating modem.")
 
-        return self.scenario.arriving_channels(self, active_only=True)[0]
+        return self.scenario.channel(self.reference_transmitter, self)
+
+    @property
+    def received_power(self) -> float:
+        """Average signal power received by this modem for its reference peer.
+
+        Assumes 1 Watt if no peer has been configured.
+
+        Returns:
+            float: The average power in Watts.
+        """
+
+        # Return unit power if no reference transmitter peer has been configured
+        if self.reference_transmitter is None:
+            return 1.0
+
+        return self.reference_transmitter.power
