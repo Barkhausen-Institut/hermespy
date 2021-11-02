@@ -134,6 +134,11 @@ class Transmitter(Modem):
         # Apply symbol precoding
         symbol_streams = self.precoding.encode(symbols)
 
+        # Check that the number of symbol streams matches the number of required symbol streams
+        if symbol_streams.shape[0] != self.num_streams:
+            raise RuntimeError("Invalid precoding configuration, the number of resulting streams does not "
+                               "match the number of transmit antennas")
+
         # Generate a dedicated base-band signal for each symbol stream
         signal_streams = np.empty((symbol_streams.shape[0], num_samples), dtype=complex)
 
