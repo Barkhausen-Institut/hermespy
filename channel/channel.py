@@ -92,9 +92,13 @@ class Channel:
             self.scenario = scenario
 
         if sync_offset_low is not None:
+            if sync_offset_low < 0:
+                raise ValueError("Lower bound must be >= 0.")
             self.__sync_offset_low = sync_offset_low
 
         if sync_offset_high is not None:
+            if sync_offset_high < 0:
+                raise ValueError("Higher bound must be >= 0.")
             self.__sync_offset_high = sync_offset_high
 
         self._verify_sync_offsets()
