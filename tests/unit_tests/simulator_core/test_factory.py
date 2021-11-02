@@ -67,6 +67,13 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, LOW)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, HIGH)
 
+    def test_no_parameters_result_in_default_values(self) -> None:
+        scenario = self.factory.from_str(self.scenario_stream)
+
+        self.assertEqual(scenario[0].channels[0, 0].sync_offset_mean, 0)
+        self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, 0)
+        self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, 0)
+
     def _create_scenario_stream(self) -> str:
         return """
 !<Scenario>
