@@ -5,12 +5,14 @@ from typing import List, Type, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 
+from modem import Modem, Transmitter, Receiver
+from channel import Channel
+from source.bits_source import BitsSource
+from noise.noise import Noise
+
+
 if TYPE_CHECKING:
 
-    from source.bits_source import BitsSource
-    from modem import Modem, Transmitter, Receiver
-    from channel import Channel
-    from noise.noise import Noise
     from channel.rx_sampler import RxSampler
 
 
@@ -539,7 +541,3 @@ class Scenario:
             block_sizes.append(receiver.encoder_manager.bit_block_size)
 
         return block_sizes
-
-
-from modem import Modem, Transmitter, Receiver
-from channel import Channel
