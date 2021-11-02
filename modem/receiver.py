@@ -9,7 +9,6 @@ from math import ceil
 import numpy as np
 import numpy.random as rnd
 
-from source import BitsSource
 from modem import Modem
 from modem.precoding import SymbolPrecoding
 from modem.waveform_generator import WaveformGenerator
@@ -132,7 +131,6 @@ class Receiver(Modem):
         state = constructor.construct_mapping(node, CommentedOrderedMap)
 
         waveform_generator = None
-        bits_source = None
         precoding = state.pop(SymbolPrecoding.yaml_tag, None)
 
         for key in state.keys():
@@ -140,13 +138,7 @@ class Receiver(Modem):
                 waveform_generator = state.pop(key)
                 break
 
-        for key in state.keys():
-            if key.startswith(BitsSource.yaml_tag):
-                bits_source = state.pop(key)
-                break
-
         state[WaveformGenerator.yaml_tag] = waveform_generator
-        state[BitsSource.yaml_tag] = bits_source
 
         args = dict((k.lower(), v) for k, v in state.items())
 

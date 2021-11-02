@@ -11,7 +11,6 @@ from modem.precoding import SymbolPrecoding
 from coding import EncoderManager
 from modem.waveform_generator import WaveformGenerator
 from modem.rf_chain import RfChain
-from source.bits_source import BitsSource
 
 if TYPE_CHECKING:
     from scenario import Scenario
@@ -42,7 +41,6 @@ class Modem:
     __linear_topology: bool
     __encoder_manager: EncoderManager
     __precoding: SymbolPrecoding
-    __bits_source: BitsSource
     __waveform_generator: Optional[WaveformGenerator]
     __rf_chain: RfChain
     __random_generator: Optional[rnd.Generator]
@@ -54,7 +52,6 @@ class Modem:
                  topology: Optional[np.ndarray] = None,
                  num_antennas: Optional[int] = None,
                  carrier_frequency: Optional[float] = None,
-                 bits: Optional[BitsSource] = None,
                  encoding: Optional[EncoderManager] = None,
                  precoding: Optional[SymbolPrecoding] = None,
                  waveform: Optional[WaveformGenerator] = None,
@@ -75,7 +72,6 @@ class Modem:
         self.__topology = np.zeros((1, 3), dtype=np.float64)
         self.__carrier_frequency = 800e6
         self.__linear_topology = False
-        self.__bits_source = BitsSource()
         self.__encoder_manager = EncoderManager()
         self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
@@ -112,9 +108,6 @@ class Modem:
         elif topology is not None:
             self.topology = topology
 
-        if bits is not None:
-            self.bits_source = bits
-
         if encoding is not None:
             self.__encoder_manager = encoding
 
@@ -147,7 +140,6 @@ class Modem:
         serialization = {
             "carrier_frequency": node.__carrier_frequency,
             "tx_power": node.__power,
-            BitsSource.yaml_tag: node.__bits_source,
             EncoderManager.yaml_tag: node.__encoder_manager,
             SymbolPrecoding.yaml_tag: node.__precoding,
             RfChain.yaml_tag: node.__rf_chain,
@@ -463,28 +455,6 @@ class Modem:
         """
 
         return self.__encoder_manager
-
-    @property
-    def bits_source(self) -> BitsSource:
-        """Access the modem's configured bits source.
-
-        Returns:
-            BitsSource:
-                Handle to the modem's bit source instance.
-        """
-
-        return self.__bits_source
-
-    @bits_source.setter
-    def bits_source(self, bits_source: BitsSource) -> None:
-        """Configure the modem's bits source.
-
-        Args:
-            bits_source (BitsSource):
-                The new bits source.
-        """
-
-        self.__bits_source = bits_source
 
     @property
     def waveform_generator(self) -> WaveformGenerator:
