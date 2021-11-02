@@ -73,7 +73,6 @@ class Channel:
         self.__receiver = None
         self.__gain = 1.0
         self.__scenario = None
-        self.__sync_offset_mean = 0
         self.__sync_offset_low = 0
         self.__sync_offset_high = 0
 
@@ -93,11 +92,16 @@ class Channel:
             self.scenario = scenario
 
         if sync_offset_low is not None:
-            self.sync_offset_low = sync_offset_low
+            self.__sync_offset_low = sync_offset_low
 
         if sync_offset_high is not None:
-            self.sync_offset_high = sync_offset_high
+            self.__sync_offset_high = sync_offset_high
 
+        self._verify_sync_offsets()
+
+    def _verify_sync_offsets(self):
+        if not (self.sync_offset_low <= self.sync_offset_high):
+            raise ValueError("Lower bound of uniform distribution must be smaller than higher bound.")
 
     @property
     def active(self) -> bool:
@@ -185,17 +189,9 @@ class Channel:
     def sync_offset_low(self) -> float:
         return self.__sync_offset_low
 
-    @sync_offset_low.setter
-    def sync_offset_low(self, val: float) -> None:
-        self.__sync_offset_low = val
-
     @property
     def sync_offset_high(self) -> float:
         return self.__sync_offset_high
-
-    @sync_offset_high.setter
-    def sync_offset_high(self, val: float) -> None:
-        self.__sync_offset_high = val
 
     @property
     def gain(self) -> float:

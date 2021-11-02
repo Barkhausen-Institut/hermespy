@@ -71,6 +71,14 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, 0)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, 0)
 
+    def test_exception_raised_if_high_smaller_than_low(self) -> None:
+        LOW = 2
+        HIGH = 1
+
+        scenario_stream = self._append_sync_offset(self.scenario_stream, LOW, HIGH)
+        with self.assertRaises(ValueError):
+            scenario = self.factory.from_str(scenario_stream)
+
     def _create_scenario_stream(self) -> str:
         return """
 !<Scenario>
