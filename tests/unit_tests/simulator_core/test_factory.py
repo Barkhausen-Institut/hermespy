@@ -6,6 +6,8 @@ from unittest.mock import Mock
 from io import StringIO
 from typing import List, Union
 
+import numpy as np
+
 from simulator_core import Factory, SerializableClasses
 
 __author__ = "Jan Adler"
@@ -50,22 +52,27 @@ class TestFactory(unittest.TestCase):
 
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:
-        self.channel_time_offset = 3e-6
-        self.scenario_stream = self._create_scenario_stream(self.channel_time_offset)
+        self.scenario_stream = self._create_scenario_stream()
+        self.scenario_stream = self._append_channel(self.scenario_stream, 0, 0)
         self.factory = Factory()
 
-    def test_setup_single_offset(self) -> None:
-        scenario = self.factory.from_stream(self.scenario_stream)
-        self.assertAlmostEqual(
-              scenario[0].channel_time_offset,
-              self.channel_time_offset)
+    def test_setup_single_offset_correct_initialization_with_correct_values(self) -> None:
+        MEAN = 3
+        LOW = 1
+        HIGH = 5
+        self.scenario_stream = self._append_sync_offset(self.scenario_stream, MEAN, LOW, HIGH)
+        scenario = self.factory.from_str(self.scenario_stream)
 
-    def _create_scenario_stream(self, time_offset: Union[float, List[float]]) -> StringIO:
-        return StringIO(f"""
+        self.assertEqual(scenario[0].channels[0, 0].sync_offset_mean, MEAN)
+        self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, LOW)
+        self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, HIGH)
+
+    def _create_scenario_stream(self) -> str:
+        return """
 !<Scenario>
 
 sampling_rate: 2e6
-channel_time_offset: {time_offset}
+
 Modems:
 
   - Transmitter
@@ -89,48 +96,22 @@ Modems:
         modulation_order: 32
 
 Channels:
-  - Channel 0 0
+"""
+
+    def _append_channel(self, scenario_stream: str, tx: int, rx: int) -> str:
+        return scenario_stream + f"""
+  - Channel {tx} {rx}
     active: true
 
-!<Simulation>
-  num_drops: 10
-""")
+"""
+    def _append_sync_offset(self, scenario_stream: str,
+                            mean: float, low: float, high: float) -> str:
 
-    def _create_scenario_stream_multiple_time_offsets(self, time_offsets: List[float]) -> StringIO:
-        return StringIO(f"""
-!<Scenario>
-
-sampling_rate: 2e6
-channel_time_offset: {time_offset}
-Modems:
-
-  - Transmitter
-    carrier_frequency: 1e9
-    position: [0, 0, 0]
-    WaveformChirpFsk:
-        chirp_bandwidth: 5e5
-        chirp_duration: 512e-6
-        freq_difference: 1953.125
-        num_data_chirps: 12
-        modulation_order: 32
-
-  - Receiver
-    carrier_frequency: 1e9
-    position: [10, 10, 10]
-    WaveformChirpFsk:
-        chirp_bandwidth: 5e5
-        chirp_duration: 512e-6
-        freq_difference: 1953.125
-        num_data_chirps: 12
-        modulation_order: 32
-
-Channels:
-  - Channel 0 0
-    active: true
-
-!<Simulation>
-  num_drops: 10
-""")
+        return scenario_stream + f"""
+    sync_offset_mean: {mean}
+    sync_offset_low: {low}
+    sync_offset_high: {high}
+"""
 
 if __name__ == '__main__':
     unittest.main()

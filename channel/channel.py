@@ -46,7 +46,10 @@ class Channel:
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
-                 scenario: Optional[Scenario] = None) -> None:
+                 scenario: Optional[Scenario] = None,
+                 sync_offset_mean: Optional[int] = None,
+                 sync_offset_low: Optional[int] = None,
+                 sync_offset_high: Optional[int] = None) -> None:
         """Class constructor.
 
         Args:
@@ -71,6 +74,9 @@ class Channel:
         self.__receiver = None
         self.__gain = 1.0
         self.__scenario = None
+        self.__sync_offset_mean = 0
+        self.__sync_offset_low = 0
+        self.__sync_offset_high = 0
 
         if transmitter is not None:
             self.transmitter = transmitter
@@ -86,6 +92,16 @@ class Channel:
 
         if scenario is not None:
             self.scenario = scenario
+
+        if sync_offset_mean is not None:
+            self.sync_offset_mean = sync_offset_mean
+
+        if sync_offset_low is not None:
+            self.sync_offset_low = sync_offset_low
+
+        if sync_offset_mean is not None:
+            self.sync_offset_high = sync_offset_high
+
 
     @property
     def active(self) -> bool:
@@ -168,6 +184,30 @@ class Channel:
     @scenario.setter
     def scenario(self, scenario) -> None:
         self.__scenario = scenario
+
+    @property
+    def sync_offset_mean(self) -> float:
+        return self.__sync_offset_mean
+
+    @sync_offset_mean.setter
+    def sync_offset_mean(self, val: float) -> None:
+        self.__sync_offset_mean = val
+
+    @property
+    def sync_offset_low(self) -> float:
+        return self.__sync_offset_low
+
+    @sync_offset_low.setter
+    def sync_offset_low(self, val: float) -> None:
+        self.__sync_offset_low = val
+
+    @property
+    def sync_offset_high(self) -> float:
+        return self.__sync_offset_high
+
+    @sync_offset_high.setter
+    def sync_offset_high(self, val: float) -> None:
+        self.__sync_offset_high = val
 
     @property
     def gain(self) -> float:
