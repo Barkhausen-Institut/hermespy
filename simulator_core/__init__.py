@@ -1,8 +1,9 @@
 from .factory import SerializableClasses, Factory
-from .executable import Executable
+from .executable import Executable, Verbosity
 from .simulation import Simulation, SNRType
+from .hardware_loop import HardwareLoop
 
-__all__ = ['Executable', 'Simulation', 'SNRType', 'Factory', 'SerializableClasses']
+__all__ = ['Executable', 'Verbosity', 'Simulation', 'HardwareLoop', 'SNRType', 'Factory', 'SerializableClasses']
 
 import sys
 from inspect import getmembers

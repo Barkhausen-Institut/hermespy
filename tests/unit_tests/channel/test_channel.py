@@ -4,11 +4,9 @@
 from datetime import time
 import unittest
 from unittest.mock import Mock
-from modem import receiver
-from modem.transmitter import Transmitter
-from modem.receiver import Receiver
-import numpy as np
 from numpy.testing import assert_array_equal
+from numpy.random import default_rng
+import numpy as np
 
 from channel import Channel
 from scenario.scenario import Scenario
@@ -32,8 +30,10 @@ class TestChannel(unittest.TestCase):
         self.receiver = Mock()
         self.active = True
         self.gain = 1.0
+        self.generator = default_rng(0)
+        self.scenario = Mock()
 
-        self.channel = Channel(self.transmitter, self.receiver, self.active, self.gain)
+        self.channel = Channel(self.transmitter, self.receiver, self.active, self.gain, self.generator, self.scenario)
 
         # Number of discrete-time samples generated for signal propagation testing
         self.propagate_signal_lengths = [0, 1, 10, 100, 1000]
@@ -51,6 +51,8 @@ class TestChannel(unittest.TestCase):
         self.assertIs(self.receiver, self.channel.receiver, "Unexpected receiver parameter initialization")
         self.assertEqual(self.active, self.channel.active, "Unexpected active parameter initialization")
         self.assertEqual(self.gain, self.channel.gain, "Unexpected gain parameter initialization")
+        self.assertEqual(self.generator, self.channel.random_generator)
+        self.assertEqual(self.scenario, self.channel.scenario)
 
     def test_active_setget(self) -> None:
         """Active property getter must return setter parameter."""
@@ -108,7 +110,46 @@ class TestChannel(unittest.TestCase):
         except ValueError:
             self.fail("Gain property set to zero raised unexpected exception")
 
-    def test_num_inputs_setget(self) -> None:
+    def test_random_generator_setget(self) -> None:
+        """Random generator property getter should return setter argument."""
+
+        generator = Mock()
+        self.channel.random_generator = generator
+
+        self.assertIs(generator, self.channel.random_generator)
+
+    def test_random_generator_get_default(self) -> None:
+        """Random generator property getter should return scenario generator if not specified."""
+
+        self.scenario.random_generator = Mock()
+        self.channel.random_generator = None
+
+        self.assertIs(self.scenario.random_generator, self.channel.random_generator)
+
+    def test_scenario_setget(self) -> None:
+        """Scenario property getter should return setter argument."""
+
+        scenario = Mock()
+        self.channel = Channel()
+        self.channel.scenario = scenario
+
+        self.assertIs(scenario, self.channel.scenario)
+
+    def test_scenario_get_validation(self) -> None:
+        """Scenario property getter should raise RuntimeError if scenario is not set."""
+
+        self.channel = Channel()
+        with self.assertRaises(RuntimeError):
+            _ = self.channel.scenario
+
+    def test_scenario_set_validation(self) -> None:
+        """Scenario property setter should raise RuntimeError if scenario is already set."""
+
+        with self.assertRaises(RuntimeError):
+            self.channel.scenario = Mock()
+
+
+    def test_num_inputs_get(self) -> None:
         """Number of inputs property must return number of transmitting antennas."""
 
         num_inputs = 5
@@ -123,7 +164,7 @@ class TestChannel(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             _ = floating_channel.num_inputs
 
-    def test_num_outputs_setget(self) -> None:
+    def test_num_outputs_get(self) -> None:
         """Number of outputs property must return number of receiving antennas."""
 
         num_outputs = 5

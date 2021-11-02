@@ -5,7 +5,6 @@ from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import TYPE_CHECKING, Type, List, Any, Optional
 from math import ceil
-from scipy.constants import speed_of_light
 import numpy as np
 import numpy.random as rnd
 
@@ -28,17 +27,67 @@ __status__ = "Prototype"
 
 
 class Transmitter(Modem):
+    """Transmitting modem within a scenario configuration.
+
+    Attributes:
+
+        __power (float):
+            Mean transmission power in Watts.
+
+        bits_source (BitsSource):
+            Source of bits to be transmitted.
+    """
 
     yaml_tag = 'Transmitter'
+
+    __power: float
+    bits_source: BitsSource
 
     def __init__(self, **kwargs: Any) -> None:
         """Object initialization.
 
         Args:
             **kwargs (Any): Transmitter configuration.
+
+            power (float, optional):
+                Average power of the transmitted signal. 1.0 By default.
         """
 
+        power = kwargs.pop('power', 1.0)
+        bits_source = kwargs.pop('BitsSource', BitsSource(self))
+
+        # Init base class
         Modem.__init__(self, **kwargs)
+
+        # Init parameters
+        self.power = power
+        self.bits_source = bits_source
+
+    @property
+    def power(self) -> float:
+        """Power of the transmitted signal.
+
+        Returns:
+            float: Transmit power in Watt.
+        """
+
+        return self.__power
+
+    @power.setter
+    def power(self, new_power: float) -> None:
+        """Modify the power of the transmitted signal.
+
+        Args:
+            new_power (float): The new signal transmit power in Watt.
+
+        Raises:
+            ValueError: If transmit power is negative.
+        """
+
+        if new_power < 0.0:
+            raise ValueError("Transmit power must be greater or equal to zero")
+
+        self.__power = new_power
 
     def send(self,
              drop_duration: Optional[float] = None,
@@ -70,7 +119,7 @@ class Transmitter(Modem):
         num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
 
         # Data bits required by the bit encoder to generate the input bits for the waveform generator
-        num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
+        # num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
 
         # Generate source data bits if none are provided
         if data_bits is None:
@@ -85,6 +134,11 @@ class Transmitter(Modem):
         # Apply symbol precoding
         symbol_streams = self.precoding.encode(symbols)
 
+        # Check that the number of symbol streams matches the number of required symbol streams
+        if symbol_streams.shape[0] != self.num_streams:
+            raise RuntimeError("Invalid precoding configuration, the number of resulting streams does not "
+                               "match the number of transmit antennas")
+
         # Generate a dedicated base-band signal for each symbol stream
         signal_streams = np.empty((symbol_streams.shape[0], num_samples), dtype=complex)
 
@@ -98,7 +152,7 @@ class Transmitter(Modem):
         transmitted_signal = self.rf_chain.send(signal_streams)
 
         # Scale resulting signal by configured power factor
-        transmitted_signal *= np.sqrt(self.power_factor)
+        transmitted_signal *= np.sqrt(self.power)
 
         # We're finally done, blow the fanfares, throw confetti, etc.
         return transmitted_signal
@@ -235,7 +289,7 @@ class Transmitter(Modem):
 
         num_bits = self.num_data_bits_per_frame * self.num_streams
         bits = self.bits_source.get_bits(num_bits)
-        return bits[0]
+        return bits
 
     @property
     def reference_channel(self) -> Channel:
