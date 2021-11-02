@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import re
 
 import numpy as np
+from scenario.scenario import Scenario
 
 from simulator_core import Factory, SerializableClasses
 from channel import Channel
@@ -97,21 +98,26 @@ class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
 
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:
-        self.scenario_stream = self._create_scenario_stream()
-        self.scenario_stream = self._append_channel(self.scenario_stream, 0, 0)
+        self.scenario_str = self._create_scenario_stream_header()
+        self.scenario_str = self._append_section(self.scenario_str, "Modems")
+        self.scenario_str = self._append_random_modem(self.scenario_str, "Transmitter")
+        self.scenario_str = self._append_random_modem(self.scenario_str, "Receiver")
+
+        self.scenario_str = self._append_section(self.scenario_str, "Channels")
+        self.scenario_str = self._append_channel(self.scenario_str, 0, 0)
         self.factory = Factory()
 
     def test_setup_single_offset_correct_initialization_with_correct_values(self) -> None:
         LOW = 1
         HIGH = 5
-        self.scenario_stream = self._append_sync_offset(self.scenario_stream, LOW, HIGH)
-        scenario = self.factory.from_str(self.scenario_stream)
+        self.scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
+        scenario = self.factory.from_str(self.scenario_str)
 
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, LOW)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, HIGH)
 
     def test_no_parameters_result_in_default_values(self) -> None:
-        scenario = self.factory.from_str(self.scenario_stream)
+        scenario = self.factory.from_str(self.scenario_str)
 
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, 0)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, 0)
@@ -120,35 +126,40 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         LOW = 2
         HIGH = 1
 
-        scenario_stream = self._append_sync_offset(self.scenario_stream, LOW, HIGH)
+        scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
         with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(scenario_stream)
+            scenario = self.factory.from_str(scenario_str)
 
     def test_exception_raised_if_low_smaller_than_zero(self) -> None:
         LOW = -1
         HIGH = 0
 
-        scenario_stream = self._append_sync_offset(self.scenario_stream, LOW, HIGH)
+        scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
         with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(scenario_stream)
+            scenario = self.factory.from_str(scenario_str)
 
     def test_exception_raised_if_high_smaller_than_zero(self) -> None:
         LOW = -1
         HIGH = -5
 
-        scenario_stream = self._append_sync_offset(self.scenario_stream, LOW, HIGH)
+        scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
         with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(scenario_stream)
+            scenario = self.factory.from_str(scenario_str)
 
-    def _create_scenario_stream(self) -> str:
+
+    def _create_scenario_stream_header(self) -> str:
         return """
 !<Scenario>
 
 sampling_rate: 2e6
+"""
 
-Modems:
+    def _append_random_modem(self, scenario_stream: str, modem_type: str) -> str:
+        if modem_type.upper() not in ["TRANSMITTER", "RECEIVER"]:
+            raise ValueError("Modem type not supported")
 
-  - Transmitter
+        scenario_stream += f"""
+  - {modem_type}
     carrier_frequency: 1e9
     position: [0, 0, 0]
     WaveformChirpFsk:
@@ -157,19 +168,12 @@ Modems:
         freq_difference: 1953.125
         num_data_chirps: 12
         modulation_order: 32
-
-  - Receiver
-    carrier_frequency: 1e9
-    position: [10, 10, 10]
-    WaveformChirpFsk:
-        chirp_bandwidth: 5e5
-        chirp_duration: 512e-6
-        freq_difference: 1953.125
-        num_data_chirps: 12
-        modulation_order: 32
-
-Channels:
 """
+        return scenario_stream
+
+    def _append_section(self, scenario_stream: str, section: str) -> str:
+        return scenario_stream + f"""
+{section}:"""
 
     def _append_channel(self, scenario_stream: str, tx: int, rx: int) -> str:
         return scenario_stream + f"""
