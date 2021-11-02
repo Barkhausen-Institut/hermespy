@@ -3,12 +3,12 @@
 
 import unittest
 from unittest.mock import Mock
-from io import StringIO
-from typing import List, Union
+import re
 
 import numpy as np
 
 from simulator_core import Factory, SerializableClasses
+from channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -49,6 +49,40 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(MockClass.yaml_tag in self.factory.registered_tags,
                         "Mock class tag not registered as expected for serialization")
 
+class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
+    def setUp(self) -> None:
+        self.factory = Factory()
+
+    def test_dumping_low_high(self) -> None:
+        LOW = 0
+        HIGH = 3
+        ch = Channel(transmitter=Mock(), receiver=Mock(),
+                     active=True, gain=1,
+                     sync_offset_low=LOW, sync_offset_high=HIGH)
+        serialized_ch = self.factory.to_str(ch)
+        self.assertTrue(
+            self._yaml_str_contains_sync_offsets(
+                yaml_str=serialized_ch,
+                sync_offset_low=LOW,
+                sync_offset_high=HIGH
+            ))
+
+    def _yaml_str_contains_sync_offsets(self, yaml_str: str, 
+                                           sync_offset_low: float,
+                                           sync_offset_high: float) -> bool:
+        regex_low = re.compile(
+            f'^sync_offset_low: {sync_offset_low}$',
+            re.MULTILINE)
+        regex_high = re.compile(
+            f'^sync_offset_high: {sync_offset_high}$',
+            re.MULTILINE)
+
+
+        correctly_parsed = (
+            re.search(regex_low, yaml_str) is not None and
+            re.search(regex_high, yaml_str) is not None
+        )
+        return correctly_parsed
 
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:

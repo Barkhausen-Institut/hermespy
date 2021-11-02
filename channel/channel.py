@@ -374,8 +374,10 @@ class Channel:
         """
 
         state = {
+            'gain': node.__gain,
             'active': node.__active,
-            'gain': node.__gain
+            'sync_offset_low': node.__sync_offset_low,
+            'sync_offset_high': node.__sync_offset_high
         }
 
         transmitter_index, receiver_index = node.indices
