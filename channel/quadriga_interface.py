@@ -302,7 +302,7 @@ class QuadrigaInterface:
         carriers = np.empty(len(self.__channels), dtype=float)
         tx_positions = np.empty((len(transmitters), 3), dtype=float)
         rx_positions = np.empty((len(receivers), 3), dtype=float)
-        tx_num_antennas = np.empty(len(receivers), dtype=float)
+        tx_num_antennas = np.empty(len(transmitters), dtype=float)
         rx_num_antennas = np.empty(len(receivers), dtype=float)
         sampling_rates = np.empty(len(transmitters), dtype=float)
 
@@ -353,8 +353,8 @@ class QuadrigaInterface:
 
         # Recover the relevant simulation results
         # TODO converter cirs to responses / delays
-        self.__impulse_responses = []
-        self.__delays = []
+        self.__impulse_responses = cirs.path_impulse_responses.T
+        self.__delays = cirs.tau.T
 
     def _run_quadriga(self, **parameters) -> List[Any]:
         """Run the quadriga model.

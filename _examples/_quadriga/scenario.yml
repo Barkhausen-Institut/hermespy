@@ -1,0 +1,56 @@
+!<Scenario>
+
+# random_seed: 0
+sampling_rate: 2e6
+
+Modems:
+
+  - Transmitter
+    power: 1e-3
+    carrier_frequency: 8e6
+    num_antennas: 2
+    position: [-250, -250, 0]
+    WaveformChirpFsk:
+        chirp_bandwidth: 5e5
+        chirp_duration: 512e-6
+        freq_difference: 1953.125
+        num_data_chirps: 12
+        modulation_order: 32
+    Precoding:
+      - SC
+
+  - Transmitter
+    power: 1e-3
+    carrier_frequency: 8e6
+    num_antennas: 2
+    position: [-250, -250, 0]
+    WaveformChirpFsk:
+        chirp_bandwidth: 5e5
+        chirp_duration: 512e-6
+        freq_difference: 1953.125
+        num_data_chirps: 12
+        modulation_order: 32
+    Precoding:
+      - SC
+
+  - Receiver
+    reference_transmitter: 0
+    carrier_frequency: 8e6
+    num_antennas: 2
+    position: [250, 250, 0]
+    WaveformChirpFsk:
+        chirp_bandwidth: 5e5
+        chirp_duration: 512e-6
+        freq_difference: 1953.125
+        num_data_chirps: 12
+        modulation_order: 32
+    Precoding:
+      - SC
+
+Channels:
+
+  - Quadriga 0 0
+    active: true
+
+  - Quadriga 1 0
+    active: true

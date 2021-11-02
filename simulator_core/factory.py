@@ -303,7 +303,7 @@ class Factory:
         for path in paths:
 
             if not os.path.exists(path):
-                raise ValueError("Lookup path '{}' not found".format(path))
+                raise ValueError(f"Lookup path '{path}' not found")
 
             if os.path.isdir(path):
                 hermes_objects += self.from_folder(path)
