@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
 
 from channel.channel import Channel
-from tools.math import db2lin, lin2db
+from tools.math import db2lin, lin2db, DbConversionType
 
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver
@@ -326,7 +326,7 @@ class RadarChannel(Channel):
         # add self interference
         self_interference = (np.hstack((tx_signal, np.zeros((1, max_delay_in_samples))))
                              / np.sqrt(self.attenuation) * np.exp(1j * self._phase_self_interference)
-                             / db2lin(self.tx_rx_isolation_db, conversion_type="amplitude"))
+                             / db2lin(self.tx_rx_isolation_db, conversion_type=DbConversionType.AMPLITUDE))
         rx_signal = delayed_signal + self_interference
 
         return rx_signal
@@ -374,7 +374,8 @@ class RadarChannel(Channel):
 
             impulse_response[idx, 0, 0, 0] += (np.exp(1j * self._phase_self_interference)
                                                / np.sqrt(self.attenuation)
-                                               / db2lin(self.tx_rx_isolation_db, conversion_type="amplitude"))
+                                               / db2lin(self.tx_rx_isolation_db,
+                                                        conversion_type=DbConversionType.AMPLITUDE))
 
         return impulse_response
 
