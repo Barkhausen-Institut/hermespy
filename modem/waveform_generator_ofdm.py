@@ -9,7 +9,7 @@ from functools import lru_cache
 from dataclasses import dataclass, field
 from abc import ABC
 from enum import Enum
-from collections import namedtuple
+from abc import abstractmethod
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 import numpy as np
 
@@ -146,16 +146,26 @@ class FrameResource:
 
         return self.__repetitions * num
 
+    @property
+    def num_slots(self) -> int:
+        """Number of time slots."""
+
+        num: int = 0
+        for element in self.elements:
+                num += element.repetitions
+
+        return self.__repetitions * num
+
 
 class FrameSection:
     """OFDM Frame configuration time axis."""
 
-    frame: Optional[Frame]
+    frame: Optional[WaveformGeneratorOfdm]
     num_repetitions: int
 
     def __init__(self,
                  num_repetitions: int = 1,
-                 frame: Optional[Frame] = None) -> None:
+                 frame: Optional[WaveformGeneratorOfdm] = None) -> None:
 
         self.frame = frame
         self.num_repetitions = num_repetitions
@@ -180,6 +190,16 @@ class FrameSection:
 
         return 0
 
+    @property
+    @abstractmethod
+    def duration(self) -> float:
+        """Duration of this frame element in time domain.
+
+        Returns:
+            float: Duration in seconds.
+        """
+        ...
+
 
 class FrameSymbolSection(FrameSection):
 
@@ -189,7 +209,7 @@ class FrameSymbolSection(FrameSection):
     def __init__(self,
                  num_repetitions: int = 1,
                  pattern: Optional[List[int]] = None,
-                 frame: Optional[Frame] = None) -> None:
+                 frame: Optional[WaveformGeneratorOfdm] = None) -> None:
 
         FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
         self.__pattern = pattern if pattern is not None else []
@@ -216,6 +236,11 @@ class FrameSymbolSection(FrameSection):
 
         return num
 
+    @property
+    def duration(self) -> float:
+
+        duration = len(self.__pattern) * self.num_repetitions / self.frame.subcarrier_spacing
+        return duration
 
     @classmethod
     def from_yaml(cls: Type[FrameSymbolSection],
@@ -231,40 +256,34 @@ class FrameSymbolSection(FrameSection):
 class FrameGuardSection(FrameSection):
 
     yaml_tag: str = u'Guard'
-    __length: float
+    __duration: float
 
     def __init__(self,
-                 length: float,
+                 duration: float,
                  num_repetitions: int = 1) -> None:
 
         FrameSection.__init__(self, num_repetitions=num_repetitions)
-        self.length = length
+        self.duration = duration
 
     @property
-    def length(self) -> float:
-        """Guard section length.
+    def duration(self) -> float:
+        return self.__duration
 
-        Returns:
-            float: Length in seconds.
-        """
-
-        return self.__length
-
-    @length.setter
-    def length(self, secs: float) -> None:
-        """Modify guard section length-
+    @duration.setter
+    def duration(self, secs: float) -> None:
+        """Modify guard section duration.
 
         Args:
-            secs (float): New length in seconds.
+            secs (float): New duration in seconds.
 
         Raises:
             ValueError: If secs is smaller than zero.
         """
 
         if secs < 0.0:
-            raise ValueError("Guard section length must be greater or equal to zero")
+            raise ValueError("Guard section duration must be greater or equal to zero")
 
-        self.__length = secs
+        self.__duration = secs
 
     @classmethod
     def from_yaml(cls: Type[FrameGuardSection],
@@ -275,73 +294,6 @@ class FrameGuardSection(FrameSection):
             return cls()
 
         return cls(**constructor.construct_mapping(node))
-
-
-class Frame:
-
-    yaml_tag = u'Frame'
-    resources: List[FrameResource]
-    structure: List[FrameSection]
-    __subcarrier_spacing: float
-
-    def __init__(self,
-                 subcarrier_spacing: float,
-                 resources: Optional[List[FrameResource]] = None,
-                 structure: Optional[List[FrameSection]] = None) -> None:
-
-        self.resources = resources if resources is not None else []
-        self.structure = structure if structure is not None else []
-
-    @property
-    def num_symbols(self) -> int:
-        """Number of symbol slots within this frame configuration.
-
-        Return:
-            int: Number of symbol slots.
-        """
-
-        num: int = 0
-        for section in self.structure:
-            num += section.num_symbols
-
-        return num
-
-    def add_section(self, section: FrameSection) -> None:
-
-        self.structure.append(section)
-        section.frame = self
-
-    @classmethod
-    def from_yaml(cls: Type[Frame], constructor: SafeConstructor, node: MappingNode) -> Frame:
-
-        state: dict[str, Any] = constructor.construct_mapping(node, deep=True)
-        state = {k.lower(): v for k, v in state.items()}
-
-        structure: List[FrameSection] = state.pop('structure', None)
-
-        # Handle resource list to object conversion
-        resources = state.pop('resources', None)
-        if resources is not None:
-            for resource_idx, resource in enumerate(resources):
-
-                element_objects = []
-                elements = resource.pop('elements', [])
-                for element_args in elements:
-                    element_objects.append(FrameElement(**element_args))
-                resource['elements'] = element_objects
-
-                resources[resource_idx] = FrameResource(**resource)
-
-        state['resources'] = resources
-
-        # Create actual frame object from state dictionary
-        frame = cls(**state)
-
-        if structure is not None:
-            for section in structure:
-                frame.add_section(section)
-
-        return frame
 
 
 class WaveformGeneratorOfdm(WaveformGenerator):
@@ -384,20 +336,21 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     reference_symbols: List[np.ndarray]
     __guard_interval: float
     __fft_size: int
-    __num_occupied_subcarriers: int
     __subcarrier_spacing: float
     dc_suppression: bool
+    resources: List[FrameResource]
+    structure: List[FrameSection]
 
     def __init__(self,
-                 frame: Optional[Frame] = None,
                  pilot_subcarriers: Optional[List[np.ndarray]] = None,
                  pilot_symbols: Optional[List[np.ndarray]] = None,
                  reference_symbols: Optional[List[np.ndarray]] = None,
                  guard_interval: float = 0.0,
                  fft_size: int = 1,
-                 num_occupied_subcarriers: int = 1,
                  subcarrier_spacing: float = 0.,
                  dc_suppression: bool = True,
+                 resources: Optional[List[FrameResource]] = None,
+                 structure: Optional[List[FrameSection]] = None,
                  modem: Modem = None,
                  oversampling_factor: int = 1,
                  modulation_order: int = 64) -> None:
@@ -431,21 +384,18 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                                    modulation_order=modulation_order)
 
         # Parameter initialization
-        self.__frame = frame if frame is not None else Frame()
         self.pilot_subcarriers = pilot_subcarriers if pilot_subcarriers is not None else []
         self.pilot_symbols = pilot_symbols if pilot_symbols is not None else []
         self.reference_symbols = reference_symbols if reference_symbols is not None else []
         self.guard_interval = guard_interval
         self.fft_size = fft_size
-        self.num_occupied_subcarriers = num_occupied_subcarriers
         self.subcarrier_spacing = subcarrier_spacing
         self.dc_suppression = dc_suppression
+        self.resources = [] if resources is None else resources
+        self.structure = [] if structure is None else structure
 
         # Initial parameter checks
         # TODO
-
-        if frame is not None:
-            _ = frame.num_symbols
 
         self._samples_in_frame_no_oversampling = 0
         self._mapping = PskQamMapping(self.modulation_order)
@@ -465,6 +415,13 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         # derived variables for precoding
         self._data_resource_elements_per_symbol = np.array([])
         # self._generate_frame_structure()
+
+    def add_section(self, section: FrameSection) -> None:
+
+        self.structure.append(section)
+        section.frame = self
+
+
         
     @property
     def guard_interval(self) -> float:
@@ -517,32 +474,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             raise ValueError("Number of frequency bins must be greater or equal to one")
 
         self.__fft_size = size
-
-    @property
-    def num_occupied_subcarriers(self) -> int:
-        """Number of occupied subcarrier bands within the bandwidth.
-
-        Returns:
-            int: Number of occupied subcarriers.
-        """
-
-        return self.__num_occupied_subcarriers
-
-    @num_occupied_subcarriers.setter
-    def num_occupied_subcarriers(self, num: int) -> None:
-        """Modify the number of occupied subcarrier bands within the bandwidth.
-
-        Args:
-            num (int): New number of occupied subcarriers.
-
-        Raises:
-            ValueError: If `num` is smaller than zero.
-        """
-
-        if num < 0:
-            raise ValueError("Number of occupied subcarriers must be greater or equal to zeros")
-
-        self.__num_occupied_subcarriers = num
         
     @property
     def subcarrier_spacing(self) -> float:
@@ -562,21 +493,32 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             spacing (float): New spacing in Hz.
 
         Raises:
-            ValueError: If `spacing` is smaller than zero.
+            ValueError: If `spacing` is smaller or equal to zero.
         """
 
-        if spacing < 0.0:
-            raise ValueError("Subcarrier spacing must be greater or equal to zero")
+        if spacing <= 0.0:
+            raise ValueError("Subcarrier spacing must be greater than zero")
 
         self.__subcarrier_spacing = spacing
 
     @property
     def symbols_per_frame(self) -> int:
-        return self.__frame.num_symbols
+
+        num_symbols = 0
+        for section in self.structure:
+            num_symbols += section.num_symbols
+
+        return num_symbols
 
     @property
     def frame_duration(self) -> float:
-        pass
+
+        duration = 0.
+
+        for section in self.structure:
+            duration += section.duration
+
+        return duration
 
     def _generate_frame_structure(self):
         """Creates the OFDM frame structure in time, frequency and space.
@@ -684,11 +626,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         return self._samples_in_frame_no_oversampling * self.oversampling_factor
 
     @property
-    def bits_in_frame(self) -> int:
-        """int: Returns read-only bits_in_frame"""
-        return self.symbols_per_frame * self._mapping.bits_per_symbol
-
-    @property
     def cyclic_prefix_overhead(self) -> float:
         """int: Returns read-only cyclic_prefix_overhead"""
         return self._cyclic_prefix_overhead
@@ -704,7 +641,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
-        f#ull_frame = copy(self.reference_frame)
+        #full_frame = copy(self.reference_frame)
         #full_frame[np.where(self.data_frame_indices)] = data_symbols
 
         frame_in_freq_domain = np.zeros((self.symbols_per_frame, self.fft_size), dtype=complex)
@@ -1168,7 +1105,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     @property
     def bits_per_frame(self) -> int:
-        return self.symbols_per_frame * np.log2(self.modulation_order)
+        return self.symbols_per_frame * self._mapping.bits_per_symbol
 
     @property
     def bit_energy(self) -> float:
@@ -1227,7 +1164,32 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 Newly created `WaveformGeneratorOfdm` instance.
         """
 
-        state = constructor.construct_mapping(node)
+        state = constructor.construct_mapping(node, deep=True)
         state = {k.lower(): v for k, v in state.items()}
 
-        return cls(**state)
+        structure: List[FrameSection] = state.pop('structure', None)
+        resources = state.pop('resources', None)
+
+
+        # Handle resource list to object conversion
+        if resources is not None:
+            for resource_idx, resource in enumerate(resources):
+
+                element_objects = []
+                elements = resource.pop('elements', [])
+                for element_args in elements:
+                    element_objects.append(FrameElement(**element_args))
+                resource['elements'] = element_objects
+
+                resources[resource_idx] = FrameResource(**resource)
+
+        state['resources'] = resources
+
+        # Create actual frame object from state dictionary
+        ofdm = cls(**state)
+
+        if structure is not None:
+            for section in structure:
+                ofdm.add_section(section)
+
+        return ofdm
