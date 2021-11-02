@@ -508,15 +508,3 @@ class Channel:
         estimate = np.eye(self.transmitter.num_antennas, self.receiver.num_antennas, dtype=complex)
         bloated_estimate = estimate[np.newaxis, :, :, np.newaxis].repeat(num_samples, axis=0)
         return bloated_estimate
-
-    def add_time_offset(self, signal: np.ndarray) -> np.ndarray:
-        """Introduces a time delay to the signal."""
-        sampling_rate = self.transmitter.scenario.sampling_rate
-        time_delay_samples = int(sampling_rate * self.scenario.channel_time_offset)
-
-        delay_samples = np.zeros(
-            (signal.shape[0],
-             time_delay_samples)
-        )
-        delayed_signal = np.hstack((delay_samples, signal))
-        return delayed_signal
