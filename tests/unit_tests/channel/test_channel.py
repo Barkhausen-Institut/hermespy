@@ -33,7 +33,13 @@ class TestChannel(unittest.TestCase):
         self.generator = default_rng(0)
         self.scenario = Mock()
 
-        self.channel = Channel(self.transmitter, self.receiver, self.active, self.gain, self.generator, self.scenario)
+        self.channel = Channel(
+            transmitter=self.transmitter,
+            receiver=self.receiver,
+            active=self.active,
+            gain=self.gain,
+            random_generator=self.generator,
+            scenario=self.scenario)
 
         # Number of discrete-time samples generated for signal propagation testing
         self.propagate_signal_lengths = [0, 1, 10, 100, 1000]
