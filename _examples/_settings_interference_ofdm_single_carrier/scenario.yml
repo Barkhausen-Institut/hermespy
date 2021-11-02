@@ -18,11 +18,56 @@ Modems:
       oversampling_factor: 2
       subcarrier_spacing: 15e3
       fft_size: 2048
-      num_occupied_subcarriers: 1200
       dc_suppression: False
 
       # Frame settings
-      guard_interval: 1e-3
+      Resources:
+
+        - repetitions: 100
+          cp_ratio: .078125
+          elements:
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+
+        - repetitions: 1
+          cp_ratio: 0.0703125
+          elements:
+            - type: REFERENCE
+              repetitions: 1200
+
+        - repetitions: 100
+          cp_ratio: .0703125
+          elements:
+            - type: DATA
+              repetitions: 3
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 2
+
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
+
+        # Symbol section, repeated 16 times (in time)
+        - Symbol
+          num_repetitions: 16
+          pattern: [0, 1, 1, 1, 2, 1, 1]    # Pattern of frequency resources within this symbol section
+
+        # Symbol section is followed by two guard intervals in time domain
+        - Guard
+          duration: 1e-3
+        - Guard
+          duration: 1e-3
 
   # Receiving OFDM modem
   - Receiver
@@ -38,61 +83,56 @@ Modems:
       oversampling_factor: 2
       subcarrier_spacing: 15e3
       fft_size: 2048
-      num_occupied_subcarriers: 1200
       dc_suppression: False
 
       # Frame settings
-      guard_interval: 1e-3
+      Resources:
 
-      Frame:
+        - repetitions: 100
+          cp_ratio: .078125
+          elements:
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
 
-        Resources:
+        - repetitions: 1
+          cp_ratio: 0.0703125
+          elements:
+            - type: REFERENCE
+              repetitions: 1200
 
-          - repetitions: 100
-            cp_ratio: .078125
-            elements:
-              - type: REFERENCE
-                repetitions: 1
-              - type: DATA
-                repetitions: 5
-              - type: REFERENCE
-                repetitions: 1
-              - type: DATA
-                repetitions: 5
+        - repetitions: 100
+          cp_ratio: .0703125
+          elements:
+            - type: DATA
+              repetitions: 3
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 2
 
-          - repetitions: 1
-            cp_ratio: 0.0703125
-            elements:
-              - type: REFERENCE
-                repetitions: 1200
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
 
-          - repetitions: 100
-            cp_ratio: .0703125
-            elements:
-              - type: DATA
-                repetitions: 3
-              - type: REFERENCE
-                repetitions: 1
-              - type: DATA
-                repetitions: 5
-              - type: REFERENCE
-                repetitions: 1
-              - type: DATA
-                repetitions: 2
+        # Symbol section, repeated 16 times (in time)
+        - Symbol
+          num_repetitions: 16
+          pattern: [0, 1, 1, 1, 2, 1, 1]    # Pattern of frequency resources within this symbol section
 
-        # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
-        Structure:
-
-          # Symbol section, repeated 16 times (in time)
-          - Symbol
-            num_repetitions: 16
-            pattern: [0, 1, 1, 1, 2, 1, 1]    # Pattern of frequency resources within this symbol section
-
-          # Symbol section is followed by two guard intervals in time domain
-          - Guard
-            length: 1e-3
-          - Guard
-            length: 1e-3
+        # Symbol section is followed by two guard intervals in time domain
+        - Guard
+          duration: 1e-3
+        - Guard
+          duration: 1e-3
 
 
   # Transmitting QAM modem, interfering with the OFDM transmitter
