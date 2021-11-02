@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""HermesPy scenario configuration."""
+
 from __future__ import annotations
 import numpy as np
 import numpy.random as rnd
@@ -10,10 +13,17 @@ from channel import Channel
 from source.bits_source import BitsSource
 from noise.noise import Noise
 
-
 if TYPE_CHECKING:
-
     from channel.rx_sampler import RxSampler
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class Scenario:

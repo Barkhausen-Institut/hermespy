@@ -200,6 +200,16 @@ class Modem:
         self.__scenario = scenario
 
     @property
+    def is_attached(self) -> bool:
+        """Is the modem currently attached to a scenario?
+
+        Returns:
+            bool: Attachment state.
+        """
+
+        return self.__scenario is not None
+
+    @property
     @abstractmethod
     def index(self) -> int:
         """The index of this modem in the scenario.
@@ -534,7 +544,6 @@ class Modem:
 
         num_code_bits = self.waveform_generator.bits_per_frame
         return self.encoder_manager.required_num_data_bits(num_code_bits)
-
 
     @property
     @abstractmethod

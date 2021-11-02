@@ -4,7 +4,7 @@
 from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
-from typing import TYPE_CHECKING, Type, List, Optional
+from typing import TYPE_CHECKING, Type, List, Optional, Union
 from math import ceil
 import numpy as np
 import numpy.random as rnd
@@ -15,6 +15,7 @@ from modem.waveform_generator import WaveformGenerator
 from noise import Noise
 
 if TYPE_CHECKING:
+    from scenario import Scenario
     from .transmitter import Transmitter
     from channel import Channel
 
@@ -33,12 +34,16 @@ class Receiver(Modem):
 
     Attributes:
 
-        __noise: The noise model.
+        __noise:
+            The noise model for thermal effects during reception sampling.
+
+        __reference_transmitter:
+            Referenced transmit peer for this receiver.
     """
 
     yaml_tag = 'Receiver'
     __noise: Noise
-    __reference_transmitter: Optional[Transmitter]
+    __reference_transmitter: Union[int, Transmitter, None]
 
     def __init__(self, **kwargs) -> None:
         """Receiver modem object initialization.
@@ -49,11 +54,12 @@ class Receiver(Modem):
         """
 
         noise = kwargs.pop('noise', None)
+        reference_transmitter = kwargs.pop('reference_transmitter', None)
 
         Modem.__init__(self, **kwargs)
 
         self.noise = Noise() if noise is None else noise
-        self.reference_transmitter = None
+        self.reference_transmitter = reference_transmitter
 
     def receive(self, input_signals: np.ndarray, noise_power: float) -> np.ndarray:
         """Demodulates the signal received.
@@ -245,16 +251,16 @@ class Receiver(Modem):
             return self.__reference_transmitter
 
     @reference_transmitter.setter
-    def reference_transmitter(self, new_reference: Optional[Transmitter]) -> None:
+    def reference_transmitter(self, new_reference: Union[Transmitter, int, None]) -> None:
         """Modify reference modem transmitting to this receiver.
 
         Args:
-            Optional[Transmitter]: Transmitting reference modem.
+            new_reference (Union[Transmitter, int, None]):
+                Transmitting reference modem.
+                May be a direct handle to the receiver or the receivers ID.
+                None to remove the reference.
 
         Raises:
-
-            RuntimeError:
-                If this Receiver is currently floating.
 
             ValueError:
                 If `new_reference` is not registered with the Receiver's scenario.
@@ -266,13 +272,38 @@ class Receiver(Modem):
 
         else:
 
-            if self.scenario is None:
-                raise RuntimeError("Error trying to modify the reference transmitter of a floating receiver")
+            if not self.is_attached:
+                self.__reference_transmitter = new_reference
 
-            if new_reference not in self.scenario.transmitters:
-                raise ValueError("Error trying to configure a reference transmitter not within a receiver's scenario")
+            else:
+
+                # Convert reference IDs to reference handles
+                if isinstance(new_reference, int):
+
+                    if new_reference >= self.scenario.num_transmitters or new_reference < 0:
+                        raise ValueError("Error trying to configure a reference transmitter ID not "
+                                         "within a receiver's scenario")
+
+                    # Convert the ID to an actual reference
+                    new_reference = self.scenario.transmitters[new_reference]
+
+                # Check if the handles are actually  transmitters within the scenario
+                if new_reference not in self.scenario.transmitters:
+                    raise ValueError("Error trying to configure a reference transmitter not "
+                                     "within a receiver's scenario")
 
             self.__reference_transmitter = new_reference
+
+    @Modem.scenario.setter
+    def scenario(self, scenario: Scenario) -> None:
+
+        # Call base class property setter
+        Modem.scenario.fset(self, scenario)
+
+        # Update the reference transmitter, implicitly runs a check if the reference transmitter
+        # is contained within the set scenario
+        if self.__reference_transmitter is not None:
+            self.reference_transmitter = self.__reference_transmitter
 
     @property
     def reference_channel(self) -> Channel:

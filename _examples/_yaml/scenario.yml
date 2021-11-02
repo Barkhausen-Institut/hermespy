@@ -27,6 +27,7 @@ Modems:
       - SC
 
   - Receiver
+    reference_transmitter: 0
     carrier_frequency: 0.0
     num_antennas: 2
     position: [10, 10, 10]
