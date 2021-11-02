@@ -76,16 +76,17 @@ class TestReceiver(unittest.TestCase):
         self.assertEqual(self.additional_transmitter, self.receiver.reference_transmitter)
 
     def test_reference_transmitter_validation(self) -> None:
-        """Reference transmitter property setter should raise RuntimeError if floating, ValueError if the modem is
+        """Reference transmitter property setter should raise ValueError if the transmitter is
         not registered with the scenario."""
 
         with self.assertRaises(ValueError):
             self.receiver.reference_transmitter = Mock()
 
-        floating_receiver = Receiver()
-        floating_receiver.transmitters = []
-        with self.assertRaises(RuntimeError):
-            floating_receiver.reference_transmitter = Mock()
+        with self.assertRaises(ValueError):
+            self.receiver.reference_transmitter = self.scenario.num_transmitters
+
+        with self.assertRaises(ValueError):
+            self.receiver.reference_transmitter = -1
 
     def test_received_power(self) -> None:
         """Received power property should return the reference transmitter's power,
