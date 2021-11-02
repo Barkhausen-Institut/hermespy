@@ -47,7 +47,6 @@ class Channel:
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  scenario: Optional[Scenario] = None,
-                 sync_offset_mean: Optional[int] = None,
                  sync_offset_low: Optional[int] = None,
                  sync_offset_high: Optional[int] = None) -> None:
         """Class constructor.
@@ -93,13 +92,10 @@ class Channel:
         if scenario is not None:
             self.scenario = scenario
 
-        if sync_offset_mean is not None:
-            self.sync_offset_mean = sync_offset_mean
-
         if sync_offset_low is not None:
             self.sync_offset_low = sync_offset_low
 
-        if sync_offset_mean is not None:
+        if sync_offset_high is not None:
             self.sync_offset_high = sync_offset_high
 
 
@@ -184,14 +180,6 @@ class Channel:
     @scenario.setter
     def scenario(self, scenario) -> None:
         self.__scenario = scenario
-
-    @property
-    def sync_offset_mean(self) -> float:
-        return self.__sync_offset_mean
-
-    @sync_offset_mean.setter
-    def sync_offset_mean(self, val: float) -> None:
-        self.__sync_offset_mean = val
 
     @property
     def sync_offset_low(self) -> float:
