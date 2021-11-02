@@ -52,13 +52,13 @@ class RadarChannel(Channel):
     def __init__(self,
                  target_range: float,
                  radar_cross_section: float,
-                 target_exists: Optional[bool] = None,
-                 tx_rx_isolation_db: Optional[float] = None,
-                 tx_antenna_gain_db: Optional[float] = None,
-                 rx_antenna_gain_db: Optional[float] = None,
-                 losses_db: Optional[float] = None,
-                 velocity: Optional[float] = None,
-                 filter_response_in_samples: Optional[int] = None,
+                 target_exists: Optional[bool] = True,
+                 tx_rx_isolation_db: Optional[float] = float("inf"),
+                 tx_antenna_gain_db: Optional[float] = 0,
+                 rx_antenna_gain_db: Optional[float] = 0,
+                 losses_db: Optional[float] = 0,
+                 velocity: Optional[float] = 0,
+                 filter_response_in_samples: Optional[int] = 21,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
@@ -78,7 +78,7 @@ class RadarChannel(Channel):
             rx_antenna_gain_db(float, optional): antenna gains in dBi (default = 0)
             losses_db(float, optional): any additional atmospheric and/or cable losses, in dB (default = 0)
             velocity(float, optional): radial velocity, in m/s (default = 0)
-            filter_reponse_in_samples(int, optional): length of interpolation filter in samples (default = 7)
+            filter_response_in_samples(int, optional): length of interpolation filter in samples (default = 7)
             transmitter (Transmitter, optional): The modem transmitting into this channel.
             receiver (Receiver, optional): The modem receiving from this channel.
             active (bool, optional): Channel activity flag.
@@ -106,39 +106,15 @@ class RadarChannel(Channel):
         if self.num_inputs > 1 or self.num_outputs > 1:
             raise ValueError("Multiple antennas are not supported")
 
-        self.__radar_cross_section = radar_cross_section
-        self.__target_exists = True
-        self.__random_number_gen = np.random.RandomState()
-        self.__tx_rx_isolation_db = float("inf")
-        self.__tx_antenna_gain_db = 0
-        self.__rx_antenna_gain_db = 0
-        self.__losses_db = 0
-        self.__velocity = 0
-        self.__filter_response_in_samples = 15
-
         self.target_range = target_range
         self.radar_cross_section = radar_cross_section
-
-        if target_exists is not None:
-            self.__target_exists = target_exists
-
-        if tx_rx_isolation_db is not None:
-            self.__tx_rx_isolation_db = tx_rx_isolation_db
-
-        if tx_antenna_gain_db is not None:
-            self.__tx_antenna_gain_db = tx_antenna_gain_db
-
-        if rx_antenna_gain_db is not None:
-            self.__rx_antenna_gain_db = rx_antenna_gain_db
-
-        if losses_db is not None:
-            self.__losses_db = losses_db
-
-        if velocity is not None:
-            self.__velocity = velocity
-
-        if filter_response_in_samples is not None:
-            self.__filter_response_in_samples = filter_response_in_samples
+        self.__target_exists = target_exists
+        self.tx_rx_isolation_db = tx_rx_isolation_db
+        self.__tx_antenna_gain_db = tx_antenna_gain_db
+        self.__rx_antenna_gain_db = rx_antenna_gain_db
+        self.__losses_db = losses_db
+        self.velocity = velocity
+        self.__filter_response_in_samples = filter_response_in_samples
 
         # random phases
         self._phase_self_interference = 0
@@ -292,7 +268,6 @@ class RadarChannel(Channel):
             float: propagation delay [s]
         """
         return 2 * self.__target_range / constants.speed_of_light
-
 
     @property
     def attenuation(self) -> float:
