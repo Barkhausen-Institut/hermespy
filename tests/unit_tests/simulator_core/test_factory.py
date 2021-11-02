@@ -67,6 +67,17 @@ class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
                 sync_offset_high=HIGH
             ))
 
+    def test_dumping_default_parameters_are_printed(self) -> None:
+        ch = Channel(transmitter=Mock(), receiver=Mock(),
+                     active=True, gain=1)
+        serialized_ch = self.factory.to_str(ch)
+        self.assertTrue(
+            self._yaml_str_contains_sync_offsets(
+                yaml_str=serialized_ch,
+                sync_offset_low=0,
+                sync_offset_high=0
+            ))
+
     def _yaml_str_contains_sync_offsets(self, yaml_str: str, 
                                            sync_offset_low: float,
                                            sync_offset_high: float) -> bool:
