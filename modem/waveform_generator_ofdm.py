@@ -50,67 +50,171 @@ class FrameElement:
 
 
 class FrameResource:
+    """Configures one sub-section of an OFDM symbol section in time AND frequency."""
 
-    num_blocks: int
+    __repetitions: int
+    __cp_ratio: float
     elements: List[FrameElement]
 
     def __init__(self,
-                 num_blocks: int = 1,
+                 repetitions: int = 1,
+                 cp_ratio: float = 0.0,
                  elements: Optional[List[FrameElement]] = None) -> None:
 
-        self.num_blocks = num_blocks
+        self.repetitions = repetitions
+        self.cp_ratio = cp_ratio
         self.elements = elements if elements is not None else []
+
+    @property
+    def repetitions(self) -> int:
+        """Number of block repetitions along the frequency axis.
+
+        Returns:
+            int: Number of repetitions.
+        """
+
+        return self.__repetitions
+
+    @repetitions.setter
+    def repetitions(self, reps: int) -> None:
+        """Modify the number of repetitions.
+
+        Args:
+            reps (int): Number of repetitions.
+
+        Raises:
+            ValueError: If `reps` is smaller than one.
+        """
+
+        if reps < 1:
+            raise ValueError("Number of frame resource repetitions must be greater or equal to one")
+
+        self.__repetitions = reps
+
+    @property
+    def cp_ratio(self) -> float:
+        """Ratio between full block length and cyclic prefix.
+
+        Returns:
+            float: The ratio between zero and one.
+        """
+
+        return self.__cp_ratio
+
+    @cp_ratio.setter
+    def cp_ratio(self, ratio: float) -> None:
+        """Modify the ratio betwen full block element length and cyclic prefix.
+
+        Args:
+            ratio (float): New ratio between zero and one.
+
+        Raises:
+            ValueError: If ratio is less than zero or larger than one.
+        """
+
+        if ratio < 0.0 or ratio > 1.0:
+            raise ValueError("Cyclic prefix ratio must be between zero and one")
+
+        self.__cp_ratio = ratio
+
+    @property
+    def num_subcarriers(self) -> int:
+        """Number of occupied subcarriers.
+
+        Returns:
+            int: Number of occupied subcarriers.
+        """
+
+        num: int = 0
+        for element in self.elements:
+            num += element.repetitions
+
+        return self.__repetitions * num
+
+    @property
+    def num_symbols(self) -> int:
+        """Number of data symbols this resource can modulate.
+
+        Return:
+            Number of modulated symbols.
+        """
+
+        num: int = 0
+        for element in self.elements:
+            if element.type == ElementType.DATA:
+                num += element.repetitions
+
+        return self.__repetitions * num
 
 
 class FrameSection:
+    """OFDM Frame configuration time axis."""
 
     frame: Optional[Frame]
     num_repetitions: int
 
     def __init__(self,
-                 num_repetitions: int = 1) -> None:
+                 num_repetitions: int = 1,
+                 frame: Optional[Frame] = None) -> None:
 
-        self.frame = None
+        self.frame = frame
         self.num_repetitions = num_repetitions
+
+    @property
+    def num_symbols(self) -> int:
+        """Number of data symbols this section can modulate.
+
+        Returns:
+            int: The number of symbols
+        """
+
+        return 0
+
+    @property
+    def num_subcarriers(self) -> int:
+        """Number of subcarriers this section requires.
+
+        Returns:
+            int: The number of subcarriers.
+        """
+
+        return 0
 
 
 class FrameSymbolSection(FrameSection):
 
     yaml_tag: str = u'Symbol'
     __pattern: List[int]
-    __cp_ratio: float   # Cyclic prefix ratio
 
     def __init__(self,
                  num_repetitions: int = 1,
-                 cp_ratio: float = 1.0,
-                 pattern: Optional[List[int]] = None) -> None:
+                 pattern: Optional[List[int]] = None,
+                 frame: Optional[Frame] = None) -> None:
 
-        FrameSection.__init__(self, num_repetitions=num_repetitions)
-        self.__cp_ratio = cp_ratio
+        FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
         self.__pattern = pattern if pattern is not None else []
+        self.frame = frame
 
     @property
-    @lru_cache()
-    def subcarrier_indices(self) -> np.ndarray:
-        """Resource mask, mapping frame element types to slots
+    def num_symbols(self) -> int:
 
-        Returns:
-            A numpy matrix where each row represents an element type and each column represents a slot.
-            Each column, i.e. each slot contains a single True boolean flag indicating this slot contains the
-            resource type represented by the respective row.
-        """
-
-        resource_mask = np.empty((len(ElementType), 0), dtype=bool)
-
+        num = 0
         for resource_idx in self.__pattern:
 
-            resource_mask_section = np.empty((len(ElementType), 0), dtype=bool)
-
             resource = self.frame.resources[resource_idx]
-            for element in resource.elements:
+            num += resource.num_symbols
 
-                np.append(res)
+        return self.num_repetitions * num
 
+    @property
+    def num_subcarriers(self) -> int:
+
+        # ToDo: Resources with different numbers of subcarriers are currently not supported
+        num = 0
+        if len(self.__pattern) > 0:
+            num = self.frame.resources[self.__pattern[0]].num_subcarriers
+
+        return num
 
 
     @classmethod
@@ -127,11 +231,40 @@ class FrameSymbolSection(FrameSection):
 class FrameGuardSection(FrameSection):
 
     yaml_tag: str = u'Guard'
+    __length: float
 
     def __init__(self,
+                 length: float,
                  num_repetitions: int = 1) -> None:
 
         FrameSection.__init__(self, num_repetitions=num_repetitions)
+        self.length = length
+
+    @property
+    def length(self) -> float:
+        """Guard section length.
+
+        Returns:
+            float: Length in seconds.
+        """
+
+        return self.__length
+
+    @length.setter
+    def length(self, secs: float) -> None:
+        """Modify guard section length-
+
+        Args:
+            secs (float): New length in seconds.
+
+        Raises:
+            ValueError: If secs is smaller than zero.
+        """
+
+        if secs < 0.0:
+            raise ValueError("Guard section length must be greater or equal to zero")
+
+        self.__length = secs
 
     @classmethod
     def from_yaml(cls: Type[FrameGuardSection],
@@ -149,13 +282,29 @@ class Frame:
     yaml_tag = u'Frame'
     resources: List[FrameResource]
     structure: List[FrameSection]
+    __subcarrier_spacing: float
 
     def __init__(self,
+                 subcarrier_spacing: float,
                  resources: Optional[List[FrameResource]] = None,
                  structure: Optional[List[FrameSection]] = None) -> None:
 
         self.resources = resources if resources is not None else []
         self.structure = structure if structure is not None else []
+
+    @property
+    def num_symbols(self) -> int:
+        """Number of symbol slots within this frame configuration.
+
+        Return:
+            int: Number of symbol slots.
+        """
+
+        num: int = 0
+        for section in self.structure:
+            num += section.num_symbols
+
+        return num
 
     def add_section(self, section: FrameSection) -> None:
 
@@ -174,6 +323,13 @@ class Frame:
         resources = state.pop('resources', None)
         if resources is not None:
             for resource_idx, resource in enumerate(resources):
+
+                element_objects = []
+                elements = resource.pop('elements', [])
+                for element_args in elements:
+                    element_objects.append(FrameElement(**element_args))
+                resource['elements'] = element_objects
+
                 resources[resource_idx] = FrameResource(**resource)
 
         state['resources'] = resources
@@ -288,16 +444,19 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         # Initial parameter checks
         # TODO
 
+        if frame is not None:
+            _ = frame.num_symbols
+
         self._samples_in_frame_no_oversampling = 0
         self._mapping = PskQamMapping(self.modulation_order)
 
-        self._resource_element_mapping: np.array = self._calculate_resource_element_mapping()
-        self._samples_in_frame_no_oversampling, self._cyclic_prefix_overhead = (
-            self._calculate_samples_in_frame()
-        )
+#        self._resource_element_mapping: np.array = self._calculate_resource_element_mapping()
+#        self._samples_in_frame_no_oversampling, self._cyclic_prefix_overhead = (
+#            self._calculate_samples_in_frame()
+#        )
 
-        self.reference_frame = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=complex)
-        self.data_frame_indices = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=bool)
+#        self.reference_frame = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=complex)
+#        self.data_frame_indices = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=bool)
         self.guard_time_indices = np.array([], dtype=int)
         self.prefix_time_indices = np.array([], dtype=int)
         self.data_time_indices = np.array([], dtype=int)
@@ -305,7 +464,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # derived variables for precoding
         self._data_resource_elements_per_symbol = np.array([])
-        self._generate_frame_structure()
+        # self._generate_frame_structure()
         
     @property
     def guard_interval(self) -> float:
@@ -413,7 +572,11 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     @property
     def symbols_per_frame(self) -> int:
-        return sum(isinstance(frame_element, FrameSymbolSection) for frame_element in self.__frame.structure)
+        return self.__frame.num_symbols
+
+    @property
+    def frame_duration(self) -> float:
+        pass
 
     def _generate_frame_structure(self):
         """Creates the OFDM frame structure in time, frequency and space.
@@ -541,8 +704,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
-        full_frame = copy(self.reference_frame)
-        full_frame[np.where(self.data_frame_indices)] = data_symbols
+        f#ull_frame = copy(self.reference_frame)
+        #full_frame[np.where(self.data_frame_indices)] = data_symbols
 
         frame_in_freq_domain = np.zeros((self.symbols_per_frame, self.fft_size), dtype=complex)
         frame_in_freq_domain[:, self._resource_element_mapping] = full_frame
@@ -1065,4 +1228,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         """
 
         state = constructor.construct_mapping(node)
+        state = {k.lower(): v for k, v in state.items()}
+
         return cls(**state)
