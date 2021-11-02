@@ -46,7 +46,6 @@ class Channel:
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
-                 scenario: Optional[Scenario] = None,
                  sync_offset_low: Optional[int] = None,
                  sync_offset_high: Optional[int] = None) -> None:
         """Class constructor.
@@ -87,9 +86,6 @@ class Channel:
 
         if gain is not None:
             self.gain = gain
-
-        if scenario is not None:
-            self.scenario = scenario
 
         if sync_offset_low is not None:
             if sync_offset_low < 0:
@@ -180,14 +176,6 @@ class Channel:
             raise RuntimeError("Overwriting a receiver configuration is not supported")
 
         self.__receiver = new_receiver
-
-    @property
-    def scenario(self):
-        return self.__scenario
-
-    @scenario.setter
-    def scenario(self, scenario) -> None:
-        self.__scenario = scenario
 
     @property
     def sync_offset_low(self) -> float:
@@ -435,7 +423,7 @@ class Channel:
 
     def add_time_offset(self, signal: np.ndarray) -> np.ndarray:
         """Introduces a time delay to the signal."""
-        sampling_rate = self.scenario.sampling_rate
+        sampling_rate = self.transmitter.scenario.sampling_rate
         time_delay_samples = int(sampling_rate * self.scenario.channel_time_offset)
 
         delay_samples = np.zeros(

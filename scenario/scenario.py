@@ -50,7 +50,6 @@ class Scenario:
     def __init__(self,
                  drop_duration: float = 0.0,
                  sampling_rate: float = 1e6,
-                 channel_time_offset: float = 0.0,
                  random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
 
@@ -70,7 +69,6 @@ class Scenario:
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.drop_duration = drop_duration
         self.sampling_rate = sampling_rate
-        self.channel_time_offset = channel_time_offset
         self.random_generator = rnd.default_rng(random_generator)
 
         self.sources: List[BitsSource] = []
@@ -417,17 +415,6 @@ class Scenario:
 
         self.__sampling_rate = value
 
-    @property
-    def channel_time_offset(self) -> float:
-        return self.__channel_time_offset
-
-    @channel_time_offset.setter
-    def channel_time_offset(self, value: float) -> None:
-        if value < 0.0:
-            raise ValueError("Time offset must be larger than zero.")
-
-        self.__channel_time_offset = value
-
     def generate_data_bits(self) -> List[np.ndarray]:
         """Generate a set of data bits required to generate a single drop within this scenario.
 
@@ -514,7 +501,6 @@ class Scenario:
         for t, transmitter in enumerate(scenario.__transmitters):
             for r, receiver in enumerate(scenario.__receivers):
                 scenario.__channels[t, r] = Channel(transmitter, receiver)
-                scenario.__channels[t, r].scenario = scenario
 
         # Integrate configured channels into the default matrix
         if isinstance(channels, Iterable):
@@ -523,7 +509,6 @@ class Scenario:
                 channel.transmitter = scenario.transmitters[transmitter_index]
                 channel.receiver = scenario.receivers[receiver_index]
                 scenario.__channels[transmitter_index, receiver_index] = channel
-                scenario.__channels[transmitter_index, receiver_index].scenario = scenario
 
         return scenario
 
