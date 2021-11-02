@@ -99,18 +99,18 @@ class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:
         self.scenario_str = self._create_scenario_stream_header()
-        self.scenario_str += self._append_section("Modems")
-        self.scenario_str += self._append_random_modem("Transmitter")
-        self.scenario_str += self._append_random_modem("Receiver")
+        self.scenario_str += self._create_section_yaml_str("Modems")
+        self.scenario_str += self._create_random_modem_yaml_str("Transmitter")
+        self.scenario_str += self._create_random_modem_yaml_str("Receiver")
 
-        self.scenario_str += self._append_section("Channels")
-        self.scenario_str += self._append_channel(0, 0)
+        self.scenario_str += self._create_section_yaml_str("Channels")
+        self.scenario_str += self._create_channel_yaml_str(0, 0)
         self.factory = Factory()
 
     def test_setup_single_offset_correct_initialization_with_correct_values(self) -> None:
         LOW = 1
         HIGH = 5
-        self.scenario_str += self._append_sync_offset(LOW, HIGH)
+        self.scenario_str += self._create_sync_offset_yaml_str(LOW, HIGH)
         scenario = self.factory.from_str(self.scenario_str)
 
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, LOW)
@@ -126,7 +126,7 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         LOW = 2
         HIGH = 1
 
-        self.scenario_str += self._append_sync_offset(LOW, HIGH)
+        self.scenario_str += self._create_sync_offset_yaml_str(LOW, HIGH)
         with self.assertRaises(ValueError):
             scenario = self.factory.from_str(self.scenario_str)
 
@@ -134,7 +134,7 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         LOW = -1
         HIGH = 0
 
-        self.scenario_str += self._append_sync_offset(LOW, HIGH)
+        self.scenario_str += self._create_sync_offset_yaml_str(LOW, HIGH)
         with self.assertRaises(ValueError):
             scenario = self.factory.from_str(self.scenario_str)
 
@@ -142,7 +142,7 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         LOW = -1
         HIGH = -5
 
-        self.scenario_str += self._append_sync_offset(LOW, HIGH)
+        self.scenario_str += self._create_sync_offset_yaml_str(LOW, HIGH)
         with self.assertRaises(ValueError):
             scenario = self.factory.from_str(self.scenario_str)
 
@@ -153,7 +153,7 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
 sampling_rate: 2e6
 """
 
-    def _append_random_modem(self, modem_type: str) -> str:
+    def _create_random_modem_yaml_str(self, modem_type: str) -> str:
         if modem_type.upper() not in ["TRANSMITTER", "RECEIVER"]:
             raise ValueError("Modem type not supported")
 
@@ -169,17 +169,17 @@ sampling_rate: 2e6
         modulation_order: 32
 """
 
-    def _append_section(self, section: str) -> str:
+    def _create_section_yaml_str(self, section: str) -> str:
         return f"""
 {section}:"""
 
-    def _append_channel(self, tx: int, rx: int) -> str:
+    def _create_channel_yaml_str(self, tx: int, rx: int) -> str:
         return f"""
   - Channel {tx} {rx}
     active: true
 
 """
-    def _append_sync_offset(self, low: float, high: float) -> str:
+    def _create_sync_offset_yaml_str(self, low: float, high: float) -> str:
 
         return f"""
     sync_offset_low: {low}
