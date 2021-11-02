@@ -57,20 +57,17 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         self.factory = Factory()
 
     def test_setup_single_offset_correct_initialization_with_correct_values(self) -> None:
-        MEAN = 3
         LOW = 1
         HIGH = 5
-        self.scenario_stream = self._append_sync_offset(self.scenario_stream, MEAN, LOW, HIGH)
+        self.scenario_stream = self._append_sync_offset(self.scenario_stream, LOW, HIGH)
         scenario = self.factory.from_str(self.scenario_stream)
 
-        self.assertEqual(scenario[0].channels[0, 0].sync_offset_mean, MEAN)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, LOW)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, HIGH)
 
     def test_no_parameters_result_in_default_values(self) -> None:
         scenario = self.factory.from_str(self.scenario_stream)
 
-        self.assertEqual(scenario[0].channels[0, 0].sync_offset_mean, 0)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, 0)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, 0)
 
@@ -112,10 +109,9 @@ Channels:
 
 """
     def _append_sync_offset(self, scenario_stream: str,
-                            mean: float, low: float, high: float) -> str:
+                            low: float, high: float) -> str:
 
         return scenario_stream + f"""
-    sync_offset_mean: {mean}
     sync_offset_low: {low}
     sync_offset_high: {high}
 """
