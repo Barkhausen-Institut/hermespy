@@ -99,18 +99,18 @@ class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:
         self.scenario_str = self._create_scenario_stream_header()
-        self.scenario_str = self._append_section(self.scenario_str, "Modems")
-        self.scenario_str = self._append_random_modem(self.scenario_str, "Transmitter")
-        self.scenario_str = self._append_random_modem(self.scenario_str, "Receiver")
+        self.scenario_str += self._append_section("Modems")
+        self.scenario_str += self._append_random_modem("Transmitter")
+        self.scenario_str += self._append_random_modem("Receiver")
 
-        self.scenario_str = self._append_section(self.scenario_str, "Channels")
-        self.scenario_str = self._append_channel(self.scenario_str, 0, 0)
+        self.scenario_str += self._append_section("Channels")
+        self.scenario_str += self._append_channel(0, 0)
         self.factory = Factory()
 
     def test_setup_single_offset_correct_initialization_with_correct_values(self) -> None:
         LOW = 1
         HIGH = 5
-        self.scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
+        self.scenario_str += self._append_sync_offset(LOW, HIGH)
         scenario = self.factory.from_str(self.scenario_str)
 
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, LOW)
@@ -126,26 +126,25 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         LOW = 2
         HIGH = 1
 
-        scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
+        self.scenario_str += self._append_sync_offset(LOW, HIGH)
         with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(scenario_str)
+            scenario = self.factory.from_str(self.scenario_str)
 
     def test_exception_raised_if_low_smaller_than_zero(self) -> None:
         LOW = -1
         HIGH = 0
 
-        scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
+        self.scenario_str += self._append_sync_offset(LOW, HIGH)
         with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(scenario_str)
+            scenario = self.factory.from_str(self.scenario_str)
 
     def test_exception_raised_if_high_smaller_than_zero(self) -> None:
         LOW = -1
         HIGH = -5
 
-        scenario_str = self._append_sync_offset(self.scenario_str, LOW, HIGH)
+        self.scenario_str += self._append_sync_offset(LOW, HIGH)
         with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(scenario_str)
-
+            scenario = self.factory.from_str(self.scenario_str)
 
     def _create_scenario_stream_header(self) -> str:
         return """
@@ -154,11 +153,11 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
 sampling_rate: 2e6
 """
 
-    def _append_random_modem(self, scenario_stream: str, modem_type: str) -> str:
+    def _append_random_modem(self, modem_type: str) -> str:
         if modem_type.upper() not in ["TRANSMITTER", "RECEIVER"]:
             raise ValueError("Modem type not supported")
 
-        scenario_stream += f"""
+        return f"""
   - {modem_type}
     carrier_frequency: 1e9
     position: [0, 0, 0]
@@ -169,22 +168,20 @@ sampling_rate: 2e6
         num_data_chirps: 12
         modulation_order: 32
 """
-        return scenario_stream
 
-    def _append_section(self, scenario_stream: str, section: str) -> str:
-        return scenario_stream + f"""
+    def _append_section(self, section: str) -> str:
+        return f"""
 {section}:"""
 
-    def _append_channel(self, scenario_stream: str, tx: int, rx: int) -> str:
-        return scenario_stream + f"""
+    def _append_channel(self, tx: int, rx: int) -> str:
+        return f"""
   - Channel {tx} {rx}
     active: true
 
 """
-    def _append_sync_offset(self, scenario_stream: str,
-                            low: float, high: float) -> str:
+    def _append_sync_offset(self, low: float, high: float) -> str:
 
-        return scenario_stream + f"""
+        return f"""
     sync_offset_low: {low}
     sync_offset_high: {high}
 """
