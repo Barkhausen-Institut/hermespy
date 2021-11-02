@@ -5,7 +5,7 @@ from numpy.random import default_rng
 
 from channel.radar_channel import RadarChannel
 from scipy import constants
-from tools.math import db2lin, lin2db
+from tools.math import db2lin, DbConversionType
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -242,7 +242,7 @@ class TestRadarChannel(unittest.TestCase):
         output = self.channel.propagate(input_signal)
 
         self_interference = output - output_ideal_isolation
-        norm_factor = db2lin(-self.channel.attenuation_db - isolation_db, conversion_type='amplitude')
+        norm_factor = db2lin(-self.channel.attenuation_db - isolation_db, conversion_type=DbConversionType.AMPLITUDE)
 
         np.testing.assert_array_almost_equal(np.abs(self_interference[0, :input_signal.size]),
                                              np.abs(input_signal[0, :]) * norm_factor)
