@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 from unittest.mock import Mock
-from copy import deepcopy
 from numpy.random import default_rng
 
 from channel.radar_channel import RadarChannel
@@ -88,17 +87,14 @@ class TestRadarChannel(unittest.TestCase):
         """Target range property getter should return setter argument."""
         new_range = 500
 
-        channel = deepcopy(self.channel)
-        channel.target_range = new_range
-        self.assertEqual(new_range, channel.target_range)
+        self.channel.target_range = new_range
+        self.assertEqual(new_range, self.channel.target_range)
 
     def test_target_exists_setget(self) -> None:
         """Target exists flag getter should return setter argument."""
         new_target_exists = False
-
-        channel = deepcopy(self.channel)
-        channel.target_exists = new_target_exists
-        self.assertEqual(new_target_exists, channel.target_exists)
+        self.channel.target_exists = new_target_exists
+        self.assertEqual(new_target_exists, self.channel.target_exists)
 
     def test_radar_cross_section_get(self) -> None:
         """Radar cross section getter should return init param."""
@@ -108,9 +104,8 @@ class TestRadarChannel(unittest.TestCase):
         """tx/rx isolation getter should return setter argument."""
         new_tx_rx_isolation_db = 100
 
-        channel = deepcopy(self.channel)
-        channel.tx_rx_isolation_db = new_tx_rx_isolation_db
-        self.assertEqual(new_tx_rx_isolation_db, channel.tx_rx_isolation_db)
+        self.channel.tx_rx_isolation_db = new_tx_rx_isolation_db
+        self.assertEqual(new_tx_rx_isolation_db, self.channel.tx_rx_isolation_db)
 
     def test_tx_antenna_gain_db_get(self) -> None:
         """tx antenna gain getter should return init param."""
@@ -128,9 +123,8 @@ class TestRadarChannel(unittest.TestCase):
         """velocity getter should return setter argument."""
         new_velocity = 20
 
-        channel = deepcopy(self.channel)
-        channel.velocity = new_velocity
-        self.assertEqual(new_velocity, channel.velocity)
+        self.channel.velocity = new_velocity
+        self.assertEqual(new_velocity, self.channel.velocity)
 
     def test_filter_response_in_samples_get(self) -> None:
         """losses getter should return init param."""
@@ -162,11 +156,10 @@ class TestRadarChannel(unittest.TestCase):
 
         expected_range = constants.speed_of_light * delay_in_samples / self.transmitter.sampling_rate / 2
 
-        channel = deepcopy(self.channel)
-        channel.target_range = expected_range
+        self.channel.target_range = expected_range
 
-        channel.init_drop()
-        output = channel.propagate(input_signal)
+        self.channel.init_drop()
+        output = self.channel.propagate(input_signal)
 
         expected_output = np.hstack((np.zeros((1, delay_in_samples)), input_signal))
 
@@ -185,11 +178,10 @@ class TestRadarChannel(unittest.TestCase):
 
         expected_range = constants.speed_of_light * (delay_in_samples + .5) / self.transmitter.sampling_rate / 2
 
-        channel = deepcopy(self.channel)
-        channel.target_range = expected_range
+        self.channel.target_range = expected_range
 
-        channel.init_drop()
-        output = channel.propagate(input_signal)
+        self.channel.init_drop()
+        output = self.channel.propagate(input_signal)
 
         straddle_loss = np.sinc(.5)
         peaks = np.abs(output[:, delay_in_samples:input_signal.size:samples_per_symbol])
@@ -222,13 +214,12 @@ class TestRadarChannel(unittest.TestCase):
 
         expected_range = constants.speed_of_light * initial_delay_in_samples / self.transmitter.sampling_rate / 2
 
-        channel = deepcopy(self.channel)
-        channel.target_range = expected_range
-        channel.velocity = velocity
+        self.channel.target_range = expected_range
+        self.channel.velocity = velocity
 
-        channel.init_drop()
+        self.channel.init_drop()
 
-        output = channel.propagate(input_signal)
+        output = self.channel.propagate(input_signal)
 
         np.testing.assert_array_almost_equal(np.abs(output[0, peaks_in_samples].flatten()), expected_straddle_amplitude)
 
@@ -246,10 +237,9 @@ class TestRadarChannel(unittest.TestCase):
         self.channel.init_drop()
         output_ideal_isolation = self.channel.propagate(input_signal)
 
-        channel = deepcopy(self.channel)
-        channel.tx_rx_isolation_db = isolation_db
+        self.channel.tx_rx_isolation_db = isolation_db
 
-        output = channel.propagate(input_signal)
+        output = self.channel.propagate(input_signal)
 
         self_interference = output - output_ideal_isolation
         norm_factor = db2lin(-self.channel.attenuation_db - isolation_db, conversion_type='amplitude')
@@ -271,10 +261,9 @@ class TestRadarChannel(unittest.TestCase):
 
         input_signal = np.sin(2 * np.pi * sinewave_frequency * time)
 
-        channel = deepcopy(self.channel)
-        channel.velocity = velocity
+        self.channel.velocity = velocity
 
-        output = channel.propagate(input_signal[np.newaxis, :])
+        output = self.channel.propagate(input_signal[np.newaxis, :])
 
         input_freq = np.fft.fft(input_signal)
         output_freq = np.fft.fft(output.flatten()[-num_samples:])
@@ -295,11 +284,10 @@ class TestRadarChannel(unittest.TestCase):
 
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
-        channel = deepcopy(self.channel)
-        channel.target_exists = False
+        self.channel.target_exists = False
 
-        channel.init_drop()
-        output = channel.propagate(input_signal)
+        self.channel.init_drop()
+        output = self.channel.propagate(input_signal)
 
         np.testing.assert_array_equal(output, np.zeros(output.shape))
 
@@ -312,17 +300,16 @@ class TestRadarChannel(unittest.TestCase):
 
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
-        channel = deepcopy(self.channel)
-        channel.velocity = velocity
-        channel.tx_rx_isolation_db = isolation_db
+        self.channel.velocity = velocity
+        self.channel.tx_rx_isolation_db = isolation_db
 
-        channel.init_drop()
+        self.channel.init_drop()
 
-        output = channel.propagate(input_signal)
+        output = self.channel.propagate(input_signal)
 
         sample_idx_last_symbol = (num_pulses - 1) * samples_per_symbol
         timestamps = np.array([0, sample_idx_last_symbol / self.transmitter.sampling_rate])
-        channel_state_info = channel.get_impulse_response(timestamps).squeeze()
+        channel_state_info = self.channel.get_impulse_response(timestamps).squeeze()
 
         num_samples_in_csi = channel_state_info.shape[1]
 
@@ -330,8 +317,8 @@ class TestRadarChannel(unittest.TestCase):
                                   output[0, sample_idx_last_symbol: sample_idx_last_symbol + num_samples_in_csi]))
 
         # interpolation filter for propagation will be truncated, must be taken into account in absolute tolerance
-        atol = np.maximum(np.abs(np.sinc(channel.filter_response_in_samples/2)),
-                          np.abs(np.sinc(np.floor(channel.filter_response_in_samples/2))))
+        atol = np.maximum(np.abs(np.sinc(self.channel.filter_response_in_samples/2)),
+                          np.abs(np.sinc(np.floor(self.channel.filter_response_in_samples/2))))
         np.testing.assert_allclose(channel_state_info, observed_csi, atol=atol)
 
         pass
