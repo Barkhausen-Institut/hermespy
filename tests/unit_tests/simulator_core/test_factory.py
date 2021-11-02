@@ -186,5 +186,44 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         with self.assertRaises(ValueError):
             scenario = self.factory.from_str(self.scenario_str)
 
+    def test_multiple_channels_creation_all_sync_offsets_defined(self) -> None:
+        sync_offsets = {
+            'ch0_0': {'LOW': 0, 'HIGH': 3},
+            'ch1_0': {'LOW': 2, 'HIGH': 5},
+            'ch0_1': {'LOW': 1, 'HIGH': 4},
+            'ch1_1': {'LOW': 5, 'HIGH': 10}
+        }
+        s = create_scenario_stream_header()
+        s += create_section_yaml_str("Modems")
+        s += create_random_modem_yaml_str("Transmitter")
+        s += create_random_modem_yaml_str("Transmitter")
+
+        s += create_random_modem_yaml_str("Receiver")
+        s += create_random_modem_yaml_str("Receiver")
+
+        s += create_section_yaml_str("Channels")
+        s += create_channel_yaml_str(0, 0)
+        s += create_sync_offset_yaml_str(low=sync_offsets['ch0_0']['LOW'], high=sync_offsets['ch0_0']['HIGH'])
+        s += create_channel_yaml_str(1, 0)
+        s += create_sync_offset_yaml_str(low=sync_offsets['ch1_0']['LOW'], high=sync_offsets['ch1_0']['HIGH'])
+        s += create_channel_yaml_str(0, 1)
+        s += create_sync_offset_yaml_str(low=sync_offsets['ch0_1']['LOW'], high=sync_offsets['ch0_1']['HIGH'])
+        s += create_channel_yaml_str(1, 1)
+        s += create_sync_offset_yaml_str(low=sync_offsets['ch1_1']['LOW'], high=sync_offsets['ch1_1']['HIGH'])
+
+        scenario = self.factory.from_str(s)
+        ch = scenario[0].channels
+        self.assertEqual(ch[0, 0].sync_offset_low, sync_offsets['ch0_0']['LOW'])
+        self.assertEqual(ch[0, 0].sync_offset_high, sync_offsets['ch0_0']['HIGH'])
+
+        self.assertEqual(ch[0, 1].sync_offset_low, sync_offsets['ch0_1']['LOW'])
+        self.assertEqual(ch[0, 1].sync_offset_high, sync_offsets['ch0_1']['HIGH'])
+
+        self.assertEqual(ch[1, 0].sync_offset_low, sync_offsets['ch1_0']['LOW'])
+        self.assertEqual(ch[1, 0].sync_offset_high, sync_offsets['ch1_0']['HIGH'])
+
+        self.assertEqual(ch[1, 1].sync_offset_low, sync_offsets['ch1_1']['LOW'])
+        self.assertEqual(ch[1, 1].sync_offset_high, sync_offsets['ch1_1']['HIGH'])
+
 if __name__ == '__main__':
     unittest.main()
