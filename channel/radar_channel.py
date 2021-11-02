@@ -41,7 +41,7 @@ class RadarChannel(Channel):
     __target_range: float
     __radar_cross_section: float
     __carrier_frequency: float
-    __target_exists: bool
+    target_exists: bool
     __tx_rx_isolation_db: float
     __tx_antenna_gain_db: float
     __rx_antenna_gain_db: float
@@ -108,7 +108,7 @@ class RadarChannel(Channel):
 
         self.target_range = target_range
         self.radar_cross_section = radar_cross_section
-        self.__target_exists = target_exists
+        self.target_exists = target_exists
         self.tx_rx_isolation_db = tx_rx_isolation_db
         self.__tx_antenna_gain_db = tx_antenna_gain_db
         self.__rx_antenna_gain_db = rx_antenna_gain_db
@@ -144,24 +144,6 @@ class RadarChannel(Channel):
             raise ValueError("Target range must be greater than or equal to zero")
 
         self.__target_range = value
-
-    @property
-    def target_exists(self) -> bool:
-        """Access configured target exists.
-
-        Returns:
-            bool: True if there is a target
-        """
-        return self.__target_exists
-
-    @target_exists.setter
-    def target_exists(self, value: bool) -> None:
-        """Modify the configured number of the target flag
-
-        Args:
-            value (bool): The new target flag
-        """
-        self.__target_exists = value
 
     @property
     def radar_cross_section(self) -> float:
@@ -323,7 +305,7 @@ class RadarChannel(Channel):
 
         delayed_signal = np.zeros((1, samples_in_frame + max_delay_in_samples), dtype=complex)
 
-        if self.__target_exists:
+        if self.target_exists:
 
             time = np.arange(samples_in_frame + max_delay_in_samples) / self.transmitter.sampling_rate
 
@@ -382,7 +364,7 @@ class RadarChannel(Channel):
         for idx, timestamp in enumerate(timestamps):
             delay = np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
 
-            if self.__target_exists:
+            if self.target_exists:
                 echo_delay = self.delay + 2 * self.velocity * timestamp / constants.speed_of_light
                 time = timestamp + np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
                 echo_phase = np.exp(-1j * (2 * np.pi * doppler_frequency * time + self._phase_echo))
