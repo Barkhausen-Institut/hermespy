@@ -3,6 +3,7 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from typing import Type, Optional
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
+from warnings import warn
 
 
 class RfChain:
@@ -13,15 +14,47 @@ class RfChain:
 
     yaml_tag = 'RfChain'
     __tx_power: float
+    __phase_offset: float
+    __amplitude_imbalance: float
+
     __power_amplifier: Optional[PowerAmplifier]
 
-    def __init__(self, tx_power: float = None) -> None:
+    def __init__(self,
+                 tx_power: float = None,
+                 phase_offset: float = None,
+                 amplitude_imbalance: float = None) -> None:
 
         self.__tx_power = 1.0
+        self.__phase_offset = 0.0
+        self.__amplitude_imbalance = 0.0
+
         self.__power_amplifier = None
 
         if tx_power is not None:
             self.__tx_power = tx_power
+
+        if phase_offset is not None:
+            self.__phase_offset = phase_offset
+
+        if amplitude_imbalance is not None:
+            self.amplitude_imbalance = amplitude_imbalance
+
+    @property
+    def amplitude_imbalance(self) -> float:
+        return self.__amplitude_imbalance
+
+    @amplitude_imbalance.setter
+    def amplitude_imbalance(self, val) -> None:
+        if abs(val) >= 1:
+            warn("Amplitude imbalance must be within interval (-1, 1).")
+            warn("Setting Amplitude imbalance to 0.")
+            self.__amplitude_imbalance = 0
+        else:
+            self.__amplitude_imbalance = val
+
+    @property
+    def phase_offset(self) -> float:
+        return self.__phase_offset
 
     @classmethod
     def to_yaml(cls: Type[RfChain], representer: SafeRepresenter, node: RfChain) -> Node:
@@ -45,6 +78,12 @@ class RfChain:
 
         if node.__power_amplifier is not None:
             state[node.power_amplifier.yaml_tag] = node.__power_amplifier
+
+        if node.__amplitude_imbalance != 0.0:
+            state['amplitude_imbalance'] = node.__amplitude_imbalance
+
+        if node.__phase_offset != 0.0:
+            state['phase_offset'] = node.__phase_offset
 
         if len(state) < 1:
             return representer.represent_none(None)
@@ -81,16 +120,33 @@ class RfChain:
 
         According to transmission impairments.
         """
+        input_signal = self.add_iq_imbalance(input_signal)
         if self.power_amplifier is not None:
             return self.power_amplifier.send(input_signal)
 
         return input_signal
+
+    def add_iq_imbalance(self, input_signal: np.ndarray) -> np.ndarray:
+        """Adds Phase offset and amplitude error to input signal.
+
+        Notation taken from https://en.wikipedia.org/wiki/IQ_imbalance.
+        """
+        x = input_signal
+        eps_delta = self.__phase_offset
+        eps_a = self.__amplitude_imbalance
+
+        eta_alpha = np.cos(eps_delta/2) + 1j * eps_a * np.sin(eps_delta/2)
+        eta_beta = eps_a * np.cos(eps_delta/2) - 1j * np.sin(eps_delta/2)
+
+        return (eta_alpha * x + eta_beta * np.conj(x))
+
 
     def receive(self, input_signal: np.ndarray) -> np.ndarray:
         """Returns the distorted version of signal in "input_signal".
 
         According to reception impairments.
         """
+        input_signal = self.add_iq_imbalance(input_signal)
         return input_signal
 
     @property
