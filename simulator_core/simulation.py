@@ -73,9 +73,19 @@ class Simulation(Executable):
     __min_num_drops: int
     __confidence_level: float
     __confidence_margin: float
+    plot_drop_transmitted_bits: bool
+    plot_drop_transmitted_signals: bool
+    plot_drop_received_signals: bool
+    plot_drop_received_bits: bool
+    plot_drop_bit_errors: bool
+    plot_drop_block_errors: bool
+    plot_drop_transmit_stft: bool
+    plot_drop_receive_stft: bool
+    plot_drop_transmit_spectrum: bool
+    plot_drop_receive_spectrum: bool
 
     def __init__(self,
-                 plot_drop: bool = False,
+                 plot_drop: bool = True,
                  calc_transmit_spectrum: bool = False,
                  calc_receive_spectrum: bool = False,
                  calc_transmit_stft: bool = False,
@@ -151,6 +161,16 @@ class Simulation(Executable):
                             calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops,
                             results_dir, verbosity)
 
+        self.plot_drop_transmitted_bits = False
+        self.plot_drop_transmitted_signals = False
+        self.plot_drop_received_signals = False
+        self.plot_drop_received_bits = False
+        self.plot_drop_bit_errors = False
+        self.plot_drop_block_errors = False
+        self.plot_drop_transmit_stft = False
+        self.plot_drop_receive_stft = False
+        self.plot_drop_transmit_spectrum = False
+        self.plot_drop_receive_spectrum = False
         self.snr_type = snr_type
         self.plot_bit_error = plot_bit_error
         self.plot_block_error = plot_block_error
@@ -246,7 +266,36 @@ class Simulation(Executable):
                     # Visualize plot if requested
                     if self.plot_drop:
 
-                        drop.plot()
+                        if self.plot_drop_transmitted_bits:
+                            drop.plot_transmitted_bits()
+
+                        if self.plot_drop_transmitted_signals:
+                            drop.plot_transmitted_signals()
+
+                        if self.plot_drop_received_signals:
+                            drop.plot_received_signals()
+
+                        if self.plot_drop_received_bits:
+                            drop.plot_received_bits()
+
+                        if self.plot_drop_bit_errors:
+                            drop.plot_bit_errors()
+
+                        if self.plot_drop_block_errors:
+                            drop.plot_block_errors()
+
+                        if self.plot_drop_transmit_stft:
+                            drop.plot_transmit_stft()
+
+                        if self.plot_drop_receive_stft:
+                            drop.plot_receive_stft()
+
+                        if self.plot_drop_transmit_spectrum:
+                            drop.plot_transmit_spectrum()
+
+                        if self.plot_drop_receive_spectrum:
+                            drop.plot_receive_spectrum()
+
                         plt.show()
 
                     # Add drop to the statistics
@@ -633,9 +682,33 @@ class Simulation(Executable):
         if quadriga_interface is not None:
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
 
+        plot_drop_transmitted_bits = state.pop('plot_drop_transmitted_bits', False)
+        plot_drop_transmitted_signals = state.pop('plot_drop_transmitted_signals', False)
+        plot_drop_received_signals = state.pop('plot_drop_received_signals', False)
+        plot_drop_received_bits = state.pop('plot_drop_received_bits', False)
+        plot_drop_bit_errors = state.pop('plot_drop_bit_errors', False)
+        plot_drop_block_errors = state.pop('plot_drop_block_errors', False)
+        plot_drop_transmit_stft = state.pop('plot_drop_transmit_stft', False)
+        plot_drop_receive_stft = state.pop('plot_drop_receive_stft', False)
+        plot_drop_transmit_spectrum = state.pop('plot_drop_transmit_spectrum', False)
+        plot_drop_receive_spectrum = state.pop('plot_drop_receive_spectrum', False)
+
         # Convert noise loop dB to linear
         noise_loop = state.pop('noise_loop', None)
         if noise_loop is not None:
             state['noise_loop'] = 10 ** (np.array(noise_loop) / 10)
 
-        return cls(**state)
+        simulation = cls(**state)
+
+        simulation.plot_drop_transmitted_bits = plot_drop_transmitted_bits
+        simulation.plot_drop_transmitted_signals = plot_drop_transmitted_signals
+        simulation.plot_drop_received_signals = plot_drop_received_signals
+        simulation.plot_drop_received_bits = plot_drop_received_bits
+        simulation.plot_drop_bit_errors = plot_drop_bit_errors
+        simulation.plot_drop_block_errors = plot_drop_block_errors
+        simulation.plot_drop_transmit_stft = plot_drop_transmit_stft
+        simulation.plot_drop_receive_stft = plot_drop_receive_stft
+        simulation.plot_drop_transmit_spectrum = plot_drop_transmit_spectrum
+        simulation.plot_drop_receive_spectrum = plot_drop_receive_spectrum
+
+        return simulation
