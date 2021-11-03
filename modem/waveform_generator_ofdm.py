@@ -200,6 +200,16 @@ class FrameSection:
 
     @property
     @abstractmethod
+    def num_samples(self) -> int:
+        """Number of samples within this OFDM time-section.
+
+        Returns:
+            int: Number of samples
+        """
+        ...
+
+    @property
+    @abstractmethod
     def duration(self) -> float:
         """Duration of this frame element in time domain.
 
@@ -345,6 +355,19 @@ class FrameSymbolSection(FrameSection):
 
         return mask
 
+    @property
+    def num_samples(self) -> int:
+        
+        num = 0
+
+        num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
+        for resource_idx in self.__pattern:
+
+            num += int(round(num_samples_per_slot * self.frame.resources[resource_idx].cp_ratio))
+
+        num += int(round(num_samples_per_slot))
+        return num * self.num_repetitions
+
     @classmethod
     def from_yaml(cls: Type[FrameSymbolSection],
                   constructor: SafeConstructor,
@@ -388,13 +411,18 @@ class FrameGuardSection(FrameSection):
 
         self.__duration = secs
 
+    @property
+    def num_samples(self) -> int:
+
+        num = int(round(self.num_repetitions * self.__duration * self.frame.modem.scenario.sampling_rate))
+        return num
+
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
 
         if len(symbols) > 0:
             raise ValueError("Guard sections may not hold modulation symbols")
 
-        num_samples = int(round(self.__duration * self.frame.modem.scenario.sampling_rate))
-        return np.zeros(num_samples, dtype=complex)
+        return np.zeros(self.num_samples, dtype=complex)
 
     def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
 
@@ -742,7 +770,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         for section in self.structure:
             num += section.num_samples
 
-        return
+        return num
 
     @property
     def cyclic_prefix_overhead(self) -> float:
