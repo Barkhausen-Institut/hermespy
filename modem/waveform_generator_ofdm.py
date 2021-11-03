@@ -200,6 +200,31 @@ class FrameSection:
         """
         ...
 
+    @abstractmethod
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
+        """Modulate this section into a complex base-band signal.
+
+        Args:
+            symbols (np.ndarray):
+                The complex data symbols encoded in this OFDM section.
+
+        Returns:
+            np.ndarray: The modulated signal vector.
+        """
+        ...
+
+    @abstractmethod
+    def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
+        """Demodulate a time section of a complex OFDM base-band signal into data symbols.
+
+        Args:
+            baseband_signal (np.ndarray): Vector of complex-valued base-band samples.
+
+        Returns:
+            np.ndarray: Symbols contained in this section.
+        """
+        ...
+
 
 class FrameSymbolSection(FrameSection):
 
@@ -284,6 +309,19 @@ class FrameGuardSection(FrameSection):
             raise ValueError("Guard section duration must be greater or equal to zero")
 
         self.__duration = secs
+
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
+
+        if len(symbols) > 0:
+            raise ValueError("Guard sections may not hold modulation symbols")
+
+        num_samples = int(round(self.__duration * self.frame.modem.scenario.sampling_rate))
+        return np.zeros(num_samples, dtype=complex)
+
+    def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
+
+        # Guard naturally sections don't encode any data symbols
+        return np.empty(0, dtype=complex)
 
     @classmethod
     def from_yaml(cls: Type[FrameGuardSection],
@@ -421,8 +459,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self.structure.append(section)
         section.frame = self
 
-
-        
     @property
     def guard_interval(self) -> float:
         """Guard interval between frames.
@@ -641,8 +677,26 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
+        # The number of samples in time domain the frame should contain, given the current sample frequency
+        num_samples = int(round(self.frame_duration * self.modem.scenario.sampling_rate))
+        output_signal = np.empty(num_samples, dtype=complex)
+
+        section_time_index = 0
+        for section in self.structure:
+
+            # Generate the time signal for this section
+
+        # The number of samples per time slot
+        # Depending on the selected sampling rate, this might result in un-recoverable subcarriers!
+
+
+
         #full_frame = copy(self.reference_frame)
         #full_frame[np.where(self.data_frame_indices)] = data_symbols
+
+        # Build the time time-frequency grid of the current ofdm frame configuration
+
+
 
         frame_in_freq_domain = np.zeros((self.symbols_per_frame, self.fft_size), dtype=complex)
         frame_in_freq_domain[:, self._resource_element_mapping] = full_frame
