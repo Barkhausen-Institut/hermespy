@@ -5,9 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union, Any, Dict
 from copy import copy
 from scipy import signal
-from functools import lru_cache
-from dataclasses import dataclass, field
-from abc import ABC
 from enum import Enum
 from abc import abstractmethod
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
@@ -31,10 +28,20 @@ __status__ = "Prototype"
 
 
 class ElementType(Enum):
+    """Type of resource element."""
 
     REFERENCE = 0
     DATA = 1
     NULL = 2
+
+class ChannelEstimation(Enum):
+    """Applied channel estimation algorithm after reception."""
+
+    IDEAL = 0
+    IDEAL_PREAMBLE = 1
+    IDEAL_MIDAMBLE = 2
+    IDEAL_POSTAMBLE = 3
+    LEAST_SQUARES = 4
 
 
 class FrameElement:
@@ -156,7 +163,7 @@ class FrameResource:
         return self.__repetitions * num
 
     @property
-    def resource_mask(self) -> Dict[ElementType, np.ndarray]:
+    def resource_mask(self) -> np.ndarray:
 
         # Initialize the base mask as all false
         mask = np.ndarray((len(ElementType), self.num_subcarriers), dtype=bool) * False
@@ -255,7 +262,7 @@ class FrameSection:
 class FrameSymbolSection(FrameSection):
 
     yaml_tag: str = u'Symbol'
-    __pattern: List[int]
+    pattern: List[int]
 
     def __init__(self,
                  num_repetitions: int = 1,
@@ -263,14 +270,14 @@ class FrameSymbolSection(FrameSection):
                  frame: Optional[WaveformGeneratorOfdm] = None) -> None:
 
         FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
-        self.__pattern = pattern if pattern is not None else []
+        self.pattern = pattern if pattern is not None else []
         self.frame = frame
 
     @property
     def num_symbols(self) -> int:
 
         num = 0
-        for resource_idx in self.__pattern:
+        for resource_idx in self.pattern:
 
             resource = self.frame.resources[resource_idx]
             num += resource.num_symbols
@@ -282,14 +289,14 @@ class FrameSymbolSection(FrameSection):
 
         # ToDo: Resources with different numbers of subcarriers are currently not supported
         num = 0
-        if len(self.__pattern) > 0:
-            num = self.frame.resources[self.__pattern[0]].num_subcarriers
+        if len(self.pattern) > 0:
+            num = self.frame.resources[self.pattern[0]].num_subcarriers
 
         return num
 
     @property
     def num_timeslots(self) -> int:
-        return len(self.__pattern) * self.num_repetitions
+        return len(self.pattern) * self.num_repetitions
 
     @property
     def duration(self) -> float:
@@ -334,17 +341,59 @@ class FrameSymbolSection(FrameSection):
         # Transform into time-domain for each ofdm symbol
         resource_signals = ifft(shifted_grid, axis=0, norm='ortho').T
 
-        # Add the cyclic prefix to each time slot while simulataneously flatten the resource signals into time domain
+        # Add the cyclic prefix to each time slot while simulatneously flatten the resource signals into time domain
         signals = []
         for resource_idx, resource_samples in enumerate(resource_signals):
 
-            pattern_idx = resource_idx % len(self.__pattern)
-            cp_ratio = self.frame.resources[self.__pattern[pattern_idx]].cp_ratio
+            pattern_idx = resource_idx % len(self.pattern)
+            cp_ratio = self.frame.resources[self.pattern[pattern_idx]].cp_ratio
 
             num_prefix_samples = int(round(num_samples_per_slot * cp_ratio))
-            signals.append(np.append(resource_samples, resource_samples[-num_prefix_samples:]))
+            signals.append(np.append(resource_samples[-num_prefix_samples:], resource_samples))
 
         return np.concatenate(signals, axis=0)
+
+    def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
+
+        rel_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
+        samples_per_slot = int(round(rel_samples_per_slot))
+
+        # Samples without prefixes in the time-time grid, essentially sections of the demodulating stft
+        slot_samples = np.empty((samples_per_slot, self.num_timeslots), dtype=complex)
+
+        sample_index = 0
+        for slot_idx in range(len(self.pattern) * self.num_repetitions):
+
+            pattern_idx = slot_idx % len(self.pattern)
+            resource = self.frame.resources[self.pattern[pattern_idx]]
+
+            num_prefix_samples = int(round(rel_samples_per_slot * resource.cp_ratio))
+
+            sample_index += num_prefix_samples
+            slot_samples[:, slot_idx] = baseband_signal[sample_index:sample_index+samples_per_slot]
+
+            sample_index += samples_per_slot
+
+        # Compute fourier transform over each time slot, pad with zeros if require
+        if samples_per_slot < self.num_subcarriers:
+            padded_slot_samples = np.append(slot_samples, np.zeros((self.num_subcarriers - samples_per_slot,
+                                                                   self.num_timeslots)), axis=0)
+        else:
+            padded_slot_samples = slot_samples[:self.num_subcarriers, :]
+
+        # np.empty()
+
+        # Recover the original dft grid
+        padded_grid = fftshift(fft(padded_slot_samples, axis=0, norm='ortho'), axes=0)
+
+#        import matplotlib.pyplot as plt
+#        plt.imshow(abs(padded_grid))
+#        plt.show()
+
+        grid = padded_grid[:self.num_subcarriers, :]
+        data_symbols = grid[self.resource_mask[ElementType.DATA.value, ::]]
+
+        return data_symbols
 
     @property
     def resource_mask(self) -> Dict[ElementType, np.ndarray]:
@@ -353,13 +402,13 @@ class FrameSymbolSection(FrameSection):
         num_subcarriers = self.num_subcarriers
         mask = np.ndarray((len(ElementType), num_subcarriers, self.num_timeslots), dtype=bool) * False
 
-        for resource_section, resource_idx in enumerate(self.__pattern):
+        for resource_section, resource_idx in enumerate(self.pattern):
 
             resource = self.frame.resources[resource_idx]
             resource_mask = resource.resource_mask
 
             repeated_mask = np.repeat(resource_mask[..., np.newaxis], self.num_repetitions, axis=2)
-            mask[:, :resource_mask.shape[1], resource_section::len(self.__pattern)] = repeated_mask
+            mask[:, :resource_mask.shape[1], resource_section::len(self.pattern)] = repeated_mask
 
         return mask
 
@@ -369,11 +418,13 @@ class FrameSymbolSection(FrameSection):
         num = 0
 
         num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
-        for resource_idx in self.__pattern:
 
+        # Add up the additional samples from cyclic prefixes
+        for resource_idx in self.pattern:
             num += int(round(num_samples_per_slot * self.frame.resources[resource_idx].cp_ratio))
 
-        num += int(round(num_samples_per_slot))
+        # Add up the base samples from each timeslot
+        num += int(round(num_samples_per_slot)) * len(self.pattern)
         return num * self.num_repetitions
 
     @classmethod
@@ -477,27 +528,23 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         of each OFDM symbol
     """
 
-    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        pass
-
     yaml_tag: str = WaveformGenerator.yaml_tag + u'OFDM'
 
-    pilot_subcarriers: List[np.ndarray]
-    pilot_symbols: List[np.ndarray]
-    reference_symbols: List[np.ndarray]
-    __guard_interval: float
-    __fft_size: int
+#    pilot_subcarriers: List[np.ndarray]
+#    pilot_symbols: List[np.ndarray]
+#    reference_symbols: List[np.ndarray]
+#    __fft_size: int
     __subcarrier_spacing: float
     dc_suppression: bool
     resources: List[FrameResource]
     structure: List[FrameSection]
 
     def __init__(self,
-                 pilot_subcarriers: Optional[List[np.ndarray]] = None,
-                 pilot_symbols: Optional[List[np.ndarray]] = None,
-                 reference_symbols: Optional[List[np.ndarray]] = None,
-                 guard_interval: float = 0.0,
-                 fft_size: int = 1,
+#                 pilot_subcarriers: Optional[List[np.ndarray]] = None,
+#                 pilot_symbols: Optional[List[np.ndarray]] = None,
+#                 reference_symbols: Optional[List[np.ndarray]] = None,
+#                 fft_size: int = 1,
+                 channel_estimation: Union[str, ChannelEstimation] = ChannelEstimation.IDEAL,
                  subcarrier_spacing: float = 0.,
                  dc_suppression: bool = True,
                  resources: Optional[List[FrameResource]] = None,
@@ -511,12 +558,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
             frame_structure (List[FrameElement], optional):
                 Structure configuration of the generated frame.
-
-            guard_interval (float, optional):
-                Spacing between individual frame transmission in seconds.
-
-            fft_size (int, optional):
-                Number of frequency bins in the Fast Fourier Transform.
 
             num_occupied_subcarriers (int, optional):
                 Number of subcarriers occupied within the frame structure??
@@ -535,11 +576,13 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                                    modulation_order=modulation_order)
 
         # Parameter initialization
-        self.pilot_subcarriers = pilot_subcarriers if pilot_subcarriers is not None else []
-        self.pilot_symbols = pilot_symbols if pilot_symbols is not None else []
-        self.reference_symbols = reference_symbols if reference_symbols is not None else []
-        self.guard_interval = guard_interval
-        self.fft_size = fft_size
+#        self.pilot_subcarriers = pilot_subcarriers if pilot_subcarriers is not None else []
+#        self.pilot_symbols = pilot_symbols if pilot_symbols is not None else []
+#        self.reference_symbols = reference_symbols if reference_symbols is not None else []
+#        self.fft_size = fft_size
+        if isinstance(channel_estimation, str):
+            channel_estimation = ChannelEstimation[channel_estimation]
+        self.channel_estimation_algorithm = channel_estimation
         self.subcarrier_spacing = subcarrier_spacing
         self.dc_suppression = dc_suppression
         self.resources = [] if resources is None else resources
@@ -572,57 +615,57 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self.structure.append(section)
         section.frame = self
 
-    @property
-    def guard_interval(self) -> float:
-        """Guard interval between frames.
-
-        Returns:
-            float: Interval in seconds.
-        """
-
-        return self.__guard_interval
-
-    @guard_interval.setter
-    def guard_interval(self, interval: float) -> None:
-        """Modify the guard interval between frames.
-
-        Args:
-            interval (float): New interval in seconds.
-
-        Raises:
-            ValueError: If `interval` is smaller than zero.
-        """
-
-        if interval < 0.0:
-            raise ValueError("Guard interval must be greater or equal to zero")
-
-        self.__guard_interval = interval
-
-    @property
-    def fft_size(self) -> int:
-        """Number of frequency bins in the Fast Fourier Transform.
-
-        Returns:
-            int: Number of frequency bins
-        """
-
-        return self.__fft_size
-
-    @fft_size.setter
-    def fft_size(self, size: int) -> None:
-        """Modify the number of frequency bins in the Fast Fourier Transform.
-
-        Args:
-            size (int): New number of frequency bins.
-
-        Raises:
-            ValueError: If `size` is smaller than one.
-        """
-
-        if size < 1:
-            raise ValueError("Number of frequency bins must be greater or equal to one")
-
-        self.__fft_size = size
+#    @property
+#    def guard_interval(self) -> float:
+#        """Guard interval between frames.
+#
+#        Returns:
+#            float: Interval in seconds.
+#        """
+#
+#        return self.__guard_interval
+#
+#    @guard_interval.setter
+#    def guard_interval(self, interval: float) -> None:
+#        """Modify the guard interval between frames.
+#
+#        Args:
+#            interval (float): New interval in seconds.
+#
+#        Raises:
+#            ValueError: If `interval` is smaller than zero.
+#        """
+#
+#        if interval < 0.0:
+#            raise ValueError("Guard interval must be greater or equal to zero")
+#
+#        self.__guard_interval = interval
+#
+#    @property
+#    def fft_size(self) -> int:
+#        """Number of frequency bins in the Fast Fourier Transform.
+#
+#        Returns:
+#            int: Number of frequency bins
+#        """
+#
+#        return self.__fft_size
+#
+#    @fft_size.setter
+#    def fft_size(self, size: int) -> None:
+#        """Modify the number of frequency bins in the Fast Fourier Transform.
+#
+#        Args:
+#            size (int): New number of frequency bins.
+#
+#        Raises:
+#            ValueError: If `size` is smaller than one.
+#        """
+#
+#        if size < 1:
+#            raise ValueError("Number of frequency bins must be greater or equal to one")
+#
+#        self.__fft_size = size
         
     @property
     def subcarrier_spacing(self) -> float:
@@ -791,7 +834,9 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         return self._mapping.get_symbols(data_bits)
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
-        return self._mapping.detect_bits(data_symbols)
+
+        detected_bits = self._mapping.detect_bits(data_symbols)
+        return detected_bits
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
@@ -813,13 +858,31 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             section_signal = section.modulate(section_data_symbols)
             output_signal = np.append(output_signal, section_signal)
 
-        f, t, Z = signal.stft(output_signal, nperseg=int(round(self.modem.scenario.sampling_rate / self.subcarrier_spacing)))
+#        f, t, Z = signal.stft(output_signal, nperseg=int(round(self.modem.scenario.sampling_rate / self.subcarrier_spacing)))
 #        import matplotlib.pyplot as plt
 #        plt.plot(np.real(output_signal))
 #        plt.imshow(abs(Z))
 #        plt.show()
         return output_signal
 
+    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+
+        symbols = np.empty(self.symbols_per_frame, dtype=complex)
+
+        sample_index = 0
+        symbol_index = 0
+        for section in self.structure:
+
+            num_samples = section.num_samples
+            num_symbols = section.num_symbols
+
+            section_symbols = section.demodulate(signal[sample_index:sample_index+num_samples])
+            symbols[symbol_index:symbol_index+num_symbols] = section_symbols
+
+            sample_index += num_samples
+            symbol_index += num_symbols
+
+        return symbols
 
     def create_frame(self, timestamp: int, data_bits: np.array) -> Tuple[np.ndarray, int, int]:
         """Creates a modulated complex baseband signal for a whole transmit frame.
@@ -1164,8 +1227,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return channel_in_freq_domain
 
-    def get_ideal_channel_estimation(
-            self, channel_timestamp: np.array) -> np.ndarray:
+    def __ideal_channel_estimation(self) -> np.ndarray:
         """returns ideal channel estimation
 
         This method extracts the frequency-domain response from a known channel impulse response. The channel is the one

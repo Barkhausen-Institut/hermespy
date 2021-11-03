@@ -5,7 +5,8 @@ from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import TYPE_CHECKING, Type, List, Optional, Union
-from math import ceil
+from itertools import product
+from math import floor
 import numpy as np
 import numpy.random as rnd
 
@@ -89,10 +90,12 @@ class Receiver(Modem):
         timestamps = np.arange(num_samples) / self.scenario.sampling_rate
 
         # Number of frames within the received samples
-        frames_per_stream = int(ceil(num_samples / self.waveform_generator.samples_in_frame))
+        samples_in_frame = self.waveform_generator.samples_in_frame
+        frames_per_stream = int(floor(num_samples / self.waveform_generator.samples_in_frame))
 
         # Number of simples pre received stream
-        symbols_per_stream = frames_per_stream * self.waveform_generator.symbols_per_frame
+        symbols_per_frame = self.waveform_generator.symbols_per_frame
+        symbols_per_stream = frames_per_stream * symbols_per_frame
 
         # Number of code bits required to generate all frames for all streams
         num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
@@ -116,8 +119,16 @@ class Receiver(Modem):
         symbol_streams = np.empty((received_signals.shape[0], symbols_per_stream),
                                   dtype=self.waveform_generator.symbol_type)
 
-        for stream_idx, noisy_signal in enumerate(noisy_signals):
-            symbol_streams[stream_idx, :] = self.waveform_generator.demodulate(noisy_signal, timestamps)
+        for (stream_idx, noisy_signal), frame_idx in product(enumerate(noisy_signals), range(frames_per_stream)):
+
+            # Select the proper signal section for the next frame to be demodulated
+            noisy_signal_frame_section = noisy_signal[frame_idx*samples_in_frame:(1+frame_idx)*samples_in_frame]
+
+            # Demodulate the frame into dat symbols
+            frame_symbols = self.waveform_generator.demodulate(noisy_signal_frame_section, timestamps)
+
+            # Save data symbols in their respective stream section
+            symbol_streams[stream_idx, frame_idx*symbols_per_frame:(1+frame_idx)*symbols_per_frame] = frame_symbols
 
         # Decode the symbol precoding
         symbols = self.precoding.decode(symbol_streams)
