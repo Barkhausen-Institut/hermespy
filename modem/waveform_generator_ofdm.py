@@ -46,7 +46,15 @@ class FrameElement:
                  type: Union[str, ElementType],
                  repetitions: int = 1) -> None:
 
-        self.type = ElementType[type] if isinstance(type, str) else type
+        if type is None:
+            self.type = ElementType.NULL
+
+        elif isinstance(type, str):
+            self.type = ElementType[type]
+
+        else:
+            self.type = type
+
         self.repetitions = repetitions
 
 
@@ -474,7 +482,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     yaml_tag: str = WaveformGenerator.yaml_tag + u'OFDM'
 
-    __frame: Frame
     pilot_subcarriers: List[np.ndarray]
     pilot_symbols: List[np.ndarray]
     reference_symbols: List[np.ndarray]
@@ -1263,15 +1270,21 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     @property
     def bit_energy(self) -> float:
-        return self.oversampling_factor / self._mapping.bits_per_symbol * self._cyclic_prefix_overhead
+
+        return 1 / self._mapping.bits_per_symbol  # ToDo: Re-implement
+        # return self.oversampling_factor / self._mapping.bits_per_symbol * self._cyclic_prefix_overhead
 
     @property
     def symbol_energy(self) -> float:
-        return self.oversampling_factor * self._cyclic_prefix_overhead
+
+        return 1 / self._mapping.bits_per_symbol  # ToDo: Re-implement
+        # return self.oversampling_factor * self._cyclic_prefix_overhead
 
     @property
     def power(self) -> float:
-        return self.num_occupied_subcarriers / self.fft_size
+
+        return 1  # ToDo: Re-implement
+#        return self.num_occupied_subcarriers / self.fft_size
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorOfdm],
@@ -1323,7 +1336,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         structure: List[FrameSection] = state.pop('structure', None)
         resources = state.pop('resources', None)
-
 
         # Handle resource list to object conversion
         if resources is not None:

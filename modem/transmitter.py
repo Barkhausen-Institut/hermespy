@@ -144,7 +144,9 @@ class Transmitter(Modem):
 
         for stream_idx, data_symbols in enumerate(symbol_streams):
 
-            signal_streams[stream_idx, :] = self.waveform_generator.modulate(data_symbols, timestamps)
+            frame = self.waveform_generator.modulate(data_symbols, timestamps)
+            frame_section = min(num_samples, len(frame))
+            signal_streams[stream_idx, :frame_section] = frame[:frame_section]
 
         # Apply stream coding, for instance beam-forming
         # TODO: Not yet supported.
