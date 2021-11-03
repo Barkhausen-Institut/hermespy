@@ -60,9 +60,9 @@ class TestIqImbalanceCreationAndSerialization(unittest.TestCase):
 !<Scenario>
 
 Modems:
-  - Transmitter:
+  - Transmitter
     RfChain:
-       amplitde_imbalance: {AMPLITUDE_IMBALANCE}
+       amplitude_imbalance: {AMPLITUDE_IMBALANCE}
        phase_offset: {PHASE_OFFSET}
 """
         scenarios = self.factory.from_str(yaml_str)
