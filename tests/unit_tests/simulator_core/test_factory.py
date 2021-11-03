@@ -5,6 +5,8 @@ import unittest
 from unittest.mock import Mock
 import re
 
+from ruamel import yaml
+
 from simulator_core import Factory, SerializableClasses
 from modem.rf_chain import RfChain
 
@@ -47,7 +49,31 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(MockClass.yaml_tag in self.factory.registered_tags,
                         "Mock class tag not registered as expected for serialization")
 
+class TestIqImbalanceCreation(unittest.TestCase):
+    def setUp(self) -> None:
+        self.factory = Factory()
 
+    def test_creation_proper_values(self) -> None:
+        AMPLITUDE_IMBALANCE = 0.5
+        PHASE_OFFSET = 3
+        yaml_str = f"""
+!<Scenario>
+
+Modems:
+  - Transmitter:
+    RfChain:
+       amplitde_imbalance: {AMPLITUDE_IMBALANCE}
+       phase_offset: {PHASE_OFFSET}
+"""
+        scenarios = self.factory.from_str(yaml_str)
+        self.assertAlmostEqual(
+            scenarios[0].transmitters[0].rf_chain.amplitde_imbalance,
+            AMPLITUDE_IMBALANCE
+        )
+        self.assertEqual(
+            scenarios[0].transmitters[0].rf_chain.phase_offset,
+            PHASE_OFFSET
+        )
 class TestIQImbalanceSerialization(unittest.TestCase):
     def setUp(self) -> None:
         self.factory = Factory()
