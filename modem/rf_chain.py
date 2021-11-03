@@ -79,6 +79,12 @@ class RfChain:
         if node.__power_amplifier is not None:
             state[node.power_amplifier.yaml_tag] = node.__power_amplifier
 
+        if node.__amplitude_imbalance != 0.0:
+            state['amplitude_imbalance'] = node.__amplitude_imbalance
+
+        if node.__phase_offset != 0.0:
+            state['phase_offset'] = node.__phase_offset
+
         if len(state) < 1:
             return representer.represent_none(None)
 
