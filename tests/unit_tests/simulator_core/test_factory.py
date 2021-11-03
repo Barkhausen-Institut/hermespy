@@ -3,8 +3,10 @@
 
 import unittest
 from unittest.mock import Mock
+import re
 
 from simulator_core import Factory, SerializableClasses
+from modem.rf_chain import RfChain
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -46,5 +48,22 @@ class TestFactory(unittest.TestCase):
                         "Mock class tag not registered as expected for serialization")
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestIQImbalanceSerialization(unittest.TestCase):
+    def setUp(self) -> None:
+        self.factory = Factory()
+
+    def test_iq_imbalance_serialisation(self) -> None:
+        PHASE_OFFSET = 10
+        AMPLITUDE_IMBALANCE = 0.5
+        rf_chain = RfChain(phase_offset=PHASE_OFFSET,
+                           amplitude_imbalance=AMPLITUDE_IMBALANCE)
+
+        serialized_rf_chain = self.factory.to_str(rf_chain)
+        phase_offset_regex = re.compile(
+            f'^phase_offset: {PHASE_OFFSET}$', re.MULTILINE)
+        amplitude_imbalance_regex = re.compile(
+            f'^amplitude_imbalance: {AMPLITUDE_IMBALANCE}$',
+            re.MULTILINE)
+
+        self.assertTrue(re.search(phase_offset_regex, serialized_rf_chain) is not None)
+        self.assertTrue(re.search(amplitude_imbalance_regex, serialized_rf_chain) is not None)
