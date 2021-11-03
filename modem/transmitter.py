@@ -143,6 +143,7 @@ class Transmitter(Modem):
         signal_streams = np.empty((symbol_streams.shape[0], num_samples), dtype=complex)
 
         for stream_idx, data_symbols in enumerate(symbol_streams):
+
             signal_streams[stream_idx, :] = self.waveform_generator.modulate(data_symbols, timestamps)
 
         # Apply stream coding, for instance beam-forming

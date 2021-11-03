@@ -327,7 +327,6 @@ class WaveformGenerator(ABC):
         """
         ...
 
-
     @abstractmethod
     def create_frame(self, old_timestamp: int,
                      data_bits: np.array) -> Tuple[np.ndarray, int, int]:

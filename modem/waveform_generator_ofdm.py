@@ -2,7 +2,7 @@
 """HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union, Any
+from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union, Any, Dict
 from copy import copy
 from scipy import signal
 from functools import lru_cache
@@ -11,6 +11,7 @@ from abc import ABC
 from enum import Enum
 from abc import abstractmethod
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
+from numpy.fft import ifft, fft, ifftshift, fftshift
 import numpy as np
 
 from modem import WaveformGenerator
@@ -147,14 +148,21 @@ class FrameResource:
         return self.__repetitions * num
 
     @property
-    def num_slots(self) -> int:
-        """Number of time slots."""
+    def resource_mask(self) -> Dict[ElementType, np.ndarray]:
 
-        num: int = 0
+        # Initialize the base mask as all false
+        mask = np.ndarray((len(ElementType), self.num_subcarriers), dtype=bool) * False
+
+        element_count = 0
         for element in self.elements:
-                num += element.repetitions
 
-        return self.__repetitions * num
+            mask[element.type.value, element_count:element_count+element.repetitions] = True
+            element_count += element.repetitions
+
+        # Repeat the subcarrier masks according to the configured number of repetitions.
+        mask = mask[:, :element_count].repeat(self.__repetitions, axis=1)
+
+        return mask
 
 
 class FrameSection:
@@ -262,10 +270,80 @@ class FrameSymbolSection(FrameSection):
         return num
 
     @property
+    def num_timeslots(self) -> int:
+        return len(self.__pattern) * self.num_repetitions
+
+    @property
     def duration(self) -> float:
 
-        duration = len(self.__pattern) * self.num_repetitions / self.frame.subcarrier_spacing
+        duration = self.num_timeslots / self.frame.subcarrier_spacing
         return duration
+
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
+
+        # Collect resource masks
+        mask = self.resource_mask
+
+        # Fill up the time-frequency grid exploiting the mask
+        grid = np.empty(mask.shape[1:], complex)
+
+        # Reference fields all currently carry the complex symbol 1+j0
+        # ToDo: Implement reference symbol configurations
+        grid[mask[ElementType.REFERENCE.value, ::]] = 1.
+
+        # Data fields carry the supplied data symbols
+        grid[mask[ElementType.DATA.value, ::]] = symbols
+
+        # NULL fields are just that... zero ToDo: Check with André if this is correct
+        grid[mask[ElementType.NULL.value, ::]] = 0.
+
+        # By convention, the length of each time slot is the inverse of the sub-carrier spacing
+        num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
+
+        # Pad the grid with zeros
+        if self.frame.dc_suppression:
+
+            padded_grid = np.zeros((grid.shape[0], int(round(num_samples_per_slot))), dtype=complex)
+            padded_grid[:, 1:grid.shape[0]+1] = grid  # Remove DC component by setting the first sub-carrier to zero
+
+        else:
+            padded_grid = np.append(grid, np.zeros((grid.shape[0], int(round(num_samples_per_slot)) - grid.shape[1]),
+                                    dtype=complex), axis=1)
+
+        # Shift
+        shifted_grid = ifftshift(padded_grid, axes=0)
+
+        # Transform into time-domain for each ofdm symbol
+        resource_signals = ifft(shifted_grid, axis=0, norm='ortho').T
+
+        # Add the cyclic prefix to each time slot while simulataneously flatten the resource signals into time domain
+        signals = []
+        for resource_idx, resource_samples in enumerate(resource_signals):
+
+            pattern_idx = resource_idx % len(self.__pattern)
+            cp_ratio = self.frame.resources[self.__pattern[pattern_idx]].cp_ratio
+
+            num_prefix_samples = int(round(num_samples_per_slot * cp_ratio))
+            signals.append(np.append(resource_samples, resource_samples[-num_prefix_samples:]))
+
+        return np.concatenate(signals, axis=0)
+
+    @property
+    def resource_mask(self) -> Dict[ElementType, np.ndarray]:
+
+        # Initialize the base mask as all false
+        num_subcarriers = self.num_subcarriers
+        mask = np.ndarray((len(ElementType), num_subcarriers, self.num_timeslots), dtype=bool) * False
+
+        for resource_section, resource_idx in enumerate(self.__pattern):
+
+            resource = self.frame.resources[resource_idx]
+            resource_mask = resource.resource_mask
+
+            repeated_mask = np.repeat(resource_mask[..., np.newaxis], self.num_repetitions, axis=2)
+            mask[:, :resource_mask.shape[1], resource_section::len(self.__pattern)] = repeated_mask
+
+        return mask
 
     @classmethod
     def from_yaml(cls: Type[FrameSymbolSection],
@@ -659,7 +737,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     @property
     def samples_in_frame(self) -> int:
         """int: Returns read-only samples_in_frame"""
-        return self._samples_in_frame_no_oversampling * self.oversampling_factor
+
+        num = 0
+        for section in self.structure:
+            num += section.num_samples
+
+        return
 
     @property
     def cyclic_prefix_overhead(self) -> float:
@@ -679,40 +762,29 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # The number of samples in time domain the frame should contain, given the current sample frequency
         num_samples = int(round(self.frame_duration * self.modem.scenario.sampling_rate))
-        output_signal = np.empty(num_samples, dtype=complex)
+        output_signal = np.empty(0, dtype=complex)
 
-        section_time_index = 0
+        sent_data_symbols = 0
         for section in self.structure:
 
-            # Generate the time signal for this section
+            # Number of data symbols encoded in this time-section of the OFDM frame
+            section_num_data_symbols = section.num_symbols
 
-        # The number of samples per time slot
-        # Depending on the selected sampling rate, this might result in un-recoverable subcarriers!
+            # Select the data symbols to be sent over this time-section of the OFDM frame
+            section_data_symbols = data_symbols[sent_data_symbols:sent_data_symbols+section_num_data_symbols]
+            sent_data_symbols += section_num_data_symbols
 
+            # Modulate the signal
+            section_signal = section.modulate(section_data_symbols)
+            output_signal = np.append(output_signal, section_signal)
 
-
-        #full_frame = copy(self.reference_frame)
-        #full_frame[np.where(self.data_frame_indices)] = data_symbols
-
-        # Build the time time-frequency grid of the current ofdm frame configuration
-
-
-
-        frame_in_freq_domain = np.zeros((self.symbols_per_frame, self.fft_size), dtype=complex)
-        frame_in_freq_domain[:, self._resource_element_mapping] = full_frame
-
-        frame_in_time_domain = np.fft.ifft(frame_in_freq_domain, norm='ortho', axis=1)
-        frame_in_time_domain = self._add_guard_intervals(frame_in_time_domain)
-
-        output_signal = np.zeros(self._samples_in_frame_no_oversampling, dtype=complex)
-
-        data_symbols = np.reshape(frame, (self.symbols_per_frame * self.fft_size,
-                                          self.param.number_tx_antennas))
-        data_symbols = data_symbols.transpose()
-        output_signal[:, self.data_time_indices] = data_symbols
-        output_signal[:, self.prefix_time_indices] = output_signal[:, self.prefix_time_indices + self.param.fft_size]
-
+        f, t, Z = signal.stft(output_signal, nperseg=int(round(self.modem.scenario.sampling_rate / self.subcarrier_spacing)))
+#        import matplotlib.pyplot as plt
+#        plt.plot(np.real(output_signal))
+#        plt.imshow(abs(Z))
+#        plt.show()
         return output_signal
+
 
     def create_frame(self, timestamp: int, data_bits: np.array) -> Tuple[np.ndarray, int, int]:
         """Creates a modulated complex baseband signal for a whole transmit frame.
