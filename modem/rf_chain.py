@@ -46,11 +46,9 @@ class RfChain:
     @amplitude_imbalance.setter
     def amplitude_imbalance(self, val) -> None:
         if abs(val) >= 1:
-            warn("Amplitude imbalance must be within interval (-1, 1).")
-            warn("Setting Amplitude imbalance to 0.")
-            self.__amplitude_imbalance = 0
-        else:
-            self.__amplitude_imbalance = val
+            raise ValueError("Amplitude imbalance must be within interval (-1, 1).")
+
+        self.__amplitude_imbalance = val
 
     @property
     def phase_offset(self) -> float:
