@@ -46,11 +46,9 @@ class RfChain:
     @amplitude_imbalance.setter
     def amplitude_imbalance(self, val) -> None:
         if abs(val) >= 1:
-            warn("Amplitude imbalance must be within interval (-1, 1).")
-            warn("Setting Amplitude imbalance to 0.")
-            self.__amplitude_imbalance = 0
-        else:
-            self.__amplitude_imbalance = val
+            raise ValueError("Amplitude imbalance must be within interval (-1, 1).")
+
+        self.__amplitude_imbalance = val
 
     @property
     def phase_offset(self) -> float:
@@ -130,6 +128,15 @@ class RfChain:
         """Adds Phase offset and amplitude error to input signal.
 
         Notation taken from https://en.wikipedia.org/wiki/IQ_imbalance.
+
+        Args:
+            input_signal (np.ndarray):
+                Signal to be detoriated as a matrix in shape `#no_antennas x #no_samples`.
+                `#no_antennas` depends if on receiver or transmitter side.
+
+        Returns:
+            np.ndarray:
+                Detoriated signal with the same shape as `input_signal`.
         """
         x = input_signal
         eps_delta = self.__phase_offset
