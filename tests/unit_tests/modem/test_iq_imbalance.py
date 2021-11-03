@@ -38,7 +38,6 @@ class TestIqImbalance(unittest.TestCase):
             self.x_t, rf_chain.add_iq_imbalance(self.x_t)
         )
 
-
-    def test_amplitude_imbalance_default_if_not_within_interval(self) -> None:
-        rf_chain = RfChain(None, None, -3)
-        self.assertEqual(rf_chain.amplitude_imbalance, 0)
+    def test_exception_raised_if_amplitude_imbalance_not_within_interval(self) -> None:
+        with self.assertRaises(ValueError):
+            rf_chain = RfChain(None, None, -3)
