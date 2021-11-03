@@ -1,10 +1,6 @@
 !<Scenario>
 
-# random_seed: 0
-# Sampling rate for OFDM 2 * 1200 subcarriers * 15kHz spacing
-# sampling_rate: 36e6
-sampling_rate: 99e6
-
+sampling_rate: 99e6 # 120e6
 
 Modems:
 
@@ -55,64 +51,43 @@ Modems:
   # Receiving OFDM modem
   - Receiver
 
-    carrier_frequency: 3e9
-    num_antennas: 1
-    reference_transmitter: 0
-
     WaveformOFDM:
 
       # Symbol modulation settings
-      modulation_order: 16
-      oversampling_factor: 2
-      subcarrier_spacing: 15e3
-      fft_size: 2048
+      modulation_order: 2
+      subcarrier_spacing: 30e3
       dc_suppression: False
 
       # Frame settings
       Resources:
 
-        - repetitions: 100      # Resource repetition in frequency domain
-          cp_ratio: .078125
+        - repetitions: 1
+          cp_ratio: 0.0703125
           elements:
-            - type: REFERENCE
-              repetitions: 1    # Element repetitions in frequency domain
+            - type: NULL
+              repetitions: 600
             - type: DATA
-              repetitions: 5
-            - type: REFERENCE
-              repetitions: 1
-            - type: DATA
-              repetitions: 5
+              repetitions: 2100
+            - type: NULL
+              repetitions: 600
 
         - repetitions: 1
           cp_ratio: 0.0703125
           elements:
-            - type: REFERENCE
-              repetitions: 1200
-
-        - repetitions: 100
-          cp_ratio: .0703125
-          elements:
+            - type: NULL
+              repetitions: 600
             - type: DATA
-              repetitions: 3
-            - type: REFERENCE
-              repetitions: 1
-            - type: DATA
-              repetitions: 5
-            - type: REFERENCE
-              repetitions: 1
-            - type: DATA
-              repetitions: 2
+              repetitions: 2100
+            - type: NULL
+              repetitions: 600
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
       Structure:
 
-        # Symbol section, repeated 16 times (in time)
         - Symbol
-          num_repetitions: 16
-          pattern: [0, 1, 1, 1, 2, 1, 1]    # Pattern of frequency resources within this symbol section
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
 
-        # Symbol section is followed by two guard intervals in time domain
         - Guard
-          duration: 1e-3
-        - Guard
-          duration: 1e-3
+          num_repetitions: 3
+          duration: 35.677083e-6

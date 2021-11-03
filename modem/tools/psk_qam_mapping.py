@@ -53,7 +53,7 @@ class PskQamMapping(object):
             self,
             modulation_order: int,
             mapping: np.ndarray = None,
-            soft_output: bool = True,
+            soft_output: bool = False,
             is_complex: bool = True):
         """
         Args:
