@@ -49,7 +49,7 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(MockClass.yaml_tag in self.factory.registered_tags,
                         "Mock class tag not registered as expected for serialization")
 
-class TestIqImbalanceCreation(unittest.TestCase):
+class TestIqImbalanceCreationAndSerialization(unittest.TestCase):
     def setUp(self) -> None:
         self.factory = Factory()
 
@@ -67,16 +67,13 @@ Modems:
 """
         scenarios = self.factory.from_str(yaml_str)
         self.assertAlmostEqual(
-            scenarios[0].transmitters[0].rf_chain.amplitde_imbalance,
+            scenarios[0].transmitters[0].rf_chain.amplitude_imbalance,
             AMPLITUDE_IMBALANCE
         )
         self.assertEqual(
             scenarios[0].transmitters[0].rf_chain.phase_offset,
             PHASE_OFFSET
         )
-class TestIQImbalanceSerialization(unittest.TestCase):
-    def setUp(self) -> None:
-        self.factory = Factory()
 
     def test_iq_imbalance_serialisation(self) -> None:
         PHASE_OFFSET = 10
