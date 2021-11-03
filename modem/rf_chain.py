@@ -128,6 +128,15 @@ class RfChain:
         """Adds Phase offset and amplitude error to input signal.
 
         Notation taken from https://en.wikipedia.org/wiki/IQ_imbalance.
+
+        Args:
+            input_signal (np.ndarray):
+                Signal to be detoriated as a matrix in shape `#no_antennas x #no_samples`.
+                `#no_antennas` depends if on receiver or transmitter side.
+
+        Returns:
+            np.ndarray:
+                Detoriated signal with the same shape as `input_signal`.
         """
         x = input_signal
         eps_delta = self.__phase_offset
