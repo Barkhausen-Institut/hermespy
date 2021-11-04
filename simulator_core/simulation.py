@@ -201,7 +201,7 @@ class Simulation(Executable):
             # Plot scenario information +
             if self.verbosity.value <= Verbosity.INFO.value:
 
-                print(f"\nScenario Simulation #{s}")
+                print(f"\nScenario Simulation #{s}, sampled at {scenario.sampling_rate:.2E}Hz")
                 print(f"{'Noise':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
                 print("="*75)
 

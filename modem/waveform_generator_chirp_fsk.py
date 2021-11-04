@@ -495,32 +495,11 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         return bits
 
-    def create_frame(self, timestamp: int,
-                     data_bits: np.array) -> Tuple[np.ndarray, int, int]:
+    @property
+    def bandwidth(self) -> float:
 
-        offset = self._calculate_frequency_offsets(data_bits)
-        f0 = -.5 * self.chirp_bandwidth
-
-        # calculate initial frequencies of the chirps
-        initial_frequency = f0 + offset * self.__freq_difference
-        initial_frequency = np.concatenate(
-            (np.ones(self.num_pilot_chirps) * f0, initial_frequency))
-        frequency, amplitude = self._calculate_chirp_frequencies(
-            initial_frequency)
-
-        phase = 2 * np.pi * \
-            integrate.cumtrapz(
-                frequency,
-                dx=1 /
-                self.modem.scenario.sampling_rate,
-                initial=0)
-
-        output_signal = amplitude * np.exp(1j * phase)
-
-        initial_sample_num = timestamp
-        timestamp += self.samples_in_frame
-
-        return output_signal[np.newaxis, :], timestamp, initial_sample_num
+        # The bandwidth is identical to the chirp bandwidth
+        return self.chirp_bandwidth
 
     def _calculate_frequency_offsets(self, data_bits: np.ndarray) -> np.ndarray:
         """Calculates the frequency offsets on frame creation.
@@ -568,63 +547,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         frequency[frequency > f1] -= self.__chirp_bandwidth  # wrap
 
         return frequency, amplitude
-
-    def receive_frame(self,
-                      rx_signal: np.ndarray,
-                      timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[np.array, np.ndarray]:
-
-        useful_signal_length = self.samples_in_frame
-
-        # Received signal is too short to recover a full frame
-        if rx_signal.shape[1] < useful_signal_length:
-            bits = np.empty(0, dtype=int)
-            rx_signal = np.array([])
-
-        else:
-            bits = np.zeros(
-                (self.num_data_chirps, self.bits_per_symbol), dtype=int)
-            frame_signal = rx_signal[0, :useful_signal_length]
-
-            # remove pilots
-            frame_signal = frame_signal[self.samples_in_chirp *
-                                        self.num_pilot_chirps:]
-
-            cos_prototype, sin_prototype, _ = self._prototypes()
-
-            for symbol_idx in range(self.num_data_chirps):
-                symbol_signal = frame_signal[:self.samples_in_chirp]
-                frame_signal = frame_signal[self.samples_in_chirp:]
-                symbol_metric = np.zeros(self.modulation_order)
-
-                for signal_idx in range(self.modulation_order):
-                    real_signal = np.real(symbol_signal)
-                    imag_signal = np.imag(symbol_signal)
-                    cos_metric = np.sum(
-                        real_signal *
-                        np.real(
-                            cos_prototype[signal_idx]) +
-                        imag_signal *
-                        np.imag(
-                            cos_prototype[signal_idx])) ** 2
-                    sin_metric = np.sum(
-                        real_signal *
-                        np.real(
-                            sin_prototype[signal_idx]) +
-                        imag_signal *
-                        np.imag(
-                            sin_prototype[signal_idx]))**2
-                    symbol_metric[signal_idx] = cos_metric + sin_metric
-
-                symbol_est = np.argmax(symbol_metric)
-                bits[symbol_idx, :] = [int(x) for x in list(
-                    np.binary_repr(symbol_est, width=self.bits_per_symbol))]
-
-            rx_signal = rx_signal[:, self.samples_in_frame:]
-
-        bits = np.ravel(bits)
-
-        return bits, rx_signal
 
     @property
     def power(self) -> float:
