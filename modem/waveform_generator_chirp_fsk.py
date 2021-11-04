@@ -446,42 +446,38 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         phase = integrate.cumtrapz(frequency, dx=1 / self.modem.scenario.sampling_rate, initial=0)
         return np.exp(2j * pi * phase)
 
+    def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
+        return impulse_response
+
     def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
         # Assess number of frames contained within this signal
-        num_frames = round(timestamps[-1] / self.frame_duration)
-        samples_in_frame = self.samples_in_frame
         samples_in_chirp = self.samples_in_chirp
         samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
         cos_prototype, sin_prototype, _ = self._prototypes()
 
-        symbols = np.empty(num_frames*self.num_data_chirps, dtype=int)
+        symbols = np.empty(self.num_data_chirps, dtype=int)
+        data_frame = signal[samples_in_pilot_section:]
 
-        # TODO: There currently seems to be no routine implemented to detect pilot symbols and synchronize detection
-        for f in range(num_frames):
+        for c in range(self.num_data_chirps):
 
-            frame = signal[f*samples_in_frame:(f+1)*samples_in_frame]
-            data_frame = frame[samples_in_pilot_section:]
+            # Extract signal part of chirp c, representing a single symbol
+            symbol_signal = data_frame[c*samples_in_chirp:(c+1)*samples_in_chirp]
 
-            for c in range(self.num_data_chirps):
+            symbol_metric = np.zeros(self.modulation_order)
 
-                # Extract signal part of chirp c, representing a single symbol
-                symbol_signal = data_frame[c*samples_in_chirp:(c+1)*samples_in_chirp]
+            for signal_idx in range(self.modulation_order):
 
-                symbol_metric = np.zeros(self.modulation_order)
+                real_signal = np.real(symbol_signal)
+                imag_signal = np.imag(symbol_signal)
 
-                for signal_idx in range(self.modulation_order):
+                cos_metric = np.sum(real_signal * np.real(cos_prototype[signal_idx]) +
+                                    imag_signal * np.imag(cos_prototype[signal_idx])) ** 2
+                sin_metric = np.sum(real_signal * np.real(sin_prototype[signal_idx]) +
+                                    imag_signal * np.imag(sin_prototype[signal_idx]))**2
+                symbol_metric[signal_idx] = cos_metric + sin_metric
 
-                    real_signal = np.real(symbol_signal)
-                    imag_signal = np.imag(symbol_signal)
-
-                    cos_metric = np.sum(real_signal * np.real(cos_prototype[signal_idx]) +
-                                        imag_signal * np.imag(cos_prototype[signal_idx])) ** 2
-                    sin_metric = np.sum(real_signal * np.real(sin_prototype[signal_idx]) +
-                                        imag_signal * np.imag(sin_prototype[signal_idx]))**2
-                    symbol_metric[signal_idx] = cos_metric + sin_metric
-
-                symbols[f * self.num_data_chirps + c] = np.argmax(symbol_metric)
+            symbols[c] = np.argmax(symbol_metric)
 
         return symbols
 

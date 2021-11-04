@@ -37,7 +37,7 @@ class SingleCarrier(SpatialMultiplexing):
         # Received signal with equal noise power is assumed, the decoded signal has same noise
         # level as input. It is assumed that all data have equal noise levels.
 
-        channel_estimation = self.precoding.modem.reference_channel.estimate(symbol_stream.shape[1])
+        channel_estimation = self.precoding.modem.reference_channel.estimate()
         noise_var = 1.0
 
         # TODO: Check this approach with André

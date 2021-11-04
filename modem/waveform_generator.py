@@ -310,67 +310,34 @@ class WaveformGenerator(ABC):
         ...
 
     @abstractmethod
-    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        """Demodulate a base-band signal to data symbols.
+    def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
+        """Estimate the channel for a given channel impulse response.
+
+        Args:
+            impulse_response (np.ndarray):
+                Channel impulse response in form num_timestamps x rx_antennas x tx_antennas x delay_in_samples + 1 .
+
+        Returns:
+            An estimated channel in the form num_symbols x rx_antennas x tx_antennas x delay in samples ?
+        """
+        ...
+
+    @abstractmethod
+    def demodulate(self, signal: np.ndarray, impulse_response: np.ndarray) -> np.ndarray:
+        """Demodulate a base-band signal stream to data symbols.
 
         Args:
 
             signal:
                 Vector of complex-valued base-band samples of a modulated signal.
 
-            timestamps (np.ndarray):
-                Vector if sample times in seconds, at which the ase-band signal was sampled.
+            impulse_response (np.ndarray):
+                Stream impulse response of dimension num_samples x num_rx_streams x num_delay_taps.
+                Can be used for channel equalization.
 
         Returns:
             np.ndarray:
                 Vector of demodulated data symbols.
-        """
-        ...
-
-    @abstractmethod
-    def create_frame(self, old_timestamp: int,
-                     data_bits: np.array) -> Tuple[np.ndarray, int, int]:
-        """Creates a new transmission frame.
-
-        Args:
-            old_timestamp (int): Initial timestamp (in sample number) of new frame.
-            data_bits (np.array):
-                Flattened blocks, whose bits are supposed to fit into this frame.
-
-        Returns:
-            (np.ndarray, int, int):
-                `np.ndarray`: Baseband complex samples of transmission frame.
-                `int`: timestamp(in sample number) of frame end.
-                `int`: Sample number of first sample in frame (to account for possible filtering).
-        """
-        ...
-
-    @abstractmethod
-    def receive_frame(self,
-                      rx_signal: np.ndarray,
-                      timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[np.array, np.ndarray]:
-        """Receives and detects the bits from a new received frame.
-
-
-        The method receives the whole received signal 'rx_signal' from the drop,
-        extracts the signal corresponding to the current frame, and detects the
-        transmitted bits, which are returned in 'bits'.
-
-        Args:
-            rx_signal (np.ndarray):
-                Received signal in drop. Rows denoting antennas and columns
-                being the samples.
-            timestamp_in_samples(int):
-                First timestamp in samples of this frame-
-            noise_var(float):
-                ES/NO required for equalization.
-
-        Returns:
-            (np.ndarray, np.ndarray):
-                `np.array`: Detected bits.
-                `np.ndarray`: Remaining received signal corresponding to the
-                following frames.
         """
         ...
 
