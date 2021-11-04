@@ -112,32 +112,44 @@ class Receiver(Modem):
         # Simulate the radio-frequency chain
         received_signals = self.rf_chain.receive(noisy_signals)
 
+        # Fetch recent impulse responses
+        channel_responses = self.reference_channel.recent_response
+
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
 
-        # Fetch recent impulse responses
-        impulse_responses = self.reference_channel.recent_response
+        # Since no spatial stream coding is supported,
+        # the channel response at each transmit input is the sum over all impinging antenna signals
+        # ToDo: This is probably not correct, since it depends on the multiplexing
+        stream_responses = np.sum(channel_responses, axis=2)
 
         # Generate a symbol stream for each dedicated base-band signal
-        symbol_streams = np.empty((received_signals.shape[0], symbols_per_stream),
-                                  dtype=self.waveform_generator.symbol_type)
+        symbol_streams: List[List[complex]] = []
+        symbol_streams_responses: List[List[complex]] = []
 
-        for (stream_idx, noisy_signal), frame_idx in product(enumerate(noisy_signals), range(frames_per_stream)):
+        for stream_idx, (noisy_signal, stream_response) in enumerate(zip(noisy_signals,
+                                                                         np.rollaxis(stream_responses, 1))):
 
-            # Select the proper impulse response for this stream
-            impulse_response = impulse_responses[:, :, stream_idx, :]
+            # Synchronization
+            frame_samples, frame_responses = self.waveform_generator.synchronize(noisy_signal, stream_response)
 
-            # Select the proper signal section for the next frame to be demodulated
-            noisy_signal_frame_section = noisy_signal[frame_idx*samples_in_frame:(1+frame_idx)*samples_in_frame]
+            # Demodulate each frame separately to make the de-modulation easier to understand
+            symbols: List[complex] = []
+            symbol_responses: List[complex] = []
+            for frame, response in zip(frame_samples, frame_responses):
 
-            # Demodulate the frame into dat symbols
-            frame_symbols = self.waveform_generator.demodulate(noisy_signal_frame_section, impulse_response)
+                # Demodulate the frame into dat symbols
+                frame_symbols, frame_symbol_responses = self.waveform_generator.demodulate(frame, response)
+
+                symbols.extend(frame_symbols.tolist())
+                symbol_responses.extend(frame_symbol_responses.tolist())
 
             # Save data symbols in their respective stream section
-            symbol_streams[stream_idx, frame_idx*symbols_per_frame:(1+frame_idx)*symbols_per_frame] = frame_symbols
+            symbol_streams.append(symbols)
+            symbol_streams_responses.append(symbol_responses)
 
         # Decode the symbol precoding
-        symbols = self.precoding.decode(symbol_streams)
+        symbols = self.precoding.decode(np.array(symbol_streams), np.array(symbol_streams_responses))
 
         # Map the symbols to code bits
         code_bits = self.waveform_generator.unmap(symbols)

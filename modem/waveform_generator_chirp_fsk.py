@@ -34,8 +34,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     __chirp_bandwidth: float
     __freq_difference: float
 
-    __oversampling_factor: int
-
     # Frame parameters
     __num_pilot_chirps: int
     __num_data_chirps: int
@@ -449,7 +447,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
         return impulse_response
 
-    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+    def demodulate(self, signal: np.ndarray, impulse_response: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
@@ -457,6 +455,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         cos_prototype, sin_prototype, _ = self._prototypes()
 
         symbols = np.empty(self.num_data_chirps, dtype=int)
+        symbol_responses = np.empty(self.num_data_chirps, dtype=complex)
         data_frame = signal[samples_in_pilot_section:]
 
         for c in range(self.num_data_chirps):
@@ -479,7 +478,10 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
             symbols[c] = np.argmax(symbol_metric)
 
-        return symbols
+            # ToDo: Check in with someone who knows the statistics here...
+            symbol_responses[c] = np.mean(impulse_response[c*samples_in_chirp:(c+1)*samples_in_chirp])
+
+        return symbols, symbol_responses
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
 

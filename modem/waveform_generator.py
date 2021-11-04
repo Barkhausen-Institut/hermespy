@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Tuple, TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from math import floor
 import numpy as np
 
 if TYPE_CHECKING:
@@ -308,6 +309,47 @@ class WaveformGenerator(ABC):
                 Complex-valued vector containing samples of the modulated base-band signals.
         """
         ...
+
+    # Hint: Channel propagation occurs here
+
+    def synchronize(self, signal: np.ndarray, stream_response: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """Simulates time-synchronization at the receiver-side.
+
+        Sorts signal-sections into frames in time-domain.
+
+        Args:
+
+            signal (np.ndarray):
+                Vector of complex base-band signal samples of a single input stream with `num_samples` entries.
+
+            channel_response (np.ndarray):
+                Vector of channel impulse responses. ToDo: Add domains.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarry]: Tuple of signal samples and channel responses sorted into frames.
+
+        Raises:
+            ValueError: If the length of `signal` and the first dimension of `channel_response` is not identical.
+        """
+
+        if len(signal) != (stream_response.shape[0] + stream_response.shape[1] - 1):
+            raise ValueError("Signal length and the first response dimension must be matching")
+
+        samples_per_frame = self.samples_in_frame
+        num_frames = int(floor(len(signal) / samples_per_frame))
+
+        frames = np.empty((num_frames, samples_per_frame), dtype=complex)
+        frame_responses = np.empty((num_frames, samples_per_frame, stream_response.shape[1]), dtype=complex)
+
+        # By default, there is no synchronization, i.e. we assume the first signal is also the first sample of
+        # the first frame. ToDo: Check with André how to implement general equalization
+        for f in range(num_frames):
+
+            # ToDo: This currently does not account for delay overhead....
+            frames[f, :] = signal[f*samples_per_frame:(f+1)*samples_per_frame]
+            frame_responses[f, :] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, :]
+
+        return frames, frame_responses
 
     @abstractmethod
     def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
