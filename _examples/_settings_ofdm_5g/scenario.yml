@@ -57,6 +57,7 @@ Modems:
       modulation_order: 2
       subcarrier_spacing: 30e3
       dc_suppression: False
+      channel_estimation: IDEAL
 
       # Frame settings
       Resources:

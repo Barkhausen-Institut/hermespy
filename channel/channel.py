@@ -4,9 +4,10 @@
 from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
 from abc import ABC
+from itertools import product
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 import numpy as np
 import numpy.random as rnd
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 if TYPE_CHECKING:
     from scenario import Scenario
@@ -34,6 +35,12 @@ class Channel(ABC):
     a random number generator, given by `rnd` may be needed. The sampling rate is
     the same at both input and output of the channel, and is given by `sampling_rate`
     samples/second.
+
+    Attributes:
+
+        __recent_response (Optional[np.ndarray]):
+            The most recent tapped impulse response. None, if no response has been generated yet.
+
     """
 
     yaml_tag = u'Channel'
@@ -44,14 +51,16 @@ class Channel(ABC):
     __gain: float
     __random_generator: Optional[rnd.Generator]
     __scenario: Optional[Scenario]
+    __recent_response: Optional[np.ndarray]
 
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
+                 scenario: Optional[Scenario] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
-                 random_generator: Optional[rnd.Generator] = None,
-                 scenario: Optional[Scenario] = None) -> None:
+                 random_generator: Optional[rnd.Generator] = None
+                 ) -> None:
         """Class constructor.
 
         Args:
@@ -60,6 +69,9 @@ class Channel(ABC):
 
             receiver (Receiver, optional):
                 The modem receiving from this channel.
+
+            scenario (Scenario, optional):
+                Scenario this channel is attached to.
 
             active (bool, optional):
                 Channel activity flag.
@@ -71,9 +83,6 @@ class Channel(ABC):
                 
             random_generator (rnd.Generator, optional):
                 Generator object for random number sequences.
-                
-            scenario (Scenario, optional):
-                Scenario this channel is attached to.
         """
 
         # Default parameters
@@ -82,6 +91,7 @@ class Channel(ABC):
         self.__receiver = None
         self.__gain = 1.0
         self.__scenario = None
+        self.recent_response = None
 
         self.random_generator = random_generator
         self.scenario = scenario
@@ -362,31 +372,41 @@ class Channel(ABC):
         if self.transmitter is None or self.receiver is None:
             raise RuntimeError("Channel is floating, making propagation simulation impossible")
 
-        # If just on stream feeds into the channel, the output shall be the repeated stream by default.
-        # Note: This might not be accurate physical behaviour for some sensor array topologies!
-        if transmitted_signal.shape[0] == 1:
-            return self.gain * transmitted_signal.repeat(self.receiver.num_antennas, axis=0)
-
-        # MISO case, results in a superposition at the receiver
-        if self.receiver.num_antennas == 1:
-            return self.gain * np.sum(transmitted_signal, axis=0, keepdims=True)
-
         if transmitted_signal.shape[0] != self.transmitter.num_antennas:
             raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
-        if self.transmitter.num_antennas != self.receiver.num_antennas:
-            raise ValueError("The default channel only supports links between modems with identical antenna count")
+        # Generate the channel's impulse response
+        num_signal_samples = transmitted_signal.shape[1]
+        impulse_response = self.impulse_response(np.arange(num_signal_samples) / self.scenario.sampling_rate)
 
-        return self.gain * transmitted_signal
+        # The maximum delay (in samples) is modeled by the last impulse response dimension
+        num_delay_samples = impulse_response.shape[3] - 1
 
-#    @abstractmethod
+        # Propagate the signal
+        received_signal = np.zeros((self.receiver.num_antennas, transmitted_signal.shape[1] + num_delay_samples),
+                                   dtype=complex)
+
+        for delay_index in range(impulse_response.shape[3]):
+            for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
+
+                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * transmitted_signal[tx_idx, :]
+                received_signal[rx_idx, delay_index:delay_index+num_signal_samples] += delayed_signal
+
+        return received_signal
+        # If just on stream feeds into the channel, the output shall be the repeated stream by default.
+        # Note: This might not be accurate physical behaviour for some sensor array topologies!
+        # if transmitted_signal.shape[0] == 1:
+        #     return self.gain * transmitted_signal.repeat(self.receiver.num_antennas, axis=0)
+#
+        # # MISO case, results in a superposition at the receiver
+        # if self.receiver.num_antennas == 1:
+        #     return self.gain * np.sum(transmitted_signal, axis=0, keepdims=True)
+
     def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
         """Calculate the channel impulse responses.
 
         This method can be used for instance by the transceivers to obtain the channel state
         information.
-
-        TODO: This does not actually seem to be model impulse responses!!!!!
 
         Args:
             timestamps (np.ndarray):
@@ -403,11 +423,53 @@ class Channel(ABC):
         if self.transmitter is None or self.receiver is None:
             raise RuntimeError("Channel is floating, making impulse response simulation impossible")
 
-        impulse_responses = np.tile(np.ones((self.receiver.num_antennas, self.transmitter.num_antennas), dtype=complex),
-                                    (timestamps.size, 1, 1))
-        impulse_responses = np.expand_dims(impulse_responses, axis=3)
+        # MISO case
+        if self.receiver.num_antennas == 1:
+            impulse_responses = np.tile(np.ones((1, self.transmitter.num_antennas), dtype=complex),
+                                        (timestamps.size, 1, 1))
 
-        return self.gain * impulse_responses
+        # SIMO case
+        elif self.transmitter.num_antennas == 1:
+            impulse_responses = np.tile(np.ones((self.receiver.num_antennas, 1), dtype=complex),
+                                        (timestamps.size, 1, 1))
+
+        # MIMO case
+        else:
+            impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas, dtype=complex),
+                                        (timestamps.size, 1, 1))
+
+        # Scale by channel gain and add dimension for delay response
+        impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
+
+        # Save newly generated response as most recent impulse response
+        self.recent_response = impulse_responses
+
+        # Return resulting impulse response
+        return impulse_responses
+
+    @property
+    def recent_response(self) -> np.ndarray:
+        """Access the most recent impulse response.
+
+        Returns:
+            np.ndarray:
+                The most recent impulse response.
+                See `impulse_response` for further information.
+        """
+
+        return self.__recent_response
+
+    @recent_response.setter
+    def recent_response(self, response: np.ndarray) -> None:
+        """Set the most recent impulse response.
+
+        Warning: DO NOT USE THIS SETTER EXTERNALLY.
+
+        Args:
+            response (np.ndarray): The newly generated impulse response.
+        """
+
+        self.__recent_response = response
 
     @classmethod
     def to_yaml(cls: Type[Channel], representer: SafeRepresenter, node: Channel) -> MappingNode:

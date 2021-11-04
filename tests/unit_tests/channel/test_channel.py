@@ -30,16 +30,17 @@ class TestChannel(unittest.TestCase):
         self.gain = 1.0
         self.generator = default_rng(0)
         self.scenario = Mock()
+        self.scenario.sampling_rate = 1e3
 
-        self.channel = Channel(self.transmitter, self.receiver, self.active, self.gain, self.generator, self.scenario)
+        self.channel = Channel(self.transmitter, self.receiver, self.scenario, self.active, self.gain, self.generator)
 
         # Number of discrete-time samples generated for signal propagation testing
-        self.propagate_signal_lengths = [0, 1, 10, 100, 1000]
+        self.propagate_signal_lengths = [1, 10, 100, 1000]
         self.propagate_signal_gains = [1.0, 0.5]
 
         # Number of discrete-time timestamps generated for impulse response testing
-        self.impulse_response_sampling_rate = 1e6
-        self.impulse_response_lengths = [0, 1, 10, 100, 1000]
+        self.impulse_response_sampling_rate = self.scenario.sampling_rate
+        self.impulse_response_lengths = [1, 10, 100, 1000]  # ToDo: Add 0
         self.impulse_response_gains = [1.0, 0.5]
 
     def test_init(self) -> None:
@@ -145,7 +146,6 @@ class TestChannel(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             self.channel.scenario = Mock()
-
 
     def test_num_inputs_get(self) -> None:
         """Number of inputs property must return number of transmitting antennas."""
@@ -269,12 +269,6 @@ class TestChannel(unittest.TestCase):
             self.transmitter.num_antennas = 1
             self.channel.propagate(np.array([[1, 2, 3], [4, 5, 6]]))
 
-        with self.assertRaises(ValueError):
-
-            self.transmitter.num_antennas = 2
-            self.receiver.num_antennas = 3
-            self.channel.propagate(np.array([[1, 2, 3], [4, 5, 6]]))
-
         with self.assertRaises(RuntimeError):
 
             floating_channel = Channel()
@@ -307,7 +301,8 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
-                expected_impulse_response = gain * np.ones((response_length, 3, 1, 1), dtype=float)
+                expected_impulse_response = np.zeros((response_length, 3, 1, 1), dtype=complex)
+                expected_impulse_response[:, :, 0, :] = gain
 
                 impulse_response = self.channel.impulse_response(timestamps)
                 assert_array_equal(expected_impulse_response, impulse_response)
@@ -323,7 +318,8 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
-                expected_impulse_response = gain * np.ones((response_length, 1, 3, 1), dtype=float)
+                expected_impulse_response = np.zeros((response_length, 1, 3, 1), dtype=complex)
+                expected_impulse_response[:, 0, :, :] = gain
 
                 impulse_response = self.channel.impulse_response(timestamps)
                 assert_array_equal(expected_impulse_response, impulse_response)
@@ -340,8 +336,9 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
-                expected_impulse_response = gain * np.ones((response_length, num_antennas, num_antennas, 1),
-                                                           dtype=float)
+                expected_impulse_response = gain * np.tile(np.eye(num_antennas, num_antennas, dtype=complex),
+                                                           (response_length, 1, 1))
+                expected_impulse_response = np.expand_dims(expected_impulse_response, axis=-1)
 
                 impulse_response = self.channel.impulse_response(timestamps)
                 assert_array_equal(expected_impulse_response, impulse_response)

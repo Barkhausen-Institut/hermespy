@@ -7,7 +7,7 @@
   calc_receive_stft: false
   noise_loop: [24, 20, 16, 12, 8, 4, 0]
   snr_type: EBN0
-  num_drops: 20
+  num_drops: 5 #20
   min_num_drops: 5
   spectrum_fft_size: 512
   confidence_level: 0.9
