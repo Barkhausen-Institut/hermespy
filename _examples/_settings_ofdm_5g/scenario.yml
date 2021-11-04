@@ -1,6 +1,6 @@
 !<Scenario>
 
-sampling_rate: 99e6 # 120e6
+sampling_rate: 100e6
 
 Modems:
 

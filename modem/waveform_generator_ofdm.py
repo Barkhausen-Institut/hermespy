@@ -8,7 +8,7 @@ from scipy import signal
 from enum import Enum
 from abc import abstractmethod
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
-from numpy.fft import ifft, fft, ifftshift, fftshift
+from scipy.constants import pi
 import numpy as np
 
 from modem import WaveformGenerator
@@ -325,25 +325,26 @@ class FrameSymbolSection(FrameSection):
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
         num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
 
-        # Pad the grid with zeros
-        if self.frame.dc_suppression:
+        num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
+        slot_timestamps = np.arange(num_slot_samples) / self.frame.modem.scenario.sampling_rate
 
-            padded_grid = np.zeros((grid.shape[0], int(round(num_samples_per_slot))), dtype=complex)
-            padded_grid[:, 1:grid.shape[0]+1] = grid  # Remove DC component by setting the first sub-carrier to zero
+        resource_signals = np.zeros((num_slot_samples, self.num_timeslots), dtype=complex)
 
-        else:
-            padded_grid = np.append(grid, np.zeros((grid.shape[0], int(round(num_samples_per_slot)) - grid.shape[1]),
-                                    dtype=complex), axis=1)
+        # Fourier transformation over sinusoidal subcarriers
+        # ToDo: Check what DC suppression is supposed to to in freq domain?
+        for subcarrier_idx in range(self.num_subcarriers):
 
-        # Shift
-        shifted_grid = ifftshift(padded_grid, axes=0)
+            freq = subcarrier_idx * self.frame.subcarrier_spacing
+            fourier_weights = np.exp(2j * pi * slot_timestamps * freq)
 
-        # Transform into time-domain for each ofdm symbol
-        resource_signals = ifft(shifted_grid, axis=0, norm='ortho').T
+            resource_signals += np.outer(fourier_weights, grid[subcarrier_idx, :])
 
-        # Add the cyclic prefix to each time slot while simulatneously flatten the resource signals into time domain
+        # Scale to obtain a unitary transform
+        resource_signals /= np.sqrt(self.num_subcarriers)
+
+        # Add the cyclic prefix to each time slot while simultaneously flatten the resource signals into time domain
         signals = []
-        for resource_idx, resource_samples in enumerate(resource_signals):
+        for resource_idx, resource_samples in enumerate(resource_signals.T):
 
             pattern_idx = resource_idx % len(self.pattern)
             cp_ratio = self.frame.resources[self.pattern[pattern_idx]].cp_ratio
@@ -361,6 +362,7 @@ class FrameSymbolSection(FrameSection):
         # Samples without prefixes in the time-time grid, essentially sections of the demodulating stft
         slot_samples = np.empty((samples_per_slot, self.num_timeslots), dtype=complex)
 
+        # Remove the cyclic prefixes before transformation into time-domain
         sample_index = 0
         for slot_idx in range(len(self.pattern) * self.num_repetitions):
 
@@ -374,25 +376,25 @@ class FrameSymbolSection(FrameSection):
 
             sample_index += samples_per_slot
 
-        # Compute fourier transform over each time slot, pad with zeros if require
-        if samples_per_slot < self.num_subcarriers:
-            padded_slot_samples = np.append(slot_samples, np.zeros((self.num_subcarriers - samples_per_slot,
-                                                                   self.num_timeslots)), axis=0)
-        else:
-            padded_slot_samples = slot_samples[:self.num_subcarriers, :]
+        num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
 
-        # np.empty()
+        grid = np.zeros((self.num_subcarriers, self.num_timeslots), dtype=complex)
+        frequency_bins = np.arange(self.num_subcarriers) * self.frame.subcarrier_spacing
 
-        # Recover the original dft grid
-        padded_grid = fftshift(fft(padded_slot_samples, axis=0, norm='ortho'), axes=0)
+        # Fourier transformation over sinusoidal subcarriers
+        # ToDo: Check what DC suppression is supposed to to in freq domain?
+        for time_idx in range(num_slot_samples):
 
-#        import matplotlib.pyplot as plt
-#        plt.imshow(abs(padded_grid))
-#        plt.show()
+            time = time_idx / self.frame.modem.scenario.sampling_rate
+            fourier_weights = np.exp(-2j * pi * frequency_bins * time)
 
-        grid = padded_grid[:self.num_subcarriers, :]
+            grid += np.outer(fourier_weights, slot_samples[time_idx, :])
+
+        # Scale to obtain a unitary transform
+        grid /= np.sqrt(num_slot_samples)
+
+        # Select the data symbols from the time-frequency grid and return the result
         data_symbols = grid[self.resource_mask[ElementType.DATA.value, ::]]
-
         return data_symbols
 
     @property
@@ -858,11 +860,11 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             section_signal = section.modulate(section_data_symbols)
             output_signal = np.append(output_signal, section_signal)
 
-#        f, t, Z = signal.stft(output_signal, nperseg=int(round(self.modem.scenario.sampling_rate / self.subcarrier_spacing)))
-#        import matplotlib.pyplot as plt
-#        plt.plot(np.real(output_signal))
-#        plt.imshow(abs(Z))
-#        plt.show()
+        #f, t, Z = signal.stft(output_signal, nperseg=int(round(self.modem.scenario.sampling_rate / self.subcarrier_spacing)))
+        #import matplotlib.pyplot as plt
+        #plt.plot(np.abs(fft(fftshift(output_signal))))
+        #plt.imshow(abs(Z))
+        #plt.show()
         return output_signal
 
     def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
