@@ -261,6 +261,7 @@ class Scenario:
         # Set proper receiver and transmitter fields
         channel.transmitter = self.transmitters[transmitter_index]
         channel.receiver = self.receivers[receiver_index]
+        channel.scenario = self
 
     def add_receiver(self, receiver: Receiver) -> None:
         """Add a new receiving modem to the simulated scenario.
@@ -283,13 +284,13 @@ class Scenario:
 
         elif self.__channels.shape[1] == 0:
 
-            self.__channels = np.array([[Channel(transmitter, receiver)] for transmitter in self.__transmitters])
+            self.__channels = np.array([[Channel(transmitter, receiver, self)] for transmitter in self.__transmitters])
 
         else:
 
             self.__channels = np.append(
                 self.__channels,
-                np.array([[Channel(transmitter, receiver)] for transmitter in self.transmitters]),
+                np.array([[Channel(transmitter, receiver, self)] for transmitter in self.transmitters]),
                 axis=1
             )
 
@@ -315,12 +316,12 @@ class Scenario:
 
         elif self.__channels.shape[0] == 0:
 
-            self.__channels = np.array([[Channel(transmitter, receiver) for receiver in self.__receivers]])
+            self.__channels = np.array([[Channel(transmitter, receiver, self) for receiver in self.__receivers]])
 
         else:
 
             self.__channels = np.append(self.__channels,
-                                        np.array([[Channel(transmitter, receiver) for receiver in self.receivers]]),
+                                        np.array([[Channel(transmitter, receiver, self) for receiver in self.receivers]]),
                                         axis=0)
 
     def remove_modem(self, modem: Modem) -> None:
@@ -512,7 +513,7 @@ class Scenario:
         scenario.__channels = np.empty((len(scenario.__transmitters), len(scenario.__receivers)), dtype=object)
         for t, transmitter in enumerate(scenario.__transmitters):
             for r, receiver in enumerate(scenario.__receivers):
-                scenario.__channels[t, r] = Channel(transmitter, receiver)
+                scenario.__channels[t, r] = Channel(transmitter, receiver, scenario)
 
         # Integrate configured channels into the default matrix
         if isinstance(channels, Iterable):
@@ -520,6 +521,7 @@ class Scenario:
 
                 channel.transmitter = scenario.transmitters[transmitter_index]
                 channel.receiver = scenario.receivers[receiver_index]
+                channel.scenario = scenario
                 scenario.__channels[transmitter_index, receiver_index] = channel
 
         return scenario

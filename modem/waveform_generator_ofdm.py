@@ -34,6 +34,7 @@ class ElementType(Enum):
     DATA = 1
     NULL = 2
 
+
 class ChannelEstimation(Enum):
     """Applied channel estimation algorithm after reception."""
 
@@ -558,13 +559,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         Args:
 
-            frame_structure (List[FrameElement], optional):
-                Structure configuration of the generated frame.
-
-            num_occupied_subcarriers (int, optional):
-                Number of subcarriers occupied within the frame structure??
-                TODO: Check.
-
             subcarrier_spacing (float, optional):
                 Spacing between individual subcarriers in Hz. ToDo: Check.
 
@@ -617,58 +611,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self.structure.append(section)
         section.frame = self
 
-#    @property
-#    def guard_interval(self) -> float:
-#        """Guard interval between frames.
-#
-#        Returns:
-#            float: Interval in seconds.
-#        """
-#
-#        return self.__guard_interval
-#
-#    @guard_interval.setter
-#    def guard_interval(self, interval: float) -> None:
-#        """Modify the guard interval between frames.
-#
-#        Args:
-#            interval (float): New interval in seconds.
-#
-#        Raises:
-#            ValueError: If `interval` is smaller than zero.
-#        """
-#
-#        if interval < 0.0:
-#            raise ValueError("Guard interval must be greater or equal to zero")
-#
-#        self.__guard_interval = interval
-#
-#    @property
-#    def fft_size(self) -> int:
-#        """Number of frequency bins in the Fast Fourier Transform.
-#
-#        Returns:
-#            int: Number of frequency bins
-#        """
-#
-#        return self.__fft_size
-#
-#    @fft_size.setter
-#    def fft_size(self, size: int) -> None:
-#        """Modify the number of frequency bins in the Fast Fourier Transform.
-#
-#        Args:
-#            size (int): New number of frequency bins.
-#
-#        Raises:
-#            ValueError: If `size` is smaller than one.
-#        """
-#
-#        if size < 1:
-#            raise ValueError("Number of frequency bins must be greater or equal to one")
-#
-#        self.__fft_size = size
-        
     @property
     def subcarrier_spacing(self) -> float:
         """Subcarrier spacing between frames.
@@ -714,104 +656,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return duration
 
-    def _generate_frame_structure(self):
-        """Creates the OFDM frame structure in time, frequency and space.
-
-        This method interprets the OFDM parameters in 'self.param' that describe the OFDM frame and generates matrices
-        with the allocation of all resource elements in a time/frequency/antenna grid
-
-        """
-        ofdm_symbol_idx = 0
-        sample_idx = 0
-        self.channel_sampling_timestamps = np.array([], dtype=int)
-
-        for frame_element in self.__frame.structure:
-
-            if isinstance(frame_element, FrameGuardSection):
-
-                num_samples = self.guard_interval * self.subcarrier_spacing * self.fft_size
-
-                self.guard_time_indices = np.append(self.guard_time_indices,
-                                                    np.arange(sample_idx, sample_idx + num_samples))
-                sample_idx += num_samples
-
-            elif isinstance(frame_element, FrameSymbolSection):
-
-                ref_idxs = self._get_subcarrier_indices(frame_element, ResourceType.REFERENCE)
-                self.channel_sampling_timestamps = np.append(self.channel_sampling_timestamps, sample_idx)
-
-                # fill out resource elements with pilot symbols
-                ref_symbols = np.tile(self.reference_symbols,
-                                      int(np.ceil(ref_idxs.size / len(self.reference_symbols))))
-                ref_symbols = ref_symbols[:ref_idxs.size]
-
-                self.reference_frame[ofdm_symbol_idx, ref_idxs, 0] = ref_symbols
-
-                # update indices for data and (cyclic) prefix
-                data_idxs = self._get_subcarrier_indices(frame_element, ResourceType.DATA)
-                self.data_frame_indices[ofdm_symbol_idx, data_idxs, :] = True
-
-                self.prefix_time_indices = np.append(self.prefix_time_indices,
-                                                     np.arange(sample_idx, sample_idx +
-                                                               frame_element.cyclic_prefix_samples))
-                sample_idx += frame_element.cyclic_prefix_samples
-                self.data_time_indices = np.append(self.data_time_indices,
-                                                   np.arange(sample_idx, sample_idx + frame_element.no_samples))
-                sample_idx += frame_element.no_samples
-
-                ofdm_symbol_idx += 1
-
-        #if self.param.precoding != "NONE":
-        #    # check if all symbols have the same number of data REs
-        #    self._data_resource_elements_per_symbol = np.sum(self.data_frame_indices[:, :, 0], axis=1)
-
-    def _get_subcarrier_indices(self, frame_element, resource_type):
-        #############################################################################
-        # calculate indices for data and pilot resource elements in this OFDM symbol
-        subcarrier_idx = 0
-        resource_idxs: np.array = np.array([], dtype=int)
-
-        for res_pattern in frame_element.resource_types:
-            for pattern_el_idx in range(res_pattern.number):
-                for res in res_pattern.MultipleRes:
-                    if res.ResourceType == resource_type:
-                        resource_idxs = np.append(resource_idxs, np.arange(subcarrier_idx, subcarrier_idx + res.number))
-                    subcarrier_idx += res.number
-        return resource_idxs
-
-    def _calculate_samples_in_frame(self) -> Tuple[int, float]:
-        samples_in_frame_no_oversampling = 0
-        number_cyclic_prefix_samples = 0
-        number_of_data_samples = 0
-
-        for frame_element in self.__frame.structure:
-
-            if isinstance(frame_element, FrameGuardSection):
-                samples_in_frame_no_oversampling += frame_element.no_samples
-            else:
-                samples_in_frame_no_oversampling += frame_element.cyclic_prefix_samples
-                number_cyclic_prefix_samples += frame_element.cyclic_prefix_samples
-
-                samples_in_frame_no_oversampling += frame_element.no_samples
-                number_of_data_samples += frame_element.no_samples
-
-        cyclic_prefix_overhead = 0.0
-        if number_of_data_samples > 0.0:
-            cyclic_prefix_overhead = (number_of_data_samples + number_cyclic_prefix_samples) / number_of_data_samples
-
-        return samples_in_frame_no_oversampling, cyclic_prefix_overhead
-
-    def _calculate_resource_element_mapping(self) -> np.array:
-        initial_index = self.fft_size - \
-            int(np.ceil(self.num_occupied_subcarriers / 2))
-        resource_element_mapping: np.array = np.arange(
-            initial_index, self.fft_size)
-        final_index = int(np.floor(self.num_occupied_subcarriers / 2))
-        resource_element_mapping = np.append(
-            resource_element_mapping, np.arange(
-                self.dc_suppression, final_index + self.dc_suppression))
-        return resource_element_mapping
-
     ###################################
     # property definitions
     @property
@@ -823,11 +667,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             num += section.num_samples
 
         return num
-
-    @property
-    def cyclic_prefix_overhead(self) -> float:
-        """int: Returns read-only cyclic_prefix_overhead"""
-        return self._cyclic_prefix_overhead
 
     # property definitions END
     #############################################
@@ -860,14 +699,13 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             section_signal = section.modulate(section_data_symbols)
             output_signal = np.append(output_signal, section_signal)
 
-        #f, t, Z = signal.stft(output_signal, nperseg=int(round(self.modem.scenario.sampling_rate / self.subcarrier_spacing)))
-        #import matplotlib.pyplot as plt
-        #plt.plot(np.abs(fft(fftshift(output_signal))))
-        #plt.imshow(abs(Z))
-        #plt.show()
         return output_signal
 
     def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+
+
+        # Estimate the channel
+
 
         symbols = np.empty(self.symbols_per_frame, dtype=complex)
 
