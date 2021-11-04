@@ -1,7 +1,6 @@
 !<Scenario>
 
 random_seed: 0
-sampling_rate: 25e6
 
 Modems:
 

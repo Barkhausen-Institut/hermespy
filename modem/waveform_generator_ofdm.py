@@ -668,6 +668,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return num
 
+    @property
     def num_subcarriers(self) -> int:
 
         num = 0
@@ -763,6 +764,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             symbol_index += num_symbols
 
         return symbols
+
+    @property
+    def bandwidth(self) -> float:
+
+        # OFDM bandwidth currently is identical to the number of subcarriers times the subcarrier spacing
+        return self.num_subcarriers * self.subcarrier_spacing
 
     def create_frame(self, timestamp: int, data_bits: np.array) -> Tuple[np.ndarray, int, int]:
         """Creates a modulated complex baseband signal for a whole transmit frame.

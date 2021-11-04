@@ -471,6 +471,17 @@ class Channel(ABC):
 
         self.__recent_response = response
 
+    @property
+    def min_sampling_rate(self) -> float:
+        """Minimal sampling rate required to adequately model the channel.
+
+        Returns:
+            float: The minimal sampling rate in Hz.
+        """
+
+        # Since the default channel is time-invariant, there are no sampling rate requirements
+        return 0.0
+
     @classmethod
     def to_yaml(cls: Type[Channel], representer: SafeRepresenter, node: Channel) -> MappingNode:
         """Serialize a channel object to YAML.
