@@ -160,38 +160,6 @@ class Transmitter(Modem):
         # We're finally done, blow the fanfares, throw confetti, etc.
         return transmitted_signal
 
-        # Make sure enough data bits were provided
-# elif len(data_bits) < num_data_bits:
-#     raise ValueError("Number of provided data bits is insufficient to generate a single frame")
-
-# # Apply channel coding to the source bits
-# code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
-
-# while timestamp < number_of_samples:
-
-#     # Generate base-band waveforms
-#     frame, timestamp, initial_sample_num = self.waveform_generator.create_frame(
-#         timestamp, code_bits)
-
-#     if frame_index == 1:
-#         tx_signal, samples_delay = self._allocate_drop_size(
-#             initial_sample_num, number_of_samples)
-
-#     tx_signal, samples_delay = self._add_frame_to_drop(
-#         initial_sample_num, samples_delay, tx_signal, frame)
-#     frame_index += 1
-
-# # Create signal streams to each antenna via the precoder
-# antenna_streams = self.precoding.encode(tx_signal)
-
-# # Simulate RF chain
-# tx_signal = self.rf_chain.send(antenna_streams)
-
-# # Scale resulting signal by configured power factor
-# tx_signal *= np.sqrt(self.power_factor)
-
-# return tx_signal
-
     @classmethod
     def from_yaml(cls: Type[Transmitter], constructor: SafeConstructor, node: Node) -> Transmitter:
         """Recall a new `Transmitter` instance from YAML.
