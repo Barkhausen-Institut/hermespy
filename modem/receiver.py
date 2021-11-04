@@ -115,17 +115,23 @@ class Receiver(Modem):
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
 
+        # Fetch recent impulse responses
+        impulse_responses = self.reference_channel.recent_response
+
         # Generate a symbol stream for each dedicated base-band signal
         symbol_streams = np.empty((received_signals.shape[0], symbols_per_stream),
                                   dtype=self.waveform_generator.symbol_type)
 
         for (stream_idx, noisy_signal), frame_idx in product(enumerate(noisy_signals), range(frames_per_stream)):
 
+            # Select the proper impulse response for this stream
+            impulse_response = impulse_responses[:, :, stream_idx, :]
+
             # Select the proper signal section for the next frame to be demodulated
             noisy_signal_frame_section = noisy_signal[frame_idx*samples_in_frame:(1+frame_idx)*samples_in_frame]
 
             # Demodulate the frame into dat symbols
-            frame_symbols = self.waveform_generator.demodulate(noisy_signal_frame_section, timestamps)
+            frame_symbols = self.waveform_generator.demodulate(noisy_signal_frame_section, impulse_response)
 
             # Save data symbols in their respective stream section
             symbol_streams[stream_idx, frame_idx*symbols_per_frame:(1+frame_idx)*symbols_per_frame] = frame_symbols

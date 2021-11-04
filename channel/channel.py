@@ -537,6 +537,4 @@ class Channel(ABC):
         Unlike the impulse_response routine, errors may occur during channel estimation.
         """
 
-        estimate = np.eye(self.transmitter.num_antennas, self.receiver.num_antennas, dtype=complex)
-        bloated_estimate = estimate[np.newaxis, :, :, np.newaxis].repeat(num_samples, axis=0)
-        return bloated_estimate
+        return self.recent_response

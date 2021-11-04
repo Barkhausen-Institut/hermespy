@@ -668,6 +668,14 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return num
 
+    def num_subcarriers(self) -> int:
+
+        num = 0
+        for section in self.structure:
+            num = max(num, section.num_subcarriers)
+
+        return num
+
     # property definitions END
     #############################################
 
@@ -701,11 +709,43 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return output_signal
 
-    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+    def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
+
+        channel_estimate = np.empty((self.symbols_per_frame,
+                                     impulse_response.shape[1],
+                                     impulse_response.shape[2],
+                                     impulse_response.shape[3]),
+                                    dtype=complex)
+        sample_index = 0
+        symbol_index = 0
+        for section in self.structure:
+
+            num_samples = section.num_samples
+            num_symbols = section.num_symbols
+
+            section_symbols = section.demodulate(signal[sample_index:sample_index+num_samples])
+            symbols[symbol_index:symbol_index+num_symbols] = section_symbols
+
+            sample_index += num_samples
+            symbol_index += num_symbols
+
+        return symbols
+
+        frequency_bins = np.arange(self.num_subcarriers) * self.subcarrier_spacing
+        for time_idx in range(impulse_response.shape[0]):
+
+            time = time_idx / self.modem.scenario.sampling_rate
+            fourier_weights = np.exp(-2j * pi * frequency_bins * time)
+
+            grid += np.outer(fourier_weights, slot_samples[time_idx, :])
 
 
-        # Estimate the channel
+        initial_timestamp_in_samples = copy(timestamp_in_samples)
 
+    def demodulate(self, signal: np.ndarray, impulse_response: np.ndarray) -> np.ndarray:
+
+        # Estimate and equalize the channel
+        # channel_estimation = self.__channel_estimation(signal, impulse_response)
 
         symbols = np.empty(self.symbols_per_frame, dtype=complex)
 
@@ -994,8 +1034,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return frame, noise_var
 
-    def channel_estimation(self, rx_signal: np.ndarray,
-                           timestamp_in_samples: int) -> np.ndarray:
+    def __channel_estimation(self, rx_signal: np.ndarray, impulse_response: np.ndarrayt) -> np.ndarray:
         """Performs channel estimation
 
         This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
@@ -1017,6 +1056,18 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 number of data OFDM symbols in the frame. R denotes the number of receive antennas and T of the transmit
                 antennas.
         """
+
+        # Convert the channel impulse response into frequency domain for the configured subcarriers
+
+        frequency_bins = np.arange(self.num_subcarriers) * self.subcarrier_spacing
+        for time_idx in range(impulse_response.shape[0]):
+
+            time = time_idx / self.modem.scenario.sampling_rate
+            fourier_weights = np.exp(-2j * pi * frequency_bins * time)
+
+            grid += np.outer(fourier_weights, slot_samples[time_idx, :])
+
+
         initial_timestamp_in_samples = copy(timestamp_in_samples)
 
         ####
@@ -1040,7 +1091,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         channel_in_freq_domain: np.ndarray
 
-        if self.param.channel_estimation == 'IDEAL':  # ideal channel estimation at each transmitted OFDM symbol
+        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL:  # ideal channel estimation at each transmitted OFDM symbol
             channel_in_freq_domain = self.get_ideal_channel_estimation(channel_timestamps)
             channel_in_freq_domain = np.moveaxis(channel_in_freq_domain, 0, -1)
 
