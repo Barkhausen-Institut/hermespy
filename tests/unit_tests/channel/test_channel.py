@@ -10,10 +10,12 @@ from numpy.core.fromnumeric import size
 from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 import numpy as np
+from scipy import stats
 
 from channel import Channel
 import scenario
 from simulator_core.factory import Factory
+from tests.unit_tests.utils import yaml_str_contains_element
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -423,39 +425,38 @@ class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
                      sync_offset_low=LOW, sync_offset_high=HIGH)
         serialized_ch = self.factory.to_str(ch)
         self.assertTrue(
-            self._yaml_str_contains_sync_offsets(
+            yaml_str_contains_element(
                 yaml_str=serialized_ch,
-                sync_offset_low=LOW,
-                sync_offset_high=HIGH
-            ))
+                key="sync_offset_low",
+                value=LOW
+            )
+        )
+        self.assertTrue(
+            yaml_str_contains_element(
+                yaml_str=serialized_ch,
+                key="sync_offset_high",
+                value=HIGH
+            )
+        )
 
     def test_dumping_default_parameters_are_printed(self) -> None:
         ch = Channel(transmitter=Mock(), receiver=Mock(),
                      active=True, gain=1)
         serialized_ch = self.factory.to_str(ch)
         self.assertTrue(
-            self._yaml_str_contains_sync_offsets(
+            yaml_str_contains_element(
                 yaml_str=serialized_ch,
-                sync_offset_low=0,
-                sync_offset_high=0
-            ))
-
-    def _yaml_str_contains_sync_offsets(self, yaml_str: str, 
-                                           sync_offset_low: float,
-                                           sync_offset_high: float) -> bool:
-        regex_low = re.compile(
-            f'^sync_offset_low: {sync_offset_low}$',
-            re.MULTILINE)
-        regex_high = re.compile(
-            f'^sync_offset_high: {sync_offset_high}$',
-            re.MULTILINE)
-
-
-        correctly_parsed = (
-            re.search(regex_low, yaml_str) is not None and
-            re.search(regex_high, yaml_str) is not None
+                key="sync_offset_low",
+                value=0
+            )
         )
-        return correctly_parsed
+        self.assertTrue(
+            yaml_str_contains_element(
+                yaml_str=serialized_ch,
+                key="sync_offset_high",
+                value=0
+            )
+        )
 
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:
@@ -620,6 +621,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
             np.hstack(
                 (np.zeros((1, int(delay)), dtype=complex), self.x_one_antenna))
         )
+
 
     def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> Channel:
         rng = np.random.default_rng(seed)
