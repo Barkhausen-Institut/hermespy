@@ -37,7 +37,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
     __model_type: TYPE
 
     def __init__(self,
-                 model_type: TYPE = 0,
+                 model_type: TYPE = TYPE.URBAN,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
@@ -47,7 +47,10 @@ class MultipathFadingCost256(MultipathFadingChannel):
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+                 receive_postcoding: Optional[np.ndarray] = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[np.random.Generator] = None) -> None:
         """Model initialization.
 
         Args:
@@ -67,7 +70,6 @@ class MultipathFadingCost256(MultipathFadingChannel):
                 If `model_type` is not supported.
                 If `los_angle` is defined in HILLY model type.
         """
-
         if model_type == self.TYPE.URBAN:
 
             delays = 1e-6 * np.asarray([0, .217, .512, .514, .517, .674, .882, 1.230, 1.287, 1.311, 1.349,
@@ -117,7 +119,10 @@ class MultipathFadingCost256(MultipathFadingChannel):
                                         doppler_frequency,
                                         los_doppler_frequency,
                                         transmit_precoding,
-                                        receive_postcoding)
+                                        receive_postcoding,
+                                        sync_offset_low,
+                                        sync_offset_high,
+                                        random_generator)
 
     @property
     def model_type(self) -> TYPE:
