@@ -569,13 +569,7 @@ class TestChannelTimeOffset(unittest.TestCase):
         )
 
     def test_no_delay_for_default_parameters(self) -> None:
-        ch = Channel(
-            transmitter=self.mock_transmitter_one_antenna,
-            receiver=self.mock_receiver_one_antenna,
-            scenario=self.scenario,
-            active=True,
-            gain=1
-        )
+        ch = self.create_channel(None, None)
 
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna),
@@ -583,15 +577,7 @@ class TestChannelTimeOffset(unittest.TestCase):
         )
 
     def test_one_exact_sample_delay(self) -> None:
-        ch = Channel(
-            transmitter=self.mock_transmitter_one_antenna,
-            receiver=self.mock_receiver_one_antenna,
-            scenario=self.scenario,
-            active=True,
-            gain=1,
-            sync_offset_low=1,
-            sync_offset_high=1
-        )
+        ch = self.create_channel(1, 1)
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna),
             np.hstack(
@@ -599,15 +585,7 @@ class TestChannelTimeOffset(unittest.TestCase):
         )
 
     def test_non_int_sample_delay_gets_truncated(self) -> None:
-        ch = Channel(
-            transmitter=self.mock_transmitter_one_antenna,
-            receiver=self.mock_receiver_one_antenna,
-            scenario=self.scenario,
-            active=True,
-            gain=1,
-            sync_offset_low=1.5,
-            sync_offset_high=1.5
-        )
+        ch = self.create_channel(1.5, 1.5)
 
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna),
@@ -621,22 +599,25 @@ class TestChannelTimeOffset(unittest.TestCase):
         SYNC_OFFSET_HIGH = 10
 
         rng_local = np.random.default_rng(COMMON_SEED)
-        rng_channel = np.random.default_rng(COMMON_SEED)
 
         delay = rng_local.uniform(low=SYNC_OFFSET_LOW, high=SYNC_OFFSET_HIGH)
-        ch = Channel(
-            transmitter=self.mock_transmitter_one_antenna,
-            receiver=self.mock_receiver_one_antenna,
-            scenario=self.scenario,
-            active=True,
-            gain=1,
-            sync_offset_low=SYNC_OFFSET_LOW,
-            sync_offset_high=SYNC_OFFSET_HIGH,
-            random_generator=rng_channel
-        )
+        ch = self.create_channel(SYNC_OFFSET_LOW, SYNC_OFFSET_HIGH, COMMON_SEED)
 
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna),
             np.hstack(
                 (np.zeros((1, int(delay)), dtype=complex), self.x_one_antenna))
+        )
+
+    def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> Channel:
+        rng = np.random.default_rng(seed)
+        return Channel(
+            transmitter=self.mock_transmitter_one_antenna,
+            receiver=self.mock_receiver_one_antenna,
+            scenario=self.scenario,
+            active=True,
+            gain=1,
+            sync_offset_low=sync_low,
+            sync_offset_high=sync_high,
+            random_generator=rng
         )
