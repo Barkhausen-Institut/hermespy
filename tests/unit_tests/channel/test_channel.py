@@ -552,11 +552,11 @@ class TestChannelTimeOffset(unittest.TestCase):
         self.scenario.sampling_rate = 1e3
         self.scenario.random_generator = np.random.default_rng()
 
-        self.mock_transmitter_one_antenna = Mock()
-        self.mock_transmitter_one_antenna.num_antennas = 1
+        self.mock_transmitter = Mock()
+        self.mock_transmitter.num_antennas = 1
 
-        self.mock_receiver_one_antenna = Mock()
-        self.mock_receiver_one_antenna.num_antennas = 1
+        self.mock_receiver = Mock()
+        self.mock_receiver.num_antennas = 1
 
         self.x_one_antenna = (
             np.random.randint(low=1, high=4, size=(1,100))
@@ -582,6 +582,18 @@ class TestChannelTimeOffset(unittest.TestCase):
             ch.propagate(self.x_one_antenna),
             np.hstack(
                 (np.zeros((1,1), dtype=complex), self.x_one_antenna))
+        )
+
+    def test_two_sample_delays_two_tx_antennas(self) -> None:
+        self.mock_transmitter.num_antennas = 2
+        ch = self.create_channel(2, 2)
+
+        rx_signal = np.expand_dims(
+            self.x_two_antenna[0, :] + self.x_two_antenna[1, :], axis=0)
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.x_two_antenna),
+            np.hstack(
+                (np.zeros((1,2), dtype=complex), rx_signal))
         )
 
     def test_non_int_sample_delay_gets_truncated(self) -> None:
@@ -612,8 +624,8 @@ class TestChannelTimeOffset(unittest.TestCase):
     def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> Channel:
         rng = np.random.default_rng(seed)
         return Channel(
-            transmitter=self.mock_transmitter_one_antenna,
-            receiver=self.mock_receiver_one_antenna,
+            transmitter=self.mock_transmitter,
+            receiver=self.mock_receiver,
             scenario=self.scenario,
             active=True,
             gain=1,
