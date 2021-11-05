@@ -89,6 +89,7 @@ class MultipathFadingChannel(Channel):
 
     yaml_tag = u'MultipathFading'
     yaml_matrix = True
+    delay_resolution_error: float = 0.2
     __delays: np.ndarray
     __power_profile: np.ndarray
     __rice_factors: np.ndarray
@@ -163,9 +164,12 @@ class MultipathFadingChannel(Channel):
         # Init base class
         Channel.__init__(self, transmitter, receiver, active, gain)
 
-        self.__delays = delays
-        self.__power_profile = power_profile
-        self.__rice_factors = rice_factors
+        # Sort delays
+        sorting = np.argsort(delays)
+
+        self.__delays = delays[sorting]
+        self.__power_profile = power_profile[sorting]
+        self.__rice_factors = rice_factors[sorting]
         self.__num_sinusoids = 10       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
         self.los_angle = los_angle
         self.__transmit_precoding = None
@@ -479,6 +483,19 @@ class MultipathFadingChannel(Channel):
         los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
 
         return los_component + nlos_component
+
+    @property
+    def min_sampling_rate(self) -> float:
+
+        # The sampling rate should be chose so that each resolvable path delay falls
+        # close to a delay sample
+        min_rate = (1 - self.delay_resolution_error) / (np.min(np.diff(self.delays)))
+
+        if min_rate == np.inf:
+            return 0.0
+
+        else:
+            return min_rate
 
     @classmethod
     def to_yaml(cls: Type[MultipathFadingChannel], representer: SafeRepresenter,

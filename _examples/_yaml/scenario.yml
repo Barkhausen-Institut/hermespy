@@ -50,9 +50,6 @@ Channels:
 
 #  - COST256 0 0
 #    model_type: URBAN
-#  - 5GTDL 0 0
-#    type: A
-#    rms_delay: 0.0
-  - Channel 0 0
-    active: true
-    seed: 0
+  - 5GTDL 0 0
+    type: A
+    rms_delay: 1e-5
