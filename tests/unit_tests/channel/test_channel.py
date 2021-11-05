@@ -550,6 +550,7 @@ class TestChannelTimeOffset(unittest.TestCase):
     def setUp(self) -> None:
         self.scenario = Mock()
         self.scenario.sampling_rate = 1e3
+        self.scenario.random_generator = np.random.default_rng()
 
         self.mock_transmitter_one_antenna = Mock()
         self.mock_transmitter_one_antenna.num_antennas = 1
@@ -614,3 +615,28 @@ class TestChannelTimeOffset(unittest.TestCase):
                 (np.zeros((1,1), dtype=complex), self.x_one_antenna))
         )
 
+    def test_sample_is_picked(self) -> None:
+        COMMON_SEED = 42
+        SYNC_OFFSET_LOW = 0
+        SYNC_OFFSET_HIGH = 10
+
+        rng_local = np.random.default_rng(COMMON_SEED)
+        rng_channel = np.random.default_rng(COMMON_SEED)
+
+        delay = rng_local.uniform(low=SYNC_OFFSET_LOW, high=SYNC_OFFSET_HIGH)
+        ch = Channel(
+            transmitter=self.mock_transmitter_one_antenna,
+            receiver=self.mock_receiver_one_antenna,
+            scenario=self.scenario,
+            active=True,
+            gain=1,
+            sync_offset_low=SYNC_OFFSET_LOW,
+            sync_offset_high=SYNC_OFFSET_HIGH,
+            random_generator=rng_channel
+        )
+
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.x_one_antenna),
+            np.hstack(
+                (np.zeros((1, int(delay)), dtype=complex), self.x_one_antenna))
+        )
