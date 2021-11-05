@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Tuple, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from scipy import integrate
-from scipy.constants import pi
 from math import ceil
 from functools import lru_cache
 import numpy as np
@@ -413,7 +412,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             The average symbol energy in UNIT.
         """
 
-        _, _, energy = self._prototypes()
+        _, energy = self._prototypes()
         return energy
 
     @property
@@ -454,7 +453,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
         prototypes, _ = self._prototypes()
 
-        symbols = np.empty(self.num_data_chirps, dtype=int)
         symbol_responses = np.empty(self.num_data_chirps, dtype=complex)
         data_frame = signal[samples_in_pilot_section:]
 
@@ -504,37 +502,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         # generate offset according to bits
         offset = np.matmul(power_of_2, bits)
         return offset
-
-    def _calculate_chirp_frequencies(
-            self, initial_frequency: np.array) -> Tuple[np.array, np.array]:
-        """Calculates the chirp frequencies.
-
-        Args:
-            initial_frequency (np.array): Initial frequencies of chirps.
-
-        Returns:
-            (np.array, np.array):
-                `np.array`: complex array containing samples as frequencies of chirps.
-                `np.array`: corresponding amplitudes.
-        """
-
-        amplitude = np.zeros(self.samples_in_chirp * initial_frequency.shape[0])
-        frequency = np.zeros(self.samples_in_chirp * initial_frequency.shape[0])
-        slope = self.__chirp_bandwidth / self.__chirp_duration
-        f1 = .5 * self.chirp_bandwidth
-
-        chirp_time = np.arange(self.samples_in_chirp) / self.modem.scenario.sampling_rate
-
-        for symbol_index, f0 in enumerate(initial_frequency):
-            first_sample = symbol_index * self.samples_in_chirp
-            last_sample = first_sample + self.samples_in_chirp
-
-            amplitude[first_sample:last_sample] = 1
-            frequency[first_sample:last_sample] = f0 + slope * chirp_time  # set (modulated) chirp
-
-        frequency[frequency > f1] -= self.__chirp_bandwidth  # wrap
-
-        return frequency, amplitude
 
     @property
     def power(self) -> float:
