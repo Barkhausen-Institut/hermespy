@@ -480,7 +480,7 @@ class Channel:
                 (impulse_responses.shape[0],
                 impulse_responses.shape[1],
                 impulse_responses.shape[2],
-                self.sync_offset_high),
+                int(self.sync_offset_high)),
                 dtype=complex
             )
 

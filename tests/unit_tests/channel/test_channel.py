@@ -597,4 +597,20 @@ class TestChannelTimeOffset(unittest.TestCase):
                 (np.zeros((1,1), dtype=complex), self.x_one_antenna))
         )
 
+    def test_non_int_sample_delay_gets_truncated(self) -> None:
+        ch = Channel(
+            transmitter=self.mock_transmitter_one_antenna,
+            receiver=self.mock_receiver_one_antenna,
+            scenario=self.scenario,
+            active=True,
+            gain=1,
+            sync_offset_low=1.5,
+            sync_offset_high=1.5
+        )
+
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.x_one_antenna),
+            np.hstack(
+                (np.zeros((1,1), dtype=complex), self.x_one_antenna))
+        )
 
