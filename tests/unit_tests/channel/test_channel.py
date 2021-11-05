@@ -5,12 +5,14 @@ from datetime import time
 import unittest
 from unittest.mock import Mock
 import re
+from numpy.core.fromnumeric import size
 
 from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 import numpy as np
 
 from channel import Channel
+import scenario
 from simulator_core.factory import Factory
 
 __author__ = "Tobias Kronauer"
@@ -408,6 +410,7 @@ class TestChannel(unittest.TestCase):
         """Test YAML serialization recall validity."""
         pass
 
+
 class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
     def setUp(self) -> None:
         self.factory = Factory()
@@ -542,3 +545,38 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
 
         self.assertEqual(ch[1, 1].sync_offset_low, sync_offsets['ch1_1']['LOW'])
         self.assertEqual(ch[1, 1].sync_offset_high, sync_offsets['ch1_1']['HIGH'])
+
+class TestChannelTimeOffset(unittest.TestCase):
+    def setUp(self) -> None:
+        self.scenario = Mock()
+        self.scenario.sampling_rate = 1e3
+
+        self.mock_transmitter_one_antenna = Mock()
+        self.mock_transmitter_one_antenna.num_antennas = 1
+
+        self.mock_receiver_one_antenna = Mock()
+        self.mock_receiver_one_antenna.num_antennas = 1
+
+        self.x_one_antenna = (
+            np.random.randint(low=1, high=4, size=(1,100))
+            + 1j * np.random.randint(low=1, high=4, size=(1,100))
+        )
+
+        self.x_two_antenna = (
+            np.random.randint(low=1, high=4, size=(2,100))
+            + 1j * np.random.randint(low=1, high=4, size=(2,100))
+        )
+    def test_no_delay_for_default_parameters(self) -> None:
+        ch = Channel(
+            transmitter=self.mock_transmitter_one_antenna,
+            receiver=self.mock_receiver_one_antenna,
+            scenario=self.scenario,
+            active=True,
+            gain=1
+        )
+
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.x_one_antenna),
+            self.x_one_antenna
+        )
+
