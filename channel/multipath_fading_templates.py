@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 from enum import Enum
 from typing import TYPE_CHECKING, Optional, Type
+from numpy.random import rand
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 
 from channel import MultipathFadingChannel
@@ -107,22 +108,22 @@ class MultipathFadingCost256(MultipathFadingChannel):
 
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(self,
-                                        delays,
-                                        power_profile,
-                                        rice_factors,
-                                        transmitter,
-                                        receiver,
-                                        active,
-                                        gain,
-                                        num_sinusoids,
-                                        los_angle,
-                                        doppler_frequency,
-                                        los_doppler_frequency,
-                                        transmit_precoding,
-                                        receive_postcoding,
-                                        sync_offset_low,
-                                        sync_offset_high,
-                                        random_generator)
+                                        delays=delays,
+                                        power_profile=power_profile,
+                                        rice_factors=rice_factors,
+                                        transmitter=transmitter,
+                                        receiver=receiver,
+                                        active=active,
+                                        gain=gain,
+                                        num_sinusoids=num_sinusoids,
+                                        los_angle=los_angle,
+                                        doppler_frequency=doppler_frequency,
+                                        los_doppler_frequency=los_doppler_frequency,
+                                        transmit_precoding=transmit_precoding,
+                                        receive_postcoding=receive_postcoding,
+                                        sync_offset_low=sync_offset_low,
+                                        sync_offset_high=sync_offset_high,
+                                        random_generator=random_generator)
 
     @property
     def model_type(self) -> TYPE:
@@ -233,7 +234,10 @@ class MultipathFading5GTDL(MultipathFadingChannel):
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+                 receive_postcoding: Optional[np.ndarray] = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[np.random.Generator] = None) -> None:
         """Model initialization.
 
         Args:
@@ -327,23 +331,24 @@ class MultipathFading5GTDL(MultipathFadingChannel):
 
         # Scale delays
         delays = rms_delay * normalized_delays
-
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(self,
-                                        delays,
-                                        power_profile,
-                                        rice_factors,
-                                        transmitter,
-                                        receiver,
-                                        active,
-                                        gain,
-                                        num_sinusoids,
-                                        los_angle,
-                                        doppler_frequency,
-                                        los_doppler_frequency,
-                                        transmit_precoding,
-                                        receive_postcoding)
-
+                                        delays=delays,
+                                        power_profile=power_profile,
+                                        rice_factors=rice_factors,
+                                        transmitter=transmitter,
+                                        receiver=receiver,
+                                        active=active,
+                                        gain=gain,
+                                        num_sinusoids=num_sinusoids,
+                                        los_angle=los_angle,
+                                        doppler_frequency=doppler_frequency,
+                                        los_doppler_frequency=los_doppler_frequency,
+                                        transmit_precoding=transmit_precoding,
+                                        receive_postcoding=receive_postcoding,
+                                        sync_offset_low=sync_offset_low,
+                                        sync_offset_high=sync_offset_high,
+                                        random_generator=random_generator)
     @property
     def model_type(self) -> TYPE:
         """Access the configured model type.
@@ -446,7 +451,10 @@ class MultipathFadingExponential(MultipathFadingChannel):
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+                 receive_postcoding: Optional[np.ndarray] = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[np.random.Generator] = None) -> None:
         """Exponential Multipath Channel Model initialization.
 
         Args:
@@ -491,19 +499,22 @@ class MultipathFadingExponential(MultipathFadingChannel):
 
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(self,
-                                        delays,
-                                        power_profile,
-                                        rice_factors,
-                                        transmitter,
-                                        receiver,
-                                        active,
-                                        gain,
-                                        num_sinusoids,
-                                        los_angle,
-                                        doppler_frequency,
-                                        los_doppler_frequency,
-                                        transmit_precoding,
-                                        receive_postcoding)
+                                        delays=delays,
+                                        power_profile=power_profile,
+                                        rice_factors=rice_factors,
+                                        transmitter=transmitter,
+                                        receiver=receiver,
+                                        active=active,
+                                        gain=gain,
+                                        num_sinusoids=num_sinusoids,
+                                        los_angle=los_angle,
+                                        doppler_frequency=doppler_frequency,
+                                        los_doppler_frequency=los_doppler_frequency,
+                                        transmit_precoding=transmit_precoding,
+                                        receive_postcoding=receive_postcoding,
+                                        sync_offset_low=sync_offset_low,
+                                        sync_offset_high=sync_offset_high,
+                                        random_generator=random_generator)
 
     @classmethod
     def to_yaml(cls: Type[MultipathFadingExponential], representer: SafeRepresenter,

@@ -117,7 +117,10 @@ class MultipathFadingChannel(Channel):
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None,
-                 interpolate_signals: bool = None) -> None:
+                 interpolate_signals: bool = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[np.random.Generator] = None) -> None:
         """Object initialization.
 
         Args:
@@ -161,7 +164,14 @@ class MultipathFadingChannel(Channel):
             raise ValueError("Rice factors must be greater or equal to zero")
 
         # Init base class
-        Channel.__init__(self, transmitter, receiver, active, gain)
+        Channel.__init__(self,
+                         transmitter=transmitter,
+                         receiver=receiver,
+                         active=active,
+                         gain=gain,
+                         sync_offset_low=sync_offset_low,
+                         sync_offset_high=sync_offset_high,
+                         random_generator=random_generator)
 
         self.__delays = delays
         self.__power_profile = power_profile
