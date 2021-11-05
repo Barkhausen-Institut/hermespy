@@ -78,14 +78,17 @@ class TestChannel(unittest.TestCase):
         self.generator = default_rng(0)
         self.scenario = Mock()
         self.scenario.sampling_rate = 1e3
-
+        self.sync_offset_low = 3
+        self.sync_offset_high = 5
         self.channel = Channel(
             transmitter=self.transmitter,
             receiver=self.receiver,
             active=self.active,
             gain=self.gain,
             random_generator=self.generator,
-            scenario=self.scenario)
+            scenario=self.scenario,
+            sync_offset_low=self.sync_offset_low,
+            sync_offset_high=self.sync_offset_high)
 
         # Number of discrete-time samples generated for signal propagation testing
         self.propagate_signal_lengths = [1, 10, 100, 1000]
@@ -105,6 +108,8 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(self.gain, self.channel.gain, "Unexpected gain parameter initialization")
         self.assertEqual(self.generator, self.channel.random_generator)
         self.assertEqual(self.scenario, self.channel.scenario)
+        self.assertEqual(self.sync_offset_low, self.channel.sync_offset_low)
+        self.assertEqual(self.sync_offset_high, self.channel.sync_offset_high)
 
     def test_active_setget(self) -> None:
         """Active property getter must return setter parameter."""
@@ -412,51 +417,6 @@ class TestChannel(unittest.TestCase):
         """Test YAML serialization recall validity."""
         pass
 
-
-class TestChannelTimeoffsetScenarioDumping(unittest.TestCase):
-    def setUp(self) -> None:
-        self.factory = Factory()
-
-    def test_dumping_low_high(self) -> None:
-        LOW = 0
-        HIGH = 3
-        ch = Channel(transmitter=Mock(), receiver=Mock(),
-                     active=True, gain=1,
-                     sync_offset_low=LOW, sync_offset_high=HIGH)
-        serialized_ch = self.factory.to_str(ch)
-        self.assertTrue(
-            yaml_str_contains_element(
-                yaml_str=serialized_ch,
-                key="sync_offset_low",
-                value=LOW
-            )
-        )
-        self.assertTrue(
-            yaml_str_contains_element(
-                yaml_str=serialized_ch,
-                key="sync_offset_high",
-                value=HIGH
-            )
-        )
-
-    def test_dumping_default_parameters_are_printed(self) -> None:
-        ch = Channel(transmitter=Mock(), receiver=Mock(),
-                     active=True, gain=1)
-        serialized_ch = self.factory.to_str(ch)
-        self.assertTrue(
-            yaml_str_contains_element(
-                yaml_str=serialized_ch,
-                key="sync_offset_low",
-                value=0
-            )
-        )
-        self.assertTrue(
-            yaml_str_contains_element(
-                yaml_str=serialized_ch,
-                key="sync_offset_high",
-                value=0
-            )
-        )
 
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:
