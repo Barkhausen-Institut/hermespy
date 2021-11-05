@@ -139,7 +139,10 @@ class SymbolPrecoding:
 
         return stream
 
-    def decode(self, input_stream: np.ndarray, stream_responses: np.ndarray) -> np.array:
+    def decode(self,
+               input_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> np.array:
         """Decode a data symbol stream after reception.
 
         Args:
@@ -153,12 +156,16 @@ class SymbolPrecoding:
                 The channel impulse response for each data symbol within `input_stream`.
                 Identical dimensionality to `input_stream`.
 
+            stream_noises (np.ndarray):
+                The noise variances for each data symbol within `input_stream`.
+                Identical dimensionality to `input_stream`.
+
         Returns:
             np.array:
                 The decoded data symbols
 
         Raises:
-            ValueError: If dimensions of `stream_responses` and `input_streams` do not match.
+            ValueError: If dimensions of `stream_responses`, `stream_noises` and `input_streams` do not match.
         """
 
         if np.any(input_stream.shape != stream_responses.shape):
@@ -168,7 +175,7 @@ class SymbolPrecoding:
 
         # Recursion through all precoders, each one may update the stream as well as the responses
         for precoder in reversed(self.__symbol_precoders):
-            input_stream, stream_responses = precoder.decode(input_stream, stream_responses)
+            input_stream, stream_responses = precoder.decode(input_stream, stream_responses, stream_noises)
 
         return input_stream.flatten()
 
