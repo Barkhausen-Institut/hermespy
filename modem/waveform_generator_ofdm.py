@@ -763,13 +763,15 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             sample_index += num_samples
             symbol_index += num_symbols
 
-        return symbols
+        # ToDo: Channel estimation
+        return symbols, np.zeros(symbols.shape, dtype=complex)
 
     @property
     def bandwidth(self) -> float:
 
         # OFDM bandwidth currently is identical to the number of subcarriers times the subcarrier spacing
-        return self.num_subcarriers * self.subcarrier_spacing
+        b = self.num_subcarriers * self.subcarrier_spacing
+        return b
 
     def create_frame(self, timestamp: int, data_bits: np.array) -> Tuple[np.ndarray, int, int]:
         """Creates a modulated complex baseband signal for a whole transmit frame.

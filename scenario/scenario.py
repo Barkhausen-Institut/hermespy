@@ -455,19 +455,19 @@ class Scenario:
             # Consider the link requirements between transmitter and receiver
             if transmitter.carrier_frequency > receiver.carrier_frequency:
                 link_bandwidth = transmitter.carrier_frequency - receiver.carrier_frequency + .5 * \
-                                 transmitter.carrier_frequency
+                                 transmitter.waveform_generator.bandwidth
 
             else:
                 link_bandwidth = receiver.carrier_frequency - transmitter.carrier_frequency + .5 * \
-                                 receiver.carrier_frequency
+                                 transmitter.waveform_generator.bandwidth
 
             sampling_rate = max(sampling_rate, 2 * link_bandwidth)
 
         for transmitter in self.__transmitters:
-            sampling_rate = max(sampling_rate, transmitter.waveform_generator.bandwidth)
+            sampling_rate = max(sampling_rate, 2 * transmitter.waveform_generator.bandwidth)
 
         for receiver in self.__receivers:
-            sampling_rate = max(sampling_rate, receiver.waveform_generator.bandwidth)
+            sampling_rate = max(sampling_rate, 2 * receiver.waveform_generator.bandwidth)
 
         return sampling_rate
 

@@ -7,6 +7,7 @@ from numpy import cos, exp
 from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
 from itertools import product
+from functools import lru_cache
 import numpy as np
 
 from channel.channel import Channel
@@ -89,7 +90,7 @@ class MultipathFadingChannel(Channel):
 
     yaml_tag = u'MultipathFading'
     yaml_matrix = True
-    delay_resolution_error: float = 0.2
+    delay_resolution_error: float = 0.4
     __delays: np.ndarray
     __power_profile: np.ndarray
     __rice_factors: np.ndarray
@@ -433,7 +434,11 @@ class MultipathFadingChannel(Channel):
                                      self.transmitter.num_antennas,
                                      max_delay_in_samples + 1), dtype=complex)
 
-        for power, delay_in_samples, los_gain, nlos_gain in zip(self.__power_profile, delays_in_samples,
+        interpolation_filter: Optional[np.ndarray] = None
+        if self.impulse_response_interpolation:
+            interpolation_filter = self.__interpolation_filter(self.scenario.sampling_rate)
+
+        for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths),
                                                                 self.__non_los_gains, self.__non_los_gains):
 
             power_factor = np.sqrt(power)
@@ -441,7 +446,12 @@ class MultipathFadingChannel(Channel):
             for rx_idx, tx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
                 signal_weights = power_factor * self.__tap(timestamps, los_gain, nlos_gain)
-                impulse_response[:, rx_idx, tx_idx, delay_in_samples] = signal_weights
+
+                if interpolation_filter is not None:
+                    impulse_response[:, rx_idx, tx_idx, :] = np.outer(signal_weights, interpolation_filter[:, path_idx])
+
+                else:
+                    impulse_response[:, rx_idx, tx_idx, delays_in_samples[path_idx]] = signal_weights
 
         self.recent_response = impulse_response
         return impulse_response
@@ -487,8 +497,13 @@ class MultipathFadingChannel(Channel):
     @property
     def min_sampling_rate(self) -> float:
 
+        # If impulse response interpolation is enabled, the sampling rate will be the scenario's sampling rate
+        if self.impulse_response_interpolation is True:
+            return 0.0
+
         # The sampling rate should be chose so that each resolvable path delay falls
         # close to a delay sample
+        # ToDo: Check if this equation makes any sense, I might have been a little tired
         min_rate = (1 - self.delay_resolution_error) / (np.min(np.diff(self.delays)))
 
         if min_rate == np.inf:
@@ -496,6 +511,30 @@ class MultipathFadingChannel(Channel):
 
         else:
             return min_rate
+
+    @lru_cache(maxsize=1)
+    def __interpolation_filter(self, sampling_rate: float) -> np.ndarray:
+        """Create an interpolation filter matrix.
+
+        Args:
+            sampling_rate: The sampling rate to which to interpolate.
+
+        Returns:
+            np.ndarray:
+                Interpolation filter matrix containing filters for each configured resolvable path.
+        """
+
+        num_delay_samples = int(round(self.max_delay * sampling_rate))
+        delay_samples = np.arange(num_delay_samples + 1) / sampling_rate
+        filter = np.zeros((num_delay_samples+1, self.num_resolvable_paths))
+
+        for path in range(self.num_resolvable_paths):
+
+            interp_filter = np.sinc((delay_samples - self.__delays[path]) * sampling_rate)
+            interp_filter /= np.sqrt(np.sum(interp_filter ** 2))
+            filter[:, path] = interp_filter
+
+        return filter
 
     @classmethod
     def to_yaml(cls: Type[MultipathFadingChannel], representer: SafeRepresenter,

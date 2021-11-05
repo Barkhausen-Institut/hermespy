@@ -5,7 +5,6 @@ from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import TYPE_CHECKING, Type, List, Optional, Union
-from itertools import product
 from math import floor
 import numpy as np
 import numpy.random as rnd
