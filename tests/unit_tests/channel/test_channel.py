@@ -546,7 +546,7 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         self.assertEqual(ch[1, 1].sync_offset_low, sync_offsets['ch1_1']['LOW'])
         self.assertEqual(ch[1, 1].sync_offset_high, sync_offsets['ch1_1']['HIGH'])
 
-class TestChannelTimeOffset(unittest.TestCase):
+class TestChannelTimeOffsetBehavior(unittest.TestCase):
     def setUp(self) -> None:
         self.scenario = Mock()
         self.scenario.sampling_rate = 1e3
