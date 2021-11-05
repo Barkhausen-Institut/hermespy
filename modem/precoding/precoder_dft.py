@@ -72,13 +72,16 @@ class DFT(SymbolPrecoder):
         # There will be an FFT conversion over the antenna streams
         return np.fft.fft(symbol_stream, axis=0, norm=self.__fft_norm)
 
-    def decode(self, symbol_stream: np.ndarray, stream_responses: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def decode(self,
+               symbol_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         # There will be an inverse FFT conversion over the antenna streams
         decoded_stream = np.fft.ifft(symbol_stream, axis=0, norm=self.__fft_norm)
         decoded_responses = np.fft.ifft(stream_responses, axis=0, norm=self.__fft_norm)
 
-        return decoded_stream, decoded_responses
+        return decoded_stream, decoded_responses, stream_noises
 
     @property
     def num_input_streams(self) -> int:

@@ -31,7 +31,10 @@ class SingleCarrier(SpatialMultiplexing):
 
         SpatialMultiplexing.__init__(self)
 
-    def decode(self, symbol_stream: np.ndarray, symbol_responses: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def decode(self,
+               symbol_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         # Decode data using SC receive diversity with N_rx received antennas.
         #
@@ -40,13 +43,14 @@ class SingleCarrier(SpatialMultiplexing):
 
         # TODO: Check this approach with André
         # Esentially, over all symbol streams for each symbol the one with the strongest response will be selected
-        channel_estimation = real(symbol_responses) ** 2 + imag(symbol_responses) ** 2
+        channel_estimation = real(stream_responses) ** 2 + imag(stream_responses) ** 2
 
         # Select proper antenna for each symbol timestamp
         antenna_selection = argmax(channel_estimation, axis=0)
         indices = np.arange(symbol_stream.shape[1])
 
         output_stream: np.ndarray = symbol_stream[antenna_selection, indices]
-        symbol_responses = symbol_responses[antenna_selection, indices]
+        symbol_responses = stream_responses[antenna_selection, indices]
+        symbol_noises = stream_noises[antenna_selection, indices]
 
-        return output_stream, symbol_responses
+        return output_stream, symbol_responses, symbol_noises

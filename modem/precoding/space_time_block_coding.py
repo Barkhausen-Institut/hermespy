@@ -74,15 +74,18 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
 
         return output
 
-    def decode(self, symbol_stream: np.ndarray, stream_responses: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def decode(self,
+               symbol_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         num_rx_streams = symbol_stream.shape[1]
 
         if num_rx_streams == 2:
-            return self.__decode_stbc_2_rx_antennas(symbol_stream, stream_responses, 1.0)
+            return self.__decode_stbc_2_rx_antennas(symbol_stream, stream_responses, stream_noises)
 
         if num_rx_streams == 4:
-            return self.__decode_stbc_4_rx_antennas(symbol_stream, stream_responses, 1.0)
+            return self.__decode_stbc_4_rx_antennas(symbol_stream, stream_responses, stream_noises)
 
         raise ValueError(f"Number of receive streams ({num_rx_streams}) "
                          "not supported in space-time/frequency code")

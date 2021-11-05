@@ -88,7 +88,10 @@ class SymbolPrecoder(ABC):
         ...
 
     @abstractmethod
-    def decode(self, symbol_stream: np.ndarray, stream_responses: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def decode(self,
+               symbol_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Decode a data stream before reception.
 
         This operation may modify the number of streams as well as the number of data symbols per stream.
@@ -104,6 +107,10 @@ class SymbolPrecoder(ABC):
                 The channel impulse response for each data symbol within `symbol_stream`.
                 Identical dimensionality to `input_stream`.
 
+            stream_noises (np.ndarray):
+                The noise variances for each data symbol within `symbol_stream`.
+                Identical dimensionality to `input_stream`.
+
         Returns:
 
             np.ndarray:
@@ -113,6 +120,9 @@ class SymbolPrecoder(ABC):
 
             np.ndarray:
                 A matrix of M'xN' data symbol impulse response estimations after this decoding step.
+
+            np.ndarray:
+                A matrix of M'xN' data symbol noise estimations after this decoding step.
 
         Raises:
             NotImplementedError: If a decoding operation is not supported
