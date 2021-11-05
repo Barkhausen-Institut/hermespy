@@ -43,6 +43,7 @@ class SyncOffset(unittest.TestCase):
 
     def test_5gtdl(self) -> None:
         LOW, HIGH = self.add_sync_offsets_to_params()
+        self.channel_params['model_type'] = MultipathFading5GTDL.TYPE.A
         ch = MultipathFading5GTDL(**self.channel_params)
         self.serialized_channel_contains_sync_offsets(ch, LOW, HIGH)
 
