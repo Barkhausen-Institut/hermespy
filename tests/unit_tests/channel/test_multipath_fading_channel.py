@@ -11,9 +11,15 @@ from scipy import stats
 from scipy.constants import pi
 import copy
 from unittest.mock import Mock
+from typing import Any, Dict
+
+from scipy.constants.codata import unit
 
 
-from channel import MultipathFadingChannel
+from channel import MultipathFadingChannel, Channel
+import channel
+from simulator_core.factory import Factory
+from tests.unit_tests.utils import yaml_str_contains_element
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -50,6 +56,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.receiver.sampling_rate = self.sampling_rate
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
+        self.sync_offset_low = 1
+        self.sync_offset_high = 3
 
         self.channel_params = {
             'delays': self.delays,
@@ -61,6 +69,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
             'gain': self.gain,
             'doppler_frequency': self.doppler_frequency,
             'num_sinusoids': 8,
+            'sync_offset_low': self.sync_offset_low,
+            'sync_offset_high': self.sync_offset_high
         }
 
         self.num_samples = 100
@@ -82,6 +92,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.assertEqual(self.gain, channel.gain, "Unexpected gain parameter initialization")
         self.assertEqual(self.num_sinusoids, channel.num_sinusoids)
         self.assertEqual(self.doppler_frequency, channel.doppler_frequency)
+        self.assertEqual(self.sync_offset_low, channel.sync_offset_low)
+        self.assertEqual(self.sync_offset_high, channel.sync_offset_high)
 
     def test_init_validation(self) -> None:
         """Object initialization should raise ValueError on invalid arguments."""
