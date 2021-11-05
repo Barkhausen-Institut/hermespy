@@ -78,8 +78,8 @@ class TestChannel(unittest.TestCase):
         self.generator = default_rng(0)
         self.scenario = Mock()
         self.scenario.sampling_rate = 1e3
-        self.sync_offset_low = 3
-        self.sync_offset_high = 5
+        self.sync_offset_low = 0
+        self.sync_offset_high = 0
         self.channel = Channel(
             transmitter=self.transmitter,
             receiver=self.receiver,
