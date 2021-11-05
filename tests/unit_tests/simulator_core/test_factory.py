@@ -4,6 +4,8 @@
 import unittest
 from unittest.mock import Mock
 
+from ruamel import yaml
+
 from simulator_core import Factory, SerializableClasses
 
 __author__ = "Jan Adler"
@@ -47,5 +49,3 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(MockClass.yaml_tag in self.factory.registered_tags,
                         "Mock class tag not registered as expected for serialization")
 
-if __name__ == '__main__':
-    unittest.main()
