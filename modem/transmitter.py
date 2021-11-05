@@ -116,7 +116,7 @@ class Transmitter(Modem):
         frames_per_stream = int(floor(drop_duration / self.waveform_generator.frame_duration))
 
         # Number of code bits required to generate all frames for all streams
-        num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
+        num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream / self.precoding.rate)
 
         # Data bits required by the bit encoder to generate the input bits for the waveform generator
         # num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
@@ -258,7 +258,7 @@ class Transmitter(Modem):
             numpy.ndarray: A vector of hard data bits in 0/1 format.
         """
 
-        num_bits = self.num_data_bits_per_frame * self.num_streams
+        num_bits = int(self.num_data_bits_per_frame * self.precoding.rate)
         bits = self.bits_source.get_bits(num_bits)
         return bits
 

@@ -7,7 +7,7 @@ Modems:
   - Transmitter
     power: 1e-3
     carrier_frequency: 0.0
-#    num_antennas: 2
+    num_antennas: 2
     position: [0, 0, 0]
     WaveformChirpFsk:
         chirp_bandwidth: 500e3
@@ -22,13 +22,13 @@ Modems:
       - Repetition
         block_size: 20
         repetitions: 3
-#    Precoding:
-#      - SC
+    Precoding:
+      - SC
 
   - Receiver
     reference_transmitter: 0
     carrier_frequency: 0.0
-#    num_antennas: 2
+    num_antennas: 2
     position: [10, 10, 10]
     WaveformChirpFsk:
         chirp_bandwidth: 500e3
@@ -43,8 +43,8 @@ Modems:
       - Repetition
         block_size: 20
         repetitions: 3
-#   Precoding:
-#      - SC
+    Precoding:
+      - SC
 
 Channels:
 

@@ -208,7 +208,7 @@ class Simulation(Executable):
                         scenario.min_sampling_rate:
                     print('\033[93m' + "Warning: The chosen sampling rate might be too low" + '\033[0m')
 
-                print(f"{'Noise':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
+                print(f"{'SNR':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
                 print("="*75)
 
             # Initialize plot statistics with current scenario state
@@ -263,7 +263,7 @@ class Simulation(Executable):
 
                                 if tx_id == 0 and rx_id == 0:
 
-                                    snr_str = f"{snr:.4f}"
+                                    snr_str = f"{10 * np.log10(snr):.1f}"
                                     print(f"{snr_str:<15}{d:<15}{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
                                 else:
