@@ -97,7 +97,7 @@ class Receiver(Modem):
         symbols_per_stream = frames_per_stream * symbols_per_frame
 
         # Number of code bits required to generate all frames for all streams
-        num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
+        num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream * self.precoding.rate)
 
         # Data bits required by the bit encoder to generate the input bits for the waveform generator
         num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)

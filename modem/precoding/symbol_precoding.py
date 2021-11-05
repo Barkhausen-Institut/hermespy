@@ -4,6 +4,7 @@
 from __future__ import annotations
 from typing import Optional, List, Type, TYPE_CHECKING
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
+from fractions import Fraction
 import numpy as np
 
 if TYPE_CHECKING:
@@ -216,6 +217,22 @@ class SymbolPrecoding:
             return 1
 
         return self.__symbol_precoders[precoder_index - 1].num_output_streams
+
+    @property
+    def rate(self) -> Fraction:
+        """Rate between input symbol slots and output symbol slots.
+
+        For example, a rate of one indicates that no symbols are getting added or removed during precoding.
+
+        Return:
+            Fraction: The precoding rate.
+        """
+
+        r = Fraction(1, 1)
+        for symbol_precoder in self.__symbol_precoders:
+            r *= symbol_precoder.rate
+
+        return r
 
     def __getitem__(self, index: int) -> Precoder:
         """Access a precoder at a given index.
