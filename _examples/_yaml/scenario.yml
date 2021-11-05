@@ -48,5 +48,5 @@ Modems:
 
 Channels:
 
-#   - COST256 0 0
-#     model_type: RURAL
+   - COST256 0 0
+     model_type: RURAL

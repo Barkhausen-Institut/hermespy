@@ -79,8 +79,8 @@ class MultipathFadingChannel(Channel):
         __num_resolvable paths (int): Number of resolvable paths within the multipath model.
         __num_sinusoids (int): Number of sinusoids components per sample sequence.
         __los_angle (Optional[float]): Line of sight angle of arrival.
-        __los_gains (np.array): Path gains for line of sight component in sample sequence, derived from rice factor
-        __non_los_gains (np.array): Path gains for non-line of sight in sample sequence, derived from rice factor
+        los_gains (np.array): Path gains for line of sight component in sample sequence, derived from rice factor
+        non_los_gains (np.array): Path gains for non-line of sight in sample sequence, derived from rice factor
         __transmit_precoding (np.ndarray): Precoding matrix for antenna streams before propagation.
         __receive_postcoding (np.ndarray): Postcoding matrix for antenna streams after propagation.
         __doppler_frequency (float): Doppler frequency in Hz.
@@ -98,7 +98,7 @@ class MultipathFadingChannel(Channel):
     __num_resolvable_paths: int
     __num_sinusoids: int
     __los_angle: Optional[float]
-    __los_gains: np.ndarray
+    los_gains: np.ndarray
     __transmit_precoding: Optional[np.ndarray]
     __receive_postcoding: Optional[np.ndarray]
     __doppler_frequency: float
@@ -200,14 +200,14 @@ class MultipathFadingChannel(Channel):
 
         rice_inf_pos = np.isposinf(rice_factors)
         rice_num_pos = np.invert(rice_inf_pos)
-        self.__los_gains = np.empty(self.num_resolvable_paths, dtype=float)
-        self.__non_los_gains = np.empty(self.num_resolvable_paths, dtype=float)
+        self.los_gains = np.empty(self.num_resolvable_paths, dtype=float)
+        self.non_los_gains = np.empty(self.num_resolvable_paths, dtype=float)
 
-        self.__los_gains[rice_inf_pos] = 1.0
-        self.__los_gains[rice_num_pos] = np.sqrt(rice_factors[rice_num_pos]) / np.sqrt(1 + rice_factors[rice_num_pos])
+        self.los_gains[rice_inf_pos] = 1.0
+        self.los_gains[rice_num_pos] = np.sqrt(rice_factors[rice_num_pos]) / np.sqrt(1 + rice_factors[rice_num_pos])
 
-        self.__non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + rice_factors[rice_num_pos])
-        self.__non_los_gains[rice_inf_pos] = 0.0
+        self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + rice_factors[rice_num_pos])
+        self.non_los_gains[rice_inf_pos] = 0.0
 
     @property
     def delays(self) -> np.ndarray:
@@ -439,19 +439,17 @@ class MultipathFadingChannel(Channel):
             interpolation_filter = self.__interpolation_filter(self.scenario.sampling_rate)
 
         for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths),
-                                                                self.__non_los_gains, self.__non_los_gains):
-
-            power_factor = np.sqrt(power)
+                                                        self.los_gains, self.non_los_gains):
 
             for rx_idx, tx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
-                signal_weights = power_factor * self.__tap(timestamps, los_gain, nlos_gain)
+                signal_weights = power ** .5 * self.__tap(timestamps, los_gain, nlos_gain)
 
                 if interpolation_filter is not None:
-                    impulse_response[:, rx_idx, tx_idx, :] = np.outer(signal_weights, interpolation_filter[:, path_idx])
+                    impulse_response[:, rx_idx, tx_idx, :] += np.outer(signal_weights, interpolation_filter[:, path_idx])
 
                 else:
-                    impulse_response[:, rx_idx, tx_idx, delays_in_samples[path_idx]] = signal_weights
+                    impulse_response[:, rx_idx, tx_idx, delays_in_samples[path_idx]] += signal_weights
 
         self.recent_response = impulse_response
         return impulse_response
