@@ -519,7 +519,9 @@ class MultipathFadingChannel(Channel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
-            'interpolate_signals': node.interpolate_signals
+            'interpolate_signals': node.interpolate_signals,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         transmitter_index, receiver_index = node.indices
