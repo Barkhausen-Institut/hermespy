@@ -46,8 +46,10 @@ class SyncOffset(unittest.TestCase):
         ch = MultipathFading5GTDL(**self.channel_params)
         self.serialized_channel_contains_sync_offsets(ch, LOW, HIGH)
 
-    def test_5gtdl(self) -> None:
+    def test_exponential(self) -> None:
         LOW, HIGH = self.add_sync_offsets_to_params()
+        self.channel_params['tap_interval'] = 0.1
+        self.channel_params['rms_delay'] = 1e-9
         ch = MultipathFadingExponential(**self.channel_params)
         self.serialized_channel_contains_sync_offsets(ch, LOW, HIGH)
 
