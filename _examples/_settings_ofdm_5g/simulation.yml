@@ -1,6 +1,7 @@
 !<Simulation>
   plot_drop: true
   plot_drop_transmitted_signals: true
+  plot_drop_transmit_spectrum: true
   plot_drop_bit_errors: true
   calc_transmit_spectrum: true
   calc_receive_spectrum: false

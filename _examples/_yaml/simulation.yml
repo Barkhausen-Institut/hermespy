@@ -1,13 +1,15 @@
 !<Simulation>
-  plot_drop: true
+  plot_drop: false
   plot_drop_transmitted_signals: true
+  plot_drop_transmitted_bits: true
   plot_drop_received_signals: true
+  plot_drop_received_bits: true
+  plot_drop_bit_errors: true
   calc_transmit_spectrum: true
   calc_receive_spectrum: false
   calc_transmit_stft: true
   calc_receive_stft: false
-#  noise_loop: [10]
-  noise_loop: [6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6] # dB
+  noise_loop: [10, 6, 2, 0, -2, -4] # dB
   snr_type: EBN0
   num_drops: 100
   min_num_drops: 30

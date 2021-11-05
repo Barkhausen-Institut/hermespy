@@ -1,6 +1,6 @@
 !<Scenario>
 
-sampling_rate: 100e6
+sampling_rate: 1.23456e8
 
 Modems:
 
@@ -8,9 +8,9 @@ Modems:
   - Transmitter
 
     # 2x2 MIMO with Single-Carrier Spatial Precoding
-    num_antennas: 2
-    Precoding:
-      - SC
+#    num_antennas: 2
+#    Precoding:
+#      - SC
 
     WaveformOFDM:
 
@@ -57,9 +57,9 @@ Modems:
   - Receiver
 
     # 2x2 MIMO with Single-Carrier Spatial Precoding
-    num_antennas: 2
-    Precoding:
-      - SC
+#    num_antennas: 2
+#    Precoding:
+#      - SC
 
     WaveformOFDM:
 
@@ -105,5 +105,6 @@ Modems:
 
 Channels:
 
-  - 5GTDL 0 0
-    type: A
+#  - 5GTDL 0 0
+#    type: A
+#    rms_delay: 1e-4

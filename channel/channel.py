@@ -41,6 +41,8 @@ class Channel(ABC):
         __recent_response (Optional[np.ndarray]):
             The most recent tapped impulse response. None, if no response has been generated yet.
 
+        impulse_response_interpolation (bool):
+            Allow for the impulse response to be resampled and interpolated.
     """
 
     yaml_tag = u'Channel'
@@ -52,6 +54,7 @@ class Channel(ABC):
     __random_generator: Optional[rnd.Generator]
     __scenario: Optional[Scenario]
     __recent_response: Optional[np.ndarray]
+    impulse_response_interpolation: bool
 
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
@@ -59,7 +62,8 @@ class Channel(ABC):
                  scenario: Optional[Scenario] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
-                 random_generator: Optional[rnd.Generator] = None
+                 random_generator: Optional[rnd.Generator] = None,
+                 impulse_response_interpolation: bool = True
                  ) -> None:
         """Class constructor.
 
@@ -83,6 +87,9 @@ class Channel(ABC):
                 
             random_generator (rnd.Generator, optional):
                 Generator object for random number sequences.
+
+            impulse_response_interpolation (bool, optional):
+                Allow the impulse response to be interpolated during sampling.
         """
 
         # Default parameters
@@ -92,6 +99,7 @@ class Channel(ABC):
         self.__gain = 1.0
         self.__scenario = None
         self.recent_response = None
+        self.impulse_response_interpolation = impulse_response_interpolation
 
         self.random_generator = random_generator
         self.scenario = scenario

@@ -4,7 +4,7 @@
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import TYPE_CHECKING, Type, List, Any, Optional
-from math import ceil
+from math import floor
 import numpy as np
 import numpy.random as rnd
 
@@ -113,7 +113,7 @@ class Transmitter(Modem):
         timestamps = np.arange(num_samples) / self.scenario.sampling_rate
 
         # Number of frames fitting into the selected drop duration
-        frames_per_stream = int(ceil(drop_duration / self.waveform_generator.frame_duration))
+        frames_per_stream = int(floor(drop_duration / self.waveform_generator.frame_duration))
 
         # Number of code bits required to generate all frames for all streams
         num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
