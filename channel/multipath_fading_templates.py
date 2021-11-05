@@ -163,6 +163,8 @@ class MultipathFadingCost256(MultipathFadingChannel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         if node.model_type is MultipathFadingCost256.TYPE.HILLY:
@@ -388,6 +390,8 @@ class MultipathFading5GTDL(MultipathFadingChannel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         if node.model_type is MultipathFading5GTDL.TYPE.C or MultipathFading5GTDL.TYPE.E:
@@ -545,6 +549,8 @@ class MultipathFadingExponential(MultipathFadingChannel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         transmitter_index, receiver_index = node.indices
