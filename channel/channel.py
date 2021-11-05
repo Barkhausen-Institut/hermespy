@@ -86,7 +86,6 @@ class Channel:
             random_generator (rnd.Generator, optional):
                 Generator object for random number sequences.
         """
-
         # Default parameters
         self.__active = True
         self.__transmitter = None
@@ -475,12 +474,22 @@ class Channel:
         return impulse_responses
 
     def add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
-        if self.sync_offset_high > 0:
+        if self.random_generator is None:
+            raise ValueError("No random number generator passed. Cannot draw sample.")
+
+        delay_sample = self.random_generator.uniform(
+            low=self.sync_offset_low,
+            high=self.sync_offset_high
+        )
+
+        delay_sample = int(delay_sample)
+
+        if delay_sample > 0:
             delays = np.zeros(
                 (impulse_responses.shape[0],
                 impulse_responses.shape[1],
                 impulse_responses.shape[2],
-                int(self.sync_offset_high)),
+                int(delay_sample)),
                 dtype=complex
             )
 
