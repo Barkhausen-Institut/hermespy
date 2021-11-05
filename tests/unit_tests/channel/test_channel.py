@@ -566,6 +566,7 @@ class TestChannelTimeOffset(unittest.TestCase):
             np.random.randint(low=1, high=4, size=(2,100))
             + 1j * np.random.randint(low=1, high=4, size=(2,100))
         )
+
     def test_no_delay_for_default_parameters(self) -> None:
         ch = Channel(
             transmitter=self.mock_transmitter_one_antenna,
@@ -579,4 +580,21 @@ class TestChannelTimeOffset(unittest.TestCase):
             ch.propagate(self.x_one_antenna),
             self.x_one_antenna
         )
+
+    def test_one_exact_sample_delay(self) -> None:
+        ch = Channel(
+            transmitter=self.mock_transmitter_one_antenna,
+            receiver=self.mock_receiver_one_antenna,
+            scenario=self.scenario,
+            active=True,
+            gain=1,
+            sync_offset_low=1,
+            sync_offset_high=1
+        )
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.x_one_antenna),
+            np.hstack(
+                (np.zeros((1,1), dtype=complex), self.x_one_antenna))
+        )
+
 

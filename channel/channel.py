@@ -406,7 +406,6 @@ class Channel:
         # Generate the channel's impulse response
         num_signal_samples = transmitted_signal.shape[1]
         impulse_response = self.impulse_response(np.arange(num_signal_samples) / self.scenario.sampling_rate)
-
         # The maximum delay (in samples) is modeled by the last impulse response dimension
         num_delay_samples = impulse_response.shape[3] - 1
 
@@ -468,11 +467,28 @@ class Channel:
 
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
-
+        impulse_responses = self.add_sync_offset(impulse_responses)
         # Save newly generated response as most recent impulse response
         self.recent_response = impulse_responses
 
         # Return resulting impulse response
+        return impulse_responses
+
+    def add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
+        if self.sync_offset_high > 0:
+            delays = np.zeros(
+                (impulse_responses.shape[0],
+                impulse_responses.shape[1],
+                impulse_responses.shape[2],
+                self.sync_offset_high),
+                dtype=complex
+            )
+
+            impulse_responses = np.concatenate(
+                (delays, impulse_responses),
+                axis=3
+            )
+
         return impulse_responses
 
     @property
