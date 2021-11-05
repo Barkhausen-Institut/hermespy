@@ -41,7 +41,10 @@ class Channel:
 
         __recent_response (Optional[np.ndarray]):
             The most recent tapped impulse response. None, if no response has been generated yet.
-
+        __sync_offset_low (Optional[float]):
+            Lower bound of uniform distribution interval of Synchronization offset.
+        __sync_offset_high (Optional[float]):
+            Higher bound of uniform distribution interval of Synchronization offset.
     """
 
     yaml_tag = u'Channel'
@@ -50,6 +53,8 @@ class Channel:
     __transmitter: Optional[Transmitter]
     __receiver: Optional[Receiver]
     __gain: float
+    __sync_offset_low: float
+    __sync_offset_high: float
     __random_generator: Optional[rnd.Generator]
     __scenario: Optional[Scenario]
     __recent_response: Optional[np.ndarray]
@@ -466,14 +471,14 @@ class Channel:
 
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
-        impulse_responses = self.add_sync_offset(impulse_responses)
+        impulse_responses = self._add_sync_offset(impulse_responses)
         # Save newly generated response as most recent impulse response
         self.recent_response = impulse_responses
 
         # Return resulting impulse response
         return impulse_responses
 
-    def add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
+    def _add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
         if self.random_generator is None:
             raise ValueError("No random number generator passed. Cannot draw sample.")
 
@@ -483,7 +488,6 @@ class Channel:
         )
 
         delay_sample = int(delay_sample)
-
         if delay_sample > 0:
             delays = np.zeros(
                 (impulse_responses.shape[0],
