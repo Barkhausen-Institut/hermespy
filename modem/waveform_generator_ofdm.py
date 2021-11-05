@@ -2,15 +2,13 @@
 """HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union, Any
+from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union, Any, Dict
 from copy import copy
 from scipy import signal
-from functools import lru_cache
-from dataclasses import dataclass, field
-from abc import ABC
 from enum import Enum
-from collections import namedtuple
+from abc import abstractmethod
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
+from scipy.constants import pi
 import numpy as np
 
 from modem import WaveformGenerator
@@ -30,10 +28,21 @@ __status__ = "Prototype"
 
 
 class ElementType(Enum):
+    """Type of resource element."""
 
     REFERENCE = 0
     DATA = 1
     NULL = 2
+
+
+class ChannelEstimation(Enum):
+    """Applied channel estimation algorithm after reception."""
+
+    IDEAL = 0
+    IDEAL_PREAMBLE = 1
+    IDEAL_MIDAMBLE = 2
+    IDEAL_POSTAMBLE = 3
+    LEAST_SQUARES = 4
 
 
 class FrameElement:
@@ -45,73 +54,381 @@ class FrameElement:
                  type: Union[str, ElementType],
                  repetitions: int = 1) -> None:
 
-        self.type = ElementType[type] if isinstance(type, str) else type
+        if type is None:
+            self.type = ElementType.NULL
+
+        elif isinstance(type, str):
+            self.type = ElementType[type]
+
+        else:
+            self.type = type
+
         self.repetitions = repetitions
 
 
 class FrameResource:
+    """Configures one sub-section of an OFDM symbol section in time AND frequency."""
 
-    num_blocks: int
+    __repetitions: int
+    __cp_ratio: float
     elements: List[FrameElement]
 
     def __init__(self,
-                 num_blocks: int = 1,
+                 repetitions: int = 1,
+                 cp_ratio: float = 0.0,
                  elements: Optional[List[FrameElement]] = None) -> None:
 
-        self.num_blocks = num_blocks
+        self.repetitions = repetitions
+        self.cp_ratio = cp_ratio
         self.elements = elements if elements is not None else []
+
+    @property
+    def repetitions(self) -> int:
+        """Number of block repetitions along the frequency axis.
+
+        Returns:
+            int: Number of repetitions.
+        """
+
+        return self.__repetitions
+
+    @repetitions.setter
+    def repetitions(self, reps: int) -> None:
+        """Modify the number of repetitions.
+
+        Args:
+            reps (int): Number of repetitions.
+
+        Raises:
+            ValueError: If `reps` is smaller than one.
+        """
+
+        if reps < 1:
+            raise ValueError("Number of frame resource repetitions must be greater or equal to one")
+
+        self.__repetitions = reps
+
+    @property
+    def cp_ratio(self) -> float:
+        """Ratio between full block length and cyclic prefix.
+
+        Returns:
+            float: The ratio between zero and one.
+        """
+
+        return self.__cp_ratio
+
+    @cp_ratio.setter
+    def cp_ratio(self, ratio: float) -> None:
+        """Modify the ratio betwen full block element length and cyclic prefix.
+
+        Args:
+            ratio (float): New ratio between zero and one.
+
+        Raises:
+            ValueError: If ratio is less than zero or larger than one.
+        """
+
+        if ratio < 0.0 or ratio > 1.0:
+            raise ValueError("Cyclic prefix ratio must be between zero and one")
+
+        self.__cp_ratio = ratio
+
+    @property
+    def num_subcarriers(self) -> int:
+        """Number of occupied subcarriers.
+
+        Returns:
+            int: Number of occupied subcarriers.
+        """
+
+        num: int = 0
+        for element in self.elements:
+            num += element.repetitions
+
+        return self.__repetitions * num
+
+    @property
+    def num_symbols(self) -> int:
+        """Number of data symbols this resource can modulate.
+
+        Return:
+            Number of modulated symbols.
+        """
+
+        num: int = 0
+        for element in self.elements:
+            if element.type == ElementType.DATA:
+                num += element.repetitions
+
+        return self.__repetitions * num
+
+    @property
+    def resource_mask(self) -> np.ndarray:
+
+        # Initialize the base mask as all false
+        mask = np.ndarray((len(ElementType), self.num_subcarriers), dtype=bool) * False
+
+        element_count = 0
+        for element in self.elements:
+
+            mask[element.type.value, element_count:element_count+element.repetitions] = True
+            element_count += element.repetitions
+
+        # Repeat the subcarrier masks according to the configured number of repetitions.
+        mask = mask[:, :element_count].repeat(self.__repetitions, axis=1)
+
+        return mask
 
 
 class FrameSection:
+    """OFDM Frame configuration time axis."""
 
-    frame: Optional[Frame]
+    frame: Optional[WaveformGeneratorOfdm]
     num_repetitions: int
 
     def __init__(self,
-                 num_repetitions: int = 1) -> None:
+                 num_repetitions: int = 1,
+                 frame: Optional[WaveformGeneratorOfdm] = None) -> None:
 
-        self.frame = None
+        self.frame = frame
         self.num_repetitions = num_repetitions
+
+    @property
+    def num_symbols(self) -> int:
+        """Number of data symbols this section can modulate.
+
+        Returns:
+            int: The number of symbols
+        """
+
+        return 0
+
+    @property
+    def num_subcarriers(self) -> int:
+        """Number of subcarriers this section requires.
+
+        Returns:
+            int: The number of subcarriers.
+        """
+
+        return 0
+
+    @property
+    @abstractmethod
+    def num_samples(self) -> int:
+        """Number of samples within this OFDM time-section.
+
+        Returns:
+            int: Number of samples
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def duration(self) -> float:
+        """Duration of this frame element in time domain.
+
+        Returns:
+            float: Duration in seconds.
+        """
+        ...
+
+    @abstractmethod
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
+        """Modulate this section into a complex base-band signal.
+
+        Args:
+            symbols (np.ndarray):
+                The complex data symbols encoded in this OFDM section.
+
+        Returns:
+            np.ndarray: The modulated signal vector.
+        """
+        ...
+
+    @abstractmethod
+    def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
+        """Demodulate a time section of a complex OFDM base-band signal into data symbols.
+
+        Args:
+            baseband_signal (np.ndarray): Vector of complex-valued base-band samples.
+
+        Returns:
+            np.ndarray: Symbols contained in this section.
+        """
+        ...
 
 
 class FrameSymbolSection(FrameSection):
 
     yaml_tag: str = u'Symbol'
-    __pattern: List[int]
-    __cp_ratio: float   # Cyclic prefix ratio
+    pattern: List[int]
 
     def __init__(self,
                  num_repetitions: int = 1,
-                 cp_ratio: float = 1.0,
-                 pattern: Optional[List[int]] = None) -> None:
+                 pattern: Optional[List[int]] = None,
+                 frame: Optional[WaveformGeneratorOfdm] = None) -> None:
 
-        FrameSection.__init__(self, num_repetitions=num_repetitions)
-        self.__cp_ratio = cp_ratio
-        self.__pattern = pattern if pattern is not None else []
+        FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
+        self.pattern = pattern if pattern is not None else []
+        self.frame = frame
 
     @property
-    @lru_cache()
-    def subcarrier_indices(self) -> np.ndarray:
-        """Resource mask, mapping frame element types to slots
+    def num_symbols(self) -> int:
 
-        Returns:
-            A numpy matrix where each row represents an element type and each column represents a slot.
-            Each column, i.e. each slot contains a single True boolean flag indicating this slot contains the
-            resource type represented by the respective row.
-        """
-
-        resource_mask = np.empty((len(ElementType), 0), dtype=bool)
-
-        for resource_idx in self.__pattern:
-
-            resource_mask_section = np.empty((len(ElementType), 0), dtype=bool)
+        num = 0
+        for resource_idx in self.pattern:
 
             resource = self.frame.resources[resource_idx]
-            for element in resource.elements:
+            num += resource.num_symbols
 
-                np.append(res)
+        return self.num_repetitions * num
 
+    @property
+    def num_subcarriers(self) -> int:
 
+        # ToDo: Resources with different numbers of subcarriers are currently not supported
+        num = 0
+        if len(self.pattern) > 0:
+            num = self.frame.resources[self.pattern[0]].num_subcarriers
+
+        return num
+
+    @property
+    def num_timeslots(self) -> int:
+        return len(self.pattern) * self.num_repetitions
+
+    @property
+    def duration(self) -> float:
+
+        duration = self.num_timeslots / self.frame.subcarrier_spacing
+        return duration
+
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
+
+        # Collect resource masks
+        mask = self.resource_mask
+
+        # Fill up the time-frequency grid exploiting the mask
+        grid = np.empty(mask.shape[1:], complex)
+
+        # Reference fields all currently carry the complex symbol 1+j0
+        # ToDo: Implement reference symbol configurations
+        grid[mask[ElementType.REFERENCE.value, ::]] = 1.
+
+        # Data fields carry the supplied data symbols
+        grid[mask[ElementType.DATA.value, ::]] = symbols
+
+        # NULL fields are just that... zero ToDo: Check with André if this is correct
+        grid[mask[ElementType.NULL.value, ::]] = 0.
+
+        # By convention, the length of each time slot is the inverse of the sub-carrier spacing
+        num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
+
+        num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
+        slot_timestamps = np.arange(num_slot_samples) / self.frame.modem.scenario.sampling_rate
+
+        resource_signals = np.zeros((num_slot_samples, self.num_timeslots), dtype=complex)
+
+        # Fourier transformation over sinusoidal subcarriers
+        # ToDo: Check what DC suppression is supposed to to in freq domain?
+        for subcarrier_idx in range(self.num_subcarriers):
+
+            freq = subcarrier_idx * self.frame.subcarrier_spacing
+            fourier_weights = np.exp(2j * pi * slot_timestamps * freq)
+
+            resource_signals += np.outer(fourier_weights, grid[subcarrier_idx, :])
+
+        # Scale to obtain a unitary transform
+        resource_signals /= np.sqrt(self.num_subcarriers)
+
+        # Add the cyclic prefix to each time slot while simultaneously flatten the resource signals into time domain
+        signals = []
+        for resource_idx, resource_samples in enumerate(resource_signals.T):
+
+            pattern_idx = resource_idx % len(self.pattern)
+            cp_ratio = self.frame.resources[self.pattern[pattern_idx]].cp_ratio
+
+            num_prefix_samples = int(round(num_samples_per_slot * cp_ratio))
+            signals.append(np.append(resource_samples[-num_prefix_samples:], resource_samples))
+
+        return np.concatenate(signals, axis=0)
+
+    def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
+
+        rel_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
+        samples_per_slot = int(round(rel_samples_per_slot))
+
+        # Samples without prefixes in the time-time grid, essentially sections of the demodulating stft
+        slot_samples = np.empty((samples_per_slot, self.num_timeslots), dtype=complex)
+
+        # Remove the cyclic prefixes before transformation into time-domain
+        sample_index = 0
+        for slot_idx in range(len(self.pattern) * self.num_repetitions):
+
+            pattern_idx = slot_idx % len(self.pattern)
+            resource = self.frame.resources[self.pattern[pattern_idx]]
+
+            num_prefix_samples = int(round(rel_samples_per_slot * resource.cp_ratio))
+
+            sample_index += num_prefix_samples
+            slot_samples[:, slot_idx] = baseband_signal[sample_index:sample_index+samples_per_slot]
+
+            sample_index += samples_per_slot
+
+        num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
+
+        grid = np.zeros((self.num_subcarriers, self.num_timeslots), dtype=complex)
+        frequency_bins = np.arange(self.num_subcarriers) * self.frame.subcarrier_spacing
+
+        # Fourier transformation over sinusoidal subcarriers
+        # ToDo: Check what DC suppression is supposed to to in freq domain?
+        for time_idx in range(num_slot_samples):
+
+            time = time_idx / self.frame.modem.scenario.sampling_rate
+            fourier_weights = np.exp(-2j * pi * frequency_bins * time)
+
+            grid += np.outer(fourier_weights, slot_samples[time_idx, :])
+
+        # Scale to obtain a unitary transform
+        grid /= np.sqrt(num_slot_samples)
+
+        # Select the data symbols from the time-frequency grid and return the result
+        data_symbols = grid[self.resource_mask[ElementType.DATA.value, ::]]
+        return data_symbols
+
+    @property
+    def resource_mask(self) -> Dict[ElementType, np.ndarray]:
+
+        # Initialize the base mask as all false
+        num_subcarriers = self.num_subcarriers
+        mask = np.ndarray((len(ElementType), num_subcarriers, self.num_timeslots), dtype=bool) * False
+
+        for resource_section, resource_idx in enumerate(self.pattern):
+
+            resource = self.frame.resources[resource_idx]
+            resource_mask = resource.resource_mask
+
+            repeated_mask = np.repeat(resource_mask[..., np.newaxis], self.num_repetitions, axis=2)
+            mask[:, :resource_mask.shape[1], resource_section::len(self.pattern)] = repeated_mask
+
+        return mask
+
+    @property
+    def num_samples(self) -> int:
+        
+        num = 0
+
+        num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
+
+        # Add up the additional samples from cyclic prefixes
+        for resource_idx in self.pattern:
+            num += int(round(num_samples_per_slot * self.frame.resources[resource_idx].cp_ratio))
+
+        # Add up the base samples from each timeslot
+        num += int(round(num_samples_per_slot)) * len(self.pattern)
+        return num * self.num_repetitions
 
     @classmethod
     def from_yaml(cls: Type[FrameSymbolSection],
@@ -127,11 +444,52 @@ class FrameSymbolSection(FrameSection):
 class FrameGuardSection(FrameSection):
 
     yaml_tag: str = u'Guard'
+    __duration: float
 
     def __init__(self,
+                 duration: float,
                  num_repetitions: int = 1) -> None:
 
         FrameSection.__init__(self, num_repetitions=num_repetitions)
+        self.duration = duration
+
+    @property
+    def duration(self) -> float:
+        return self.__duration
+
+    @duration.setter
+    def duration(self, secs: float) -> None:
+        """Modify guard section duration.
+
+        Args:
+            secs (float): New duration in seconds.
+
+        Raises:
+            ValueError: If secs is smaller than zero.
+        """
+
+        if secs < 0.0:
+            raise ValueError("Guard section duration must be greater or equal to zero")
+
+        self.__duration = secs
+
+    @property
+    def num_samples(self) -> int:
+
+        num = int(round(self.num_repetitions * self.__duration * self.frame.modem.scenario.sampling_rate))
+        return num
+
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
+
+        if len(symbols) > 0:
+            raise ValueError("Guard sections may not hold modulation symbols")
+
+        return np.zeros(self.num_samples, dtype=complex)
+
+    def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
+
+        # Guard naturally sections don't encode any data symbols
+        return np.empty(0, dtype=complex)
 
     @classmethod
     def from_yaml(cls: Type[FrameGuardSection],
@@ -142,50 +500,6 @@ class FrameGuardSection(FrameSection):
             return cls()
 
         return cls(**constructor.construct_mapping(node))
-
-
-class Frame:
-
-    yaml_tag = u'Frame'
-    resources: List[FrameResource]
-    structure: List[FrameSection]
-
-    def __init__(self,
-                 resources: Optional[List[FrameResource]] = None,
-                 structure: Optional[List[FrameSection]] = None) -> None:
-
-        self.resources = resources if resources is not None else []
-        self.structure = structure if structure is not None else []
-
-    def add_section(self, section: FrameSection) -> None:
-
-        self.structure.append(section)
-        section.frame = self
-
-    @classmethod
-    def from_yaml(cls: Type[Frame], constructor: SafeConstructor, node: MappingNode) -> Frame:
-
-        state: dict[str, Any] = constructor.construct_mapping(node, deep=True)
-        state = {k.lower(): v for k, v in state.items()}
-
-        structure: List[FrameSection] = state.pop('structure', None)
-
-        # Handle resource list to object conversion
-        resources = state.pop('resources', None)
-        if resources is not None:
-            for resource_idx, resource in enumerate(resources):
-                resources[resource_idx] = FrameResource(**resource)
-
-        state['resources'] = resources
-
-        # Create actual frame object from state dictionary
-        frame = cls(**state)
-
-        if structure is not None:
-            for section in structure:
-                frame.add_section(section)
-
-        return frame
 
 
 class WaveformGeneratorOfdm(WaveformGenerator):
@@ -217,50 +531,33 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         of each OFDM symbol
     """
 
-    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        pass
-
     yaml_tag: str = WaveformGenerator.yaml_tag + u'OFDM'
 
-    __frame: Frame
-    pilot_subcarriers: List[np.ndarray]
-    pilot_symbols: List[np.ndarray]
-    reference_symbols: List[np.ndarray]
-    __guard_interval: float
-    __fft_size: int
-    __num_occupied_subcarriers: int
+#    pilot_subcarriers: List[np.ndarray]
+#    pilot_symbols: List[np.ndarray]
+#    reference_symbols: List[np.ndarray]
+#    __fft_size: int
     __subcarrier_spacing: float
     dc_suppression: bool
+    resources: List[FrameResource]
+    structure: List[FrameSection]
 
     def __init__(self,
-                 frame: Optional[Frame] = None,
-                 pilot_subcarriers: Optional[List[np.ndarray]] = None,
-                 pilot_symbols: Optional[List[np.ndarray]] = None,
-                 reference_symbols: Optional[List[np.ndarray]] = None,
-                 guard_interval: float = 0.0,
-                 fft_size: int = 1,
-                 num_occupied_subcarriers: int = 1,
+#                 pilot_subcarriers: Optional[List[np.ndarray]] = None,
+#                 pilot_symbols: Optional[List[np.ndarray]] = None,
+#                 reference_symbols: Optional[List[np.ndarray]] = None,
+#                 fft_size: int = 1,
+                 channel_estimation: Union[str, ChannelEstimation] = ChannelEstimation.IDEAL,
                  subcarrier_spacing: float = 0.,
                  dc_suppression: bool = True,
+                 resources: Optional[List[FrameResource]] = None,
+                 structure: Optional[List[FrameSection]] = None,
                  modem: Modem = None,
                  oversampling_factor: int = 1,
                  modulation_order: int = 64) -> None:
         """Orthogonal Frequency Division Multiplexing Waveform Generator initialization.
 
         Args:
-
-            frame_structure (List[FrameElement], optional):
-                Structure configuration of the generated frame.
-
-            guard_interval (float, optional):
-                Spacing between individual frame transmission in seconds.
-
-            fft_size (int, optional):
-                Number of frequency bins in the Fast Fourier Transform.
-
-            num_occupied_subcarriers (int, optional):
-                Number of subcarriers occupied within the frame structure??
-                TODO: Check.
 
             subcarrier_spacing (float, optional):
                 Spacing between individual subcarriers in Hz. ToDo: Check.
@@ -275,15 +572,17 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                                    modulation_order=modulation_order)
 
         # Parameter initialization
-        self.__frame = frame if frame is not None else Frame()
-        self.pilot_subcarriers = pilot_subcarriers if pilot_subcarriers is not None else []
-        self.pilot_symbols = pilot_symbols if pilot_symbols is not None else []
-        self.reference_symbols = reference_symbols if reference_symbols is not None else []
-        self.guard_interval = guard_interval
-        self.fft_size = fft_size
-        self.num_occupied_subcarriers = num_occupied_subcarriers
+#        self.pilot_subcarriers = pilot_subcarriers if pilot_subcarriers is not None else []
+#        self.pilot_symbols = pilot_symbols if pilot_symbols is not None else []
+#        self.reference_symbols = reference_symbols if reference_symbols is not None else []
+#        self.fft_size = fft_size
+        if isinstance(channel_estimation, str):
+            channel_estimation = ChannelEstimation[channel_estimation]
+        self.channel_estimation_algorithm = channel_estimation
         self.subcarrier_spacing = subcarrier_spacing
         self.dc_suppression = dc_suppression
+        self.resources = [] if resources is None else resources
+        self.structure = [] if structure is None else structure
 
         # Initial parameter checks
         # TODO
@@ -291,13 +590,13 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self._samples_in_frame_no_oversampling = 0
         self._mapping = PskQamMapping(self.modulation_order)
 
-        self._resource_element_mapping: np.array = self._calculate_resource_element_mapping()
-        self._samples_in_frame_no_oversampling, self._cyclic_prefix_overhead = (
-            self._calculate_samples_in_frame()
-        )
+#        self._resource_element_mapping: np.array = self._calculate_resource_element_mapping()
+#        self._samples_in_frame_no_oversampling, self._cyclic_prefix_overhead = (
+#            self._calculate_samples_in_frame()
+#        )
 
-        self.reference_frame = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=complex)
-        self.data_frame_indices = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=bool)
+#        self.reference_frame = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=complex)
+#        self.data_frame_indices = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=bool)
         self.guard_time_indices = np.array([], dtype=int)
         self.prefix_time_indices = np.array([], dtype=int)
         self.data_time_indices = np.array([], dtype=int)
@@ -305,86 +604,13 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # derived variables for precoding
         self._data_resource_elements_per_symbol = np.array([])
-        self._generate_frame_structure()
-        
-    @property
-    def guard_interval(self) -> float:
-        """Guard interval between frames.
+        # self._generate_frame_structure()
 
-        Returns:
-            float: Interval in seconds.
-        """
+    def add_section(self, section: FrameSection) -> None:
 
-        return self.__guard_interval
+        self.structure.append(section)
+        section.frame = self
 
-    @guard_interval.setter
-    def guard_interval(self, interval: float) -> None:
-        """Modify the guard interval between frames.
-
-        Args:
-            interval (float): New interval in seconds.
-
-        Raises:
-            ValueError: If `interval` is smaller than zero.
-        """
-
-        if interval < 0.0:
-            raise ValueError("Guard interval must be greater or equal to zero")
-
-        self.__guard_interval = interval
-
-    @property
-    def fft_size(self) -> int:
-        """Number of frequency bins in the Fast Fourier Transform.
-
-        Returns:
-            int: Number of frequency bins
-        """
-
-        return self.__fft_size
-
-    @fft_size.setter
-    def fft_size(self, size: int) -> None:
-        """Modify the number of frequency bins in the Fast Fourier Transform.
-
-        Args:
-            size (int): New number of frequency bins.
-
-        Raises:
-            ValueError: If `size` is smaller than one.
-        """
-
-        if size < 1:
-            raise ValueError("Number of frequency bins must be greater or equal to one")
-
-        self.__fft_size = size
-
-    @property
-    def num_occupied_subcarriers(self) -> int:
-        """Number of occupied subcarrier bands within the bandwidth.
-
-        Returns:
-            int: Number of occupied subcarriers.
-        """
-
-        return self.__num_occupied_subcarriers
-
-    @num_occupied_subcarriers.setter
-    def num_occupied_subcarriers(self, num: int) -> None:
-        """Modify the number of occupied subcarrier bands within the bandwidth.
-
-        Args:
-            num (int): New number of occupied subcarriers.
-
-        Raises:
-            ValueError: If `num` is smaller than zero.
-        """
-
-        if num < 0:
-            raise ValueError("Number of occupied subcarriers must be greater or equal to zeros")
-
-        self.__num_occupied_subcarriers = num
-        
     @property
     def subcarrier_spacing(self) -> float:
         """Subcarrier spacing between frames.
@@ -403,132 +629,53 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             spacing (float): New spacing in Hz.
 
         Raises:
-            ValueError: If `spacing` is smaller than zero.
+            ValueError: If `spacing` is smaller or equal to zero.
         """
 
-        if spacing < 0.0:
-            raise ValueError("Subcarrier spacing must be greater or equal to zero")
+        if spacing <= 0.0:
+            raise ValueError("Subcarrier spacing must be greater than zero")
 
         self.__subcarrier_spacing = spacing
 
     @property
     def symbols_per_frame(self) -> int:
-        return sum(isinstance(frame_element, FrameSymbolSection) for frame_element in self.__frame.structure)
 
-    def _generate_frame_structure(self):
-        """Creates the OFDM frame structure in time, frequency and space.
+        num_symbols = 0
+        for section in self.structure:
+            num_symbols += section.num_symbols
 
-        This method interprets the OFDM parameters in 'self.param' that describe the OFDM frame and generates matrices
-        with the allocation of all resource elements in a time/frequency/antenna grid
+        return num_symbols
 
-        """
-        ofdm_symbol_idx = 0
-        sample_idx = 0
-        self.channel_sampling_timestamps = np.array([], dtype=int)
+    @property
+    def frame_duration(self) -> float:
 
-        for frame_element in self.__frame.structure:
+        duration = 0.
 
-            if isinstance(frame_element, FrameGuardSection):
+        for section in self.structure:
+            duration += section.duration
 
-                num_samples = self.guard_interval * self.subcarrier_spacing * self.fft_size
-
-                self.guard_time_indices = np.append(self.guard_time_indices,
-                                                    np.arange(sample_idx, sample_idx + num_samples))
-                sample_idx += num_samples
-
-            elif isinstance(frame_element, FrameSymbolSection):
-
-                ref_idxs = self._get_subcarrier_indices(frame_element, ResourceType.REFERENCE)
-                self.channel_sampling_timestamps = np.append(self.channel_sampling_timestamps, sample_idx)
-
-                # fill out resource elements with pilot symbols
-                ref_symbols = np.tile(self.reference_symbols,
-                                      int(np.ceil(ref_idxs.size / len(self.reference_symbols))))
-                ref_symbols = ref_symbols[:ref_idxs.size]
-
-                self.reference_frame[ofdm_symbol_idx, ref_idxs, 0] = ref_symbols
-
-                # update indices for data and (cyclic) prefix
-                data_idxs = self._get_subcarrier_indices(frame_element, ResourceType.DATA)
-                self.data_frame_indices[ofdm_symbol_idx, data_idxs, :] = True
-
-                self.prefix_time_indices = np.append(self.prefix_time_indices,
-                                                     np.arange(sample_idx, sample_idx +
-                                                               frame_element.cyclic_prefix_samples))
-                sample_idx += frame_element.cyclic_prefix_samples
-                self.data_time_indices = np.append(self.data_time_indices,
-                                                   np.arange(sample_idx, sample_idx + frame_element.no_samples))
-                sample_idx += frame_element.no_samples
-
-                ofdm_symbol_idx += 1
-
-        #if self.param.precoding != "NONE":
-        #    # check if all symbols have the same number of data REs
-        #    self._data_resource_elements_per_symbol = np.sum(self.data_frame_indices[:, :, 0], axis=1)
-
-    def _get_subcarrier_indices(self, frame_element, resource_type):
-        #############################################################################
-        # calculate indices for data and pilot resource elements in this OFDM symbol
-        subcarrier_idx = 0
-        resource_idxs: np.array = np.array([], dtype=int)
-
-        for res_pattern in frame_element.resource_types:
-            for pattern_el_idx in range(res_pattern.number):
-                for res in res_pattern.MultipleRes:
-                    if res.ResourceType == resource_type:
-                        resource_idxs = np.append(resource_idxs, np.arange(subcarrier_idx, subcarrier_idx + res.number))
-                    subcarrier_idx += res.number
-        return resource_idxs
-
-    def _calculate_samples_in_frame(self) -> Tuple[int, float]:
-        samples_in_frame_no_oversampling = 0
-        number_cyclic_prefix_samples = 0
-        number_of_data_samples = 0
-
-        for frame_element in self.__frame.structure:
-
-            if isinstance(frame_element, FrameGuardSection):
-                samples_in_frame_no_oversampling += frame_element.no_samples
-            else:
-                samples_in_frame_no_oversampling += frame_element.cyclic_prefix_samples
-                number_cyclic_prefix_samples += frame_element.cyclic_prefix_samples
-
-                samples_in_frame_no_oversampling += frame_element.no_samples
-                number_of_data_samples += frame_element.no_samples
-
-        cyclic_prefix_overhead = 0.0
-        if number_of_data_samples > 0.0:
-            cyclic_prefix_overhead = (number_of_data_samples + number_cyclic_prefix_samples) / number_of_data_samples
-
-        return samples_in_frame_no_oversampling, cyclic_prefix_overhead
-
-    def _calculate_resource_element_mapping(self) -> np.array:
-        initial_index = self.fft_size - \
-            int(np.ceil(self.num_occupied_subcarriers / 2))
-        resource_element_mapping: np.array = np.arange(
-            initial_index, self.fft_size)
-        final_index = int(np.floor(self.num_occupied_subcarriers / 2))
-        resource_element_mapping = np.append(
-            resource_element_mapping, np.arange(
-                self.dc_suppression, final_index + self.dc_suppression))
-        return resource_element_mapping
+        return duration
 
     ###################################
     # property definitions
     @property
     def samples_in_frame(self) -> int:
         """int: Returns read-only samples_in_frame"""
-        return self._samples_in_frame_no_oversampling * self.oversampling_factor
+
+        num = 0
+        for section in self.structure:
+            num += section.num_samples
+
+        return num
 
     @property
-    def bits_in_frame(self) -> int:
-        """int: Returns read-only bits_in_frame"""
-        return self.symbols_per_frame * self._mapping.bits_per_symbol
+    def num_subcarriers(self) -> int:
 
-    @property
-    def cyclic_prefix_overhead(self) -> float:
-        """int: Returns read-only cyclic_prefix_overhead"""
-        return self._cyclic_prefix_overhead
+        num = 0
+        for section in self.structure:
+            num = max(num, section.num_subcarriers)
+
+        return num
 
     # property definitions END
     #############################################
@@ -537,28 +684,92 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         return self._mapping.get_symbols(data_bits)
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
-        return self._mapping.detect_bits(data_symbols)
+
+        detected_bits = self._mapping.detect_bits(data_symbols)
+        return detected_bits
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
-        full_frame = copy(self.reference_frame)
-        full_frame[np.where(self.data_frame_indices)] = data_symbols
+        # The number of samples in time domain the frame should contain, given the current sample frequency
+        num_samples = int(round(self.frame_duration * self.modem.scenario.sampling_rate))
+        output_signal = np.empty(0, dtype=complex)
 
-        frame_in_freq_domain = np.zeros((self.symbols_per_frame, self.fft_size), dtype=complex)
-        frame_in_freq_domain[:, self._resource_element_mapping] = full_frame
+        sent_data_symbols = 0
+        for section in self.structure:
 
-        frame_in_time_domain = np.fft.ifft(frame_in_freq_domain, norm='ortho', axis=1)
-        frame_in_time_domain = self._add_guard_intervals(frame_in_time_domain)
+            # Number of data symbols encoded in this time-section of the OFDM frame
+            section_num_data_symbols = section.num_symbols
 
-        output_signal = np.zeros(self._samples_in_frame_no_oversampling, dtype=complex)
+            # Select the data symbols to be sent over this time-section of the OFDM frame
+            section_data_symbols = data_symbols[sent_data_symbols:sent_data_symbols+section_num_data_symbols]
+            sent_data_symbols += section_num_data_symbols
 
-        data_symbols = np.reshape(frame, (self.symbols_per_frame * self.fft_size,
-                                          self.param.number_tx_antennas))
-        data_symbols = data_symbols.transpose()
-        output_signal[:, self.data_time_indices] = data_symbols
-        output_signal[:, self.prefix_time_indices] = output_signal[:, self.prefix_time_indices + self.param.fft_size]
+            # Modulate the signal
+            section_signal = section.modulate(section_data_symbols)
+            output_signal = np.append(output_signal, section_signal)
 
         return output_signal
+
+    def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
+
+        channel_estimate = np.empty((self.symbols_per_frame,
+                                     impulse_response.shape[1],
+                                     impulse_response.shape[2],
+                                     impulse_response.shape[3]),
+                                    dtype=complex)
+        sample_index = 0
+        symbol_index = 0
+        for section in self.structure:
+
+            num_samples = section.num_samples
+            num_symbols = section.num_symbols
+
+            section_symbols = section.demodulate(signal[sample_index:sample_index+num_samples])
+            symbols[symbol_index:symbol_index+num_symbols] = section_symbols
+
+            sample_index += num_samples
+            symbol_index += num_symbols
+
+        return symbols
+
+        frequency_bins = np.arange(self.num_subcarriers) * self.subcarrier_spacing
+        for time_idx in range(impulse_response.shape[0]):
+
+            time = time_idx / self.modem.scenario.sampling_rate
+            fourier_weights = np.exp(-2j * pi * frequency_bins * time)
+
+            grid += np.outer(fourier_weights, slot_samples[time_idx, :])
+
+
+        initial_timestamp_in_samples = copy(timestamp_in_samples)
+
+    def demodulate(self, signal: np.ndarray, impulse_response: np.ndarray) -> np.ndarray:
+
+        # Estimate and equalize the channel
+        # channel_estimation = self.__channel_estimation(signal, impulse_response)
+
+        symbols = np.empty(self.symbols_per_frame, dtype=complex)
+
+        sample_index = 0
+        symbol_index = 0
+        for section in self.structure:
+
+            num_samples = section.num_samples
+            num_symbols = section.num_symbols
+
+            section_symbols = section.demodulate(signal[sample_index:sample_index+num_samples])
+            symbols[symbol_index:symbol_index+num_symbols] = section_symbols
+
+            sample_index += num_samples
+            symbol_index += num_symbols
+
+        return symbols
+
+    @property
+    def bandwidth(self) -> float:
+
+        # OFDM bandwidth currently is identical to the number of subcarriers times the subcarrier spacing
+        return self.num_subcarriers * self.subcarrier_spacing
 
     def create_frame(self, timestamp: int, data_bits: np.array) -> Tuple[np.ndarray, int, int]:
         """Creates a modulated complex baseband signal for a whole transmit frame.
@@ -830,8 +1041,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return frame, noise_var
 
-    def channel_estimation(self, rx_signal: np.ndarray,
-                           timestamp_in_samples: int) -> np.ndarray:
+    def __channel_estimation(self, rx_signal: np.ndarray, impulse_response: np.ndarrayt) -> np.ndarray:
         """Performs channel estimation
 
         This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
@@ -853,6 +1063,18 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 number of data OFDM symbols in the frame. R denotes the number of receive antennas and T of the transmit
                 antennas.
         """
+
+        # Convert the channel impulse response into frequency domain for the configured subcarriers
+
+        frequency_bins = np.arange(self.num_subcarriers) * self.subcarrier_spacing
+        for time_idx in range(impulse_response.shape[0]):
+
+            time = time_idx / self.modem.scenario.sampling_rate
+            fourier_weights = np.exp(-2j * pi * frequency_bins * time)
+
+            grid += np.outer(fourier_weights, slot_samples[time_idx, :])
+
+
         initial_timestamp_in_samples = copy(timestamp_in_samples)
 
         ####
@@ -876,7 +1098,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         channel_in_freq_domain: np.ndarray
 
-        if self.param.channel_estimation == 'IDEAL':  # ideal channel estimation at each transmitted OFDM symbol
+        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL:  # ideal channel estimation at each transmitted OFDM symbol
             channel_in_freq_domain = self.get_ideal_channel_estimation(channel_timestamps)
             channel_in_freq_domain = np.moveaxis(channel_in_freq_domain, 0, -1)
 
@@ -903,8 +1125,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return channel_in_freq_domain
 
-    def get_ideal_channel_estimation(
-            self, channel_timestamp: np.array) -> np.ndarray:
+    def __ideal_channel_estimation(self) -> np.ndarray:
         """returns ideal channel estimation
 
         This method extracts the frequency-domain response from a known channel impulse response. The channel is the one
@@ -1005,19 +1226,25 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     @property
     def bits_per_frame(self) -> int:
-        return self.symbols_per_frame * np.log2(self.modulation_order)
+        return self.symbols_per_frame * self._mapping.bits_per_symbol
 
     @property
     def bit_energy(self) -> float:
-        return self.oversampling_factor / self._mapping.bits_per_symbol * self._cyclic_prefix_overhead
+
+        return 1 / self._mapping.bits_per_symbol  # ToDo: Re-implement
+        # return self.oversampling_factor / self._mapping.bits_per_symbol * self._cyclic_prefix_overhead
 
     @property
     def symbol_energy(self) -> float:
-        return self.oversampling_factor * self._cyclic_prefix_overhead
+
+        return 1 / self._mapping.bits_per_symbol  # ToDo: Re-implement
+        # return self.oversampling_factor * self._cyclic_prefix_overhead
 
     @property
     def power(self) -> float:
-        return self.num_occupied_subcarriers / self.fft_size
+
+        return 1  # ToDo: Re-implement
+#        return self.num_occupied_subcarriers / self.fft_size
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorOfdm],
@@ -1064,5 +1291,31 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 Newly created `WaveformGeneratorOfdm` instance.
         """
 
-        state = constructor.construct_mapping(node)
-        return cls(**state)
+        state = constructor.construct_mapping(node, deep=True)
+        state = {k.lower(): v for k, v in state.items()}
+
+        structure: List[FrameSection] = state.pop('structure', None)
+        resources = state.pop('resources', None)
+
+        # Handle resource list to object conversion
+        if resources is not None:
+            for resource_idx, resource in enumerate(resources):
+
+                element_objects = []
+                elements = resource.pop('elements', [])
+                for element_args in elements:
+                    element_objects.append(FrameElement(**element_args))
+                resource['elements'] = element_objects
+
+                resources[resource_idx] = FrameResource(**resource)
+
+        state['resources'] = resources
+
+        # Create actual frame object from state dictionary
+        ofdm = cls(**state)
+
+        if structure is not None:
+            for section in structure:
+                ofdm.add_section(section)
+
+        return ofdm

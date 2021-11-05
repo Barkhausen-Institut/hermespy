@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Optional, Type
+from typing import Optional, Type, Tuple
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 import numpy as np
 
@@ -87,7 +87,7 @@ class SymbolPrecoder(ABC):
         ...
 
     @abstractmethod
-    def decode(self, symbol_stream: np.ndarray) -> np.ndarray:
+    def decode(self, symbol_stream: np.ndarray, stream_responses: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Decode a data stream before reception.
 
         This operation may modify the number of streams as well as the number of data symbols per stream.
@@ -99,12 +99,19 @@ class SymbolPrecoder(ABC):
                 The first matrix dimension M represents the number of streams,
                 the second dimension N the number of discrete data symbols.
 
+            stream_responses (np.ndarray):
+                The channel impulse response for each data symbol within `symbol_stream`.
+                Identical dimensionality to `input_stream`.
+
         Returns:
 
             np.ndarray:
                 A matrix of M'xN' decoded data symbol streams.
                 The first matrix dimension M' represents the number of streams after decoding,
                 the second dimension N' the number of discrete data symbols after decoding.
+
+            np.ndarray:
+                A matrix of M'xN' data symbol impulse response estimations after this decoding step.
 
         Raises:
             NotImplementedError: If a decoding operation is not supported

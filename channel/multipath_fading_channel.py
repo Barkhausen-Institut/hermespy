@@ -2,11 +2,12 @@
 """Multipath Fading Channel Model."""
 
 from __future__ import annotations
-import numpy as np
 from scipy.constants import pi
 from numpy import cos, exp
 from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
+from itertools import product
+import numpy as np
 
 from channel.channel import Channel
 
@@ -418,88 +419,28 @@ class MultipathFadingChannel(Channel):
 
         self.__los_angle = angle
 
-    @property
-    def max_delay_in_samples(self) -> int:
-        """Maximum input shift caused by the channel delay in samples.
+    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
 
-        Returns:
-            int: Delay in samples.
-        """
+        delays_in_samples = np.round(self.__delays * self.scenario.sampling_rate).astype(int)
+        max_delay_in_samples = delays_in_samples.max()
 
-        return int(self.max_delay * self.transmitter.sampling_rate)
+        impulse_response = np.zeros((len(timestamps),
+                                     self.receiver.num_antennas,
+                                     self.transmitter.num_antennas,
+                                     max_delay_in_samples + 1), dtype=complex)
 
-    @property
-    def delay_pads(self) -> np.ndarray:
-        return np.round(self.__delays * self.transmitter.sampling_rate).astype(int)
-
-    def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
-        """Modifies the input signal and returns it after channel propagation.
-
-        Args:
-            transmitted_signal (np.ndarray):
-                Input signal to channel with shape of `N_tx_antennas x n_samples`.
-
-        Returns:
-            np.ndarray:
-                Distorted signal after channel propagation. If input is
-                an array of size 'number_tx_antennas' X 'number_of_samples',
-                then the output is of size 'number_rx_antennas' X 'number_of_samples'
-                + L, with L denoting the maximum excess delay of the power
-                delay profile, in samples.
-
-        Raises:
-            ValueError:
-                If `transmitted_signal` is not a matrix.
-                If the first dimension of `transmitted_signal` does not equal the number of transmitter antennas.
-
-            RuntimeError:
-                If the channel is currently floating.
-        """
-
-        if transmitted_signal.ndim != 2:
-            raise ValueError("Transmitted signal must be a matrix (an array with two dimensions)")
-
-        if self.transmitter is None or self.receiver is None:
-            raise RuntimeError("Channel is floating, making propagation simulation impossible")
-
-        if transmitted_signal.shape[0] != self.transmitter.num_antennas:
-            raise ValueError("Number of transmitted signal streams must equal the number of transmitting antennas")
-
-        # Calculate number of discrete-time samples,
-        # the propagated signal may require additional samples to account for delays
-        num_samples_in = transmitted_signal.shape[1]
-
-        # Transmit antenna correlation
-        if self.transmit_precoding is not None:
-            transmitted_signal = self.transmit_precoding @ transmitted_signal
-
-        timestamps = np.arange(num_samples_in) / self.transmitter.sampling_rate
-        delay_pads = self.delay_pads
-        max_pad = delay_pads.max()
-
-        num_samples_out = num_samples_in + max_pad
-        received_signals = np.zeros((self.receiver.num_antennas, num_samples_out), dtype=complex)
-
-        # Add paths to form received signal
-
-        for power, delay_pad, los_gain, nlos_gain in zip(self.__power_profile, self.delay_pads,
-                                                         self.__non_los_gains, self.__non_los_gains):
+        for power, delay_in_samples, los_gain, nlos_gain in zip(self.__power_profile, delays_in_samples,
+                                                                self.__non_los_gains, self.__non_los_gains):
 
             power_factor = np.sqrt(power)
 
-            for tx_signal, rx_idx in zip(transmitted_signal, range(self.receiver.num_antennas)):
+            for rx_idx, tx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
                 signal_weights = power_factor * self.__tap(timestamps, los_gain, nlos_gain)
-                received_signals[rx_idx, delay_pad:num_samples_in+delay_pad] = signal_weights * tx_signal
+                impulse_response[:, rx_idx, tx_idx, delay_in_samples] = signal_weights
 
-        # Receive antenna correlation
-        if self.receive_postcoding is not None:
-            received_signals = self.receive_postcoding @  received_signals
-
-        return received_signals
-
-    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
-        pass
+        self.recent_response = impulse_response
+        return impulse_response
 
     def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
         """Generate a single fading sequence tap.

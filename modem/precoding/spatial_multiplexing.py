@@ -39,10 +39,12 @@ class SpatialMultiplexing(SymbolPrecoder):
 
         number_of_streams = self.num_output_streams
 
-        encoded_symbol_stream = np.reshape(symbol_stream, (number_of_streams, -1), 'F')
+        # Repeat the data symbols
+        encoded_symbol_stream = symbol_stream.repeat(number_of_streams, axis=0)
+
         return encoded_symbol_stream
 
-    def decode(self, symbol_stream: np.ndarray) -> np.ndarray:
+    def decode(self, symbol_stream: np.ndarray, symbol_responses: np.ndarray) -> np.ndarray:
 
         # Decoding is not supported!
         raise RuntimeError("Spatial multiplexing does not support decoding operations")

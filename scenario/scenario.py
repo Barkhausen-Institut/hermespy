@@ -7,6 +7,7 @@ import numpy.random as rnd
 from typing import List, Type, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
+from itertools import product
 
 from modem import Modem, Transmitter, Receiver
 from channel import Channel
@@ -261,6 +262,7 @@ class Scenario:
         # Set proper receiver and transmitter fields
         channel.transmitter = self.transmitters[transmitter_index]
         channel.receiver = self.receivers[receiver_index]
+        channel.scenario = self
 
     def add_receiver(self, receiver: Receiver) -> None:
         """Add a new receiving modem to the simulated scenario.
@@ -283,13 +285,13 @@ class Scenario:
 
         elif self.__channels.shape[1] == 0:
 
-            self.__channels = np.array([[Channel(transmitter, receiver)] for transmitter in self.__transmitters])
+            self.__channels = np.array([[Channel(transmitter, receiver, self)] for transmitter in self.__transmitters])
 
         else:
 
             self.__channels = np.append(
                 self.__channels,
-                np.array([[Channel(transmitter, receiver)] for transmitter in self.transmitters]),
+                np.array([[Channel(transmitter, receiver, self)] for transmitter in self.transmitters]),
                 axis=1
             )
 
@@ -315,12 +317,12 @@ class Scenario:
 
         elif self.__channels.shape[0] == 0:
 
-            self.__channels = np.array([[Channel(transmitter, receiver) for receiver in self.__receivers]])
+            self.__channels = np.array([[Channel(transmitter, receiver, self) for receiver in self.__receivers]])
 
         else:
 
             self.__channels = np.append(self.__channels,
-                                        np.array([[Channel(transmitter, receiver) for receiver in self.receivers]]),
+                                        np.array([[Channel(transmitter, receiver, self) for receiver in self.receivers]]),
                                         axis=0)
 
     def remove_modem(self, modem: Modem) -> None:
@@ -427,6 +429,48 @@ class Scenario:
 
         self.__sampling_rate = value
 
+    @property
+    def min_sampling_rate(self) -> float:
+        """Minimal sampling rate required to render the scenario without aliasing.
+
+        Returns:
+            float: Minimal sapling rate in Hz.
+        """
+
+        sampling_rate = 0.0
+
+        for (tx_id, transmitter), (rx_id, receiver) in product(enumerate(self.__transmitters),
+                                                               enumerate(self.__receivers)):
+
+            # Select the proper channel connecting transmitter and receiver
+            channel = self.__channels[tx_id, rx_id]
+
+            # Skip link requirements if the channel is disabled
+            if not channel.active:
+                continue
+
+            # Consider the channel sampling rate requirements
+            sampling_rate = max(sampling_rate, channel.min_sampling_rate)
+
+            # Consider the link requirements between transmitter and receiver
+            if transmitter.carrier_frequency > receiver.carrier_frequency:
+                link_bandwidth = transmitter.carrier_frequency - receiver.carrier_frequency + .5 * \
+                                 transmitter.carrier_frequency
+
+            else:
+                link_bandwidth = receiver.carrier_frequency - transmitter.carrier_frequency + .5 * \
+                                 receiver.carrier_frequency
+
+            sampling_rate = max(sampling_rate, 2 * link_bandwidth)
+
+        for transmitter in self.__transmitters:
+            sampling_rate = max(sampling_rate, transmitter.waveform_generator.bandwidth)
+
+        for receiver in self.__receivers:
+            sampling_rate = max(sampling_rate, receiver.waveform_generator.bandwidth)
+
+        return sampling_rate
+
     def generate_data_bits(self) -> List[np.ndarray]:
         """Generate a set of data bits required to generate a single drop within this scenario.
 
@@ -482,6 +526,7 @@ class Scenario:
 
         modems = state_scenario.pop('Modems', None)
         channels = state_scenario.pop('Channels', None)
+        sampling_rate = state_scenario.pop('sampling_rate', None)
 
         # Convert the random seed to a new random generator object if its specified within the config
         random_seed = state_scenario.pop('random_seed', None)
@@ -512,7 +557,7 @@ class Scenario:
         scenario.__channels = np.empty((len(scenario.__transmitters), len(scenario.__receivers)), dtype=object)
         for t, transmitter in enumerate(scenario.__transmitters):
             for r, receiver in enumerate(scenario.__receivers):
-                scenario.__channels[t, r] = Channel(transmitter, receiver)
+                scenario.__channels[t, r] = Channel(transmitter, receiver, scenario)
 
         # Integrate configured channels into the default matrix
         if isinstance(channels, Iterable):
@@ -520,8 +565,13 @@ class Scenario:
 
                 channel.transmitter = scenario.transmitters[transmitter_index]
                 channel.receiver = scenario.receivers[receiver_index]
+                channel.scenario = scenario
                 scenario.__channels[transmitter_index, receiver_index] = channel
 
+        # Configure sampling rate
+        scenario.sampling_rate = scenario.min_sampling_rate if sampling_rate is None else sampling_rate
+
+        # A configured scenario emerges from the depths
         return scenario
 
     @property

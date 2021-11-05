@@ -5,7 +5,8 @@ from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
 from typing import TYPE_CHECKING, Type, List, Optional, Union
-from math import ceil
+from itertools import product
+from math import floor
 import numpy as np
 import numpy.random as rnd
 
@@ -89,10 +90,12 @@ class Receiver(Modem):
         timestamps = np.arange(num_samples) / self.scenario.sampling_rate
 
         # Number of frames within the received samples
-        frames_per_stream = int(ceil(num_samples / self.waveform_generator.samples_in_frame))
+        samples_in_frame = self.waveform_generator.samples_in_frame
+        frames_per_stream = int(floor(num_samples / self.waveform_generator.samples_in_frame))
 
         # Number of simples pre received stream
-        symbols_per_stream = frames_per_stream * self.waveform_generator.symbols_per_frame
+        symbols_per_frame = self.waveform_generator.symbols_per_frame
+        symbols_per_stream = frames_per_stream * symbols_per_frame
 
         # Number of code bits required to generate all frames for all streams
         num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
@@ -109,18 +112,44 @@ class Receiver(Modem):
         # Simulate the radio-frequency chain
         received_signals = self.rf_chain.receive(noisy_signals)
 
+        # Fetch recent impulse responses
+        channel_responses = self.reference_channel.recent_response
+
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
 
-        # Generate a symbol stream for each dedicated base-band signal
-        symbol_streams = np.empty((received_signals.shape[0], symbols_per_stream),
-                                  dtype=self.waveform_generator.symbol_type)
+        # Since no spatial stream coding is supported,
+        # the channel response at each transmit input is the sum over all impinging antenna signals
+        # ToDo: This is probably not correct, since it depends on the multiplexing
+        stream_responses = np.sum(channel_responses, axis=2)
 
-        for stream_idx, noisy_signal in enumerate(noisy_signals):
-            symbol_streams[stream_idx, :] = self.waveform_generator.demodulate(noisy_signal, timestamps)
+        # Generate a symbol stream for each dedicated base-band signal
+        symbol_streams: List[List[complex]] = []
+        symbol_streams_responses: List[List[complex]] = []
+
+        for stream_idx, (noisy_signal, stream_response) in enumerate(zip(noisy_signals,
+                                                                         np.rollaxis(stream_responses, 1))):
+
+            # Synchronization
+            frame_samples, frame_responses = self.waveform_generator.synchronize(noisy_signal, stream_response)
+
+            # Demodulate each frame separately to make the de-modulation easier to understand
+            symbols: List[complex] = []
+            symbol_responses: List[complex] = []
+            for frame, response in zip(frame_samples, frame_responses):
+
+                # Demodulate the frame into dat symbols
+                frame_symbols, frame_symbol_responses = self.waveform_generator.demodulate(frame, response)
+
+                symbols.extend(frame_symbols.tolist())
+                symbol_responses.extend(frame_symbol_responses.tolist())
+
+            # Save data symbols in their respective stream section
+            symbol_streams.append(symbols)
+            symbol_streams_responses.append(symbol_responses)
 
         # Decode the symbol precoding
-        symbols = self.precoding.decode(symbol_streams)
+        symbols = self.precoding.decode(np.array(symbol_streams), np.array(symbol_streams_responses))
 
         # Map the symbols to code bits
         code_bits = self.waveform_generator.unmap(symbols)
