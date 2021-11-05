@@ -126,11 +126,11 @@ class Receiver(Modem):
         symbol_streams: List[List[complex]] = []
         symbol_streams_responses: List[List[complex]] = []
 
-        for stream_idx, (noisy_signal, stream_response) in enumerate(zip(noisy_signals,
+        for stream_idx, (rx_signal, stream_response) in enumerate(zip(received_signals,
                                                                          np.rollaxis(stream_responses, 1))):
 
             # Synchronization
-            frame_samples, frame_responses = self.waveform_generator.synchronize(noisy_signal, stream_response)
+            frame_samples, frame_responses = self.waveform_generator.synchronize(rx_signal, stream_response)
 
             # Demodulate each frame separately to make the de-modulation easier to understand
             symbols: List[complex] = []
