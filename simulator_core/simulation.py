@@ -202,6 +202,12 @@ class Simulation(Executable):
             if self.verbosity.value <= Verbosity.INFO.value:
 
                 print(f"\nScenario Simulation #{s}, sampled at {scenario.sampling_rate:.2E}Hz")
+
+                # Warn if the sampling rate is too low
+                if self.verbosity.value <= Verbosity.WARNING.value and scenario.sampling_rate < \
+                        scenario.min_sampling_rate:
+                    print('\033[93m' + "Warning: The chosen sampling rate might be too low" + '\033[0m')
+
                 print(f"{'Noise':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
                 print("="*75)
 
