@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Type
+from typing import Type, Tuple
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
@@ -67,41 +67,18 @@ class DFT(SymbolPrecoder):
 
         return cls()
 
-    def encode(self, output_stream: np.matrix) -> np.matrix:
-        """Apply a DFT to data streams before transmission.
+    def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
 
-        Args:
-            output_stream (np.matrix):
-                The data streams feeding into the `Precoder` to be encoded.
-                The first matrix dimension is the number of streams,
-                the second dimension the number of discrete samples within each respective stream.
+        # There will be an FFT conversion over the antenna streams
+        return np.fft.fft(symbol_stream, axis=0, norm=self.__fft_norm)
 
-        Returns:
-            np.matrix:
-                The encoded data streams.
-                The first matrix dimension is the number of streams,
-                the second dimension the number of discrete samples.
-        """
+    def decode(self, symbol_stream: np.ndarray, stream_responses: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
 
-        return np.fft.fft(output_stream, norm=self.__fft_norm)
+        # There will be an inverse FFT conversion over the antenna streams
+        decoded_stream = np.fft.ifft(symbol_stream, axis=0, norm=self.__fft_norm)
+        decoded_responses = np.fft.ifft(stream_responses, axis=0, norm=self.__fft_norm)
 
-    def decode(self, input_stream: np.matrix) -> np.matrix:
-        """Apply an inverse DFT to data streams after reception
-
-        Args:
-            input_stream (np.matrix):
-                The data streams feeding into the `Precoder` to be decoded.
-                The first matrix dimension is the number of streams,
-                the second dimension the number of discrete samples within each respective stream.
-
-        Returns:
-            np.matrix:
-                The decoded data streams.
-                The first matrix dimension is the number of streams,
-                the second dimension the number of discrete samples.
-        """
-
-        return np.fft.ifft(input_stream, norm=self.__fft_norm)
+        return decoded_stream, decoded_responses
 
     @property
     def num_input_streams(self) -> int:
