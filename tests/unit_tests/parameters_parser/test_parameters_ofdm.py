@@ -221,7 +221,7 @@ oversampling_factor = 1
 dc_suppresion = False
 
 [Receiver]
-channel_estimation = ideal_postamble
+stream_responses = ideal_postamble
 equalization = ZF
 
 [MIMO]

@@ -173,7 +173,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
 
         cfg = config['Receiver']
 
-        self.channel_estimation = cfg.get('channel_estimation')
+        self.channel_estimation = cfg.get('stream_responses')
         self.equalization = cfg.get('equalization')
 
         cfg = config['MIMO']
@@ -227,7 +227,7 @@ class ParametersOfdm(ParametersWaveformGenerator):
         if self.channel_estimation not in ParametersOfdm.channel_estimation_val:
             raise ValueError(
                 msg_header +
-                f'channel_estimation ({self.channel_estimation}) not supported')
+                f'stream_responses ({self.channel_estimation}) not supported')
 
         if self.equalization not in ParametersOfdm.equalization_val:
             raise ValueError(
