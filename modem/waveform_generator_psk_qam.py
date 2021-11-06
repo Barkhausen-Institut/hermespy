@@ -251,16 +251,50 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         self.__chirp_bandwidth = bandwidth
 
     def map(self, data_bits: np.ndarray) -> np.ndarray:
-        pass
+        return self.__mapping.get_symbols(data_bits)
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
-        pass
+        return self.__mapping.detect_bits(data_symbols)
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        pass
 
-    def demodulate(self, signal: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        pass
+        self._set_sampling_indices()
+        self._set_pulse_correlation_matrix()
+
+        frame = np.zeros(self.samples_in_frame, dtype=complex)
+        frame[self._symbol_idx[:self.num_preamble_symbols]] = 1
+        start_index_data = self.num_preamble_symbols
+        end_index_data = self.num_preamble_symbols + self.num_data_symbols
+        frame[self._symbol_idx[start_index_data: end_index_data]] = data_symbols
+
+        output_signal = self.tx_filter.filter(frame)
+        return output_signal
+
+    def demodulate(self,
+                   signal: np.ndarray,
+                   impulse_response: np.ndarray,
+                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+        self._set_sampling_indices()
+        self._set_pulse_correlation_matrix()
+
+        frame = self.rx_filter.filter(signal)
+        frame_channel = self.rx_filter.filter(impulse_response)
+
+        start_index_data = self.num_preamble_symbols
+        end_index_data = self.num_preamble_symbols + self.num_data_symbols
+
+        symbols = frame[self._symbol_idx[start_index_data: end_index_data]]
+        channel = frame_channel[self._symbol_idx[start_index_data: end_index_data]]
+        noise = np.repeat(noise_variance, len(symbols))
+
+        return symbols, channel, noise
+
+    @property
+    def bandwidth(self) -> float:
+
+        # The bandwidth is assumed to be identical to the QAM chirp bandwidth
+        return self.__chirp_bandwidth
 
     @property
     def equalization(self) -> WaveformGeneratorPskQam.Equalization:
@@ -389,6 +423,9 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         """
 
         if self.num_preamble_symbols < 1 and self.num_postamble_symbols < 1:
+            return 0
+
+        if self.__pilot_rate == 0:
             return 0
 
         return int(np.round(self.modem.scenario.sampling_rate / self.pilot_rate))
