@@ -5,10 +5,10 @@ Modems:
   # Transmitting OFDM modem
   - Transmitter
 
-    # 2x2 MIMO with Single-Carrier Spatial Precoding
-    num_antennas: 2
-    Precoding:
-      - SM
+    Encoding:
+      - LDPC
+        block_size: 256
+        rate: [1, 2]
 
     WaveformOFDM:
 
@@ -59,9 +59,19 @@ Modems:
           num_repetitions: 3
           duration: 35.677083e-6
 
+    # 2x2 MIMO with Single-Carrier Spatial Precoding
+    num_antennas: 2
+    Precoding:
+      - SM
+
 
   # Receiving OFDM modem
   - Receiver
+
+    Encoding:
+      - LDPC
+        block_size: 256
+        rate: [1, 2]
 
     # 2x2 MIMO with Single-Carrier Spatial Precoding
     num_antennas: 2

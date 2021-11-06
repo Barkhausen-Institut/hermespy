@@ -753,7 +753,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
 
-        detected_bits = self._mapping.detect_bits(data_symbols)
+        detected_bits = self._mapping.detect_bits(data_symbols).astype(int)
         return detected_bits
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
