@@ -3,10 +3,10 @@ from typing import Type, Tuple
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 import numpy as np
 
-from . import SymbolPrecoder
+from.ratio_combining import MaximumRatioCombining
 
 
-class SpaceTimeBlockCoding(SymbolPrecoder):
+class SpaceTimeBlockCoding(MaximumRatioCombining):
     """A precoder distributing symbols in space and time.
     
     Cool.
@@ -17,7 +17,7 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
     def __init__(self) -> None:
         """Space-Time Block Coding object initialization."""
 
-        SymbolPrecoder.__init__(self)
+        MaximumRatioCombining.__init__(self)
 
     def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
         """Encode data into multiple antennas with space-time/frequency block codes
@@ -51,7 +51,7 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
             output = output / np.sqrt(2)
 
         elif num_tx_streams == 4:
-            output = np.zeros((4, number_of_symbols), dtype=complex)
+            output = np.empty((4, number_of_symbols), dtype=complex)
 
             idx0 = np.arange(0, number_of_symbols, 4)
             idx1 = idx0 + 1
@@ -75,32 +75,33 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
         return output
 
     def decode(self,
-               symbol_stream: np.ndarray,
+               symbol_streams: np.ndarray,
                stream_responses: np.ndarray,
                stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
-        num_rx_streams = symbol_stream.shape[1]
+        num_rx_streams = symbol_streams.shape[0]
 
         if num_rx_streams == 2:
-            return self.__decode_stbc_2_rx_antennas(symbol_stream, stream_responses, stream_noises)
+            return self.__decode_stbc_2_rx_antennas(symbol_streams, stream_responses, stream_noises)
 
         if num_rx_streams == 4:
-            return self.__decode_stbc_4_rx_antennas(symbol_stream, stream_responses, stream_noises)
+            return self.__decode_stbc_4_rx_antennas(symbol_streams, stream_responses, stream_noises)
 
         raise ValueError(f"Number of receive streams ({num_rx_streams}) "
                          "not supported in space-time/frequency code")
 
     def __decode_stbc_2_rx_antennas(self,
-                                   input_data: np.ndarray,
-                                   channel_estimation: np.ndarray, noise_var) -> Tuple[np.ndarray, np.ndarray]:
-        """Decode data for STBC with 2 transmit antennas
+                                    symbol_streams: np.ndarray,
+                                    stream_responses: np.ndarray,
+                                    stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Decode data for STBC with 2 antenna streams
 
         Received signal with equal noise power is assumed, the decoded signal has same noise level as input.
         If more than 2 receive antennas are employed, then MRC is applied on the STBC decoding output of all antennas.
 
         Args:
-            input_data(np.ndarray): Input signal with N_rx x N symbols.
-            channel_estimation(np.ndarray): Channel estimation with N_rx x N_tx x N symbols.
+            symbol_streams(np.ndarray): Input signal with N_rx x N symbols.
+            stream_responses(np.ndarray): Channel estimation with N_rx x N_tx x N symbols.
 
         Returns:
             (np.ndarray, np.ndarray):
@@ -108,36 +109,36 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
                 channel_estimation_out: updated channel estimation with size 1 x N.
         """
 
-        number_of_rx_antennas = input_data.shape[0]
-        number_of_symbols = input_data.shape[1]
-        output = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
-        channel_estimation_out = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
+        number_of_rx_antennas = symbol_streams.shape[0]
+        number_of_symbols = symbol_streams.shape[1]
+        symbol_streams_out = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
+        stream_responses_out = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
 
-        channel = channel_estimation / np.sqrt(2)
+        channel = stream_responses / np.sqrt(2)
 
         even_idx = np.arange(0, number_of_symbols, 2)
         odd_idx = even_idx + 1
 
-        y_even = (np.conj(channel[:, 0, even_idx]) * input_data[:, even_idx] +
-                  channel[:, 1, odd_idx] * np.conj(input_data[:, odd_idx]))
-        y_odd = (-channel[:, 1, even_idx] * np.conj(input_data[:, even_idx]) +
-                 np.conj(channel[:, 0, odd_idx]) * input_data[:, odd_idx])
+        y_even = (np.conj(channel[0, even_idx]) * symbol_streams[:, even_idx] +
+                  channel[1, odd_idx] * np.conj(symbol_streams[:, odd_idx]))
+        y_odd = (-channel[1, even_idx] * np.conj(symbol_streams[:, even_idx]) +
+                 np.conj(channel[0, odd_idx]) * symbol_streams[:, odd_idx])
 
-        norm = np.sqrt(np.abs(channel[:, 0, even_idx]) ** 2 + np.abs(channel[:, 1, even_idx]) ** 2)
+        # ToDo: This way of norming things does not seem correct to me.
+        # Why would we only normalize over the even indices?
+        norm = np.sqrt(np.abs(channel[0, even_idx]) ** 2 + np.abs(channel[1, even_idx]) ** 2)
 
-        output[:, even_idx] = y_even / norm
-        output[:, odd_idx] = y_odd / norm
+        symbol_streams_out[:, even_idx] = y_even / norm
+        symbol_streams_out[:, odd_idx] = y_odd / norm
 
         # the channel coefficient is the norm
-        channel_estimation_out[:, even_idx] = norm
-        channel_estimation_out[:, odd_idx] = norm
+        stream_responses_out[:, even_idx] = norm
+        stream_responses_out[:, odd_idx] = norm
 
-        if number_of_rx_antennas > 1:
-            output, channel_estimation_out, noise_var = self._decode_mrc(output,
-                                                                         channel_estimation_out[:, np.newaxis, :],
-                                                                         noise_var)
+        # ToDo: Noise changes
+        noise_estimation_out = np.zeros(symbol_streams_out.shape, dtype=float)
 
-        return output, channel_estimation_out
+        return MaximumRatioCombining.decode(self, symbol_streams_out, stream_responses_out, noise_estimation_out)
 
     def __decode_stbc_4_rx_antennas(self,
                                     input_data: np.ndarray,
@@ -161,11 +162,6 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
         number_of_rx_antennas = input_data.shape[0]
         number_of_symbols = input_data.shape[1]
 
-        if isinstance(noise_var, float):
-            noise_var = noise_var * np.ones(input_data.shape)
-
-        # channel_estimation = np.squeeze(channel_estimation)
-
         tx0_idx = np.arange(0, number_of_symbols, 4)
         tx1_idx = tx0_idx + 1
         tx2_idx = tx0_idx + 2
@@ -180,14 +176,14 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
         noise_var_0_2[:, ::2] = noise_var[:, tx0_idx]
         noise_var_0_2[:, 1::2] = noise_var[:, tx1_idx]
 
-        ce_0_2 = np.zeros((number_of_rx_antennas, 2, (len(tx0_idx) + len(tx1_idx))), dtype=complex)
-        ce_0_2[:, 0, ::2] = channel_estimation[:, 0, tx0_idx]
-        ce_0_2[:, 0, 1::2] = channel_estimation[:, 0, tx1_idx]
-        ce_0_2[:, 1, ::2] = channel_estimation[:, 2, tx0_idx]
-        ce_0_2[:, 1, 1::2] = channel_estimation[:, 2, tx1_idx]
+        ce_0_2 = np.zeros((2, (len(tx0_idx) + len(tx1_idx))), dtype=complex)
+        ce_0_2[0, ::2] = channel_estimation[0, tx0_idx]
+        ce_0_2[0, 1::2] = channel_estimation[0, tx1_idx]
+        ce_0_2[1, ::2] = channel_estimation[2, tx0_idx]
+        ce_0_2[1, 1::2] = channel_estimation[2, tx1_idx]
 
         out_tx_0_2, ce_0_2, noise_var_0_2 = self.__decode_stbc_2_rx_antennas(input_stbc_tx_antennas_0_2, ce_0_2,
-                                                                            noise_var_0_2)
+                                                                             noise_var_0_2)
 
         # reshape, so that we can concatenate t and t+1 accordingly
         out_tx_0_2 = np.reshape(out_tx_0_2, (-1, 2))
@@ -203,14 +199,14 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
         noise_var_1_3[:, ::2] = noise_var[:, tx2_idx]
         noise_var_1_3[:, 1::2] = noise_var[:, tx3_idx]
 
-        ce_1_3 = np.zeros((number_of_rx_antennas, 2, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
-        ce_1_3[:, 0, ::2] = channel_estimation[:, 1, tx2_idx]
-        ce_1_3[:, 0, 1::2] = channel_estimation[:, 1, tx3_idx]
-        ce_1_3[:, 1, ::2] = channel_estimation[:, 3, tx2_idx]
-        ce_1_3[:, 1, 1::2] = channel_estimation[:, 3, tx3_idx]
+        ce_1_3 = np.zeros((number_of_rx_antennas, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
+        ce_1_3[0, ::2] = channel_estimation[1, tx2_idx]
+        ce_1_3[0, 1::2] = channel_estimation[1, tx3_idx]
+        ce_1_3[1, ::2] = channel_estimation[3, tx2_idx]
+        ce_1_3[1, 1::2] = channel_estimation[3, tx3_idx]
 
         out_tx_1_3, ce_1_3, noise_var_1_3 = self.__decode_stbc_2_rx_antennas(input_stbc_tx_antennas_1_3,
-                                                                            ce_1_3, noise_var_1_3)
+                                                                             ce_1_3, noise_var_1_3)
 
         # reshape so that we can concatenate t and t+1 accordingly
         out_tx_1_3 = np.reshape(out_tx_1_3, (-1, 2))
@@ -238,7 +234,7 @@ class SpaceTimeBlockCoding(SymbolPrecoder):
     def num_output_streams(self) -> int:
 
         # DFT precoding does not alter the number of symbol streams
-        return self.precoding.required_inputs(self)
+        return self.precoding.required_outputs(self)
 
     @classmethod
     def to_yaml(cls: Type[SpaceTimeBlockCoding], representer: SafeRepresenter, node: SpaceTimeBlockCoding) -> Node:

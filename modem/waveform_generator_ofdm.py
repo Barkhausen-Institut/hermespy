@@ -374,13 +374,13 @@ class FrameSymbolSection(FrameSection):
 
         # Reference fields all currently carry the complex symbol 1+j0
         # ToDo: Implement reference symbol configurations
-        grid[mask[ElementType.REFERENCE.value, ::]] = 1.
+        grid.T[mask[ElementType.REFERENCE.value, ::].T] = 1.
 
         # Data fields carry the supplied data symbols
-        grid[mask[ElementType.DATA.value, ::]] = symbols
+        grid.T[mask[ElementType.DATA.value, ::].T] = symbols
 
         # NULL fields are just that... zero ToDo: Check with André if this is correct
-        grid[mask[ElementType.NULL.value, ::]] = 0.
+        grid.T[mask[ElementType.NULL.value, ::].T] = 0.
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
         num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
@@ -391,8 +391,6 @@ class FrameSymbolSection(FrameSection):
                                                         grid.shape[0],
                                                         self.frame.subcarrier_spacing,
                                                         self.frame.dc_suppression)
-
-
 
         resource_signals = idft_matrix @ grid
 
@@ -405,6 +403,7 @@ class FrameSymbolSection(FrameSection):
 
             num_prefix_samples = int(round(num_samples_per_slot * cp_ratio))
             signals.append(np.append(resource_samples[-num_prefix_samples:], resource_samples))
+
 
         return np.concatenate(signals, axis=0)
 
@@ -818,8 +817,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         channel_estimation = self.__channel_estimation(symbol_grid, impulse_grid, resource_mask)
 
         # Recover the data symbols, as well as the respective channel weights from the resource grids
-        data_symbols = symbol_grid[resource_mask[ElementType.DATA.value, ::]]
-        channel_weights = channel_estimation[resource_mask[ElementType.DATA.value, ::]]
+        data_symbols = symbol_grid.T[resource_mask[ElementType.DATA.value, ::].T]
+        channel_weights = channel_estimation.T[resource_mask[ElementType.DATA.value, ::].T]
         noise_variances = np.repeat(noise_variance, self.symbols_per_frame)
 
         return data_symbols, channel_weights, noise_variances
@@ -1142,7 +1141,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         if self.channel_estimation_algorithm == ChannelEstimation.REFERENCE_SIGNAL:
             return self.__reference_based_channel_estimation(rx_signal)
 
-        #if self.param.channel_estimation in {"LS", "LEAST_SQUARE"}:
+        #if self.param.stream_responses in {"LS", "LEAST_SQUARE"}:
         #    return self.__reference_based_channel_estimation(rx_signal)
         #    channel_in_freq_domain = np.repeat(channel_in_freq_domain[:, :, np.newaxis, :], number_of_symbols, axis=2)
         #else:
@@ -1231,17 +1230,17 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         """
         if np.any(channel_estimation_freq[:, :, self._resource_element_mapping] == 0) or frequency_bins.size:
-            # if channel_estimation is missing at any frequency or different frequencies
+            # if stream_responses is missing at any frequency or different frequencies
             # then interpolate
-            ch_est_freqs = np.where(channel_estimation != 0)[1]
+            ch_est_freqs = np.where(stream_responses != 0)[1]
             ch_est_freqs[ch_est_freqs > self.param.fft_size / 2] = (ch_est_freqs[ch_est_freqs > self.param.fft_size / 2]
                                                                     - self.param.fft_size)
             ch_est_freqs = ch_est_freqs * self.param.subcarrier_spacing
             ch_est_freqs = np.fft.fftshift(ch_est_freqs)
 
-            interp_function = interpolate.interp1d(ch_est_freqs, np.fft.fftshift(channel_estimation))
+            interp_function = interpolate.interp1d(ch_est_freqs, np.fft.fftshift(stream_responses))
 
-            channel_estimation = interp_function(frequency_bins)
+            stream_responses = interp_function(frequency_bins)
         """
 
         # multiple antennas
@@ -1356,7 +1355,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         else:
             discrete_frequencies = 2 * pi * np.arange(num_subcarriers) * subcarrier_spacing
 
-        return np.exp(-1j * np.outer(discrete_frequencies, slot_timestamps)) / np.sqrt(num_subcarriers)
+        return np.exp(-1j * np.outer(discrete_frequencies, slot_timestamps)) / np.sqrt(num_timestamps)
 
     @lru_cache(maxsize=5)
     def inverse_fourier_weights(self, num_timestamps, num_subcarriers, subcarrier_spacing, dc_suppression) -> np.ndarray:
@@ -1369,4 +1368,4 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         else:
             discrete_frequencies = 2 * pi * np.arange(num_subcarriers) * subcarrier_spacing
 
-        return np.exp(1j * np.outer(slot_timestamps, discrete_frequencies)) / np.sqrt(num_subcarriers)
+        return np.exp(1j * np.outer(slot_timestamps, discrete_frequencies)) / np.sqrt(num_timestamps)

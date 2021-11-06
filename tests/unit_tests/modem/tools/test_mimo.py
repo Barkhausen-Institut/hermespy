@@ -96,7 +96,7 @@ class TestMimo(unittest.TestCase):
         no_tx_antennas = 2
         no_rx_antennas = 1
 
-        # input_data = np.zeros((8),dtype=complex)
+        # symbol_streams = np.zeros((8),dtype=complex)
         input_data = self.input[0, :]
 
         mimo_stbc = Mimo("STBC", self.no_streams, no_tx_antennas)

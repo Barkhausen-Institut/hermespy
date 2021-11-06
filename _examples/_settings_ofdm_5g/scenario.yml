@@ -8,7 +8,7 @@ Modems:
     # 2x2 MIMO with Single-Carrier Spatial Precoding
     num_antennas: 2
     Precoding:
-      - SC
+      - SM
 
     WaveformOFDM:
 
@@ -51,13 +51,21 @@ Modems:
           num_repetitions: 3
           duration: 35.677083e-6
 
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
+
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6
+
+
   # Receiving OFDM modem
   - Receiver
 
     # 2x2 MIMO with Single-Carrier Spatial Precoding
     num_antennas: 2
     Precoding:
-      - SC
       - ZF
 
     WaveformOFDM:
@@ -93,6 +101,14 @@ Modems:
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
       Structure:
+
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
+
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6
 
         - Symbol
           num_repetitions: 1
