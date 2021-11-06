@@ -1,16 +1,14 @@
 !<Scenario>
 
-sampling_rate: 1.23456e8
-
 Modems:
 
   # Transmitting OFDM modem
   - Transmitter
 
     # 2x2 MIMO with Single-Carrier Spatial Precoding
-#    num_antennas: 2
-#    Precoding:
-#      - SC
+    num_antennas: 2
+    Precoding:
+      - SC
 
     WaveformOFDM:
 
@@ -19,7 +17,7 @@ Modems:
       subcarrier_spacing: 30e3
       dc_suppression: False
 
-      # Frame settings
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
 
         - repetitions: 1
@@ -33,7 +31,7 @@ Modems:
               repetitions: 600
 
         - repetitions: 1
-          cp_ratio: 0.0703125
+          cp_ratio: 0.078125
           elements:
             - type: NULL
               repetitions: 600
@@ -57,9 +55,10 @@ Modems:
   - Receiver
 
     # 2x2 MIMO with Single-Carrier Spatial Precoding
-#    num_antennas: 2
-#    Precoding:
-#      - SC
+    num_antennas: 2
+    Precoding:
+      - SC
+      - ZF
 
     WaveformOFDM:
 
@@ -69,7 +68,7 @@ Modems:
       dc_suppression: False
       channel_estimation: IDEAL
 
-      # Frame settings
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
 
         - repetitions: 1
@@ -83,7 +82,7 @@ Modems:
               repetitions: 600
 
         - repetitions: 1
-          cp_ratio: 0.0703125
+          cp_ratio: 0.078125
           elements:
             - type: NULL
               repetitions: 600
@@ -107,4 +106,4 @@ Channels:
 
   - 5GTDL 0 0
     type: A
-    rms_delay: 1e-7
+    rms_delay: 0.

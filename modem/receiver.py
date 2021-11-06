@@ -61,14 +61,14 @@ class Receiver(Modem):
         self.noise = Noise() if noise is None else noise
         self.reference_transmitter = reference_transmitter
 
-    def receive(self, input_signals: np.ndarray, noise_power: float) -> np.ndarray:
+    def receive(self, input_signals: np.ndarray, noise_variance: float) -> np.ndarray:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
 
         Args:
             input_signals (np.ndarray): Received signal.
-            noise_power (float): Power of the incoming noise, for simulation and possible equalization.
+            noise_variance (float): Power of the incoming noise, for simulation and possible equalization.
 
         Returns:
             np.array: Detected bits as a list of data blocks for the drop.
@@ -106,7 +106,7 @@ class Receiver(Modem):
         scaled_signals = input_signals / np.sqrt(self.received_power)
 
         # Add receive noise
-        noisy_signals = self.__noise.add_noise(scaled_signals, noise_power)
+        noisy_signals = self.__noise.add_noise(scaled_signals, noise_variance)
 
         # Simulate the radio-frequency chain
         received_signals = self.rf_chain.receive(noisy_signals)
@@ -125,9 +125,10 @@ class Receiver(Modem):
         # Generate a symbol stream for each dedicated base-band signal
         symbol_streams: List[List[complex]] = []
         symbol_streams_responses: List[List[complex]] = []
+        symbol_streams_noise: List[List[float]] = []
 
         for stream_idx, (rx_signal, stream_response) in enumerate(zip(received_signals,
-                                                                         np.rollaxis(stream_responses, 1))):
+                                                                      np.rollaxis(stream_responses, 1))):
 
             # Synchronization
             frame_samples, frame_responses = self.waveform_generator.synchronize(rx_signal, stream_response)
@@ -135,20 +136,25 @@ class Receiver(Modem):
             # Demodulate each frame separately to make the de-modulation easier to understand
             symbols: List[complex] = []
             symbol_responses: List[complex] = []
+            symbol_noise: List[float] = []
             for frame, response in zip(frame_samples, frame_responses):
 
                 # Demodulate the frame into dat symbols
-                frame_symbols, frame_symbol_responses = self.waveform_generator.demodulate(frame, response)
+                f_symbols, f_responses, f_noise = self.waveform_generator.demodulate(frame, response, noise_variance)
 
-                symbols.extend(frame_symbols.tolist())
-                symbol_responses.extend(frame_symbol_responses.tolist())
+                symbols.extend(f_symbols.tolist())
+                symbol_responses.extend(f_responses.tolist())
+                symbol_noise.extend(f_noise.tolist())
 
             # Save data symbols in their respective stream section
             symbol_streams.append(symbols)
             symbol_streams_responses.append(symbol_responses)
+            symbol_streams_noise.append(symbol_noise)
 
         # Decode the symbol precoding
-        symbols = self.precoding.decode(np.array(symbol_streams), np.array(symbol_streams_responses))
+        symbols = self.precoding.decode(np.array(symbol_streams),
+                                        np.array(symbol_streams_responses),
+                                        np.array(symbol_streams_noise))
 
         # Map the symbols to code bits
         code_bits = self.waveform_generator.unmap(symbols)

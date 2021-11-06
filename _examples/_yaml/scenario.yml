@@ -46,7 +46,7 @@ Modems:
     Precoding:
       - SC
 
-Channels:
-
-   - COST256 0 0
-     model_type: RURAL
+#Channels:
+#
+#   - COST256 0 0
+#     model_type: RURAL

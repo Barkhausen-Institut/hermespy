@@ -339,7 +339,7 @@ class WaveformGenerator(ABC):
         num_frames = int(floor(len(signal) / samples_per_frame))
 
         frames = np.empty((num_frames, samples_per_frame), dtype=complex)
-        frame_responses = np.empty((num_frames, samples_per_frame, stream_response.shape[1]), dtype=complex)
+        frame_responses = np.empty((num_frames, samples_per_frame), dtype=complex)
 
         # By default, there is no synchronization, i.e. we assume the first signal is also the first sample of
         # the first frame. ToDo: Check with André how to implement general equalization
@@ -347,25 +347,15 @@ class WaveformGenerator(ABC):
 
             # ToDo: This currently does not account for delay overhead....
             frames[f, :] = signal[f*samples_per_frame:(f+1)*samples_per_frame]
-            frame_responses[f, :] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, :]
+            frame_responses[f, :] = np.sum(stream_response[f*samples_per_frame:(f+1)*samples_per_frame, :], axis=1)
 
         return frames, frame_responses
 
     @abstractmethod
-    def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
-        """Estimate the channel for a given channel impulse response.
-
-        Args:
-            impulse_response (np.ndarray):
-                Channel impulse response in form num_timestamps x rx_antennas x tx_antennas x delay_in_samples + 1 .
-
-        Returns:
-            An estimated channel in the form num_symbols x rx_antennas x tx_antennas x delay in samples ?
-        """
-        ...
-
-    @abstractmethod
-    def demodulate(self, signal: np.ndarray, impulse_response: np.ndarray) -> np.ndarray:
+    def demodulate(self,
+                   signal: np.ndarray,
+                   impulse_response: np.ndarray,
+                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Demodulate a base-band signal stream to data symbols.
 
         Args:
@@ -373,13 +363,16 @@ class WaveformGenerator(ABC):
             signal:
                 Vector of complex-valued base-band samples of a modulated signal.
 
-            impulse_response (np.ndarray):
-                Stream impulse response of dimension num_samples x num_rx_streams x num_delay_taps.
-                Can be used for channel equalization.
+            impulse_response:
+                Vector of complex valued base-band channel impulse responses of a modulated signal.
+
+            noise_variance:
+                Variance of the thermal noise introduced during reception.
 
         Returns:
-            np.ndarray:
-                Vector of demodulated data symbols.
+            (np.ndarray, np.ndarray, np.ndarray):
+                Tuple of 3 vectors of equal length:
+                The demodulated data symbols, their channel estimates and their noise variance.
         """
         ...
 
