@@ -13,7 +13,3 @@ snr_type: EBN0                  # SNR is defined as the ratio between bit energy
 calc_transmit_spectrum: true    # Calculate the average transmit spectrum over all drops
 calc_transmit_stft: true        # Calculate the average short-time Fourier transform over all drops
 spectrum_fft_size: 512          # Stft and transmit spectrum should both feature 512 frequency bins
-
-plot_drop: true
-plot_drop_transmitted_signals: true
-plot_drop_received_signals: true
