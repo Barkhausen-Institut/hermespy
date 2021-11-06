@@ -168,14 +168,18 @@ class SymbolPrecoding:
             ValueError: If dimensions of `stream_responses`, `stream_noises` and `input_streams` do not match.
         """
 
-        if np.any(input_stream.shape != stream_responses.shape):
+        if np.any(input_stream.shape != stream_responses.shape) or np.any(input_stream.shape != stream_noises.shape):
             raise ValueError("Dimensions of input_stream and stream_responses must be identical")
 
-        input_stream = input_stream.copy()
+        symbols_iteration = input_stream.copy()
+        streams_iteration = stream_responses.copy()
+        noises_iteration = stream_noises.copy()
 
         # Recursion through all precoders, each one may update the stream as well as the responses
         for precoder in reversed(self.__symbol_precoders):
-            input_stream, stream_responses = precoder.decode(input_stream, stream_responses, stream_noises)
+            symbols_iteration, stream_responses, noises_iteration = precoder.decode(symbols_iteration,
+                                                                                    streams_iteration,
+                                                                                    noises_iteration)
 
         return input_stream.flatten()
 
