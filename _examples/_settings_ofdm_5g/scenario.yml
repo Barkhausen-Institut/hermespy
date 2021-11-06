@@ -117,9 +117,3 @@ Modems:
         - Guard
           num_repetitions: 3
           duration: 35.677083e-6
-
-Channels:
-
-  - 5GTDL 0 0
-    type: A
-    rms_delay: 0.

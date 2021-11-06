@@ -443,29 +443,27 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         return signal
 
-    def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
-        return impulse_response
-
-    def demodulate(self, signal: np.ndarray, impulse_response: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def demodulate(self,
+                   signal: np.ndarray,
+                   impulse_response: np.ndarray,
+                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
         samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
         prototypes, _ = self._prototypes()
 
-        symbol_responses = np.empty(self.num_data_chirps, dtype=complex)
         data_frame = signal[samples_in_pilot_section:]
 
         symbol_signals = data_frame.reshape(-1, self.samples_in_chirp)
         symbol_metrics = abs(symbol_signals @ prototypes.T.conj())
 
+        # ToDo: Unfortunately the demodulation-scheme is non-linear. Is there a better way?
         symbols = np.argmax(symbol_metrics, axis=1)
+        symbol_responses = np.zeros(self.num_data_chirps, dtype=complex)
+        noises = np.repeat(noise_variance, self.num_data_chirps)
 
-        for c in range(self.num_data_chirps):
-            # ToDo: Check in with someone who knows the statistics here...
-            symbol_responses[c] = np.mean(impulse_response[c*samples_in_chirp:(c+1)*samples_in_chirp])
-
-        return symbols, symbol_responses
+        return symbols, symbol_responses, noises
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
 

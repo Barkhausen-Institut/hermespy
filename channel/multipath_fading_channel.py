@@ -4,11 +4,12 @@
 from __future__ import annotations
 from scipy.constants import pi
 from numpy import cos, exp
-from typing import TYPE_CHECKING, Optional, Type
-from ruamel.yaml import SafeRepresenter, MappingNode
+from typing import TYPE_CHECKING, Optional, Type, Union, List
+from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 from itertools import product
 from functools import lru_cache
 import numpy as np
+import numpy.random as rnd
 
 from channel.channel import Channel
 
@@ -106,9 +107,9 @@ class MultipathFadingChannel(Channel):
     interpolate_signals: bool
 
     def __init__(self,
-                 delays: np.ndarray,
-                 power_profile: np.ndarray,
-                 rice_factors: np.ndarray,
+                 delays: Union[np.ndarray, List[float]],
+                 power_profile: Union[np.ndarray, List[float]],
+                 rice_factors: Union[np.ndarray, List[float]],
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
@@ -144,7 +145,12 @@ class MultipathFadingChannel(Channel):
                 If rice factors are smaller than zero.
         """
 
-        if delays.ndim != 1 or power_profile.ndim != 1 or rice_factors.ndim != 1:
+        # Convert delays, power profile and rice factors to numpy arrays if they were provided as lists
+        self.__delays = np.array(delays) if isinstance(delays, list) else delays
+        self.__power_profile = np.array(power_profile) if isinstance(power_profile, list) else power_profile
+        self.__rice_factors = np.array(rice_factors) if isinstance(rice_factors, list) else rice_factors
+
+        if self.__delays.ndim != 1 or self.__power_profile.ndim != 1 or self.__rice_factors.ndim != 1:
             raise ValueError("Delays, power profile and rice factors must be vectors")
 
         if len(delays) != len(power_profile) or len(power_profile) != len(rice_factors):
@@ -153,13 +159,13 @@ class MultipathFadingChannel(Channel):
         if len(delays) < 1:
             raise ValueError("Configuration must contain at least one delay tap")
 
-        if np.any(delays < 0.0):
+        if np.any(self.__delays < 0.0):
             raise ValueError("Delays must be greater or equal to zero")
 
-        if np.any(power_profile < 0.0):
+        if np.any(self.__power_profile < 0.0):
             raise ValueError("Power profile factors must be greater or equal to zero")
 
-        if np.any(rice_factors < 0.0):
+        if np.any(self.__rice_factors < 0.0):
             raise ValueError("Rice factors must be greater or equal to zero")
 
         # Init base class
@@ -168,9 +174,9 @@ class MultipathFadingChannel(Channel):
         # Sort delays
         sorting = np.argsort(delays)
 
-        self.__delays = delays[sorting]
-        self.__power_profile = power_profile[sorting]
-        self.__rice_factors = rice_factors[sorting]
+        self.__delays = self.__delays[sorting]
+        self.__power_profile = self.__power_profile[sorting]
+        self.__rice_factors = self.__rice_factors[sorting]
         self.__num_sinusoids = 10       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
         self.los_angle = los_angle
         self.__transmit_precoding = None
@@ -195,18 +201,19 @@ class MultipathFadingChannel(Channel):
             self.receive_postcoding = receive_postcoding
 
         # Infer additional parameters
-        self.__max_delay = max(delays)
-        self.__num_resolvable_paths = len(delays)
+        self.__max_delay = max(self.__delays)
+        self.__num_resolvable_paths = len(self.__delays)
 
-        rice_inf_pos = np.isposinf(rice_factors)
+        rice_inf_pos = np.isposinf(self.__rice_factors)
         rice_num_pos = np.invert(rice_inf_pos)
         self.los_gains = np.empty(self.num_resolvable_paths, dtype=float)
         self.non_los_gains = np.empty(self.num_resolvable_paths, dtype=float)
 
         self.los_gains[rice_inf_pos] = 1.0
-        self.los_gains[rice_num_pos] = np.sqrt(rice_factors[rice_num_pos]) / np.sqrt(1 + rice_factors[rice_num_pos])
+        self.los_gains[rice_num_pos] = np.sqrt(self.__rice_factors[rice_num_pos] /
+                                               (1 + self.__rice_factors[rice_num_pos]))
 
-        self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + rice_factors[rice_num_pos])
+        self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
         self.non_los_gains[rice_inf_pos] = 0.0
 
     @property
@@ -524,15 +531,15 @@ class MultipathFadingChannel(Channel):
 
         num_delay_samples = int(round(self.max_delay * sampling_rate))
         delay_samples = np.arange(num_delay_samples + 1) / sampling_rate
-        filter = np.zeros((num_delay_samples+1, self.num_resolvable_paths))
+        filter_instances = np.zeros((num_delay_samples+1, self.num_resolvable_paths))
 
         for path in range(self.num_resolvable_paths):
 
             interp_filter = np.sinc((delay_samples - self.__delays[path]) * sampling_rate)
             interp_filter /= np.sqrt(np.sum(interp_filter ** 2))
-            filter[:, path] = interp_filter
+            filter_instances[:, path] = interp_filter
 
-        return filter
+        return filter_instances
 
     @classmethod
     def to_yaml(cls: Type[MultipathFadingChannel], representer: SafeRepresenter,
@@ -570,3 +577,37 @@ class MultipathFadingChannel(Channel):
 
         yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
         return yaml
+
+    @classmethod
+    def from_yaml(cls: Type[MultipathFadingChannel],
+                  constructor: SafeConstructor,
+                  node: MappingNode) -> MultipathFadingChannel:
+        """Recall a new `MultipathFadingChannel` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `MultipathFadingChannel` serialization.
+
+        Returns:
+            MultipathFadingChannel:
+                Newly created `MultipathFadingChannel` instance. The internal references to modems will be `None` and need to be
+                initialized by the `scenario` YAML constructor.
+
+        """
+
+        state = constructor.construct_mapping(node)
+
+        seed = state.pop('seed', None)
+        power_profile = state.pop('power_profile', None)
+
+        if seed is not None:
+            state['random_generator'] = rnd.default_rng(seed)
+
+        # Convert power profile from dB to linear
+        if power_profile is not None:
+            state['power_profile'] = 10 ** (np.array(power_profile) / 10)
+
+        return cls(**state)
