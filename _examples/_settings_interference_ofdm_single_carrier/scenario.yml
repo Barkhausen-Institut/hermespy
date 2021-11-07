@@ -1,116 +1,103 @@
 !<Scenario>
 
-# random_seed: 0
-# Sampling rate for OFDM 2 * 1200 subcarriers * 15kHz spacing
-# sampling_rate: 36e6
-sampling_rate: 18e5
+# Fix the random number generation to a global seed
+# Setting this seed will result in an identical simulator output for each run
+random_seed: 15
 
+# Maximum simulated time of this scenario in seconds
+drop_duration: 20e-3
 
+# Section describing all wireless devices transmitting and receiving within this scenario
+# A SISO link between two Quadrature Amplitude Modulation devices and two orthogonal frequency division multiplexing devices
+# The devices interfere with each other
 Modems:
 
-  # Transmitting OFDM modem
+  # A single QAM transmitting modem
   - Transmitter
 
-    carrier_frequency: 3e9
-    num_antennas: 1
+    carrier_frequency: 3.1e9  # Center frequency of the rf-band signal in Hz
+    power: 10                 # Average transmit power in dBW
 
-    WaveformOFDM:
+    # Waveform configuration
+    WaveformPskQam:
 
-      # Symbol modulation settings
-      modulation_order: 16
-      oversampling_factor: 2
-      subcarrier_spacing: 15e3
-      fft_size: 2048
-      dc_suppression: False
+      # Symbol settings
+      symbol_rate: 1e6            # Rate of symbol repetition in Hz
+      modulation_order: 64        # Modulation order, in other words 8 bit per data chirp
+      chirp_bandwidth: 1e7        # Bandwidth of each dedicated chirp in Hz
+      chirp_duration: 1e-6        # Duration each dedicated chirp in s
+
+      # Filter settings
+      #filter:
+      #  filter_type: ROOT_RAISED_COSINE
+      #  pulse_width: .5
+      #  roll_off: .5
 
       # Frame settings
-      Resources:
+      num_preamble_symbols: 50    # Number of preamble chirps before data
+      num_data_symbols: 50        # Number of data chirps
+      pilot_rate: 1e6             # Rate of pilot chirp repetition in Hz
+      guard_interval: 1e-6        # Pause between frame transmissions in seconds
 
-        - repetitions: 10
-          cp_ratio: .078125
-          elements:
-            - type: REFERENCE
-              repetitions: 1
-            - type: DATA
-              repetitions: 5
-            - type: REFERENCE
-              repetitions: 1
-            - type: DATA
-              repetitions: 5
-
-        - repetitions: 10
-          cp_ratio: 0.0703125
-          elements:
-            - type: REFERENCE
-              repetitions: 12
-
-        - repetitions: 10
-          cp_ratio: .0703125
-          elements:
-            - type: DATA
-              repetitions: 3
-            - type: REFERENCE
-              repetitions: 1
-            - type: DATA
-              repetitions: 5
-            - type: REFERENCE
-              repetitions: 1
-            - type: DATA
-              repetitions: 2
-
-      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
-      Structure:
-
-        # Symbol section, repeated 16 times (in time)
-        - Symbol
-          num_repetitions: 16
-          pattern: [0, 1, 1, 1, 2, 1, 1]    # Pattern of frequency resources within this symbol section
-
-        # Symbol section is followed by two guard intervals in time domain
-        - Guard
-          duration: 1e-3
-        - Guard
-          duration: 1e-3
-
-  # Receiving OFDM modem
+  # A single QAM receiving modem
   - Receiver
 
-    carrier_frequency: 3e9
-    num_antennas: 1
-    reference_transmitter: 0
+    carrier_frequency: 3.1e9      # Center frequency of the rf-band signal in Hz
+    reference_transmitter: 0      # ID of the referenced modem transmitting to this receiver
+
+    # Waveform configuration
+    WaveformPskQam:
+
+      # Symbol settings
+      symbol_rate: 1e6            # Rate of symbol repetition in Hz
+      modulation_order: 64        # Modulation order, in other words 8 bit per data chirp
+      chirp_bandwidth: 1e7        # Bandwidth of each dedicated chirp in Hz
+      chirp_duration: 1e-6        # Duration each dedicated chirp in s
+
+      # Filter settings
+      #filter:
+      #  filter_type: ROOT_RAISED_COSINE
+      #  pulse_width: .5
+      #  roll_off: .5
+
+      # Frame settings
+      num_preamble_symbols: 50    # Number of preamble chirps before data
+      num_data_symbols: 50        # Number of data chirps
+      pilot_rate: 1e6             # Rate of pilot chirp repetition in Hz
+      guard_interval: 1e-6        # Pause between frame transmissions in seconds
+
+  # A single transmitting OFDM modem
+  - Transmitter
+
+    carrier_frequency: 3e9    # Center frequency of the rf-band signal in Hz
+    power: 1                  # Average transmit power in dBW
 
     WaveformOFDM:
 
       # Symbol modulation settings
       modulation_order: 16
-      oversampling_factor: 2
       subcarrier_spacing: 15e3
-      fft_size: 2048
       dc_suppression: False
 
-      # Frame settings
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
 
-        - repetitions: 100      # Resource repetition in frequency domain
-          cp_ratio: .078125
+        - repetitions: 200
+          cp_ratio: 0.078125
           elements:
-            - type: REFERENCE
-              repetitions: 1    # Element repetitions in frequency domain
-            - type: DATA
-              repetitions: 5
             - type: REFERENCE
               repetitions: 1
             - type: DATA
               repetitions: 5
-
-        - repetitions: 1
-          cp_ratio: 0.0703125
-          elements:
-            - type: REFERENCE
-              repetitions: 1200
 
         - repetitions: 100
-          cp_ratio: .0703125
+          cp_ratio: 0.0703125
+          elements:
+            - type: REFERENCE
+              repetitions: 1
+
+        - repetitions: 100
+          cp_ratio: 0.0703125
           elements:
             - type: DATA
               repetitions: 3
@@ -126,90 +113,69 @@ Modems:
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
       Structure:
 
-        # Symbol section, repeated 16 times (in time)
         - Symbol
           num_repetitions: 16
-          pattern: [0, 1, 1, 1, 2, 1, 1]    # Pattern of frequency resources within this symbol section
+          pattern: [0, 1, 1, 1, 2, 1, 1]
 
-        # Symbol section is followed by two guard intervals in time domain
         - Guard
-          duration: 1e-3
-        - Guard
-          duration: 1e-3
+          num_repetitions: 1
+          duration: 2e-3
 
-
-  # Transmitting QAM modem, interfering with the OFDM transmitter
-  - Transmitter
-
-    carrier_frequency: 3.01e9
-    num_antennas: 1
-
-    WaveformPskQam:
-
-      # Symbol settings
-      symbol_rate: 1e6
-      modulation_order: 64
-      chirp_bandwidth: 1e9
-      chirp_duration: 1e-6
-      oversampling_factor: 4
-
-      # Filter settings
-      filter:
-        filter_type: RAISED_COSINE
-        length_in_symbols: 16
-        roll_off: .5
-        #pulse_width: .5
-
-      # Frame settings
-      num_preamble_symbols: 50
-      num_data_symbols: 50
-      pilot_rate: 1e6
-      guard_interval: 1e-6
-
-  # Receiving QAM modem
+  # A single receiving OFDM modem
   - Receiver
 
-    carrier_frequency: 3.01e9
-    num_antennas: 1
-    reference_transmitter: 1
+    carrier_frequency: 3e9        # Center frequency of the rf-band signal in Hz
+    reference_transmitter: 1      # ID of the referenced modem transmitting to this receiver
 
-    WaveformPskQam:
+    # Spatial precoding with zero-forcing channel equalization
+    Precoding:
+      - ZF
 
-      # Symbol settings
-      symbol_rate: 1e6
-      modulation_order: 64
-      chirp_bandwidth: 1e9
-      chirp_duration: 1e-6
-      oversampling_factor: 4
+    WaveformOFDM:
 
-      # Filter settings
-      filter:
-        filter_type: RAISED_COSINE
-        length_in_symbols: 16
-        roll_off: .5
-        #pulse_width: .5
+      # Symbol modulation settings
+      modulation_order: 16
+      subcarrier_spacing: 15e3
+      dc_suppression: False
 
-      # Frame settings
-      num_preamble_symbols: 50
-      num_data_symbols: 50
-      pilot_rate: 1e6
-      guard_interval: 1e-6
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
+      Resources:
 
-# Channel model configuration
-Channels:
+        - repetitions: 200
+          cp_ratio: 0.078125
+          elements:
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
 
-  # Channel between first transmitter and first receiver
-  - Channel 0 0
-    active: true
+        - repetitions: 1200
+          cp_ratio: 0.0703125
+          elements:
+            - type: REFERENCE
+              repetitions: 1
 
-  # Channel between first transmitter and second receiver
-  - Channel 0 1
-    active: true
+        - repetitions: 100
+          cp_ratio: 0.0703125
+          elements:
+            - type: DATA
+              repetitions: 3
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 2
 
-  # Channel between second transmitter and first receiver
-  - Channel 1 0
-    active: true
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
 
-  # Channel between second transmitter and second receiver
-  - Channel 1 1
-    active: true
+        - Symbol
+          num_repetitions: 16
+          pattern: [0, 1, 1, 1, 2, 1, 1]
+
+        - Guard
+          num_repetitions: 1
+          duration: 2e-3
