@@ -38,8 +38,29 @@ class Channel(ABC):
 
     Attributes:
 
-        __recent_response (Optional[np.ndarray]):
-            The most recent tapped impulse response. None, if no response has been generated yet.
+        __active (bool):
+            Flag enabling signal propagation over this specific channel.
+            Enabled by default, may be disabled to easily debug scenarios.
+
+        __transmitter (Optional[Transmitter]):
+            Handle to the wireless modem transmitting into this channel.
+            If set to `None`, this channel instance is considered floating.
+
+        __receiver (Optional[Receiver]):
+            Handle to the wireless modem receiving from this channel.
+            If set to `None`, this channel instance is considered floating.
+
+        __gain (float):
+            Linear factor by which signals propagated over this channel will be scaled.
+            1.0 by default, i.e. no free-space propagation losses are considered in the default channel.
+
+        __random_generator (Optional[numpy.random.Generator]):
+            Random generator object used to generate pseudo-random number sequences for this channel instance.
+            If set to `None`, the channel will instead access the random generator of `scenario`.
+
+        __scenario (Optional[Scenario]):
+            HermesPy scenario description this channel belongs to.
+            If set to `None`, this channel instance is considered floating.
 
         impulse_response_interpolation (bool):
             Allow for the impulse response to be resampled and interpolated.
@@ -53,7 +74,6 @@ class Channel(ABC):
     __gain: float
     __random_generator: Optional[rnd.Generator]
     __scenario: Optional[Scenario]
-    __recent_response: Optional[np.ndarray]
     impulse_response_interpolation: bool
 
     def __init__(self,
@@ -338,16 +358,11 @@ class Channel(ABC):
 
         return self.__transmitter.index, self.__receiver.index
 
-#    @abstractmethod
-    def init_drop(self) -> None:
-        """Initializes random channel parameters for each drop, if required by model."""
-        pass
-
-#    @abstractmethod
-    def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
+    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Modifies the input signal and returns it after channel propagation.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of one's.
+        The routine samples a new impulse response.
 
         Args:
 
@@ -356,12 +371,17 @@ class Channel(ABC):
                 The array is expected to be two-dimensional with shape `num_transmit_antennas`x`num_samples`.
 
         Returns:
-            np.ndarray:
-                The distorted signal after propagation.
-                Two-dimensional array with shape `num_receive_antennas`x`num_propagated_samples`.
+            (np.ndarray, np.ndarray):
+                Tuple of the distorted signal after propagation and the channel impulse response.
+
+                The propagated signal is a two-dimensional array with shape
+                `num_receive_antennas`x`num_propagated_samples`.
                 Note that the channel may append samples to the propagated signal,
                 so that `num_propagated_samples` is generally not equal to `num_samples`.
 
+                The impulse response is a 4-dimensional array of size
+                `T x num_receive_antennas x num_transmit_antennas x (L+1)`,
+                where `L` is the maximum path delay (in samples).
         Raises:
 
             ValueError:
@@ -383,6 +403,12 @@ class Channel(ABC):
         if transmitted_signal.shape[0] != self.transmitter.num_antennas:
             raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
+        # If the channel is inactive, propagation will result in signal loss
+        # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
+        if not self.active:
+            return (np.empty((self.receiver.num_antennas, 0), dtype=complex),
+                    np.empty((0, self.transmitter.num_antennas, self.receiver.num_antennas, 1), dtype=complex))
+
         # Generate the channel's impulse response
         num_signal_samples = transmitted_signal.shape[1]
         impulse_response = self.impulse_response(np.arange(num_signal_samples) / self.scenario.sampling_rate)
@@ -400,15 +426,7 @@ class Channel(ABC):
                 delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * transmitted_signal[tx_idx, :]
                 received_signal[rx_idx, delay_index:delay_index+num_signal_samples] += delayed_signal
 
-        return received_signal
-        # If just on stream feeds into the channel, the output shall be the repeated stream by default.
-        # Note: This might not be accurate physical behaviour for some sensor array topologies!
-        # if transmitted_signal.shape[0] == 1:
-        #     return self.gain * transmitted_signal.repeat(self.receiver.num_antennas, axis=0)
-#
-        # # MISO case, results in a superposition at the receiver
-        # if self.receiver.num_antennas == 1:
-        #     return self.gain * np.sum(transmitted_signal, axis=0, keepdims=True)
+        return received_signal, impulse_response
 
     def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
         """Calculate the channel impulse responses.
@@ -449,35 +467,8 @@ class Channel(ABC):
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
 
-        # Save newly generated response as most recent impulse response
-        self.recent_response = impulse_responses
-
         # Return resulting impulse response
         return impulse_responses
-
-    @property
-    def recent_response(self) -> np.ndarray:
-        """Access the most recent impulse response.
-
-        Returns:
-            np.ndarray:
-                The most recent impulse response.
-                See `impulse_response` for further information.
-        """
-
-        return self.__recent_response
-
-    @recent_response.setter
-    def recent_response(self, response: np.ndarray) -> None:
-        """Set the most recent impulse response.
-
-        Warning: DO NOT USE THIS SETTER EXTERNALLY.
-
-        Args:
-            response (np.ndarray): The newly generated impulse response.
-        """
-
-        self.__recent_response = response
 
     @property
     def min_sampling_rate(self) -> float:
@@ -546,14 +537,3 @@ class Channel(ABC):
             state['random_generator'] = rnd.default_rng(seed)
 
         return cls(**state)
-
-    def estimate(self, num_samples: int = 1) -> np.ndarray:
-        """Returns estimated channel responses.
-
-        Args:
-            num_samples (int, optional): Number of discrete time samples.
-
-        Unlike the impulse_response routine, errors may occur during channel estimation.
-        """
-
-        return self.recent_response

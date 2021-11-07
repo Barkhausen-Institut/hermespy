@@ -4,8 +4,9 @@
 from __future__ import annotations
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
-from typing import TYPE_CHECKING, Type, List, Optional, Union
+from typing import TYPE_CHECKING, Type, List, Optional, Union, Tuple
 from math import floor
+from scipy.constants import pi
 import numpy as np
 import numpy.random as rnd
 
@@ -61,14 +62,70 @@ class Receiver(Modem):
         self.noise = Noise() if noise is None else noise
         self.reference_transmitter = reference_transmitter
 
-    def receive(self, input_signals: np.ndarray, noise_variance: float) -> np.ndarray:
+    def receive(self, rf_signals: List[Tuple[np.ndarray, float]],
+                noise_variance: float) -> np.ndarray:
+        """Receive and down-mix radio-frequency-band signals to baseband signals over the receiver's hardware chain.
+
+        Args:
+            rf_signals (List[Tuple[np.ndarray, float]]):
+                List containing pairs of rf-band samples and their respective carrier frequencies.
+
+            noise_variance (float):
+                Variance (i.e. power) of the thermal noise added to the signals during reception.
+
+            Raises:
+                ValueError:
+                    If the first dimension of each rf signal does not match the number of receive antennas.
+                    If `noise_variance` is smaller than zero.
+        """
+
+        max_signal_length = 0
+        for rf_signal, _ in rf_signals:
+
+            # Make sure the rf signal contains a stream for each antenna
+            if rf_signal.shape[0] != self.num_antennas:
+                raise ValueError("Number of input signal streams must be equal to the number of receiving antennas")
+
+            max_signal_length = max(max_signal_length, rf_signal.shape[1])
+
+        timestamps = 2j * pi * np.arange(max_signal_length) / self.scenario.sampling_rate
+        baseband_signal = np.zeros((self.num_antennas, max_signal_length), dtype=complex)
+
+        # Down-mix each rf-band signal to baseband and superimpose them at the receiver-side
+        for rf_signal, carrier_frequency in rf_signals:
+
+            frequency_difference = carrier_frequency - self.carrier_frequency
+            mix_oscillation = np.exp(timestamps[:rf_signal.shape[1]] * frequency_difference)
+
+            for antenna_idx, rf_antenna_signal in enumerate(rf_signal):
+                baseband_signal[antenna_idx, :rf_signal.shape[1]] += mix_oscillation * rf_antenna_signal
+
+        # Scale resulting signal to unit power (relative to the configured transmitter reference)
+        scaled_signal = baseband_signal / np.sqrt(self.received_power)
+
+        # Add receive noise
+        noisy_signal = self.__noise.add_noise(scaled_signal, noise_variance)
+
+        # Simulate the radio-frequency chain
+        received_signal = self.rf_chain.receive(noisy_signal)
+
+        # Return resulting base-band superposition
+        return received_signal
+
+    def demodulate(self, baseband_signal: np.ndarray, channel: np.ndarray, noise_variance: float) -> np.ndarray:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
 
         Args:
-            input_signals (np.ndarray): Received signal.
-            noise_variance (float): Power of the incoming noise, for simulation and possible equalization.
+            baseband_signal (np.ndarray):
+                Received signal noisy base-band signal.
+
+            channel (np.ndarray):
+                Wireless channel impulse-response estimation.
+
+            noise_variance (float):
+                Power of the incoming noise, required for equalization and channel estimation.
 
         Returns:
             np.array: Detected bits as a list of data blocks for the drop.
@@ -77,7 +134,7 @@ class Receiver(Modem):
             ValueError: If the first dimension of `input_signals` does not match the number of receive antennas.
         """
 
-        if input_signals.shape[0] != self.num_antennas:
+        if baseband_signal.shape[0] != self.num_antennas:
             raise ValueError("Number of input signals must be equal to the number of antennas")
 
         # If no receiving waveform generator is configured, no signal is being received
@@ -85,16 +142,10 @@ class Receiver(Modem):
         if self.waveform_generator is None:
             return np.empty((self.num_antennas, 0), dtype=complex)
 
-        num_samples = input_signals.shape[1]
-        timestamps = np.arange(num_samples) / self.scenario.sampling_rate
+        num_samples = baseband_signal.shape[1]
 
         # Number of frames within the received samples
-        samples_in_frame = self.waveform_generator.samples_in_frame
         frames_per_stream = int(floor(num_samples / self.waveform_generator.samples_in_frame))
-
-        # Number of simples pre received stream
-        symbols_per_frame = self.waveform_generator.symbols_per_frame
-        symbols_per_stream = frames_per_stream * symbols_per_frame
 
         # Number of code bits required to generate all frames for all streams
         num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream * self.precoding.rate)
@@ -102,32 +153,20 @@ class Receiver(Modem):
         # Data bits required by the bit encoder to generate the input bits for the waveform generator
         num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
 
-        # Scale resulting signal to unit power (relative to the configured transmitter reference)
-        scaled_signals = input_signals / np.sqrt(self.received_power)
-
-        # Add receive noise
-        noisy_signals = self.__noise.add_noise(scaled_signals, noise_variance)
-
-        # Simulate the radio-frequency chain
-        received_signals = self.rf_chain.receive(noisy_signals)
-
-        # Fetch recent impulse responses
-        channel_responses = self.reference_channel.recent_response
-
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
 
         # Since no spatial stream coding is supported,
         # the channel response at each transmit input is the sum over all impinging antenna signals
         # ToDo: This is probably not correct, since it depends on the multiplexing
-        stream_responses = np.sum(channel_responses, axis=2)
+        stream_responses = np.sum(channel, axis=2)
 
         # Generate a symbol stream for each dedicated base-band signal
         symbol_streams: List[List[complex]] = []
         symbol_streams_responses: List[List[complex]] = []
         symbol_streams_noise: List[List[float]] = []
 
-        for stream_idx, (rx_signal, stream_response) in enumerate(zip(received_signals,
+        for stream_idx, (rx_signal, stream_response) in enumerate(zip(baseband_signal,
                                                                       np.rollaxis(stream_responses, 1))):
 
             # Synchronization
@@ -152,12 +191,12 @@ class Receiver(Modem):
             symbol_streams_noise.append(symbol_noise)
 
         # Decode the symbol precoding
-        symbols = self.precoding.decode(np.array(symbol_streams),
-                                        np.array(symbol_streams_responses),
-                                        np.array(symbol_streams_noise))
+        decoded_symbols = self.precoding.decode(np.array(symbol_streams),
+                                                np.array(symbol_streams_responses),
+                                                np.array(symbol_streams_noise))
 
         # Map the symbols to code bits
-        code_bits = self.waveform_generator.unmap(symbols)
+        code_bits = self.waveform_generator.unmap(decoded_symbols)
 
         # Decode the coded bit stream to plain data bits
         data_bits = self.encoder_manager.decode(code_bits, num_data_bits)
