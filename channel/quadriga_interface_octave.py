@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Optional, List, Any, Type
 
 import numpy as np
-from oct2py import Oct2Py, Oct2PyError
+from oct2py import Oct2Py, Oct2PyError, Struct
 
 from .quadriga_interface import QuadrigaInterface
 
@@ -66,4 +66,9 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
             raise RuntimeError(error)
 
         # Pull & return results
-        return self.__octave.pull("cirs")
+        cirs = self.__octave.pull("cirs")
+
+        if isinstance(cirs, Struct):
+            cirs = np.array([[cirs]])
+
+        return cirs

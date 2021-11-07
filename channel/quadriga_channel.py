@@ -4,11 +4,13 @@
 from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from math import ceil
 import numpy as np
 
 from channel import Channel, QuadrigaInterface
 
 if TYPE_CHECKING:
+    from scenario import Scenario
     from modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
@@ -33,6 +35,7 @@ class QuadrigaChannel(Channel):
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
+                 scenario: Optional[Scenario] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None) -> None:
         """Quadriga Channel object initialization.
@@ -46,6 +49,9 @@ class QuadrigaChannel(Channel):
             receiver (Receiver, optional):
                 The modem receiving from this channel.
 
+            scenario (Scenario, optional):
+                Scenario this channel is attached to.
+
             active (bool, optional):
                 Channel activity flag.
                 Activated by default.
@@ -53,13 +59,10 @@ class QuadrigaChannel(Channel):
             gain (float, optional):
                 Channel power gain.
                 1.0 by default.
-
-            interface (QuadrigaInterface, optional):
-                Interface handle to the quadriga backend.
         """
 
         # Init base channel class
-        Channel.__init__(self, transmitter, receiver, active, gain)
+        Channel.__init__(self, transmitter, receiver, scenario, active, gain)
 
         # Register this channel at the interface
         self.__quadriga_interface.register_channel(self)
@@ -82,91 +85,28 @@ class QuadrigaChannel(Channel):
 
         return QuadrigaInterface.GlobalInstance()
 
-    def propagate(self, transmitted_signal: np.ndarray) -> np.ndarray:
+    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
 
-        if transmitted_signal.ndim != 2:
-            raise ValueError("Transmitted signal must be a matrix (an array of two dimensions)")
+        # Query the quadriga interface for a new impulse response
+        path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
 
-        if self.transmitter is None or self.receiver is None:
-            raise RuntimeError("Channel is floating, making propagation simulation impossible")
-
-        cir, tau = self.__quadriga_interface.get_impulse_response(self)
-
-        max_delay_in_samples = int(max(tau) * self.transmitter.sampling_rate)
-        number_of_samples_out = transmitted_signal.shape[1] + max_delay_in_samples
-
-        rx_signal = np.zeros((self.receiver.num_antennas, number_of_samples_out), dtype=complex)
-        for rx_antenna in range(self.receiver.num_antennas):
-
-            rx_signal_ant = np.zeros(number_of_samples_out, dtype=complex)
-
-            for tx_antenna in range(self.transmitter.num_antennas):
-                tx_signal_ant = transmitted_signal[tx_antenna, :]
-
-                # of dimension, #paths x #snap_shots, along the third dimension are the samples
-                # choose first snapshot, i.e. assume static
-                cir_txa_rxa = cir[rx_antenna, tx_antenna, :, 0]
-                tau_txa_rxa = tau[rx_antenna, tx_antenna, :, 0]
-
-                # cir from quadriga corresponds to impulse_response_siso of
-                # MultiPathFadingChannel
-
-                time_delay_in_samples_vec = (tau_txa_rxa * self.transmitter.sampling_rate).astype(int)
-
-                for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
-
-                    padding = self.max_delay_in_samples - delay_in_samples
-                    path_response_at_delay = cir_txa_rxa[delay_idx]
-
-                    signal_path = tx_signal_ant * path_response_at_delay
-                    signal_path = np.concatenate((
-                        np.zeros(delay_in_samples),
-                        signal_path,
-                        np.zeros(padding)))
-
-                    rx_signal_ant += signal_path
-
-            rx_signal[rx_antenna, :] = rx_signal_ant
-
-        return rx_signal * self.gain
-
-    def get_impulse_response(self, timestamps: np.array) -> np.ndarray:
-        """Calculates the channel impulse response.
-
-        This method can be used for instance by the transceivers to obtain the
-        channel state information.
-
-        Args:
-            timestamps (np.array):
-                Time instants with length T to calculate the response for.
-
-        Returns:
-            np.ndarray:
-                Impulse response in all 'number_rx_antennas' x 'number_tx_antennas'
-                channels at the time instants given in vector 'timestamps'.
-                `impulse_response` is a 4D-array, with the following dimensions:
-                1- sampling instants, 2 - Rx antennas, 3 - Tx antennas, 4 - delays
-                (in samples)
-                The shape is T x number_rx_antennas x number_tx_antennas x (L+1)
-        """
-        cir, tau = self.__quadriga_interface.get_impulse_response(self.transmitter, self.receiver)
-        self.max_delay_in_samples = np.around(
-            np.max(tau) * self.sampling_rate).astype(int)
+        max_delay_in_samples = np.around(
+            np.max(path_delays) * self.scenario.sampling_rate).astype(int)
 
         impulse_response = np.zeros((timestamps.size,
-                                     self.number_rx_antennas,
-                                     self.number_tx_antennas,
-                                     self.max_delay_in_samples + 1), dtype=complex)
+                                     self.receiver.num_antennas,
+                                     self.transmitter.num_antennas,
+                                     max_delay_in_samples + 1), dtype=complex)
 
-        for tx_antenna in range(self.number_tx_antennas):
-            for rx_antenna in range(self.number_rx_antennas):
+        for tx_antenna in range(self.transmitter.num_antennas):
+            for rx_antenna in range(self.receiver.num_antennas):
                 # of dimension, #paths x #snap_shots, along the third dimension are the samples
                 # choose first snapshot, i.e. assume static
-                cir_txa_rxa = cir[rx_antenna, tx_antenna, :, 0]
-                tau_txa_rxa = tau[rx_antenna, tx_antenna, :, 0]
+                cir_txa_rxa = path_gains[rx_antenna, tx_antenna, :]
+                tau_txa_rxa = path_delays[rx_antenna, tx_antenna, :]
 
                 time_delay_in_samples_vec = np.around(
-                    tau_txa_rxa * self.sampling_rate).astype(int)
+                    tau_txa_rxa * self.scenario.sampling_rate).astype(int)
 
                 for delay_idx, delay_in_samples in enumerate(
                         time_delay_in_samples_vec):

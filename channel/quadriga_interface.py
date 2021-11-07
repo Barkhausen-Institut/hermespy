@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 from typing import List, Tuple, Optional, Type, TYPE_CHECKING, Any
+
+import oct2py
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import os
 import numpy as np
@@ -220,7 +222,7 @@ class QuadrigaInterface:
 
         self.__channels.pop(self.__channels.index(channel))
 
-    def get_impulse_response(self, channel: QuadrigaChannel) -> Tuple[np.ndarray, float]:
+    def get_impulse_response(self, channel: QuadrigaChannel) -> Tuple[np.ndarray, np.ndarray]:
         """Get the impulse response for a specific quadriga channel.
 
         Will launch the quadriga channel simulator if the channel has already been fetched.
@@ -251,30 +253,9 @@ class QuadrigaInterface:
         # Mark this channel as having been fetched
         self.__fetched_channels.append(channel)
 
-        channel_index = self.__channels.index(channel)
-        return self.__impulse_responses[channel_index], self.__delays[channel_index]
-
-        #self._launch_quadriga()
-        #if self._number_rx == 1 and self._number_tx == 1:
-        #    cir_rx = self.cirs.path_impulse_responses
-        #    tau_rx = self.cirs.tau
-        #else:
-        #    cir_rx = self.cirs[modem_rx.param.id - 1,
-        #                       modem_tx.param.id - 1].path_impulse_responses
-        #    tau_rx = self.cirs[modem_rx.param.id -
-        #                       1, modem_tx.param.id - 1].tau
-#
-        ## make dimensions fit
-        ## oct2py automatically discards dimensions, i.e. (1,1,2,1) = (1,1,2,)
-        #if np.isscalar(cir_rx):
-        #    cir_rx = np.array([[[[cir_rx]]]])
-        #    tau_rx = np.array([[[[tau_rx]]]])
-#
-        #for dim in range(4 - cir_rx.ndim):
-        #    cir_rx = np.expand_dims(cir_rx, axis=cir_rx.ndim)
-        #    tau_rx = np.expand_dims(tau_rx, axis=tau_rx.ndim)
-#
-        #return cir_rx, tau_rx
+        channel_indices = self.__channel_indices[self.__channels.index(channel), :]
+        channel = self.__cirs[channel_indices[0], channel_indices[1]]
+        return channel.path_impulse_responses, channel.tau
 
     def __launch_quadriga(self) -> None:
         """Launches quadriga channel simulator.
@@ -291,13 +272,23 @@ class QuadrigaInterface:
         transmitters: List[Transmitter] = []
         receivers: List[Receiver] = []
 
-        for channel in self.__channels:
+        self.__channel_indices = np.empty((len(self.__channels), 2), dtype=int)
+        receiver_index = 0
+        transmitter_index = 0
+
+        for channel_idx, channel in enumerate(self.__channels):
+
+            self.__channel_indices[channel_idx, :] = (receiver_index, transmitter_index)
 
             if channel.transmitter not in transmitters:
+
                 transmitters.append(channel.transmitter)
+                transmitter_index += 1
 
             if channel.receiver not in receivers:
+
                 receivers.append(channel.receiver)
+                receiver_index += 1
 
         carriers = np.empty(len(self.__channels), dtype=float)
         tx_positions = np.empty((len(transmitters), 3), dtype=float)
@@ -350,11 +341,7 @@ class QuadrigaInterface:
 
         # Run quadriga for the specific interface implementation
         cirs = self._run_quadriga(**parameters)
-
-        # Recover the relevant simulation results
-        # TODO converter cirs to responses / delays
-        self.__impulse_responses = cirs.path_impulse_responses.T
-        self.__delays = cirs.tau.T
+        self.__cirs = cirs
 
     def _run_quadriga(self, **parameters) -> List[Any]:
         """Run the quadriga model.
