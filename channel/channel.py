@@ -396,7 +396,8 @@ class Channel:
 
         return self.__transmitter.index, self.__receiver.index
 
-    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def propagate(self, transmitted_signal: np.ndarray,
+                        rng: np.random.Generator = None) -> Tuple[np.ndarray, np.ndarray]:
         """Modifies the input signal and returns it after channel propagation.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of one's.
@@ -407,6 +408,9 @@ class Channel:
             transmitted_signal (np.ndarray):
                 Input signal antenna signals to be propagated of this channel instance.
                 The array is expected to be two-dimensional with shape `num_transmit_antennas`x`num_samples`.
+
+            rng (np.random.Generator):
+                Random number generator for debugging purposes.
 
         Returns:
             (np.ndarray, np.ndarray):
@@ -432,6 +436,9 @@ class Channel:
                 If the channel is currently floating.
         """
 
+        if rng is None:
+            rng = self.random_generator
+
         if transmitted_signal.ndim != 2:
             raise ValueError("Transmitted signal must be a matrix (an array of two dimensions)")
 
@@ -449,7 +456,9 @@ class Channel:
 
         # Generate the channel's impulse response
         num_signal_samples = transmitted_signal.shape[1]
-        impulse_response = self.impulse_response(np.arange(num_signal_samples) / self.scenario.sampling_rate)
+        impulse_response = self.impulse_response(
+            np.arange(num_signal_samples) / self.scenario.sampling_rate,
+            rng)
         # The maximum delay (in samples) is modeled by the last impulse response dimension
         num_delay_samples = impulse_response.shape[3] - 1
 
@@ -506,18 +515,15 @@ class Channel:
 
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
-        impulse_responses = self._add_sync_offset(impulse_responses)
+        impulse_responses = self._add_sync_offset(impulse_responses, rng)
         # Save newly generated response as most recent impulse response
         self.recent_response = impulse_responses
 
         # Return resulting impulse response
         return impulse_responses
 
-    def _add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
-        if self.random_generator is None:
-            raise ValueError("No random number generator passed. Cannot draw sample.")
-
-        self.calculate_new_sync_delay(self.random_generator)
+    def _add_sync_offset(self, impulse_responses: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+        self.calculate_new_sync_delay(rng)
 
         delay_samples = int(self.current_sync_offset*self.scenario.sampling_rate)
         if delay_samples > 0:
