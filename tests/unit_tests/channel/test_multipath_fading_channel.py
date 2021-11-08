@@ -4,7 +4,7 @@
 import unittest
 import numpy as np
 import numpy.random as rand
-from numpy import exp
+from numpy import dtype, exp
 import numpy.testing as npt
 import scipy
 from scipy import stats
@@ -18,6 +18,7 @@ from scipy.constants.codata import unit
 
 from channel import MultipathFadingChannel, Channel
 import channel
+from scenario.scenario import Scenario
 from simulator_core.factory import Factory
 from tests.unit_tests.utils import yaml_str_contains_element
 
@@ -585,6 +586,43 @@ class TestMultipathFadingChannel(unittest.TestCase):
         :return:
         """
         pass
+
+from tests.unit_tests.channel.test_channel import TestChannelTimeOffsetBehavior
+
+
+class TestSyncoffsetNoInterpolationFilter(TestChannelTimeOffsetBehavior):
+
+    def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> None:
+        sampling_rate = 1e3
+        transmitter = Mock()
+        receiver = Mock()
+        transmitter.sampling_rate = sampling_rate
+        receiver.sampling_rate = sampling_rate
+        transmitter.num_antennas = 1
+        receiver.num_antennas = 1
+
+        channel_params = {
+            'delays': np.zeros(1, dtype=float),
+            'power_profile': np.ones(1, dtype=float),
+            'scenario': Scenario(sampling_rate=1e3),
+            'rice_factors': np.zeros(1, dtype=float),
+            'active': True,
+            'transmitter': transmitter,
+            'receiver': receiver,
+            'gain': 1.0,
+            'doppler_frequency': 0.0,
+            'num_sinusoids': 1,
+            'sync_offset_low': sync_low,
+            'sync_offset_high': sync_high,
+            'random_generator': np.random.default_rng(seed=seed),
+            'impulse_response_interpolation': False
+        }
+
+        ch = MultipathFadingChannel(**channel_params)
+        return ch
+
+
+
 
 
 """if __name__ == '__main__':
