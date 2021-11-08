@@ -95,7 +95,7 @@ class QuadrigaChannel(Channel):
 
         return QuadrigaInterface.GlobalInstance()
 
-    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+    def impulse_response(self, timestamps: np.ndarray, rng: np.random.Generator) -> np.ndarray:
 
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
