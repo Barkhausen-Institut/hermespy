@@ -4,7 +4,6 @@
 from __future__ import annotations
 from typing import List, Tuple, Optional, Type, TYPE_CHECKING, Any
 
-import oct2py
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import os
 import numpy as np
