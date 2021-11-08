@@ -11,6 +11,15 @@ if TYPE_CHECKING:
     from modem import Modem
     from . import Precoder
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class SymbolPrecoding:
     """Channel SymbolPrecoding configuration for wireless transmission of modulated data symbols.

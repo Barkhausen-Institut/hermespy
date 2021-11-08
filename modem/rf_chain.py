@@ -3,7 +3,15 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from typing import Type, Optional
 from modem.rf_chain_models.power_amplifier import PowerAmplifier
-from warnings import warn
+
+__author__ = "André Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["André Barreto", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "André Noll Barreto"
+__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class RfChain:
