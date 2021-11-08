@@ -244,8 +244,8 @@ class Channel:
     def current_sync_offset(self) -> float:
         return self.__current_sync_offset
 
-    def calculate_new_sync_delay(self, rng: rnd.Generator) -> float:
-        return rng.uniform(
+    def calculate_new_sync_delay(self, rng: rnd.Generator) -> None:
+        self.__current_sync_offset = rng.uniform(
                 low=self.sync_offset_low, high=self.sync_offset_high)
 
     @property
@@ -514,7 +514,7 @@ class Channel:
         if self.random_generator is None:
             raise ValueError("No random number generator passed. Cannot draw sample.")
 
-        self.__current_sync_offset = self.calculate_new_sync_delay(self.random_generator)
+        self.calculate_new_sync_delay(self.random_generator)
 
         delay_samples = int(self.current_sync_offset)
         if delay_samples > 0:
