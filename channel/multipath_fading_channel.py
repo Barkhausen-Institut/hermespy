@@ -470,7 +470,7 @@ class MultipathFadingChannel(Channel):
 
         interpolation_filter: Optional[np.ndarray] = None
         if self.impulse_response_interpolation:
-            interpolation_filter = self.__interpolation_filter(self.scenario.sampling_rate, rng)
+            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate, rng)
 
         for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths),
                                                         self.los_gains, self.non_los_gains):
@@ -524,7 +524,6 @@ class MultipathFadingChannel(Channel):
         los_doppler = self.los_doppler_frequency
         los_phase = rng.uniform(0, 2*pi)
         los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
-
         return los_component + nlos_component
 
     @property
@@ -545,8 +544,7 @@ class MultipathFadingChannel(Channel):
         else:
             return min_rate
 
-    @lru_cache(maxsize=1)
-    def __interpolation_filter(self, sampling_rate: float) -> np.ndarray:
+    def interpolation_filter(self, sampling_rate: float) -> np.ndarray:
         """Create an interpolation filter matrix.
 
         Args:
