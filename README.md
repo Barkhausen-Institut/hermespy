@@ -10,7 +10,7 @@ You can find an introductory video here: https://www.barkhauseninstitut.org/en/r
 
 # Features
 
-The curent release version 0.1.0 serves as a platform for joint development. Beside some core functionality, that can be found beside the [release plan](FEATURES.md), its main focus is to provide a software architecture that can be easily extended.
+The curent release version 0.2.0 serves as a platform for joint development. Beside some core functionality, that can be found beside the [release plan](FEATURES.md), its main focus is to provide a software architecture that can be easily extended.
 
 # Installation
 There are two supported ways to install hermespy on your system:
@@ -55,7 +55,7 @@ Install it via
 - `pip install -e .`
  
 
-[Quadriga channel model v2.1.30](https://quadriga-channel-model.de/) is supported by HermesPy.
+[Quadriga channel model v0.2.0](https://quadriga-channel-model.de/) is supported by HermesPy.
 For it to be used, some preliminary steps need to be taken. It can be run with either Octave or matlab. For **octave**, under Windows, you need to set the environemnt variable that tells python where to find octave-cli executable by calling
 
 ```
