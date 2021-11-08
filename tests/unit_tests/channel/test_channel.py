@@ -412,7 +412,10 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna, self.rng_default_seed_1)[0],
-            self.propagate_without_delay(self.x_one_antenna, ch, self.rng_default_seed_2)
+            self.propagate_without_delay(
+                signal=self.x_one_antenna,
+                rng=self.rng_default_seed_2
+            )
         )
 
     def test_one_exact_sample_delay(self) -> None:
@@ -421,7 +424,9 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
             ch.propagate(self.x_one_antenna, self.rng_default_seed_1)[0],
             np.hstack(
                 (np.zeros((1,1), dtype=complex),
-                self.propagate_without_delay(self.x_one_antenna, self.rng_default_seed_1)))
+                self.propagate_without_delay(
+                    signal=self.x_one_antenna,
+                    rng=self.rng_default_seed_2)))
         )
 
 
@@ -432,8 +437,9 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
             ch.propagate(self.x_one_antenna, self.rng_default_seed_1)[0],
             np.hstack(
                 (np.zeros((1,1), dtype=complex),
-                 self.propagate_without_delay(self.x_one_antenna,
-                                              self.rng_default_seed_2)))
+                 self.propagate_without_delay(
+                     signal=self.x_one_antenna,
+                     rng=self.rng_default_seed_2)))
         )
 
     def test_sample_is_picked(self) -> None:
@@ -450,8 +456,9 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
             ch.propagate(self.x_one_antenna, self.rng_default_seed_1)[0],
             np.hstack(
                 (np.zeros((1, int(delay)), dtype=complex),
-                 self.propagate_without_delay(self.x_one_antenna,
-                                              self.rng_default_seed_2)))
+                 self.propagate_without_delay(
+                     signal=self.x_one_antenna,
+                     rng=self.rng_default_seed_2)))
         )
 
     def propagate_without_delay(self,
