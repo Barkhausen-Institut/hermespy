@@ -470,7 +470,7 @@ class MultipathFadingChannel(Channel):
 
         interpolation_filter: Optional[np.ndarray] = None
         if self.impulse_response_interpolation:
-            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate, rng)
+            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate)
 
         for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths),
                                                         self.los_gains, self.non_los_gains):
