@@ -199,7 +199,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = gain * signal
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
@@ -216,7 +216,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = np.repeat(gain * signal, self.receiver.num_antennas, axis=0)
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
@@ -235,7 +235,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = gain * np.sum(signal, axis=0, keepdims=True)
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
@@ -254,7 +254,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = gain * signal
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
