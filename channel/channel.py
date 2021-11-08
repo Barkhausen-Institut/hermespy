@@ -516,7 +516,7 @@ class Channel:
 
         self.calculate_new_sync_delay(self.random_generator)
 
-        delay_samples = int(self.current_sync_offset)
+        delay_samples = int(self.current_sync_offset*self.scenario.sampling_rate)
         if delay_samples > 0:
             delays = np.zeros(
                 (impulse_responses.shape[0],

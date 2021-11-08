@@ -382,6 +382,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
     def setUp(self) -> None:
         self.scenario = Mock()
         self.scenario.sampling_rate = 1e3
+        self.sample_duration = 1/self.scenario.sampling_rate
         self.scenario.random_generator = np.random.default_rng()
 
         self.mock_transmitter = Mock()
@@ -411,7 +412,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         )
 
     def test_one_exact_sample_delay(self) -> None:
-        ch = self.create_channel(1, 1)
+        ch = self.create_channel(self.sample_duration, self.sample_duration)
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna)[0],
             np.hstack(
@@ -422,7 +423,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
     def test_two_sample_delays_two_tx_antennas(self) -> None:
         self.mock_transmitter.num_antennas = 2
         ch_no_delay = self.create_channel(0, 0)
-        ch = self.create_channel(2, 2)
+        ch = self.create_channel(2*self.sample_duration, 2*self.sample_duration)
 
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_two_antenna)[0],
@@ -432,7 +433,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         )
 
     def test_non_int_sample_delay_gets_truncated(self) -> None:
-        ch = self.create_channel(1.5, 1.5)
+        ch = self.create_channel(1.5*self.sample_duration, 1.5*self.sample_duration)
 
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna)[0],
@@ -444,11 +445,11 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
     def test_sample_is_picked(self) -> None:
         COMMON_SEED = 42
         SYNC_OFFSET_LOW = 0
-        SYNC_OFFSET_HIGH = 10
+        SYNC_OFFSET_HIGH = 10*self.sample_duration
 
         rng_local = np.random.default_rng(COMMON_SEED)
 
-        delay = rng_local.uniform(low=SYNC_OFFSET_LOW, high=SYNC_OFFSET_HIGH)
+        delay = rng_local.uniform(low=SYNC_OFFSET_LOW, high=SYNC_OFFSET_HIGH) * self.scenario.sampling_rate
         ch = self.create_channel(SYNC_OFFSET_LOW, SYNC_OFFSET_HIGH, COMMON_SEED)
 
         np.testing.assert_array_almost_equal(
