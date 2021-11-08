@@ -217,7 +217,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = gain * signal
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
@@ -234,7 +234,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = np.repeat(gain * signal, self.receiver.num_antennas, axis=0)
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
@@ -253,7 +253,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = gain * np.sum(signal, axis=0, keepdims=True)
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
@@ -272,7 +272,7 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_signal = gain * signal
-                propagated_signal = self.channel.propagate(signal)
+                propagated_signal, _ = self.channel.propagate(signal)
 
                 assert_array_equal(expected_propagated_signal, propagated_signal)
 
@@ -406,14 +406,14 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         ch = self.create_channel(None, None)
 
         np.testing.assert_array_almost_equal(
-            ch.propagate(self.x_one_antenna),
+            ch.propagate(self.x_one_antenna)[0],
             self.x_one_antenna
         )
 
     def test_one_exact_sample_delay(self) -> None:
         ch = self.create_channel(1, 1)
         np.testing.assert_array_almost_equal(
-            ch.propagate(self.x_one_antenna),
+            ch.propagate(self.x_one_antenna)[0],
             np.hstack(
                 (np.zeros((1,1), dtype=complex),
                 self.propagate_without_delay(self.x_one_antenna)))
@@ -425,7 +425,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         ch = self.create_channel(2, 2)
 
         np.testing.assert_array_almost_equal(
-            ch.propagate(self.x_two_antenna),
+            ch.propagate(self.x_two_antenna)[0],
             np.hstack(
                 (np.zeros((1,2), dtype=complex),
                 self.propagate_without_delay(self.x_two_antenna, ch_no_delay)))
@@ -435,7 +435,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         ch = self.create_channel(1.5, 1.5)
 
         np.testing.assert_array_almost_equal(
-            ch.propagate(self.x_one_antenna),
+            ch.propagate(self.x_one_antenna)[0],
             np.hstack(
                 (np.zeros((1,1), dtype=complex),
                  self.propagate_without_delay(self.x_one_antenna)))
@@ -452,7 +452,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         ch = self.create_channel(SYNC_OFFSET_LOW, SYNC_OFFSET_HIGH, COMMON_SEED)
 
         np.testing.assert_array_almost_equal(
-            ch.propagate(self.x_one_antenna),
+            ch.propagate(self.x_one_antenna)[0],
             np.hstack(
                 (np.zeros((1, int(delay)), dtype=complex),
                  self.propagate_without_delay(self.x_one_antenna)))
@@ -464,7 +464,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         if ch is None:
             ch = self.channel_without_delay
 
-        return ch.propagate(signal)
+        return ch.propagate(signal)[0]
 
     def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> Channel:
         rng = np.random.default_rng(seed)
