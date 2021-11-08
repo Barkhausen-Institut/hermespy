@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 import numpy as np
+import numpy.random as rnd
 
 from channel import Channel, QuadrigaInterface
 
@@ -34,7 +35,10 @@ class QuadrigaChannel(Channel):
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
-                 gain: Optional[float] = None) -> None:
+                 gain: Optional[float] = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[rnd.Generator] = None) -> None:
         """Quadriga Channel object initialization.
 
         Automatically registers channel objects at the interface.
@@ -59,7 +63,13 @@ class QuadrigaChannel(Channel):
         """
 
         # Init base channel class
-        Channel.__init__(self, transmitter, receiver, active, gain)
+        Channel.__init__(self, transmitter=transmitter,
+                               receiver=receiver,
+                               active=active,
+                               gain=gain,
+                               sync_offset_low=sync_offset_low,
+                               sync_offset_high=sync_offset_high,
+                               random_generator=random_generator)
 
         # Register this channel at the interface
         self.__quadriga_interface.register_channel(self)
@@ -194,8 +204,10 @@ class QuadrigaChannel(Channel):
         """
 
         state = {
-            'active': node.__active,
-            'gain': node.__gain
+            'active': node.active,
+            'gain': node.gain,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         transmitter_index, receiver_index = node.indices
