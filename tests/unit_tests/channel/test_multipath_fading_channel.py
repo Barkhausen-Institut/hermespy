@@ -132,19 +132,19 @@ class TestMultipathFadingChannel(unittest.TestCase):
         """Delays getter should return init param."""
 
         channel = MultipathFadingChannel(**self.channel_params)
-        self.assertIs(self.delays, channel.delays)
+        np.testing.assert_array_almost_equal(self.delays, channel.delays)
 
     def test_power_profiles_get(self) -> None:
         """Power profiles getter should return init param."""
 
         channel = MultipathFadingChannel(**self.channel_params)
-        self.assertIs(self.power_profile, channel.power_profile)
+        np.testing.assert_array_almost_equal(self.power_profile, channel.power_profile)
 
     def test_rice_factors_get(self) -> None:
         """Rice factors getter should return init param."""
 
         channel = MultipathFadingChannel(**self.channel_params)
-        self.assertIs(self.rice_factors, channel.rice_factors)
+        np.testing.assert_array_almost_equal(self.rice_factors, channel.rice_factors)
 
     def test_doppler_frequency_setget(self) -> None:
         """Doppler frequency property getter should return setter argument."""
