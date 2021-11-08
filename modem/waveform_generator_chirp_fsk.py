@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Tuple, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from scipy import integrate
-from scipy.constants import pi
 from math import ceil
+from functools import lru_cache
 import numpy as np
 
 from modem import Modem
@@ -412,7 +412,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             The average symbol energy in UNIT.
         """
 
-        _, _, energy = self._prototypes()
+        _, energy = self._prototypes()
         return energy
 
     @property
@@ -423,7 +423,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             The average bit energy in UNIT.
         """
 
-        _, _, symbol_energy = self._prototypes()
+        _, symbol_energy = self._prototypes()
         bit_energy = symbol_energy / self.bits_per_symbol
         return bit_energy
 
@@ -434,54 +434,36 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
-        f0 = -.5 * self.chirp_bandwidth
+        prototypes, _ = self._prototypes()
+        signal = np.empty(self.samples_in_frame, dtype=complex)
 
-        # calculate initial frequencies of the chirps
-        initial_frequency = f0 + data_symbols * self.__freq_difference
-        initial_frequency = np.concatenate((np.ones(self.num_pilot_chirps) * f0, initial_frequency))
-        frequency, amplitude = self._calculate_chirp_frequencies(initial_frequency)
+        samples_in_chirp = self.samples_in_chirp
+        for symbol_idx, symbol in enumerate(data_symbols):
+            signal[symbol_idx*samples_in_chirp:(1+symbol_idx)*samples_in_chirp] = prototypes[symbol, :]
 
-        phase = integrate.cumtrapz(frequency, dx=1 / self.modem.scenario.sampling_rate, initial=0)
-        return np.exp(2j * pi * phase)
+        return signal
 
-    def estimate_channel(self, impulse_response: np.ndarray) -> np.ndarray:
-        return impulse_response
-
-    def demodulate(self, signal: np.ndarray, impulse_response: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def demodulate(self,
+                   signal: np.ndarray,
+                   impulse_response: np.ndarray,
+                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
         samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
-        cos_prototype, sin_prototype, _ = self._prototypes()
+        prototypes, _ = self._prototypes()
 
-        symbols = np.empty(self.num_data_chirps, dtype=int)
-        symbol_responses = np.empty(self.num_data_chirps, dtype=complex)
         data_frame = signal[samples_in_pilot_section:]
 
-        for c in range(self.num_data_chirps):
+        symbol_signals = data_frame.reshape(-1, self.samples_in_chirp)
+        symbol_metrics = abs(symbol_signals @ prototypes.T.conj())
 
-            # Extract signal part of chirp c, representing a single symbol
-            symbol_signal = data_frame[c*samples_in_chirp:(c+1)*samples_in_chirp]
+        # ToDo: Unfortunately the demodulation-scheme is non-linear. Is there a better way?
+        symbols = np.argmax(symbol_metrics, axis=1)
+        symbol_responses = np.zeros(self.num_data_chirps, dtype=complex)
+        noises = np.repeat(noise_variance, self.num_data_chirps)
 
-            symbol_metric = np.zeros(self.modulation_order)
-
-            for signal_idx in range(self.modulation_order):
-
-                real_signal = np.real(symbol_signal)
-                imag_signal = np.imag(symbol_signal)
-
-                cos_metric = np.sum(real_signal * np.real(cos_prototype[signal_idx]) +
-                                    imag_signal * np.imag(cos_prototype[signal_idx])) ** 2
-                sin_metric = np.sum(real_signal * np.real(sin_prototype[signal_idx]) +
-                                    imag_signal * np.imag(sin_prototype[signal_idx]))**2
-                symbol_metric[signal_idx] = cos_metric + sin_metric
-
-            symbols[c] = np.argmax(symbol_metric)
-
-            # ToDo: Check in with someone who knows the statistics here...
-            symbol_responses[c] = np.mean(impulse_response[c*samples_in_chirp:(c+1)*samples_in_chirp])
-
-        return symbols, symbol_responses
+        return symbols, symbol_responses, noises
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
 
@@ -519,41 +501,12 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         offset = np.matmul(power_of_2, bits)
         return offset
 
-    def _calculate_chirp_frequencies(
-            self, initial_frequency: np.array) -> Tuple[np.array, np.array]:
-        """Calculates the chirp frequencies.
-
-        Args:
-            initial_frequency (np.array): Initial frequencies of chirps.
-
-        Returns:
-            (np.array, np.array):
-                `np.array`: complex array containing samples as frequencies of chirps.
-                `np.array`: corresponding amplitudes.
-        """
-
-        amplitude = np.zeros(self.samples_in_chirp * initial_frequency.shape[0], dtype=complex)
-        frequency = np.zeros(self.samples_in_chirp * initial_frequency.shape[0], dtype=complex)
-        slope = self.__chirp_bandwidth / self.__chirp_duration
-        f1 = .5 * self.chirp_bandwidth
-
-        for symbol_index, f0 in enumerate(initial_frequency):
-            first_sample = symbol_index * self.samples_in_chirp
-            last_sample = first_sample + self.samples_in_chirp
-
-            amplitude[first_sample:last_sample] = 1
-            frequency[first_sample:last_sample] = f0 + slope * self.chirp_time  # set (modulated) chirp
-
-        frequency[frequency > f1] -= self.__chirp_bandwidth  # wrap
-
-        return frequency, amplitude
-
     @property
     def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
 
-    # @lru_cache(maxsize=1, typed=True)
-    def _prototypes(self) -> Tuple[np.array, np.array, float]:
+    @lru_cache(maxsize=1, typed=True)
+    def _prototypes(self) -> Tuple[np.array, float]:
         """Generate chirp prototypes.
 
         This method generates the prototype chirps for all possible modulation symbols, that will be correlated with the
@@ -563,31 +516,27 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         Returns: Tuple[np.array, np.array, float]
             np.array:
-                Cosine prototype.
-            np.array:
-                Sine prototype.
+                Prototype.
             float:
                 Symbol energy.
         """
 
         # Chirp parameter inference
         slope = self.chirp_bandwidth / self.chirp_duration
-        chirp_time = self.chirp_time
+        chirp_time = np.arange(self.samples_in_chirp) / self.modem.scenario.sampling_rate
         f0 = -.5 * self.chirp_bandwidth
         f1 = -f0
 
         # non-coherent detection
-        cos_signal = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
-        sin_signal = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
+        prototypes = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
 
         for idx in range(self.modulation_order):
             initial_frequency = f0 + idx * self.freq_difference
-            frequency = initial_frequency + chirp_time * slope
+            frequency = chirp_time * slope + initial_frequency
             frequency[frequency > f1] -= self.chirp_bandwidth
 
             phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.modem.scenario.sampling_rate, initial=0)
-            cos_signal[idx, :] = np.exp(1j * phase)
-            sin_signal[idx, :] = np.exp(1j * (phase - np.pi / 2))
+            prototypes[idx, :] = np.exp(1j * phase)
 
-        symbol_energy = sum(abs(cos_signal[0, :])**2)
-        return cos_signal, sin_signal, symbol_energy
+        symbol_energy = sum(abs(prototypes[0, :])**2)
+        return prototypes, symbol_energy
