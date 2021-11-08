@@ -412,7 +412,7 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna, self.rng_default_seed_1)[0],
-            self.x_one_antenna
+            self.propagate_without_delay(self.x_one_antenna, ch, self.rng_default_seed_2)
         )
 
     def test_one_exact_sample_delay(self) -> None:
