@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from tests.unit_tests.coding.test_encoder import StubEncoder
-from coding.encoder_manager import EncoderManager
+from hermespy.coding.encoder_manager import EncoderManager
 
 
 __author__ = "Jan Adler"

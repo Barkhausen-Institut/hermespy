@@ -4,18 +4,12 @@
 from datetime import time
 import unittest
 from unittest.mock import Mock
-import re
-from numpy.core.fromnumeric import size
 
 from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 import numpy as np
-from scipy import stats
 
-from channel import Channel
-import scenario
-from simulator_core.factory import Factory
-from tests.unit_tests.utils import yaml_str_contains_element
+from hermespy.channel import Channel
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

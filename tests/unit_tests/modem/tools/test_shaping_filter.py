@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import numpy.testing as npt
-from modem.tools.shaping_filter import ShapingFilter
+from hermespy.modem.tools.shaping_filter import ShapingFilter
 from matplotlib import pyplot as plt
 from scipy import signal
 

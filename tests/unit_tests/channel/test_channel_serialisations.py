@@ -4,14 +4,14 @@ from typing import Dict, Any, Tuple
 
 import numpy as np
 
-from channel import (
+from hermespy.channel import (
     Channel, MultipathFadingChannel
 )
-from channel.multipath_fading_templates import (
+from hermespy.channel.multipath_fading_templates import (
     MultipathFading5GTDL, MultipathFadingExponential,
     MultipathFadingCost256)
-from channel.quadriga_channel import QuadrigaChannel
-from simulator_core import Factory
+from hermespy.channel.quadriga_channel import QuadrigaChannel
+from hermespy.simulator_core import Factory
 from tests.unit_tests.utils import yaml_str_contains_element
 
 

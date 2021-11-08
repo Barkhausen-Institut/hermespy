@@ -11,5 +11,5 @@ if(SKBUILD)
   list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
 endif()
 
-add_subdirectory(coding/ldpc_binding)
-install(TARGETS ldpc_binding DESTINATION coding/ldpc_binding/bin)
+add_subdirectory(hermespy/coding/ldpc_binding)
+install(TARGETS ldpc_binding DESTINATION hermespy/coding/ldpc_binding/bin)

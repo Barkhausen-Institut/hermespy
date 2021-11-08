@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import numpy as np
 from math import ceil
 
-from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
+from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

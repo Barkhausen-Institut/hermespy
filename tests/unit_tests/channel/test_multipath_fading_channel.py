@@ -15,12 +15,8 @@ from typing import Any, Dict
 
 from scipy.constants.codata import unit
 
-
-from channel import MultipathFadingChannel, Channel
-import channel
-from scenario.scenario import Scenario
-from simulator_core.factory import Factory
-from tests.unit_tests.utils import yaml_str_contains_element
+from hermespy.channel import MultipathFadingChannel
+from hermespy.scenario import Scenario
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

@@ -1,4 +1,3 @@
-import unittest
 import unittest.mock
 from unittest.mock import patch
 import os
@@ -8,7 +7,7 @@ from numpy import random
 import scipy
 from scipy import io
 
-from channel.rx_sampler import RxSampler
+from hermespy.channel.rx_sampler import RxSampler
 
 
 class TestRxSampler(unittest.TestCase):

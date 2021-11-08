@@ -5,7 +5,7 @@ import unittest
 import numpy.random as rnd
 from unittest.mock import Mock
 
-from modem import Transmitter
+from hermespy.modem import Transmitter
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
