@@ -465,7 +465,7 @@ class Channel:
 
         return received_signal, impulse_response
 
-    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+    def impulse_response(self, timestamps: np.ndarray, rng: np.random.Generator = None) -> np.ndarray:
         """Calculate the channel impulse responses.
 
         This method can be used for instance by the transceivers to obtain the channel state
@@ -474,6 +474,9 @@ class Channel:
         Args:
             timestamps (np.ndarray):
                 Time instants with length `T` to calculate the response for.
+
+            rng (np.random.Generator):
+                Random number generator. Used for testing purposes.
 
         Returns:
             np.ndarray:
