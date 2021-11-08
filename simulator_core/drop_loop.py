@@ -8,6 +8,15 @@ from simulator_core.statistics import Statistics
 from modem.modem import Modem
 from noise.noise import Noise
 
+__author__ = "André Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["André Barreto", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "André Noll Barreto"
+__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class DropLoop:
     """Implements the main simulation loop.

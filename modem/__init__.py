@@ -8,6 +8,16 @@ from .waveform_generator_psk_qam import WaveformGeneratorPskQam
 from .waveform_generator_ofdm import WaveformGeneratorOfdm, FrameGuardSection, FrameSymbolSection
 from .tools.shaping_filter import ShapingFilter
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
+
 __all__ = ['Modem', 'Transmitter', 'Receiver', 'RfChain', 'WaveformGenerator', 'WaveformGeneratorChirpFsk',
            'WaveformGeneratorPskQam', 'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection',
            'FrameSymbolSection']

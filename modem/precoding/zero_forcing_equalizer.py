@@ -8,6 +8,15 @@ import numpy as np
 
 from .symbol_precoder import SymbolPrecoder
 
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class ZeroForcingEqualizer(SymbolPrecoder):
     """Zero-Forcing channel equalization."""
