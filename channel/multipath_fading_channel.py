@@ -12,6 +12,7 @@ import numpy as np
 import numpy.random as rnd
 
 from channel.channel import Channel
+from scenario.scenario import Scenario
 
 if TYPE_CHECKING:
     from modem import Transmitter, Receiver
@@ -121,8 +122,10 @@ class MultipathFadingChannel(Channel):
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None,
                  interpolate_signals: bool = None,
+                 scenario: Optional[Scenario] = None,
                  sync_offset_low: Optional[float] = None,
                  sync_offset_high: Optional[float] = None,
+                 impulse_response_interpolation: bool = True,
                  random_generator: Optional[np.random.Generator] = None) -> None:
         """Object initialization.
 
@@ -175,11 +178,13 @@ class MultipathFadingChannel(Channel):
         Channel.__init__(self,
                          transmitter=transmitter,
                          receiver=receiver,
+                         scenario=scenario,
                          active=active,
                          gain=gain,
                          sync_offset_low=sync_offset_low,
                          sync_offset_high=sync_offset_high,
-                         random_generator=random_generator)
+                         random_generator=random_generator,
+                         impulse_response_interpolation=impulse_response_interpolation)
 
         # Sort delays
         sorting = np.argsort(delays)
@@ -225,6 +230,11 @@ class MultipathFadingChannel(Channel):
 
         self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
         self.non_los_gains[rice_inf_pos] = 0.0
+
+    @property
+    def max_delay_with_desync(self) -> float:
+        """Returns maximum delay including sync offset."""
+        return self.max_delay + self.current_sync_offset
 
     @property
     def delays(self) -> np.ndarray:
@@ -441,10 +451,16 @@ class MultipathFadingChannel(Channel):
 
         self.__los_angle = angle
 
+    def _calculate_path_delays_in_samples(self, rng: np.random.Generator) -> np.array:
+        self.calculate_new_sync_delay(rng)
+        delays_in_samples = np.round(self.__delays * self.scenario.sampling_rate).astype(int)
+        delays_in_samples += int(self.current_sync_offset * self.scenario.sampling_rate)
+        return delays_in_samples
+
     def impulse_response(self, timestamps: np.ndarray, rng: np.random.Generator = None) -> np.ndarray:
         if rng is None:
             rng = self.random_generator
-        delays_in_samples = np.round(self.__delays * self.scenario.sampling_rate).astype(int)
+        delays_in_samples = self._calculate_path_delays_in_samples(rng)
         max_delay_in_samples = delays_in_samples.max()
 
         impulse_response = np.zeros((len(timestamps),
@@ -460,8 +476,7 @@ class MultipathFadingChannel(Channel):
                                                         self.los_gains, self.non_los_gains):
 
             for rx_idx, tx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
-
-                signal_weights = power ** .5 * self.__tap(timestamps, los_gain, nlos_gain)
+                signal_weights = power ** .5 * self.__tap(timestamps, los_gain, nlos_gain, rng)
 
                 if interpolation_filter is not None:
                     impulse_response[:, rx_idx, tx_idx, :] += np.outer(signal_weights, interpolation_filter[:, path_idx])
@@ -472,7 +487,9 @@ class MultipathFadingChannel(Channel):
         self.recent_response = impulse_response
         return impulse_response
 
-    def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
+    def __tap(self, timestamps: np.ndarray, 
+              los_gain: complex, nlos_gain: complex,
+              rng: np.random.Generator) -> np.ndarray:
         """Generate a single fading sequence tap.
 
         Implements equation (18) of the underlying paper.
@@ -481,14 +498,14 @@ class MultipathFadingChannel(Channel):
             timestamps (np.ndarray): Time instances at which the channel should be sampled.
             los_gain (complex): Gain of the line-of-sight (specular) model component.
             nlos_gain (complex): Gain of the non-line-of-sight model components.
-
+            rng (np.random.Generator): Random number generator for debugging purposes.
         Returns:
             np.ndarray: Channel gains at requested timestamps.
         """
 
         nlos_doppler = self.doppler_frequency
-        nlos_angles = np.random.uniform(0, 2*pi, self.num_sinusoids)
-        nlos_phases = np.random.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_angles = rng.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_phases = rng.uniform(0, 2*pi, self.num_sinusoids)
 
         nlos_component = np.zeros(len(timestamps), dtype=complex)
         for s in range(self.num_sinusoids):
@@ -502,10 +519,10 @@ class MultipathFadingChannel(Channel):
             los_angle = self.los_angle
 
         else:
-            los_angle = np.random.uniform(0, 2*pi)
+            los_angle = rng.uniform(0, 2*pi)
 
         los_doppler = self.los_doppler_frequency
-        los_phase = np.random.uniform(0, 2*pi)
+        los_phase = rng.uniform(0, 2*pi)
         los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
 
         return los_component + nlos_component
@@ -529,7 +546,7 @@ class MultipathFadingChannel(Channel):
             return min_rate
 
     @lru_cache(maxsize=1)
-    def __interpolation_filter(self, sampling_rate: float, rng: np.random.Generator) -> np.ndarray:
+    def __interpolation_filter(self, sampling_rate: float) -> np.ndarray:
         """Create an interpolation filter matrix.
 
         Args:
@@ -539,9 +556,9 @@ class MultipathFadingChannel(Channel):
             np.ndarray:
                 Interpolation filter matrix containing filters for each configured resolvable path.
         """
-
-        num_delay_samples = int(round(self.max_delay * sampling_rate))
+        num_delay_samples = int(self.max_delay_with_desync * sampling_rate)
         delay_samples = np.arange(num_delay_samples + 1) / sampling_rate
+
         filter_instances = np.zeros((num_delay_samples+1, self.num_resolvable_paths))
 
         for path in range(self.num_resolvable_paths):
