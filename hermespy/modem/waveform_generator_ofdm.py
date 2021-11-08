@@ -12,11 +12,11 @@ from scipy.constants import pi
 from functools import lru_cache
 import numpy as np
 
-from modem import WaveformGenerator
-from modem.tools import PskQamMapping
+from hermespy.modem import WaveformGenerator
+from hermespy.modem.tools import PskQamMapping
 
 if TYPE_CHECKING:
-    from modem import Modem
+    from hermespy.modem import Modem
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

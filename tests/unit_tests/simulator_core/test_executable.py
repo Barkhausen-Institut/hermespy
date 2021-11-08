@@ -5,7 +5,7 @@ import unittest
 import tempfile
 from unittest.mock import Mock
 
-from simulator_core import Executable, Verbosity
+from hermespy.simulator_core import Executable, Verbosity
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

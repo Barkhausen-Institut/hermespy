@@ -10,9 +10,9 @@ from enum import Enum
 import scipy.fft as fft
 import numpy as np
 
-from scenario import Scenario
+from hermespy.scenario import Scenario
 from .drop import Drop
-from simulator_core.tools.theoretical_results import TheoreticalResults
+from hermespy.simulator_core.tools.theoretical_results import TheoreticalResults
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

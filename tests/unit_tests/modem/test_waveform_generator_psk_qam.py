@@ -6,9 +6,9 @@ import numpy as np
 from parameters_parser.parameters_psk_qam import ParametersPskQam
 from parameters_parser.parameters_tx_modem import ParametersTxModem
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
-from modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
-from modem.modem import Modem
-from source.bits_source import BitsSource
+from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
+from hermespy.modem.modem import Modem
+from hermespy.source import BitsSource
 import tests.unit_tests.modem.utils as utils
 
 

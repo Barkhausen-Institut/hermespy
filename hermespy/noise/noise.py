@@ -4,11 +4,11 @@
 from __future__ import annotations
 import numpy as np
 import numpy.random as rnd
-from typing import TYPE_CHECKING, Type, Tuple, Optional, Union
+from typing import TYPE_CHECKING, Type, Optional, Union
 from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter, SafeConstructor
 
 if TYPE_CHECKING:
-    from modem import Receiver
+    from hermespy.modem import Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

@@ -10,9 +10,9 @@ from numpy import exp
 from scipy import stats
 from scipy.special import comb
 
-from scenario import Scenario
-from modem import Transmitter, Receiver, WaveformGenerator, WaveformGeneratorChirpFsk, WaveformGeneratorPskQam
-from channel import Channel, MultipathFadingChannel
+from hermespy.scenario import Scenario
+from hermespy.modem import Transmitter, Receiver, WaveformGenerator, WaveformGeneratorChirpFsk, WaveformGeneratorPskQam
+from hermespy.channel import Channel, MultipathFadingChannel
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

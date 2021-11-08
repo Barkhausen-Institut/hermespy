@@ -4,8 +4,8 @@ import os
 from numpy.testing import assert_array_equal
 from scipy.io import loadmat
 
-from coding.ldpc import LDPC
-from coding.ldpc_binding.ldpc import LDPCBinding
+from hermespy.coding.ldpc import LDPC
+from hermespy.coding.ldpc_binding.ldpc import LDPCBinding
 
 
 class TestLDPC(unittest.TestCase):

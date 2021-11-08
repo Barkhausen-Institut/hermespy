@@ -10,7 +10,7 @@ import numpy as np
 import numpy.random as rnd
 
 if TYPE_CHECKING:
-    from modem import Transmitter
+    from hermespy.modem import Transmitter
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

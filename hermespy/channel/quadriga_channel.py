@@ -2,16 +2,15 @@
 """Single Channel of the Quadriga Channel Model Interface."""
 
 from __future__ import annotations
-from typing import Type, Tuple, TYPE_CHECKING, Optional
+from typing import Type, TYPE_CHECKING, Optional
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
-from math import ceil
 import numpy as np
 
-from channel import Channel, QuadrigaInterface
+from hermespy.channel import Channel, QuadrigaInterface
 
 if TYPE_CHECKING:
-    from scenario import Scenario
-    from modem import Transmitter, Receiver
+    from hermespy.scenario import Scenario
+    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

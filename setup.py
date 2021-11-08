@@ -26,7 +26,7 @@ setup(
         "Natural Language :: English",
         "Topic :: Scientific/Engineering",
     ],
-    packages=find_packages(exclude=("tests", "3rdparty")),
+    packages=['hermespy'],
     package_dir={"": ""},
     include_package_data=True,
     exclude_package_data={
@@ -36,7 +36,7 @@ setup(
     zip_safe=False,
     python_requires=">=3.7",
     entry_points={
-        'console_scripts': ['hermes=bin:hermes'],
+        'console_scripts': ['hermes=hermespy.bin:hermes'],
     },
     install_requires=['matplotlib', 'numpy', 'scipy', 'data-science-types', 'ruamel.yaml'],
 )

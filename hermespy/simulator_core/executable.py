@@ -9,7 +9,7 @@ from enum import Enum
 import os.path as path
 import datetime
 
-from scenario import Scenario
+from hermespy.scenario import Scenario
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

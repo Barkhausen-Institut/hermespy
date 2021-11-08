@@ -9,13 +9,13 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 from itertools import product
 
-from modem import Modem, Transmitter, Receiver
-from channel import Channel
-from source.bits_source import BitsSource
-from noise.noise import Noise
+from hermespy.modem import Modem, Transmitter, Receiver
+from hermespy.channel import Channel
+from hermespy.source.bits_source import BitsSource
+from hermespy.noise.noise import Noise
 
 if TYPE_CHECKING:
-    from channel.rx_sampler import RxSampler
+    from hermespy.channel.rx_sampler import RxSampler
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

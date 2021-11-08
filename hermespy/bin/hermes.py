@@ -33,7 +33,7 @@ import argparse
 from typing import List, Optional
 from ruamel.yaml.constructor import ConstructorError
 
-from simulator_core import Factory, Executable
+from hermespy.simulator_core import Factory, Executable
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

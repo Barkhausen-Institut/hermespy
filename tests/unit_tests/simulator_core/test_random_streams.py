@@ -2,7 +2,7 @@ import unittest
 import os
 import numpy as np
 
-from simulator_core.random_streams import RandomStreams
+from hermespy.simulator_core import RandomStreams
 
 
 class TestRandomStreams(unittest.TestCase):

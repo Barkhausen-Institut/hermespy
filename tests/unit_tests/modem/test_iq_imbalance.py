@@ -3,8 +3,8 @@ import re
 
 import numpy as np
 
-from modem.rf_chain import RfChain
-from simulator_core.factory import Factory
+from hermespy.modem import RfChain
+from hermespy.simulator_core.factory import Factory
 
 
 class TestIqImbalance(unittest.TestCase):

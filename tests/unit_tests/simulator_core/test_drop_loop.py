@@ -1,13 +1,11 @@
-import unittest
 import unittest.mock
-import os
 from unittest.mock import patch, Mock
 from typing import List
 
 import numpy as np
 
-from simulator_core.drop_loop import DropLoop
-from simulator_core.statistics import Statistics
+from hermespy.simulator_core import DropLoop
+from hermespy.simulator_core import Statistics
 
 
 class TestDropLoop(unittest.TestCase):

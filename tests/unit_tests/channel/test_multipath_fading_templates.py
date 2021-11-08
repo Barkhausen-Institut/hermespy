@@ -4,7 +4,7 @@
 import unittest
 from unittest.mock import Mock
 
-from channel import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
+from hermespy.channel import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

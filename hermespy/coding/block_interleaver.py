@@ -6,7 +6,7 @@ from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
 import numpy as np
 
-from coding import Encoder
+from hermespy.coding import Encoder
 
 
 __author__ = "Jan Adler"

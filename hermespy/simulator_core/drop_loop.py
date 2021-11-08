@@ -3,10 +3,10 @@ from typing import List
 import numpy as np
 
 from parameters_parser.parameters_general import ParametersGeneral
-from scenario.scenario import Scenario
-from simulator_core.statistics import Statistics
-from modem.modem import Modem
-from noise.noise import Noise
+from hermespy.scenario.scenario import Scenario
+from hermespy.simulator_core.statistics import Statistics
+from hermespy.modem.modem import Modem
+from hermespy.noise.noise import Noise
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

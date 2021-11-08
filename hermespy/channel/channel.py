@@ -10,8 +10,8 @@ import numpy as np
 import numpy.random as rnd
 
 if TYPE_CHECKING:
-    from scenario import Scenario
-    from modem import Transmitter, Receiver
+    from hermespy.scenario import Scenario
+    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

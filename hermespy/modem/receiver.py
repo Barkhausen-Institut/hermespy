@@ -10,15 +10,15 @@ from scipy.constants import pi
 import numpy as np
 import numpy.random as rnd
 
-from modem import Modem
-from modem.precoding import SymbolPrecoding
-from modem.waveform_generator import WaveformGenerator
-from noise import Noise
+from hermespy.modem import Modem
+from hermespy.modem.precoding import SymbolPrecoding
+from hermespy.modem.waveform_generator import WaveformGenerator
+from hermespy.noise import Noise
 
 if TYPE_CHECKING:
-    from scenario import Scenario
+    from hermespy.scenario import Scenario
     from .transmitter import Transmitter
-    from channel import Channel
+    from hermespy.channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

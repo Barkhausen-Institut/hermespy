@@ -1,10 +1,9 @@
 import unittest
 
 import numpy as np
-import numpy.matlib
 import numpy.testing as nt
 
-from modem.precoding.mimo import Mimo
+from hermespy.modem.precoding.mimo import Mimo
 
 
 class TestMimo(unittest.TestCase):

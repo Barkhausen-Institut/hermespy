@@ -9,7 +9,7 @@ from math import floor
 import numpy as np
 
 if TYPE_CHECKING:
-    from modem import Modem
+    from hermespy.modem import Modem
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
