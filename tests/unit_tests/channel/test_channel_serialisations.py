@@ -10,6 +10,7 @@ from channel import (
 from channel.multipath_fading_templates import (
     MultipathFading5GTDL, MultipathFadingExponential,
     MultipathFadingCost256)
+from channel.quadriga_channel import QuadrigaChannel
 from simulator_core import Factory
 from tests.unit_tests.utils import yaml_str_contains_element
 
@@ -52,6 +53,11 @@ class SyncOffset(unittest.TestCase):
         self.channel_params['tap_interval'] = 0.1
         self.channel_params['rms_delay'] = 1e-9
         ch = MultipathFadingExponential(**self.channel_params)
+        self.serialized_channel_contains_sync_offsets(ch, LOW, HIGH)
+
+    def test_quadriga(self) -> None:
+        LOW, HIGH = self.add_sync_offsets_to_params()
+        ch = QuadrigaChannel(**self.channel_params)
         self.serialized_channel_contains_sync_offsets(ch, LOW, HIGH)
 
     def add_sync_offsets_to_params(self) -> Tuple[float, float]:
