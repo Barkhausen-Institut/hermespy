@@ -400,6 +400,8 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
             + 1j * np.random.randint(low=1, high=4, size=(2,100))
         )
 
+        self.channel_without_delay = self.create_channel(0, 0)
+
     def test_no_delay_for_default_parameters(self) -> None:
         ch = self.create_channel(None, None)
 
@@ -413,19 +415,20 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna),
             np.hstack(
-                (np.zeros((1,1), dtype=complex), self.x_one_antenna))
+                (np.zeros((1,1), dtype=complex),
+                self.propagate_without_delay(self.x_one_antenna)))
         )
 
     def test_two_sample_delays_two_tx_antennas(self) -> None:
         self.mock_transmitter.num_antennas = 2
+        ch_no_delay = self.create_channel(0, 0)
         ch = self.create_channel(2, 2)
 
-        rx_signal = np.expand_dims(
-            self.x_two_antenna[0, :] + self.x_two_antenna[1, :], axis=0)
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_two_antenna),
             np.hstack(
-                (np.zeros((1,2), dtype=complex), rx_signal))
+                (np.zeros((1,2), dtype=complex),
+                self.propagate_without_delay(self.x_two_antenna, ch_no_delay)))
         )
 
     def test_non_int_sample_delay_gets_truncated(self) -> None:
@@ -434,7 +437,8 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna),
             np.hstack(
-                (np.zeros((1,1), dtype=complex), self.x_one_antenna))
+                (np.zeros((1,1), dtype=complex),
+                 self.propagate_without_delay(self.x_one_antenna)))
         )
 
     def test_sample_is_picked(self) -> None:
@@ -450,9 +454,17 @@ class TestChannelTimeOffsetBehavior(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             ch.propagate(self.x_one_antenna),
             np.hstack(
-                (np.zeros((1, int(delay)), dtype=complex), self.x_one_antenna))
+                (np.zeros((1, int(delay)), dtype=complex),
+                 self.propagate_without_delay(self.x_one_antenna)))
         )
 
+    def propagate_without_delay(self,
+                                signal: np.ndarray,
+                                ch: Channel = None) -> np.ndarray:
+        if ch is None:
+            ch = self.channel_without_delay
+
+        return ch.propagate(signal)
 
     def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> Channel:
         rng = np.random.default_rng(seed)
