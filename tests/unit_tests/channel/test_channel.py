@@ -372,7 +372,7 @@ class TestChannel(unittest.TestCase):
         pass
 
 
-class TestChannelTimeOffsetBehavior(unittest.TestCase):
+class TestSyncOffset(unittest.TestCase):
     def setUp(self) -> None:
         self.SEED = 42
         self.rng_default_seed_1 = np.random.default_rng(self.SEED)
