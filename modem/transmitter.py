@@ -4,7 +4,7 @@
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import TYPE_CHECKING, Type, List, Any, Optional
-from math import ceil
+from math import floor
 import numpy as np
 import numpy.random as rnd
 
@@ -112,14 +112,17 @@ class Transmitter(Modem):
         num_samples = int(np.ceil(drop_duration * self.scenario.sampling_rate))
         timestamps = np.arange(num_samples) / self.scenario.sampling_rate
 
+        # Number of data symbols per transmitted frame
+        symbols_per_frame = self.waveform_generator.symbols_per_frame
+
+        # Length of frame in samples
+        samples_per_frame = self.waveform_generator.samples_in_frame
+
         # Number of frames fitting into the selected drop duration
-        frames_per_stream = int(ceil(drop_duration / self.waveform_generator.frame_duration))
+        frames_per_stream = int(floor(drop_duration / self.waveform_generator.frame_duration))
 
         # Number of code bits required to generate all frames for all streams
-        num_code_bits = self.waveform_generator.bits_per_frame * frames_per_stream * self.num_streams
-
-        # Data bits required by the bit encoder to generate the input bits for the waveform generator
-        # num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
+        num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream / self.precoding.rate)
 
         # Generate source data bits if none are provided
         if data_bits is None:
@@ -142,11 +145,17 @@ class Transmitter(Modem):
         # Generate a dedicated base-band signal for each symbol stream
         signal_streams = np.empty((symbol_streams.shape[0], num_samples), dtype=complex)
 
-        for stream_idx, data_symbols in enumerate(symbol_streams):
+        for stream_idx, stream_symbols in enumerate(symbol_streams):
+            for frame_idx in range(frames_per_stream):
 
-            frame = self.waveform_generator.modulate(data_symbols, timestamps)
-            frame_section = min(num_samples, len(frame))
-            signal_streams[stream_idx, :frame_section] = frame[:frame_section]
+                data_symbols = stream_symbols[frame_idx*symbols_per_frame:(1+frame_idx)*symbols_per_frame]
+                frame = self.waveform_generator.modulate(data_symbols, timestamps)
+
+                frame_start_idx = min(num_samples, frame_idx * samples_per_frame)
+                frame_end_idx = min(num_samples, (1 + frame_idx) * samples_per_frame)
+                frame_length = frame_end_idx - frame_start_idx
+
+                signal_streams[stream_idx, frame_start_idx:frame_end_idx] = frame[:frame_length]
 
         # Apply stream coding, for instance beam-forming
         # TODO: Not yet supported.
@@ -258,7 +267,7 @@ class Transmitter(Modem):
             numpy.ndarray: A vector of hard data bits in 0/1 format.
         """
 
-        num_bits = self.num_data_bits_per_frame * self.num_streams
+        num_bits = int(self.num_data_bits_per_frame * self.precoding.rate)
         bits = self.bits_source.get_bits(num_bits)
         return bits
 

@@ -4,6 +4,7 @@
 from __future__ import annotations
 from typing import Optional, List, Type, TYPE_CHECKING
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
+from fractions import Fraction
 import numpy as np
 
 if TYPE_CHECKING:
@@ -138,7 +139,10 @@ class SymbolPrecoding:
 
         return stream
 
-    def decode(self, input_stream: np.ndarray, stream_responses: np.ndarray) -> np.array:
+    def decode(self,
+               input_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> np.array:
         """Decode a data symbol stream after reception.
 
         Args:
@@ -152,22 +156,30 @@ class SymbolPrecoding:
                 The channel impulse response for each data symbol within `input_stream`.
                 Identical dimensionality to `input_stream`.
 
+            stream_noises (np.ndarray):
+                The noise variances for each data symbol within `input_stream`.
+                Identical dimensionality to `input_stream`.
+
         Returns:
             np.array:
                 The decoded data symbols
 
         Raises:
-            ValueError: If dimensions of `stream_responses` and `input_streams` do not match.
+            ValueError: If dimensions of `stream_responses`, `stream_noises` and `input_streams` do not match.
         """
 
-        if np.any(input_stream.shape != stream_responses.shape):
+        if np.any(input_stream.shape != stream_responses.shape) or np.any(input_stream.shape != stream_noises.shape):
             raise ValueError("Dimensions of input_stream and stream_responses must be identical")
 
-        input_stream = input_stream.copy()
+        symbols_iteration = input_stream.copy()
+        streams_iteration = stream_responses.copy()
+        noises_iteration = stream_noises.copy()
 
         # Recursion through all precoders, each one may update the stream as well as the responses
         for precoder in reversed(self.__symbol_precoders):
-            input_stream, stream_responses = precoder.decode(input_stream, stream_responses)
+            symbols_iteration, stream_responses, noises_iteration = precoder.decode(symbols_iteration,
+                                                                                    streams_iteration,
+                                                                                    noises_iteration)
 
         return input_stream.flatten()
 
@@ -216,6 +228,22 @@ class SymbolPrecoding:
             return 1
 
         return self.__symbol_precoders[precoder_index - 1].num_output_streams
+
+    @property
+    def rate(self) -> Fraction:
+        """Rate between input symbol slots and output symbol slots.
+
+        For example, a rate of one indicates that no symbols are getting added or removed during precoding.
+
+        Return:
+            Fraction: The precoding rate.
+        """
+
+        r = Fraction(1, 1)
+        for symbol_precoder in self.__symbol_precoders:
+            r *= symbol_precoder.rate
+
+        return r
 
     def __getitem__(self, index: int) -> Precoder:
         """Access a precoder at a given index.

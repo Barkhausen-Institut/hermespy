@@ -2,7 +2,7 @@
 """Spatial Multiplexing encoding step of communication data symbols."""
 
 from __future__ import annotations
-from typing import Type
+from typing import Type, Tuple
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 import numpy as np
 
@@ -44,7 +44,10 @@ class SpatialMultiplexing(SymbolPrecoder):
 
         return encoded_symbol_stream
 
-    def decode(self, symbol_stream: np.ndarray, symbol_responses: np.ndarray) -> np.ndarray:
+    def decode(self,
+               symbol_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         # Decoding is not supported!
         raise RuntimeError("Spatial multiplexing does not support decoding operations")

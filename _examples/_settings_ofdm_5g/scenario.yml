@@ -1,16 +1,14 @@
 !<Scenario>
 
-sampling_rate: 100e6
-
 Modems:
 
   # Transmitting OFDM modem
   - Transmitter
 
-    # 2x2 MIMO with Single-Carrier Spatial Precoding
-    num_antennas: 2
-    Precoding:
-      - SC
+    Encoding:
+      - LDPC
+        block_size: 256
+        rate: [1, 2]
 
     WaveformOFDM:
 
@@ -19,7 +17,7 @@ Modems:
       subcarrier_spacing: 30e3
       dc_suppression: False
 
-      # Frame settings
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
 
         - repetitions: 1
@@ -33,7 +31,7 @@ Modems:
               repetitions: 600
 
         - repetitions: 1
-          cp_ratio: 0.0703125
+          cp_ratio: 0.078125
           elements:
             - type: NULL
               repetitions: 600
@@ -53,13 +51,32 @@ Modems:
           num_repetitions: 3
           duration: 35.677083e-6
 
-  # Receiving OFDM modem
-  - Receiver
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
+
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6
 
     # 2x2 MIMO with Single-Carrier Spatial Precoding
     num_antennas: 2
     Precoding:
-      - SC
+      - SM
+
+
+  # Receiving OFDM modem
+  - Receiver
+
+    Encoding:
+      - LDPC
+        block_size: 256
+        rate: [1, 2]
+
+    # 2x2 MIMO with Single-Carrier Spatial Precoding
+    num_antennas: 2
+    Precoding:
+      - ZF
 
     WaveformOFDM:
 
@@ -69,7 +86,7 @@ Modems:
       dc_suppression: False
       channel_estimation: IDEAL
 
-      # Frame settings
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
 
         - repetitions: 1
@@ -83,7 +100,7 @@ Modems:
               repetitions: 600
 
         - repetitions: 1
-          cp_ratio: 0.0703125
+          cp_ratio: 0.078125
           elements:
             - type: NULL
               repetitions: 600
@@ -103,7 +120,10 @@ Modems:
           num_repetitions: 3
           duration: 35.677083e-6
 
-Channels:
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
 
-  - 5GTDL 0 0
-    type: A
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6

@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional, Type, Tuple
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
+from fractions import Fraction
 import numpy as np
 
 from . import SymbolPrecoding
@@ -87,7 +88,10 @@ class SymbolPrecoder(ABC):
         ...
 
     @abstractmethod
-    def decode(self, symbol_stream: np.ndarray, stream_responses: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def decode(self,
+               symbol_stream: np.ndarray,
+               stream_responses: np.ndarray,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Decode a data stream before reception.
 
         This operation may modify the number of streams as well as the number of data symbols per stream.
@@ -103,6 +107,10 @@ class SymbolPrecoder(ABC):
                 The channel impulse response for each data symbol within `symbol_stream`.
                 Identical dimensionality to `input_stream`.
 
+            stream_noises (np.ndarray):
+                The noise variances for each data symbol within `symbol_stream`.
+                Identical dimensionality to `input_stream`.
+
         Returns:
 
             np.ndarray:
@@ -112,6 +120,9 @@ class SymbolPrecoder(ABC):
 
             np.ndarray:
                 A matrix of M'xN' data symbol impulse response estimations after this decoding step.
+
+            np.ndarray:
+                A matrix of M'xN' data symbol noise estimations after this decoding step.
 
         Raises:
             NotImplementedError: If a decoding operation is not supported
@@ -171,6 +182,18 @@ class SymbolPrecoder(ABC):
             raise RuntimeError("Error trying to access requirements of a floating precoder")
 
         return self.precoding.required_inputs(self)
+
+    @property
+    def rate(self) -> Fraction:
+        """Rate between input symbol slots and output symbol slots.
+
+        For example, a rate of one indicates that no symbols are getting added or removed during precoding.
+
+        Return:
+            Fraction: The precoding rate.
+        """
+
+        return Fraction(1, 1)
 
     @classmethod
     def to_yaml(cls: Type[SymbolPrecoder],

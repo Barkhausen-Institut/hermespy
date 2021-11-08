@@ -166,7 +166,7 @@ class LDPC(Encoder):
                     Qv[var_pos] = Q_temp + Rcv[check_ind, var_pos]
 
         # Return bit format from {-1, 1} format to {0, 1}
-        return np.ndarray(Qv[:self.bit_block_size] < 0, dtype=int)
+        return (Qv[:self.bit_block_size] < 0).astype(int)
 
     @property
     def bit_block_size(self) -> int:

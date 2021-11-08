@@ -11,47 +11,46 @@ Modems:
 
       # Symbol settings
       symbol_rate: 100e6
-      modulation_order: 4
+      modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
       oversampling_factor: 2
 
       # Filter settings
-      filter:
-        filter_type: RAISED_COSINE
+      #filter:
+      #  filter_type: RAISED_COSINE
 
       # Frame settings
-      #num_preamble_symbols: 10
-      #num_data_symbols: 1000
-      num_preamble_symbols: 0
-      num_data_symbols: 20
-      pilot_rate: 0
-      guard_interval: 0
+      num_preamble_symbols: 10
+      num_data_symbols: 1000
+      pilot_rate: 1e6
+      guard_interval: 1e-6
 
   # Receiver configuration
   - Receiver
+
+    Precoding:
+      - MMSE
 
     # Waveform configuration
     WaveformPskQam:
 
       # Symbol settings
       symbol_rate: 100e6
-      modulation_order: 4
+      modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
       oversampling_factor: 2
 
       # Filter settings
-      filter:
-        filter_type: RAISED_COSINE
+      # filter:
+      #  filter_type: RAISED_COSINE
 
       # Frame settings
-      #num_preamble_symbols: 10
-      # num_data_symbols: 1000
-      num_preamble_symbols: 0
-      num_data_symbols: 20
-      pilot_rate: 0
-      guard_interval: 0
+      num_preamble_symbols: 10
+      num_data_symbols: 1000
+      pilot_rate: 1e6
+      guard_interval: 1e-6
 
       # Receiver channel equalization
-      equalization: MMSE
+      # equalization: MMSE

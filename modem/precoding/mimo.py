@@ -115,7 +115,7 @@ class Mimo(SymbolPrecoder):
         Returns:
             (np.ndarray, np.ndarray, np.ndarray):
                 output (np.ndarray): Decoded data with size 1 x K
-                channel_estimation (np.ndarray): post-processed channel estimation with
+                stream_responses (np.ndarray): post-processed channel estimation with
                     size 1 x K.
                 noise_var (np.ndarray): post-processing noise variance with size 1 x K.
         """
@@ -144,7 +144,7 @@ class Mimo(SymbolPrecoder):
         Returns:
             (np.ndarray, np.ndarray, np.ndarray):
                 output: Decoded data with size 1 x K.
-                channel_estimation: post-processing channel estimation with size 1 x K.
+                stream_responses: post-processing channel estimation with size 1 x K.
                 noise_var: post-processing noise variance with size 1 x K.
         """
 
@@ -228,7 +228,7 @@ class Mimo(SymbolPrecoder):
         if isinstance(noise_var, float):
             noise_var = noise_var * np.ones(input_data.shape)
 
-        # channel_estimation = np.squeeze(channel_estimation)
+        # stream_responses = np.squeeze(stream_responses)
 
         tx0_idx = np.arange(0, number_of_symbols, 4)
         tx1_idx = tx0_idx + 1
@@ -374,8 +374,8 @@ class MaximumRatioCombining(Mimo):
 
         channel_estimation = np.squeeze(channel_estimation, axis=1)
         output_stream = np.sum(input_stream * channel_estimation.conj(), axis=0)[np.newaxis]
-        # noise_var = np.sum(noise_var * (np.abs(channel_estimation) ** 2), axis=0)[np.newaxis]
-        # channel_estimation = np.sum(np.abs(channel_estimation) ** 2, axis=0)[np.newaxis]
+        # noise_var = np.sum(noise_var * (np.abs(stream_responses) ** 2), axis=0)[np.newaxis]
+        # stream_responses = np.sum(np.abs(stream_responses) ** 2, axis=0)[np.newaxis]
 
         return output_stream
 
