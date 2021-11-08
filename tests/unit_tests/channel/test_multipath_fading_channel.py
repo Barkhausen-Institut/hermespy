@@ -583,10 +583,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
         """
         pass
 
-from tests.unit_tests.channel.test_channel import TestChannelTimeOffsetBehavior
+from tests.unit_tests.channel.test_channel import TestSyncOffset
 
 
-class TestSyncoffsetNoInterpolationFilter(TestChannelTimeOffsetBehavior):
+class TestSyncoffsetNoInterpolationFilter(TestSyncOffset):
 
     def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> None:
         sampling_rate = 1e3
