@@ -513,6 +513,8 @@ class Channel:
             impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas, dtype=complex),
                                         (timestamps.size, 1, 1))
 
+        if rng is None:
+            rng = self.random_generator
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
         impulse_responses = self._add_sync_offset(impulse_responses, rng)
