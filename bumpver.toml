@@ -1,0 +1,31 @@
+[bumpver]
+
+current_version = "0.2.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "Bumb to version {new_version}"
+commit = false
+tag = false
+push = false
+
+[bumpver.file_patterns]
+
+# Root directory files
+"README.md" = [ "{version}" ]
+"bumpver.toml" = [ 'current_version = "{version}"' ]
+"setup.py" = [ 'version="{version}"' ]
+
+# Source files
+"hermespy/bin/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/channel/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/coding/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/modem/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/modem/precoding/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/modem/rf_chain_models/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/modem/tools/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/noise/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/scenario/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/simulator_core/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/simulator_core/tools/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/source/*.py" = [ '__version__ = "{version}"' ]
+
+# ToDo: Test files

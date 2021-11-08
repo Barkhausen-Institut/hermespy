@@ -6,7 +6,7 @@ from copy import deepcopy
 
 
 from parameters_parser.parameters_rf_chain import ParametersRfChain
-from modem.rf_chain_models.power_amplifier import PowerAmplifier
+from hermespy.modem.rf_chain_models.power_amplifier import PowerAmplifier
 from matplotlib import pyplot as plt
 
 

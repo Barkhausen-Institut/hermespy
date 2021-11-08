@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from simulator_core import Simulation, SNRType
+from hermespy.simulator_core import Simulation, SNRType
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

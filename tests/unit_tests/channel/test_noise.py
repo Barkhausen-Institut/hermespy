@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from noise.noise import Noise
+from hermespy.noise import Noise
 
 
 class TestNoise(unittest.TestCase):

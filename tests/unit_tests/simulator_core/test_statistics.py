@@ -1,4 +1,3 @@
-import unittest
 import os
 import unittest.mock
 from unittest.mock import Mock, patch
@@ -7,9 +6,9 @@ from typing import List
 import numpy as np
 from scipy import signal
 
-from simulator_core.statistics import Statistics
+from hermespy.simulator_core import Statistics
 from parameters_parser.parameters import Parameters
-from source.bits_source import BitsSource
+from hermespy.source import BitsSource
 
 
 class StatisticsTest(unittest.TestCase):

@@ -1,4 +1,4 @@
-from coding import EncoderFactory
+from hermespy.coding import EncoderFactory
 import numpy as np
 import unittest.mock
 from unittest.mock import patch, Mock
@@ -6,11 +6,11 @@ from unittest.mock import patch, Mock
 from numpy import random as rnd
 import copy
 
-from modem.modem import Modem
+from hermespy.modem.modem import Modem
 from parameters_parser.parameters_tx_modem import ParametersTxModem
 from parameters_parser.parameters_psk_qam import ParametersPskQam
-from source.bits_source import BitsSource
-from coding import EncoderManager
+from hermespy.source import BitsSource
+from hermespy.coding import EncoderManager
 from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 
 class TestModem(unittest.TestCase):
