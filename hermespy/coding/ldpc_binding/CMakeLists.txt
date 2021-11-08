@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15...3.19)
-project(ldpc VERSION "0.0.1")
+project(ldpc VERSION "0.2.0")
 
 find_package(pybind11 CONFIG REQUIRED)
 

@@ -26,7 +26,7 @@ setup(
         "Natural Language :: English",
         "Topic :: Scientific/Engineering",
     ],
-    packages=['hermespy'],
+    packages=find_packages(exclude=['tests']),
     package_dir={"": ""},
     include_package_data=True,
     exclude_package_data={
@@ -34,7 +34,7 @@ setup(
     },
     extras_require={"test": ["pytest"]},
     zip_safe=False,
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     entry_points={
         'console_scripts': ['hermes=hermespy.bin:hermes'],
     },
