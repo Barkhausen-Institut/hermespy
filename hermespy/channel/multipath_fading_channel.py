@@ -11,10 +11,10 @@ from functools import lru_cache
 import numpy as np
 import numpy.random as rnd
 
-from channel.channel import Channel
+from hermespy.channel.channel import Channel
 
 if TYPE_CHECKING:
-    from modem import Transmitter, Receiver
+    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

@@ -7,12 +7,12 @@ from enum import Enum
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
 import numpy as np
 
-from modem.waveform_generator import WaveformGenerator
-from modem.tools.shaping_filter import ShapingFilter
-from modem.tools.psk_qam_mapping import PskQamMapping
+from hermespy.modem.waveform_generator import WaveformGenerator
+from hermespy.modem.tools.shaping_filter import ShapingFilter
+from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 
 if TYPE_CHECKING:
-    from modem import Modem
+    from hermespy.modem import Modem
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

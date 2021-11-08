@@ -4,9 +4,7 @@
 import unittest
 from unittest.mock import Mock
 
-from ruamel import yaml
-
-from simulator_core import Factory, SerializableClasses
+from hermespy.simulator_core import Factory, SerializableClasses
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

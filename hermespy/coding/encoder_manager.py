@@ -8,7 +8,7 @@ from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 from math import ceil
 
 if TYPE_CHECKING:
-    from modem import Modem
+    from hermespy.modem import Modem
     from . import Encoder
 
 

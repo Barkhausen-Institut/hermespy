@@ -8,13 +8,13 @@ from math import floor
 import numpy as np
 import numpy.random as rnd
 
-from modem import Modem
-from source import BitsSource
-from modem.waveform_generator import WaveformGenerator
-from modem.precoding import SymbolPrecoding
+from hermespy.modem import Modem
+from hermespy.source import BitsSource
+from hermespy.modem.waveform_generator import WaveformGenerator
+from hermespy.modem.precoding import SymbolPrecoding
 
 if TYPE_CHECKING:
-    from channel import Channel
+    from hermespy.channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -119,7 +119,7 @@ class Transmitter(Modem):
         samples_per_frame = self.waveform_generator.samples_in_frame
 
         # Number of frames fitting into the selected drop duration
-        frames_per_stream = int(floor(drop_duration / self.waveform_generator.frame_duration))
+        frames_per_stream = int(np.ceil(drop_duration / self.waveform_generator.frame_duration))
 
         # Number of code bits required to generate all frames for all streams
         num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream / self.precoding.rate)

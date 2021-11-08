@@ -4,7 +4,7 @@
 import unittest
 import numpy as np
 
-from coding import BlockInterleaver
+from hermespy.coding import BlockInterleaver
 
 
 __author__ = "Jan Adler"

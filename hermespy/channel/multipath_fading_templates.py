@@ -7,10 +7,10 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 
-from channel import MultipathFadingChannel
+from hermespy.channel import MultipathFadingChannel
 
 if TYPE_CHECKING:
-    from modem import Transmitter, Receiver
+    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

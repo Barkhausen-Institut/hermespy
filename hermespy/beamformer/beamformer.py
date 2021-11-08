@@ -7,7 +7,7 @@ import scipy.constants as const
 from scipy import sin, cos
 import matplotlib.pyplot as plt
 
-from modem.precoding import Precoding, Precoder
+from hermespy.modem.precoding import Precoding, Precoder
 
 
 class TransmissionDirection(Enum):

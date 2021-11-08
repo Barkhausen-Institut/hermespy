@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from coding.repetition_encoder import RepetitionEncoder
+from hermespy.coding import RepetitionEncoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

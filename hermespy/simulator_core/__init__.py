@@ -20,7 +20,7 @@ from inspect import getmembers
 modules = ['channel', 'modem', 'scenario', 'simulator_core', 'source', 'coding', 'modem.precoding', 'modem.tools',
            'noise']
 for module in modules:
-    for _, member in getmembers(sys.modules[module]):
+    for _, member in getmembers(sys.modules['hermespy.' + module]):
 
         if hasattr(member, 'yaml_tag'):
             SerializableClasses.add(member)

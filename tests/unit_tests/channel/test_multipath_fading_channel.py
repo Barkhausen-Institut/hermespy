@@ -13,7 +13,7 @@ import copy
 from unittest.mock import Mock
 
 
-from channel import MultipathFadingChannel
+from hermespy.channel import MultipathFadingChannel
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

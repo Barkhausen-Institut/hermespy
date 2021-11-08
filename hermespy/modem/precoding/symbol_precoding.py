@@ -8,7 +8,7 @@ from fractions import Fraction
 import numpy as np
 
 if TYPE_CHECKING:
-    from modem import Modem
+    from hermespy.modem import Modem
     from . import Precoder
 
 __author__ = "Jan Adler"

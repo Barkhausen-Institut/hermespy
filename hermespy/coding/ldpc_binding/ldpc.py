@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any
 import numpy as np
 
-from coding.ldpc import LDPC
-import coding.ldpc_binding.bin.ldpc_binding as ldpc_binding  # type: ignore
+from hermespy.coding.ldpc import LDPC
+import hermespy.coding.ldpc_binding.bin.ldpc_binding as ldpc_binding  # type: ignore
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

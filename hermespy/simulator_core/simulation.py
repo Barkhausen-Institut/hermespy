@@ -11,8 +11,8 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 from .executable import Executable, Verbosity
 from .drop import Drop
 from .statistics import SNRType, Statistics
-from scenario import Scenario
-from channel import QuadrigaInterface, Channel
+from hermespy.scenario import Scenario
+from hermespy.channel import QuadrigaInterface, Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

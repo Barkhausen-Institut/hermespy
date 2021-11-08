@@ -2,10 +2,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from beamformer import Beamformer, TransmissionDirection
+from hermespy.beamformer import Beamformer, TransmissionDirection
 
 if TYPE_CHECKING:
-    from modem import Modem
+    from hermespy.modem import Modem
 
 
 class ConventionalBeamformer(Beamformer):

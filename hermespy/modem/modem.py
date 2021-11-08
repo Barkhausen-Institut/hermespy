@@ -17,14 +17,14 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-from modem.precoding import SymbolPrecoding
-from coding import EncoderManager
-from modem.waveform_generator import WaveformGenerator
-from modem.rf_chain import RfChain
+from hermespy.modem.precoding import SymbolPrecoding
+from hermespy.coding import EncoderManager
+from hermespy.modem.waveform_generator import WaveformGenerator
+from hermespy.modem.rf_chain import RfChain
 
 if TYPE_CHECKING:
-    from scenario import Scenario
-    from channel import Channel
+    from hermespy.scenario import Scenario
+    from hermespy.channel import Channel
 
 
 class TransmissionMode(Enum):

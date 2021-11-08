@@ -1,6 +1,5 @@
 from .shaping_filter import ShapingFilter
 from .psk_qam_mapping import PskQamMapping
-from modem.precoding.mimo import Mimo
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

@@ -4,7 +4,7 @@
 import unittest
 from unittest.mock import Mock
 
-from modem import Receiver
+from hermespy.modem import Receiver
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

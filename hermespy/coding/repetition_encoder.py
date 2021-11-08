@@ -6,7 +6,7 @@ from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import numpy as np
 
-from coding.encoder import Encoder
+from hermespy.coding.encoder import Encoder
 
 
 __author__ = "Tobias Kronauer"

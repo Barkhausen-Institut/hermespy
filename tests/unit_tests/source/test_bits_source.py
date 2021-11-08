@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Test source of bit streams to be transmitted."""
 
-from source.bits_source import BitsSource
+from hermespy.source import BitsSource
 
 from unittest.mock import Mock
 import unittest

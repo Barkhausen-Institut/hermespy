@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from typing import Type, Optional
-from modem.rf_chain_models.power_amplifier import PowerAmplifier
+from hermespy.modem.rf_chain_models.power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

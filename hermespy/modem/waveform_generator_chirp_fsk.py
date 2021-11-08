@@ -9,8 +9,8 @@ from math import ceil
 from functools import lru_cache
 import numpy as np
 
-from modem import Modem
-from modem.waveform_generator import WaveformGenerator
+from hermespy.modem import Modem
+from hermespy.modem.waveform_generator import WaveformGenerator
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

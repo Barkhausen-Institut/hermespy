@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from unittest.mock import Mock
 
-from coding.encoder import Encoder
+from hermespy.coding import Encoder
 
 
 __author__ = "Jan Adler"
