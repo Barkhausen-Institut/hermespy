@@ -44,7 +44,7 @@ class TestScenario(unittest.TestCase):
             # Mock waveform generator max frame duration property
             modem.waveform_generator.max_frame_duration = (1+t) * 1e-4
             modem.generate_data_bits.return_value = np.ones(1+t)
-            modem.encoder_manager.block_size = 1 + t
+            modem.encoder_manager.bit_block_size = 1 + t
 
             self.transmitters.append(modem)
             self.scenario.add_transmitter(modem)
@@ -53,7 +53,7 @@ class TestScenario(unittest.TestCase):
         for r in range(self.num_receivers):
 
             modem = Mock()
-            modem.encoder_manager.block_size = 1 + r
+            modem.encoder_manager.bit_block_size = 1 + r
 
             self.receivers.append(modem)
             self.scenario.add_receiver(modem)
@@ -222,7 +222,7 @@ class TestScenario(unittest.TestCase):
 
             for channel in self.scenario.channels.flatten():
                 self.assertIsNot(self.receivers[0], channel.receiver)
-                
+
         if self.num_transmitters > 0:
 
             self.scenario.remove_modem(self.transmitters[0])
@@ -285,7 +285,7 @@ class TestScenario(unittest.TestCase):
 
         expected_block_sizes: List[int] = []
         for transmitter in self.transmitters:
-            expected_block_sizes.append(transmitter.encoder_manager.block_size)
+            expected_block_sizes.append(transmitter.encoder_manager.bit_block_size)
 
         self.assertCountEqual(expected_block_sizes, self.scenario.transmit_block_sizes)
 
@@ -294,7 +294,7 @@ class TestScenario(unittest.TestCase):
 
         expected_block_sizes: List[int] = []
         for receiver in self.receivers:
-            expected_block_sizes.append(receiver.encoder_manager.block_size)
+            expected_block_sizes.append(receiver.encoder_manager.bit_block_size)
 
         self.assertCountEqual(expected_block_sizes, self.scenario.receive_block_sizes)
 
