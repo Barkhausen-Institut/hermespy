@@ -78,3 +78,11 @@ class TestNoise(unittest.TestCase):
             noise_power = sum(noisy_signal.real ** 2 + noisy_signal.imag ** 2) / (len(signal))
 
             self.assertTrue(abs(noise_power - expected_noise_power) <= (0.001 * expected_noise_power))
+
+    def test_to_yaml(self) -> None:
+        """Test object serialization."""
+        pass
+
+    def test_from_yaml(self) -> None:
+        """Test object recall from yaml."""
+        pass
