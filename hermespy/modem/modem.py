@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+"""HermesPy Modem base class."""
+
 from __future__ import annotations
-from typing import Tuple, List, Type, TYPE_CHECKING, Optional
+from typing import List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from enum import Enum
 from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
@@ -36,7 +39,10 @@ class TransmissionMode(Enum):
 
 
 class Modem:
-    """Implements a modem.
+    """Implements the base class of a wireless a modem.
+
+    In HermesPy, a modem is the basis of every simulation entity which may transmit or receive
+    electromagnetic waveforms.
 
     The modem consists of an analog RF chain, a waveform generator, and can be used
     either for transmission or reception of a given technology.
@@ -256,13 +262,13 @@ class Modem:
             RuntimeError: If trying to access the random generator of a floating modem.
         """
 
+        if self.__random_generator is not None:
+            return self.__random_generator
+
         if self.__scenario is None:
             raise RuntimeError("Trying to access the random generator of a floating modem")
 
-        if self.__random_generator is None:
-            return self.__scenario.random_generator
-
-        return self.__random_generator
+        return self.__scenario.random_generator
 
     @random_generator.setter
     def random_generator(self, generator: Optional[rnd.Generator]) -> None:
@@ -274,35 +280,8 @@ class Modem:
 
         self.__random_generator = generator
 
-    def _add_frame_to_drop(self, initial_sample_num: int,
-                           samples_delay: int, tx_signal: np.ndarray,
-                           frame: np.ndarray) -> Tuple[np.ndarray, int]:
-        initial_sample_idx = samples_delay + initial_sample_num
-        end_sample_idx = initial_sample_idx + frame.shape[1]
-
-        if end_sample_idx > tx_signal.shape[1]:
-            # last frame may be larger than allocated space, because of
-            # filtering
-            tx_signal = np.append(
-                tx_signal, np.zeros((self.num_antennas, end_sample_idx - tx_signal.shape[1])), axis=1)
-
-        tx_signal[:, initial_sample_idx:end_sample_idx] += frame
-        return tx_signal, samples_delay
-
-    def _allocate_drop_size(self, initial_sample_num: int,
-                            number_of_samples: int) -> Tuple[np.ndarray, int]:
-        if initial_sample_num < 0:
-            # first frame may start before 0 because of filtering
-            samples_delay = -initial_sample_num
-        else:
-            samples_delay = 0
-
-        tx_signal = np.zeros((self.num_antennas, number_of_samples - initial_sample_num),
-                             dtype=complex)
-        return tx_signal, samples_delay
-
     @property
-    def position(self) -> np.array:
+    def position(self) -> np.ndarray:
         """Access the modem's position.
 
         Returns:
@@ -313,18 +292,31 @@ class Modem:
         return self.__position
 
     @position.setter
-    def position(self, position: np.array) -> None:
+    def position(self, position: np.ndarray) -> None:
         """Update the modem's position.
 
         Args:
             position (np.array):
                 The modem's new position.
+
+        Raises:
+            ValueError: If `position` is not a vector with at most three entries.
         """
+        
+        if position.ndim != 1:
+            raise ValueError("Modem position must be a vector")
+
+        if len(position) > 3:
+            raise ValueError("Modem position may have at most three dimensions")
+
+        # Make vector 3D if less dimensions have been supplied
+        if len(position) < 3:
+            position = np.append(position, np.zeros(3 - len(position), dtype=float))
 
         self.__position = position
 
     @property
-    def orientation(self) -> np.array:
+    def orientation(self) -> np.ndarray:
         """Access the modem's orientation.
 
         Returns:
@@ -335,13 +327,19 @@ class Modem:
         return self.__orientation
 
     @orientation.setter
-    def orientation(self, orientation: np.array) -> None:
+    def orientation(self, orientation: np.ndarray) -> None:
         """Update the modem's orientation.
 
         Args:
             orientation(np.array):
                 The new modem orientation.
+
+        Raises:
+            ValueError: If `orientation` is not a vector with 3 entries.
         """
+
+        if orientation.ndim != 1 or len(orientation) != 3:
+            raise ValueError("Modem orientation must be a three-dimensional vector")
 
         self.__orientation = orientation
 
@@ -371,31 +369,29 @@ class Modem:
                 If the first dimension `topology` is smaller than 1 or its second dimension is larger than 3.
         """
 
-        if len(topology.shape) > 2:
+        if topology.ndim > 2:
             raise ValueError("The topology array must be of dimension 2")
+
+        # If the topology is one-dimensional, we assume a ULA and therefore simply expand the second dimension
+        if topology.ndim == 1:
+            topology = topology.T[:, np.newaxis]
 
         if topology.shape[0] < 1:
             raise ValueError("The topology must contain at least one sensor")
 
-        if len(topology.shape) > 1:
+        if topology.shape[1] > 3:
+            raise ValueError("Second topology dimension may contain at most 3 fields (xyz)")
 
-            if topology.shape[1] > 3:
-                raise ValueError("The second topology dimension must contain 3 fields (xyz)")
+        # The second dimension may have less than 3 entries, in this case we expand by zeros
+        if topology.shape[1] < 3:
+            topology = np.append(topology, np.zeros((topology.shape[0], 3-topology.shape[1]), dtype=float), axis=1)
 
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=np.float32)
-            self.__topology[:, :topology.shape[1]] = topology
-
-        else:
-
-            self.__topology = np.zeros((topology.shape[0], 3), dtype=np.float32)
-            self.__topology[:, 0] = topology
+        self.__topology = topology
 
         # Automatically detect linearity in default configurations, where all sensor elements
         # are oriented along the local x-axis.
         axis_sums = np.sum(self.__topology, axis=0)
-
-        if (axis_sums[1] + axis_sums[2]) < 1e-10:
-            self.__is_linear = True
+        self.__linear_topology = ((axis_sums[1] + axis_sums[2]) < 1e-10)
 
     @property
     def carrier_frequency(self) -> float:
@@ -475,6 +471,18 @@ class Modem:
         """
 
         return self.__encoder_manager
+
+    @encoder_manager.setter
+    def encoder_manager(self, new_manager: EncoderManager) -> None:
+        """Update the modem's encoder management.
+
+        Args:
+            new_manager (EncoderManger):
+                The new encoder manager.
+        """
+
+        self.__encoder_manager = new_manager
+        new_manager.modem = self
 
     @property
     def waveform_generator(self) -> WaveformGenerator:
