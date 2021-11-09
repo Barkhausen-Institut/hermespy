@@ -24,12 +24,6 @@ class Noise:
     """Implements a complex additive white gaussian noise at the receiver.
 
     Attributes:
-        snr_type (str)
-            signal-to-noise definition.
-            The following values are currently supported:
-             - EB/N0(dB): bit-energy over N0 (in dB)
-             - ES/NO(dB): signal-energy over N0 (in dB)
-             - custom(dB): custom SNR (in dB)
 
         __receiver (Optional[Receiver]):
             Receiver modem this noise model is attached to.
@@ -103,13 +97,13 @@ class Noise:
             RuntimeError: If trying to access the random generator of a floating noise model.
         """
 
+        if self.__random_generator is not None:
+            return self.__random_generator
+
         if self.__receiver is None:
             raise RuntimeError("Trying to access the random generator of a floating noise model")
 
-        if self.__random_generator is None:
-            return self.__receiver.random_generator
-
-        return self.__random_generator
+        return self.__receiver.random_generator
 
     @random_generator.setter
     def random_generator(self, generator: Optional[rnd.Generator]) -> None:
@@ -146,34 +140,6 @@ class Noise:
         noise = (self.random_generator.standard_normal(signal.shape) + 1j *
                  self.random_generator.standard_normal(signal.shape)) / np.sqrt(2) * np.sqrt(noise_power)
         return signal + noise
-
-    def calculate_noise_var(self, snr: float, signal_energy: float) -> float:
-        """Calculates the required noise variance
-
-        Noise variance is calculated according to the SNR definition specified in self.snr_type.
-
-        Args:
-            snr (float):
-                Signal-to-noise ratio for noise power. If snr_type is 'CUSTOM',
-                the parameter is interpreted as actual noise variance.
-            signal_energy: Energy of signal.
-
-        Returns:
-            float: noise variance
-        """
-        if self.snr_type == 'EB/N0(DB)' or self.snr_type == 'ES/N0(DB)':
-            snr_linear = self.db_to_linear(snr)
-            noise_var = signal_energy / snr_linear
-        elif self.snr_type.upper() == 'CUSTOM':
-            noise_var = self.db_to_linear(snr)
-        else:
-            raise ValueError("Invalid snr_type")
-
-        return noise_var
-
-    def db_to_linear(self, db_quantity: float) -> float:
-        """Converts db quantity to linear quanity."""
-        return (10**(db_quantity / 10.))
 
     @classmethod
     def to_yaml(cls: Type[Noise],
