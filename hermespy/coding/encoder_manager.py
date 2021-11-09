@@ -378,7 +378,7 @@ class EncoderManager:
             List[Encoder]: A list of encoders in order of transmit execution (reversed receive execution).
         """
 
-        return sorted(self._encoders, key=lambda encoder: encoder.block_size)
+        return sorted(self._encoders, key=lambda encoder: encoder.bit_block_size)
 
     @property
     def rate(self) -> float:
