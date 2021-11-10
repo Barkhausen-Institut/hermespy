@@ -4,7 +4,6 @@
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 from typing import TYPE_CHECKING, Type, List, Any, Optional
-from math import floor
 import numpy as np
 import numpy.random as rnd
 
@@ -43,25 +42,30 @@ class Transmitter(Modem):
     __power: float
     bits_source: BitsSource
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self,
+                 power: float = 1.0,
+                 bits_source: Optional[BitsSource] = None,
+                 **kwargs: Any) -> None:
         """Object initialization.
 
         Args:
-            **kwargs (Any): Transmitter configuration.
 
             power (float, optional):
                 Average power of the transmitted signal. 1.0 By default.
-        """
 
-        power = kwargs.pop('power', 1.0)
-        bits_source = kwargs.pop('BitsSource', BitsSource(self))
+            bits_source (BitsSource, optional):
+                Source of bits to be transmitted.
+
+            **kwargs (Any):
+                Modem configuration parameters.
+        """
 
         # Init base class
         Modem.__init__(self, **kwargs)
 
         # Init parameters
         self.power = power
-        self.bits_source = bits_source
+        self.bits_source = BitsSource(self) if bits_source is None else BitsSource
 
     @property
     def power(self) -> float:
@@ -108,6 +112,11 @@ class Transmitter(Modem):
         Raises:
             ValueError: If not enough data bits were provided to generate as single frame.
         """
+
+        # By default, the drop duration will be exactly one frame
+        if drop_duration is None:
+            drop_duration = self.waveform_generator.frame_duration
+
         # coded_bits = self.encoder.encoder(data_bits)
         num_samples = int(np.ceil(drop_duration * self.scenario.sampling_rate))
         timestamps = np.arange(num_samples) / self.scenario.sampling_rate
@@ -270,11 +279,3 @@ class Transmitter(Modem):
         num_bits = int(self.num_data_bits_per_frame * self.precoding.rate)
         bits = self.bits_source.get_bits(num_bits)
         return bits
-
-    @property
-    def reference_channel(self) -> Channel:
-
-        if self.scenario is None:
-            raise RuntimeError("Attempting to access reference channel of a floating modem.")
-
-        return self.scenario.departing_channels(self, active_only=True)[0]
