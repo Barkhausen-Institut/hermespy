@@ -2,9 +2,14 @@
 """Test HermesPy simulation executable."""
 
 import unittest
+from unittest.mock import Mock, create_autospec
+
 import numpy as np
 from numpy.testing import assert_array_equal
 
+from hermespy.modem import transmitter
+from hermespy.channel import Channel
+from hermespy.scenario.scenario import Scenario
 from hermespy.simulator_core import Simulation, SNRType
 
 __author__ = "Jan Adler"
@@ -72,3 +77,39 @@ class TestSimulation(unittest.TestCase):
     def test_from_yaml(self) -> None:
         """Test YAML serialization recall validity."""
         pass
+
+class TestStoppingCriteria(unittest.TestCase):
+    def setUp(self) -> None:
+        self.no_rx = 2
+        self.no_tx = 3
+        self.simulation = Simulation()
+        self.simulation.noise_loop = np.arange(30)
+        self.simulation.min_num_drops = 1
+        self.simulation.max_num_drops = 1
+
+
+        self.scenario = Scenario()
+        self.scenario.drop_duration = 0.1
+        for rx_idx in range(self.no_rx):
+            self.scenario.add_receiver(Mock())
+        for tx_idx in range(self.no_tx):
+            self.scenario.add_transmitter(Mock())
+
+        mock_channel = Mock()
+        mock_channel.propagate.return_value = (np.array([0]), np.array([0]))
+
+        for rx_idx in range(self.no_rx):
+            for tx_idx in range(self.no_tx):
+                self.scenario.set_channel(tx_idx, rx_idx, mock_channel)
+
+    def test_propagation_only_from_tx1_2_to_rx0(self) -> None:
+        tx_signals = [np.random.randint(low=0, high=2,size=100) for _ in range(self.no_tx)]
+        snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
+        snr_mask[1, 0] = False
+        snr_mask[2, 0] = False
+        propagation_matrix = Simulation.propagate(
+            self.scenario, tx_signals, snr_mask
+        )
+
+        self.assertEqual(propagation_matrix[0][1], tuple())
+        self.assertEqual(propagation_matrix[0][2], tuple())
