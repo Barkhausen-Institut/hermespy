@@ -395,6 +395,10 @@ class Channel:
 
         return self.__transmitter.index, self.__receiver.index
 
+    @property
+    def no_path_delay_samples(self) -> int:
+        return int(self.__current_sync_offset * self.scenario.sampling_rate)
+
     def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Modifies the input signal and returns it after channel propagation.
 
@@ -451,14 +455,13 @@ class Channel:
         impulse_response = self.impulse_response(
             np.arange(num_signal_samples) / self.scenario.sampling_rate)
 
-        # The maximum delay (in samples) is modeled by the last impulse response dimension
-        num_delay_samples = impulse_response.shape[3] - 1
-
         # Propagate the signal
-        received_signal = np.zeros((self.receiver.num_antennas, transmitted_signal.shape[1] + num_delay_samples),
-                                   dtype=complex)
+        received_signal = np.zeros(
+            (self.receiver.num_antennas,
+             transmitted_signal.shape[1] + self.no_path_delay_samples),
+            dtype=complex)
 
-        for delay_index in range(impulse_response.shape[3]):
+        for delay_index in range(self.no_path_delay_samples+1):
             for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
                 delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * transmitted_signal[tx_idx, :]
@@ -503,9 +506,9 @@ class Channel:
             impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas, dtype=complex),
                                         (timestamps.size, 1, 1))
 
-
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
+
         impulse_responses = self._add_sync_offset(impulse_responses)
         # Save newly generated response as most recent impulse response
         self.recent_response = impulse_responses
@@ -516,13 +519,12 @@ class Channel:
     def _add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
         self.calculate_new_sync_delay()
 
-        delay_samples = int(self.current_sync_offset*self.scenario.sampling_rate)
-        if delay_samples > 0:
+        if self.no_path_delay_samples > 0:
             delays = np.zeros(
                 (impulse_responses.shape[0],
                 impulse_responses.shape[1],
                 impulse_responses.shape[2],
-                int(delay_samples)),
+                self.no_path_delay_samples),
                 dtype=complex
             )
 
@@ -532,6 +534,7 @@ class Channel:
             )
 
         return impulse_responses
+
 
     @property
     def min_sampling_rate(self) -> float:
