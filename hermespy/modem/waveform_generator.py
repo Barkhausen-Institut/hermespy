@@ -347,7 +347,7 @@ class WaveformGenerator(ABC):
 
             # ToDo: This currently does not account for delay overhead....
             frames[f, :] = signal[f*samples_per_frame:(f+1)*samples_per_frame]
-            frame_responses[f, :] = np.sum(stream_response[f*samples_per_frame:(f+1)*samples_per_frame, :], axis=1)
+            frame_responses[f, :] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, 0]
 
         return frames, frame_responses
 

@@ -8,7 +8,7 @@ from typing import Tuple
 import numpy as np
 import numpy.random as rnd
 from scipy.constants import pi
-from math import ceil
+from math import floor
 
 from hermespy.modem import WaveformGenerator
 
@@ -30,21 +30,27 @@ class WaveformGeneratorDummy(WaveformGenerator):
 
         WaveformGenerator.__init__(self, **kwargs)
 
+    @property
     def samples_in_frame(self) -> int:
         return 20
 
+    @property
     def bits_per_frame(self) -> int:
         return 8
 
+    @property
     def symbols_per_frame(self) -> int:
         return 1
 
+    @property
     def bit_energy(self) -> float:
         return 1/8
 
+    @property
     def symbol_energy(self) -> float:
         return 1.0
 
+    @property
     def power(self) -> float:
         return 1.0
 
@@ -63,6 +69,7 @@ class WaveformGeneratorDummy(WaveformGenerator):
                    noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         return signal, impulse_response, np.repeat(noise_variance, signal.shape)
 
+    @property
     def bandwidth(self) -> float:
         return 100.
 
@@ -115,6 +122,28 @@ class TestWaveformGenerator(unittest.TestCase):
     def test_synchronize(self) -> None:
         """Default synchronization routine should properly split signals into frame-sections."""
 
-        frames
+        num_samples_test = [50, 100, 150, 200]
 
-        signal = np.exp(2j * self.rnd.uniform(0, pi))
+        for num_samples in num_samples_test:
+
+            signal = np.exp(2j * self.rnd.uniform(0, pi, num_samples))
+            response = np.ones((num_samples, 1), dtype=complex)
+
+            frames, responses = self.waveform_generator.synchronize(signal, response)
+
+            # Number of frames is the number of frames that fit into the samples
+            num_frames = frames.shape[0]
+            expected_num_frames = int(floor(num_samples / self.waveform_generator.samples_in_frame))
+            self.assertEqual(expected_num_frames, num_frames)
+
+            # Frame and response should have equal length
+            self.assertCountEqual(frames.shape, responses.shape)
+
+    def test_synchronize_validation(self) -> None:
+        """Synchronization should raise a ValueError if the signal shape does match the stream response shape."""
+
+        with self.assertRaises(ValueError):
+            _ = self.waveform_generator.synchronize(np.zeros(10), np.zeros((10, 2)))
+
+        with self.assertRaises(ValueError):
+            _ = self.waveform_generator.synchronize(np.zeros((10, 2)), np.zeros((10, 2)))
