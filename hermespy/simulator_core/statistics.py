@@ -9,6 +9,7 @@ from scipy.fft import fftshift
 from enum import Enum
 import scipy.fft as fft
 import numpy as np
+from hermespy import scenario
 
 from hermespy.scenario import Scenario
 from .drop import Drop
@@ -174,7 +175,14 @@ class Statistics:
 
         for drop in drops:
             self.add_drop(drop, snr_index)
-
+    @property
+    def flag_matrix(self) -> np.ndarray:
+        """Returns flag matrix of last drop."""
+        return np.zeros(
+            (scenario.num_transmitters,
+             scenario.num_receivers,
+             self.__num_snr_loops)
+        )
     @property
     def num_drops(self) -> int:
         """Access the number of drops already added to this statistics.
