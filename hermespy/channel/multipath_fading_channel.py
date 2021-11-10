@@ -2,19 +2,21 @@
 """Multipath Fading Channel Model."""
 
 from __future__ import annotations
-from scipy.constants import pi
-from numpy import cos, exp
-from typing import TYPE_CHECKING, Optional, Type, Union, List
-from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 from itertools import product
 from functools import lru_cache
+from typing import TYPE_CHECKING, Optional, Type, Union, List, Tuple
+
 import numpy as np
 import numpy.random as rnd
+from numpy import cos, exp
+from scipy.constants import pi
+from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 
 from hermespy.channel.channel import Channel
 from hermespy.scenario import Scenario
 
 if TYPE_CHECKING:
+    from hermespy.scenario import Scenario
     from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
@@ -113,8 +115,10 @@ class MultipathFadingChannel(Channel):
                  rice_factors: Union[np.ndarray, List[float]],
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
+                 scenario: Optional[Scenario] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
+                 random_generator: Optional[rnd.Generator] = None,
                  num_sinusoids: Optional[float] = None,
                  los_angle: Optional[float] = None,
                  doppler_frequency: Optional[float] = None,
@@ -122,26 +126,53 @@ class MultipathFadingChannel(Channel):
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None,
                  interpolate_signals: bool = None,
-                 scenario: Optional[Scenario] = None,
                  sync_offset_low: Optional[float] = None,
                  sync_offset_high: Optional[float] = None,
-                 impulse_response_interpolation: bool = True,
-                 random_generator: Optional[np.random.Generator] = None) -> None:
+                 impulse_response_interpolation: bool = True) -> None:
         """Object initialization.
 
         Args:
-            delays (np.ndarray): Delay in seconds of each individual multipath tap.
-            power_profile (np.ndarray): Power loss factor of each individual multipath tap.
-            rice_factors (np.ndarray): Rice factor balancing line of sight and multipath in each individual channel tap.
-            transmitter (Transmitter, optional): The modem transmitting into this channel.
-            receiver (Receiver, optional): The modem receiving from this channel.
-            active (bool, optional): Channel activity flag.
-            gain (float, optional): Channel power gain.
-            num_sinusoids (int, optional): Number of sinusoids used to sample the statistical distribution.
-            los_angle (float, optional): Angle phase of the line of sight component within the statistical distribution.
-            doppler_frequency (float, optional): Doppler frequency shift of the statistical distribution.
-            transmit_precoding (np.ndarray): Transmit precoding matrix.
-            receive_postcoding (np.ndarray): Receive postcoding matrix.
+            delays (np.ndarray):
+                Delay in seconds of each individual multipath tap.
+
+            power_profile (np.ndarray):
+                Power loss factor of each individual multipath tap.
+
+            rice_factors (np.ndarray):
+                Rice factor balancing line of sight and multipath in each individual channel tap.
+
+            transmitter (Transmitter, optional):
+                The modem transmitting into this channel.
+
+            receiver (Receiver, optional):
+                The modem receiving from this channel.
+
+            scenario (Scenario, optional):
+                The scenario this channel is attached to.
+
+            active (bool, optional):
+                Channel activity flag.
+
+            gain (float, optional):
+                Channel power gain.
+
+            random_generator (rnd.Generator, optional):
+                Generator object for random number sequences.
+
+            num_sinusoids (int, optional):
+                Number of sinusoids used to sample the statistical distribution.
+
+            los_angle (float, optional):
+                Angle phase of the line of sight component within the statistical distribution.
+
+            doppler_frequency (float, optional):
+                Doppler frequency shift of the statistical distribution.
+
+            transmit_precoding (np.ndarray):
+                Transmit precoding matrix.
+
+            receive_postcoding (np.ndarray):
+                Receive postcoding matrix.
 
         Raises:
             ValueError:
@@ -192,7 +223,7 @@ class MultipathFadingChannel(Channel):
         self.__delays = self.__delays[sorting]
         self.__power_profile = self.__power_profile[sorting]
         self.__rice_factors = self.__rice_factors[sorting]
-        self.__num_sinusoids = 10       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
+        self.__num_sinusoids = 20       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
         self.los_angle = los_angle
         self.__transmit_precoding = None
         self.__receive_postcoding = None
@@ -451,8 +482,30 @@ class MultipathFadingChannel(Channel):
 
         self.__los_angle = angle
 
+    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+
+        propagated_signal = transmitted_signal.copy()
+
+        # Introduce transmit precoding
+        if self.__transmit_precoding is not None:
+            propagated_signal = self.__transmit_precoding @ propagated_signal
+
+        # Propagate over channel impulse response
+        propagated_signal, impulse_response = Channel.propagate(self, propagated_signal)
+
+        # ToDo: Should we consider the pre-and postcoding matrices in the impulse response?
+        # Currently, pre- and postcoding is not considered and will probably degrade channel equalization
+
+        # Introduce receive postcoding
+        if self.__receive_postcoding is not None:
+            propagated_signal = self.__receive_postcoding @ propagated_signal
+
+        return propagated_signal, impulse_response
+
+
     def _calculate_path_delays_in_samples(self) -> np.array:
         self.calculate_new_sync_delay()
+
         delays_in_samples = np.round(self.__delays * self.scenario.sampling_rate).astype(int)
         delays_in_samples += int(self.current_sync_offset * self.scenario.sampling_rate)
         return delays_in_samples
@@ -482,8 +535,7 @@ class MultipathFadingChannel(Channel):
                 else:
                     impulse_response[:, rx_idx, tx_idx, delays_in_samples[path_idx]] += signal_weights
 
-        self.recent_response = impulse_response
-        return impulse_response
+        return self.gain * impulse_response
 
     def __tap(self, timestamps: np.ndarray, 
               los_gain: complex, nlos_gain: complex) -> np.ndarray:
