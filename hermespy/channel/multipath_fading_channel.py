@@ -5,6 +5,7 @@ from __future__ import annotations
 from itertools import product
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, Type, Union, List, Tuple
+from math import ceil
 
 import numpy as np
 import numpy.random as rnd
@@ -13,6 +14,7 @@ from scipy.constants import pi
 from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 
 from hermespy.channel.channel import Channel
+from hermespy.helpers.resampling import delay_resampling_matrix
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -487,7 +489,7 @@ class MultipathFadingChannel(Channel):
     def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
 
         delays_in_samples = np.round(self.__delays * self.scenario.sampling_rate).astype(int)
-        max_delay_in_samples = delays_in_samples.max()
+        max_delay_in_samples = int(ceil(self.__delays[-1] * self.scenario.sampling_rate))
 
         impulse_response = np.zeros((len(timestamps),
                                      self.receiver.num_antennas,
@@ -506,7 +508,8 @@ class MultipathFadingChannel(Channel):
                 signal_weights = power ** .5 * self.__tap(timestamps, los_gain, nlos_gain)
 
                 if interpolation_filter is not None:
-                    impulse_response[:, rx_idx, tx_idx, :] += np.outer(signal_weights, interpolation_filter[:, path_idx])
+                    impulse_response[:, rx_idx, tx_idx, :] += np.outer(signal_weights,
+                                                                       interpolation_filter[path_idx, :])
 
                 else:
                     impulse_response[:, rx_idx, tx_idx, delays_in_samples[path_idx]] += signal_weights
@@ -581,15 +584,14 @@ class MultipathFadingChannel(Channel):
                 Interpolation filter matrix containing filters for each configured resolvable path.
         """
 
-        num_delay_samples = int(round(self.max_delay * sampling_rate))
-        delay_samples = np.arange(num_delay_samples + 1) / sampling_rate
-        filter_instances = np.zeros((num_delay_samples+1, self.num_resolvable_paths))
+        num_delay_samples = int(ceil(self.max_delay * sampling_rate))
 
-        for path in range(self.num_resolvable_paths):
+        filter_instances = np.empty((self.num_resolvable_paths, num_delay_samples+1), float)
 
-            interp_filter = np.sinc((delay_samples - self.__delays[path]) * sampling_rate)
-            interp_filter /= np.sqrt(np.sum(interp_filter ** 2))
-            filter_instances[:, path] = interp_filter
+        for path_idx, delay in enumerate(self.__delays):
+
+            resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples+1)
+            filter_instances[path_idx, :] = resampling_matrix[:, 0]
 
         return filter_instances
 
