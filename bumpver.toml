@@ -18,6 +18,7 @@ push = false
 "hermespy/bin/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/channel/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/coding/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/helpers/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/precoding/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/rf_chain_models/*.py" = [ '__version__ = "{version}"' ]

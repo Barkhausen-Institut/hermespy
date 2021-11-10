@@ -322,11 +322,11 @@ class WaveformGenerator(ABC):
             signal (np.ndarray):
                 Vector of complex base-band signal samples of a single input stream with `num_samples` entries.
 
-            channel_response (np.ndarray):
+            stream_response (np.ndarray):
                 Vector of channel impulse responses. ToDo: Add domains.
 
         Returns:
-            Tuple[np.ndarray, np.ndarry]: Tuple of signal samples and channel responses sorted into frames.
+            Tuple[np.ndarray, np.ndarray]: Tuple of signal samples and channel responses sorted into frames.
 
         Raises:
             ValueError: If the length of `signal` and the first dimension of `channel_response` is not identical.
@@ -420,6 +420,6 @@ class WaveformGenerator(ABC):
         """
 
         if handle.waveform_generator is not self:
-            raise RuntimeError("Invalid modem attachment routine")
+            handle.waveform_generator = self
 
         self.__modem = handle
