@@ -432,14 +432,25 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         offset = self._calculate_frequency_offsets(data_bits)
         return offset
 
-    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray = np.empty(0)) -> np.ndarray:
 
         prototypes, _ = self._prototypes()
         signal = np.empty(self.samples_in_frame, dtype=complex)
 
+        sample_idx = 0
         samples_in_chirp = self.samples_in_chirp
-        for symbol_idx, symbol in enumerate(data_symbols):
-            signal[symbol_idx*samples_in_chirp:(1+symbol_idx)*samples_in_chirp] = prototypes[symbol, :]
+
+        # Modulate pilot symbols
+        for _ in range(self.num_pilot_chirps):
+
+            signal[sample_idx:sample_idx+samples_in_chirp] = prototypes[0, :]
+            sample_idx += samples_in_chirp
+
+        # Modulate data symbols
+        for symbol in data_symbols:
+
+            signal[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
+            sample_idx += samples_in_chirp
 
         return signal
 

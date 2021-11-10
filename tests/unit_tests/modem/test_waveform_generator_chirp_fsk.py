@@ -40,8 +40,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
             "guard_interval": 4e-6,
         }
 
-        self.parameters["sampling_rate"] =\
-            self.parameters["chirp_bandwidth"] * self.parameters["oversampling_factor"]
+        self.modem.scenario.sampling_rate = self.parameters["chirp_bandwidth"] * self.parameters["oversampling_factor"]
 
         self.generator.__init__(**self.parameters)
 
@@ -216,7 +215,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
     def test_samples_in_chirp_calculation(self) -> None:
         """Test the calculation for the number of samples within one chirp."""
 
-        expected_samples_in_chirp = int(ceil(self.parameters["chirp_duration"] * self.parameters["sampling_rate"]))
+        expected_samples_in_chirp = int(ceil(self.parameters["chirp_duration"] * self.modem.scenario.sampling_rate))
         self.assertEqual(expected_samples_in_chirp, self.generator.samples_in_chirp,
                          "Samples in chirp calculation produced unexpected result")
 
@@ -228,24 +227,16 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         self.assertEqual(chirps_in_frame_expected, self.generator.chirps_in_frame,
                          "Calculation of number of chirps in frame produced unexpected result")
 
-    def test_proper_new_timestamp_after_frame_creation(self) -> None:
-        """Test the time offset calculation during frame creation."""
-
-        timestamp = 0
-        new_timestamp_expected = timestamp + self.generator.samples_in_frame
-
-        _, new_timestamp, initial_sample_num = self.generator.create_frame(timestamp, self.data_bits)
-
-        self.assertEqual(new_timestamp_expected, new_timestamp)
-        self.assertEqual(timestamp, initial_sample_num)
-
     def test_prototype_chirps_for_modulation_symbols(self) -> None:
+        """The generated prototypes for FSK signals must be proper."""
+
         cos_signal_expected = self.__read_saved_results_from_file('cos_signal.npy')
         sin_signal_expected = self.__read_saved_results_from_file('sin_signal.npy')
 
-        cos_prototype, sin_prototype, _ = self.generator._prototypes()
-        np.testing.assert_array_almost_equal(cos_signal_expected, cos_prototype)
-        np.testing.assert_array_almost_equal(sin_signal_expected, sin_prototype)
+        prototypes, _ = self.generator._prototypes()
+        expected_prototypes = .5 * cos_signal_expected + .5j * sin_signal_expected
+
+        np.testing.assert_array_almost_equal(prototypes, expected_prototypes)
 
     def test_bit_energy_calculation(self) -> None:
         """Test the energy calculation for a single transmitted bit."""
@@ -270,23 +261,14 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         """Verify the proper demodulation of received signals."""
 
         rx_signal = self.__read_saved_results_from_file('rx_signal.npy')
-        rx_signal = np.reshape(rx_signal, (1, rx_signal.shape[0]))
+        impulse_response = np.ones(rx_signal.shape, dtype=complex)
+        noise_variance = 0.0
 
-        received_bits, _ = self.generator.receive_frame(rx_signal, 0, 0)
+        received_symbols, _, _ = self.generator.demodulate(rx_signal, impulse_response, noise_variance)
+        received_bits = self.generator.unmap(received_symbols)
+
         received_bits_expected = self.__read_saved_results_from_file('received_bits.npy').ravel()
-
-        np.testing.assert_array_equal(received_bits, received_bits_expected)
-
-    def test_rx_signal_demodulation_long_signal(self) -> None:
-        """Test leftover signal after demodulation?"""
-
-        signal_overflow = 3
-        rx_signal = self.__read_saved_results_from_file('rx_signal.npy')
-        rx_signal = np.append(rx_signal, np.ones(signal_overflow))
-        rx_signal = np.reshape(rx_signal, (1, rx_signal.shape[0]))
-
-        _, left_over_rx_signal = self.generator.receive_frame(rx_signal, 0, 0)
-        self.assertEqual(left_over_rx_signal.shape[1], signal_overflow)
+        np.testing.assert_array_equal(received_bits[:len(received_bits_expected)], received_bits_expected)
 
     def test_proper_bit_energy_calculation(self) -> None:
         """Tests if theoretical bit energy is calculated correctly"""
@@ -296,12 +278,14 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
 
         # define test parameters
         num_frames = 12
-        num_bits = num_frames * self.generator.bits_per_frame
 
         data_bits = np.random.randint(0, 2, (num_frames, self.generator.bits_per_frame))
-        transmitted_signal = np.array([self.generator.create_frame(0, data)[0] for data in data_bits])
+        data_symbols = [self.generator.map(bits) for bits in data_bits]
+        transmitted_signal = np.array([self.generator.modulate(symbols) for symbols in data_symbols])
 
-        bit_energy = np.sum(abs(transmitted_signal.flatten())**2) / num_bits
+        symbol_energy = np.sum(abs(transmitted_signal.flatten())**2) / (self.generator.num_pilot_chirps +
+                                                                        self.generator.num_data_chirps)
+        bit_energy = symbol_energy / self.generator.bits_per_symbol / num_frames
 
         # compare the measured energy with the expected values
         self.assertAlmostEqual(bit_energy, self.generator.bit_energy,
@@ -318,9 +302,10 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         num_symbols = num_frames * self.generator.chirps_in_frame
 
         data_bits = np.random.randint(0, 2, (num_frames, self.generator.bits_per_frame))
-        transmitted_signal = np.array([self.generator.create_frame(0, data)[0] for data in data_bits])
+        data_symbols = [self.generator.map(bits) for bits in data_bits]
+        transmitted_signal = np.array([self.generator.modulate(symbols) for symbols in data_symbols])
 
-        symbol_energy = np.sum(abs(transmitted_signal.flatten())**2) / num_symbols
+        symbol_energy = np.sum(abs(transmitted_signal.flatten())**2) / (num_symbols + self.generator.num_pilot_chirps)
 
         # compare the measured energy with the expected values
         self.assertAlmostEqual(symbol_energy, self.generator.symbol_energy,
@@ -336,11 +321,17 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         num_samples = num_frames * self.generator.samples_in_frame
 
         data_bits = np.random.randint(0, 2, (num_frames, self.generator.bits_per_frame))
-        transmitted_signal = np.array([self.generator.create_frame(0, data)[0] for data in data_bits])
+        data_symbols = [self.generator.map(bits) for bits in data_bits]
+        transmitted_signal = np.array([self.generator.modulate(symbol) for symbol in data_symbols])
 
         power = np.sum(abs(transmitted_signal.flatten())**2) / num_samples
         self.assertAlmostEqual(power, self.generator.power, places=1,
                                msg="Unexpected signal energy transmitted")
+
+    def test_bandwidth(self) -> None:
+        """Bandwidth property should return chirp bandwidth."""
+
+        self.assertEqual(self.parameters['chirp_bandwidth'], self.generator.bandwidth)
 
     def __read_saved_results_from_file(self, file_name: str) -> np.ndarray:
         """Internal helper function for reading numpy arrays from save files.
