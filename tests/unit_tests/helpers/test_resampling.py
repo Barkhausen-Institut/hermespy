@@ -44,3 +44,17 @@ class TestDelayResampling(unittest.TestCase):
             # Make sure the power scales properly
             norm = np.linalg.norm(circular_transformation, axis=1)
             assert_almost_equal(np.ones(num_samples), norm, decimal=1)
+
+    def test_resampling_matrix_dimensions(self) -> None:
+        """The resampling matrix should scale its dimensions according to the arguments."""
+
+        sampling_rate = 1e3
+        delay = 5e4
+
+        num_input_samples_tests = np.arange(4)
+        num_output_samples_tests = np.arange(4)
+
+        for num_input_samples, num_output_samples in product(num_input_samples_tests, num_output_samples_tests):
+
+            resampling_matrix = delay_resampling_matrix(sampling_rate, num_input_samples, delay, num_output_samples)
+            self.assertCountEqual([num_output_samples, num_input_samples], resampling_matrix.shape)

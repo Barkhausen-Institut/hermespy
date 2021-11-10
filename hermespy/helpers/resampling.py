@@ -16,8 +16,9 @@ __status__ = "Prototype"
 
 
 def delay_resampling_matrix(sampling_rate: float,
-                            num_samples: int,
-                            delay: float) -> np.ndarray:
+                            num_samples_in: int,
+                            delay: float,
+                            num_samples_out: int = -1) -> np.ndarray:
     """Generate an interpolation-matrix for resampling a signal at a specific delay.
 
     Args:
@@ -25,11 +26,14 @@ def delay_resampling_matrix(sampling_rate: float,
         sampling_rate (float):
             Rate in Hz at which the signal to be transformed is sampled.
 
-        num_samples (int):
+        num_samples_in (int):
             Number of samples provided.
 
         delay (float):
             Delay in seconds, by which the sampled signal should be shifted.
+
+        num_samples_out(int, optional):
+            Number of output samples.
 
     Returns:
         np.ndarray:
@@ -39,9 +43,14 @@ def delay_resampling_matrix(sampling_rate: float,
             the transformation matrix is not necessarily square.
     """
 
-    delay_samples_overhead = int(ceil(abs(delay) * sampling_rate)) * np.sign(delay)
-    input_timestamps = np.arange(num_samples)
-    output_timestamps = np.arange(num_samples + delay_samples_overhead) - delay * sampling_rate
+    input_timestamps = np.arange(num_samples_in)
+
+    if num_samples_out < 0:
+        delay_samples_overhead = int(ceil(abs(delay) * sampling_rate)) * np.sign(delay)
+        output_timestamps = np.arange(num_samples_in + delay_samples_overhead) - delay * sampling_rate
+
+    else:
+        output_timestamps = np.arange(num_samples_out) - delay * sampling_rate
 
     interpolation_filter = np.sinc(np.subtract.outer(output_timestamps, input_timestamps))
     return interpolation_filter

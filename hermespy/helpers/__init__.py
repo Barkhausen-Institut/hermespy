@@ -1,4 +1,4 @@
-from resampling import delay_resampling_matrix
+from .resampling import delay_resampling_matrix
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
