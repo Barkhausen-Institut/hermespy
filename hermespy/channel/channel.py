@@ -535,6 +535,24 @@ class Channel:
 
         return impulse_responses
 
+    def interpolation_filter(self, sampling_rate: float) -> np.ndarray:
+        """Create an interpolation filter matrix.
+
+        Args:
+            sampling_rate: The sampling rate to which to interpolate.
+
+        Returns:
+            np.ndarray:
+                Interpolation filter matrix containing filters for each configured resolvable path.
+        """
+        delay_samples = np.arange(self.no_path_delay_samples + 1) / sampling_rate
+
+        #filter_instances = np.zeros((num_delay_samples+1, 1))
+
+        interp_filter = np.sinc(delay_samples * sampling_rate)
+        interp_filter /= np.sqrt(np.sum(interp_filter ** 2))
+
+        return interp_filter
 
     @property
     def min_sampling_rate(self) -> float:
