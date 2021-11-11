@@ -122,6 +122,9 @@ class TestReceiver(Receiver):
 
         return received_signal
 
+    def demodulate(self, signal, channel, noise) -> np.array:
+        return np.ones(10)
+
 class TestStoppingCriteria(unittest.TestCase):
     def setUp(self) -> None:
         self.no_rx = 2
@@ -193,3 +196,13 @@ class TestStoppingCriteria(unittest.TestCase):
         )
 
         self.assertEqual(received_signals[0], (None, None, None))
+
+    def test_no_detection_at_rx0(self) -> None:
+        self.snr_mask[:, 0] = False
+        received_signals = [
+            (Mock(), Mock(), Mock()) for _ in range(self.no_rx)
+        ]
+        receiver_bits = Simulation.detect(self.scenario, received_signals, self.snr_mask)
+        self.assertIsNone(receiver_bits[0])
+        self.assertIsNotNone(receiver_bits[1])
+

@@ -661,7 +661,9 @@ class Simulation(Executable):
 
 
     @staticmethod
-    def detect(scenario: Scenario, received_signals: List[Tuple[np.ndarray, np.ndarray, float]]) -> List[np.ndarray]:
+    def detect(scenario: Scenario,
+               received_signals: List[Tuple[np.ndarray, np.ndarray, float]],
+               snr_mask: np.ndarray) -> List[np.ndarray]:
         """Detect bits from base-band signals.
 
         Calls the waveform-generator's receive-chain routines of each respective receiver.
@@ -690,9 +692,11 @@ class Simulation(Executable):
         receiver_bits: List[np.ndarray] = []
 
         for receiver, (signal, channel, noise) in zip(scenario.receivers, received_signals):
+            bits = None
+            active_rx_idx = np.flatnonzero(np.all(snr_mask, axis=0))
 
-            # Receive data bits
-            bits = receiver.demodulate(signal, channel, noise)
+            if receiver.index in active_rx_idx:
+                bits = receiver.demodulate(signal, channel, noise)
             receiver_bits.append(bits)
 
         return receiver_bits
