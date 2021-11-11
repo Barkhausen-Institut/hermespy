@@ -76,7 +76,7 @@ class Drop:
         __transmit_block_sizes (List[int]):
             Bit block sizes for each transmitter.
 
-        __received_signals (List[np.ndarray]):
+        _received_signals (List[np.ndarray]):
             Modulated signals impinging onto receiving modems.
 
         __received_bits (List[np.ndarray]):
@@ -113,7 +113,7 @@ class Drop:
             For each transmitter, a tuple of frequency bins, timestamps and respective stft matrix is cached.
             If no result has been computed yet, the attribute is None.
 
-        __receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
+        _receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
             Short time fourier transform of the transmitted antenna signals.
             By default only the first antenna within an array is considered.
             For each receiver, a tuple of frequency bins, timestamps and respective stft matrix is cached.
@@ -456,25 +456,26 @@ class Drop:
 
         self.__receive_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__received_signals:
+            if not antenna_signals is None:
+                # Consider only the first antenna signal
+                signal: np.ndarray = antenna_signals[0]
+                window_size = len(signal)
+                # Make sure that signal is at least as long as FFT and pad it
+                # with zeros is needed
+                if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
 
-            # Consider only the first antenna signal
-            signal: np.ndarray = antenna_signals[0]
-            window_size = len(signal)
+                    signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                    window_size = self.__spectrum_fft_size
 
-            # Make sure that signal is at least as long as FFT and pad it
-            # with zeros is needed
-            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+                # Compute stft TODO: Add sampling rate
+                frequency, time, transform = stft(signal, nperseg=window_size,
+                                                    noverlap=int(.5 * window_size),
+                                                    return_onesided=False)
 
-                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
-                window_size = self.__spectrum_fft_size
-
-            # Compute stft TODO: Add sampling rate
-            frequency, time, transform = stft(signal, nperseg=window_size,
-                                              noverlap=int(.5 * window_size),
-                                              return_onesided=False)
-
-            # Append result tuple
-            self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
+                # Append result tuple
+                self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
+            else:
+                self.__receive_stft.append(None)
 
         return self.__receive_stft
 
