@@ -475,7 +475,7 @@ class Drop:
                 # Append result tuple
                 self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
             else:
-                self.__receive_stft.append(None)
+                self.__receive_stft.append((None, None, None))
 
         return self.__receive_stft
 

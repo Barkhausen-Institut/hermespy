@@ -40,4 +40,4 @@ class TestStoppingCrtiteria(unittest.TestCase):
                         received_bits=[None, None], received_block_sizes=[0,0])
         receive_stft = drop.receive_stft
 
-        self.assertIsNone(receive_stft[1])
+        self.assertEquals(receive_stft[1], (None, None, None))
