@@ -170,8 +170,6 @@ class TestStoppingCriteria(unittest.TestCase):
             propagation_matrix[0][0][0],
             propagation_matrix[1][0][0] + propagation_matrix[1][1][0] + propagation_matrix[1][2][0]
         ]
-        propagation_matrix[0][1] = tuple((None, None))
-        propagation_matrix[0][2] = tuple((None, None))
         received_signals = Simulation.receive(
             self.scenario, propagation_matrix, self.snr_mask)
 
