@@ -677,7 +677,6 @@ class Drop:
 
     def plot_bit_errors(self) -> None:
         """Plot bit errors into a grid."""
-
         grid_width = self.__num_receptions
         grid_height = self.__num_transmissions
 
@@ -698,7 +697,7 @@ class Drop:
                 link_errors: Optional[np.ndarray] = bit_errors[transmission_index][reception_index]
 
                 if link_errors is None:
-                    axes[transmission_index, reception_index].text(0, 0, "No bits exchanged")
+                    axes[transmission_index, reception_index].text(0, 0, "No bits exchanged or stopping criteria met")
 
                 else:
                     axes[transmission_index, reception_index].stem(link_errors)
