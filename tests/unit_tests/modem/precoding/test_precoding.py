@@ -6,8 +6,6 @@ from unittest.mock import Mock
 from fractions import Fraction
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal
-from scipy.constants import pi
 
 from hermespy.modem.precoding import SymbolPrecoding
 

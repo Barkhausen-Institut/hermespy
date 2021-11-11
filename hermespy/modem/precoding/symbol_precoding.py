@@ -9,7 +9,7 @@ import numpy as np
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
-    from . import Precoder
+    from .symbol_precoder import SymbolPrecoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -32,7 +32,7 @@ class SymbolPrecoding:
 
     yaml_tag = u'Precoding'
     __modem: Optional[Modem]
-    __symbol_precoders: List[Precoder]
+    __symbol_precoders: List[SymbolPrecoder]
 
     def __init__(self,
                  modem: Modem = None) -> None:
@@ -197,7 +197,7 @@ class SymbolPrecoding:
 
         return symbols_iteration.flatten()
 
-    def required_outputs(self, precoder: Precoder) -> int:
+    def required_outputs(self, precoder: SymbolPrecoder) -> int:
         """Query the number output streams of a given precoder within a transmitter.
 
         Args:
@@ -220,7 +220,7 @@ class SymbolPrecoding:
 
         return self.__symbol_precoders[precoder_index + 1].num_input_streams
 
-    def required_inputs(self, precoder: Precoder) -> int:
+    def required_inputs(self, precoder: SymbolPrecoder) -> int:
         """Query the number input streams of a given precoder within a receiver.
 
         Args:
@@ -259,7 +259,7 @@ class SymbolPrecoding:
 
         return r
 
-    def __getitem__(self, index: int) -> Precoder:
+    def __getitem__(self, index: int) -> SymbolPrecoder:
         """Access a precoder at a given index.
 
         Args:
@@ -272,7 +272,7 @@ class SymbolPrecoding:
 
         return self.__symbol_precoders[index]
 
-    def __setitem__(self, index: int, precoder: Precoder) -> None:
+    def __setitem__(self, index: int, precoder: SymbolPrecoder) -> None:
         """Register a precoder within the configuration chain.
 
         This function automatically register the `SymbolPrecoding` instance to the `Precoder`.
