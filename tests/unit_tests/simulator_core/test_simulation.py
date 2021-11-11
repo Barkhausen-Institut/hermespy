@@ -181,3 +181,15 @@ class TestStoppingCriteria(unittest.TestCase):
             received_signals[1][0],
             expected_received_signals[1]
         )
+
+    def test_do_not_receive_at_rx0_at_all(self) -> None:
+        propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1,100)),
+                                np.random.randint(low=0, high=2, size=(1,100)))
+                                for _ in range(self.no_tx)] for _ in range(self.no_rx)]
+        Simulation.calculate_noise_variance = Mock(return_value=0.0)
+        self.snr_mask[:, 0] = False
+        received_signals = Simulation.receive(
+            self.scenario, propagation_matrix, self.snr_mask
+        )
+
+        self.assertEqual(received_signals[0], (None, None, None))
