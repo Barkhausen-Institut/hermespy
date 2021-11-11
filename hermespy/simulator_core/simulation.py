@@ -219,15 +219,14 @@ class Simulation(Executable):
             # Save most recent drop
             drop: Optional[SimulationDrop] = None
 
-            # Iterate over required noise taps
-            for noise_index, snr in enumerate(self.noise_loop):
+            for d in range(self.num_drops):
+                run_flags = statistics.flag_matrix
 
-                if self.verbosity.value <= Verbosity.INFO.value and noise_index > 0:
-                    print("-" * 75)
+                if d < self.min_num_drops:
+                    run_flags[:, :, :]  = True
 
-                # Iterate over configured number of required simulation drops
-                for d in range(self.num_drops):
-
+                for noise_index, snr in enumerate(self.noise_loop):
+                    snr_mask = run_flags[:, :, noise_index]
                     # Generate data bits to be transmitted
                     data_bits = scenario.generate_data_bits()
 
@@ -235,13 +234,21 @@ class Simulation(Executable):
                     transmitted_signals = Simulation.transmit(scenario, data_bits=data_bits)
 
                     # Simulate propagation over channel model
-                    propagation_matrix = Simulation.propagate(scenario, transmitted_signals)
+                    propagation_matrix = Simulation.propagate(scenario,
+                                                              transmitted_signals,
+                                                              snr_mask)
 
                     # Simulate signal reception and mixing at the receiver-side
-                    received_signals = Simulation.receive(scenario, propagation_matrix, self.snr_type, snr)
+                    received_signals = Simulation.receive(scenario,
+                                                          propagation_matrix,
+                                                          snr_mask,
+                                                          self.snr_type,
+                                                          snr)
 
                     # Receive and demodulate signal
-                    detected_bits = Simulation.detect(scenario, received_signals)
+                    detected_bits = Simulation.detect(scenario,
+                                                      received_signals,
+                                                      snr_mask)
 
                     # Collect block sizes
                     transmit_block_sizes = scenario.transmit_block_sizes
@@ -579,6 +586,7 @@ class Simulation(Executable):
             propagation_matrix.append(propagation_row)
 
         return propagation_matrix
+
     @staticmethod
     def receive(scenario: Scenario,
                 propagation_matrix: List[List[Tuple[np.ndarray, np.ndarray]]],
