@@ -263,21 +263,24 @@ class Drop:
             for receiver_bits in self.received_bits:
                 
                 # Skip error computation if padding is disabled and the stream lengths don't match
-                if (len(receiver_bits) != len(transmitter_bits) 
-                    and not self.__pad_bit_errors) or receiver_bits is None:
+                if receiver_bits is None:
                     transmit_errors.append(None)
-
                 else:
+                    if (len(receiver_bits) != len(transmitter_bits) 
+                        and not self.__pad_bit_errors):
+                        transmit_errors.append(None)
 
-                    # Pad bit sequences (if required)
-                    num_bits = max(len(receiver_bits), len(transmitter_bits))
-                    padded_transmission = np.append(transmitter_bits, np.zeros(num_bits - len(transmitter_bits)))
-                    padded_reception = np.append(receiver_bits, np.zeros(num_bits - len(receiver_bits)))
+                    else:
 
-                    # Compute bit errors as the positions where both sequences differ.
-                    # Note that this requires the sequences to be in 0/1 format!
-                    bit_errors = np.abs(padded_transmission - padded_reception)
-                    transmit_errors.append(bit_errors)
+                        # Pad bit sequences (if required)
+                        num_bits = max(len(receiver_bits), len(transmitter_bits))
+                        padded_transmission = np.append(transmitter_bits, np.zeros(num_bits - len(transmitter_bits)))
+                        padded_reception = np.append(receiver_bits, np.zeros(num_bits - len(receiver_bits)))
+
+                        # Compute bit errors as the positions where both sequences differ.
+                        # Note that this requires the sequences to be in 0/1 format!
+                        bit_errors = np.abs(padded_transmission - padded_reception)
+                        transmit_errors.append(bit_errors)
 
             self.__bit_errors.append(transmit_errors)
 
