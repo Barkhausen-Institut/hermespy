@@ -5,7 +5,7 @@ from .rf_chain import RfChain
 from .waveform_generator import WaveformGenerator
 from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from .waveform_generator_psk_qam import WaveformGeneratorPskQam
-from .waveform_generator_ofdm import WaveformGeneratorOfdm, FrameGuardSection, FrameSymbolSection
+from .waveform_generator_ofdm import WaveformGeneratorOfdm, FrameGuardSection, FrameSymbolSection, FrameResource
 from .tools.shaping_filter import ShapingFilter
 
 __author__ = "Jan Adler"
@@ -20,4 +20,4 @@ __status__ = "Prototype"
 
 __all__ = ['Modem', 'Transmitter', 'Receiver', 'RfChain', 'WaveformGenerator', 'WaveformGeneratorChirpFsk',
            'WaveformGeneratorPskQam', 'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection',
-           'FrameSymbolSection']
+           'FrameSymbolSection', 'FrameResource']

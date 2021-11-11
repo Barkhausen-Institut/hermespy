@@ -4,16 +4,19 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union
 from copy import copy
-from scipy import signal
 from enum import Enum
 from abc import abstractmethod
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
-from scipy.constants import pi
 from functools import lru_cache
-import numpy as np
 
+import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
+from scipy import signal
+from scipy.constants import pi
+from scipy.interpolate import griddata
+from numba import jit
 from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
+
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -43,7 +46,7 @@ class ChannelEstimation(Enum):
     IDEAL_PREAMBLE = 1
     IDEAL_MIDAMBLE = 2
     IDEAL_POSTAMBLE = 3
-    REFERENCE_SIGNAL = 4
+    REFERENCE = 4
 
 
 class FrameElement:
@@ -387,10 +390,11 @@ class FrameSymbolSection(FrameSection):
 
         num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
 
-        idft_matrix = self.frame.inverse_fourier_weights(num_slot_samples,
-                                                        grid.shape[0],
-                                                        self.frame.subcarrier_spacing,
-                                                        self.frame.dc_suppression)
+        idft_matrix = self.frame.inverse_fourier_weights(self.frame.modem.scenario.sampling_rate,
+                                                         num_slot_samples,
+                                                         grid.shape[0],
+                                                         self.frame.subcarrier_spacing,
+                                                         self.frame.dc_suppression)
 
         resource_signals = idft_matrix @ grid
 
@@ -435,7 +439,8 @@ class FrameSymbolSection(FrameSection):
         num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
 
         # Transform grid back to data symbols
-        dft_matrix = self.frame.fourier_weights(num_slot_samples,
+        dft_matrix = self.frame.fourier_weights(self.frame.modem.scenario.sampling_rate,
+                                                num_slot_samples,
                                                 self.num_subcarriers,
                                                 self.frame.subcarrier_spacing,
                                                 self.frame.dc_suppression)
@@ -576,7 +581,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     prefix_time_indices (numpy.ndarray):
     data_time_indices (numpy.ndarray): vectors containing the indices of the guard intervals, prefixes and data in time
         samples, considering sampling at the FFT rate
-    channel_sampling_timestamps (numpy.ndarray): vector containing the timestamps (in terms of nor obersampled samples)
+    channel_sampling_timestamps (numpy.ndarray): vector containing the timestamps (in terms of nor oversampled samples)
         of each OFDM symbol
     """
 
@@ -597,7 +602,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 #                 reference_symbols: Optional[List[np.ndarray]] = None,
 #                 fft_size: int = 1,
                  channel_estimation: Union[str, ChannelEstimation] = ChannelEstimation.IDEAL,
-                 subcarrier_spacing: float = 0.,
+                 subcarrier_spacing: float = 1e3,
                  dc_suppression: bool = True,
                  resources: Optional[List[FrameResource]] = None,
                  structure: Optional[List[FrameSection]] = None,
@@ -636,24 +641,17 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         # Initial parameter checks
         # TODO
 
-        self._samples_in_frame_no_oversampling = 0
         self._mapping = PskQamMapping(self.modulation_order)
 
-#        self._resource_element_mapping: np.array = self._calculate_resource_element_mapping()
-#        self._samples_in_frame_no_oversampling, self._cyclic_prefix_overhead = (
-#            self._calculate_samples_in_frame()
-#        )
+    def add_resource(self, resource: FrameResource) -> None:
+        """Add a OFDM frequency resource to the waveform.
 
-#        self.reference_frame = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=complex)
-#        self.data_frame_indices = np.zeros((self.symbols_per_frame, self.num_occupied_subcarriers), dtype=bool)
-        self.guard_time_indices = np.array([], dtype=int)
-        self.prefix_time_indices = np.array([], dtype=int)
-        self.data_time_indices = np.array([], dtype=int)
-        self.channel_sampling_timestamps = np.array([], dtype=int)
+        Args:
+            resource (FrameResource):
+                The resource description to be added.
+        """
 
-        # derived variables for precoding
-        self._data_resource_elements_per_symbol = np.array([])
-        # self._generate_frame_structure()
+        self.resources.append(resource)
 
     def add_section(self, section: FrameSection) -> None:
 
@@ -724,8 +722,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         return duration"""
         return self.samples_in_frame / self.modem.scenario.sampling_rate
 
-    ###################################
-    # property definitions
     @property
     def samples_in_frame(self) -> int:
         """int: Returns read-only samples_in_frame"""
@@ -745,9 +741,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return num
 
-    # property definitions END
-    #############################################
-
     def map(self, data_bits: np.ndarray) -> np.ndarray:
         return self._mapping.get_symbols(data_bits)
 
@@ -759,7 +752,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
 
         # The number of samples in time domain the frame should contain, given the current sample frequency
-        num_samples = int(round(self.frame_duration * self.modem.scenario.sampling_rate))
         output_signal = np.empty(0, dtype=complex)
 
         sent_data_symbols = 0
@@ -830,276 +822,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
 
-    def create_frame(self, timestamp: int, data_bits: np.array) -> Tuple[np.ndarray, int, int]:
-        """Creates a modulated complex baseband signal for a whole transmit frame.
-
-        The signal will be modulated based on the bits generated by "self.source".
-
-        Args:
-            timestamp(int): timestamp (in samples) of initial sample in frame
-            data_bits (np.array):
-                Flattened blocks, whose bits are supposed to fit into this frame.
-
-        Returns:
-            (np.ndarray, int, int):
-            
-            `output_signal(numpy.ndarray)`: 2D array containing the transmitted signal with
-            (self.param.number_tx_antennas x self.samples_in_frame) elements
-
-            `timestamp(int)`: current timestamp (in samples) of the following frame
-
-            `initial_sample_num(int)`: sample in which this frame starts (equal to initial timestamp)
-        """
-        output_signal: np.ndarray = np.zeros(
-            (self.param.number_tx_antennas, self._samples_in_frame_no_oversampling),
-            dtype=complex)
-
-        # fill time-frequency grid with reference and data symbols
-        data_symbols_in_frame = self._mapping.get_symbols(data_bits)
-
-        # MIMO if needed
-        data_symbols_in_frame = self._mimo.encode(data_symbols_in_frame)
-        data_symbols_in_frame = data_symbols_in_frame.flatten('F')
-
-        # data is mapped across all frequencies first
-        full_frame = copy(self.reference_frame)
-        full_frame[np.where(self.data_frame_indices)] = data_symbols_in_frame
-
-        full_frame = self._precode(full_frame)
-
-        output_signal = self.create_ofdm_frame_time_domain(full_frame)
-
-        initial_sample_num = timestamp
-        timestamp += self.samples_in_frame
-
-        if self.param.oversampling_factor > 1:
-            output_signal = signal.resample_poly(
-                output_signal, self.param.oversampling_factor, 1, axis=1)
-        return output_signal, timestamp, initial_sample_num
-
-    def create_ofdm_frame_time_domain(self, frame: np.ndarray):
-        """Creates one OFDM frame in time domain.
-
-        Args:
-            frame(numpy.array): a 3D array containing the symbols in frequency domain.
-                The array is of size N_symb x K_sc x M_tx, with N_symb the number of OFDM symbols, K_sc the number of
-                occupied subcarriers and N_tx the number of transmit antennas
-
-        Returns:
-            frame_in_time_domain(numpy.array): an M_tx x N_samp array containing the time-domain OFDM frame.
-                Note that the samples are at the FFT sampling rate, not considering any oversampling factor.
-        """
-        frame_in_freq_domain = np.zeros((self._number_ofdm_symbols, self.param.fft_size, self.param.number_tx_antennas),
-                                        dtype=complex)
-        frame_in_freq_domain[:, self._resource_element_mapping, :] = frame
-
-        frame_in_time_domain = np.fft.ifft(frame_in_freq_domain, norm='ortho', axis=1)
-        frame_in_time_domain = self._add_guard_intervals(frame_in_time_domain)
-
-        return frame_in_time_domain
-
-    def _add_guard_intervals(self, frame):
-        """Adds guard intervals and cyclic prefixes to a time-domain OFDM frame.
-
-        The position of the null guard intervals and the length of the cyclic prefixes are defined in
-        self.param.frame_structure.
-
-        Args:
-            frame(numpy.array): a 2D array containing the raw OFDM symbols in time domain. It is of size
-                N_symb x N_fft x M_tx, with M_tx the number of transmit antennas and N_symb the number of symbols.
-
-        Returns:
-            output_signal(numpy.array): an M_tx x N_samp array containing the time-domain OFDM frame.
-        """
-        output_signal: np.ndarray = np.zeros((self.param.number_tx_antennas, self._samples_in_frame_no_oversampling),
-                                             dtype=complex)
-
-        data_symbols = np.reshape(frame, (self._number_ofdm_symbols * self.param.fft_size,
-                                          self.param.number_tx_antennas))
-        data_symbols = data_symbols.transpose()
-        output_signal[:, self.data_time_indices] = data_symbols
-        output_signal[:, self.prefix_time_indices] = output_signal[:, self.prefix_time_indices + self.param.fft_size]
-
-        return output_signal
-
-    def _precode(self, frame):
-        """Precode the frequemcy-domain OFDM frame
-
-        The precoding algorithm is defined in 'self.param.precoding'. Currently, only DFT-spread precoding is supported
-
-        Args:
-            frame(numpy.array): a 3D array(N_symb x K_sc x M_tx) containing the OFDM resource elements
-
-        Returns:
-            frame(numpy.array): the precoded frame
-        """
-        if self.param.precoding == 'DFT':
-            # iterate over all symbols as they may have different number of data REs
-            for symbol in range(self._number_ofdm_symbols):
-                data_indices = self.data_frame_indices[symbol, :, 0]
-                if np.any(data_indices):
-                    data_symbols = frame[symbol, data_indices, :]
-                    data_symbols = np.fft.fft(data_symbols, axis=0, norm='ortho')
-                    frame[symbol, data_indices, :] = data_symbols
-        #elif self.param.precoding == "GFDM":
-            # 1. get data symbols from frame (nix mit gfdm zu tun)
-            # 2. definiere pulse shape, wie? li muss ahmad fragen
-            # 3. create window (gfdm_func.g2Wtx), z.B. Wtx_FD = gfdm_func.g2Wtx(g, K, M, "FD")
-            # 4. data_symbols = data_symbols.reshape(K, M), len(D) MUSS gleich K*M, sonst zero padding oder so
-            # 5. data_symbols = GFDM_Mod(D, window von 3, K_set, TD/FD)
-        return frame
-
-    def receive_frame(self,
-                      rx_signal: np.ndarray,
-                      timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[List[np.ndarray], np.ndarray]:
-        """Demodulates the signal for a whole received frame.
-
-        This method extracts a signal frame from 'rx_signal' and demodulates it according to
-        the frame and modulation parameters.
-
-        Args:
-            rx_signal(numpy.ndarray):
-                N x S array containg the received signal, with N the number of receive antennas
-                and S the number of samples left in the drop.
-            timestamp_in_samples(int):
-                timestamp of initial sample in received signal, relative to the first sample in
-                the simulation drop.
-            noise_var (float): noise variance (for equalization).
-
-        Returns:
-            (list[np.ndarray], np.ndarray):
-                `list[numpy.ndarray]`: 
-                    list of detected blocks of bits.
-                `numpy.ndarray`:
-                    N x S' array containing the remaining part of the signal, after this frame was
-                    demodulated.  S' = S - self.samples_in_frame
-        """
-        if rx_signal.shape[1] < self.samples_in_frame:
-            bits = None
-            rx_signal = np.array([])
-        else:
-            bits = np.array([])
-            frame_signal = rx_signal[:, :self.samples_in_frame]
-            rx_signal = rx_signal[:, self.samples_in_frame:]
-
-            if self.param.oversampling_factor > 1:
-                frame_signal = signal.decimate(frame_signal, self.param.oversampling_factor)
-
-            frame_in_freq_domain = self._get_frame_in_freq_domain(copy(frame_signal))
-            channel_estimation = self.channel_estimation(frame_in_freq_domain, timestamp_in_samples)
-
-            frame_symbols, noise_var = self._equalize(frame_in_freq_domain, channel_estimation, noise_var)
-
-            frame_symbols, noise_var = self._decode(frame_symbols, noise_var)
-            bits = self._mapping.detect_bits(frame_symbols.flatten('F'), noise_var.flatten('F'))
-
-        return list([bits]), rx_signal
-
-    def _get_frame_in_freq_domain(self, frame_in_time_domain: np.ndarray):
-        """Converts a frame from time to frequency domain
-
-        This method removes all the guard intervals and prefixes, and converts time domain to frequency domain.
-
-        Args:
-            frame_in_time_domain(numpy.array): a M_rx x N_samp array containing the time-domain frame, with M_rx the
-                number of receive antennas and N_samp the number of samples in a frame (without oversampling)
-
-        Returns:
-            frame_freq_domain(numpy.array): the frequemcy-domain frame, of size M_rx x N_symb x N_fft, with N_symb the
-                number of OFDM symbols in the frame and N_fft the FFT length.
-        """
-        # remove guard intervals and cyclic prefixes
-        frame_in_time_domain = frame_in_time_domain[:, self.data_time_indices]
-
-        # convert to frequency domain
-        frame_in_time_domain = np.reshape(frame_in_time_domain, (self.param.number_rx_antennas,
-                                                                 self._number_ofdm_symbols,
-                                                                 self.param.fft_size))
-
-        frame_in_freq_domain = np.fft.fft(frame_in_time_domain, norm='ortho')
-
-        return frame_in_freq_domain
-
-    def _equalize(self, frame_in_freq_domain, channel_in_freq_domain, noise_var):
-        """Equalize the frequency-domain symbols
-
-        Perform linear frequency-domain equalization according to estimated channel.
-        Both ZF or MMSE are supported, as defined in 'self.param.equalization'
-
-        Args:
-            frame_in_freq_domain(numpy.ndarray): a 3D array (M_rx x N_symb x N_fft) containing the frequency-domain frame,
-                with M_rx the number of receive antennas, N_symb the number of OFDM symbols in a frame and N_fft the FFT
-                length.
-            channel_in_freq_domain(numpy.ndarray): a 4D array (M_rx x N_symb x N_fft) containing the channel estimates
-            noise_var(float): estimated noise variance
-
-        Returns:
-            data_symbols(numpy.ndarray): M_rx x N_re array with data symbols after equalization, with N_re the number of
-                resource elements (RE) in the frame
-            noise_var(numpy.ndarray): M_rx x N_re array with the estimated noise variance at each RE
-        """
-        # remove null subcarriers
-        resource_elements = frame_in_freq_domain[:, :, self._resource_element_mapping]
-        channel_in_freq_domain = channel_in_freq_domain[:, :, :, self._resource_element_mapping]
-
-        # remove reference symbols
-        data_frame_indices = self.data_frame_indices[:, :, 0]
-        resource_elements = resource_elements[:, data_frame_indices]
-        channel_in_freq_domain = channel_in_freq_domain[:, :, data_frame_indices]
-
-        # MIMO decode
-        data_symbols, channel, noise_var = self._mimo.decode(resource_elements, channel_in_freq_domain, noise_var)
-
-        # equalize
-        if self.param.equalization == "MMSE":
-            snr = (channel * np.conj(channel))**2 / noise_var
-            equalizer = 1 / channel * (snr / (snr + 1.))
-        else:  # ZF
-            equalizer = 1 / channel
-
-        noise_var = noise_var * np.abs(equalizer)**2
-        data_symbols = data_symbols * equalizer
-
-        return data_symbols, noise_var
-
-    def _decode(self, frame, noise_var):
-        """Decode the frequency-domain OFDM frame according to a given precoding method
-
-        The precoding algorithm is defined in 'self.param.precoding'. Currently, only DFT-spread precoding is supported
-
-        Args:
-            frame(numpy.array): an M_rx x N_re array containing the OFDM resource elements, with M_rx the number of
-                receive antennas and N_re the number of data resource elements in the frame
-            noise_var(numpy.array): an M_rx x N_re array containing the noise variance
-
-        Returns:
-            frame(numpy.array): symbols after decoding
-            noise_var(numpy.array): noise variance after decoding
-        """
-        if self.param.precoding == "DFT":
-            frame_idx = 0
-            for symbol in range(self._number_ofdm_symbols):
-                data_indices = self.data_frame_indices[symbol, :, 0]
-                if np.any(data_indices):
-                    idx_end = frame_idx + self._data_resource_elements_per_symbol[symbol]
-                    data_symbols = (frame[:, frame_idx: idx_end])
-                    noise_var_data = noise_var[:, frame_idx: idx_end]
-
-                    frame[:, frame_idx:idx_end] = np.fft.ifft(data_symbols, norm='ortho')
-                    noise_var[:, frame_idx: idx_end] = np.broadcast_to(np.mean(noise_var_data, axis=1),
-                                                                       (self._data_resource_elements_per_symbol[symbol],
-                                                                        self.param.number_rx_antennas)).T
-
-                frame_idx += self._data_resource_elements_per_symbol[symbol]
-        #elif self.param.precoding == "GFDM":
-            # 1. create window für rx, Wtx2Wrx(Window transmitter, "ZF", 1, 1)
-            # 2. data_symbols = GFDM_Demod(data_symbols, window von 1, K_set, TD/FD)
-            # (3. data_symbols = data_sy)
-            # 3. data_symbols = von KxM auf K*Mx1... wie's halt sein muss
-
-        return frame, noise_var
-
     def __channel_estimation(self, symbol_grid: np.ndarray, channel_grid: np.ndarray, resource_mask: np.ndarray) -> np.ndarray:
         """Performs channel estimation
 
@@ -1138,61 +860,14 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_POSTAMBLE:
             return channel_grid[:, -1].repeat(channel_grid.shape[1], axis=1)
 
-        if self.channel_estimation_algorithm == ChannelEstimation.REFERENCE_SIGNAL:
-            return self.__reference_based_channel_estimation(rx_signal)
+        if self.channel_estimation_algorithm == ChannelEstimation.REFERENCE:
+            return self.reference_based_channel_estimation(symbol_grid, resource_mask)
 
-        #if self.param.stream_responses in {"LS", "LEAST_SQUARE"}:
-        #    return self.__reference_based_channel_estimation(rx_signal)
-        #    channel_in_freq_domain = np.repeat(channel_in_freq_domain[:, :, np.newaxis, :], number_of_symbols, axis=2)
-        #else:
-        #    raise ValueError('invalid channel estimation type')
-        #
-        # return channel_in_freq_domain
+        raise RuntimeError("Unknown OFDM channel estimation routine requested")
 
-    def __ideal_channel_estimation(self) -> np.ndarray:
-        """returns ideal channel estimation
-
-        This method extracts the frequency-domain response from a known channel impulse response. The channel is the one
-        from `self.channel`.
-
-        Args:
-            channel_timestamp(np.array): timestamp (in seconds) at which the channel impulse response should be
-                measured
-
-        Returns:
-            np.ndarray:
-                channel in freqency domain in shape `FFT_SIZE x #rx_antennas x #tx_antennas x #timestamps
-        """
-        channel_in_freq_domain_MIMO = np.zeros(
-            (self.param.fft_size * self.param.oversampling_factor,
-             self._channel.number_rx_antennas,
-             self._channel.number_tx_antennas,
-             channel_timestamp.size),
-            dtype=complex
-        )
-        cir = self._channel.get_impulse_response(channel_timestamp)
-        cir = np.swapaxes(cir, 0, 3)
-
-        for rx_antenna_idx in range(self._channel.number_rx_antennas):
-            for tx_antenna_idx in range(self._channel.number_tx_antennas):
-                channel_in_freq_domain_MIMO[:, rx_antenna_idx, tx_antenna_idx, :] = (
-                    np.fft.fft(
-                        cir[:, rx_antenna_idx, tx_antenna_idx, :],
-                        n=self.param.fft_size * self.param.oversampling_factor,
-                        axis=0
-                    )
-                )
-
-        if self.param.oversampling_factor > 1:
-            channel_in_freq_domain_MIMO = np.delete(
-                channel_in_freq_domain_MIMO,
-                slice(int(self.param.fft_size / 2), -int(self.param.fft_size / 2)),
-                axis=0
-            )
-
-        return channel_in_freq_domain_MIMO
-
-    def reference_based_channel_estimation(self, rx_signal, frequency_bins=np.array([])):
+    def reference_based_channel_estimation(self,
+                                           symbol_grid: np.ndarray,
+                                           resource_mask: np.ndarray):
         """returns channel estimation base don reference signals
 
         This method estimates the channel using reference symbols. Only LS method is curently implemented. The function
@@ -1206,47 +881,61 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         Returns:
             np.ndarray:
-                channel in freqency domain in shape `FFT_SIZE x #rx_antennas x #tx_antennas x #timestamps
+                channel in frequency domain in shape `FFT_SIZE x #rx_antennas x #tx_antennas x #timestamps
         """
+
+        propagated_reference_symbols = symbol_grid.T[resource_mask[ElementType.REFERENCE.value, ::].T]
+        reference_symbols = np.ones(len(propagated_reference_symbols), dtype=complex)  # ToDo: Variable reference symbols
+        reference_channel_estimation = propagated_reference_symbols / reference_symbols
+
+        channel_estimation = np.zeros(symbol_grid.shape, dtype=complex)
+        channel_estimation.T[resource_mask[ElementType.REFERENCE.value, ::].T] = reference_channel_estimation
+
+        interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
+        holes = np.where(np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
+
+        # ToDo: Check with group what to do about missing values outside the convex hull
+        interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method='nearest')
+        channel_estimation[holes] = interpolated_holes
+        return channel_estimation[..., np.newaxis]   # Append an additional axis for multiple transmit antennas
 
         # adjust sizes of matrices, consider only occupied subcarriers
-        reference_frame = np.moveaxis(self.reference_frame, -1, 0)
-        rx_signal = rx_signal[:, :, self._resource_element_mapping]
-        ref_freq_idx = np.any(reference_frame, axis=(0, 1))
-        ref_idx = reference_frame != 0
-
-        # LS channel estimation (averaged over time)
-        channel_estimation_time_freq = np.zeros(rx_signal.shape, dtype=complex)
-        channel_estimation_time_freq[ref_idx] = rx_signal[ref_idx] / reference_frame[ref_idx]
-        channel_estimation = np.zeros((self.param.number_rx_antennas, self.param.number_tx_antennas,
-                                       self.param.number_occupied_subcarriers), dtype=complex)
-        channel_estimation[0, 0, ref_freq_idx] = (np.sum(channel_estimation_time_freq[:, :, ref_freq_idx], axis=1) /
-                                                  np.sum(ref_idx[:, :, ref_freq_idx], axis=1))
-
-        # extend matrix to all N_FFT subcarriers
-        channel_estimation_freq = np.zeros((self.param.number_rx_antennas, self.param.number_tx_antennas,
-                                            self.param.fft_size), dtype=complex)
-        channel_estimation_freq[:, :, self._resource_element_mapping] = channel_estimation
-
-        """
-        if np.any(channel_estimation_freq[:, :, self._resource_element_mapping] == 0) or frequency_bins.size:
-            # if stream_responses is missing at any frequency or different frequencies
-            # then interpolate
-            ch_est_freqs = np.where(stream_responses != 0)[1]
-            ch_est_freqs[ch_est_freqs > self.param.fft_size / 2] = (ch_est_freqs[ch_est_freqs > self.param.fft_size / 2]
-                                                                    - self.param.fft_size)
-            ch_est_freqs = ch_est_freqs * self.param.subcarrier_spacing
-            ch_est_freqs = np.fft.fftshift(ch_est_freqs)
-
-            interp_function = interpolate.interp1d(ch_est_freqs, np.fft.fftshift(stream_responses))
-
-            stream_responses = interp_function(frequency_bins)
-        """
-
-        # multiple antennas
-        # check interpolation
-
-        return channel_estimation_freq
+#        reference_frame = np.moveaxis(self.reference_frame, -1, 0)
+#        rx_signal = rx_signal[:, :, self._resource_element_mapping]
+#        ref_freq_idx = np.any(reference_frame, axis=(0, 1))
+#        ref_idx = reference_frame != 0
+#
+#        # LS channel estimation (averaged over time)
+#        channel_estimation_time_freq = np.zeros(rx_signal.shape, dtype=complex)
+#        channel_estimation_time_freq[ref_idx] = rx_signal[ref_idx] / reference_frame[ref_idx]
+#        channel_estimation = np.zeros((self.param.number_rx_antennas, self.param.number_tx_antennas,
+#                                       self.param.number_occupied_subcarriers), dtype=complex)
+#        channel_estimation[0, 0, ref_freq_idx] = (np.sum(channel_estimation_time_freq[:, :, ref_freq_idx], axis=1) /
+#                                                  np.sum(ref_idx[:, :, ref_freq_idx], axis=1))
+#
+#        # extend matrix to all N_FFT subcarriers
+#        channel_estimation_freq = np.zeros((self.param.number_rx_antennas, self.param.number_tx_antennas,
+#                                            self.param.fft_size), dtype=complex)
+#        channel_estimation_freq[:, :, self._resource_element_mapping] = channel_estimation"""
+#
+#
+#        if np.any(channel_estimation_freq[:, :, self._resource_element_mapping] == 0) or frequency_bins.size:
+#            # if stream_responses is missing at any frequency or different frequencies
+#            # then interpolate
+#            ch_est_freqs = np.where(stream_responses != 0)[1]
+#            ch_est_freqs[ch_est_freqs > self.param.fft_size / 2] = (ch_est_freqs[ch_est_freqs > self.param.fft_size / 2]
+#                                                                    - self.param.fft_size)
+#            ch_est_freqs = ch_est_freqs * self.param.subcarrier_spacing
+#            ch_est_freqs = np.fft.fftshift(ch_est_freqs)
+#
+#            interp_function = interpolate.interp1d(ch_est_freqs, np.fft.fftshift(stream_responses))
+#
+#            stream_responses = interp_function(frequency_bins)
+#
+#        # multiple antennas
+#        # check interpolation
+#
+#        return channel_estimation_freq
 
     @property
     def bits_per_frame(self) -> int:
@@ -1344,10 +1033,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return ofdm
 
+    @staticmethod
     @lru_cache(maxsize=5)
-    def fourier_weights(self, num_timestamps, num_subcarriers, subcarrier_spacing, dc_suppression) -> np.ndarray:
+    @jit
+    def fourier_weights(sampling_rate, num_timestamps, num_subcarriers, subcarrier_spacing, dc_suppression) -> np.ndarray:
 
-        slot_timestamps = np.arange(num_timestamps) / self.modem.scenario.sampling_rate
+        slot_timestamps = np.arange(num_timestamps) / sampling_rate
 
         if dc_suppression:
             discrete_frequencies = 2 * pi * (1 + np.arange(num_subcarriers)) * subcarrier_spacing
@@ -1357,10 +1048,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return np.exp(-1j * np.outer(discrete_frequencies, slot_timestamps)) / np.sqrt(num_timestamps)
 
+    @staticmethod
     @lru_cache(maxsize=5)
-    def inverse_fourier_weights(self, num_timestamps, num_subcarriers, subcarrier_spacing, dc_suppression) -> np.ndarray:
+    @jit
+    def inverse_fourier_weights(sampling_rate, num_timestamps, num_subcarriers, subcarrier_spacing, dc_suppression) -> np.ndarray:
 
-        slot_timestamps = np.arange(num_timestamps) / self.modem.scenario.sampling_rate
+        slot_timestamps = np.arange(num_timestamps) / sampling_rate
 
         if dc_suppression:
             discrete_frequencies = 2 * pi * (1 + np.arange(num_subcarriers)) * subcarrier_spacing
