@@ -101,11 +101,6 @@ class Statistics:
         self.__num_drops = 0
         self.__num_snr_loops = len(snr_loop)
 
-        self.run_flag = [
-            np.ones(self.__num_snr_loops, dtype=np.bool_)
-            for _ in range(self.__scenario.num_transmitters)
-        ]
-
         self.bit_error_num_drops = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
         self.block_error_num_drops = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
@@ -286,6 +281,12 @@ class Statistics:
                     # Update maximal block error over all drops
                     block_error_max = self.block_error_max[snr_index, tx_modem, rx_modem]
                     self.block_error_max[snr_index, tx_modem, rx_modem] = max(block_error_max, block_error)
+
+    def iterative_mean(self, old_mean: float,
+                             no_old_samples: float,
+                             new_sample: float) -> float:
+        return no_old_samples / (no_old_samples + 1) * old_mean + 1 / (no_old_samples+1) * new_sample
+
 
         # iterate over receivers and its signals received
         """for rx_modem_idx, received_signals in enumerate(received_bits):
