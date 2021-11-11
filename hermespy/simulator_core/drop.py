@@ -261,9 +261,10 @@ class Drop:
 
             transmit_errors: List[Optional[np.ndarray]] = []
             for receiver_bits in self.received_bits:
-
+                
                 # Skip error computation if padding is disabled and the stream lengths don't match
-                if len(receiver_bits) != len(transmitter_bits) and not self.__pad_bit_errors:
+                if (len(receiver_bits) != len(transmitter_bits) 
+                    and not self.__pad_bit_errors) or receiver_bits is None:
                     transmit_errors.append(None)
 
                 else:
