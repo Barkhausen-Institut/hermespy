@@ -9,7 +9,6 @@ from scipy.fft import fftshift
 from enum import Enum
 import scipy.fft as fft
 import numpy as np
-from hermespy import scenario
 
 from hermespy.scenario import Scenario
 from .drop import Drop
