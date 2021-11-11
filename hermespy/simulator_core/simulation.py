@@ -12,6 +12,7 @@ from .executable import Executable, Verbosity
 from .drop import Drop
 from .statistics import SNRType, Statistics
 from hermespy.scenario import Scenario
+from hermespy.modem import Receiver
 from hermespy.channel import QuadrigaInterface, Channel
 
 __author__ = "Jan Adler"
@@ -578,10 +579,10 @@ class Simulation(Executable):
             propagation_matrix.append(propagation_row)
 
         return propagation_matrix
-
     @staticmethod
     def receive(scenario: Scenario,
                 propagation_matrix: List[List[Tuple[np.ndarray, np.ndarray]]],
+                snr_mask: np.ndarray,
                 snr_type: SNRType = SNRType.EBN0,
                 snr: float = 0.0) -> List[Tuple[np.ndarray, np.ndarray, float]]:
         """Generate signals received by all receivers registered with this scenario.
@@ -622,32 +623,42 @@ class Simulation(Executable):
         received_signals: List[Tuple[np.ndarray, np.ndarray, float]] = []
         for receiver_index, (receiver, transmitted_signals) in enumerate(zip(scenario.receivers,
                                                                              propagation_matrix)):
-
             impinging_signals = [(tx_tuple[0], transmitter.carrier_frequency)
                                  for tx_tuple, transmitter in zip(transmitted_signals, scenario.transmitters)]
+            # delete masked signals
+            receiving_tx = np.flatnonzero(snr_mask[:, receiver_index])
+            if len(receiving_tx) > 0:
+                impinging_signals = [impinging_signals[tx_idx] for tx_idx in receiving_tx]
 
-            # Compute noise variance at the receiver
-            noise_variance = 0.0
+                # Compute noise variance at the receiver
+                noise_variance = Simulation.calculate_noise_variance(
+                    receiver, snr, snr_type)
 
-            if snr_type == SNRType.EBN0:
-                noise_variance = receiver.waveform_generator.bit_energy / snr
+                # Model rf-signal reception at the respective receiver
+                received_signal = receiver.receive(impinging_signals, noise_variance)
 
-            elif snr_type == SNRType.ESN0:
-                noise_variance = receiver.waveform_generator.symbol_energy / snr
+                # Select the proper channel impulse response
+                channel = transmitted_signals[receiver.reference_transmitter.index][1]
 
-            elif snr_type == SNRType.CUSTOM:  # TODO: What is custom exactly supposed to do?
-                noise_variance = 1 / snr
-
-            # Model rf-signal reception at the respective receiver
-            received_signal = receiver.receive(impinging_signals, noise_variance)
-
-            # Select the proper channel impulse response
-            channel = transmitted_signals[receiver.reference_transmitter.index][1]
-
-            # Save result, what else?
-            received_signals.append((received_signal, channel, noise_variance))
+                # Save result, what else?
+                received_signals.append((received_signal, channel, noise_variance))
+            else:
+                received_signals.append((None, None, None))
 
         return received_signals
+
+    @staticmethod
+    def calculate_noise_variance(receiver: Receiver, snr: float, snr_type: SNRType) -> float:
+        if snr_type == SNRType.EBN0:
+            noise_variance = receiver.waveform_generator.bit_energy / snr
+
+        elif snr_type == SNRType.ESN0:
+            noise_variance = receiver.waveform_generator.symbol_energy / snr
+
+        elif snr_type == SNRType.CUSTOM:  # TODO: What is custom exactly supposed to do?
+            noise_variance = 1 / snr
+        return noise_variance
+
 
     @staticmethod
     def detect(scenario: Scenario, received_signals: List[Tuple[np.ndarray, np.ndarray, float]]) -> List[np.ndarray]:
