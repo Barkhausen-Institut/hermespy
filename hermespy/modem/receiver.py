@@ -156,18 +156,12 @@ class Receiver(Modem):
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
 
-        # Since no spatial stream coding is supported,
-        # the channel response at each transmit input is the sum over all impinging antenna signals
-        # ToDo: This is probably not correct, since it depends on the multiplexing
-        stream_responses = np.sum(channel, axis=2)
-
         # Generate a symbol stream for each dedicated base-band signal
         symbol_streams: List[List[complex]] = []
         symbol_streams_responses: List[List[complex]] = []
         symbol_streams_noise: List[List[float]] = []
 
-        for stream_idx, (rx_signal, stream_response) in enumerate(zip(baseband_signal,
-                                                                      np.rollaxis(stream_responses, 1))):
+        for stream_idx, (rx_signal, stream_response) in enumerate(zip(baseband_signal, np.rollaxis(channel, 1))):
 
             # Synchronization
             frame_samples, frame_responses = self.waveform_generator.synchronize(rx_signal, stream_response)

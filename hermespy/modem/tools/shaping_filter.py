@@ -137,7 +137,7 @@ class ShapingFilter:
         self.impulse_response = self.impulse_response / \
             np.linalg.norm(self.impulse_response)
 
-    def filter(self, input_signal: np.array) -> np.array:
+    def filter(self, input_signal: np.ndarray) -> np.ndarray:
         """Filters the input signal with the shaping filter.
 
         Args:
@@ -147,8 +147,13 @@ class ShapingFilter:
             np.array:
                 Filtered signal with  `N + samples_per_symbol*length_in_symbols - 1` samples.
         """
-        output = np.convolve(input_signal, self.impulse_response)
-        return output
+
+        # Convolve over a vector by default
+        if input_signal.ndim == 1:
+            return np.convolve(input_signal, self.impulse_response)
+
+        # For multidimensional arrays, convolve over the first axis
+        return np.apply_along_axis(lambda v: np.convolve(v, self.impulse_response), axis=0, arr=input_signal)
 
     def _get_raised_cosine(self, filter_type: str, roll_off: float,
                            bandwidth_expansion: float) -> np.ndarray:

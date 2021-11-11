@@ -591,7 +591,7 @@ class MultipathFadingChannel(Channel):
         for path_idx, delay in enumerate(self.__delays):
 
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples+1)
-            filter_instances[path_idx, :] = resampling_matrix[:, 0]
+            filter_instances[path_idx, :] = resampling_matrix[:, 0] / np.linalg.norm(resampling_matrix)
 
         return filter_instances
 

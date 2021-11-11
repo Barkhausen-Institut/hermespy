@@ -323,7 +323,8 @@ class WaveformGenerator(ABC):
                 Vector of complex base-band signal samples of a single input stream with `num_samples` entries.
 
             stream_response (np.ndarray):
-                Vector of channel impulse responses. ToDo: Add domains.
+                Channel matrix for a single antenna stream.
+                Should be of dimension `num_samples`x`num_input_streams`x`max_delay_in_samples+1`.
 
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple of signal samples and channel responses sorted into frames.
@@ -332,14 +333,14 @@ class WaveformGenerator(ABC):
             ValueError: If the length of `signal` and the first dimension of `channel_response` is not identical.
         """
 
-        if len(signal) != (stream_response.shape[0] + stream_response.shape[1] - 1):
+        if len(signal) != (stream_response.shape[0] + stream_response.shape[2] - 1):
             raise ValueError("Signal length and the first response dimension must be matching")
 
         samples_per_frame = self.samples_in_frame
         num_frames = int(floor(len(signal) / samples_per_frame))
 
         frames = np.empty((num_frames, samples_per_frame), dtype=complex)
-        frame_responses = np.empty((num_frames, samples_per_frame), dtype=complex)
+        frame_responses = np.empty((num_frames, samples_per_frame, stream_response.shape[1]), dtype=complex)
 
         # By default, there is no synchronization, i.e. we assume the first signal is also the first sample of
         # the first frame. ToDo: Check with André how to implement general equalization
@@ -347,7 +348,7 @@ class WaveformGenerator(ABC):
 
             # ToDo: This currently does not account for delay overhead....
             frames[f, :] = signal[f*samples_per_frame:(f+1)*samples_per_frame]
-            frame_responses[f, :] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, 0]
+            frame_responses[f, ::] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, :, 0]
 
         return frames, frame_responses
 
@@ -360,18 +361,19 @@ class WaveformGenerator(ABC):
 
         Args:
 
-            signal:
-                Vector of complex-valued base-band samples of a modulated signal.
+            signal (np.ndarray):
+                Vector featuring `num_samples` of complex-valued base-band samples of a modulated signal.
 
-            impulse_response:
-                Vector of complex valued base-band channel impulse responses of a modulated signal.
+            impulse_response (np.ndarray):
+                Vector featuring `num_samples`x`num_input_streams` of complex valued base-band channel
+                impulse responses of a modulated signal.
 
-            noise_variance:
+            noise_variance (float):
                 Variance of the thermal noise introduced during reception.
 
         Returns:
             (np.ndarray, np.ndarray, np.ndarray):
-                Tuple of 3 vectors of equal length:
+                Tuple of 3 vectors of equal-length first dimension `num_symbols`.
                 The demodulated data symbols, their channel estimates and their noise variance.
         """
         ...

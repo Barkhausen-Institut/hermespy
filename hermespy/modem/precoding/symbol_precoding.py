@@ -177,7 +177,7 @@ class SymbolPrecoding:
             ValueError: If dimensions of `stream_responses`, `stream_noises` and `input_streams` do not match.
         """
 
-        if np.any(input_stream.shape != stream_responses.shape) or np.any(input_stream.shape != stream_noises.shape):
+        if np.any(input_stream.shape[:2] != stream_responses.shape[:2]) or np.any(input_stream.shape != stream_noises.shape):
             raise ValueError("Dimensions of input_stream and stream_responses must be identical")
 
         symbols_iteration = input_stream.copy()
@@ -190,7 +190,7 @@ class SymbolPrecoding:
                                                                                     streams_iteration,
                                                                                     noises_iteration)
 
-        return input_stream.flatten()
+        return symbols_iteration.flatten()
 
     def required_outputs(self, precoder: Precoder) -> int:
         """Query the number output streams of a given precoder within a transmitter.
