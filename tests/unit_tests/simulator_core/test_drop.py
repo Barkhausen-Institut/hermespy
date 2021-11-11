@@ -14,14 +14,18 @@ class TestDrop(Drop):
         super().__init__([], [], [], received_signals, received_bits, received_block_sizes)
 
 class TestStoppingCrtiteria(unittest.TestCase):
+    def setUp(self) -> None:
+        self.received_signals_one_modem = [np.random.randint(low=0, high=10, size=(1,10))]
+        self.drop_one_modem = TestDrop(received_signals=self.received_signals_one_modem)
+        self.window_size_one_modem = 10
+
     def test_receive_stft_properly_calculated_for_non_none_signals(self) -> None:
-        received_signals = [np.random.randint(low=0, high=10, size=(1,10))]
-        window_size = len(received_signals[0][0])
-        f, t, transform = signal.stft(received_signals[0][0], nperseg=window_size,
-                            noverlap = int(.5*window_size),
+        f, t, transform = signal.stft(
+                            self.received_signals_one_modem[0][0],
+                            nperseg=self.window_size_one_modem,
+                            noverlap = int(.5*self.window_size_one_modem),
                             return_onesided=False)
-        drop = TestDrop(received_signals=received_signals)
-        receive_stft = drop.receive_stft
+        receive_stft = self.drop_one_modem.receive_stft
         np.testing.assert_array_almost_equal(
             fftshift(f), receive_stft[0][0]
         )
