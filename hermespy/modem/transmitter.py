@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
-from typing import TYPE_CHECKING, Type, List, Any, Optional
+from typing import Type, List, Any, Optional
 import numpy as np
 import numpy.random as rnd
 
@@ -11,9 +11,6 @@ from hermespy.modem import Modem
 from hermespy.source import BitsSource
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.precoding import SymbolPrecoding
-
-if TYPE_CHECKING:
-    from hermespy.channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -65,7 +62,7 @@ class Transmitter(Modem):
 
         # Init parameters
         self.power = power
-        self.bits_source = BitsSource(self) if bits_source is None else BitsSource
+        self.bits_source = BitsSource(self) if bits_source is None else bits_source
 
     @property
     def power(self) -> float:

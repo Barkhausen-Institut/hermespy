@@ -76,7 +76,7 @@ Modems:
     # 2x2 MIMO with Single-Carrier Spatial Precoding
     num_antennas: 2
     Precoding:
-      - ZF
+      - SM
 
     WaveformOFDM:
 

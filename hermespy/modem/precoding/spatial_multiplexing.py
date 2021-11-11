@@ -4,6 +4,7 @@
 from __future__ import annotations
 from typing import Type, Tuple
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
+from fractions import Fraction
 import numpy as np
 
 from . import SymbolPrecoder
@@ -39,8 +40,8 @@ class SpatialMultiplexing(SymbolPrecoder):
 
         number_of_streams = self.num_output_streams
 
-        # Repeat the data symbols
-        encoded_symbol_stream = symbol_stream.repeat(number_of_streams, axis=0)
+        # Distribute data symbols to the stream
+        encoded_symbol_stream = np.reshape(symbol_stream, (number_of_streams, -1), 'F')
 
         return encoded_symbol_stream
 
@@ -49,8 +50,12 @@ class SpatialMultiplexing(SymbolPrecoder):
                stream_responses: np.ndarray,
                stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
-        # Decoding is not supported!
-        raise RuntimeError("Spatial multiplexing does not support decoding operations")
+        # Collect data symbols from the stream
+        decoded_stream = np.reshape(symbol_stream, (1, -1), 'F')
+        decoded_responses = np.reshape(stream_responses, (1, decoded_stream.shape[1], -1), 'F')
+        decoded_noises = np.reshape(stream_noises, (1, -1), 'F')
+
+        return decoded_stream, decoded_responses, decoded_noises
 
     @property
     def num_input_streams(self) -> int:
@@ -63,6 +68,13 @@ class SpatialMultiplexing(SymbolPrecoder):
 
         # Always outputs the required number of streams
         return self.required_num_output_streams
+
+    @property
+    def rate(self) -> Fraction:
+
+        # Spatial multiplexing distributes the incoming stream symbols
+        # equally over the outgoing streams.
+        return Fraction(self.num_input_streams, self.num_output_streams)
 
     @classmethod
     def to_yaml(cls: Type[SpatialMultiplexing],
