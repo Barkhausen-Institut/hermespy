@@ -2,13 +2,13 @@
 """Test HermesPy simulation executable."""
 
 import unittest
-from unittest.mock import Mock, create_autospec
+from unittest.mock import Mock
+from typing import List, Tuple
 
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.modem import transmitter
-from hermespy.channel import Channel
+from hermespy.modem import Receiver
 from hermespy.scenario.scenario import Scenario
 from hermespy.simulator_core import Simulation, SNRType
 
@@ -78,6 +78,50 @@ class TestSimulation(unittest.TestCase):
         """Test YAML serialization recall validity."""
         pass
 
+class TestReceiver(Receiver):
+    """Overrides some methods from Receiver to facilitate testing."""
+    def __init__(self, no_antennas: int, scenario: Scenario) -> None:
+        self.no_antennas = no_antennas
+        self.__scenario = scenario
+        self.reference_transmitter = Mock()
+        self.reference_transmitter.index = 0
+
+    @property
+    def reference_transmitter(self) -> Mock:
+        return self.__reference_transmitter
+
+    @reference_transmitter.setter
+    def reference_transmitter(self, val: Mock) -> None:
+        self.__reference_transmitter = val
+
+    @property
+    def scenario(self) -> Scenario:
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, val: Scenario) -> None:
+        self.__scenario = val
+
+    def receive(self, rf_signals: List[Tuple[np.ndarray, float]],
+                noise_variance: float) -> np.ndarray:
+        """Receive signals and just add them.
+
+        Args:
+            rf_signals (List[Tuple[np.ndarray, float]]):
+                List containing pairs of rf-band samples and their respective carrier frequencies.
+
+            noise_variance (float):
+                Variance (i.e. power) of the thermal noise added to the signals during reception.
+        """
+        no_samples = rf_signals[0][0].shape[1]
+        received_signal = np.zeros((self.no_antennas, no_samples))
+        for signal, _  in rf_signals:
+            if signal is not None:
+                for antenna_idx in range(signal.shape[0]):
+                    received_signal[antenna_idx, :] += signal[antenna_idx, :]
+
+        return received_signal
+
 class TestStoppingCriteria(unittest.TestCase):
     def setUp(self) -> None:
         self.no_rx = 2
@@ -87,14 +131,15 @@ class TestStoppingCriteria(unittest.TestCase):
         self.simulation.min_num_drops = 1
         self.simulation.max_num_drops = 1
 
-
         self.scenario = Scenario()
         self.scenario.drop_duration = 0.1
-        for rx_idx in range(self.no_rx):
-            self.scenario.add_receiver(Mock())
-        for tx_idx in range(self.no_tx):
-            self.scenario.add_transmitter(Mock())
+        self.scenario.add_receiver(TestReceiver(1, self.scenario))
+        self.scenario.add_receiver(TestReceiver(1, self.scenario))
 
+        self.scenario.add_transmitter(Mock())
+        self.scenario.add_transmitter(Mock())
+        self.scenario.add_transmitter(Mock())
+        
         mock_channel = Mock()
         mock_channel.propagate.return_value = (np.array([0]), np.array([0]))
 
@@ -113,3 +158,30 @@ class TestStoppingCriteria(unittest.TestCase):
 
         self.assertEqual(propagation_matrix[0][1], tuple())
         self.assertEqual(propagation_matrix[0][2], tuple())
+
+    def test_do_not_receive_from_tx1_2_to_rx0(self) -> None:
+        snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
+        snr_mask[1, 0] = False
+        snr_mask[2, 0] = False
+        propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1,100)),
+                                np.random.randint(low=0, high=2, size=(1,100)))
+                                for _ in range(self.no_tx)] for _ in range(self.no_rx)]
+
+        Simulation.calculate_noise_variance = Mock(return_value=0.0)
+        expected_received_signals = [
+            propagation_matrix[0][0][0],
+            propagation_matrix[1][0][0] + propagation_matrix[1][1][0] + propagation_matrix[1][2][0]
+        ]
+        propagation_matrix[0][1] = tuple((None, None))
+        propagation_matrix[0][2] = tuple((None, None))
+        received_signals = Simulation.receive(
+            self.scenario, propagation_matrix, snr_mask)
+
+        np.testing.assert_array_almost_equal(
+            received_signals[0][0],
+            expected_received_signals[0]
+        )
+        np.testing.assert_array_almost_equal(
+            received_signals[1][0],
+            expected_received_signals[1]
+        )
