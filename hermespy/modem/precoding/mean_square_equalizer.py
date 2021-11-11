@@ -61,7 +61,7 @@ class MMSEqualizer(SymbolPrecoder):
 
     @property
     def num_output_streams(self) -> int:
-        return self.required_num_output_streams
+        return self.required_num_input_streams
 
     @classmethod
     def to_yaml(cls: Type[MMSEqualizer],

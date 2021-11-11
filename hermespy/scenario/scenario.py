@@ -375,7 +375,7 @@ class Scenario:
             min_drop_duration = 0.0
             for transmitter in self.__transmitters:
 
-                max_frame_duration = transmitter.waveform_generator.max_frame_duration
+                max_frame_duration = transmitter.waveform_generator.frame_duration
                 if max_frame_duration > min_drop_duration:
                     min_drop_duration = max_frame_duration
 

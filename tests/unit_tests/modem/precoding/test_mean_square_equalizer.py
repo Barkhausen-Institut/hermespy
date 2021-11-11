@@ -77,9 +77,9 @@ class TestMMSEqualizer(unittest.TestCase):
             self.assertEqual(num_outputs, self.precoder.num_input_streams)
 
     def test_num_output_streams(self) -> None:
-        """The number of output streams should always be equal to the number of required output streams."""
+        """The number of output streams should always be equal to the number of required input streams."""
 
-        for num_outputs in [1, 5, 10]:
+        for num_inputs in [1, 5, 10]:
 
-            self.precoding.required_outputs = lambda precoder: num_outputs
-            self.assertEqual(num_outputs, self.precoder.num_output_streams)
+            self.precoding.required_inputs = lambda precoder: num_inputs
+            self.assertEqual(num_inputs, self.precoder.num_output_streams)

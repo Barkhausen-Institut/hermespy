@@ -36,21 +36,29 @@ class ZeroForcingEqualizer(SymbolPrecoder):
                stream_responses: np.ndarray,
                stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
-        equalizer = 1 / stream_responses
+        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
+        equalized_responses = np.empty(stream_responses.shape, dtype=complex)
+        equalized_noises = np.empty(stream_noises.shape, dtype=complex)
 
-        resulting_symbols = symbol_stream * equalizer
-        resulting_responses = np.ones(stream_responses.shape)
-        resulting_noises = stream_noises * np.abs(equalizer)**2
+        for idx, (symbol, response, noise) in enumerate(zip(symbol_stream.T,
+                                                            np.rollaxis(stream_responses, 1),
+                                                            np.rollaxis(stream_noises, 1))):
+            noise_covariance = np.diag(noise)
+            equalizer = np.linalg.pinv(response)
 
-        return resulting_symbols, resulting_responses, resulting_noises
+            equalized_symbols[:, idx] = equalizer @ symbol
+            equalized_responses[:, idx, :] = equalizer @ response
+            equalized_noises[:, idx] = np.diag(equalized_responses[:, idx, :] @ noise_covariance).real ** -1 - 1
+
+        return equalized_symbols, equalized_responses, equalized_noises
 
     @property
     def num_input_streams(self) -> int:
-        return self.required_num_input_streams
+        return self.required_num_output_streams
 
     @property
     def num_output_streams(self) -> int:
-        return self.required_num_output_streams
+        return self.required_num_input_streams
 
     @classmethod
     def to_yaml(cls: Type[ZeroForcingEqualizer],

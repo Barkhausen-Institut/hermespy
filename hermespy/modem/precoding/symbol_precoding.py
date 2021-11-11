@@ -190,7 +190,7 @@ class SymbolPrecoding:
                                                                                     streams_iteration,
                                                                                     noises_iteration)
 
-        return symbols_iteration.flatten()
+        return symbols_iteration
 
     def required_outputs(self, precoder: Precoder) -> int:
         """Query the number output streams of a given precoder within a transmitter.

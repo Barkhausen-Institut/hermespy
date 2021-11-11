@@ -404,7 +404,6 @@ class FrameSymbolSection(FrameSection):
             num_prefix_samples = int(round(num_samples_per_slot * cp_ratio))
             signals.append(np.append(resource_samples[-num_prefix_samples:], resource_samples))
 
-
         return np.concatenate(signals, axis=0)
 
     def demodulate(self,
@@ -416,7 +415,7 @@ class FrameSymbolSection(FrameSection):
 
         # Samples without prefixes in the time-time grid, essentially sections of the demodulating stft
         slot_samples = np.empty((samples_per_slot, self.num_timeslots), dtype=complex)
-        slot_channels = np.empty((samples_per_slot, self.num_timeslots), dtype=complex)
+        slot_channels = np.empty((samples_per_slot, self.num_timeslots, ideal_channel.shape[1]), dtype=complex)
 
         # Remove the cyclic prefixes before transformation into time-domain
         sample_index = 0
@@ -429,7 +428,7 @@ class FrameSymbolSection(FrameSection):
 
             sample_index += num_prefix_samples
             slot_samples[:, slot_idx] = baseband_signal[sample_index:sample_index+samples_per_slot]
-            slot_channels[:, slot_idx] = ideal_channel[sample_index:sample_index + samples_per_slot]
+            slot_channels[:, slot_idx, :] = ideal_channel[sample_index:sample_index + samples_per_slot]
 
             sample_index += samples_per_slot
 
@@ -442,7 +441,7 @@ class FrameSymbolSection(FrameSection):
                                                 self.frame.dc_suppression)
 
         ofdm_grid = dft_matrix @ slot_samples
-        channel_grid = dft_matrix @ slot_channels
+        channel_grid = np.tensordot(dft_matrix, slot_channels, axes=(1, 0))
 
         return ofdm_grid, channel_grid
 
@@ -717,12 +716,13 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     @property
     def frame_duration(self) -> float:
 
-        duration = 0.
+        """"duration = 0.
 
         for section in self.structure:
             duration += section.duration
 
-        return duration
+        return duration"""
+        return self.samples_in_frame / self.modem.scenario.sampling_rate
 
     ###################################
     # property definitions
@@ -785,7 +785,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # Recover OFDM grid
         symbol_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=complex)
-        impulse_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=complex)
+        impulse_grid = np.empty((self.num_subcarriers, self.words_per_frame, impulse_response.shape[1]), dtype=complex)
         resource_mask = np.empty((len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=bool)
 
         sample_index = 0
@@ -807,7 +807,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             section_mask = section.resource_mask
 
             symbol_grid[:, word_index:word_index+num_words] = section_symbol_grid
-            impulse_grid[:, word_index:word_index+num_words] = section_response_grid
+            impulse_grid[:, word_index:word_index+num_words, :] = section_response_grid
             resource_mask[:, :, word_index:word_index+num_words] = section_mask
 
             sample_index += num_samples
@@ -818,7 +818,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # Recover the data symbols, as well as the respective channel weights from the resource grids
         data_symbols = symbol_grid.T[resource_mask[ElementType.DATA.value, ::].T]
-        channel_weights = channel_estimation.T[resource_mask[ElementType.DATA.value, ::].T]
+        channel_weights = channel_estimation.T[:, resource_mask[ElementType.DATA.value, ::].T].T
         noise_variances = np.repeat(noise_variance, self.symbols_per_frame)
 
         return data_symbols, channel_weights, noise_variances
