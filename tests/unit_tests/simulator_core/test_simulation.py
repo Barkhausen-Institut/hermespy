@@ -147,22 +147,20 @@ class TestStoppingCriteria(unittest.TestCase):
             for tx_idx in range(self.no_tx):
                 self.scenario.set_channel(tx_idx, rx_idx, mock_channel)
 
+        self.snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
+        self.snr_mask[1, 0] = False
+        self.snr_mask[2, 0] = False
+
     def test_propagation_not_from_tx1_2_to_rx0(self) -> None:
         tx_signals = [np.random.randint(low=0, high=2,size=100) for _ in range(self.no_tx)]
-        snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
-        snr_mask[1, 0] = False
-        snr_mask[2, 0] = False
-        propagation_matrix = Simulation.propagate(
-            self.scenario, tx_signals, snr_mask
-        )
 
+        propagation_matrix = Simulation.propagate(
+            self.scenario, tx_signals, self.snr_mask
+        )
         self.assertEqual(propagation_matrix[0][1], tuple((None, None)))
         self.assertEqual(propagation_matrix[0][2], tuple((None, None)))
 
     def test_do_not_receive_from_tx1_2_to_rx0(self) -> None:
-        snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
-        snr_mask[1, 0] = False
-        snr_mask[2, 0] = False
         propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1,100)),
                                 np.random.randint(low=0, high=2, size=(1,100)))
                                 for _ in range(self.no_tx)] for _ in range(self.no_rx)]
@@ -175,7 +173,7 @@ class TestStoppingCriteria(unittest.TestCase):
         propagation_matrix[0][1] = tuple((None, None))
         propagation_matrix[0][2] = tuple((None, None))
         received_signals = Simulation.receive(
-            self.scenario, propagation_matrix, snr_mask)
+            self.scenario, propagation_matrix, self.snr_mask)
 
         np.testing.assert_array_almost_equal(
             received_signals[0][0],
