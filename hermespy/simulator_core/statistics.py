@@ -212,7 +212,8 @@ class Statistics:
 
         # Add new periodogram to the sum of periodograms
         for periodogram, (_, new_periodogram) in zip(self._periodogram_tx, transmit_spectra):
-            periodogram += new_periodogram
+            if new_periodogram is not None:
+                periodogram += new_periodogram
 
     def __add_receive_spectrum(self, drop: Drop) -> None:
         """Subroutine to add a new receive spectral information from a new drop.
@@ -233,7 +234,8 @@ class Statistics:
 
         # Add new periodogram to the sum of periodograms
         for periodogram, (_, new_periodogram) in zip(self._periodogram_rx, receive_spectra):
-            periodogram += new_periodogram
+            if periodogram is not None:
+                periodogram += new_periodogram
 
     def __add_bit_error_rate(self, drop: Drop, snr_index: int) -> None:
         """Calculates error rate between received signal in bits and source bits.
