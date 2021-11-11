@@ -147,7 +147,7 @@ class TestStoppingCriteria(unittest.TestCase):
             for tx_idx in range(self.no_tx):
                 self.scenario.set_channel(tx_idx, rx_idx, mock_channel)
 
-    def test_propagation_only_from_tx1_2_to_rx0(self) -> None:
+    def test_propagation_not_from_tx1_2_to_rx0(self) -> None:
         tx_signals = [np.random.randint(low=0, high=2,size=100) for _ in range(self.no_tx)]
         snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
         snr_mask[1, 0] = False
