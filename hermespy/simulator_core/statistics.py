@@ -178,8 +178,8 @@ class Statistics:
     def flag_matrix(self) -> np.ndarray:
         """Returns flag matrix of last drop."""
         return np.zeros(
-            (scenario.num_transmitters,
-             scenario.num_receivers,
+            (self.__scenario.num_transmitters,
+             self.__scenario.num_receivers,
              self.__num_snr_loops)
         )
     @property
@@ -233,7 +233,7 @@ class Statistics:
 
         # Add new periodogram to the sum of periodograms
         for periodogram, (_, new_periodogram) in zip(self._periodogram_rx, receive_spectra):
-            if periodogram is not None:
+            if new_periodogram is not None:
                 periodogram += new_periodogram
 
     def __add_bit_error_rate(self, drop: Drop, snr_index: int) -> None:
