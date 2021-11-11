@@ -52,3 +52,19 @@ class TestMMSEqualizer(unittest.TestCase):
 
         expected_rate = precoder_alpha.rate * precoder_beta.rate
         self.assertEqual(expected_rate, self.precoding.rate)
+
+    def test_decode_validation(self) -> None:
+        """Decoding should result in a RuntimeError, if multiple streams result."""
+
+        precoder = Mock()
+        precoder.decode = lambda symbols, streams, noise: (symbols.repeat(2, axis=0),
+                                                           streams.repeat(2, axis=0),
+                                                           noise.repeat(2, axis=0))
+
+        self.precoding[0] = precoder
+        symbols = self.generator.random((1, 10))
+        channel = self.generator.random((1, 10, 1))
+        noise = self.generator.random((1, 10))
+
+        with self.assertRaises(RuntimeError):
+            _ = self.precoding.decode(symbols, channel, noise)

@@ -190,7 +190,12 @@ class SymbolPrecoding:
                                                                                     streams_iteration,
                                                                                     noises_iteration)
 
-        return symbols_iteration
+        # Make sure the output stream is one-dimensional
+        # A multi-dimensional output stream indicates a invalid precoding configuration
+        if symbols_iteration.shape[0] > 1:
+            raise RuntimeError("More than one stream resulting from precoding decoding, the configuration is invalid")
+
+        return symbols_iteration.flatten()
 
     def required_outputs(self, precoder: Precoder) -> int:
         """Query the number output streams of a given precoder within a transmitter.
