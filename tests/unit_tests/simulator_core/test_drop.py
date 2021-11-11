@@ -56,7 +56,8 @@ class TestStoppingCrtiteria(unittest.TestCase):
             np.random.randint(low=0, high=10, size=(1,10)),
             None]
         drop = TestDrop(received_signals=received_signals,
-                        received_bits=[None, None], received_block_sizes=[0,0])
+                        received_bits=[None, None],
+                        received_block_sizes=[0,0])
 
         receive_spectrum = drop.receive_spectrum
         self.assertEquals(receive_spectrum[1], (None, None))
@@ -68,7 +69,8 @@ class TestStoppingCrtiteria(unittest.TestCase):
             np.random.randint(low=0, high=10, size=(1,10)),
             None]
         drop = TestDrop(received_signals=received_signals,
-                        received_bits=[None, None], received_block_sizes=[0,0])
+                        received_bits=[None, None],
+                        received_block_sizes=[0,0])
         receive_stft = drop.receive_stft
 
         self.assertEquals(receive_stft[1], (None, None, None))
