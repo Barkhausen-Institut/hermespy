@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 from typing import Type, Tuple
+from itertools import product, repeat
+
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
 import numpy as np
 
@@ -36,18 +38,26 @@ class MMSEqualizer(SymbolPrecoder):
                stream_responses: np.ndarray,
                stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
-        snr = (stream_responses * np.conj(stream_responses)) ** 2 / stream_noises
-        equalizer = 1 / stream_responses * (snr / (snr + 1.))
+        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
+        equalized_responses = np.empty(stream_responses.shape, dtype=complex)
+        equalized_noises = np.empty(stream_noises.shape, dtype=complex)
 
-        resulting_symbols = symbol_stream * equalizer
-        resulting_responses = (snr / (snr + 1.))
-        resulting_noises = stream_noises * np.abs(equalizer)**2
+        for idx, (symbol, response, noise) in enumerate(zip(symbol_stream.T,
+                                                            np.rollaxis(stream_responses, 1),
+                                                            np.rollaxis(stream_noises, 1))):
 
-        return resulting_symbols, resulting_responses, resulting_noises
+            noise_covariance = np.diag(noise)
+            equalizer = np.linalg.inv(response.T.conj() @ response + noise_covariance) @ response.T.conj()
+
+            equalized_symbols[:, idx] = equalizer @ symbol
+            equalized_responses[:, idx, :] = equalizer @ response
+            equalized_noises[:, idx] = np.diag(equalized_responses[:, idx, :]).real ** -1 - 1
+
+        return equalized_symbols, equalized_responses, equalized_noises
 
     @property
     def num_input_streams(self) -> int:
-        return self.required_num_input_streams
+        return self.required_num_output_streams
 
     @property
     def num_output_streams(self) -> int:

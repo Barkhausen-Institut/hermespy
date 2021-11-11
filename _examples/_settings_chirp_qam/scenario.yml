@@ -1,5 +1,7 @@
 !<Scenario>
 
+random_seed: 0
+
 # The scenario consists of a single link between a transmitting and receiving modem
 Modems:
 
@@ -52,5 +54,8 @@ Modems:
       pilot_rate: 1e6
       guard_interval: 1e-6
 
-      # Receiver channel equalization
-      # equalization: MMSE
+
+Channels:
+
+  - COST256 0 0
+    model_type: RURAL

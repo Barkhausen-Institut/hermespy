@@ -50,7 +50,7 @@ class BitsSource:
         self.__transmitter = None
 
         self.transmitter = transmitter
-        self.random_generator = rnd.default_rng() if random_generator is None else random_generator
+        self.random_generator = random_generator
 
     @property
     def transmitter(self) -> Transmitter:

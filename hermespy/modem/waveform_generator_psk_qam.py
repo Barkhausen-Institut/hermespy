@@ -285,7 +285,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         end_index_data = self.num_preamble_symbols + self.num_data_symbols
 
         symbols = frame[self._symbol_idx[start_index_data: end_index_data]]
-        channel = frame_channel[self._symbol_idx[start_index_data: end_index_data]]
+        channel = frame_channel[self._symbol_idx[start_index_data: end_index_data], :]
         noise = np.repeat(noise_variance, len(symbols))
 
         return symbols, channel, noise
