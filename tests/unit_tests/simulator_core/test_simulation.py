@@ -156,8 +156,8 @@ class TestStoppingCriteria(unittest.TestCase):
             self.scenario, tx_signals, snr_mask
         )
 
-        self.assertEqual(propagation_matrix[0][1], tuple())
-        self.assertEqual(propagation_matrix[0][2], tuple())
+        self.assertEqual(propagation_matrix[0][1], tuple((None, None)))
+        self.assertEqual(propagation_matrix[0][2], tuple((None, None)))
 
     def test_do_not_receive_from_tx1_2_to_rx0(self) -> None:
         snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)

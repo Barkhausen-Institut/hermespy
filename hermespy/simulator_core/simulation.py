@@ -565,7 +565,7 @@ class Simulation(Executable):
             propagation_row: List[Tuple[np.ndarray, np.ndarray]] = []
             for transmitter_id, (transmitter, transmitted_signal) in enumerate(zip(scenario.transmitters,
                                                                                    transmitted_signals)):
-                propagation_tuple = tuple()
+                propagation_tuple = tuple((None, None))
                 # Select responsible channel between respective transmitter and receiver
                 channel: Channel = channels[transmitter_id, receiver_id]
                 snr = snr_mask[transmitter_id, receiver_id]
