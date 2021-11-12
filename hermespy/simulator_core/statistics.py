@@ -121,13 +121,8 @@ class Statistics:
         self.bit_error_mean = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
         self.block_error_mean = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
 
-        self.bit_errors = np.array([
-                                    np.zeros(
-                                        (self.__num_snr_loops,
-                                        scenario.num_transmitters,
-                                        scenario.num_receivers)
-                                    )])
-        self.block_errors = np.zeros(self.bit_errors.shape)
+        self.bit_errors = []
+        self.block_errors = []
 
         self._frequency_range_tx = [
             np.zeros(self.__spectrum_fft_size)
@@ -290,7 +285,7 @@ class Statistics:
                     bit_error_max = self.bit_error_max[snr_index, tx_modem, rx_modem]
                     self.bit_error_max[snr_index, tx_modem, rx_modem] = max(bit_error_max, bit_error)
 
-                    bit_error_mean = self.bit_eror_mean[snr_index, tx_modem, rx_modem]
+                    bit_error_mean = self.bit_error_mean[snr_index, tx_modem, rx_modem]
                     self.bit_error_mean[snr_index, tx_modem, rx_modem] = self.update_mean(
                         old_mean=bit_error_mean,
                         no_old_samples=self.bit_error_num_drops[snr_index, tx_modem, rx_modem] - 1,
@@ -315,7 +310,7 @@ class Statistics:
                     block_error_max = self.block_error_max[snr_index, tx_modem, rx_modem]
                     self.block_error_max[snr_index, tx_modem, rx_modem] = max(block_error_max, block_error)
 
-                    block_error_mean = self.block_eror_mean[snr_index, tx_modem, rx_modem]
+                    block_error_mean = self.block_error_mean[snr_index, tx_modem, rx_modem]
                     self.block_error_mean[snr_index, tx_modem, rx_modem] = self.update_mean(
                         old_mean=block_error_mean,
                         no_old_samples=self.block_error_num_drops[snr_index, tx_modem, rx_modem] - 1,
@@ -323,8 +318,8 @@ class Statistics:
                     )
 
                     current_bler[snr_index, tx_modem, rx_modem] = block_error
-        self.bit_errors[self.__num_drops] = current_ber
-        self.block_errors[self.__num_drops] = current_bler
+        self.bit_errors.append(current_ber)
+        self.block_errors.append(current_bler)
 
     def update_mean(self, old_mean: float,
                              no_old_samples: float,
@@ -339,11 +334,12 @@ class Statistics:
             for tx_modem_idx in range(self.__scenario.num_transmitters):
 
                 if self.__num_drops >= self.__min_num_drops:
-                    ber_lower = self.ber_min[tx_modem_idx, rx_modem_idx, snr_index]
-                    ber_upper = self.ber_max[tx_modem_idx, rx_modem_idx, snr_index]
+                    ber_lower = self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx]
+                    ber_upper = self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx]
 
+                    bers_arr = np.array(self.bit_errors)
                     ber_stats = stats.bayes_mvs(
-                        data=self.ber[tx_modem_idx, rx_modem_idx, snr_index],
+                        data=bers_arr[:, snr_index, tx_modem_idx, rx_modem_idx],
                         alpha=self.__confidence_margin)
 
                     if self.__num_drops > 1:
@@ -353,11 +349,11 @@ class Statistics:
                                 ber_lower = 0
                             ber_upper = ber_stats[0][1][1]
                     else:
-                        ber_upper = self.ber[rx_modem_idx][snr_index]
-                        ber_lower = self.ber[rx_modem_idx][snr_index]
+                        ber_upper = bers_arr[0, snr_index, tx_modem_idx, rx_modem_idx]
+                        ber_lower = ber_lower
 
-                    self.ber_min[tx_modem_idx, rx_modem_idx, snr_index] = ber_lower
-                    self.ber_upper[tx_modem_idx, rx_modem_idx, snr_index] = ber_upper
+                    self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = ber_lower
+                    self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = ber_upper
 
                 if (
                     self.__confidence_margin > 0
@@ -374,6 +370,21 @@ class Statistics:
                         confidence_margin,
                     )
                     np.seterr(**old_settings)
+
+    def estimate_confidence_intervals_mean(self, data: np.array, 
+                                                 confidence_interval: float) -> Tuple[float, float]:
+        lower_bound = data[0]
+        upper_bound = data[0]
+        if len(data) > 1:
+            estimates = stats.bayes_mvs(data=data, alpha=confidence_interval)
+
+            if not np.isnan(estimates[0][1][0]):
+                lower_bound = estimates[0][1][0]
+                if lower_bound < 0:
+                    lower_bound = 0
+                upper_bound = estimates[0][1][1]
+
+        return lower_bound, upper_bound
         """for rx_modem_idx, received_signals in enumerate(received_bits):
 
             # get respective snr indices
