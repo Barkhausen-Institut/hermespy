@@ -31,10 +31,10 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
     def create_drop(self, transmitted_bits: List[np.array], received_bits: List[np.array]) -> Drop:
         return Drop(transmitted_bits=transmitted_bits,
                     transmitted_signals=[None],
-                    transmit_block_sizes=[None for _ in transmitted_bits],
+                    transmit_block_sizes=[len(bits) for bits in transmitted_bits],
                     received_signals=[None],
                     received_bits=received_bits,
-                    receive_block_sizes=[None for _ in received_bits])
+                    receive_block_sizes=[len(bits) for bits in received_bits])
 
     def test_update_mean(self) -> None:
         samples = np.arange(5)
@@ -62,6 +62,30 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
             for drop in drops:
                 self.stats.update_stopping_criteria(drop, snr_idx)
                 self.assertTrue(self.next_drop_can_be_run(self.stats.flag_matrix, snr_idx))
+
+
+    def test_estimation_of_confidence_intervals_of_mean(self) -> None:
+        data = [0, 0, 0.5]
+        confidence_interval = 0.05
+
+        expected_lower_bound = 0.15486
+        expected_upper_bound = 0.17846
+
+        lower_bound, upper_bound = self.stats.estimate_confidence_intervals_mean(
+            data, confidence_interval)
+
+        self.assertAlmostEqual(expected_lower_bound, lower_bound, places=3)
+        self.assertAlmostEqual(expected_upper_bound, upper_bound, places=3)
+
+    def test_confidence_intervals_bounds_equals_first_sample_if_only_one_sample(self) -> None:
+        data = [0]
+        confidence_interval = 0.05
+
+        lower_bound, upper_bound = self.stats.estimate_confidence_intervals_mean(
+            data, confidence_interval)
+
+        self.assertAlmostEqual(0, lower_bound, places=3)
+        self.assertAlmostEqual(0, upper_bound, places=3)
 
     def next_drop_can_be_run(self, flag_matrix: np.ndarray, snr_index: int) -> bool:
         return np.all(flag_matrix[:, :, snr_index] == True)
