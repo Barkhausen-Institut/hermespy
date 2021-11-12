@@ -432,7 +432,7 @@ class FrameSymbolSection(FrameSection):
 
             sample_index += num_prefix_samples
             slot_samples[:, slot_idx] = baseband_signal[sample_index:sample_index+samples_per_slot]
-            slot_channels[:, slot_idx, :] = ideal_channel[sample_index:sample_index + samples_per_slot]
+            slot_channels[:, slot_idx, :] = ideal_channel[sample_index:sample_index + samples_per_slot, :]
 
             sample_index += samples_per_slot
 
@@ -636,7 +636,11 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         self.subcarrier_spacing = subcarrier_spacing
         self.dc_suppression = dc_suppression
         self.resources = [] if resources is None else resources
-        self.structure = [] if structure is None else structure
+        self.structure = []
+
+        if structure is not None:
+            for section in structure:
+                self.add_section(section)
 
         # Initial parameter checks
         # TODO

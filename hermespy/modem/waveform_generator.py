@@ -340,7 +340,7 @@ class WaveformGenerator(ABC):
         num_frames = int(floor(len(signal) / samples_per_frame))
 
         frames = np.empty((num_frames, samples_per_frame), dtype=complex)
-        frame_responses = np.empty((num_frames, samples_per_frame, stream_response.shape[1]), dtype=complex)
+        frame_responses = np.empty((num_frames, samples_per_frame, *stream_response.shape[1:]), dtype=complex)
 
         # By default, there is no synchronization, i.e. we assume the first signal is also the first sample of
         # the first frame. ToDo: Check with André how to implement general equalization
@@ -348,7 +348,7 @@ class WaveformGenerator(ABC):
 
             # ToDo: This currently does not account for delay overhead....
             frames[f, :] = signal[f*samples_per_frame:(f+1)*samples_per_frame]
-            frame_responses[f, ::] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, :, 0]
+            frame_responses[f, ::] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, ::]
 
         return frames, frame_responses
 
