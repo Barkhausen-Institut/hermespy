@@ -292,4 +292,4 @@ class SymbolPrecoding:
         else:
             self.__symbol_precoders[index] = precoder
 
-        precoder.SymbolPrecoding = self
+        precoder.precoding = self

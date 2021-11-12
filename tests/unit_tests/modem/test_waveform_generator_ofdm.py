@@ -122,6 +122,38 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
         assert_array_almost_equal(expected_data_symbols, data_symbols)
         assert_array_almost_equal(expected_noise_symbols[..., np.newaxis], noise_symbols)
 
+    def test_channel_propagation_impulse_response_assumptions(self) -> None:
+        """Data and noise signals should be properly transformed to frequency domain
+        and mapped to their respective symbol slots."""
+
+        # Build a basic communication frame containing only a single symbol slot with 100 data subcarriers
+        num_elements = 50
+        symbol_elements = [FrameElement(ElementType.DATA) for _ in range(num_elements)]
+        resource = FrameResource(repetitions=2, cp_ratio=0.2, elements=symbol_elements)
+        self.waveform_generator.add_resource(resource)
+
+        section = FrameSymbolSection(pattern=[0], frame=self.waveform_generator)
+        self.waveform_generator.add_section(section)
+
+        # Generate two separate symbol streams, one modeling data, one modeling noise
+        expected_data_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
+        expected_noise_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
+
+        # Mock modulation by directly calling the section modulator
+        data_signal = section.modulate(expected_data_symbols)
+        noise_signal = section.modulate(expected_noise_symbols)
+        noise_variance = 0.
+
+        propagated_data_signal = data_signal * noise_signal
+
+        data_symbols, impulse_symbols, noise_variances = self.waveform_generator.demodulate(propagated_data_signal,
+                                                                                          noise_signal[..., np.newaxis],
+                                                                                          noise_variance)
+
+        equalized_data_symbols = data_symbols / impulse_symbols[:, 0]
+        assert_array_almost_equal(equalized_data_symbols, expected_data_symbols)
+
+
     def test_reference_based_channel_estimation(self) -> None:
         """Reference-based channel estimation should properly estimate channel at reference points."""
 
