@@ -2,10 +2,13 @@
 """Test channel model for wireless transmission links."""
 
 import unittest
-from unittest.mock import Mock
-from numpy.testing import assert_array_equal
-from numpy.random import default_rng
+from unittest.mock import Mock, patch
+from itertools import product
+
 import numpy as np
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.random import default_rng
+
 
 from hermespy.channel import Channel
 
@@ -350,6 +353,33 @@ class TestChannel(unittest.TestCase):
 
             floating_channel = Channel()
             floating_channel.impulse_response(np.empty(0, dtype=complex))
+
+    @patch('hermespy.channel.Channel.impulse_response')
+    def test_delay_matrix(self, impulse_response) -> None:
+        """Multiplication with a delay matrix constructed from a power-delay profile
+        should yield identical results as channel propagation."""
+
+        num_antennas = 1
+        self.transmitter.num_antennas = num_antennas
+        self.receiver.num_antennas = num_antennas
+
+        delay_taps = [2, 4, 7]
+        for impulse_response_length, num_taps in product(self.impulse_response_lengths, delay_taps):
+
+            impulse_response.return_value = np.exp(2j * self.generator.uniform(0, np.pi, (impulse_response_length,
+                                                                                          num_antennas,
+                                                                                          num_antennas,
+                                                                                          num_taps)))
+
+            signal = np.exp(2j * self.generator.uniform(0, np.pi, (num_antennas,
+                                                                   impulse_response_length)))
+
+            expected_propagated_signal, response = self.channel.propagate(signal)
+            assert_array_equal(impulse_response.return_value, response)
+
+            delay_matrix = self.channel.DelayMatrix(impulse_response.return_value[:, 0, 0, :])
+            propagated_signal = delay_matrix @ signal[0, :]
+            assert_array_almost_equal(expected_propagated_signal[0, :], propagated_signal)
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
