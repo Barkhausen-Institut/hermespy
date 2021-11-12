@@ -8,6 +8,7 @@ import scipy.io as sio
 from scipy.fft import fftshift
 from enum import Enum
 import scipy.fft as fft
+from scipy import stats
 import numpy as np
 
 from hermespy.scenario import Scenario
@@ -73,7 +74,9 @@ class Statistics:
                  calc_receive_stft: bool = True,
                  spectrum_fft_size: int = 0,
                  snr_type: SNRType = SNRType.EBN0,
-                 calc_theory: bool = True) -> None:
+                 calc_theory: bool = True,
+                 confidence_margin: float = 0.0,
+                 min_num_drops: int = 0) -> None:
         """Transmission statistics object initialization.
 
         Args:
@@ -95,6 +98,8 @@ class Statistics:
         self.__calc_receive_stft = calc_receive_stft
         self.__spectrum_fft_size = spectrum_fft_size
         self.__calc_theory = calc_theory
+        self.__confidence_margin = confidence_margin
+        self.__min_num_drops = min_num_drops
         self.snr_type = snr_type
         
         # Inferred attributes
@@ -112,6 +117,17 @@ class Statistics:
 
         self.bit_error_max = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
         self.block_error_max = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+
+        self.bit_error_mean = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+        self.block_error_mean = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
+
+        self.bit_errors = np.array([
+                                    np.zeros(
+                                        (self.__num_snr_loops,
+                                        scenario.num_transmitters,
+                                        scenario.num_receivers)
+                                    )])
+        self.block_errors = np.zeros(self.bit_errors.shape)
 
         self._frequency_range_tx = [
             np.zeros(self.__spectrum_fft_size)
@@ -134,6 +150,12 @@ class Statistics:
         else:
             self.theoretical_results = None
 
+        self.__flag_matrix = np.ones(
+            (self.__scenario.num_transmitters,
+             self.__scenario.num_receivers,
+             self.__num_snr_loops),
+            dtype=bool
+        )
     def add_drop(self, drop: Drop, snr_index: int) -> None:
         """Add a new transmission drop to the statistics.
 
@@ -172,11 +194,8 @@ class Statistics:
     @property
     def flag_matrix(self) -> np.ndarray:
         """Returns flag matrix of last drop."""
-        return np.zeros(
-            (self.__scenario.num_transmitters,
-             self.__scenario.num_receivers,
-             self.__num_snr_loops)
-        )
+        return self.__flag_matrix
+
     @property
     def num_drops(self) -> int:
         """Access the number of drops already added to this statistics.
@@ -247,11 +266,16 @@ class Statistics:
 
         # Enumerate over bit and block error grids simultaneously.
         # Each respective grid entry may be None if no error rate computation is feasible.
+        current_ber = np.zeros(
+            (self.__num_snr_loops,
+             self.__scenario.num_transmitters,
+             self.__scenario.num_receivers)
+        )
+        current_bler = np.zeros(current_ber.shape)
         for tx_modem, (bit_error_row, block_error_row) in enumerate(zip(bit_error_rates, block_error_rates)):
             for rx_modem, (bit_error, block_error) in enumerate(zip(bit_error_row, block_error_row)):
 
                 if bit_error is not None:
-
                     # Increase drop counter for the specific grid field
                     self.bit_error_num_drops[snr_index, tx_modem, rx_modem] += 1
 
@@ -265,6 +289,15 @@ class Statistics:
                     # Update maximal bit error over all drops
                     bit_error_max = self.bit_error_max[snr_index, tx_modem, rx_modem]
                     self.bit_error_max[snr_index, tx_modem, rx_modem] = max(bit_error_max, bit_error)
+
+                    bit_error_mean = self.bit_eror_mean[snr_index, tx_modem, rx_modem]
+                    self.bit_error_mean[snr_index, tx_modem, rx_modem] = self.update_mean(
+                        old_mean=bit_error_mean,
+                        no_old_samples=self.bit_error_num_drops[snr_index, tx_modem, rx_modem] - 1,
+                        new_sample=bit_error
+                    )
+
+                    current_ber[snr_index, tx_modem, rx_modem] = bit_error
 
                 if block_error is not None:
 
@@ -282,13 +315,65 @@ class Statistics:
                     block_error_max = self.block_error_max[snr_index, tx_modem, rx_modem]
                     self.block_error_max[snr_index, tx_modem, rx_modem] = max(block_error_max, block_error)
 
-    def iterative_mean(self, old_mean: float,
+                    block_error_mean = self.block_eror_mean[snr_index, tx_modem, rx_modem]
+                    self.block_error_mean[snr_index, tx_modem, rx_modem] = self.update_mean(
+                        old_mean=block_error_mean,
+                        no_old_samples=self.block_error_num_drops[snr_index, tx_modem, rx_modem] - 1,
+                        new_sample=block_error
+                    )
+
+                    current_bler[snr_index, tx_modem, rx_modem] = block_error
+        self.bit_errors[self.__num_drops] = current_ber
+        self.block_errors[self.__num_drops] = current_bler
+
+    def update_mean(self, old_mean: float,
                              no_old_samples: float,
                              new_sample: float) -> float:
         return no_old_samples / (no_old_samples + 1) * old_mean + 1 / (no_old_samples+1) * new_sample
 
+    def update_stopping_criteria(self, drop: Drop, snr_index: int) -> None:
+        flag_matrix_previous_drop = self.flag_matrix
 
-        # iterate over receivers and its signals received
+        # TODO: What to do if ber is none?
+        for rx_modem_idx in range(self.__scenario.num_receivers):
+            for tx_modem_idx in range(self.__scenario.num_transmitters):
+
+                if self.__num_drops >= self.__min_num_drops:
+                    ber_lower = self.ber_min[tx_modem_idx, rx_modem_idx, snr_index]
+                    ber_upper = self.ber_max[tx_modem_idx, rx_modem_idx, snr_index]
+
+                    ber_stats = stats.bayes_mvs(
+                        data=self.ber[tx_modem_idx, rx_modem_idx, snr_index],
+                        alpha=self.__confidence_margin)
+
+                    if self.__num_drops > 1:
+                        if not np.isnan(ber_stats[0][1][0]):
+                            ber_lower = ber_stats[0][1][0]
+                            if ber_lower < 0:
+                                ber_lower = 0
+                            ber_upper = ber_stats[0][1][1]
+                    else:
+                        ber_upper = self.ber[rx_modem_idx][snr_index]
+                        ber_lower = self.ber[rx_modem_idx][snr_index]
+
+                    self.ber_min[tx_modem_idx, rx_modem_idx, snr_index] = ber_lower
+                    self.ber_upper[tx_modem_idx, rx_modem_idx, snr_index] = ber_upper
+
+                if (
+                    self.__confidence_margin > 0
+                    and self.__num_drops >= self.__min_num_drops
+                ):
+                    old_settings = np.seterr(divide="ignore", invalid="ignore")
+
+                    confidence_margin = (self.bit_error_max[rx_modem_idx] -
+                                        self.bit_error_min[rx_modem_idx]
+                                        ) / self.bit_error_sum[rx_modem_idx]
+
+                    self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = np.logical_or(
+                        confidence_margin > self.__confidence_margin,
+                        confidence_margin,
+                    )
+                    np.seterr(**old_settings)
         """for rx_modem_idx, received_signals in enumerate(received_bits):
 
             # get respective snr indices
