@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
-from hermespy.modem.precoding import MMSEqualizer
+from hermespy.modem.precoding import MMSESpaceEqualizer
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -20,7 +20,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestMMSEqualizer(unittest.TestCase):
+class TestMMSESpaceEqualizer(unittest.TestCase):
 
     def setUp(self) -> None:
 
@@ -28,7 +28,7 @@ class TestMMSEqualizer(unittest.TestCase):
         self.generator = np.random.default_rng(42)
 
         # Precoder to be tested
-        self.precoder = MMSEqualizer()
+        self.precoder = MMSESpaceEqualizer()
 
         # Mock the precoding configuration
         self.precoding = Mock()

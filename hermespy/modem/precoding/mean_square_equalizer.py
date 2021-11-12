@@ -7,8 +7,11 @@ from itertools import product, repeat
 
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
 import numpy as np
+from numpy import tensordot
+from numpy.linalg import tensorinv
 
 from .symbol_precoder import SymbolPrecoder
+from hermespy.channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -20,10 +23,10 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MMSEqualizer(SymbolPrecoder):
+class MMSETimeEqualizer(SymbolPrecoder):
     """Minimum-Mean-Square channel equalization in time domain."""
 
-    yaml_tag: str = u'MMSE'
+    yaml_tag: str = u'MMSE-Time'
 
     def __init__(self) -> None:
         """Minimum-Mean-Square channel equalization object initialization."""
@@ -42,9 +45,7 @@ class MMSEqualizer(SymbolPrecoder):
         equalized_responses = np.empty(stream_responses.shape, dtype=complex)
         equalized_noises = np.empty(stream_noises.shape, dtype=complex)
 
-
         num_symbols = symbol_stream.shape[1]
-        num_delays = stream_responses.shape[3]
 
         # Equalize in space in a first step
         for idx, (symbols, response, noise) in enumerate(zip(symbol_stream,
@@ -52,24 +53,21 @@ class MMSEqualizer(SymbolPrecoder):
                                                              stream_noises)):
 
             # Combine the responses of all superimposed transmit antennas for equalization
-            summed_response = np.sum(response, axis=1, keepdims=False)
+            response_sum = np.sum(response, axis=1, keepdims=False)
 
-
-            convolution = np.zeros((num_symbols, num_symbols), dtype=complex)
-            for delay_index, delay_response in enumerate(summed_response.T):
-                convolution.flat[delay_index::(1+num_symbols)] = delay_response[:-delay_index]
-                # ToDo: Correct conolution setting here
-
-
+            delay_matrix = Channel.DelayMatrix(response_sum)[:num_symbols, :num_symbols]
             noise_covariance = np.diag(noise)
-            equalizer = np.linalg.inv(convolution.T.conj() @ convolution + noise_covariance) @ convolution.T.conj()
+
+            # ToDo: Optimization opportunity, lower triangular multiplied by upper triangular matrix
+            # We should be able to skip creating the whole convolution matrix
+            inverse = np.linalg.inv(delay_matrix.T.conj() @ delay_matrix + noise_covariance)
+            equalizer = inverse @ delay_matrix.T.conj()
 
             equalized_symbols[idx, :] = equalizer @ symbols
-            equalized_responses[:, idx, :] = equalizer @ response
-            equalized_noises[:, idx] = np.diag(equalized_responses[:, idx, :]).real ** -1 - 1
+            equalized_responses[idx, :, :, :] = tensordot(equalizer, response, axes=(1, 0))
+            equalized_noises[idx, :] = 1 / (1 / (noise * np.diag(inverse).real) - 1)
 
         return equalized_symbols, equalized_responses, equalized_noises
-
 
     @property
     def num_input_streams(self) -> int:
@@ -80,18 +78,18 @@ class MMSEqualizer(SymbolPrecoder):
         return self.required_num_input_streams
 
     @classmethod
-    def to_yaml(cls: Type[MMSEqualizer],
+    def to_yaml(cls: Type[MMSETimeEqualizer],
                 representer: SafeRepresenter,
-                node: MMSEqualizer) -> ScalarNode:
-        """Serialize an `MMSEqualizer` object to YAML.
+                node: MMSETimeEqualizer) -> ScalarNode:
+        """Serialize an `MMSETimeEqualizer` object to YAML.
 
         Args:
             representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
-            node (MMSEqualizer):
-                The `MMSEqualizer` instance to be serialized.
+            node (MMSETimeEqualizer):
+                The `MMSETimeEqualizer` instance to be serialized.
 
         Returns:
             Node:
@@ -101,21 +99,21 @@ class MMSEqualizer(SymbolPrecoder):
         return representer.represent_scalar(cls.yaml_tag, None)
 
     @classmethod
-    def from_yaml(cls: Type[MMSEqualizer],
+    def from_yaml(cls: Type[MMSETimeEqualizer],
                   constructor: SafeConstructor,
-                  node: ScalarNode) -> MMSEqualizer:
-        """Recall a new `MMSEqualizer` instance from YAML.
+                  node: ScalarNode) -> MMSETimeEqualizer:
+        """Recall a new `MMSETimeEqualizer` instance from YAML.
 
         Args:
             constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
             node (Node):
-                YAML node representing the `MMSEqualizer` serialization.
+                YAML node representing the `MMSETimeEqualizer` serialization.
 
         Returns:
-            MMSEqualizer:
-                Newly created `MMSEqualizer` instance.
+            MMSETimeEqualizer:
+                Newly created `MMSETimeEqualizer` instance.
         """
 
         return cls()
@@ -124,7 +122,7 @@ class MMSEqualizer(SymbolPrecoder):
 class MMSESpaceEqualizer(SymbolPrecoder):
     """Minimum-Mean-Square channel equalization in space domain."""
 
-    yaml_tag: str = u'MMSE'
+    yaml_tag: str = u'MMSE-Space'
 
     def __init__(self) -> None:
         """Minimum-Mean-Square channel equalization object initialization."""
@@ -145,18 +143,19 @@ class MMSESpaceEqualizer(SymbolPrecoder):
 
         # Equalize in space in a first step
         for idx, (symbol, response, noise) in enumerate(zip(symbol_stream.T,
-                                                            np.rollaxis(stream_responses[..., 0], 1),
+                                                            np.rollaxis(stream_responses, 1),
                                                             np.rollaxis(stream_noises, 1))):
-
             noise_covariance = np.diag(noise)
-            equalizer = np.linalg.inv(response.T.conj() @ response + noise_covariance) @ response.T.conj()
+            response_sum = np.sum(response, axis=2, keepdims=False)
+
+            inverse = np.linalg.inv(response_sum.T.conj() @ response_sum + noise_covariance)
+            equalizer = inverse @ response_sum.T.conj()
 
             equalized_symbols[:, idx] = equalizer @ symbol
-            equalized_responses[:, idx, :] = equalizer @ response
-            equalized_noises[:, idx] = np.diag(equalized_responses[:, idx, :]).real ** -1 - 1
+            equalized_responses[:, idx, :, :] = equalizer @ response
+            equalized_noises[:, idx] = 1 / (1 / (noise * np.diag(inverse).real) - 1)
 
         return equalized_symbols, equalized_responses, equalized_noises
-
 
     @property
     def num_input_streams(self) -> int:
@@ -167,18 +166,18 @@ class MMSESpaceEqualizer(SymbolPrecoder):
         return self.required_num_input_streams
 
     @classmethod
-    def to_yaml(cls: Type[MMSEqualizer],
+    def to_yaml(cls: Type[MMSESpaceEqualizer],
                 representer: SafeRepresenter,
-                node: MMSEqualizer) -> ScalarNode:
-        """Serialize an `MMSEqualizer` object to YAML.
+                node: MMSESpaceEqualizer) -> ScalarNode:
+        """Serialize an `MMSESpaceEqualizer` object to YAML.
 
         Args:
             representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
-            node (MMSEqualizer):
-                The `MMSEqualizer` instance to be serialized.
+            node (MMSESpaceEqualizer):
+                The `MMSESpaceEqualizer` instance to be serialized.
 
         Returns:
             Node:
@@ -188,21 +187,21 @@ class MMSESpaceEqualizer(SymbolPrecoder):
         return representer.represent_scalar(cls.yaml_tag, None)
 
     @classmethod
-    def from_yaml(cls: Type[MMSEqualizer],
+    def from_yaml(cls: Type[MMSESpaceEqualizer],
                   constructor: SafeConstructor,
-                  node: ScalarNode) -> MMSEqualizer:
-        """Recall a new `MMSEqualizer` instance from YAML.
+                  node: ScalarNode) -> MMSESpaceEqualizer:
+        """Recall a new `MMSESpaceEqualizer` instance from YAML.
 
         Args:
             constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
             node (Node):
-                YAML node representing the `MMSEqualizer` serialization.
+                YAML node representing the `MMSESpaceEqualizer` serialization.
 
         Returns:
-            MMSEqualizer:
-                Newly created `MMSEqualizer` instance.
+            MMSESpaceEqualizer:
+                Newly created `MMSESpaceEqualizer` instance.
         """
 
         return cls()
