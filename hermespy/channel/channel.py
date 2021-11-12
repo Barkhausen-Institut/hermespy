@@ -5,9 +5,11 @@ from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
 from abc import ABC
 from itertools import product
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+
 import numpy as np
 import numpy.random as rnd
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from numba import jit
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -469,6 +471,29 @@ class Channel(ABC):
 
         # Return resulting impulse response
         return impulse_responses
+
+    @staticmethod
+    def DelayMatrix(power_delay_profile: np.ndarray) -> np.ndarray:
+        """Transform a channel impulse response power delay profile to a linear transformation matrix.
+
+        Args:
+            power_delay_profile (np.ndarray):
+                A matrix of dimension TxL+1 where T is the sampled time and L is the sampled delay, respectively.
+
+        Returns:
+            np.ndarray:
+                A complex TxT transformation matrix representing the `power_delay_profile`.
+        """
+
+        num_timestamps = power_delay_profile.shape[0]
+        num_taps = power_delay_profile.shape[1]
+        convolution = np.zeros((num_timestamps + num_taps - 1, num_timestamps), dtype=complex)
+
+        time_indices = np.arange(num_timestamps)
+        for delay_index, delay_response in enumerate(power_delay_profile.T):
+            convolution[delay_index + time_indices,  time_indices] = delay_response
+
+        return convolution
 
     @property
     def min_sampling_rate(self) -> float:
