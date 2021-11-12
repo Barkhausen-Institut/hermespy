@@ -334,26 +334,12 @@ class Statistics:
             for tx_modem_idx in range(self.__scenario.num_transmitters):
 
                 if self.__num_drops >= self.__min_num_drops:
-                    ber_lower = self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx]
-                    ber_upper = self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx]
+                    mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
+                        np.array(self.bit_errors), self.__confidence_margin
+                    )
 
-                    bers_arr = np.array(self.bit_errors)
-                    ber_stats = stats.bayes_mvs(
-                        data=bers_arr[:, snr_index, tx_modem_idx, rx_modem_idx],
-                        alpha=self.__confidence_margin)
-
-                    if self.__num_drops > 1:
-                        if not np.isnan(ber_stats[0][1][0]):
-                            ber_lower = ber_stats[0][1][0]
-                            if ber_lower < 0:
-                                ber_lower = 0
-                            ber_upper = ber_stats[0][1][1]
-                    else:
-                        ber_upper = bers_arr[0, snr_index, tx_modem_idx, rx_modem_idx]
-                        ber_lower = ber_lower
-
-                    self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = ber_lower
-                    self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = ber_upper
+                    self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound
+                    self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = mean_upper_bound
 
                 if (
                     self.__confidence_margin > 0
