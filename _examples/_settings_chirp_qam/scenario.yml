@@ -32,7 +32,7 @@ Modems:
   - Receiver
 
     Precoding:
-      - ZF-Time
+      - MMSE-Time
 
     # Waveform configuration
     WaveformPskQam:
