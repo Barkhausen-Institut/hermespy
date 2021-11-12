@@ -36,16 +36,16 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
                     received_bits=received_bits,
                     receive_block_sizes=[None for _ in received_bits])
 
-    def test_iterative_mean(self) -> None:
+    def test_update_mean(self) -> None:
         samples = np.arange(5)
 
         expected_means = [0, 0.5, 1.0, 1.5, 2.0]
         mean = 0.0
         means: List[float] = []
         for n in range(1, 5+1):
-            mean = self.stats.iterative_mean(
+            mean = self.stats.update_mean(
                          old_mean=mean,
-                         old_samples=n-1,
+                         no_old_samples=n-1,
                          new_sample=samples[n-1])
             means.append(mean)
 
