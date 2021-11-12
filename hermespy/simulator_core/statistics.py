@@ -372,11 +372,20 @@ class Statistics:
                     np.seterr(**old_settings)
 
     def estimate_confidence_intervals_mean(self, data: np.array, 
-                                                 confidence_interval: float) -> Tuple[float, float]:
+                                                 alpha: float) -> Tuple[float, float]:
+        """Estimates bayesian confidence intervals for the mean.
+
+        Args:
+            data (np.array): Data samples.
+            alpha (float): Probability that return confidence interval contains true parameter.
+
+        Returns:
+            (float, float): Lower and upper bound of estimated mean.
+        """
         lower_bound = data[0]
         upper_bound = data[0]
         if len(data) > 1:
-            estimates = stats.bayes_mvs(data=data, alpha=confidence_interval)
+            estimates = stats.bayes_mvs(data=data, alpha=alpha)
 
             if not np.isnan(estimates[0][1][0]):
                 lower_bound = estimates[0][1][0]

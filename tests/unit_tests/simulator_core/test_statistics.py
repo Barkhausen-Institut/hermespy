@@ -65,24 +65,24 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
 
 
     def test_estimation_of_confidence_intervals_of_mean(self) -> None:
-        data = [0, 0, 0.5]
-        confidence_interval = 0.05
+        data = [0, 0, 0.5, 0.5, 0.6, 0.5]
+        alpha = 0.95
 
-        expected_lower_bound = 0.15486
-        expected_upper_bound = 0.17846
+        expected_lower_bound = 0.0626
+        expected_upper_bound = 0.637
 
         lower_bound, upper_bound = self.stats.estimate_confidence_intervals_mean(
-            data, confidence_interval)
+            data, alpha)
 
         self.assertAlmostEqual(expected_lower_bound, lower_bound, places=3)
         self.assertAlmostEqual(expected_upper_bound, upper_bound, places=3)
 
     def test_confidence_intervals_bounds_equals_first_sample_if_only_one_sample(self) -> None:
         data = [0]
-        confidence_interval = 0.05
+        alpha = 0.05
 
         lower_bound, upper_bound = self.stats.estimate_confidence_intervals_mean(
-            data, confidence_interval)
+            data, alpha)
 
         self.assertAlmostEqual(0, lower_bound, places=3)
         self.assertAlmostEqual(0, upper_bound, places=3)
