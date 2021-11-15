@@ -12,7 +12,7 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
     def setUp(self) -> None:
         self.min_num_drops = 3
         self.max_num_drops = 4
-        self.confidence_margin = 0.7
+        self.confidence_margin = 0.91
         self.confidence_level = 0.9
         self.snr_loop = np.arange(5)
         self.scenario_mock = Mock()
@@ -71,15 +71,15 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
         drops = [self.create_drop(transmitted_bits[i], received_bits[i])
                  for i in range(NUM_DROPS)]
 
-        for drop_idx in range(NUM_DROPS):
+        for drop_idx in range(1, NUM_DROPS+1):
             for snr_idx, _ in enumerate(self.snr_loop):
-                self.stats.add_drop(drops[drop_idx], snr_idx)
-                if drop_idx <= self.min_num_drops:
-                    self.assertTrue(
+                self.stats.add_drop(drops[drop_idx-1], snr_idx)
+                if drop_idx == NUM_DROPS:
+                    self.assertFalse(
                         self.next_drop_can_be_run(
                             self.stats.flag_matrix, snr_idx))
                 else:
-                    self.assertFalse(
+                    self.assertTrue(
                         self.next_drop_can_be_run(
                             self.stats.flag_matrix, snr_idx
                         )
