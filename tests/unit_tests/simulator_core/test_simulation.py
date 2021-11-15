@@ -139,6 +139,8 @@ class TestStoppingCriteria(unittest.TestCase):
         self.scenario.add_receiver(TestReceiver(1, self.scenario))
         self.scenario.add_receiver(TestReceiver(1, self.scenario))
 
+        mock_transmitter = Mock()
+        mock_transmitter.send.return_value = np.array([0])
         self.scenario.add_transmitter(Mock())
         self.scenario.add_transmitter(Mock())
         self.scenario.add_transmitter(Mock())
@@ -153,6 +155,15 @@ class TestStoppingCriteria(unittest.TestCase):
         self.snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
         self.snr_mask[1, 0] = False
         self.snr_mask[2, 0] = False
+
+    def test_do_not_send_if_tx0_is_flagged(self) -> None:
+        self.snr_mask[:, :] = True
+        self.snr_mask[0, :] = False
+        transmitted_signals = Simulation.transmit(self.scenario, self.snr_mask, None, None)
+
+        self.assertIsNone(transmitted_signals[0])
+        self.assertIsNotNone(transmitted_signals[1])
+        self.assertIsNotNone(transmitted_signals[2])
 
     def test_propagation_not_from_tx1_2_to_rx0(self) -> None:
         tx_signals = [np.random.randint(low=0, high=2,size=100) for _ in range(self.no_tx)]

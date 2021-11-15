@@ -238,7 +238,9 @@ class Simulation(Executable):
                     data_bits = scenario.generate_data_bits()
 
                     # Generate radio-frequency band signal emitted from each transmitter
-                    transmitted_signals = Simulation.transmit(scenario, data_bits=data_bits)
+                    transmitted_signals = Simulation.transmit(scenario=scenario,
+                                                              snr_mask=snr_mask,
+                                                              data_bits=data_bits)
 
                     # Simulate propagation over channel model
                     propagation_matrix = Simulation.propagate(scenario,
@@ -497,12 +499,14 @@ class Simulation(Executable):
 
     @staticmethod
     def transmit(scenario: Scenario,
+                 snr_mask: np.ndarray,
                  drop_duration: Optional[float] = None,
                  data_bits: Optional[np.array] = None) -> List[np.ndarray]:
         """Simulate signals emitted by all transmitters registered with a scenario.
 
         Args:
             scenario (Scenario): The scenario for which to simulate signals.
+            snr_mask (np.ndarray): Mask that says if signals are to be created for specific snr.
             drop_duration (float, optional): Length of simulated transmission in seconds.
             data_bits (List[np.array], optional): The data bits to be sent by each transmitting modem.
 
@@ -520,22 +524,31 @@ class Simulation(Executable):
         if drop_duration <= 0.0:
             raise ValueError("Drop duration must be greater or equal to zero")
 
-        transmitted_signals = []
+        sending_tx_idx = np.flatnonzero(np.all(snr_mask, axis=1))
 
+        transmitted_signals = []
         if data_bits is None:
 
-            for transmitter in scenario.transmitters:
-                transmitted_signals.append(transmitter.send(drop_duration))
+            for transmitter_idx, transmitter in enumerate(scenario.transmitters):
+                if transmitter_idx in sending_tx_idx or sending_tx_idx.size == 0:
+                    transmitted_signals.append(transmitter.send(drop_duration))
+                else:
+                    transmitted_signals.append(None)
 
         else:
 
             if len(data_bits) != len(scenario.transmitters):
                 raise ValueError("Data bits to be transmitted contain insufficient streams")
-
-            for transmitter, data in zip(scenario.transmitters, data_bits):
-                transmitted_signals.append(transmitter.send(drop_duration, data))
+            
+            for transmitter_idx, (transmitter, data) in enumerate(
+                                                            zip(scenario.transmitters, data_bits)):
+                if transmitter_idx in sending_tx_idx or sending_tx_idx.size == 0:
+                    transmitted_signals.append(transmitter.send(drop_duration, data))
+                else:
+                    transmitted_signals.append(None)
 
         return transmitted_signals
+
     @staticmethod
     def propagate(scenario: Scenario,
                   transmitted_signals: List[np.ndarray],
