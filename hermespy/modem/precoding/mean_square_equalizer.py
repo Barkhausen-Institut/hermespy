@@ -3,12 +3,10 @@
 
 from __future__ import annotations
 from typing import Type, Tuple
-from itertools import product, repeat
+from itertools import product
 
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
 import numpy as np
-from numpy import tensordot
-from numpy.linalg import tensorinv
 
 from .symbol_precoder import SymbolPrecoder
 from hermespy.channel import Channel
@@ -43,7 +41,7 @@ class MMSETimeEqualizer(SymbolPrecoder):
 
         equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
         equalized_responses = np.empty(stream_responses.shape, dtype=complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=complex)
+        equalized_noises = np.empty(stream_noises.shape, dtype=float)
 
         num_symbols = symbol_stream.shape[1]
 
@@ -53,19 +51,33 @@ class MMSETimeEqualizer(SymbolPrecoder):
                                                              stream_noises)):
 
             # Combine the responses of all superimposed transmit antennas for equalization
-            response_sum = np.sum(response, axis=1, keepdims=False)
+            ideal_transform = np.zeros((num_symbols + response.shape[2] - 1, num_symbols), dtype=complex)
+            for tx_response in response.transpose((1, 0, 2)):
+                ideal_transform += Channel.DelayMatrix(tx_response)
 
-            delay_matrix = Channel.DelayMatrix(response_sum)[:num_symbols, :num_symbols]
+            truncated_transform = ideal_transform[:num_symbols, :]
+
             noise_covariance = np.diag(noise)
 
             # ToDo: Optimization opportunity, lower triangular multiplied by upper triangular matrix
             # We should be able to skip creating the whole convolution matrix
-            inverse = np.linalg.inv(delay_matrix.T.conj() @ delay_matrix + noise_covariance)
-            equalizer = inverse @ delay_matrix.T.conj()
 
-            equalized_symbols[idx, :] = equalizer @ symbols
-            equalized_responses[idx, :, :, :] = tensordot(equalizer, response, axes=(1, 0))
-            equalized_noises[idx, :] = 1 / (1 / (noise * np.diag(inverse).real) - 1)
+            # ToDo: What to do if there aren't enough symbols covering the whole delay?? This should be a common problem!
+            ideal_inverse = np.linalg.inv(ideal_transform.T.conj() @ ideal_transform + noise_covariance)
+            ideal_equalizer = ideal_inverse @ ideal_transform.T.conj()
+            truncated_inverse = np.linalg.inv(truncated_transform.T.conj() @ truncated_transform + noise_covariance)
+            truncated_equalizer = truncated_inverse @ truncated_transform.T.conj()
+
+            # Since we may not have enough symbols to completely equalize the delay,
+            # we need to resort to cyclic repetition. This sucks big-time!
+            equalized_symbols[idx, :] = truncated_equalizer @ symbols
+            for tx_id, tx_response in enumerate(response.transpose((1, 0, 2))):
+
+                equalized_response_matrix = ideal_equalizer @ Channel.DelayMatrix(tx_response)
+                equalized_responses[idx, :, tx_id, :] = Channel.PowerDelayProfile(equalized_response_matrix,
+                                                                                  tx_response.shape[1], num_symbols)
+
+            equalized_noises[idx, :] = 1 / (1 / (noise * np.diag(ideal_inverse).real) - 1)
 
         return equalized_symbols, equalized_responses, equalized_noises
 
@@ -138,12 +150,20 @@ class MMSESpaceEqualizer(SymbolPrecoder):
                stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
-        equalized_responses = np.empty(stream_responses.shape, dtype=complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=complex)
+        equalized_noises = np.empty(stream_noises.shape, dtype=float)
+
+        num_symbols = symbol_stream.shape[1]
+        response_transformations = np.empty((*stream_responses.shape[:3], stream_responses.shape[1] + stream_responses.shape[3] - 1),
+                                            dtype=complex)
+        equalized_response_transformations = np.empty(response_transformations.shape, dtype=complex)
+        for rx_idx, tx_idx in product(range(stream_responses.shape[0]), range(stream_responses.shape[2])):
+
+            response = stream_responses[rx_idx, :, tx_idx, :]
+            response_transformations[rx_idx, :, tx_idx, :] = Channel.DelayMatrix(response).T
 
         # Equalize in space in a first step
         for idx, (symbol, response, noise) in enumerate(zip(symbol_stream.T,
-                                                            np.rollaxis(stream_responses, 1),
+                                                            np.rollaxis(response_transformations, 1),
                                                             np.rollaxis(stream_noises, 1))):
             noise_covariance = np.diag(noise)
             response_sum = np.sum(response, axis=2, keepdims=False)
@@ -152,8 +172,18 @@ class MMSESpaceEqualizer(SymbolPrecoder):
             equalizer = inverse @ response_sum.T.conj()
 
             equalized_symbols[:, idx] = equalizer @ symbol
-            equalized_responses[:, idx, :, :] = equalizer @ response
+
+            for tx_idx in range(stream_responses.shape[2]):
+                equalized_response_transformations[:, idx, tx_idx, :] = equalizer @ response_transformations[:, idx, tx_idx, :]
+
             equalized_noises[:, idx] = 1 / (1 / (noise * np.diag(inverse).real) - 1)
+
+        equalized_responses = np.empty(stream_responses.shape, dtype=complex)
+        for rx_idx, tx_idx in product(range(stream_responses.shape[0]), range(stream_responses.shape[2])):
+
+            equalized_response = Channel.PowerDelayProfile(equalized_response_transformations[rx_idx, :, tx_idx, :],
+                                                           stream_responses.shape[3], num_symbols)
+            equalized_responses[rx_idx, :, tx_idx, :] = equalized_response
 
         return equalized_symbols, equalized_responses, equalized_noises
 

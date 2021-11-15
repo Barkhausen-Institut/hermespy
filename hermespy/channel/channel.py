@@ -482,7 +482,7 @@ class Channel(ABC):
 
         Returns:
             np.ndarray:
-                A complex TxT transformation matrix representing the `power_delay_profile`.
+                A complex (T+L)xT transformation matrix representing the `power_delay_profile`.
         """
 
         num_timestamps = power_delay_profile.shape[0]
@@ -494,6 +494,34 @@ class Channel(ABC):
             convolution[delay_index + time_indices,  time_indices] = delay_response
 
         return convolution
+
+    @staticmethod
+    def PowerDelayProfile(delay_matrix: np.ndarray, num_delay_taps: int, num_timestamps: int = 0) -> np.ndarray:
+        """Transform a linear transformation matrix to a power delay profile.
+
+        Args:
+            delay_matrix (np.ndarray):
+                A complex TxT transformation matrix representing a `power_delay_profile`.
+
+            num_delay_taps (int):
+                The number of L delay taps.
+        Returns:
+            np.ndarray:
+                A matrix of dimension TxL+1 where T is the sampled time and L is the sampled delay, respectively.
+        """
+
+        if num_timestamps == 0:
+            num_timestamps = delay_matrix.shape[0] - num_delay_taps + 1
+
+        power_delay_profile = np.empty((num_timestamps, num_delay_taps), dtype=complex)
+
+        # The delay profile is contained within the off-diagonal elements of the delay matrix
+        for delay_idx in range(num_delay_taps):
+
+            diagonal_elements = np.diag(delay_matrix, -delay_idx)
+            power_delay_profile[0:len(diagonal_elements), delay_idx] = diagonal_elements
+
+        return power_delay_profile
 
     @property
     def min_sampling_rate(self) -> float:

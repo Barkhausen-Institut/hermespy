@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
-from hermespy.modem.precoding import ZeroForcingEqualizer
+from hermespy.modem.precoding import ZFTimeEqualizer, ZFSpaceEqualizer
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -28,7 +28,7 @@ class TestZeroForcingEqualizer(unittest.TestCase):
         self.generator = np.random.default_rng(42)
 
         # Precoder to be tested
-        self.precoder = ZeroForcingEqualizer()
+        self.precoder = ZFTimeEqualizer()
 
         # Mock the precoding configuration
         self.precoding = Mock()

@@ -184,17 +184,28 @@ class SymbolPrecoding:
         streams_iteration = stream_responses.copy()
         noises_iteration = stream_noises.copy()
 
+        import matplotlib.pyplot as plt
+        _, axes = plt.subplots(1 + len(self.__symbol_precoders), 2)
+        axes[0, 0].plot(abs(input_stream.flatten()))
+        axes[0, 1].plot(abs(stream_noises.flatten()))
+        i = 0
+
         # Recursion through all precoders, each one may update the stream as well as the responses
         for precoder in reversed(self.__symbol_precoders):
-            symbols_iteration, stream_responses, noises_iteration = precoder.decode(symbols_iteration,
-                                                                                    streams_iteration,
-                                                                                    noises_iteration)
+            symbols_iteration, streams_iteration, noises_iteration = precoder.decode(symbols_iteration,
+                                                                                     streams_iteration,
+                                                                                     noises_iteration)
+
+            axes[1+i, 0].plot(abs(symbols_iteration.flatten()))
+            axes[1+i, 1].plot(abs(noises_iteration.flatten()))
+            i+=1
 
         # Make sure the output stream is one-dimensional
         # A multi-dimensional output stream indicates a invalid precoding configuration
         if symbols_iteration.shape[0] > 1:
             raise RuntimeError("More than one stream resulting from precoding decoding, the configuration is invalid")
 
+        plt.show()
         return symbols_iteration.flatten()
 
     def required_outputs(self, precoder: SymbolPrecoder) -> int:

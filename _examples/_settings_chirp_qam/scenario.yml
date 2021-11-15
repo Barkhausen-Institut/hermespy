@@ -8,6 +8,11 @@ Modems:
   # Transmitter configuration
   - Transmitter
 
+    num_antennas: 2
+
+    Precoding:
+      - SM
+
     # Waveform configuration
     WaveformPskQam:
 
@@ -16,11 +21,11 @@ Modems:
       modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
-      oversampling_factor: 1
+      oversampling_factor: 4
 
       # Filter settings
       #filter:
-      #  filter_type: RAISED_COSINE
+      #  filter_type: ROOT_RAISED_COSINE
 
       # Frame settings
       num_preamble_symbols: 10
@@ -31,8 +36,12 @@ Modems:
   # Receiver configuration
   - Receiver
 
+    num_antennas: 2
+
     Precoding:
+      - SM
       - MMSE-Time
+      - MMSE-Space
 
     # Waveform configuration
     WaveformPskQam:
@@ -42,11 +51,11 @@ Modems:
       modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
-      oversampling_factor: 1
+      oversampling_factor: 4
 
       # Filter settings
-      # filter:
-      #  filter_type: RAISED_COSINE
+      #filter:
+      #  filter_type: ROOT_RAISED_COSINE
 
       # Frame settings
       num_preamble_symbols: 10
@@ -57,5 +66,6 @@ Modems:
 
 Channels:
 
-  - COST256 0 0
-    model_type: RURAL
+  - 5GTDL 0 0
+    type: B
+    rms_delay: 1e-7
