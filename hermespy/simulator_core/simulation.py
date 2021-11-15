@@ -222,18 +222,15 @@ class Simulation(Executable):
                                     spectrum_fft_size=self.spectrum_fft_size,
                                     confidence_margin=self.confidence_margin,
                                     confidence_level=self.confidence_level,
-                                    confice_metric=self.confidence_metric,
+                                    confidence_metric=self.confidence_metric,
                                     min_num_drops=self.min_num_drops,
                                     max_num_drops=self.max_num_drops)
 
             # Save most recent drop
             drop: Optional[SimulationDrop] = None
 
-            for d in range(self.num_drops):
+            for d in range(self.max_num_drops):
                 run_flags = statistics.flag_matrix
-
-                if d < self.min_num_drops:
-                    run_flags[:, :, :]  = True
 
                 for noise_index, snr in enumerate(self.noise_loop):
                     snr_mask = run_flags[:, :, noise_index]
