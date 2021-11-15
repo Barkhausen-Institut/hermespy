@@ -44,7 +44,7 @@ class Statistics:
         __calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
         __calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int); Number of discrete frequency bins computed within the Fast Fourier Transforms.
-        __num_drops (int): Number of drops already added to the statistics.
+        __num_drops (np.array): SNR-Specific Number of drops already added to the statistics.
         snr_loop (List[float]): List of (linear) signal to noise ratios.
         __num_snr_loops (int): Different number of snrs to perform simulation for.
         run_flag[List[np.array]]:
@@ -103,8 +103,8 @@ class Statistics:
         self.snr_type = snr_type
         
         # Inferred attributes
-        self.__num_drops = 0
         self.__num_snr_loops = len(snr_loop)
+        self.__num_drops = np.zeros(self.__num_snr_loops)
         self._no_simulation_iterations = 0
         self._drop_updates = np.zeros(
             (self.__num_snr_loops,
@@ -173,10 +173,10 @@ class Statistics:
         """
 
         if self.__calc_transmit_spectrum:
-            self.__add_transmit_spectrum(drop)
+            self.__add_transmit_spectrum(drop, snr_index)
                 
         if self.__calc_receive_spectrum:
-            self.__add_receive_spectrum(drop)
+            self.__add_receive_spectrum(drop, snr_index)
 
         if self.__calc_transmit_stft:
             self._stft_tx = drop.transmit_stft
@@ -187,7 +187,7 @@ class Statistics:
         self.__add_bit_error_rate(drop, snr_index)
 
         # Increase internal drop counter
-        self.__num_drops += 1
+        self.__num_drops[snr_index] += 1
 
     def add_drops(self, drops: List[Drop], snr_index: int) -> None:
         """Add multiple transmission drops to the statistics.
@@ -205,27 +205,28 @@ class Statistics:
         return self.__flag_matrix
 
     @property
-    def num_drops(self) -> int:
+    def num_drops(self) -> np.array:
         """Access the number of drops already added to this statistics.
 
         Returns:
-            int: The number of drops.
+            np.array: SNR-specific number of drops.
         """
 
         return self.__num_drops
 
-    def __add_transmit_spectrum(self, drop: Drop) -> None:
+    def __add_transmit_spectrum(self, drop: Drop, snr_index: int) -> None:
         """Subroutine to add a new transmit spectral information from a new drop.
 
         Args:
             drop (Drop): The new drop.
+            snr_index (int): Respective snr index.
         """
 
         # Fetch transmit spectra from drop
         transmit_spectra = drop.transmit_spectrum
 
         # Initialize containers during first drop
-        if self.__num_drops < 1:
+        if self.__num_drops[snr_index] < 1:
             for transmitter_index in range(self.__scenario.num_transmitters):
                 self._frequency_range_tx[transmitter_index] = transmit_spectra[transmitter_index][0]
                 self._periodogram_tx[transmitter_index] = np.zeros(len(transmit_spectra[transmitter_index][0]),
@@ -236,18 +237,19 @@ class Statistics:
             if new_periodogram is not None:
                 periodogram += new_periodogram
 
-    def __add_receive_spectrum(self, drop: Drop) -> None:
+    def __add_receive_spectrum(self, drop: Drop, snr_index: int) -> None:
         """Subroutine to add a new receive spectral information from a new drop.
 
         Args:
             drop (Drop): The new drop.
+            snr_index (int): Respective SNR index.
         """
 
         # Fetch receive spectra from drop
         receive_spectra = drop.receive_spectrum
 
         # Initialize containers during first drop
-        if self.__num_drops < 1:
+        if self.__num_drops[snr_index] < 1:
             for receiver_index in range(self.__scenario.num_receivers):
                 self._frequency_range_rx[receiver_index] = receive_spectra[receiver_index][0]
                 self._periodogram_rx[receiver_index] = np.zeros(len(receive_spectra[receiver_index][0]),
@@ -354,7 +356,7 @@ class Statistics:
         for rx_modem_idx in range(self.__scenario.num_receivers):
             for tx_modem_idx in range(self.__scenario.num_transmitters):
 
-                if self.__num_drops >= self.__min_num_drops:
+                if self.__num_drops[snr_index] >= self.__min_num_drops:
                     mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
                         np.array(self.bit_errors), self.__confidence_margin
                     )
