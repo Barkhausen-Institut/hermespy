@@ -17,7 +17,7 @@ class TestDropLoop(unittest.TestCase):
         _ = self.patcher.start()
 
         mock_params_general = Mock()
-        mock_params_general.max_num_drops = 3
+        mock_params_general.max_num_simulation_iterations = 3
         mock_params_general.drop_length = 0
 
         mock_scenario = Mock()
@@ -41,7 +41,7 @@ class TestDropLoop(unittest.TestCase):
     def test_drop_loop_end_command_on_exceeding_num_drops(self) -> None:
         self.drop_loop._scenario.rx_modems = []
 
-        self.drop_loop.params.max_num_drops = self.drop_loop._statistics.__num_drops - 1
+        self.drop_loop.params.max_num_simulation_iterations = self.drop_loop._statistics.__num_drops - 1
 
         self.assertTrue(self.drop_loop.verify_drop_loop())
 

@@ -76,7 +76,7 @@ class Statistics:
                  snr_type: SNRType = SNRType.EBN0,
                  calc_theory: bool = True,
                  confidence_margin: float = 0.0,
-                 min_num_drops: int = 0) -> None:
+                 min_num_simulation_iterations: int = 0) -> None:
         """Transmission statistics object initialization.
 
         Args:
@@ -99,7 +99,7 @@ class Statistics:
         self.__spectrum_fft_size = spectrum_fft_size
         self.__calc_theory = calc_theory
         self.__confidence_margin = confidence_margin
-        self.__min_num_drops = min_num_drops
+        self.__min_num_simulation_iterations = min_num_simulation_iterations
         self.snr_type = snr_type
         
         # Inferred attributes
@@ -354,7 +354,7 @@ class Statistics:
         for rx_modem_idx in range(self.__scenario.num_receivers):
             for tx_modem_idx in range(self.__scenario.num_transmitters):
 
-                if self.__num_drops >= self.__min_num_drops:
+                if self.__num_drops >= self.__min_num_simulation_iterations:
                     mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
                         np.array(self.bit_errors), self.__confidence_margin
                     )
@@ -456,7 +456,7 @@ class Statistics:
                 )
 
                 # calculate confidence margins
-                if self.__num_drops >= self.param_general.min_num_drops:
+                if self.__num_drops >= self.param_general.min_num_simulation_iterations:
                     # define those to save typing
                     ber_lower = self.bit_error_min[rx_modem_idx][snr_idx]
                     fer_lower = self.block_error_min[rx_modem_idx][snr_idx]
@@ -504,7 +504,7 @@ class Statistics:
             # update stopping criteria
             if (
                 self.param_general.confidence_margin > 0
-                and self.__num_drops >= self.param_general.min_num_drops
+                and self.__num_drops >= self.param_general.min_num_simulation_iterations
             ):
                 old_settings = np.seterr(divide="ignore", invalid="ignore")
 
