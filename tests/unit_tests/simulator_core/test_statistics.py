@@ -7,15 +7,12 @@ import numpy as np
 from hermespy.simulator_core.statistics import Statistics
 from hermespy.simulator_core.drop import Drop
 
-class FakeStatistics(Statistics):
-    def update_stopping_criteria_drop(self, drop: Drop, snr_index: int) -> None:
-        self._drop_updates[snr_index, :, :] = True
 
 class TestUpdateStoppingCriteria(unittest.TestCase):
     def setUp(self) -> None:
         self.min_num_drops = 3
         self.max_num_drops = 4
-        self.confidence_margin = 0.1
+        self.confidence_margin = 0.7
         self.confidence_level = 0.9
         self.snr_loop = np.arange(5)
         self.scenario_mock = Mock()
@@ -57,33 +54,6 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
             means.append(mean)
 
         self.assertListEqual(expected_means, means)
-
-    def test_no_iterations_update_if_stopping_criteria_update_for_all_drops(self) -> None:
-        transmitted_bits = [np.ones(10)]
-        received_bits = transmitted_bits
-
-        drop = self.create_drop(transmitted_bits, received_bits)
-
-        snr_loop = np.arange(5)
-        scenario_mock = Mock()
-        scenario_mock.num_transmitters = 1
-        scenario_mock.num_receivers = 1
-        stats = FakeStatistics(scenario=self.scenario_mock,
-                                snr_loop=snr_loop,
-                                calc_theory=False,
-                                calc_transmit_spectrum=False,
-                                calc_receive_spectrum=False,
-                                calc_transmit_stft=False,
-                                calc_receive_stft=False,
-                                confidence_margin=0.1,
-                                confidence_level=0.99,
-                                min_num_drops=3,
-                                max_num_drops=4)
-
-        for snr_idx, snr_val in enumerate(snr_loop):
-            self.assertEquals(stats.no_simulation_iterations, 0)
-            stats.update_stopping_criteria(drop, snr_idx)
-        self.assertEquals(stats.no_simulation_iterations, 1)
 
     def test_min_num_drops_reached(self):
         for snr_idx, snr in enumerate(self.snr_loop):
