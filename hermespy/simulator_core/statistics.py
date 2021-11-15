@@ -105,6 +105,13 @@ class Statistics:
         # Inferred attributes
         self.__num_drops = 0
         self.__num_snr_loops = len(snr_loop)
+        self._no_simulation_iterations = 0
+        self._drop_updates = np.zeros(
+            (self.__num_snr_loops,
+             self.__scenario.num_transmitters,
+             self.__scenario.num_receivers),
+            dtype=bool
+        )
 
         self.bit_error_num_drops = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
         self.block_error_num_drops = np.zeros((self.__num_snr_loops, scenario.num_transmitters, scenario.num_receivers))
@@ -151,6 +158,12 @@ class Statistics:
              self.__num_snr_loops),
             dtype=bool
         )
+
+    @property
+    def no_simulation_iterations(self) -> int:
+        """Returns the number of simulation iterations."""
+        return self._no_simulation_iterations
+
     def add_drop(self, drop: Drop, snr_index: int) -> None:
         """Add a new transmission drop to the statistics.
 
@@ -327,6 +340,14 @@ class Statistics:
         return no_old_samples / (no_old_samples + 1) * old_mean + 1 / (no_old_samples+1) * new_sample
 
     def update_stopping_criteria(self, drop: Drop, snr_index: int) -> None:
+        self.update_stopping_criteria_drop(drop, snr_index)
+        simulation_iteration_finished = np.all(self._drop_updates)
+
+        if simulation_iteration_finished:
+            self._drop_updates[:, :, :] = False
+            self._no_simulation_iterations += 1
+
+    def update_stopping_criteria_drop(self, drop: Drop, snr_index: int) -> None:
         flag_matrix_previous_drop = self.flag_matrix
 
         # TODO: What to do if ber is none?
@@ -348,6 +369,7 @@ class Statistics:
                         confidence_margin > self.__confidence_margin
                     )
 
+            self._drop_updates[snr_index, tx_modem_idx, rx_modem_idx] = True
     def get_confidence_margin_ber_mean(self, tx_modem_idx: int,
                                              rx_modem_idx: int,
                                              snr_idx: int) -> float:
