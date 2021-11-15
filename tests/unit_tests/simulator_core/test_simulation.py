@@ -131,8 +131,8 @@ class TestStoppingCriteria(unittest.TestCase):
         self.no_tx = 3
         self.simulation = Simulation()
         self.simulation.noise_loop = np.arange(30)
-        self.simulation.min_num_drops = 1
-        self.simulation.max_num_drops = 1
+        self.simulation.min_num_simulation_iterations = 1
+        self.simulation.max_num_simulation_iterations = 1
 
         self.scenario = Scenario()
         self.scenario.drop_duration = 0.1
