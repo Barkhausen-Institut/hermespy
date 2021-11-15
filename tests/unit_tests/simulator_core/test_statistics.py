@@ -80,15 +80,9 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
         self.assertEquals(stats.no_simulation_iterations, 1)
 
     def test_min_num_drops_reached(self):
-        transmitted_bits = [np.ones(10)]
-        received_bits = transmitted_bits
-
-        drops = [self.create_drop(transmitted_bits, received_bits)
-                 for i in range(self.min_num_drops + 1)]
-
         for snr_idx, snr in enumerate(self.snr_loop):
-            for drop in drops:
-                self.stats.update_stopping_criteria(drop, snr_idx)
+            for drop in range(self.min_num_drops + 1):
+                self.stats.update_stopping_criteria(snr_idx)
                 self.assertTrue(self.next_drop_can_be_run(self.stats.flag_matrix, snr_idx))
 
     def test_estimation_of_confidence_intervals_of_mean(self) -> None:

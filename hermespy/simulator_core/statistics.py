@@ -185,7 +185,7 @@ class Statistics:
             self._stft_rx = drop.receive_stft
 
         self.__add_bit_error_rate(drop, snr_index)
-
+        self.update_stopping_criteria(snr_index)
         # Increase internal drop counter
         self.__num_drops[snr_index] += 1
 
@@ -341,37 +341,27 @@ class Statistics:
                              new_sample: float) -> float:
         return no_old_samples / (no_old_samples + 1) * old_mean + 1 / (no_old_samples+1) * new_sample
 
-    def update_stopping_criteria(self, drop: Drop, snr_index: int) -> None:
-        self.update_stopping_criteria_drop(drop, snr_index)
-        simulation_iteration_finished = np.all(self._drop_updates)
 
-        if simulation_iteration_finished:
-            self._drop_updates[:, :, :] = False
-            self._no_simulation_iterations += 1
-
-    def update_stopping_criteria_drop(self, drop: Drop, snr_index: int) -> None:
-        flag_matrix_previous_drop = self.flag_matrix
-
+    def update_stopping_criteria(self, snr_index: int) -> None:
         # TODO: What to do if ber is none?
         for rx_modem_idx in range(self.__scenario.num_receivers):
             for tx_modem_idx in range(self.__scenario.num_transmitters):
-
                 if self.__num_drops[snr_index] >= self.__min_num_drops:
-                    mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
-                        np.array(self.bit_errors), self.__confidence_margin
-                    )
+                    if self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] == True:
+                        mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
+                            np.array(self.bit_errors), self.__confidence_margin
+                        )
 
-                    self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound
-                    self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = mean_upper_bound
+                        self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound
+                        self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = mean_upper_bound
 
-                    confidence_margin = self.get_confidence_margin_ber_mean(
-                        tx_modem_idx, rx_modem_idx, snr_index
-                    )
-                    self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
-                        confidence_margin > self.__confidence_margin
-                    )
+                        confidence_margin = self.get_confidence_margin_ber_mean(
+                            tx_modem_idx, rx_modem_idx, snr_index
+                        )
+                        self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
+                            confidence_margin > self.__confidence_margin
+                        )
 
-            self._drop_updates[snr_index, tx_modem_idx, rx_modem_idx] = True
     def get_confidence_margin_ber_mean(self, tx_modem_idx: int,
                                              rx_modem_idx: int,
                                              snr_idx: int) -> float:
