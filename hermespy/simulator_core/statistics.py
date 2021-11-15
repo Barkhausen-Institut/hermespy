@@ -60,6 +60,8 @@ class Statistics:
     __calc_receive_stft: bool
     __spectrum_fft_size: int
     __num_drops: int
+    __confidence_margin: float
+    __confidence_level: float
     snr_loop: List[float]
     __num_snr_loops: int
     snr_type: SNRType
@@ -75,7 +77,8 @@ class Statistics:
                  spectrum_fft_size: int = 0,
                  snr_type: SNRType = SNRType.EBN0,
                  calc_theory: bool = True,
-                 confidence_margin: float = 0.0,
+                 confidence_margin: float = 0.1,
+                 confidence_level: float = 0.99,
                  min_num_drops: int = 0,
                  max_num_drops: int = 1) -> None:
         """Transmission statistics object initialization.
@@ -100,6 +103,7 @@ class Statistics:
         self.__spectrum_fft_size = spectrum_fft_size
         self.__calc_theory = calc_theory
         self.__confidence_margin = confidence_margin
+        self.__confidence_level = confidence_level
         self.__min_num_drops = min_num_drops
         self.__max_num_drops = max_num_drops
         self.snr_type = snr_type
@@ -353,7 +357,7 @@ class Statistics:
                     if self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] == True:
                         mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
                             self.bit_errors[:self.__num_drops[snr_index], snr_index, tx_modem_idx, rx_modem_idx],
-                            self.__confidence_margin
+                            self.__confidence_level
                         )
 
                         self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound

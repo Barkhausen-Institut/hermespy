@@ -14,7 +14,9 @@ class FakeStatistics(Statistics):
 class TestUpdateStoppingCriteria(unittest.TestCase):
     def setUp(self) -> None:
         self.min_num_drops = 3
-        self.confidence_margin = 0.99
+        self.max_num_drops = 4
+        self.confidence_margin = 0.1
+        self.confidence_level = 0.9
         self.snr_loop = np.arange(5)
         self.scenario_mock = Mock()
         self.scenario_mock.num_transmitters = 1
@@ -27,7 +29,9 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
                                 calc_transmit_stft=False,
                                 calc_receive_stft=False,
                                 confidence_margin=self.confidence_margin,
-                                min_num_drops=self.min_num_drops)
+                                confidence_level=self.confidence_level,
+                                min_num_drops=self.min_num_drops,
+                                max_num_drops=self.max_num_drops)
         self.transmitted_bits = [np.ones(10)]
         self.received_bits = [np.zeros(10)]
 
@@ -71,8 +75,10 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
                                 calc_receive_spectrum=False,
                                 calc_transmit_stft=False,
                                 calc_receive_stft=False,
-                                confidence_margin=0.99,
-                                min_num_drops=3)
+                                confidence_margin=0.1,
+                                confidence_level=0.99,
+                                min_num_drops=3,
+                                max_num_drops=4)
 
         for snr_idx, snr_val in enumerate(snr_loop):
             self.assertEquals(stats.no_simulation_iterations, 0)
@@ -85,6 +91,31 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
                 self.stats.update_stopping_criteria(snr_idx)
                 self.assertTrue(self.next_drop_can_be_run(self.stats.flag_matrix, snr_idx))
 
+    def test_update_stopping_criteria(self) -> None:
+        NUM_DROPS = self.min_num_drops + 1
+        transmitted_bits = [[np.ones(10)] for _ in range(NUM_DROPS)]
+        received_bits = [[np.zeros(10)] for _ in range(self.min_num_drops-1)]
+        received_bits.append([np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])])
+        received_bits.append([np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])])
+
+        drops = [self.create_drop(transmitted_bits[i], received_bits[i])
+                 for i in range(NUM_DROPS)]
+
+        for drop_idx in range(NUM_DROPS):
+            for snr_idx, _ in enumerate(self.snr_loop):
+                self.stats.add_drop(drops[drop_idx], snr_idx)
+                if drop_idx <= self.min_num_drops:
+                    self.assertTrue(
+                        self.next_drop_can_be_run(
+                            self.stats.flag_matrix, snr_idx))
+                else:
+                    self.assertFalse(
+                        self.next_drop_can_be_run(
+                            self.stats.flag_matrix, snr_idx
+                        )
+                    )
+                
+        
     def test_estimation_of_confidence_intervals_of_mean(self) -> None:
         data = [0, 0, 0.5, 0.5, 0.6, 0.5]
         alpha = 0.95
