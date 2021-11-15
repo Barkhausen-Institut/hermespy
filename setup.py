@@ -38,5 +38,5 @@ setup(
     entry_points={
         'console_scripts': ['hermes=hermespy.bin:hermes'],
     },
-    install_requires=['matplotlib', 'numpy', 'scipy', 'data-science-types', 'ruamel.yaml'],
+    install_requires=['matplotlib', 'numpy', 'scipy', 'data-science-types', 'ruamel.yaml', 'numba', 'sparse'],
 )
