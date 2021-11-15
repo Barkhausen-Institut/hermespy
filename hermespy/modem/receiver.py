@@ -164,20 +164,19 @@ class Receiver(Modem):
         # Convert channel model from impulse responses to transformation tensors
         channel_transformations = Channel.impulse_transformation(channel)
 
-        for stream_idx, (rx_signal, stream_channels) in enumerate(zip(baseband_signal,
-                                                                     np.rollaxis(channel_transformations, 1))):
+        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(baseband_signal, channel_transformations)):
 
             # Synchronization
-            frame_samples, frame_channels = self.waveform_generator.synchronize(rx_signal, stream_channels)
+            frame_samples, frame_transforms = self.waveform_generator.synchronize(rx_signal, stream_transform)
 
             # Demodulate each frame separately to make the de-modulation easier to understand
             symbols: List[complex] = []
             symbol_responses: List[complex] = []
             symbol_noise: List[float] = []
-            for frame, frame_channel in zip(frame_samples, frame_channels):
+            for frame, frame_transform in zip(frame_samples, frame_transforms):
 
                 # Demodulate the frame into data symbols
-                f_symbols, f_responses, f_noise = self.waveform_generator.demodulate(frame, frame_channel,
+                f_symbols, f_responses, f_noise = self.waveform_generator.demodulate(frame, frame_transform,
                                                                                      noise_variance)
 
                 symbols.extend(f_symbols.tolist())

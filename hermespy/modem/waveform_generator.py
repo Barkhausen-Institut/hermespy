@@ -3,10 +3,13 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Tuple, TYPE_CHECKING, Optional, Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from typing import Tuple, TYPE_CHECKING, Optional, Type, List
 from math import floor
+
+
 import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from sparse import COO
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -312,7 +315,7 @@ class WaveformGenerator(ABC):
 
     # Hint: Channel propagation occurs here
 
-    def synchronize(self, signal: np.ndarray, stream_response: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def synchronize(self, signal: np.ndarray, frame_transforms: COO) -> Tuple[np.ndarray, List[COO]]:
         """Simulates time-synchronization at the receiver-side.
 
         Sorts signal-sections into frames in time-domain.
@@ -322,25 +325,26 @@ class WaveformGenerator(ABC):
             signal (np.ndarray):
                 Vector of complex base-band signal samples of a single input stream with `num_samples` entries.
 
-            stream_response (np.ndarray):
+            frame_transforms (np.ndarray):
                 Channel matrix for a single antenna stream.
-                Should be of dimension `num_samples`x`num_input_streams`x`max_delay_in_samples+1`.
+                Should be of dimension num_input_streams`x``num_samples + max_delay_in_samples`x`num_samples`.
 
         Returns:
-            Tuple[np.ndarray, np.ndarray]: Tuple of signal samples and channel responses sorted into frames.
+            Tuple[np.ndarray, List[COO]]:
+                Tuple of signal samples and channel transformations sorted into frames
 
         Raises:
             ValueError: If the length of `signal` and the first dimension of `channel_response` is not identical.
         """
 
-        if len(signal) != stream_response.shape[0]:
+        if len(signal) != frame_transforms.shape[1]:
             raise ValueError("Signal length and the first response dimension must be matching")
 
         samples_per_frame = self.samples_in_frame
         num_frames = int(floor(len(signal) / samples_per_frame))
 
         frames = np.empty((num_frames, samples_per_frame), dtype=complex)
-        frame_responses = np.empty((num_frames, samples_per_frame, *stream_response.shape[1:]), dtype=complex)
+        frame_transforms: List[COO] = []
 
         # By default, there is no synchronization, i.e. we assume the first signal is also the first sample of
         # the first frame. ToDo: Check with André how to implement general equalization
@@ -348,9 +352,9 @@ class WaveformGenerator(ABC):
 
             # ToDo: This currently does not account for delay overhead....
             frames[f, :] = signal[f*samples_per_frame:(f+1)*samples_per_frame]
-            frame_responses[f, ::] = stream_response[f*samples_per_frame:(f+1)*samples_per_frame, ::]
+            frame_transforms[f, ::] = frame_transforms[f * samples_per_frame:(f + 1) * samples_per_frame, ::]
 
-        return frames, frame_responses
+        return frames, frame_transforms
 
     @abstractmethod
     def demodulate(self,
