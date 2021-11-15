@@ -99,6 +99,7 @@ class Simulation(Executable):
                  noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
                  min_num_drops: int = 0,
+                 max_num_drops: int = 1,
                  confidence_level: float = 1.0,
                  confidence_margin: float = 0.0,
                  results_dir: Optional[str] = None,
@@ -145,6 +146,9 @@ class Simulation(Executable):
             min_num_drops (int, optional):
                 Minimum number of drops before confidence check may prematurely terminate execution.
 
+            max_num_drops (int, optional):
+                Maximum number of drops before confidence check may prematurely terminate execution.
+
             confidence_level (float, optional):
                 Confidence at which execution should be terminated.
 
@@ -176,6 +180,7 @@ class Simulation(Executable):
         self.plot_bit_error = plot_bit_error
         self.plot_block_error = plot_block_error
         self.min_num_drops = min_num_drops
+        self.max_num_drops = max_num_drops
         self.confidence_level = confidence_level
         self.confidence_margin = confidence_margin
 
@@ -192,6 +197,9 @@ class Simulation(Executable):
 
         else:
             self.confidence_metric = confidence_metric
+
+        if self.max_num_drops < self.min_num_drops:
+            raise ValueError("Minimum number of drops must be smaller than maximum number of drops.")
 
     def run(self) -> None:
         """Run the full simulation configuration."""
@@ -213,8 +221,17 @@ class Simulation(Executable):
                 print("="*75)
 
             # Initialize plot statistics with current scenario state
-            statistics = Statistics(scenario, self.noise_loop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
-                                    self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size)
+            statistics = Statistics(scenario=scenario,
+                                    snr_loop=self.noise_loop,
+                                    calc_transmit_spectrum=self.calc_transmit_spectrum,
+                                    calc_receive_spectrum=self.calc_receive_spectrum,
+                                    calc_transmit_stft=self.calc_transmit_stft,
+                                    calc_receive_stft=self.calc_receive_stft,
+                                    spectrum_fft_size=self.spectrum_fft_size,
+                                    confidence_margin=self.confidence_margin,
+                                    confidence_level=self.confidence_level,
+                                    min_num_drops=self.min_num_drops,
+                                    max_num_drops=self.max_num_drops)
 
             # Save most recent drop
             drop: Optional[SimulationDrop] = None
