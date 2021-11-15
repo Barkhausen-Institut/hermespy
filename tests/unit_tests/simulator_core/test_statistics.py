@@ -56,6 +56,36 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
 
         self.assertListEqual(expected_means, means)
 
+    def test_disabled_stopping_criteria(self) -> None:
+        self.stats = Statistics(scenario=self.scenario_mock,
+                                snr_loop=self.snr_loop,
+                                calc_theory=False,
+                                calc_transmit_spectrum=False,
+                                calc_receive_spectrum=False,
+                                calc_transmit_stft=False,
+                                calc_receive_stft=False,
+                                confidence_margin=self.confidence_margin,
+                                confidence_level=self.confidence_level,
+                                confidence_metric=ConfidenceMetric.DISABLED,
+                                min_num_drops=self.min_num_drops,
+                                max_num_drops=self.max_num_drops)
+        NUM_DROPS = self.min_num_drops + 1
+        transmitted_bits = [[np.ones(10)] for _ in range(NUM_DROPS)]
+        received_bits = [[np.zeros(10)] for _ in range(self.min_num_drops-1)]
+        received_bits.append([np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])])
+        received_bits.append([np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])])
+
+        drops = [self.create_drop(transmitted_bits[i], received_bits[i])
+                 for i in range(NUM_DROPS)]
+
+        for drop_idx in range(1, NUM_DROPS+1):
+            for snr_idx, _ in enumerate(self.snr_loop):
+                self.stats.add_drop(drops[drop_idx-1], snr_idx)
+                self.assertTrue(
+                    self.next_drop_can_be_run(
+                        self.stats.flag_matrix, snr_idx
+                    )
+                )
     def test_update_stopping_criteria(self) -> None:
         NUM_DROPS = self.min_num_drops + 1
         transmitted_bits = [[np.ones(10)] for _ in range(NUM_DROPS)]
