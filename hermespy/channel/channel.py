@@ -9,7 +9,8 @@ from itertools import product
 import numpy as np
 import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
-from numba import jit
+from numba import jit, complex128
+from sparse import DOK, COO
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -473,7 +474,8 @@ class Channel(ABC):
         return impulse_responses
 
     @staticmethod
-    def DelayMatrix(power_delay_profile: np.ndarray) -> np.ndarray:
+    @jit(complex128[:, :](complex128[:, :]), nopython=True)
+    def delay_matrix(power_delay_profile: np.ndarray) -> np.ndarray:
         """Transform a channel impulse response power delay profile to a linear transformation matrix.
 
         Args:
@@ -487,16 +489,18 @@ class Channel(ABC):
 
         num_timestamps = power_delay_profile.shape[0]
         num_taps = power_delay_profile.shape[1]
-        convolution = np.zeros((num_timestamps + num_taps - 1, num_timestamps), dtype=complex)
+        convolution = np.zeros((num_timestamps + num_taps - 1, num_timestamps), dtype=complex128)
 
         time_indices = np.arange(num_timestamps)
-        for delay_index, delay_response in enumerate(power_delay_profile.T):
-            convolution[delay_index + time_indices,  time_indices] = delay_response
+        for delay_index in range(power_delay_profile.shape[1]):
+            for time_index in time_indices:
+
+                convolution[delay_index + time_index, time_index] = power_delay_profile[time_index, delay_index]
 
         return convolution
 
     @staticmethod
-    def PowerDelayProfile(delay_matrix: np.ndarray, num_delay_taps: int, num_timestamps: int = 0) -> np.ndarray:
+    def power_delay_profile(delay_matrix: np.ndarray, num_delay_taps: int, num_timestamps: int = 0) -> np.ndarray:
         """Transform a linear transformation matrix to a power delay profile.
 
         Args:
@@ -522,6 +526,42 @@ class Channel(ABC):
             power_delay_profile[0:len(diagonal_elements), delay_idx] = diagonal_elements
 
         return power_delay_profile
+
+    @staticmethod
+#    @jit(complex128[:, :, :, :](complex128[:, :, :, :]), nopython=True)
+    def impulse_transformation(impulse_response: np.ndarray) -> COO:
+        """Convert a channel impulse response to a linear transformation tensor.
+
+        Args:
+            impulse_response (np.ndarray):
+                T x N_Rx x N_Tx x L+1 Channel impulse response tensor.
+                See `impulse_response` for further details.
+
+        Returns:
+            DOK:
+                Sparse linear transformation tensor of dimension N_Rx x N_Tx x T+L x T.
+                Note that the slice over the first snd last dimension will usually form a lower triangular matrix.
+        """
+
+        num_rx = impulse_response.shape[1]
+        num_tx = impulse_response.shape[2]
+        num_taps = impulse_response.shape[3]
+        num_out = impulse_response.shape[0] + num_taps - 1
+        num_in = impulse_response.shape[0]
+
+        in_ids = np.repeat(np.arange(num_in), num_taps)
+        out_ids = np.array([np.arange(num_taps) + t for t in range(num_in)]).flatten()
+        rx_ids = np.arange(num_rx)
+        tx_ids = np.arange(num_tx)
+
+        coordinates = [rx_ids.repeat(num_tx * num_taps * num_in),
+                       tx_ids.repeat(num_rx * num_taps * num_in).reshape((num_tx, -1), order='F').flatten(),
+                       np.tile(out_ids, num_rx * num_tx),
+                       np.tile(in_ids, num_rx * num_tx)]
+        data = impulse_response.transpose((1, 2, 0, 3)).flatten()
+
+        transformation = COO(coordinates, data, shape=(num_rx, num_tx, num_out, num_in))
+        return transformation
 
     @property
     def min_sampling_rate(self) -> float:

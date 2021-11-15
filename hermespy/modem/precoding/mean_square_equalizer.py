@@ -51,11 +51,8 @@ class MMSETimeEqualizer(SymbolPrecoder):
                                                              stream_noises)):
 
             # Combine the responses of all superimposed transmit antennas for equalization
-            ideal_transform = np.zeros((num_symbols + response.shape[2] - 1, num_symbols), dtype=complex)
-            for tx_response in response.transpose((1, 0, 2)):
-                ideal_transform += Channel.DelayMatrix(tx_response)
-
-            truncated_transform = ideal_transform[:num_symbols, :]
+            ideal_transform = np.sum(stream_responses, axis=1, keepdims=False)
+            truncated_transform = ideal_transform[:num_symbols]
 
             noise_covariance = np.diag(noise)
 
@@ -73,9 +70,7 @@ class MMSETimeEqualizer(SymbolPrecoder):
             equalized_symbols[idx, :] = truncated_equalizer @ symbols
             for tx_id, tx_response in enumerate(response.transpose((1, 0, 2))):
 
-                equalized_response_matrix = ideal_equalizer @ Channel.DelayMatrix(tx_response)
-                equalized_responses[idx, :, tx_id, :] = Channel.PowerDelayProfile(equalized_response_matrix,
-                                                                                  tx_response.shape[1], num_symbols)
+                equalized_response_matrix = ideal_equalizer @ tx_response
 
             equalized_noises[idx, :] = 1 / (1 / (noise * np.diag(ideal_inverse).real) - 1)
 
@@ -159,7 +154,7 @@ class MMSESpaceEqualizer(SymbolPrecoder):
         for rx_idx, tx_idx in product(range(stream_responses.shape[0]), range(stream_responses.shape[2])):
 
             response = stream_responses[rx_idx, :, tx_idx, :]
-            response_transformations[rx_idx, :, tx_idx, :] = Channel.DelayMatrix(response).T
+            response_transformations[rx_idx, :, tx_idx, :] = Channel.delay_matrix(response).T
 
         # Equalize in space in a first step
         for idx, (symbol, response, noise) in enumerate(zip(symbol_stream.T,
@@ -181,8 +176,8 @@ class MMSESpaceEqualizer(SymbolPrecoder):
         equalized_responses = np.empty(stream_responses.shape, dtype=complex)
         for rx_idx, tx_idx in product(range(stream_responses.shape[0]), range(stream_responses.shape[2])):
 
-            equalized_response = Channel.PowerDelayProfile(equalized_response_transformations[rx_idx, :, tx_idx, :],
-                                                           stream_responses.shape[3], num_symbols)
+            equalized_response = Channel.power_delay_profile(equalized_response_transformations[rx_idx, :, tx_idx, :],
+                                                             stream_responses.shape[3], num_symbols)
             equalized_responses[rx_idx, :, tx_idx, :] = equalized_response
 
         return equalized_symbols, equalized_responses, equalized_noises

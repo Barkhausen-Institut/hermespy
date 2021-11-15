@@ -14,11 +14,11 @@ from hermespy.modem import Modem
 from hermespy.modem.precoding import SymbolPrecoding
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.noise import Noise
+from hermespy.channel import Channel
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
     from .transmitter import Transmitter
-    from hermespy.channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -161,19 +161,24 @@ class Receiver(Modem):
         symbol_streams_responses: List[List[complex]] = []
         symbol_streams_noise: List[List[float]] = []
 
-        for stream_idx, (rx_signal, stream_response) in enumerate(zip(baseband_signal, np.rollaxis(channel, 1))):
+        # Convert channel model from impulse responses to transformation tensors
+        channel_transformations = Channel.impulse_transformation(channel)
+
+        for stream_idx, (rx_signal, stream_channels) in enumerate(zip(baseband_signal,
+                                                                     np.rollaxis(channel_transformations, 1))):
 
             # Synchronization
-            frame_samples, frame_responses = self.waveform_generator.synchronize(rx_signal, stream_response)
+            frame_samples, frame_channels = self.waveform_generator.synchronize(rx_signal, stream_channels)
 
             # Demodulate each frame separately to make the de-modulation easier to understand
             symbols: List[complex] = []
             symbol_responses: List[complex] = []
             symbol_noise: List[float] = []
-            for frame, response in zip(frame_samples, frame_responses):
+            for frame, frame_channel in zip(frame_samples, frame_channels):
 
-                # Demodulate the frame into dat symbols
-                f_symbols, f_responses, f_noise = self.waveform_generator.demodulate(frame, response, noise_variance)
+                # Demodulate the frame into data symbols
+                f_symbols, f_responses, f_noise = self.waveform_generator.demodulate(frame, frame_channel,
+                                                                                     noise_variance)
 
                 symbols.extend(f_symbols.tolist())
                 symbol_responses.extend(f_responses.tolist())

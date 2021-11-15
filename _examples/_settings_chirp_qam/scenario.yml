@@ -8,10 +8,10 @@ Modems:
   # Transmitter configuration
   - Transmitter
 
-    num_antennas: 2
+    num_antennas: 1
 
-    Precoding:
-      - SM
+    #Precoding:
+    #  - SM
 
     # Waveform configuration
     WaveformPskQam:
@@ -36,12 +36,12 @@ Modems:
   # Receiver configuration
   - Receiver
 
-    num_antennas: 2
+    num_antennas: 1
 
     Precoding:
-      - SM
+      #- SM
       - MMSE-Time
-      - MMSE-Space
+      #- MMSE-Space
 
     # Waveform configuration
     WaveformPskQam:
@@ -66,6 +66,5 @@ Modems:
 
 Channels:
 
-  - 5GTDL 0 0
-    type: B
-    rms_delay: 1e-7
+  - COST256 0 0
+    model_type: RURAL
