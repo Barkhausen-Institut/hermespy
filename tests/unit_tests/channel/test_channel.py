@@ -381,6 +381,19 @@ class TestChannel(unittest.TestCase):
             propagated_signal = delay_matrix @ signal[0, :]
             assert_array_almost_equal(expected_propagated_signal[0, :], propagated_signal)
 
+    def test_power_delay_profile(self) -> None:
+        """Power delay matrix and power profile should be circular."""
+
+        delay_taps = [2, 4, 7]
+        for impulse_response_length, num_taps in product(self.impulse_response_lengths, delay_taps):
+
+            impulse_response = np.exp(2j * self.generator.uniform(0, np.pi, (impulse_response_length, num_taps)))
+
+            delay_matrix = self.channel.DelayMatrix(impulse_response)
+            power_delay_profile = self.channel.PowerDelayProfile(delay_matrix, num_taps)
+
+            assert_array_equal(power_delay_profile, impulse_response)
+
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
         pass

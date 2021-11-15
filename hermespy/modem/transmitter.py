@@ -273,6 +273,6 @@ class Transmitter(Modem):
             numpy.ndarray: A vector of hard data bits in 0/1 format.
         """
 
-        num_bits = int(self.num_data_bits_per_frame * self.precoding.rate)
+        num_bits = int(self.num_data_bits_per_frame / self.precoding.rate)
         bits = self.bits_source.get_bits(num_bits)
         return bits

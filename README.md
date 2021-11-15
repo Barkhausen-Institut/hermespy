@@ -19,7 +19,7 @@ There are two supported ways to install HermesPy on your system:
 
 #### From PyPI
 This is the recommended method for end-users.
-Hermespy is registered as an [official package](https://pypi.org/project/hermespy/) in PyPI.
+HermesPy is registered as an [official package](https://pypi.org/project/hermespy/) in PyPI.
 We intend to directly serve prebuilt binaries for Windows, most Linux distributions and MacOS.
 Install the package via
 
@@ -32,27 +32,28 @@ pip install hermespy
 ```
 
 ##### Linux users
-````commandline
+```commandline
 python -m venv env
 . env/bin/activate
 pip install hermespy
-````
+```
 
 ### From Source
 This is the recommended method for developers.
 You can build the package from scratch at any system by cloning the repository source via
-````commandline
+```commandline
 git clone <this-repo>
 cd hermespy/
-````
+```
+Make sure to have [Git LFS](https://git-lfs.github.com/) installed.
 #### Windows users
 1. Create a new virtual environment using conda or any environment manager of your choice and install the default
    python package manager pip
-   ````commandline
+   ```commandline
    conda create -n <envname> python=3.9
    conda activate <envname>
    conda install pip
-   ````
+   ```
 2. Install HermesPy as well as its dependencies using pip
    ````commandline
    pip install -r requirements.txt
@@ -63,15 +64,15 @@ cd hermespy/
    1. Make sure the `python` symlink is linked to python3.9
    2. Create a new virtual environment using venv or any environment manager of your choice and install the default
       python package manager pip
-      ````commandline
+      ```commandline
       python -m venv env
       . env/bin/activate
-      ````
+      ```
       3. Install HermesPy as well as its dependencies using pip
-      ````commandline
+      ```commandline
       pip install -r requirements.txt
       pip install -e .
-      ````
+      ```
 
 [Quadriga channel model v0.2.0](https://quadriga-channel-model.de/) is supported by HermesPy.
 For it to be used, some preliminary steps need to be taken.
