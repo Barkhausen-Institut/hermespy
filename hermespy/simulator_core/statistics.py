@@ -412,7 +412,7 @@ class Statistics:
                                     mean: float) -> float:
         """Calculates current confidence margin for confidence metric mean."""
         old_settings = np.seterr(divide="ignore", invalid="ignore")
-        confidence_margin = (upper - lower) / mean
+        confidence_margin = np.float64((upper - lower)) / np.float64(mean)
         np.seterr(**old_settings)
         return confidence_margin
 
