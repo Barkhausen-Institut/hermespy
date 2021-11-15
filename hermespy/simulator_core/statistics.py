@@ -341,21 +341,25 @@ class Statistics:
                     self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound
                     self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = mean_upper_bound
 
-                if (
-                    self.__confidence_margin > 0
-                    and self.__num_drops >= self.__min_num_drops
-                ):
-                    old_settings = np.seterr(divide="ignore", invalid="ignore")
-
-                    confidence_margin = (self.bit_error_max[rx_modem_idx] -
-                                        self.bit_error_min[rx_modem_idx]
-                                        ) / self.bit_error_sum[rx_modem_idx]
-
-                    self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = np.logical_or(
-                        confidence_margin > self.__confidence_margin,
-                        confidence_margin,
+                    confidence_margin = self.get_confidence_margin_ber_mean(
+                        tx_modem_idx, rx_modem_idx, snr_index
                     )
-                    np.seterr(**old_settings)
+                    self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
+                        confidence_margin > self.__confidence_margin
+                    )
+
+    def get_confidence_margin_ber_mean(self, tx_modem_idx: int,
+                                             rx_modem_idx: int,
+                                             snr_idx: int) -> float:
+        """Calculates current confidence margin for BER mean."""
+        old_settings = np.seterr(divide="ignore", invalid="ignore")
+        confidence_margin = (
+                (self.bit_error_max[snr_idx, tx_modem_idx, rx_modem_idx]
+                 - self.bit_error_min[snr_idx, tx_modem_idx, rx_modem_idx])
+                 / self.bit_error_mean[snr_idx, tx_modem_idx, rx_modem_idx]
+        )
+        np.seterr(**old_settings)
+        return confidence_margin
 
     def estimate_confidence_intervals_mean(self, data: np.array, 
                                                  alpha: float) -> Tuple[float, float]:

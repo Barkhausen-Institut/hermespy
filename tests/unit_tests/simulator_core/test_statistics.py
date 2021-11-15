@@ -11,7 +11,7 @@ from hermespy.simulator_core.drop import Drop
 class TestUpdateStoppingCriteria(unittest.TestCase):
     def setUp(self) -> None:
         self.min_num_drops = 3
-        self.confidence_margin = 0.05
+        self.confidence_margin = 0.99
         self.snr_loop = np.arange(5)
         self.scenario_mock = Mock()
         self.scenario_mock.num_transmitters = 1
@@ -63,7 +63,6 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
                 self.stats.update_stopping_criteria(drop, snr_idx)
                 self.assertTrue(self.next_drop_can_be_run(self.stats.flag_matrix, snr_idx))
 
-
     def test_estimation_of_confidence_intervals_of_mean(self) -> None:
         data = [0, 0, 0.5, 0.5, 0.6, 0.5]
         alpha = 0.95
@@ -86,6 +85,26 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
 
         self.assertAlmostEqual(0, lower_bound, places=3)
         self.assertAlmostEqual(0, upper_bound, places=3)
+
+    def test_getting_confidence_margin_for_ber_mean(self) -> None:
+        NO_TX = 3
+        NO_RX = 2
+        NO_SNRS = 10
+        self.stats.bit_error_max = np.ones((NO_TX, NO_RX, NO_SNRS))
+        self.stats.bit_error_min = np.zeros(self.stats.bit_error_max.shape)
+        self.stats.bit_error_mean = np.ones(self.stats.bit_error_max.shape)
+
+        self.stats.bit_error_max[0, 0, 0] = 1
+        self.stats.bit_error_min[0, 0, 0] = 0.9
+        self.stats.bit_error_mean[0, 0, 0] = 0.95
+
+        self.assertAlmostEqual(self.stats.get_confidence_margin_ber_mean(0, 0, 0), (1-0.9)/0.95)
+
+    def test_margin_calculation_returns_inf_if_mean_is_zero(self) -> None:
+        self.stats.bit_error_max[0, 0, 0] = 1
+        self.stats.bit_error_min[0, 0, 0] = 0
+        self.stats.bit_error_mean[0, 0, 0] = 0
+        self.assertEqual(np.inf, self.stats.get_confidence_margin_ber_mean(0, 0, 0))
 
     def next_drop_can_be_run(self, flag_matrix: np.ndarray, snr_index: int) -> bool:
         return np.all(flag_matrix[:, :, snr_index] == True)
