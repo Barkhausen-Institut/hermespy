@@ -53,7 +53,7 @@ class ZFTimeEqualizer(SymbolPrecoder):
             # Combine the responses of all superimposed transmit antennas for equalization
             response_sum = np.sum(response, axis=1, keepdims=False)
 
-            delay_matrix = Channel.DelayMatrix(response_sum)[:num_symbols, :num_symbols]
+            delay_matrix = Channel.delay_matrix(response_sum)[:num_symbols, :num_symbols]
 
             # ToDo: Optimization opportunity, lower triangular multiplied by upper triangular matrix
             # We should be able to skip creating the whole convolution matrix

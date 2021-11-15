@@ -333,7 +333,7 @@ class WaveformGenerator(ABC):
             ValueError: If the length of `signal` and the first dimension of `channel_response` is not identical.
         """
 
-        if len(signal) != (stream_response.shape[0] + stream_response.shape[2] - 1):
+        if len(signal) != stream_response.shape[0]:
             raise ValueError("Signal length and the first response dimension must be matching")
 
         samples_per_frame = self.samples_in_frame
