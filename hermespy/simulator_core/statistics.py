@@ -25,6 +25,15 @@ __email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class ConfidenceMetric(Enum):
+    """Confidence metric for stopping criteria during simulation execution. """
+
+    DISABLED = 0        # No stopping criterion
+    BER = 1             # Bit Error Rate
+    BLER = 2            # Block Error Rate
+#    FLER = 3            # Frame error rate
+
+
 class SNRType(Enum):
     """Supported signal-to-noise ratio types."""
 
@@ -62,6 +71,7 @@ class Statistics:
     __num_drops: int
     __confidence_margin: float
     __confidence_level: float
+    __confidence_metric: ConfidenceMetric
     snr_loop: List[float]
     __num_snr_loops: int
     snr_type: SNRType
@@ -79,6 +89,7 @@ class Statistics:
                  calc_theory: bool = True,
                  confidence_margin: float = 0.1,
                  confidence_level: float = 0.99,
+                 confidence_metric: ConfidenceMetric = ConfidenceMetric.DISABLED,
                  min_num_drops: int = 0,
                  max_num_drops: int = 1) -> None:
         """Transmission statistics object initialization.
@@ -104,6 +115,7 @@ class Statistics:
         self.__calc_theory = calc_theory
         self.__confidence_margin = confidence_margin
         self.__confidence_level = confidence_level
+        self.__confidence_metric = confidence_metric
         self.__min_num_drops = min_num_drops
         self.__max_num_drops = max_num_drops
         self.snr_type = snr_type
@@ -201,7 +213,8 @@ class Statistics:
             self._stft_rx = drop.receive_stft
 
         self.__add_bit_error_rate(drop, snr_index)
-        self.update_stopping_criteria(snr_index)
+        if not self.__confidence_metric == ConfidenceMetric.DISABLED:
+            self.update_stopping_criteria(snr_index)
 
     def add_drops(self, drops: List[Drop], snr_index: int) -> None:
         """Add multiple transmission drops to the statistics.
@@ -349,37 +362,57 @@ class Statistics:
 
 
     def update_stopping_criteria(self, snr_index: int) -> None:
-        # TODO: What to do if ber is none?
         # TODO: BLER?
         for rx_modem_idx in range(self.__scenario.num_receivers):
             for tx_modem_idx in range(self.__scenario.num_transmitters):
                 if self.__num_drops[snr_index] >= self.__min_num_drops:
                     if self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] == True:
-                        mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
-                            self.bit_errors[:self.__num_drops[snr_index], snr_index, tx_modem_idx, rx_modem_idx],
-                            self.__confidence_level
-                        )
 
-                        self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound
-                        self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = mean_upper_bound
+                        if self.__confidence_metric == ConfidenceMetric.BER:
+                            self.__update_flag_matrix_ber(snr_index, tx_modem_idx, rx_modem_idx)
+                        elif self.__confidence_metric == ConfidenceMetric.BLER:
+                            self.__update_flag_matrix_bler(snr_index, tx_modem_idx, rx_modem_idx)
 
-                        confidence_margin = self.get_confidence_margin_ber_mean(
-                            tx_modem_idx, rx_modem_idx, snr_index
-                        )
-                        self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
-                            confidence_margin > self.__confidence_margin
-                        )
+    def __update_flag_matrix_ber(self, snr_index: int, tx_modem_idx: int, rx_modem_idx: int) -> None:
+        errors = self.bit_errors[:self.__num_drops[snr_index], snr_index, tx_modem_idx, rx_modem_idx]
 
-    def get_confidence_margin_ber_mean(self, tx_modem_idx: int,
-                                             rx_modem_idx: int,
-                                             snr_idx: int) -> float:
-        """Calculates current confidence margin for BER mean."""
-        old_settings = np.seterr(divide="ignore", invalid="ignore")
-        confidence_margin = (
-                (self.bit_error_max[snr_idx, tx_modem_idx, rx_modem_idx]
-                 - self.bit_error_min[snr_idx, tx_modem_idx, rx_modem_idx])
-                 / self.bit_error_mean[snr_idx, tx_modem_idx, rx_modem_idx]
+        mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
+            errors, self.__confidence_level)
+
+        self.bit_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound
+        self.bit_error_max[snr_index, tx_modem_idx, rx_modem_idx] = mean_upper_bound
+        confidence_margin = self.get_confidence_margin(
+                    upper=mean_upper_bound,
+                    lower=mean_lower_bound,
+                    mean=self.bit_error_mean[snr_index, tx_modem_idx, rx_modem_idx]
         )
+        self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
+            confidence_margin > self.__confidence_margin
+        )
+
+    def __update_flag_matrix_bler(self, snr_index: int, tx_modem_idx: int, rx_modem_idx: int) -> None:
+        errors = self.bit_errors[:self.__num_drops[snr_index], snr_index, tx_modem_idx, rx_modem_idx]
+
+        mean_lower_bound, mean_upper_bound = self.estimate_confidence_intervals_mean(
+            errors, self.__confidence_level)
+
+        self.block_error_min[snr_index, tx_modem_idx, rx_modem_idx] = mean_lower_bound
+        self.block_error_max[snr_index, tx_modem_idx, rx_modem_idx] = mean_upper_bound
+        confidence_margin = self.get_confidence_margin(
+                    upper=mean_upper_bound,
+                    lower=mean_lower_bound,
+                    mean=self.block_error_mean[snr_index, tx_modem_idx, rx_modem_idx]
+        )
+        self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
+            confidence_margin > self.__confidence_margin
+        )
+
+    def get_confidence_margin(self, upper: float,
+                                    lower: float,
+                                    mean: float) -> float:
+        """Calculates current confidence margin for confidence metric mean."""
+        old_settings = np.seterr(divide="ignore", invalid="ignore")
+        confidence_margin = (upper - lower) / mean
         np.seterr(**old_settings)
         return confidence_margin
 
