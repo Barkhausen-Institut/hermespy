@@ -10,7 +10,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 from .executable import Executable, Verbosity
 from .drop import Drop
-from .statistics import SNRType, Statistics
+from .statistics import SNRType, Statistics, ConfidenceMetric
 from hermespy.scenario import Scenario
 from hermespy.modem import Receiver
 from hermespy.channel import QuadrigaInterface, Channel
@@ -34,14 +34,6 @@ class SimulationDrop(Drop):
 
         Drop.__init__(self, *args)
 
-
-class ConfidenceMetric(Enum):
-    """Confidence metric for stopping criteria during simulation execution. """
-
-    DISABLED = 0        # No stopping criterion
-    BER = 1             # Bit Error Rate
-    BLER = 2            # Block Error Rate
-#    FLER = 3            # Frame error rate
 
 
 class Simulation(Executable):
@@ -230,6 +222,7 @@ class Simulation(Executable):
                                     spectrum_fft_size=self.spectrum_fft_size,
                                     confidence_margin=self.confidence_margin,
                                     confidence_level=self.confidence_level,
+                                    confice_metric=self.confidence_metric,
                                     min_num_drops=self.min_num_drops,
                                     max_num_drops=self.max_num_drops)
 
