@@ -55,8 +55,8 @@ class Simulation(Executable):
         plot_block_error (bool):
             Plot resulting block error rate after simulation.
 
-        __min_num_simulation_iterations (int):
-            Minimum number of simulation_runs before confidence check may prematurely abort execution.
+        __min_num_drops (int):
+            Minimum number of drops before confidence check may prematurely abort execution.
 
         __confidence_level (float):
             Confidence at which execution should be terminated.
@@ -71,7 +71,7 @@ class Simulation(Executable):
     confidence_metric: ConfidenceMetric
     plot_bit_error: bool
     plot_block_error: bool
-    __min_num_simulation_iterations: int
+    __min_num_drops: int
     __confidence_level: float
     __confidence_margin: float
     plot_drop_transmitted_bits: bool
@@ -98,7 +98,7 @@ class Simulation(Executable):
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
                  noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
-                 min_num_simulation_iterations: int = 0,
+                 min_num_drops: int = 0,
                  confidence_level: float = 1.0,
                  confidence_margin: float = 0.0,
                  results_dir: Optional[str] = None,
@@ -142,7 +142,7 @@ class Simulation(Executable):
             confidence_metric (Union[ConfidenceMetric, str], optional):
                 Metric for premature simulation stopping criterion
 
-            min_num_simulation_iterations (int, optional):
+            min_num_drops (int, optional):
                 Minimum number of drops before confidence check may prematurely terminate execution.
 
             confidence_level (float, optional):
@@ -175,7 +175,7 @@ class Simulation(Executable):
         self.snr_type = snr_type
         self.plot_bit_error = plot_bit_error
         self.plot_block_error = plot_block_error
-        self.min_num_simulation_iterations = min_num_simulation_iterations
+        self.min_num_drops = min_num_drops
         self.confidence_level = confidence_level
         self.confidence_margin = confidence_margin
 
@@ -222,7 +222,7 @@ class Simulation(Executable):
             for d in range(self.num_drops):
                 run_flags = statistics.flag_matrix
 
-                if d < self.min_num_simulation_iterations:
+                if d < self.min_num_drops:
                     run_flags[:, :, :]  = True
 
                 for noise_index, snr in enumerate(self.noise_loop):
@@ -323,7 +323,7 @@ class Simulation(Executable):
 
                     # Check confidence if the routine is enabled and
                     # the minimum number of configured drops has been reached
-                    # if self.confidence_metric is not ConfidenceMetric.DISABLED and d >= self.min_num_simulation_iterations:
+                    # if self.confidence_metric is not ConfidenceMetric.DISABLED and d >= self.min_num_drops:
 
             # Dump statistics results
             statistics.save(self.results_dir)
@@ -411,30 +411,30 @@ class Simulation(Executable):
         self.__noise_loop = loop
 
     @property
-    def min_num_simulation_iterations(self) -> int:
-        """Minimum number of simulation runs before confidence check may terminate execution.
+    def min_num_drops(self) -> int:
+        """Minimum number of drops before confidence check may terminate execution.
 
         Returns:
-            int: Minimum number of simulations.
+            int: Minimum number of drops.
         """
 
-        return self.__min_num_simulation_iterations
+        return self.__min_num_drops
 
-    @min_num_simulation_iterations.setter
-    def min_num_simulation_iterations(self, num_simulation_runs: int) -> None:
-        """Modify minimum number of simulation_runs before confidence check may terminate execution.
+    @min_num_drops.setter
+    def min_num_drops(self, num_drops: int) -> None:
+        """Modify minimum number of drops before confidence check may terminate execution.
 
         Args:
-            num_simulation_runs (int): Minim number of drops.
+            num_drops (int): Minim number of drops.
 
         Raises:
-            ValueError: If `num_simulation_runs` is smaller than zero.
+            ValueError: If `num_drops` is smaller than zero.
         """
 
-        if num_simulation_runs < 0:
+        if num_drops < 0:
             raise ValueError("Minimum number of drops must be greater or equal to zero.")
 
-        self.__min_num_simulation_iterations = num_simulation_runs
+        self.__min_num_drops = num_drops
 
     @property
     def confidence_level(self) -> float:
