@@ -595,11 +595,11 @@ class Simulation(Executable):
                 propagation_tuple = tuple((None, None))
                 # Select responsible channel between respective transmitter and receiver
                 channel: Channel = channels[transmitter_id, receiver_id]
-                snr = drop_run_flag[transmitter_id, receiver_id]
+                propagate_signal = drop_run_flag[transmitter_id, receiver_id]
                 # Propagate the signal over the channel
                 # The propagation tuple contains the propagated signal as the first element,
                 # the impulse response as the second element
-                if snr:
+                if propagate_signal:
                     propagation_tuple = channel.propagate(transmitted_signal)
                 propagation_row.append(propagation_tuple)
 
