@@ -113,12 +113,18 @@ class TestReceiver(Receiver):
             noise_variance (float):
                 Variance (i.e. power) of the thermal noise added to the signals during reception.
         """
-        no_samples = rf_signals[0][0].shape[1]
-        received_signal = np.zeros((self.no_antennas, no_samples))
+
+        if not np.array_equal(rf_signals[0][0], np.array([0])):
+            no_samples = rf_signals[0][0].shape[1]
+            received_signal = np.zeros((self.no_antennas, no_samples))
+
         for signal, _  in rf_signals:
             if signal is not None:
-                for antenna_idx in range(signal.shape[0]):
-                    received_signal[antenna_idx, :] += signal[antenna_idx, :]
+                if not np.array_equal(signal, np.array([0])):
+                    for antenna_idx in range(signal.shape[0]):
+                        received_signal[antenna_idx, :] += signal[antenna_idx, :]
+                else:
+                    received_signal = np.array([0])
 
         return received_signal
 
@@ -141,9 +147,9 @@ class TestStoppingCriteria(unittest.TestCase):
 
         mock_transmitter = Mock()
         mock_transmitter.send.return_value = np.array([0])
-        self.scenario.add_transmitter(Mock())
-        self.scenario.add_transmitter(Mock())
-        self.scenario.add_transmitter(Mock())
+        self.scenario.add_transmitter(mock_transmitter)
+        self.scenario.add_transmitter(mock_transmitter)
+        self.scenario.add_transmitter(mock_transmitter)
         
         mock_channel = Mock()
         mock_channel.propagate.return_value = (np.array([0]), np.array([0]))
@@ -155,6 +161,21 @@ class TestStoppingCriteria(unittest.TestCase):
         self.snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
         self.snr_mask[1, 0] = False
         self.snr_mask[2, 0] = False
+        Simulation.calculate_noise_variance = Mock(return_value=0.0)
+
+    def test_simulation_not_run_for_rx0(self) -> None:
+        self.snr_mask[:, :] = True
+        self.snr_mask[:, 0] = False
+
+        tx_signals = Simulation.transmit(self.scenario, self.snr_mask)
+        propagation_matrix = Simulation.propagate(self.scenario, tx_signals, self.snr_mask)
+        received_signals = Simulation.receive(self.scenario, propagation_matrix,
+                                              self.snr_mask)
+        detected_bits = Simulation.detect(self.scenario, received_signals,
+                                          self.snr_mask)
+
+        self.assertIsNone(detected_bits[0])
+        self.assertIsNotNone(detected_bits[1])
 
     def test_do_not_send_if_tx0_is_flagged(self) -> None:
         self.snr_mask[:, :] = True
@@ -179,7 +200,6 @@ class TestStoppingCriteria(unittest.TestCase):
                                 np.random.randint(low=0, high=2, size=(1,100)))
                                 for _ in range(self.no_tx)] for _ in range(self.no_rx)]
 
-        Simulation.calculate_noise_variance = Mock(return_value=0.0)
         expected_received_signals = [
             propagation_matrix[0][0][0],
             propagation_matrix[1][0][0] + propagation_matrix[1][1][0] + propagation_matrix[1][2][0]
@@ -200,7 +220,6 @@ class TestStoppingCriteria(unittest.TestCase):
         propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1,100)),
                                 np.random.randint(low=0, high=2, size=(1,100)))
                                 for _ in range(self.no_tx)] for _ in range(self.no_rx)]
-        Simulation.calculate_noise_variance = Mock(return_value=0.0)
         self.snr_mask[:, 0] = False
         received_signals = Simulation.receive(
             self.scenario, propagation_matrix, self.snr_mask
