@@ -158,29 +158,29 @@ class TestStoppingCriteria(unittest.TestCase):
             for tx_idx in range(self.no_tx):
                 self.scenario.set_channel(tx_idx, rx_idx, mock_channel)
 
-        self.snr_mask = np.ones((self.no_tx, self.no_rx), dtype=bool)
-        self.snr_mask[1, 0] = False
-        self.snr_mask[2, 0] = False
+        self.drop_run_flag = np.ones((self.no_tx, self.no_rx), dtype=bool)
+        self.drop_run_flag[1, 0] = False
+        self.drop_run_flag[2, 0] = False
         Simulation.calculate_noise_variance = Mock(return_value=0.0)
 
     def test_simulation_not_run_for_rx0(self) -> None:
-        self.snr_mask[:, :] = True
-        self.snr_mask[:, 0] = False
+        self.drop_run_flag[:, :] = True
+        self.drop_run_flag[:, 0] = False
 
-        tx_signals = Simulation.transmit(self.scenario, self.snr_mask)
-        propagation_matrix = Simulation.propagate(self.scenario, tx_signals, self.snr_mask)
+        tx_signals = Simulation.transmit(self.scenario, self.drop_run_flag)
+        propagation_matrix = Simulation.propagate(self.scenario, tx_signals, self.drop_run_flag)
         received_signals = Simulation.receive(self.scenario, propagation_matrix,
-                                              self.snr_mask)
+                                              self.drop_run_flag)
         detected_bits = Simulation.detect(self.scenario, received_signals,
-                                          self.snr_mask)
+                                          self.drop_run_flag)
 
         self.assertIsNone(detected_bits[0])
         self.assertIsNotNone(detected_bits[1])
 
     def test_do_not_send_if_tx0_is_flagged(self) -> None:
-        self.snr_mask[:, :] = True
-        self.snr_mask[0, :] = False
-        transmitted_signals = Simulation.transmit(self.scenario, self.snr_mask, None, None)
+        self.drop_run_flag[:, :] = True
+        self.drop_run_flag[0, :] = False
+        transmitted_signals = Simulation.transmit(self.scenario, self.drop_run_flag, None, None)
 
         self.assertIsNone(transmitted_signals[0])
         self.assertIsNotNone(transmitted_signals[1])
@@ -190,7 +190,7 @@ class TestStoppingCriteria(unittest.TestCase):
         tx_signals = [np.random.randint(low=0, high=2,size=100) for _ in range(self.no_tx)]
 
         propagation_matrix = Simulation.propagate(
-            self.scenario, tx_signals, self.snr_mask
+            self.scenario, tx_signals, self.drop_run_flag
         )
         self.assertEqual(propagation_matrix[0][1], tuple((None, None)))
         self.assertEqual(propagation_matrix[0][2], tuple((None, None)))
@@ -205,7 +205,7 @@ class TestStoppingCriteria(unittest.TestCase):
             propagation_matrix[1][0][0] + propagation_matrix[1][1][0] + propagation_matrix[1][2][0]
         ]
         received_signals = Simulation.receive(
-            self.scenario, propagation_matrix, self.snr_mask)
+            self.scenario, propagation_matrix, self.drop_run_flag)
 
         np.testing.assert_array_almost_equal(
             received_signals[0][0],
@@ -220,19 +220,19 @@ class TestStoppingCriteria(unittest.TestCase):
         propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1,100)),
                                 np.random.randint(low=0, high=2, size=(1,100)))
                                 for _ in range(self.no_tx)] for _ in range(self.no_rx)]
-        self.snr_mask[:, 0] = False
+        self.drop_run_flag[:, 0] = False
         received_signals = Simulation.receive(
-            self.scenario, propagation_matrix, self.snr_mask
+            self.scenario, propagation_matrix, self.drop_run_flag
         )
 
         self.assertEqual(received_signals[0], (None, None, None))
 
     def test_no_detection_at_rx0(self) -> None:
-        self.snr_mask[:, 0] = False
+        self.drop_run_flag[:, 0] = False
         received_signals = [
             (Mock(), Mock(), Mock()) for _ in range(self.no_rx)
         ]
-        receiver_bits = Simulation.detect(self.scenario, received_signals, self.snr_mask)
+        receiver_bits = Simulation.detect(self.scenario, received_signals, self.drop_run_flag)
         self.assertIsNone(receiver_bits[0])
         self.assertIsNotNone(receiver_bits[1])
 
