@@ -56,10 +56,7 @@ class Statistics:
         __num_drops (np.array): SNR-Specific Number of drops already added to the statistics.
         snr_loop (List[float]): List of (linear) signal to noise ratios.
         __num_snr_loops (int): Different number of snrs to perform simulation for.
-        run_flag[List[np.array]]:
-            Each list item corresponds to one receiver modem.
-            Each list item is a np.array stating if results are to be calculated
-            for the corresponding SNR value.
+        __run_flag_matrix (np.ndarray): Determines if next simulation shall be run.
     """
 
     __scenario: Scenario
@@ -76,6 +73,7 @@ class Statistics:
     __num_snr_loops: int
     snr_type: SNRType
     __theory: TheoreticalResults = TheoreticalResults()
+    __run_flag_matrix: np.ndarray
 
     def __init__(self,
                  scenario: Scenario,
@@ -180,7 +178,7 @@ class Statistics:
         else:
             self.theoretical_results = None
 
-        self.__flag_matrix = np.ones(
+        self.__run_flag_matrix = np.ones(
             (self.__scenario.num_transmitters,
              self.__scenario.num_receivers,
              self.__num_snr_loops),
@@ -227,9 +225,9 @@ class Statistics:
         for drop in drops:
             self.add_drop(drop, snr_index)
     @property
-    def flag_matrix(self) -> np.ndarray:
-        """Returns flag matrix of last drop."""
-        return self.__flag_matrix
+    def run_flag_matrix(self) -> np.ndarray:
+        """Returns run_flag matrix of last drop."""
+        return self.__run_flag_matrix
 
     @property
     def num_drops(self) -> np.array:
@@ -366,7 +364,7 @@ class Statistics:
         for rx_modem_idx in range(self.__scenario.num_receivers):
             for tx_modem_idx in range(self.__scenario.num_transmitters):
                 if self.__num_drops[snr_index] >= self.__min_num_drops:
-                    if self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] == True:
+                    if self.__run_flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] == True:
 
                         if self.__confidence_metric == ConfidenceMetric.BER:
                             self.__update_flag_matrix_ber(snr_index, tx_modem_idx, rx_modem_idx)
@@ -386,7 +384,7 @@ class Statistics:
                     lower=mean_lower_bound,
                     mean=self.bit_error_mean[snr_index, tx_modem_idx, rx_modem_idx]
         )
-        self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
+        self.__run_flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
             confidence_margin > self.__confidence_margin
         )
 
@@ -403,7 +401,7 @@ class Statistics:
                     lower=mean_lower_bound,
                     mean=self.block_error_mean[snr_index, tx_modem_idx, rx_modem_idx]
         )
-        self.__flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
+        self.__run_flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] = (
             confidence_margin > self.__confidence_margin
         )
 

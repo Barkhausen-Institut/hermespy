@@ -83,7 +83,7 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
                 self.stats.add_drop(drops[drop_idx-1], snr_idx)
                 self.assertTrue(
                     self.next_drop_can_be_run(
-                        self.stats.flag_matrix, snr_idx
+                        self.stats.run_flag_matrix, snr_idx
                     )
                 )
     def test_update_stopping_criteria(self) -> None:
@@ -102,11 +102,11 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
                 if drop_idx == NUM_DROPS:
                     self.assertFalse(
                         self.next_drop_can_be_run(
-                            self.stats.flag_matrix, snr_idx))
+                            self.stats.run_flag_matrix, snr_idx))
                 else:
                     self.assertTrue(
                         self.next_drop_can_be_run(
-                            self.stats.flag_matrix, snr_idx
+                            self.stats.run_flag_matrix, snr_idx
                         )
                     )
                 
@@ -140,5 +140,5 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
     def test_margin_calculation_does_not_crash_if_mean_zero(self) -> None:
         _ = self.stats.get_confidence_margin(0,0,0)
 
-    def next_drop_can_be_run(self, flag_matrix: np.ndarray, snr_index: int) -> bool:
-        return np.all(flag_matrix[:, :, snr_index] == True)
+    def next_drop_can_be_run(self, run_flag_matrix: np.ndarray, snr_index: int) -> bool:
+        return np.all(run_flag_matrix[:, :, snr_index] == True)
