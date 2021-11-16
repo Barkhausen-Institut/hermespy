@@ -530,7 +530,7 @@ class Simulation(Executable):
         if data_bits is None:
 
             for transmitter_idx, transmitter in enumerate(scenario.transmitters):
-                if transmitter_idx in sending_tx_idx or sending_tx_idx.size == 0:
+                if transmitter_idx in sending_tx_idx:
                     transmitted_signals.append(transmitter.send(drop_duration))
                 else:
                     transmitted_signals.append(None)
@@ -542,7 +542,7 @@ class Simulation(Executable):
             
             for transmitter_idx, (transmitter, data) in enumerate(
                                                             zip(scenario.transmitters, data_bits)):
-                if transmitter_idx in sending_tx_idx or sending_tx_idx.size == 0:
+                if transmitter_idx in sending_tx_idx:
                     transmitted_signals.append(transmitter.send(drop_duration, data))
                 else:
                     transmitted_signals.append(None)
