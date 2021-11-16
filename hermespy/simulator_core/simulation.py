@@ -565,6 +565,7 @@ class Simulation(Executable):
             scenario (Scenario): The scenario for which to simulate the channel propagation.
             transmitted_signals (List[np.ndarray]):
                 List of signal streams emerging from each registered transmit modem.
+            drop_run_flag (np.ndarray): Mask that says if signals are to be created for specific snr.
 
         Returns:
             List[List[Tuple[np.ndarray, np.ndarray]]]:
@@ -626,6 +627,8 @@ class Simulation(Executable):
                 MxN Matrix of pairs of received signals and impulse responses.
                 The entry in the M-th row and N-th column contains the propagation data between
                 the N-th transmitter and M-th receiver.
+
+            drop_run_flag (np.ndarray): Mask that says if signals are to be created for specific snr.
 
             snr_type (SNRType, optional):
                 Type of noise.
@@ -703,6 +706,8 @@ class Simulation(Executable):
             received_signals (List[Tuple[np.ndarray, np.ndarray, float]]):
                 A list of M tuples containing the received noisy base-band signals, the channel impulse response
                 as well as the noise variance for each receiving modem, respectively.
+
+            drop_run_flag (np.ndarray): Mask that says if signals are to be created for specific snr.
 
         Returns:
             List[np.ndarray]:
