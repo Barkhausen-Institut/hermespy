@@ -230,7 +230,7 @@ class Simulation(Executable):
             drop: Optional[SimulationDrop] = None
 
             for d in range(self.max_num_drops):
-                run_flags = statistics.flag_matrix
+                run_flags = statistics.run_flag_matrix
 
                 for noise_index, snr in enumerate(self.noise_loop):
                     snr_mask = run_flags[:, :, noise_index]
