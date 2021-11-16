@@ -54,8 +54,12 @@ class Statistics:
         __calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int); Number of discrete frequency bins computed within the Fast Fourier Transforms.
         __num_drops (np.array): SNR-Specific Number of drops already added to the statistics.
+        __confidence_margin (float): Margin for the stopping criteria check.
+        __confidence_level (float): Probability to find interval for that metric is within.
+        __confidence_metric (ConfidenceMetric): Metric that the stopping crtieria is to be calculated for.
         snr_loop (List[float]): List of (linear) signal to noise ratios.
         __num_snr_loops (int): Different number of snrs to perform simulation for.
+        snr_type (SNRType): Type of SNR to be used for noise calculation.
         __run_flag_matrix (np.ndarray): Determines if next simulation shall be run.
     """
 
@@ -100,7 +104,13 @@ class Statistics:
             calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
             calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
             spectrum_fft_size (int): Number of discrete frequency bins computed within the Fast Fourier Transforms.
+            snr_type (SNRTYpe): Type of SNR to be used for noise calculation.
             calc_theory (bool, optional): Calculate theoretical results, if possible.
+            confidence_margin (float): Margin for the stopping criteria check.
+            confidence_level (float): Probability to find interval for that metric is within.
+            confidence_metric (ConfidenceMetric): Metric that the stopping crtieria is to be calculated for.
+            min_num_drops (int): Minimum number of simulation drops to calculate.
+            max_num_drops (int): Maximum numbr of simulation drops to calculate.
         """
 
         self.__scenario = scenario
@@ -354,13 +364,27 @@ class Statistics:
         self.__num_drops[snr_index] += 1
 
     def update_mean(self, old_mean: float,
-                             no_old_samples: float,
-                             new_sample: float) -> float:
+                          no_old_samples: int,
+                          new_sample: float) -> float:
+        """Updates mean iteratively.
+
+        Args:
+            old_mean (float): Mean to be updated.
+            no_old_sampls (int): Number of samples that were used for old_mean calculation.
+            new_sample (float): New sample.
+
+        Returns:
+            float: New mean.
+        """
         return no_old_samples / (no_old_samples + 1) * old_mean + 1 / (no_old_samples+1) * new_sample
 
 
     def update_stopping_criteria(self, snr_index: int) -> None:
-        # TODO: BLER?
+        """Updates the stopping criteria.
+
+        Args:
+            snr_index (int): SNR-specific drop that stopping criteria shall be updated for.
+        """
         for rx_modem_idx in range(self.__scenario.num_receivers):
             for tx_modem_idx in range(self.__scenario.num_transmitters):
                 if self.__num_drops[snr_index] >= self.__min_num_drops:
@@ -408,7 +432,15 @@ class Statistics:
     def get_confidence_margin(self, upper: float,
                                     lower: float,
                                     mean: float) -> float:
-        """Calculates current confidence margin for confidence metric mean."""
+        """Calculates current confidence margin for confidence metric mean.
+
+        Args:
+            upper (float): Upper boundary.
+            lower (float): Lower boundary.
+            mean (float): Mean value-
+        Returns:
+            float: Confidence_margin.
+        """
         old_settings = np.seterr(divide="ignore", invalid="ignore")
         confidence_margin = np.float64((upper - lower)) / np.float64(mean)
         np.seterr(**old_settings)
