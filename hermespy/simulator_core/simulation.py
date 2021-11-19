@@ -84,7 +84,6 @@ class Simulation(Executable):
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
                  spectrum_fft_size: int = 0,
-                 num_drops: int = 1,
                  plot_bit_error: bool = True,
                  plot_block_error: bool = True,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
@@ -116,9 +115,6 @@ class Simulation(Executable):
 
             spectrum_fft_size (int):
                 Number of discrete frequency bins computed within the Fast Fourier Transforms.
-
-            num_drops (int):
-                Number of drops per executed scenario.
 
             plot_bit_error (bool, optional):
                 Plot resulting bit error rate after simulation.
@@ -155,7 +151,7 @@ class Simulation(Executable):
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
-                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops,
+                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, max_num_drops,
                             results_dir, verbosity)
 
         self.plot_drop_transmitted_bits = False
