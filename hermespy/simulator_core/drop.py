@@ -55,11 +55,11 @@ class ComplexVisualization(IntEnum):
         else:
             raise RuntimeError("Unsupported plot mode requested")
 
-        if timestamps is None:
-            axis.plot(plot_data)
-
-        else:
-            axis.plot(timestamps, plot_data)
+        if data is not None:
+            if timestamps is None:
+                axis.plot(plot_data)
+            else:
+                axis.plot(timestamps, plot_data)
 
 
 class Drop:
@@ -613,11 +613,8 @@ class Drop:
             visualization (ComplexVisualization, optional): How to plot the received signals.
         """
 
-        # remove non non signals that were skipped due to stopping criteria
-        signals = [signal for signal in self.__received_signals if signal is not None]
-
         # Infer grid dimensions
-        grid_height = len(signals)
+        grid_height = len(self.__received_signals)
         grid_width = 0
 
         # Abort without error if no received signal is available
@@ -625,11 +622,11 @@ class Drop:
             return
 
         # The grid width is the maximum number of transmitting antennas within this drop
-        for transmission in signals:
+        for transmission in self.__received_signals:
             grid_width = max(grid_width, transmission.shape[0])
 
         figure, axes = plt.subplots(grid_height, grid_width, squeeze=False)
-        for transmission_index, transmission in enumerate(signals):
+        for transmission_index, transmission in enumerate(self.__received_signals):
 
             for antenna_index, antenna_emission in enumerate(transmission):
                 visualization.plot(axes[transmission_index, antenna_index], antenna_emission)
