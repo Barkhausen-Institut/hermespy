@@ -627,7 +627,7 @@ class Simulation(Executable):
                 # Propagate the signal over the channel
                 # The propagation tuple contains the propagated signal as the first element,
                 # the impulse response as the second element
-                if propagate_signal:
+                if propagate_signal and transmitted_signal is not None:
                     propagation_tuple = channel.propagate(transmitted_signal)
                 propagation_row.append(propagation_tuple)
 
@@ -697,14 +697,17 @@ class Simulation(Executable):
                 noise_variance = Simulation.calculate_noise_variance(
                     receiver, snr, snr_type)
 
-                # Model rf-signal reception at the respective receiver
-                received_signal = receiver.receive(impinging_signals, noise_variance)
+                if impinging_signals[0][0] is None:
+                    received_signals.append((None, None, None))
+                else:
+                    # Model rf-signal reception at the respective receiver
+                    received_signal = receiver.receive(impinging_signals, noise_variance)
 
-                # Select the proper channel impulse response
-                channel = transmitted_signals[receiver.reference_transmitter.index][1]
+                    # Select the proper channel impulse response
+                    channel = transmitted_signals[receiver.reference_transmitter.index][1]
 
-                # Save result, what else?
-                received_signals.append((received_signal, channel, noise_variance))
+                    # Save result, what else?
+                    received_signals.append((received_signal, channel, noise_variance))
             else:
                 received_signals.append((None, None, None))
 
@@ -739,7 +742,7 @@ class Simulation(Executable):
                 A list of M tuples containing the received noisy base-band signals, the channel impulse response
                 as well as the noise variance for each receiving modem, respectively.
 
-            drop_run_flag (np.ndarray): Mask that says if signals are to be created for specific snr.
+            drop_run_flag (np.ndarray, optional): Mask that says if signals are to be created for specific snr.
 
         Returns:
             List[np.ndarray]:
@@ -756,11 +759,15 @@ class Simulation(Executable):
 
         receiver_bits: List[np.ndarray] = []
 
-        for receiver, (signal, channel, noise) in zip(scenario.receivers, received_signals):
-            bits = None
+        if drop_run_flag is None:
+            active_rx_idx = np.arange(len(scenario.receivers))
+        else:
             active_rx_idx = np.flatnonzero(np.all(drop_run_flag, axis=0))
 
-            if receiver.index in active_rx_idx:
+        for receiver, (signal, channel, noise) in zip(scenario.receivers, received_signals):
+            bits = None
+
+            if receiver.index in active_rx_idx and signal is not None:
                 bits = receiver.demodulate(signal, channel, noise)
             receiver_bits.append(bits)
 
