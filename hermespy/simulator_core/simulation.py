@@ -420,6 +420,31 @@ class Simulation(Executable):
         self.__noise_loop = loop
 
     @property
+    def max_num_drops(self) -> int:
+        """Maximum number of drops before confidence check may terminate execution.
+
+        Returns:
+            int: Maximum number of drops.
+        """
+        return self.__max_num_drops
+
+    @max_num_drops.setter
+    def max_num_drops(self, val: int) -> None:
+        """Modify maximum number of drops before confidence check may terminate execution.
+
+        Args:
+            num_drops (int): maximum number of drops.
+
+        Raises:
+            ValueError: If `num_drops` is smaller than zero.
+        """
+
+        if val < 0:
+            raise ValueError("Maximum number of drops must be greater or equal to zero.")
+
+        self.__max_num_drops = val
+
+    @property
     def min_num_drops(self) -> int:
         """Minimum number of drops before confidence check may terminate execution.
 
@@ -430,7 +455,7 @@ class Simulation(Executable):
         return self.__min_num_drops
 
     @min_num_drops.setter
-    def min_num_drops(self, num_drops: int) -> None:
+    def min_num_drops(self, val: int) -> None:
         """Modify minimum number of drops before confidence check may terminate execution.
 
         Args:
@@ -440,10 +465,10 @@ class Simulation(Executable):
             ValueError: If `num_drops` is smaller than zero.
         """
 
-        if num_drops < 0:
+        if val < 0:
             raise ValueError("Minimum number of drops must be greater or equal to zero.")
 
-        self.__min_num_drops = num_drops
+        self.__min_num_drops = val
 
     @property
     def confidence_level(self) -> float:
