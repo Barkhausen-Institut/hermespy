@@ -41,7 +41,7 @@ class Executable(ABC):
         calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
         calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int): Number of FFT bins considered during computation.
-        __num_drops (int): Number of executions per scenario.
+        __max_num_drops (int): Number of maximum executions per scenario.
         __results_dir (str): Directory in which all execution artifacts will be dropped.
         __verbosity (Verbosity): Information output behaviour during execution.
     """
@@ -54,7 +54,7 @@ class Executable(ABC):
     calc_transmit_stft: bool
     calc_receive_stft: bool
     __spectrum_fft_size: int
-    __num_drops: int
+    __max_num_drops: int
     __results_dir: str
     __verbosity: Verbosity
 
@@ -65,7 +65,7 @@ class Executable(ABC):
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
                  spectrum_fft_size: int = 0,
-                 num_drops: int = 1,
+                 max_num_drops: int = 1,
                  results_dir: Optional[str] = None,
                  verbosity: Union[Verbosity, str] = Verbosity.INFO) -> None:
         """Object initialization.
@@ -77,7 +77,7 @@ class Executable(ABC):
             calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
             calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
             spectrum_fft_size (int): Number of discrete frequency bins computed within the Fast Fourier Transforms.
-            num_drops (int): Number of drops per executed scenario.
+            max_num_drops (int): Maximum Number of drops per executed scenario.
             results_dir(str, optional): Directory in which all execution artifacts will be dropped.
             verbosity: (Union[str, Verbosity], optional): Information output behaviour during execution.
         """
@@ -90,7 +90,7 @@ class Executable(ABC):
         self.calc_transmit_stft = calc_transmit_stft
         self.calc_receive_stft = calc_receive_stft
         self.spectrum_fft_size = spectrum_fft_size
-        self.num_drops = num_drops
+        self.max_num_drops = max_num_drops
         self.results_dir = Executable.__default_results_dir() if results_dir is None else results_dir
         self.verbosity = verbosity
 
@@ -145,18 +145,18 @@ class Executable(ABC):
         self.__spectrum_fft_size = bins
 
     @property
-    def num_drops(self) -> int:
+    def max_num_drops(self) -> int:
         """Access number of drops per executed scenario.
 
         Returns:
             int: Number of drops.
         """
 
-        return self.__num_drops
+        return self.__max_num_drops
 
-    @num_drops.setter
-    def num_drops(self, num: int) -> None:
-        """Modify number of drops per executed scenario.
+    @max_num_drops.setter
+    def max_num_drops(self, num: int) -> None:
+        """Modify maximum number of drops per executed scenario.
 
         Args:
             num (int): New number of drops.
@@ -168,7 +168,7 @@ class Executable(ABC):
         if num < 1:
             raise ValueError("Number of drops must be greater than zero")
 
-        self .__num_drops = num
+        self .__max_num_drops = num
 
     @property
     def results_dir(self) -> str:
