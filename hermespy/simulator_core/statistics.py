@@ -69,7 +69,7 @@ class Statistics:
     __calc_transmit_stft: bool
     __calc_receive_stft: bool
     __spectrum_fft_size: int
-    __num_drops: int
+    __num_drops: np.array
     __confidence_margin: float
     __confidence_level: float
     __confidence_metric: ConfidenceMetric
