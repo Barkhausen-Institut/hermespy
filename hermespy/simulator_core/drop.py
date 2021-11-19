@@ -460,7 +460,7 @@ class Drop:
 
         self.__receive_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__received_signals:
-            if not antenna_signals is None:
+            if antenna_signals is not None:
                 # Consider only the first antenna signal
                 signal: np.ndarray = antenna_signals[0]
                 window_size = len(signal)
