@@ -260,17 +260,14 @@ class Transmitter(Modem):
 
         return [channel.receiver for channel in self.scenario.departing_channels(self, True)]
 
-    @property
-    def num_bits(self) -> int:
-        return int(self.num_data_bits_per_frame * self.precoding.rate)
-
     def generate_data_bits(self) -> np.ndarray:
         """Generate data bits required to build a single transmit data frame for this modem.
 
         Returns:
             numpy.ndarray: A vector of hard data bits in 0/1 format.
         """
-        bits = self.bits_source.get_bits(self.num_bits)
+        num_bits = int(self.num_data_bits_per_frame * self.precoding.rate)
+        bits = self.bits_source.get_bits(num_bits)
         return bits
 
     @property
