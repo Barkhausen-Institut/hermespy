@@ -169,10 +169,8 @@ class TestStoppingCriteria(unittest.TestCase):
 
         tx_signals = Simulation.transmit(self.scenario, self.drop_run_flag)
         propagation_matrix = Simulation.propagate(self.scenario, tx_signals, self.drop_run_flag)
-        received_signals = Simulation.receive(self.scenario, propagation_matrix,
-                                              self.drop_run_flag)
-        detected_bits = Simulation.detect(self.scenario, received_signals,
-                                          self.drop_run_flag)
+        received_signals = Simulation.receive(self.scenario, propagation_matrix, self.drop_run_flag)
+        detected_bits = Simulation.detect(self.scenario, received_signals, self.drop_run_flag)
 
         self.assertIsNone(detected_bits[0])
         self.assertIsNotNone(detected_bits[1])
