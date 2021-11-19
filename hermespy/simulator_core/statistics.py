@@ -240,7 +240,7 @@ class Statistics:
         return self.__run_flag_matrix
 
     @property
-    def num_drops(self) -> np.array:
+    def num_drops(self) -> np.ndarray:
         """Access the number of drops already added to this statistics.
 
         Returns:
