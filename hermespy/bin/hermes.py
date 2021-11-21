@@ -31,6 +31,7 @@ import shutil
 import sys
 import argparse
 from typing import List, Optional
+
 from ruamel.yaml.constructor import ConstructorError
 
 from hermespy.simulator_core import Factory, Executable
@@ -56,11 +57,12 @@ def hermes(args: Optional[List[str]] = None) -> None:
     if args is None:
         args = sys.argv[1:]
 
-    print("Welcome to HermesPy")
-    parser = argparse.ArgumentParser(
-        description="usage: hermes.py -p <settings_dir> -o <output_dir>")
-    parser.add_argument("-p", help="Settings directory.")
-    parser.add_argument("-o", help="Output directory.")
+    parser = argparse.ArgumentParser(description='HermesPy - The Heterogeneous Mobile Radio Simulator',
+                                     prog='hermes')
+    parser.add_argument("-p", help="settings directory from which to read the configuration", type=str)
+    parser.add_argument("-o", help="output directory to which results will be dumped", type=str)
+    parser.add_argument('-t', '--test', action='store_true', help='run in test-mode, does not dump results')
+
     arguments = parser.parse_args(args)
     input_parameters_dir = arguments.p
     results_dir = arguments.o
@@ -72,7 +74,8 @@ def hermes(args: Optional[List[str]] = None) -> None:
     elif not(os.path.isabs(input_parameters_dir)):
         input_parameters_dir = os.path.join(os.getcwd(), input_parameters_dir)
 
-    print('Parameters will be read from ' + input_parameters_dir)
+    print('Welcome to HermesPy\n'
+          'Parameters will be read from ' + input_parameters_dir)
 
     ##################
     # Import executable from YAML config dump
@@ -82,6 +85,10 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
         # Create executable
         executable: Executable = factory.load(input_parameters_dir)
+
+        # Configure executable
+        if results_dir is not None:
+            executable.results_dir = results_dir
 
     except ConstructorError as error:
 
@@ -95,7 +102,8 @@ def hermes(args: Optional[List[str]] = None) -> None:
     print("Results will be saved in '{}'".format(executable.results_dir))
 
     # Dump current configuration to results directory
-    shutil.copytree(input_parameters_dir, executable.results_dir, dirs_exist_ok=True)
+    if not arguments.t:
+        shutil.copytree(input_parameters_dir, executable.results_dir, dirs_exist_ok=True)
 
     ##################
     # run simulation
