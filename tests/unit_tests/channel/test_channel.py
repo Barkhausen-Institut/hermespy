@@ -2,11 +2,10 @@
 """Test channel model for wireless transmission links."""
 
 import unittest
-from unittest.mock import Mock, patch
-from itertools import product
+from unittest.mock import Mock
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 
 
@@ -37,7 +36,7 @@ class TestChannel(unittest.TestCase):
 
         self.channel = Channel(self.transmitter, self.receiver, self.scenario, self.active, self.gain, self.generator)
 
-        # Number of discrete-time samples generated for signal propagation testing
+        # Number of discrete-time samples generated for baseband_signal propagation testing
         self.propagate_signal_lengths = [1, 10, 100, 1000]
         self.propagate_signal_gains = [1.0, 0.5]
 
@@ -353,69 +352,6 @@ class TestChannel(unittest.TestCase):
 
             floating_channel = Channel()
             floating_channel.impulse_response(np.empty(0, dtype=complex))
-
-    @patch('hermespy.channel.Channel.impulse_response')
-    def test_delay_matrix(self, impulse_response) -> None:
-        """Multiplication with a delay matrix constructed from a power-delay profile
-        should yield identical results as channel propagation."""
-
-        num_antennas = 1
-        self.transmitter.num_antennas = num_antennas
-        self.receiver.num_antennas = num_antennas
-
-        delay_taps = [2, 4, 7]
-        for impulse_response_length, num_taps in product(self.impulse_response_lengths, delay_taps):
-
-            impulse_response.return_value = np.exp(2j * self.generator.uniform(0, np.pi, (impulse_response_length,
-                                                                                          num_antennas,
-                                                                                          num_antennas,
-                                                                                          num_taps)))
-
-            signal = np.exp(2j * self.generator.uniform(0, np.pi, (num_antennas,
-                                                                   impulse_response_length)))
-
-            expected_propagated_signal, response = self.channel.propagate(signal)
-            assert_array_equal(impulse_response.return_value, response)
-
-            delay_matrix = self.channel.delay_matrix(impulse_response.return_value[:, 0, 0, :])
-            propagated_signal = delay_matrix @ signal[0, :]
-            assert_array_almost_equal(expected_propagated_signal[0, :], propagated_signal)
-
-    def test_power_delay_profile(self) -> None:
-        """Power delay matrix and power profile should be circular."""
-
-        delay_taps = [2, 4, 7]
-        for impulse_response_length, num_taps in product(self.impulse_response_lengths, delay_taps):
-
-            impulse_response = np.exp(2j * self.generator.uniform(0, np.pi, (impulse_response_length, num_taps)))
-
-            delay_matrix = self.channel.delay_matrix(impulse_response)
-            power_delay_profile = self.channel.power_delay_profile(delay_matrix, num_taps)
-
-            assert_array_equal(power_delay_profile, impulse_response)
-
-    def test_impulse_transformation(self) -> None:
-        """Impulse transformation should properly convert an impulse response channel tensor
-        to a linear transformation tensor."""
-
-        num_antennas = 2
-        self.transmitter.num_antennas = 2
-        self.receiver.num_antennas = 2
-
-        delay_taps = [2, 4, 7]
-        for impulse_response_length, num_taps in product(self.impulse_response_lengths, delay_taps):
-
-            impulse_response = np.arange((impulse_response_length + num_taps - 1) * num_antennas ** 2 * num_taps, dtype=complex)
-            impulse_response = impulse_response.reshape((impulse_response_length + num_taps - 1, num_antennas,
-                                                         num_antennas, num_taps))
-
-            impulse_transformation = self.channel.impulse_transformation(impulse_response).todense()
-
-            for rx, tx in product(range(self.receiver.num_antennas), range(self.transmitter.num_antennas)):
-
-                expected_slice = self.channel.delay_matrix(impulse_response[:, rx, tx, :])
-                impulse_slice = impulse_transformation[rx, tx, ...]
-                assert_array_equal(expected_slice, impulse_slice)
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
