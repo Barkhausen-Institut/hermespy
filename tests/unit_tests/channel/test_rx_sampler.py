@@ -199,7 +199,7 @@ class TestRxSampler(unittest.TestCase):
 
         # read variables from matfile
         signal_resampled = variables_mat["signalResampled"].ravel()
-        signal_in = variables_mat["signal"].ravel()
+        signal_in = variables_mat["baseband_signal"].ravel()
         interpolate_factor = variables_mat["interpolateFactor"].item()
         decimate_factor = variables_mat["decimateFactor"].item()
 
@@ -218,18 +218,18 @@ class TestRxSampler(unittest.TestCase):
     def calculate_snr_complex_signals(
         self, signal_matlab: np.array, signal_scipy: np.array
     ) -> float:
-        """This functions calculates "SNR" between matlab and scipy signal.
+        """This functions calculates "SNR" between matlab and scipy baseband_signal.
 
-        The difference between the matlab and the scipy-signal is considered
-        as noise. Therefore, the method compares the matlab-signal with the
-        scipy signal.
+        The difference between the matlab and the scipy-baseband_signal is considered
+        as noise. Therefore, the method compares the matlab-baseband_signal with the
+        scipy baseband_signal.
 
         Args:
-            signal_matlab (np.array): Matlab signal.
-            signal_scipy (np.array): Scipy signal.
+            signal_matlab (np.array): Matlab baseband_signal.
+            signal_scipy (np.array): Scipy baseband_signal.
 
         Returns:
-            (float) signal to noise ratio.
+            (float) baseband_signal to noise ratio.
 
         """
         power_scipy_signal = signal_scipy * np.conj(signal_scipy)

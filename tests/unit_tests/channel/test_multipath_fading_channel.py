@@ -285,7 +285,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         np.testing.assert_almost_equal(first_draw, second_draw)
 
     def test_antenna_correlation(self) -> None:
-        """Test the antenna correlation"""
+        """Test the antenna correlation."""
 
         NO_ANTENNAS = 2
 
@@ -307,13 +307,13 @@ class TestMultipathFadingChannel(unittest.TestCase):
                            self.transmit_frequency / self.sampling_rate).reshape((NO_ANTENNAS, self.num_samples))
 
         correlated_channel.random_generator = np.random.default_rng(22)
-        rx_signal_correlated_channel, correlated_ir = correlated_channel.propagate(tx_signal)
+        rx_signal_correlated_channel, correlated_channel_state = correlated_channel.propagate(tx_signal)
 
         uncorrelated_channel.random_generator = np.random.default_rng(22)
-        rx_signal_uncorrelated_channel, uncorrelated_ir = uncorrelated_channel.propagate(transmit_precoding @ tx_signal)
+        rx_signal_uncorrelated_channel, uncorrelated_channel_state = uncorrelated_channel.propagate(transmit_precoding @ tx_signal)
 
         # Make sure both channels generated the same impulse response for propagation
-        np.testing.assert_array_equal(correlated_ir, uncorrelated_ir)
+        np.testing.assert_array_equal(correlated_channel_state.state, uncorrelated_channel_state.state)
 
         expected_rx_signal_correlated_channel = (receive_postcoding  @ rx_signal_uncorrelated_channel)
         np.testing.assert_array_almost_equal(expected_rx_signal_correlated_channel, rx_signal_correlated_channel)
