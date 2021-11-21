@@ -6,10 +6,10 @@ from abc import ABC, abstractmethod
 from typing import Tuple, TYPE_CHECKING, Optional, Type, List
 from math import floor
 
-
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
-from sparse import COO
+
+from hermespy.channel import ChannelStateInformation
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -48,7 +48,7 @@ class WaveformGenerator(ABC):
                 By default, the generator is considered to be floating.
 
             oversampling_factor (int, optional):
-                The factor at which the simulated signal is oversampled.
+                The factor at which the simulated baseband_signal is oversampled.
 
             modulation_order (int, optional):
                 Order of modulation.
@@ -235,9 +235,9 @@ class WaveformGenerator(ABC):
     @property
     @abstractmethod
     def bit_energy(self) -> float:
-        """Returns the theoretical average (discrete-time) bit energy of the modulated signal.
+        """Returns the theoretical average (discrete-time) bit energy of the modulated baseband_signal.
 
-        Energy of signal x[k] is defined as \\sum{|x[k]}^2
+        Energy of baseband_signal x[k] is defined as \\sum{|x[k]}^2
         Only data bits are considered, i.e., reference, guard intervals are ignored.
         """
         ...
@@ -245,9 +245,9 @@ class WaveformGenerator(ABC):
     @property
     @abstractmethod
     def symbol_energy(self) -> float:
-        """The theoretical average symbol (discrete-time) energy of the modulated signal.
+        """The theoretical average symbol (discrete-time) energy of the modulated baseband_signal.
 
-        Energy of signal x[k] is defined as \\sum{|x[k]}^2
+        Energy of baseband_signal x[k] is defined as \\sum{|x[k]}^2
         Only data bits are considered, i.e., reference, guard intervals are ignored.
 
         Returns:
@@ -260,7 +260,7 @@ class WaveformGenerator(ABC):
     def power(self) -> float:
         """Returns the theoretical average symbol (unitless) power,
 
-        Power of signal x[k] is defined as \\sum_{k=1}^N{|x[k]|}^2 / N
+        Power of baseband_signal x[k] is defined as \\sum_{k=1}^N{|x[k]|}^2 / N
         Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate
         """
         ...
@@ -297,7 +297,7 @@ class WaveformGenerator(ABC):
 
     @abstractmethod
     def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        """Modulate a stream of data symbols to a base-band signal.
+        """Modulate a stream of data symbols to a base-band baseband_signal.
 
         Args:
 
@@ -305,7 +305,7 @@ class WaveformGenerator(ABC):
                 Vector of data symbols to be modulated.
 
             timestamps (np.ndarray):
-                Vector if sample times in seconds, at which the resulting base-band signal should be sampled.
+                Vector if sample times in seconds, at which the resulting base-band baseband_signal should be sampled.
 
         Returns:
             np.ndarray:
@@ -315,68 +315,72 @@ class WaveformGenerator(ABC):
 
     # Hint: Channel propagation occurs here
 
-    def synchronize(self, signal: np.ndarray, frame_transforms: COO) -> Tuple[np.ndarray, List[COO]]:
+    def synchronize(self,
+                    signal: np.ndarray,
+                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
         """Simulates time-synchronization at the receiver-side.
 
-        Sorts signal-sections into frames in time-domain.
+        Sorts baseband_signal-sections into frames in time-domain.
 
         Args:
 
             signal (np.ndarray):
-                Vector of complex base-band signal samples of a single input stream with `num_samples` entries.
+                Vector of complex base-band baseband_signal samples of a single input stream with `num_samples` entries.
 
-            frame_transforms (np.ndarray):
-                Channel matrix for a single antenna stream.
-                Should be of dimension num_input_streams`x``num_samples + max_delay_in_samples`x`num_samples`.
+            channel_state (ChannelStateInformation):
+                State of the wireless transmission channel over which `baseband_signal` has been propagated.
 
         Returns:
-            Tuple[np.ndarray, List[COO]]:
-                Tuple of signal samples and channel transformations sorted into frames
+            List[Tuple[np.ndarray, ChannelStateInformation]]:
+                Tuple of baseband_signal samples and channel transformations sorted into frames
 
         Raises:
-            ValueError: If the length of `signal` and the first dimension of `channel_response` is not identical.
+            ValueError:
+                If the number of received streams in `channel_state` does not equal one.
+                If the length of `baseband_signal` and the number of samples in `channel_state` are not identical.
         """
 
-        if len(signal) != frame_transforms.shape[1]:
-            raise ValueError("Signal length and the first response dimension must be matching")
+        if len(signal) != channel_state.num_samples + channel_state.num_delay_taps - 1:
+            raise ValueError("Baseband baseband_signal and channel state contain a different amount of samples")
+
+        if channel_state.num_receive_streams != 1:
+            raise ValueError("Channel state during synchronization may only contain a single receive stream")
 
         samples_per_frame = self.samples_in_frame
         num_frames = int(floor(len(signal) / samples_per_frame))
 
-        frames = np.empty((num_frames, samples_per_frame), dtype=complex)
-        frame_transforms: List[COO] = []
+        # Slice signals and channel state information into frame-sized portions
+        # Default synchronization does NOT account for possible delays,
+        # i.e. assume the the first baseband-baseband_signal's sample to also be the first frame's initial sample
+        synchronized_frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
+        for frame_idx in range(num_frames):
 
-        # By default, there is no synchronization, i.e. we assume the first signal is also the first sample of
-        # the first frame. ToDo: Check with André how to implement general equalization
-        for f in range(num_frames):
+            frame_samples = signal[frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
+            frame_channel_state = channel_state[:, :,  frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame, :]
+            synchronized_frames.append((frame_samples, frame_channel_state))
 
-            # ToDo: This currently does not account for delay overhead....
-            frames[f, :] = signal[f*samples_per_frame:(f+1)*samples_per_frame]
-            frame_transforms[f, ::] = frame_transforms[f * samples_per_frame:(f + 1) * samples_per_frame, ::]
-
-        return frames, frame_transforms
+        return synchronized_frames
 
     @abstractmethod
     def demodulate(self,
-                   signal: np.ndarray,
-                   impulse_response: np.ndarray,
-                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                   baseband_signal: np.ndarray,
+                   channel_state: ChannelStateInformation,
+                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
         """Demodulate a base-band signal stream to data symbols.
 
         Args:
 
-            signal (np.ndarray):
-                Vector featuring `num_samples` of complex-valued base-band samples of a modulated signal.
+            baseband_signal (np.ndarray):
+                Vector of complex-valued base-band samples of a single communication frame.
 
-            impulse_response (np.ndarray):
-                Vector featuring `num_samples`x`num_input_streams` of complex valued base-band channel
-                impulse responses of a modulated signal.
+            channel_state (ChannelStateInformation):
+                Channel state information of a single communication frame.
 
             noise_variance (float):
                 Variance of the thermal noise introduced during reception.
 
         Returns:
-            (np.ndarray, np.ndarray, np.ndarray):
+            (np.ndarray, ChannelStateInformation, np.ndarray):
                 Tuple of 3 vectors of equal-length first dimension `num_symbols`.
                 The demodulated data symbols, their channel estimates and their noise variance.
         """

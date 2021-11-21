@@ -153,7 +153,9 @@ class ShapingFilter:
             return np.convolve(input_signal, self.impulse_response)
 
         # For multidimensional arrays, convolve over the first axis
-        return np.apply_along_axis(lambda v: np.convolve(v, self.impulse_response), axis=0, arr=input_signal)
+        # ToDo: Re-implement for sparse matrices
+        return input_signal
+        # return np.apply_along_axis(lambda v: np.convolve(v, self.impulse_response), axis=0, arr=input_signal)
 
     def _get_raised_cosine(self, filter_type: str, roll_off: float,
                            bandwidth_expansion: float) -> np.ndarray:

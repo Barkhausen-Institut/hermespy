@@ -4,11 +4,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional, Type, Tuple
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 from fractions import Fraction
+
 import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 
 from . import SymbolPrecoding
+from hermespy.channel import ChannelStateInformation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -90,8 +92,8 @@ class SymbolPrecoder(ABC):
     @abstractmethod
     def decode(self,
                symbol_stream: np.ndarray,
-               stream_responses: np.ndarray,
-               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+               channel_state: ChannelStateInformation,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
         """Decode a data stream before reception.
 
         This operation may modify the number of streams as well as the number of data symbols per stream.
@@ -103,9 +105,8 @@ class SymbolPrecoder(ABC):
                 The first matrix dimension M represents the number of streams,
                 the second dimension N the number of discrete data symbols.
 
-            stream_responses (np.ndarray):
-                The channel impulse response for each data symbol within `symbol_stream`.
-                Identical dimensionality to `input_stream`.
+            channel_state (ChannelStateInformation):
+                The channel state estimates for each input symbol within `input_stream`.
 
             stream_noises (np.ndarray):
                 The noise variances for each data symbol within `symbol_stream`.
@@ -118,8 +119,8 @@ class SymbolPrecoder(ABC):
                 The first matrix dimension M' represents the number of streams after decoding,
                 the second dimension N' the number of discrete data symbols after decoding.
 
-            np.ndarray:
-                A matrix of M'xN' data symbol impulse response estimations after this decoding step.
+            ChannelStateInformation:
+                Updated channel state information after decoding.
 
             np.ndarray:
                 A matrix of M'xN' data symbol noise estimations after this decoding step.

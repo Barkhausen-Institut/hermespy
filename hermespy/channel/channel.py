@@ -10,7 +10,9 @@ import numpy as np
 import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 from numba import jit, complex128
-from sparse import DOK, COO
+from sparse import COO
+
+from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -361,7 +363,7 @@ class Channel(ABC):
 
         return self.__transmitter.index, self.__receiver.index
 
-    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation]:
         """Modifies the input signal and returns it after channel propagation.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of one's.
@@ -374,17 +376,13 @@ class Channel(ABC):
                 The array is expected to be two-dimensional with shape `num_transmit_antennas`x`num_samples`.
 
         Returns:
-            (np.ndarray, np.ndarray):
-                Tuple of the distorted signal after propagation and the channel impulse response.
+            (np.ndarray, ChannelStateInformation):
+                Tuple of the distorted signal after propagation and the respective channel state.
 
                 The propagated signal is a two-dimensional array with shape
                 `num_receive_antennas`x`num_propagated_samples`.
                 Note that the channel may append samples to the propagated signal,
                 so that `num_propagated_samples` is generally not equal to `num_samples`.
-
-                The impulse response is a 4-dimensional array of size
-                `T x num_receive_antennas x num_transmit_antennas x (L+1)`,
-                where `L` is the maximum path delay (in samples).
         Raises:
 
             ValueError:
@@ -410,7 +408,7 @@ class Channel(ABC):
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
             return (np.empty((self.receiver.num_antennas, 0), dtype=complex),
-                    np.empty((0, self.transmitter.num_antennas, self.receiver.num_antennas, 1), dtype=complex))
+                    ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0))
 
         # Generate the channel's impulse response
         num_signal_samples = transmitted_signal.shape[1]
@@ -429,7 +427,10 @@ class Channel(ABC):
                 delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * transmitted_signal[tx_idx, :]
                 received_signal[rx_idx, delay_index:delay_index+num_signal_samples] += delayed_signal
 
-        return received_signal, impulse_response
+        channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                impulse_response.transpose(1, 2, 0, 3))
+
+        return received_signal, channel_state
 
     def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
         """Calculate the channel impulse responses.
@@ -538,7 +539,7 @@ class Channel(ABC):
                 See `impulse_response` for further details.
 
         Returns:
-            DOK:
+            COO:
                 Sparse linear transformation tensor of dimension N_Rx x N_Tx x T+L x T.
                 Note that the slice over the first snd last dimension will usually form a lower triangular matrix.
         """

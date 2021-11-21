@@ -3,9 +3,13 @@
 
 from __future__ import annotations
 from typing import Optional, List, Type, TYPE_CHECKING
-from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 from fractions import Fraction
+
 import numpy as np
+import matplotlib.pyplot as plt
+from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
+
+from hermespy.channel import ChannelStateInformation
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -28,11 +32,25 @@ class SymbolPrecoding:
     In order to account for the possibility of multiple antenna data-streams,
     waveform generators may access the `SymbolPrecoding` configuration to encode one-dimensional symbol
     streams into multi-dimensional symbol streams during transmission and subsequently decode during reception.
+
+    Attributes:
+
+        __modem (Optional[Modem]):
+            Communication modem (transmitter or receiver) this precoding configuration is attached to.
+
+        __symbol_precoders (List[SymbolPrecoder]):
+            List of individual precoding steps.
+            The full precoding results from a sequential execution of each precoding step.
+
+        debug (bool):
+            Debug flag.
+            If enabled, the precoding will visualize the individual precoding steps after decoding.
     """
 
     yaml_tag = u'Precoding'
     __modem: Optional[Modem]
     __symbol_precoders: List[SymbolPrecoder]
+    debug: bool
 
     def __init__(self,
                  modem: Modem = None) -> None:
@@ -45,6 +63,7 @@ class SymbolPrecoding:
 
         self.modem = modem
         self.__symbol_precoders = []
+        self.debug = False
 
     @classmethod
     def to_yaml(cls: Type[SymbolPrecoding], representer: SafeRepresenter, node: SymbolPrecoding) -> Node:
@@ -150,7 +169,7 @@ class SymbolPrecoding:
 
     def decode(self,
                input_stream: np.ndarray,
-               stream_responses: np.ndarray,
+               channel_states: ChannelStateInformation,
                stream_noises: np.ndarray) -> np.array:
         """Decode a data symbol stream after reception.
 
@@ -161,9 +180,8 @@ class SymbolPrecoding:
                 The first matrix dimension is the number of streams,
                 the second dimension the number of discrete samples within each respective stream.
 
-            stream_responses (np.ndarray):
-                The channel impulse response for each data symbol within `input_stream`.
-                Identical dimensionality to `input_stream`.
+            channel_states (ChannelStateInformation):
+                The channel state estimates for each input symbol within `input_stream`.
 
             stream_noises (np.ndarray):
                 The noise variances for each data symbol within `input_stream`.
@@ -177,35 +195,49 @@ class SymbolPrecoding:
             ValueError: If dimensions of `stream_responses`, `stream_noises` and `input_streams` do not match.
         """
 
-        if np.any(input_stream.shape[:2] != stream_responses.shape[:2]) or np.any(input_stream.shape != stream_noises.shape):
-            raise ValueError("Dimensions of input_stream and stream_responses must be identical")
+        if input_stream.shape[0] != channel_states.num_receive_streams:
+            raise ValueError("Input streams and channel states must have identical number of streams")
+
+        if input_stream.shape[1] != channel_states.num_symbols:
+            raise ValueError("Input streams and channel states must have identical number of symbols")
 
         symbols_iteration = input_stream.copy()
-        streams_iteration = stream_responses.copy()
+        channel_state_iteration = channel_states
         noises_iteration = stream_noises.copy()
 
-        import matplotlib.pyplot as plt
-        _, axes = plt.subplots(1 + len(self.__symbol_precoders), 2)
-        axes[0, 0].plot(abs(input_stream.flatten()))
-        axes[0, 1].plot(abs(stream_noises.flatten()))
-        i = 0
+        if self.debug:
+            fig, ax = plt.subplots(3, 1+len(self.__symbol_precoders), squeeze=False)
+
+            ax[0, 0].set_title("Input")
+            ax[0, 0].set_ylabel("Signal")
+            ax[0, 0].plot(abs(symbols_iteration.flatten()))
+            ax[1, 0].set_ylabel("CSI")
+            ax[1, 0].plot(abs(channel_state_iteration.state.sum(axis=1).flatten()))
+            ax[2, 0].set_ylabel("Noise")
+            ax[2, 0].plot(abs(noises_iteration.flatten()))
+            i = 0
 
         # Recursion through all precoders, each one may update the stream as well as the responses
         for precoder in reversed(self.__symbol_precoders):
-            symbols_iteration, streams_iteration, noises_iteration = precoder.decode(symbols_iteration,
-                                                                                     streams_iteration,
-                                                                                     noises_iteration)
+            symbols_iteration, channel_state_iteration, noises_iteration = precoder.decode(symbols_iteration,
+                                                                                           channel_state_iteration,
+                                                                                           noises_iteration)
 
-            axes[1+i, 0].plot(abs(symbols_iteration.flatten()))
-            axes[1+i, 1].plot(abs(noises_iteration.flatten()))
-            i+=1
+            if self.debug:
+                i += 1
+                ax[0, i].set_title(precoder.__class__.__name__)
+                ax[0, i].plot(abs(symbols_iteration.flatten()))
+                ax[1, i].plot(abs(channel_state_iteration.state.sum(axis=1).flatten()))
+                ax[2, i].plot(abs(noises_iteration.flatten()))
+
+        if self.debug:
+            plt.show()
 
         # Make sure the output stream is one-dimensional
         # A multi-dimensional output stream indicates a invalid precoding configuration
         if symbols_iteration.shape[0] > 1:
             raise RuntimeError("More than one stream resulting from precoding decoding, the configuration is invalid")
 
-        plt.show()
         return symbols_iteration.flatten()
 
     def required_outputs(self, precoder: SymbolPrecoder) -> int:

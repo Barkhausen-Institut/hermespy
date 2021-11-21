@@ -49,4 +49,3 @@ class MaximumRatioCombining(SymbolPrecoder):
     @property
     def num_output_streams(self) -> int:
         return 1
-

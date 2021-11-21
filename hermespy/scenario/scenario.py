@@ -465,12 +465,12 @@ class Scenario:
 
         for transmitter in self.__transmitters:
             sampling_rate = max(sampling_rate,
-                                2 * transmitter.waveform_generator.bandwidth *
+                                transmitter.waveform_generator.bandwidth *
                                 transmitter.waveform_generator.oversampling_factor)
 
         for receiver in self.__receivers:
             sampling_rate = max(sampling_rate,
-                                2 * receiver.waveform_generator.bandwidth *
+                                receiver.waveform_generator.bandwidth *
                                 receiver.waveform_generator.oversampling_factor)
 
         return sampling_rate

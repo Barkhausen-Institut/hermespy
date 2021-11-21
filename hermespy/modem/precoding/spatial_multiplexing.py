@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 from typing import Type, Tuple
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 from fractions import Fraction
+
 import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 
 from . import SymbolPrecoder
+from hermespy.channel import ChannelStateInformation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -41,21 +43,23 @@ class SpatialMultiplexing(SymbolPrecoder):
         number_of_streams = self.num_output_streams
 
         # Distribute data symbols to the stream
-        encoded_symbol_stream = np.reshape(symbol_stream, (number_of_streams, -1), 'F')
+        encoded_symbol_stream = np.reshape(symbol_stream, (number_of_streams, -1))   # 'F'
 
         return encoded_symbol_stream
 
     def decode(self,
                symbol_stream: np.ndarray,
-               stream_responses: np.ndarray,
-               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+               channel_state: ChannelStateInformation,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         # Collect data symbols from the stream
-        decoded_stream = np.reshape(symbol_stream, (1, -1), 'F')
-        decoded_responses = np.reshape(stream_responses, (1, decoded_stream.shape[1], -1), 'F')
-        decoded_noises = np.reshape(stream_noises, (1, -1), 'F')
+        symbol_stream = np.reshape(symbol_stream, (1, -1))  # 'F'
+        stream_noises = np.reshape(stream_noises, (1, -1))  # 'F'
 
-        return decoded_stream, decoded_responses, decoded_noises
+        state = channel_state.state
+        channel_state.state = state.reshape((1, state.shape[1], -1, state.shape[3]))  # 'F'
+
+        return symbol_stream, channel_state, stream_noises
 
     @property
     def num_input_streams(self) -> int:
