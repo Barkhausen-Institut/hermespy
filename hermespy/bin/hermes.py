@@ -74,8 +74,8 @@ def hermes(args: Optional[List[str]] = None) -> None:
     elif not(os.path.isabs(input_parameters_dir)):
         input_parameters_dir = os.path.join(os.getcwd(), input_parameters_dir)
 
-    print('Welcome to HermesPy\n'
-          'Parameters will be read from ' + input_parameters_dir)
+    print('\nWelcome to HermesPy\n'
+          'Parameters will be read from ' + input_parameters_dir + '\n')
 
     ##################
     # Import executable from YAML config dump
@@ -102,7 +102,7 @@ def hermes(args: Optional[List[str]] = None) -> None:
     print("Results will be saved in '{}'".format(executable.results_dir))
 
     # Dump current configuration to results directory
-    if not arguments.t:
+    if not arguments.test:
         shutil.copytree(input_parameters_dir, executable.results_dir, dirs_exist_ok=True)
 
     ##################
