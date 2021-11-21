@@ -202,7 +202,7 @@ class ChannelStateInformation:
 
         if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
 
-            self.__state = ifft(self.__state, axis=3, norm='ortho')
+            self.__state = ifft(self.__state, axis=3)
             self.__state_format = ChannelStateFormat.IMPULSE_RESPONSE
 
         return self
