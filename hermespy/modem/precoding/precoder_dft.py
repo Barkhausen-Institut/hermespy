@@ -1,9 +1,14 @@
+# -*- coding: utf-8 -*-
+"""Discrete Fourier Transform precoding of communication symbols."""
+
 from __future__ import annotations
 from typing import Type, Tuple
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+
 import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 from . import SymbolPrecoder
+from hermespy.channel import ChannelStateInformation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -79,18 +84,18 @@ class DFT(SymbolPrecoder):
     def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
 
         # There will be an FFT conversion over the antenna streams
-        return np.fft.fft(symbol_stream, axis=0, norm=self.__fft_norm)
+        return np.fft.fft(symbol_stream, axis=1, norm=self.__fft_norm)
 
     def decode(self,
                symbol_stream: np.ndarray,
-               stream_responses: np.ndarray,
-               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+               channel_state: ChannelStateInformation,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         # There will be an inverse FFT conversion over the antenna streams
-        decoded_stream = np.fft.ifft(symbol_stream, axis=0, norm=self.__fft_norm)
-        decoded_responses = np.fft.ifft(stream_responses, axis=0, norm=self.__fft_norm)
+        decoded_stream = np.fft.ifft(symbol_stream, axis=1, norm=self.__fft_norm)
+        # channel_state.linear = np.fft.ifft(channel_state.linear, axis=2, norm=self.__fft_norm)
 
-        return decoded_stream, decoded_responses, stream_noises
+        return decoded_stream, channel_state, stream_noises
 
     @property
     def num_input_streams(self) -> int:

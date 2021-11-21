@@ -3,20 +3,19 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, List, Tuple, Optional, Type, Union
-from copy import copy
 from enum import Enum
 from abc import abstractmethod
 from functools import lru_cache
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
-from scipy import signal
 from scipy.constants import pi
 from scipy.interpolate import griddata
 from numba import jit
+
 from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
-
+from hermespy.channel import ChannelStateInformation, ChannelStateDimension
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -293,15 +292,15 @@ class FrameSection:
     @abstractmethod
     def demodulate(self,
                    baseband_signal: np.ndarray,
-                   ideal_channel: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+                   channel_state: ChannelStateInformation) -> Tuple[np.ndarray, ChannelStateInformation]:
         """Demodulate a time section of a complex OFDM base-band signal into data symbols.
 
         Args:
             baseband_signal (np.ndarray): Vector of complex-valued base-band samples.
-            ideal_channel (np.ndarray): The ideal channel impulse response.
+            channel_state (ChannelStateInformation): Channel state.
 
         Returns:
-            (np.ndarray, np.ndarray):
+            (np.ndarray, channel_state):
                 Section symbol grid and channel response grid.
         """
         ...
@@ -412,31 +411,33 @@ class FrameSymbolSection(FrameSection):
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
-                   ideal_channel: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+                   channel_state: ChannelStateInformation) -> Tuple[np.ndarray, ChannelStateInformation]:
 
         rel_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
         samples_per_slot = int(round(rel_samples_per_slot))
 
-        # Samples without prefixes in the time-time grid, essentially sections of the demodulating stft
-        slot_samples = np.empty((samples_per_slot, self.num_timeslots), dtype=complex)
-        slot_channels = np.empty((samples_per_slot, self.num_timeslots, ideal_channel.shape[1]), dtype=complex)
-
         # Remove the cyclic prefixes before transformation into time-domain
         sample_index = 0
-        for slot_idx in range(len(self.pattern) * self.num_repetitions):
+        sample_indices = np.empty(0, dtype=int)
+        channel_sample_indices = np.empty(0, dtype=int)
+        num_slots = len(self.pattern) * self.num_repetitions
+
+        for slot_idx in range(num_slots):
 
             pattern_idx = slot_idx % len(self.pattern)
             resource = self.frame.resources[self.pattern[pattern_idx]]
 
             num_prefix_samples = int(round(rel_samples_per_slot * resource.cp_ratio))
-
             sample_index += num_prefix_samples
-            slot_samples[:, slot_idx] = baseband_signal[sample_index:sample_index+samples_per_slot]
-            slot_channels[:, slot_idx, :] = ideal_channel[sample_index:sample_index + samples_per_slot, :]
+
+            sample_indices = np.append(sample_indices, np.arange(sample_index, sample_index + samples_per_slot))
+            channel_sample_indices = np.append(channel_sample_indices, sample_index)
 
             sample_index += samples_per_slot
 
+        slot_samples = baseband_signal[sample_indices].reshape((samples_per_slot, num_slots), order='F')
         num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
+        slot_channel_state = channel_state[:, :, channel_sample_indices, :].to_frequency_selectivity(num_bins=self.num_subcarriers)
 
         # Transform grid back to data symbols
         dft_matrix = self.frame.fourier_weights(self.frame.modem.scenario.sampling_rate,
@@ -444,11 +445,8 @@ class FrameSymbolSection(FrameSection):
                                                 self.num_subcarriers,
                                                 self.frame.subcarrier_spacing,
                                                 self.frame.dc_suppression)
-
         ofdm_grid = dft_matrix @ slot_samples
-        channel_grid = np.tensordot(dft_matrix, slot_channels, axes=(1, 0))
-
-        return ofdm_grid, channel_grid
+        return ofdm_grid, slot_channel_state
 
     @property
     def resource_mask(self) -> np.ndarray:
@@ -775,14 +773,14 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         return output_signal
 
     def demodulate(self,
-                   signal: np.ndarray,
-                   impulse_response: np.ndarray,
-                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                   baseband_signal: np.ndarray,
+                   channel_state: ChannelStateInformation,
+                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         # Recover OFDM grid
         symbol_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=complex)
-        impulse_grid = np.empty((self.num_subcarriers, self.words_per_frame, impulse_response.shape[1]), dtype=complex)
         resource_mask = np.empty((len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=bool)
+        section_channel_states: List[ChannelStateInformation] = []
 
         sample_index = 0
         word_index = 0
@@ -796,28 +794,34 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                 sample_index += num_samples
                 continue
 
-            signal_section = signal[sample_index:sample_index+num_samples]
-            impulse_response_section = impulse_response[sample_index:sample_index+num_samples]
+            time_indices = np.arange(sample_index, sample_index+num_samples)
+            signal_section = baseband_signal[time_indices]
+            channel_state_section = channel_state[:, :, time_indices, :]
 
-            section_symbol_grid, section_response_grid = section.demodulate(signal_section, impulse_response_section)
+            section_symbol_grid, section_channel_state = section.demodulate(signal_section, channel_state_section)
             section_mask = section.resource_mask
 
             symbol_grid[:, word_index:word_index+num_words] = section_symbol_grid
-            impulse_grid[:, word_index:word_index+num_words, :] = section_response_grid
+            section_channel_states.append(section_channel_state)
             resource_mask[:, :, word_index:word_index+num_words] = section_mask
 
             sample_index += num_samples
             word_index += num_words
 
-        # Estimate the channel given the recovered OFDM resources
-        channel_estimation = self.__channel_estimation(symbol_grid, impulse_grid, resource_mask)
+        ideal_channel_state = ChannelStateInformation.concatenate(section_channel_states,
+                                                                  dimension=ChannelStateDimension.SAMPLES)
+
+        # Estimate the channel given the recovered OFDM resources and convert it back to linear transformation matrices
+        # Since we handle frequency bins here, the CSI transformations are diagonal over the last two dimensions
+        channel_state_estimation = self.__channel_estimation(symbol_grid, ideal_channel_state, resource_mask)
 
         # Recover the data symbols, as well as the respective channel weights from the resource grids
-        data_symbols = symbol_grid.T[resource_mask[ElementType.DATA.value, ::].T]
-        channel_weights = channel_estimation.T[:, resource_mask[ElementType.DATA.value, ::].T].T
+        data_mask = resource_mask[ElementType.DATA.value, ::]
+        channel_state_estimation = channel_state_estimation[:, :, data_mask.flatten(), :]
+        data_symbols = symbol_grid.T[data_mask.T]
         noise_variances = np.repeat(noise_variance, self.symbols_per_frame)
 
-        return data_symbols, channel_weights, noise_variances
+        return data_symbols.flatten(), channel_state_estimation, noise_variances
 
     @property
     def bandwidth(self) -> float:
@@ -826,7 +830,10 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
 
-    def __channel_estimation(self, symbol_grid: np.ndarray, channel_grid: np.ndarray, resource_mask: np.ndarray) -> np.ndarray:
+    def __channel_estimation(self,
+                             symbol_grid: np.ndarray,
+                             channel_state: ChannelStateInformation,
+                             resource_mask: np.ndarray) -> ChannelStateInformation:
         """Performs channel estimation
 
         This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
@@ -843,7 +850,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             timestamp_in_samples(int): sample index inside the drop of the first sample in frame
 
         Returns:
-            numpy.ndarray:
+            ChannelEstimation:
                 channel estimate in the frequency domain. It is a R x T x K x N array, with N the FFT size and K the
                 number of data OFDM symbols in the frame. R denotes the number of receive antennas and T of the transmit
                 antennas.
@@ -851,10 +858,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # Ideally, the channel is estimated perfectly at each received symbol slot
         if self.channel_estimation_algorithm == ChannelEstimation.IDEAL:
-            return channel_grid
+            return channel_state
 
         # An ideal preamble estimates the channel at the first symbol position
         if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_PREAMBLE:
+
+            channel_state.state = channel_state.state[:, :, 0, :].repeat()
             return channel_grid[:, 0].repeat(channel_grid.shape[1], axis=1)
 
         if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_MIDAMBLE:

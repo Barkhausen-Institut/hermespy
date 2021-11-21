@@ -4,12 +4,15 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, Optional, Type, Union
 from enum import Enum
-from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
+
 import numpy as np
+from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
+from sparse import COO
 
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
+from hermespy.channel import ChannelStateInformation
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -271,24 +274,25 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         return output_signal
 
     def demodulate(self,
-                   signal: np.ndarray,
-                   impulse_response: np.ndarray,
-                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                   baseband_signal: np.ndarray,
+                   channel_state: ChannelStateInformation,
+                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         self._set_sampling_indices()
         self._set_pulse_correlation_matrix()
 
-        frame = self.rx_filter.filter(signal)
-        frame_channel = self.rx_filter.filter(impulse_response)
+        filtered_signal = self.rx_filter.filter(baseband_signal)
+        filtered_channel_state = self.rx_filter.filter(channel_state.to_impulse_response().state)
 
         start_index_data = self.num_preamble_symbols
         end_index_data = self.num_preamble_symbols + self.num_data_symbols
+        symbol_indices = self._symbol_idx[start_index_data:end_index_data]
 
-        symbols = frame[self._symbol_idx[start_index_data: end_index_data]]
-        channel = frame_channel[self._symbol_idx[start_index_data:end_index_data], ...][..., self._symbol_idx[start_index_data:end_index_data]]
+        symbols = filtered_signal[symbol_indices]
+        channel_state.state = filtered_channel_state[:, :, symbol_indices, :]
         noise = np.repeat(noise_variance, len(symbols))
 
-        return symbols, channel, noise
+        return symbols, channel_state, noise
 
     @property
     def bandwidth(self) -> float:

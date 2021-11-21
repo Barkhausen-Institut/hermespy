@@ -3,12 +3,15 @@
 
 from __future__ import annotations
 from typing import Tuple, Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
-from scipy import integrate
 from math import ceil
 from functools import lru_cache
-import numpy as np
 
+
+import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from scipy import integrate
+
+from hermespy.channel import ChannelStateInformation
 from hermespy.modem import Modem
 from hermespy.modem.waveform_generator import WaveformGenerator
 
@@ -455,26 +458,28 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return signal
 
     def demodulate(self,
-                   signal: np.ndarray,
-                   impulse_response: np.ndarray,
-                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                   baseband_signal: np.ndarray,
+                   channel_state: ChannelStateInformation,
+                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
         samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
         prototypes, _ = self._prototypes()
 
-        data_frame = signal[samples_in_pilot_section:]
+        data_frame = baseband_signal[samples_in_pilot_section:]
 
         symbol_signals = data_frame.reshape(-1, self.samples_in_chirp)
         symbol_metrics = abs(symbol_signals @ prototypes.T.conj())
 
         # ToDo: Unfortunately the demodulation-scheme is non-linear. Is there a better way?
         symbols = np.argmax(symbol_metrics, axis=1)
-        symbol_responses = np.zeros(self.num_data_chirps, dtype=complex)
+        channel_state = ChannelStateInformation.Ideal(channel_state.num_transmit_streams,
+                                                      channel_state.num_receive_streams,
+                                                      len(symbols))
         noises = np.repeat(noise_variance, self.num_data_chirps)
 
-        return symbols, symbol_responses, noises
+        return symbols, channel_state, noises
 
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
 
@@ -483,7 +488,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         for s, symbol in enumerate(data_symbols):
 
-            symbol_bits = [int(x) for x in list(np.binary_repr(symbol, width=bits_per_symbol))]
+            symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
             bits[s*bits_per_symbol:(s+1)*bits_per_symbol] = symbol_bits
 
         return bits

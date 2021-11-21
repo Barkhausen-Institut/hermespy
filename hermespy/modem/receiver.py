@@ -2,19 +2,20 @@
 """HermesPy Receiving Modem."""
 
 from __future__ import annotations
-from ruamel.yaml import RoundTripConstructor, Node
-from ruamel.yaml.comments import CommentedOrderedMap
 from typing import TYPE_CHECKING, Type, List, Optional, Union, Tuple
 from math import floor
-from scipy.constants import pi
+
 import numpy as np
 import numpy.random as rnd
+from ruamel.yaml import RoundTripConstructor, Node
+from ruamel.yaml.comments import CommentedOrderedMap
+from scipy.constants import pi
 
 from hermespy.modem import Modem
 from hermespy.modem.precoding import SymbolPrecoding
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.noise import Noise
-from hermespy.channel import Channel
+from hermespy.channel import ChannelStateDimension, ChannelStateInformation
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -112,7 +113,9 @@ class Receiver(Modem):
         # Return resulting base-band superposition
         return received_signal
 
-    def demodulate(self, baseband_signal: np.ndarray, channel: np.ndarray, noise_variance: float) -> np.ndarray:
+    def demodulate(self, baseband_signal: np.ndarray,
+                   channel_state: ChannelStateInformation,
+                   noise_variance: float) -> np.ndarray:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
@@ -121,8 +124,8 @@ class Receiver(Modem):
             baseband_signal (np.ndarray):
                 Received signal noisy base-band signal.
 
-            channel (np.ndarray):
-                Wireless channel impulse-response estimation.
+            channel_state (ChannelStateInformation):
+                State of the channel over which `baseband_signal` has been propagated.
 
             noise_variance (float):
                 Power of the incoming noise, required for equalization and channel estimation.
@@ -136,6 +139,9 @@ class Receiver(Modem):
 
         if baseband_signal.shape[0] != self.num_antennas:
             raise ValueError("Number of input signals must be equal to the number of antennas")
+
+        if channel_state.num_receive_streams != self.num_antennas:
+            raise ValueError("Number of channel state receive streams does not match the number of receiver antennas")
 
         # If no receiving waveform generator is configured, no signal is being received
         # TODO: Check if this is really a valid case
@@ -156,42 +162,44 @@ class Receiver(Modem):
         # Apply stream decoding, for instance beam-forming
         # TODO: Not yet supported.
 
-        # Generate a symbol stream for each dedicated base-band signal
-        symbol_streams: List[List[complex]] = []
-        symbol_streams_responses: List[List[complex]] = []
-        symbol_streams_noise: List[List[float]] = []
+        # Synchronize all streams into frames
+        frames: List[List[Tuple[np.ndarray, ChannelStateInformation]]] = []
+        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(baseband_signal,
+                                                                       channel_state.received_streams())):
 
-        # Convert channel model from impulse responses to transformation tensors
-        channel_transformations = Channel.impulse_transformation(channel)
+            frame = self.waveform_generator.synchronize(rx_signal, stream_transform)
+            frames.append(frame)
 
-        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(baseband_signal, channel_transformations)):
+        frames = np.array(frames, dtype=object)
 
-            # Synchronization
-            frame_samples, frame_transforms = self.waveform_generator.synchronize(rx_signal, stream_transform)
+        # Demodulate the parallel frames arriving at each stream,
+        # then decode the (inverse) precoding over all stream frames
+        decoded_symbols = np.empty(0, dtype=complex)
+        for frame_streams in frames.transpose(1, 0, 2):
 
-            # Demodulate each frame separately to make the de-modulation easier to understand
-            symbols: List[complex] = []
-            symbol_responses: List[complex] = []
-            symbol_noise: List[float] = []
-            for frame, frame_transform in zip(frame_samples, frame_transforms):
+            # Demodulate each frame separately
+            symbols: List[np.ndarray] = []
+            channel_states: List[ChannelStateInformation] = []
+            noises: List[complex] = []
+
+            for stream in frame_streams:
 
                 # Demodulate the frame into data symbols
-                f_symbols, f_responses, f_noise = self.waveform_generator.demodulate(frame, frame_transform,
-                                                                                     noise_variance)
+                s_symbols, s_channel_state, s_noise = self.waveform_generator.demodulate(*stream, noise_variance)
 
-                symbols.extend(f_symbols.tolist())
-                symbol_responses.extend(f_responses.tolist())
-                symbol_noise.extend(f_noise.tolist())
+                symbols.append(s_symbols)
+                channel_states.append(s_channel_state)
+                noises.append(s_noise)
 
-            # Save data symbols in their respective stream section
-            symbol_streams.append(symbols)
-            symbol_streams_responses.append(symbol_responses)
-            symbol_streams_noise.append(symbol_noise)
+            frame_symbols = np.array(symbols, dtype=complex)
+            frame_channel_states = ChannelStateInformation.concatenate(channel_states,
+                                                                       ChannelStateDimension.RECEIVE_STREAMS)
+            frame_noises = np.array(noises, dtype=float)
 
-        # Decode the symbol precoding
-        decoded_symbols = self.precoding.decode(np.array(symbol_streams),
-                                                np.array(symbol_streams_responses),
-                                                np.array(symbol_streams_noise))
+            decoded_frame_symbols = self.precoding.decode(frame_symbols,
+                                                          frame_channel_states,
+                                                          frame_noises)
+            decoded_symbols = np.append(decoded_symbols, decoded_frame_symbols)
 
         # Map the symbols to code bits
         code_bits = self.waveform_generator.unmap(decoded_symbols)

@@ -3,13 +3,15 @@
 
 from __future__ import annotations
 from typing import Type, Tuple
-from itertools import product
 
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
 import numpy as np
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
+from sparse import tensordot, diagonal
+from scipy.sparse import diags
+from scipy.sparse.linalg import inv
 
 from .symbol_precoder import SymbolPrecoder
-from hermespy.channel import Channel
+from hermespy.channel import ChannelStateInformation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -24,7 +26,7 @@ __status__ = "Prototype"
 class MMSETimeEqualizer(SymbolPrecoder):
     """Minimum-Mean-Square channel equalization in time domain."""
 
-    yaml_tag: str = u'MMSE-Time'
+    yaml_tag: str = u'MMSE'
 
     def __init__(self) -> None:
         """Minimum-Mean-Square channel equalization object initialization."""
@@ -36,45 +38,35 @@ class MMSETimeEqualizer(SymbolPrecoder):
 
     def decode(self,
                symbol_stream: np.ndarray,
-               stream_responses: np.ndarray,
-               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-
-        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
-        equalized_responses = np.empty(stream_responses.shape, dtype=complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=float)
+               channel_state: ChannelStateInformation,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         num_symbols = symbol_stream.shape[1]
+        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
+        equalized_noises = np.empty(stream_noises.shape, dtype=float)
 
         # Equalize in space in a first step
-        for idx, (symbols, response, noise) in enumerate(zip(symbol_stream,
-                                                             stream_responses,
-                                                             stream_noises)):
+        for idx, (symbols, stream_state, noise) in enumerate(zip(symbol_stream,
+                                                                 channel_state.received_streams(),
+                                                                 stream_noises)):
 
             # Combine the responses of all superimposed transmit antennas for equalization
-            ideal_transform = np.sum(stream_responses, axis=1, keepdims=False)
-            truncated_transform = ideal_transform[:num_symbols]
+            linear_state = stream_state.linear
+            transform = np.sum(linear_state[0, ::], axis=0, keepdims=False)
 
-            noise_covariance = np.diag(noise)
+            inverse = inv(transform.T.conj() @ transform + diags(noise))
+            symbol_equalizer = inverse @ transform[:num_symbols, :].T.conj()
+            channel_equalizer = inverse @ transform.T.conj()
 
-            # ToDo: Optimization opportunity, lower triangular multiplied by upper triangular matrix
-            # We should be able to skip creating the whole convolution matrix
+            equalized_symbols[idx, :] = symbol_equalizer @ symbols
+            equalized_channel = tensordot(channel_equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
 
-            # ToDo: What to do if there aren't enough symbols covering the whole delay?? This should be a common problem!
-            ideal_inverse = np.linalg.inv(ideal_transform.T.conj() @ ideal_transform + noise_covariance)
-            ideal_equalizer = ideal_inverse @ ideal_transform.T.conj()
-            truncated_inverse = np.linalg.inv(truncated_transform.T.conj() @ truncated_transform + noise_covariance)
-            truncated_equalizer = truncated_inverse @ truncated_transform.T.conj()
+            stream_state.linear = equalized_channel
 
-            # Since we may not have enough symbols to completely equalize the delay,
-            # we need to resort to cyclic repetition. This sucks big-time!
-            equalized_symbols[idx, :] = truncated_equalizer @ symbols
-            for tx_id, tx_response in enumerate(response.transpose((1, 0, 2))):
+            norm = diagonal(inverse).todense().real
+            equalized_noises[idx, :] = noise * norm / (1 - noise * norm)
 
-                equalized_response_matrix = ideal_equalizer @ tx_response
-
-            equalized_noises[idx, :] = 1 / (1 / (noise * np.diag(ideal_inverse).real) - 1)
-
-        return equalized_symbols, equalized_responses, equalized_noises
+        return equalized_symbols, channel_state, equalized_noises
 
     @property
     def num_input_streams(self) -> int:
@@ -141,46 +133,26 @@ class MMSESpaceEqualizer(SymbolPrecoder):
 
     def decode(self,
                symbol_stream: np.ndarray,
-               stream_responses: np.ndarray,
-               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+               channel_state: ChannelStateInformation,
+               stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
-        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=float)
+        for time_idx, (symbols, csi, noise) in enumerate(zip(symbol_stream.T,
+                                                             channel_state.samples(),
+                                                             stream_noises.T)):
 
-        num_symbols = symbol_stream.shape[1]
-        response_transformations = np.empty((*stream_responses.shape[:3], stream_responses.shape[1] + stream_responses.shape[3] - 1),
-                                            dtype=complex)
-        equalized_response_transformations = np.empty(response_transformations.shape, dtype=complex)
-        for rx_idx, tx_idx in product(range(stream_responses.shape[0]), range(stream_responses.shape[2])):
-
-            response = stream_responses[rx_idx, :, tx_idx, :]
-            response_transformations[rx_idx, :, tx_idx, :] = Channel.delay_matrix(response).T
-
-        # Equalize in space in a first step
-        for idx, (symbol, response, noise) in enumerate(zip(symbol_stream.T,
-                                                            np.rollaxis(response_transformations, 1),
-                                                            np.rollaxis(stream_noises, 1))):
+            linear_state: np.ndarray = np.sum(csi.linear[:, :, 0, :].todense(), axis=2, keepdims=False)
             noise_covariance = np.diag(noise)
-            response_sum = np.sum(response, axis=2, keepdims=False)
 
-            inverse = np.linalg.inv(response_sum.T.conj() @ response_sum + noise_covariance)
-            equalizer = inverse @ response_sum.T.conj()
+            inverse = np.linalg.inv(linear_state.T.conj() @ linear_state + noise_covariance)
+            equalizer = inverse @ linear_state.T.conj()
 
-            equalized_symbols[:, idx] = equalizer @ symbol
+            symbol_stream[:, time_idx] = equalizer @ symbols
+            channel_state.state[:, :, time_idx, :] = np.tensordot(equalizer, csi.linear[:, :, 0, :], axes=(1, 0))
 
-            for tx_idx in range(stream_responses.shape[2]):
-                equalized_response_transformations[:, idx, tx_idx, :] = equalizer @ response_transformations[:, idx, tx_idx, :]
+            norm = np.diag(inverse).real
+            stream_noises[:, time_idx] = noise * norm / (1 - noise * norm)
 
-            equalized_noises[:, idx] = 1 / (1 / (noise * np.diag(inverse).real) - 1)
-
-        equalized_responses = np.empty(stream_responses.shape, dtype=complex)
-        for rx_idx, tx_idx in product(range(stream_responses.shape[0]), range(stream_responses.shape[2])):
-
-            equalized_response = Channel.power_delay_profile(equalized_response_transformations[rx_idx, :, tx_idx, :],
-                                                             stream_responses.shape[3], num_symbols)
-            equalized_responses[rx_idx, :, tx_idx, :] = equalized_response
-
-        return equalized_symbols, equalized_responses, equalized_noises
+        return symbol_stream, channel_state, stream_noises
 
     @property
     def num_input_streams(self) -> int:
