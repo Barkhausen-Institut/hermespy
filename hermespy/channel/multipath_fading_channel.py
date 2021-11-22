@@ -504,7 +504,6 @@ class MultipathFadingChannel(Channel):
 
         return propagated_signal, impulse_response
 
-
     def _calculate_path_delays_in_samples(self) -> np.array:
         self.calculate_new_sync_delay()
 
