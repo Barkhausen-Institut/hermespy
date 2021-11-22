@@ -7,7 +7,7 @@ confidence_level: .9
 confidence_margin: .1
 confidence_metric: BER
 
-noise_loop: [0, 4, 8, 12, 16, 20, 24, 28, 32, 36]  # dB
+noise_loop: [20, 10, 2, 0]  # dB
 snr_type: EBN0                  # SNR is defined as the ratio between bit energy and noise power
 
 calc_transmit_spectrum: true    # Calculate the average transmit spectrum over all drops

@@ -117,7 +117,8 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
         noise_signal = section.modulate(expected_noise_symbols)[..., np.newaxis]
         noise_variance = 0.
 
-        data_symbols, noise_symbols, noise_variances = self.waveform_generator.demodulate(data_signal, noise_signal, noise_variance)
+        data_symbols, noise_symbols, noise_variances = self.waveform_generator.demodulate(data_signal, noise_signal,
+                                                                                          noise_variance)
 
         assert_array_almost_equal(expected_data_symbols, data_symbols)
         assert_array_almost_equal(expected_noise_symbols[..., np.newaxis], noise_symbols)
@@ -147,8 +148,9 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
         propagated_data_signal = data_signal * noise_signal
 
         data_symbols, impulse_symbols, noise_variances = self.waveform_generator.demodulate(propagated_data_signal,
-                                                                                          noise_signal[..., np.newaxis],
-                                                                                          noise_variance)
+                                                                                            noise_signal[
+                                                                                                ..., np.newaxis],
+                                                                                            noise_variance)
 
         equalized_data_symbols = data_symbols / impulse_symbols[:, 0]
         assert_array_almost_equal(equalized_data_symbols, expected_data_symbols)

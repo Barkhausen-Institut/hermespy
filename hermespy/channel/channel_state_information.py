@@ -63,12 +63,16 @@ class ChannelStateInformation:
         __num_frequency_bins (int):
             Number of discrete frequency bins in frequency-selectivity mode.
             Recovers the 4th matrix dimension during conversions.
+
+        __tol (float):
+            Values smaller than tol will be rounded to zero to speed up computations.
     """
 
     __state_format: ChannelStateFormat
     __state: np.ndarray
     __num_delay_taps: int
     __num_frequency_bins: int
+    __tol = 1e-6
 
     def __init__(self,
                  state_format: ChannelStateFormat,
@@ -388,6 +392,7 @@ class ChannelStateInformation:
         return transformation
 
     def __from_impulse_response(self, transformation: Union[COO, np.ndarray]) -> None:
+
 
         for delay_idx in range(self.__num_delay_taps):
 

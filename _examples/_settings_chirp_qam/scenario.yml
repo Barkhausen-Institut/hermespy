@@ -8,10 +8,8 @@ Modems:
   # Transmitter configuration
   - Transmitter
 
-    num_antennas: 1
-
-    #Precoding:
-    #  - SM
+    Precoding:
+      - SM
 
     # Waveform configuration
     WaveformPskQam:
@@ -21,7 +19,7 @@ Modems:
       modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
-      oversampling_factor: 4
+      oversampling_factor: 2
 
       # Filter settings
       #filter:
@@ -36,12 +34,8 @@ Modems:
   # Receiver configuration
   - Receiver
 
-    num_antennas: 1
-
     Precoding:
-      #- SM
       - MMSE-Time
-      #- MMSE-Space
 
     # Waveform configuration
     WaveformPskQam:
@@ -51,7 +45,7 @@ Modems:
       modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
-      oversampling_factor: 4
+      oversampling_factor: 2
 
       # Filter settings
       #filter:

@@ -11,7 +11,7 @@ Modems:
   # A single transmitter
   - Transmitter:
 
-      carrier_frequency: 865e6  # Center frequency of Rf-band signal
+      carrier_frequency: 865e6  # Center frequency of Rf-band baseband_signal
       num_antennas: 1           # Transmitter features a single antenna
 
       # Bit encoding before mapping to modulation symbols
@@ -36,7 +36,7 @@ Modems:
   # A single receiver
   - Receiver:
 
-      carrier_frequency: 865e6  # Center frequency of Rf-band signal
+      carrier_frequency: 865e6  # Center frequency of Rf-band baseband_signal
       num_antennas: 1           # Receiver features a single antenna
 
       # Bit encoding before mapping to modulation symbols

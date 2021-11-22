@@ -160,7 +160,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
     def test_too_short_signal_length_for_demodulation(self) -> None:
         # define input parameters
         timestamp_in_samples = 0
-        rx_signal = np.ones((1, 3))  # empty signal cannot be demodulated
+        rx_signal = np.ones((1, 3))  # empty baseband_signal cannot be demodulated
 
         demodulated_bits, left_over_rx_signal = self.waveform_generator_qpsk.receive_frame(
             rx_signal, timestamp_in_samples, 0)
@@ -170,7 +170,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
 
     def test_demodulating_signal_length_one_sample_longer_than_frame(
             self) -> None:
-        # define received signal. length of signal is 1 sample longer than the
+        # define received baseband_signal. length of baseband_signal is 1 sample longer than the
         # length of a frame
         frame_overlap = 1
         rx_signal = np.random.randint(
@@ -239,7 +239,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
             relative_difference)
 
     def test_proper_power_calculation(self) -> None:
-        """Tests if theoretical signal power is calculated correctly"""
+        """Tests if theoretical baseband_signal power is calculated correctly"""
 
         # define test parameters
         number_of_drops = 5
@@ -263,13 +263,13 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
     @staticmethod
     def estimate_energy(modem: Modem, number_of_drops: int, number_of_frames: int,
                         data_bits: np.array, energy_type: str) -> float:
-        """Generates a signal with a few drops and frames and measures average energy or power.
-        In this method a signal is generated over several drops, and the average power or bit/symbol energy is
+        """Generates a baseband_signal with a few drops and frames and measures average energy or power.
+        In this method a baseband_signal is generated over several drops, and the average power or bit/symbol energy is
         calculated.
 
         Args:
             modem(Modem): modem for which transmit energy is calculated
-            number_of_drops(int): number of drops for which signal is generated
+            number_of_drops(int): number of drops for which baseband_signal is generated
             number_of_frames(int): number of frames generated in each drop
             data_bits(np.array): the data bits to be sent created by the BitsSource
             energy_type(str): what type of energy is to be returned.
