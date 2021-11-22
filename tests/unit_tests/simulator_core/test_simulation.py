@@ -175,6 +175,16 @@ class TestStoppingCriteria(unittest.TestCase):
         self.assertIsNone(detected_bits[0])
         self.assertIsNotNone(detected_bits[1])
 
+    def test_no_flagging_if_no_run_flag_is_passed(self) -> None:
+        self.drop_run_flag[:, :] = True
+        tx_signals = Simulation.transmit(self.scenario)
+        propagation_matrix = Simulation.propagate(self.scenario, tx_signals)
+        received_signals = Simulation.receive(self.scenario, propagation_matrix)
+        detected_bits = Simulation.detect(self.scenario, received_signals)
+
+        self.assertIsNotNone(detected_bits[0])
+        self.assertIsNotNone(detected_bits[1])
+
     def test_do_not_send_if_tx0_is_flagged(self) -> None:
         self.drop_run_flag[:, :] = True
         self.drop_run_flag[0, :] = False
