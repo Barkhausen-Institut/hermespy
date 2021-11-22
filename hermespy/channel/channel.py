@@ -527,13 +527,13 @@ class Channel:
 
     def _add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
         self.calculate_new_sync_delay()
-
-        if self.no_path_delay_samples > 0:
+        delay_samples = self.current_sync_offset * self.scenario.sampling_rate
+        if delay_samples > 0:
             delays = np.zeros(
                 (impulse_responses.shape[0],
                 impulse_responses.shape[1],
                 impulse_responses.shape[2],
-                self.no_path_delay_samples),
+                delay_samples),
                 dtype=complex
             )
 
