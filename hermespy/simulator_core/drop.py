@@ -55,11 +55,11 @@ class ComplexVisualization(IntEnum):
         else:
             raise RuntimeError("Unsupported plot mode requested")
 
-        if timestamps is None:
-            axis.plot(plot_data)
-
-        else:
-            axis.plot(timestamps, plot_data)
+        if data is not None:
+            if timestamps is None:
+                axis.plot(plot_data)
+            else:
+                axis.plot(timestamps, plot_data)
 
 
 class Drop:
@@ -76,7 +76,7 @@ class Drop:
         __transmit_block_sizes (List[int]):
             Bit block sizes for each transmitter.
 
-        __received_signals (List[np.ndarray]):
+        _received_signals (List[np.ndarray]):
             Modulated signals impinging onto receiving modems.
 
         __received_bits (List[np.ndarray]):
@@ -113,7 +113,7 @@ class Drop:
             For each transmitter, a tuple of frequency bins, timestamps and respective stft matrix is cached.
             If no result has been computed yet, the attribute is None.
 
-        __receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
+        _receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
             Short time fourier transform of the transmitted antenna signals.
             By default only the first antenna within an array is considered.
             For each receiver, a tuple of frequency bins, timestamps and respective stft matrix is cached.
@@ -261,13 +261,14 @@ class Drop:
 
             transmit_errors: List[Optional[np.ndarray]] = []
             for receiver_bits in self.received_bits:
-
+                
                 # Skip error computation if padding is disabled and the stream lengths don't match
-                if len(receiver_bits) != len(transmitter_bits) and not self.__pad_bit_errors:
+                if receiver_bits is None:
                     transmit_errors.append(None)
-
+                elif (len(receiver_bits) != len(transmitter_bits) 
+                      and not self.__pad_bit_errors):
+                        transmit_errors.append(None)
                 else:
-
                     # Pad bit sequences (if required)
                     num_bits = max(len(receiver_bits), len(transmitter_bits))
                     padded_transmission = np.append(transmitter_bits, np.zeros(num_bits - len(transmitter_bits)))
@@ -456,25 +457,26 @@ class Drop:
 
         self.__receive_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__received_signals:
+            if antenna_signals is not None:
+                # Consider only the first antenna signal
+                signal: np.ndarray = antenna_signals[0]
+                window_size = len(signal)
+                # Make sure that signal is at least as long as FFT and pad it
+                # with zeros is needed
+                if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
 
-            # Consider only the first antenna signal
-            signal: np.ndarray = antenna_signals[0]
-            window_size = len(signal)
+                    signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                    window_size = self.__spectrum_fft_size
 
-            # Make sure that signal is at least as long as FFT and pad it
-            # with zeros is needed
-            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+                # Compute stft TODO: Add sampling rate
+                frequency, time, transform = stft(signal, nperseg=window_size,
+                                                    noverlap=int(.5 * window_size),
+                                                    return_onesided=False)
 
-                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
-                window_size = self.__spectrum_fft_size
-
-            # Compute stft TODO: Add sampling rate
-            frequency, time, transform = stft(signal, nperseg=window_size,
-                                              noverlap=int(.5 * window_size),
-                                              return_onesided=False)
-
-            # Append result tuple
-            self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
+                # Append result tuple
+                self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
+            else:
+                self.__receive_stft.append((None, None, None))
 
         return self.__receive_stft
 
@@ -499,23 +501,25 @@ class Drop:
 
         self.__transmit_spectrum: List[Tuple[np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__transmitted_signals:
+            if antenna_signals is not None:
+                # Consider only the first antenna signal
+                signal: np.ndarray = antenna_signals[0]
+                window_size = len(signal)
 
-            # Consider only the first antenna signal
-            signal: np.ndarray = antenna_signals[0]
-            window_size = len(signal)
+                # Make sure that signal is at least as long as FFT and pad it
+                # with zeros is needed
+                if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
 
-            # Make sure that signal is at least as long as FFT and pad it
-            # with zeros is needed
-            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+                    signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                    window_size = self.__spectrum_fft_size
 
-                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
-                window_size = self.__spectrum_fft_size
+                # TODO: Integrate sampling rate
+                frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
+                                            return_onesided=False) # , fs=sampling_rate,
 
-            # TODO: Integrate sampling rate
-            frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
-                                           return_onesided=False) # , fs=sampling_rate,
-
-            self.__transmit_spectrum.append((frequency, periodogram))
+                self.__transmit_spectrum.append((frequency, periodogram))
+            else:
+                self.__transmit_spectrum.append((None, None))
 
         return self.__transmit_spectrum
     
@@ -541,22 +545,25 @@ class Drop:
         self.__receive_spectrum: List[Tuple[np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__received_signals:
 
-            # Consider only the first antenna signal
-            signal: np.ndarray = antenna_signals[0]
-            window_size = len(signal)
+            if antenna_signals is not None:
+                # Consider only the first antenna signal
+                signal: np.ndarray = antenna_signals[0]
+                window_size = len(signal)
 
-            # Make sure that signal is at least as long as FFT and pad it
-            # with zeros is needed
-            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+                # Make sure that signal is at least as long as FFT and pad it
+                # with zeros is needed
+                if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
 
-                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
-                window_size = self.__spectrum_fft_size
+                    signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                    window_size = self.__spectrum_fft_size
 
-            # TODO: Integrate sampling rate
-            frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
-                                           return_onesided=False) # , fs=sampling_rate,
+                # TODO: Integrate sampling rate
+                frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
+                                            return_onesided=False) # , fs=sampling_rate,
 
-            self.__receive_spectrum.append((frequency, periodogram))
+                self.__receive_spectrum.append((frequency, periodogram))
+            else:
+                self.__receive_spectrum.append((None, None))
 
         return self.__receive_spectrum
 
@@ -670,7 +677,6 @@ class Drop:
 
     def plot_bit_errors(self) -> None:
         """Plot bit errors into a grid."""
-
         grid_width = self.__num_receptions
         grid_height = self.__num_transmissions
 
@@ -691,7 +697,7 @@ class Drop:
                 link_errors: Optional[np.ndarray] = bit_errors[transmission_index][reception_index]
 
                 if link_errors is None:
-                    axes[transmission_index, reception_index].text(0, 0, "No bits exchanged")
+                    axes[transmission_index, reception_index].text(0, 0, "No bits exchanged or stopping criteria met")
 
                 else:
                     axes[transmission_index, reception_index].stem(link_errors)
