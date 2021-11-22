@@ -51,8 +51,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.receiver.sampling_rate = self.sampling_rate
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
-        self.sync_offset_low = 1e-3
-        self.sync_offset_high = 3e-3
+        self.sync_offset_low = 1e-6
+        self.sync_offset_high = 3e-6
 
         self.channel_params = {
             'delays': self.delays,
@@ -333,6 +333,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         """
 
         self.rice_factors[0] = float('inf')
+        self.channel_params['sync_offset_low'] = None
+        self.channel_params['sync_offset_high'] = None
         self.delays[0] = 10 / self.sampling_rate
         channel = MultipathFadingChannel(**self.channel_params)
 
@@ -419,6 +421,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.channel_params['power_profile'][0] = 1.
         self.channel_params['rice_factors'][0] = 0.
         self.channel_params['doppler_frequency'] = self.doppler_frequency
+        self.channel_params['sync_offset_low'] = 0.
+        self.channel_params['sync_offset_high'] = 0.
         channel = MultipathFadingChannel(**self.channel_params)
 
         time_interval = 1 / self.doppler_frequency  # get uncorrelated samples
@@ -461,6 +465,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.channel_params['power_profile'][0] = 1.
         self.channel_params['rice_factors'][0] = 1.
         self.channel_params['doppler_frequency'] = doppler_frequency
+        self.channel_params['sync_offset_low'] = 0.
+        self.channel_params['sync_offset_high'] = 0.
         channel = MultipathFadingChannel(**self.channel_params)
 
         time_interval = 1 / doppler_frequency  # get uncorrelated samples
@@ -500,6 +506,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.channel_params['delays'] = np.zeros(5)
         self.channel_params['power_profile'] = np.ones(5)
         self.channel_params['rice_factors'] = np.zeros(5)
+        self.channel_params['sync_offset_low'] = 0.
+        self.channel_params['sync_offset_high'] = 0.
         self.channel_params['delays'] = np.array([0, 3, 6, 7, 8]) / self.sampling_rate
 
         mean_delay = np.mean(self.channel_params['delays'])
