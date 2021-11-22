@@ -37,7 +37,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
     __model_type: TYPE
 
     def __init__(self,
-                 model_type: TYPE = 0,
+                 model_type: TYPE = TYPE.URBAN,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
                  active: Optional[bool] = None,
@@ -47,7 +47,10 @@ class MultipathFadingCost256(MultipathFadingChannel):
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+                 receive_postcoding: Optional[np.ndarray] = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[np.random.Generator] = None) -> None:
         """Model initialization.
 
         Args:
@@ -117,7 +120,10 @@ class MultipathFadingCost256(MultipathFadingChannel):
                                         doppler_frequency=doppler_frequency,
                                         los_doppler_frequency=los_doppler_frequency,
                                         transmit_precoding=transmit_precoding,
-                                        receive_postcoding=receive_postcoding)
+                                        receive_postcoding=receive_postcoding,
+                                        sync_offset_low=sync_offset_low,
+                                        sync_offset_high=sync_offset_high,
+                                        random_generator=random_generator)
 
     @property
     def model_type(self) -> TYPE:
@@ -157,6 +163,8 @@ class MultipathFadingCost256(MultipathFadingChannel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         if node.model_type is MultipathFadingCost256.TYPE.HILLY:
@@ -228,7 +236,10 @@ class MultipathFading5GTDL(MultipathFadingChannel):
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+                 receive_postcoding: Optional[np.ndarray] = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[np.random.Generator] = None) -> None:
         """Model initialization.
 
         Args:
@@ -325,19 +336,22 @@ class MultipathFading5GTDL(MultipathFadingChannel):
 
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(self,
-                                        delays,
-                                        power_profile,
-                                        rice_factors,
-                                        transmitter,
-                                        receiver,
-                                        active,
-                                        gain,
-                                        num_sinusoids,
-                                        los_angle,
-                                        doppler_frequency,
-                                        los_doppler_frequency,
-                                        transmit_precoding,
-                                        receive_postcoding)
+                                        delays=delays,
+                                        power_profile=power_profile,
+                                        rice_factors=rice_factors,
+                                        transmitter=transmitter,
+                                        receiver=receiver,
+                                        active=active,
+                                        gain=gain,
+                                        num_sinusoids=num_sinusoids,
+                                        los_angle=los_angle,
+                                        doppler_frequency=doppler_frequency,
+                                        los_doppler_frequency=los_doppler_frequency,
+                                        transmit_precoding=transmit_precoding,
+                                        receive_postcoding=receive_postcoding,
+                                        sync_offset_low=sync_offset_low,
+                                        sync_offset_high=sync_offset_high,
+                                        random_generator=random_generator)
 
     @property
     def model_type(self) -> TYPE:
@@ -378,6 +392,8 @@ class MultipathFading5GTDL(MultipathFadingChannel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         if node.model_type is MultipathFading5GTDL.TYPE.C or MultipathFading5GTDL.TYPE.E:
@@ -441,7 +457,10 @@ class MultipathFadingExponential(MultipathFadingChannel):
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None) -> None:
+                 receive_postcoding: Optional[np.ndarray] = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 random_generator: Optional[np.random.Generator] = None) -> None:
         """Exponential Multipath Channel Model initialization.
 
         Args:
@@ -486,19 +505,22 @@ class MultipathFadingExponential(MultipathFadingChannel):
 
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(self,
-                                        delays,
-                                        power_profile,
-                                        rice_factors,
-                                        transmitter,
-                                        receiver,
-                                        active,
-                                        gain,
-                                        num_sinusoids,
-                                        los_angle,
-                                        doppler_frequency,
-                                        los_doppler_frequency,
-                                        transmit_precoding,
-                                        receive_postcoding)
+                                        delays=delays,
+                                        power_profile=power_profile,
+                                        rice_factors=rice_factors,
+                                        transmitter=transmitter,
+                                        receiver=receiver,
+                                        active=active,
+                                        gain=gain,
+                                        num_sinusoids=num_sinusoids,
+                                        los_angle=los_angle,
+                                        doppler_frequency=doppler_frequency,
+                                        los_doppler_frequency=los_doppler_frequency,
+                                        transmit_precoding=transmit_precoding,
+                                        receive_postcoding=receive_postcoding,
+                                        sync_offset_low=sync_offset_low,
+                                        sync_offset_high=sync_offset_high,
+                                        random_generator=random_generator)
 
     @classmethod
     def to_yaml(cls: Type[MultipathFadingExponential], representer: SafeRepresenter,
@@ -529,6 +551,8 @@ class MultipathFadingExponential(MultipathFadingChannel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         transmitter_index, receiver_index = node.indices

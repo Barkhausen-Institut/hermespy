@@ -10,8 +10,9 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 from .executable import Executable, Verbosity
 from .drop import Drop
-from .statistics import SNRType, Statistics
+from .statistics import SNRType, Statistics, ConfidenceMetric
 from hermespy.scenario import Scenario
+from hermespy.modem import Receiver
 from hermespy.channel import QuadrigaInterface, Channel
 
 __author__ = "Jan Adler"
@@ -33,14 +34,6 @@ class SimulationDrop(Drop):
 
         Drop.__init__(self, *args)
 
-
-class ConfidenceMetric(Enum):
-    """Confidence metric for stopping criteria during simulation execution. """
-
-    DISABLED = 0        # No stopping criterion
-    BER = 1             # Bit Error Rate
-    BLER = 2            # Block Error Rate
-#    FLER = 3            # Frame error rate
 
 
 class Simulation(Executable):
@@ -91,13 +84,13 @@ class Simulation(Executable):
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
                  spectrum_fft_size: int = 0,
-                 num_drops: int = 1,
                  plot_bit_error: bool = True,
                  plot_block_error: bool = True,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
                  noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
                  min_num_drops: int = 0,
+                 max_num_drops: int = 1,
                  confidence_level: float = 1.0,
                  confidence_margin: float = 0.0,
                  results_dir: Optional[str] = None,
@@ -123,9 +116,6 @@ class Simulation(Executable):
             spectrum_fft_size (int):
                 Number of discrete frequency bins computed within the Fast Fourier Transforms.
 
-            num_drops (int):
-                Number of drops per executed scenario.
-
             plot_bit_error (bool, optional):
                 Plot resulting bit error rate after simulation.
 
@@ -144,6 +134,9 @@ class Simulation(Executable):
             min_num_drops (int, optional):
                 Minimum number of drops before confidence check may prematurely terminate execution.
 
+            max_num_drops (int, optional):
+                Maximum number of drops before confidence check may prematurely terminate execution.
+
             confidence_level (float, optional):
                 Confidence at which execution should be terminated.
 
@@ -158,7 +151,7 @@ class Simulation(Executable):
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
-                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, num_drops,
+                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, max_num_drops,
                             results_dir, verbosity)
 
         self.plot_drop_transmitted_bits = False
@@ -175,6 +168,7 @@ class Simulation(Executable):
         self.plot_bit_error = plot_bit_error
         self.plot_block_error = plot_block_error
         self.min_num_drops = min_num_drops
+        self.max_num_drops = max_num_drops
         self.confidence_level = confidence_level
         self.confidence_margin = confidence_margin
 
@@ -191,6 +185,9 @@ class Simulation(Executable):
 
         else:
             self.confidence_metric = confidence_metric
+
+        if self.max_num_drops < self.min_num_drops:
+            raise ValueError("Minimum number of drops must be smaller than maximum number of drops.")
 
     def run(self) -> None:
         """Run the full simulation configuration."""
@@ -212,35 +209,51 @@ class Simulation(Executable):
                 print("="*75)
 
             # Initialize plot statistics with current scenario state
-            statistics = Statistics(scenario, self.noise_loop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
-                                    self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size)
+            statistics = Statistics(scenario=scenario,
+                                    snr_loop=self.noise_loop,
+                                    calc_transmit_spectrum=self.calc_transmit_spectrum,
+                                    calc_receive_spectrum=self.calc_receive_spectrum,
+                                    calc_transmit_stft=self.calc_transmit_stft,
+                                    calc_receive_stft=self.calc_receive_stft,
+                                    spectrum_fft_size=self.spectrum_fft_size,
+                                    confidence_margin=self.confidence_margin,
+                                    confidence_level=self.confidence_level,
+                                    confidence_metric=self.confidence_metric,
+                                    min_num_drops=self.min_num_drops,
+                                    max_num_drops=self.max_num_drops)
 
             # Save most recent drop
             drop: Optional[SimulationDrop] = None
 
-            # Iterate over required noise taps
-            for noise_index, snr in enumerate(self.noise_loop):
+            for d in range(self.max_num_drops):
+                run_flags = statistics.run_flag_matrix
 
-                if self.verbosity.value <= Verbosity.INFO.value and noise_index > 0:
-                    print("-" * 75)
-
-                # Iterate over configured number of required simulation drops
-                for d in range(self.num_drops):
-
+                for noise_index, snr in enumerate(self.noise_loop):
+                    drop_run_flag = run_flags[:, :, noise_index]
                     # Generate data bits to be transmitted
                     data_bits = scenario.generate_data_bits()
 
                     # Generate radio-frequency band signal emitted from each transmitter
-                    transmitted_signals = Simulation.transmit(scenario, data_bits=data_bits)
+                    transmitted_signals = Simulation.transmit(scenario=scenario,
+                                                              drop_run_flag=drop_run_flag,
+                                                              data_bits=data_bits)
 
                     # Simulate propagation over channel model
-                    propagation_matrix = Simulation.propagate(scenario, transmitted_signals)
+                    propagation_matrix = Simulation.propagate(scenario,
+                                                              transmitted_signals,
+                                                              drop_run_flag)
 
                     # Simulate signal reception and mixing at the receiver-side
-                    received_signals = Simulation.receive(scenario, propagation_matrix, self.snr_type, snr)
+                    received_signals = Simulation.receive(scenario,
+                                                          propagation_matrix,
+                                                          drop_run_flag,
+                                                          self.snr_type,
+                                                          snr)
 
                     # Receive and demodulate signal
-                    detected_bits = Simulation.detect(scenario, received_signals)
+                    detected_bits = Simulation.detect(scenario,
+                                                      received_signals,
+                                                      drop_run_flag)
 
                     # Collect block sizes
                     transmit_block_sizes = scenario.transmit_block_sizes
@@ -403,6 +416,31 @@ class Simulation(Executable):
         self.__noise_loop = loop
 
     @property
+    def max_num_drops(self) -> int:
+        """Maximum number of drops before confidence check may terminate execution.
+
+        Returns:
+            int: Maximum number of drops.
+        """
+        return self.__max_num_drops
+
+    @max_num_drops.setter
+    def max_num_drops(self, val: int) -> None:
+        """Modify maximum number of drops before confidence check may terminate execution.
+
+        Args:
+            num_drops (int): maximum number of drops.
+
+        Raises:
+            ValueError: If `num_drops` is smaller than zero.
+        """
+
+        if val < 0:
+            raise ValueError("Maximum number of drops must be greater or equal to zero.")
+
+        self.__max_num_drops = val
+
+    @property
     def min_num_drops(self) -> int:
         """Minimum number of drops before confidence check may terminate execution.
 
@@ -413,7 +451,7 @@ class Simulation(Executable):
         return self.__min_num_drops
 
     @min_num_drops.setter
-    def min_num_drops(self, num_drops: int) -> None:
+    def min_num_drops(self, val: int) -> None:
         """Modify minimum number of drops before confidence check may terminate execution.
 
         Args:
@@ -423,10 +461,10 @@ class Simulation(Executable):
             ValueError: If `num_drops` is smaller than zero.
         """
 
-        if num_drops < 0:
+        if val < 0:
             raise ValueError("Minimum number of drops must be greater or equal to zero.")
 
-        self.__min_num_drops = num_drops
+        self.__min_num_drops = val
 
     @property
     def confidence_level(self) -> float:
@@ -482,12 +520,14 @@ class Simulation(Executable):
 
     @staticmethod
     def transmit(scenario: Scenario,
+                 drop_run_flag: Optional[np.ndarray] = None,
                  drop_duration: Optional[float] = None,
                  data_bits: Optional[np.array] = None) -> List[np.ndarray]:
         """Simulate signals emitted by all transmitters registered with a scenario.
 
         Args:
             scenario (Scenario): The scenario for which to simulate signals.
+            drop_run_flag (np.ndarray, optional): Mask that says if signals are to be created for specific snr.
             drop_duration (float, optional): Length of simulated transmission in seconds.
             data_bits (List[np.array], optional): The data bits to be sent by each transmitting modem.
 
@@ -505,26 +545,38 @@ class Simulation(Executable):
         if drop_duration <= 0.0:
             raise ValueError("Drop duration must be greater or equal to zero")
 
-        transmitted_signals = []
+        if drop_run_flag is not None:
+            sending_tx_idx = np.flatnonzero(np.all(drop_run_flag, axis=1))
+        else:
+            sending_tx_idx = np.arange(len(scenario.transmitters))
 
+        transmitted_signals: List[Optional[np.ndarray]] = []
         if data_bits is None:
 
-            for transmitter in scenario.transmitters:
-                transmitted_signals.append(transmitter.send(drop_duration))
+            for transmitter_idx, transmitter in enumerate(scenario.transmitters):
+                if transmitter_idx in sending_tx_idx:
+                    transmitted_signals.append(transmitter.send(drop_duration))
+                else:
+                    transmitted_signals.append(None)
 
         else:
 
             if len(data_bits) != len(scenario.transmitters):
                 raise ValueError("Data bits to be transmitted contain insufficient streams")
-
-            for transmitter, data in zip(scenario.transmitters, data_bits):
-                transmitted_signals.append(transmitter.send(drop_duration, data))
+            
+            for transmitter_idx, (transmitter, data) in enumerate(
+                                                            zip(scenario.transmitters, data_bits)):
+                if transmitter_idx in sending_tx_idx:
+                    transmitted_signals.append(transmitter.send(drop_duration, data))
+                else:
+                    transmitted_signals.append(None)
 
         return transmitted_signals
 
     @staticmethod
     def propagate(scenario: Scenario,
-                  transmitted_signals: List[np.ndarray]) -> List[List[Tuple[np.ndarray, np.ndarray]]]:
+                  transmitted_signals: List[np.ndarray],
+                  drop_run_flag: Optional[np.ndarray] = None) -> List[List[Tuple[np.ndarray, np.ndarray]]]:
         """Propagate the signals generated by registered transmitters over the channel model.
 
         Signals receiving at each receive modem are a superposition of all transmit signals impinging
@@ -537,6 +589,7 @@ class Simulation(Executable):
             scenario (Scenario): The scenario for which to simulate the channel propagation.
             transmitted_signals (List[np.ndarray]):
                 List of signal streams emerging from each registered transmit modem.
+            drop_run_flag (np.ndarray, optional): Mask that says if signals are to be created for specific snr.
 
         Returns:
             List[List[Tuple[np.ndarray, np.ndarray]]]:
@@ -564,14 +617,18 @@ class Simulation(Executable):
             propagation_row: List[Tuple[np.ndarray, np.ndarray]] = []
             for transmitter_id, (transmitter, transmitted_signal) in enumerate(zip(scenario.transmitters,
                                                                                    transmitted_signals)):
-
+                propagation_tuple = tuple((None, None))
                 # Select responsible channel between respective transmitter and receiver
                 channel: Channel = channels[transmitter_id, receiver_id]
-
+                if drop_run_flag is None:
+                    propagate_signal = True
+                else:
+                    propagate_signal = drop_run_flag[transmitter_id, receiver_id]
                 # Propagate the signal over the channel
                 # The propagation tuple contains the propagated signal as the first element,
                 # the impulse response as the second element
-                propagation_tuple = channel.propagate(transmitted_signal)
+                if propagate_signal and transmitted_signal is not None:
+                    propagation_tuple = channel.propagate(transmitted_signal)
                 propagation_row.append(propagation_tuple)
 
             propagation_matrix.append(propagation_row)
@@ -581,6 +638,7 @@ class Simulation(Executable):
     @staticmethod
     def receive(scenario: Scenario,
                 propagation_matrix: List[List[Tuple[np.ndarray, np.ndarray]]],
+                drop_run_flag: Optional[np.ndarray] = None,
                 snr_type: SNRType = SNRType.EBN0,
                 snr: float = 0.0) -> List[Tuple[np.ndarray, np.ndarray, float]]:
         """Generate signals received by all receivers registered with this scenario.
@@ -596,6 +654,9 @@ class Simulation(Executable):
                 MxN Matrix of pairs of received signals and impulse responses.
                 The entry in the M-th row and N-th column contains the propagation data between
                 the N-th transmitter and M-th receiver.
+
+            drop_run_flag (np.ndarray, optional):
+                Mask that says if signals are to be created for specific snr.
 
             snr_type (SNRType, optional):
                 Type of noise.
@@ -621,35 +682,54 @@ class Simulation(Executable):
         received_signals: List[Tuple[np.ndarray, np.ndarray, float]] = []
         for receiver_index, (receiver, transmitted_signals) in enumerate(zip(scenario.receivers,
                                                                              propagation_matrix)):
-
             impinging_signals = [(tx_tuple[0], transmitter.carrier_frequency)
                                  for tx_tuple, transmitter in zip(transmitted_signals, scenario.transmitters)]
+            # delete masked signals
+            if drop_run_flag is None:
+                receiving_rx = np.arange(len(scenario.transmitters))
+            else:
+                receiving_rx = np.flatnonzero(drop_run_flag[:, receiver_index])
 
-            # Compute noise variance at the receiver
-            noise_variance = 0.0
+            if len(receiving_rx) > 0:
+                impinging_signals = [impinging_signals[tx_idx] for tx_idx in receiving_rx]
 
-            if snr_type == SNRType.EBN0:
-                noise_variance = receiver.waveform_generator.bit_energy / snr
+                # Compute noise variance at the receiver
+                noise_variance = Simulation.calculate_noise_variance(
+                    receiver, snr, snr_type)
 
-            elif snr_type == SNRType.ESN0:
-                noise_variance = receiver.waveform_generator.symbol_energy / snr
+                if impinging_signals[0][0] is None:
+                    received_signals.append((None, None, None))
+                else:
+                    # Model rf-signal reception at the respective receiver
+                    received_signal = receiver.receive(impinging_signals, noise_variance)
 
-            elif snr_type == SNRType.CUSTOM:  # TODO: What is custom exactly supposed to do?
-                noise_variance = 1 / snr
+                    # Select the proper channel impulse response
+                    channel = transmitted_signals[receiver.reference_transmitter.index][1]
 
-            # Model rf-signal reception at the respective receiver
-            received_signal = receiver.receive(impinging_signals, noise_variance)
-
-            # Select the proper channel impulse response
-            channel = transmitted_signals[receiver.reference_transmitter.index][1]
-
-            # Save result, what else?
-            received_signals.append((received_signal, channel, noise_variance))
+                    # Save result, what else?
+                    received_signals.append((received_signal, channel, noise_variance))
+            else:
+                received_signals.append((None, None, None))
 
         return received_signals
 
     @staticmethod
-    def detect(scenario: Scenario, received_signals: List[Tuple[np.ndarray, np.ndarray, float]]) -> List[np.ndarray]:
+    def calculate_noise_variance(receiver: Receiver, snr: float, snr_type: SNRType) -> float:
+        if snr_type == SNRType.EBN0:
+            noise_variance = receiver.waveform_generator.bit_energy / snr
+
+        elif snr_type == SNRType.ESN0:
+            noise_variance = receiver.waveform_generator.symbol_energy / snr
+
+        elif snr_type == SNRType.CUSTOM:  # TODO: What is custom exactly supposed to do?
+            noise_variance = 1 / snr
+        return noise_variance
+
+
+    @staticmethod
+    def detect(scenario: Scenario,
+               received_signals: List[Tuple[np.ndarray, np.ndarray, float]],
+               drop_run_flag: Optional[np.ndarray] = None) -> List[np.ndarray]:
         """Detect bits from base-band signals.
 
         Calls the waveform-generator's receive-chain routines of each respective receiver.
@@ -661,6 +741,8 @@ class Simulation(Executable):
             received_signals (List[Tuple[np.ndarray, np.ndarray, float]]):
                 A list of M tuples containing the received noisy base-band signals, the channel impulse response
                 as well as the noise variance for each receiving modem, respectively.
+
+            drop_run_flag (np.ndarray, optional): Mask that says if signals are to be created for specific snr.
 
         Returns:
             List[np.ndarray]:
@@ -677,10 +759,16 @@ class Simulation(Executable):
 
         receiver_bits: List[np.ndarray] = []
 
-        for receiver, (signal, channel, noise) in zip(scenario.receivers, received_signals):
+        if drop_run_flag is None:
+            active_rx_idx = np.arange(len(scenario.receivers))
+        else:
+            active_rx_idx = np.flatnonzero(np.all(drop_run_flag, axis=0))
 
-            # Receive data bits
-            bits = receiver.demodulate(signal, channel, noise)
+        for receiver, (signal, channel, noise) in zip(scenario.receivers, received_signals):
+            bits = None
+
+            if receiver.index in active_rx_idx and signal is not None:
+                bits = receiver.demodulate(signal, channel, noise)
             receiver_bits.append(bits)
 
         return receiver_bits
