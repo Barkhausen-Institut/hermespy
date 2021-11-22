@@ -11,7 +11,7 @@ Modems:
   # A single transmitter
   - Transmitter:
 
-      carrier_frequency: 865e6      # Center frequency of Rf-band signal
+      carrier_frequency: 865e6      # Center frequency of Rf-band baseband_signal
       num_antennas: 2               # Transmitter features two antennas
       position: [10., 10., 10.]     # Position of the modem within the scenario
 
@@ -41,7 +41,7 @@ Modems:
   # A single receiver
   - Receiver:
 
-      carrier_frequency: 865e6      # Center frequency of Rf-band signal
+      carrier_frequency: 865e6      # Center frequency of Rf-band baseband_signal
       num_antennas: 2               # Receiver features two antennas
       position: [200., 200., 200.]  # Position of the modem within the scenario
 

@@ -353,6 +353,23 @@ class TestChannel(unittest.TestCase):
             floating_channel = Channel()
             floating_channel.impulse_response(np.empty(0, dtype=complex))
 
+    def test_channel_state_information(self) -> None:
+        """Propagating over the linear channel state model should return identical results."""
+
+        self.transmitter.num_antennas = 1
+        self.receiver.num_antennas = 1
+
+        for num_samples in self.propagate_signal_lengths:
+            for gain in self.propagate_signal_gains:
+
+                signal = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
+                self.channel.gain = gain
+
+                propagated_signal, channel_state_information = self.channel.propagate(signal)
+                expected_csi_signal = channel_state_information.linear[0, 0, ::].todense() @ signal.T
+
+                assert_array_equal(propagated_signal, expected_csi_signal.T)
+
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
         pass

@@ -26,7 +26,7 @@ __status__ = "Prototype"
 class MMSETimeEqualizer(SymbolPrecoder):
     """Minimum-Mean-Square channel equalization in time domain."""
 
-    yaml_tag: str = u'MMSE'
+    yaml_tag: str = u'MMSE-Time'
 
     def __init__(self) -> None:
         """Minimum-Mean-Square channel equalization object initialization."""
@@ -52,7 +52,7 @@ class MMSETimeEqualizer(SymbolPrecoder):
 
             # Combine the responses of all superimposed transmit antennas for equalization
             linear_state = stream_state.linear
-            transform = np.sum(linear_state[0, ::], axis=0, keepdims=False)
+            transform = np.sum(linear_state[0, :, :, :], axis=0, keepdims=False)
 
             inverse = inv(transform.T.conj() @ transform + diags(noise))
             symbol_equalizer = inverse @ transform[:num_symbols, :].T.conj()

@@ -53,10 +53,10 @@ class StatisticsTest(unittest.TestCase):
     def test_update_error_rate_one_drop_one_frame(self) -> None:
         """Tests for one drop, whether BER is calculated properly.
 
-        One drop is evaluated. A signal is sent containing ten bits. It is expected
+        One drop is evaluated. A baseband_signal is sent containing ten bits. It is expected
         that the receiver is able to receive 2 bits properly and 8 bits are falsely detected
         resulting in a BER of 0.8. We add no noise."""
-        # set signal that is received at rx side, no noise added
+        # set baseband_signal that is received at rx side, no noise added
         output_rx_modems = self.generate_10bits_signals([8])
 
         # run the method to test
@@ -245,7 +245,7 @@ class StatisticsTest(unittest.TestCase):
         initial_periodogram = np.full(fft_size, 3)
         welch_periodogram = np.full(fft_size, -1)
 
-        # generate signal
+        # generate baseband_signal
         rnd = np.random.RandomState(42)
         tx_signal = rnd.rand(fft_size)[np.newaxis, :]
 
@@ -279,7 +279,7 @@ class StatisticsTest(unittest.TestCase):
 
         self.stats._tx_sampling_rate = [1e6]
 
-        # generate signal
+        # generate baseband_signal
         rnd = np.random.RandomState(42)
         tx_signal = rnd.rand(512)[np.newaxis, :]
 
@@ -310,9 +310,9 @@ class StatisticsTest(unittest.TestCase):
             self, erroneous_bits: List[int], num_blocks: int = 1) -> List[List[np.array]]:
         """Generates signals at receiver side.
 
-        For each signal that a transmitter sends, the respective signal at
+        For each baseband_signal that a transmitter sends, the respective baseband_signal at
         receivers side is calculated with added noise according to the length
-        of the snr_vector. The noise is set to zero. The sent signal is 10 bits
+        of the snr_vector. The noise is set to zero. The sent baseband_signal is 10 bits
         long, among which `erroneous_bits` are negated and `10-erroneous_bits`
         are unchanged. This results in a BER value of erroneous_bits/10
         at the receiver side, for each receiver.
@@ -326,7 +326,7 @@ class StatisticsTest(unittest.TestCase):
             List[List[np.array]]:
                 Each List item corresponds to one receiver. Each receiver list
                 contains frames, which are in turn list items. Each Frame is
-                composed of np.array with the actual signal.
+                composed of np.array with the actual baseband_signal.
         """
 
         output_rx_modems = list()
@@ -348,7 +348,7 @@ class StatisticsTest(unittest.TestCase):
                         block[bit_errors:],
                     )
                     block_with_different_snr = np.tile(
-                        # replicate signal
+                        # replicate baseband_signal
                         block_bits_partly_negated, (self.no_snr, 1)
                     )
                     detected_bits_noisy[:, block_iter, :] = (

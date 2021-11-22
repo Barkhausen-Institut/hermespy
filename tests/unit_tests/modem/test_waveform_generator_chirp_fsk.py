@@ -312,7 +312,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
                                msg="Unexpected symbol energy transmitted")
 
     def test_proper_power_calculation(self) -> None:
-        """Tests if theoretical signal power is calculated correctly
+        """Tests if theoretical baseband_signal power is calculated correctly
         TODO: Check power calculation, since the delta is currently ~0.5, which seems kind of high
         """
 
@@ -326,7 +326,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
 
         power = np.sum(abs(transmitted_signal.flatten())**2) / num_samples
         self.assertAlmostEqual(power, self.generator.power, places=1,
-                               msg="Unexpected signal energy transmitted")
+                               msg="Unexpected baseband_signal energy transmitted")
 
     def test_bandwidth(self) -> None:
         """Bandwidth property should return chirp bandwidth."""

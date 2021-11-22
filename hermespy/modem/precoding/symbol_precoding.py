@@ -63,7 +63,7 @@ class SymbolPrecoding:
 
         self.modem = modem
         self.__symbol_precoders = []
-        self.debug = False
+        self.debug = True
 
     @classmethod
     def to_yaml(cls: Type[SymbolPrecoding], representer: SafeRepresenter, node: SymbolPrecoding) -> Node:
@@ -212,7 +212,7 @@ class SymbolPrecoding:
             ax[0, 0].set_ylabel("Signal")
             ax[0, 0].plot(abs(symbols_iteration.flatten()))
             ax[1, 0].set_ylabel("CSI")
-            ax[1, 0].plot(abs(channel_state_iteration.state.sum(axis=1).flatten()))
+            ax[1, 0].plot(abs(channel_state_iteration.state.sum(axis=1).sum(axis=2).flatten()))
             ax[2, 0].set_ylabel("Noise")
             ax[2, 0].plot(abs(noises_iteration.flatten()))
             i = 0
@@ -227,7 +227,7 @@ class SymbolPrecoding:
                 i += 1
                 ax[0, i].set_title(precoder.__class__.__name__)
                 ax[0, i].plot(abs(symbols_iteration.flatten()))
-                ax[1, i].plot(abs(channel_state_iteration.state.sum(axis=1).flatten()))
+                ax[1, i].plot(abs(channel_state_iteration.state.sum(axis=1).sum(axis=2).flatten()))
                 ax[2, i].plot(abs(noises_iteration.flatten()))
 
         if self.debug:

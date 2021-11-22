@@ -105,19 +105,19 @@ class MultipathFadingCost256(MultipathFadingChannel):
 
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(self,
-                                        delays,
-                                        power_profile,
-                                        rice_factors,
-                                        transmitter,
-                                        receiver,
-                                        active,
-                                        gain,
-                                        num_sinusoids,
-                                        los_angle,
-                                        doppler_frequency,
-                                        los_doppler_frequency,
-                                        transmit_precoding,
-                                        receive_postcoding)
+                                        delays=delays,
+                                        power_profile=power_profile,
+                                        rice_factors=rice_factors,
+                                        transmitter=transmitter,
+                                        receiver=receiver,
+                                        active=active,
+                                        gain=gain,
+                                        num_sinusoids=num_sinusoids,
+                                        los_angle=los_angle,
+                                        doppler_frequency=doppler_frequency,
+                                        los_doppler_frequency=los_doppler_frequency,
+                                        transmit_precoding=transmit_precoding,
+                                        receive_postcoding=receive_postcoding)
 
     @property
     def model_type(self) -> TYPE:
