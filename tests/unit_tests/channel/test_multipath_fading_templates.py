@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 from hermespy.channel import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
 
+
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -25,18 +26,24 @@ class TestCost256(unittest.TestCase):
         self.receiver = Mock()
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
+        self.sync_offset_low = 3
+        self.sync_offset_high = 5
 
     def test_init(self) -> None:
         """Test the template initializations."""
 
         for model_type in MultipathFadingCost256.TYPE:
 
-            channel = MultipathFadingCost256(model_type,
-                                             self.transmitter,
-                                             self.receiver)
+            channel = MultipathFadingCost256(model_type=model_type,
+                                             transmitter=self.transmitter,
+                                             receiver=self.receiver,
+                                             sync_offset_low=self.sync_offset_low,
+                                             sync_offset_high=self.sync_offset_high)
 
             self.assertIs(self.transmitter, channel.transmitter)
             self.assertIs(self.receiver, channel.receiver)
+            self.assertEqual(self.sync_offset_low, channel.sync_offset_low)
+            self.assertEqual(self.sync_offset_high, channel.sync_offset_high)
 
     def test_init_validation(self) -> None:
         """Template initialization should raise ValueError on invalid model type."""
@@ -74,6 +81,9 @@ class Test5GTDL(unittest.TestCase):
         self.receiver = Mock()
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
+        self.sync_offset_low = 3
+        self.sync_offset_high = 5
+
 
     def test_init(self) -> None:
         """Test the template initializations."""
@@ -82,7 +92,9 @@ class Test5GTDL(unittest.TestCase):
 
             channel = MultipathFading5GTDL(model_type,
                                            transmitter=self.transmitter,
-                                           receiver=self.receiver)
+                                           receiver=self.receiver,
+                                           sync_offset_low=self.sync_offset_low,
+                                           sync_offset_high=self.sync_offset_high)
 
             self.assertIs(self.transmitter, channel.transmitter)
             self.assertIs(self.receiver, channel.receiver)

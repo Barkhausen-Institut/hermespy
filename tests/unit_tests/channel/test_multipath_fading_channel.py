@@ -14,6 +14,7 @@ from scipy import stats
 from scipy.constants import pi
 
 from hermespy.channel import MultipathFadingChannel
+from hermespy.scenario import Scenario
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -50,6 +51,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.receiver.sampling_rate = self.sampling_rate
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
+        self.sync_offset_low = 1
+        self.sync_offset_high = 3
 
         self.channel_params = {
             'delays': self.delays,
@@ -63,6 +66,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
             'num_sinusoids': self.num_sinusoids,
             'los_angle': None,
             'doppler_frequency': self.doppler_frequency,
+            'sync_offset_low': self.sync_offset_low,
+            'sync_offset_high': self.sync_offset_high,
             'random_generator': np.random.default_rng(0)
         }
 
@@ -85,6 +90,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.assertEqual(self.gain, channel.gain, "Unexpected gain parameter initialization")
         self.assertEqual(self.num_sinusoids, channel.num_sinusoids)
         self.assertEqual(self.doppler_frequency, channel.doppler_frequency)
+        self.assertEqual(self.sync_offset_low, channel.sync_offset_low)
+        self.assertEqual(self.sync_offset_high, channel.sync_offset_high)
 
     def test_init_validation(self) -> None:
         """Object initialization should raise ValueError on invalid arguments."""
@@ -123,19 +130,19 @@ class TestMultipathFadingChannel(unittest.TestCase):
         """Delays getter should return init param."""
 
         channel = MultipathFadingChannel(**self.channel_params)
-        np.testing.assert_array_equal(self.delays, channel.delays)
+        np.testing.assert_array_almost_equal(self.delays, channel.delays)
 
     def test_power_profiles_get(self) -> None:
         """Power profiles getter should return init param."""
 
         channel = MultipathFadingChannel(**self.channel_params)
-        np.testing.assert_array_equal(self.power_profile, channel.power_profile)
+        np.testing.assert_array_almost_equal(self.power_profile, channel.power_profile)
 
     def test_rice_factors_get(self) -> None:
         """Rice factors getter should return init param."""
 
         channel = MultipathFadingChannel(**self.channel_params)
-        np.testing.assert_array_equal(self.rice_factors, channel.rice_factors)
+        np.testing.assert_array_almost_equal(self.rice_factors, channel.rice_factors)
 
     def test_doppler_frequency_setget(self) -> None:
         """Doppler frequency property getter should return setter argument."""
@@ -578,263 +585,36 @@ class TestMultipathFadingChannel(unittest.TestCase):
         """
         pass
 
+from tests.unit_tests.channel.test_channel import TestSyncOffset
 
-"""if __name__ == '__main__':
-    '''
-    If this file is called, initially plot some graphs to that indicate if multipath channel is working correctly, and
-    then perform all unit tests.
-    '''
 
-    rnd = np.random.RandomState(44)
-    rx_modem_params = ParametersRxModem()
-    tx_modem_params = ParametersTxModem()
-    param = ParametersChannel(rx_modem_params, tx_modem_params)
-    param.multipath_model = 'STOCHASTIC'
+class TestSyncoffsetNoInterpolationFilter(TestSyncOffset):
 
-    ###################################
-    # plot Rayleigh/Rice distribution
-    max_num_drops = 100
-    doppler_frequency = 200
-    sampling_rate = 1e6
-    samples_per_drop = 1000
+    def create_channel(self, sync_low: float, sync_high: float, seed: int = 42) -> None:
+        sampling_rate = 1e3
+        transmitter = Mock()
+        receiver = Mock()
+        transmitter.sampling_rate = sampling_rate
+        receiver.sampling_rate = sampling_rate
+        transmitter.num_antennas = 1
+        receiver.num_antennas = 1
 
-    param.delays = np.array([0])
-    param.power_delay_profile = np.array([1])
+        channel_params = {
+            'delays': np.zeros(1, dtype=float),
+            'power_profile': np.ones(1, dtype=float),
+            'scenario': Scenario(sampling_rate=1e3),
+            'rice_factors': np.zeros(1, dtype=float),
+            'active': True,
+            'transmitter': transmitter,
+            'receiver': receiver,
+            'gain': 1.0,
+            'doppler_frequency': 0.0,
+            'num_sinusoids': 1,
+            'sync_offset_low': sync_low,
+            'sync_offset_high': sync_high,
+            'random_generator': np.random.default_rng(seed=seed),
+            'impulse_response_interpolation': False
+        }
 
-    param.k_factor_rice = np.asarray([0])
-    channel_rayleigh = MultipathFadingChannel(
-        param, rnd, sampling_rate, doppler_frequency)
-
-    param.k_factor_rice = np.asarray([1])
-    channel_rice = MultipathFadingChannel(
-        param, rnd, sampling_rate, doppler_frequency)
-
-    time_interval = 1 / doppler_frequency  # get uncorrelated samples
-    timestamps = np.arange(samples_per_drop) * time_interval
-
-    samples_rayleigh = np.array([])
-    samples_rice = np.array([])
-
-    aux_samples = np.array([])
-
-    for drop in range(max_num_drops):
-        channel_rayleigh.init_drop()
-        channel_rice.init_drop()
-
-        channel_gains = channel_rayleigh.get_impulse_response(timestamps)
-        samples_rayleigh = np.append(samples_rayleigh, channel_gains.ravel())
-
-        channel_gains = channel_rice.get_impulse_response(timestamps)
-        samples_rice = np.append(samples_rice, channel_gains.ravel())
-
-    # plot distribution of real part
-    plt.figure()
-    plt.subplot(131)
-    hist, bin_edges, dummy = plt.hist(
-        np.real(samples_rayleigh), density=True, bins=40, label='histogram')
-    plt.plot(
-        bin_edges,
-        stats.norm.pdf(
-            bin_edges,
-            scale=1 /
-            np.sqrt(2)),
-        label='normal distribution')
-    plt.title('Histogram of real part of channel gain')
-    plt.legend()
-
-    # plot distribution of absolute value (Rayleigh fading)
-    plt.subplot(132)
-    hist, bin_edges, dummy = plt.hist(
-        np.abs(samples_rayleigh), density=True, bins=40, label='histogram')
-    plt.plot(
-        bin_edges,
-        stats.rayleigh.pdf(
-            bin_edges,
-            scale=1 /
-            np.sqrt(2)),
-        label='Rayleigh distribution')
-    plt.title('Histogram of channel gain amplitude - Rayleigh fading')
-    plt.legend()
-
-    # plot distribution of absolute value (Rice fading)
-    plt.subplot(133)
-    hist, bin_edges, dummy = plt.hist(
-        np.abs(samples_rice), density=True, bins=40, label='histogram')
-    plt.plot(
-        bin_edges,
-        stats.rice.pdf(
-            bin_edges,
-            b=np.sqrt(2),
-            scale=1 / 2),
-        label='Rice distribution')
-    plt.title('Histogram of channel gain amplitude - Rice fading')
-    plt.legend()
-
-    ##########################################################################
-    # plot power delay/profile
-    max_number_paths = 20
-    max_delay_in_samples = 30
-    max_doppler_frequency = 100
-
-    number_of_paths = rnd.randint(2, np.minimum(
-        max_number_paths, max_delay_in_samples))
-    path_delay_in_samples = rnd.choice(
-        max_delay_in_samples,
-        number_of_paths,
-        replace=False)
-    path_delay_in_samples = np.sort(
-        path_delay_in_samples) - path_delay_in_samples.min()
-    max_delay_in_samples = path_delay_in_samples.max()
-    path_delay = path_delay_in_samples / sampling_rate
-
-    param.delays = path_delay
-
-    power_delay_profile = np.abs(rnd.random_sample(param.delays.shape))
-    param.power_delay_profile = power_delay_profile / \
-        np.sum(power_delay_profile)
-
-    doppler_frequency = rnd.random_sample() * max_doppler_frequency
-
-    param.k_factor_rice = np.zeros(path_delay.size)  # Rayleigh fading
-
-    # create channel with no need for interpolation
-    channel = MultipathFadingChannel(
-        param, rnd, sampling_rate, doppler_frequency)
-
-    # create channel with interpolation (delays are not multiples of sampling
-    # interval)
-    sampling_rate_interp = sampling_rate * (1 + rnd.random_sample() * 0.5)
-    channel_interp = MultipathFadingChannel(
-        param, rnd, sampling_rate_interp, doppler_frequency)
-
-    time_interval = 1 / doppler_frequency  # get uncorrelated samples
-    timestamps = np.arange(samples_per_drop) * time_interval
-
-    all_channels = np.array([])
-    all_channels_interp = np.array([])
-
-    for drop in range(max_num_drops):
-        channel.init_drop()
-        channel_interp.init_drop()
-
-        channel_gains = np.squeeze(channel.get_impulse_response(timestamps))
-        if all_channels.size:
-            all_channels = np.append(all_channels, channel_gains, axis=0)
-        else:
-            all_channels = channel_gains
-
-        channel_gains = np.squeeze(
-            channel_interp.get_impulse_response(timestamps))
-        if all_channels_interp.size:
-            all_channels_interp = np.append(
-                all_channels_interp, channel_gains, axis=0)
-        else:
-            all_channels_interp = channel_gains
-
-    mean_power = np.mean(np.abs(all_channels) ** 2, axis=0)
-    mean_power_interp = np.mean(np.abs(all_channels_interp) ** 2, axis=0)
-
-    rms_delay_spread = np.sqrt(np.sum((np.arange(channel.max_delay_in_samples + 1) / channel.sampling_rate)**2
-                                      * mean_power))
-    rms_delay_spread_interp = np.sqrt(np.sum((np.arange(channel_interp.max_delay_in_samples + 1)
-                                              / channel_interp.sampling_rate)**2 * mean_power_interp))
-
-    plt.figure()
-    plt.subplot(121)
-    plt.stem(
-        param.delays * 1e6,
-        param.power_delay_profile,
-        label='desired profile',
-        linefmt='r',
-        markerfmt='or')
-    marker = plt.stem(np.arange(max_delay_in_samples + 1) / sampling_rate * 1e6, mean_power, label='actual profile',
-                      linefmt='b', markerfmt='Db')
-    marker[0].set_markerfacecolor('none')
-    plt.xlabel('delay (ns)')
-    plt.title(
-        'Power Delay Profile (rms delay spread = {:f}ns)'.format(
-            rms_delay_spread * 1e6))
-    plt.legend()
-
-    plt.subplot(122)
-
-    plt.stem(
-        param.delays * 1e6,
-        param.power_delay_profile,
-        label='desired profile',
-        linefmt='r',
-        markerfmt='or')
-    marker = plt.stem(np.arange(channel_interp.max_delay_in_samples + 1) / sampling_rate_interp * 1e6, mean_power_interp,
-                      label='actual profile', linefmt='b', markerfmt='Db')
-    marker[0].set_markerfacecolor('none')
-    plt.xlabel('delay (ns)')
-    plt.title(
-        'Power Delay Profile - Interpolated (rms delay spread = {:f}ns)'.format(
-            rms_delay_spread_interp * 1e6))
-    plt.legend()
-
-    ##########################################################################
-    # plot autocorrelation and Doppler spectrum
-    max_num_drops = 1000
-    doppler_frequency = 200
-    sampling_rate = 1e6
-    samples_per_drop = 1000
-    channel_oversampling_rate = 100  # in relation to doppler_frequency
-
-    param.delays = np.array([0])
-    param.power_delay_profile = np.array([1])
-
-    param.k_factor_rice = np.asarray([0])
-    channel = MultipathFadingChannel(
-        param, rnd, sampling_rate, doppler_frequency)
-
-    time_interval = 1 / doppler_frequency / channel_oversampling_rate
-    timestamps = np.arange(samples_per_drop) * time_interval
-
-    autocorr = np.zeros(2 * samples_per_drop - 1, dtype=complex)
-
-    for drop in range(max_num_drops):
-        channel.init_drop()
-
-        channel_gains = np.squeeze(
-            channel_rayleigh.get_impulse_response(timestamps))
-        autocorr += np.correlate(channel_gains,
-                                 channel_gains,
-                                 'full') / samples_per_drop
-
-    autocorr = autocorr / max_num_drops
-
-    # plot distribution of real part
-    dt = np.arange(-samples_per_drop + 1, samples_per_drop) * time_interval
-    plt.figure()
-    plt.subplot(121)
-    plt.plot(dt * doppler_frequency, autocorr, label='simulation')
-    plt.plot(
-        dt *
-        doppler_frequency,
-        special.j0(
-            2 *
-            np.pi *
-            doppler_frequency *
-            dt),
-        label='theory')
-    plt.xlabel('time (doppler x delay)')
-    plt.title('Rayleigh Fading - autocorrelation')
-    plt.xlim(-5, 5)
-    plt.legend()
-
-    plt.subplot(122)
-    doppler_spectrum = np.fft.fftshift(np.fft.fft(autocorr))
-    freq = np.fft.fftshift(
-        np.fft.fftfreq(
-            autocorr.size,
-            time_interval)) / doppler_frequency
-    plt.plot(freq, np.abs(doppler_spectrum), label='simulation')
-    plt.title('Doppler Spectrum')
-    plt.xlabel('normalized frequency (f/fd)')
-    plt.ylabel('power spectrum density')
-    plt.xlim(-doppler_frequency * 1.5, doppler_frequency * 1.5)
-
-    plt.show()
-
-    unittest.main()"""
+        ch = MultipathFadingChannel(**channel_params)
+        return ch
