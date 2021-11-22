@@ -51,8 +51,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.receiver.sampling_rate = self.sampling_rate
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
-        self.sync_offset_low = 1
-        self.sync_offset_high = 3
+        self.sync_offset_low = 1e-3
+        self.sync_offset_high = 3e-3
 
         self.channel_params = {
             'delays': self.delays,
