@@ -399,7 +399,7 @@ class Channel:
         return self.__transmitter.index, self.__receiver.index
 
     @property
-    def no_path_delay_samples(self) -> int:
+    def sync_offset_delay_samples(self) -> int:
         return int(self.__current_sync_offset * self.scenario.sampling_rate)
 
     def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation]:
@@ -454,13 +454,20 @@ class Channel:
         impulse_response = self.impulse_response(
             np.arange(num_signal_samples) / self.scenario.sampling_rate)
 
+        # The maximum delay in samples is modeled by the last impulse response dimension
+        num_delay_samples = impulse_response.shape[3] - 1
+
         # Propagate the signal
         received_signal = np.zeros(
             (self.receiver.num_antennas,
-             transmitted_signal.shape[1] + self.no_path_delay_samples),
+             transmitted_signal.shape[1] + num_delay_samples),
             dtype=complex)
 
-        for delay_index in range(self.no_path_delay_samples+1):
+        interpolation_filter: Optional[np.ndarray] = None
+        if self.impulse_response_interpolation:
+            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate)
+
+        for delay_index in range(num_delay_samples+1):
             for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
                 delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * transmitted_signal[tx_idx, :]
@@ -547,10 +554,7 @@ class Channel:
             np.ndarray:
                 Interpolation filter matrix containing filters for each configured resolvable path.
         """
-        delay_samples = np.arange(self.no_path_delay_samples + 1) / sampling_rate
-
-        #filter_instances = np.zeros((num_delay_samples+1, 1))
-
+        delay_samples = np.arange(self.sync_offset_delay_samples)
         interp_filter = np.sinc(delay_samples * sampling_rate)
         interp_filter /= np.sqrt(np.sum(interp_filter ** 2))
 
