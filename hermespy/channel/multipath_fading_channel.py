@@ -15,6 +15,7 @@ from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 
 from hermespy.channel.channel import Channel
 from hermespy.helpers.resampling import delay_resampling_matrix
+from hermespy.scenario import Scenario
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -126,7 +127,10 @@ class MultipathFadingChannel(Channel):
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None,
-                 interpolate_signals: bool = None) -> None:
+                 interpolate_signals: bool = None,
+                 sync_offset_low: Optional[float] = None,
+                 sync_offset_high: Optional[float] = None,
+                 impulse_response_interpolation: bool = True) -> None:
         """Object initialization.
 
         Args:
@@ -204,7 +208,16 @@ class MultipathFadingChannel(Channel):
             raise ValueError("Rice factors must be greater or equal to zero")
 
         # Init base class
-        Channel.__init__(self, transmitter, receiver, scenario, active, gain, random_generator)
+        Channel.__init__(self,
+                         transmitter=transmitter,
+                         receiver=receiver,
+                         scenario=scenario,
+                         active=active,
+                         gain=gain,
+                         sync_offset_low=sync_offset_low,
+                         sync_offset_high=sync_offset_high,
+                         random_generator=random_generator,
+                         impulse_response_interpolation=impulse_response_interpolation)
 
         # Sort delays
         sorting = np.argsort(delays)
@@ -250,6 +263,11 @@ class MultipathFadingChannel(Channel):
 
         self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
         self.non_los_gains[rice_inf_pos] = 0.0
+
+    @property
+    def max_delay_with_desync(self) -> float:
+        """Returns maximum delay including sync offset."""
+        return self.max_delay + self.current_sync_offset
 
     @property
     def delays(self) -> np.ndarray:
@@ -486,10 +504,19 @@ class MultipathFadingChannel(Channel):
 
         return propagated_signal, impulse_response
 
-    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+
+    def _calculate_path_delays_in_samples(self) -> np.array:
+        self.calculate_new_sync_delay()
 
         delays_in_samples = np.round(self.__delays * self.scenario.sampling_rate).astype(int)
-        max_delay_in_samples = int(ceil(self.__delays[-1] * self.scenario.sampling_rate))
+        # max_delay_in_samples = int(ceil(self.__delays[-1] * self.scenario.sampling_rate))
+
+        delays_in_samples += int(self.current_sync_offset * self.scenario.sampling_rate)
+        return delays_in_samples
+
+    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+        delays_in_samples = self._calculate_path_delays_in_samples()
+        max_delay_in_samples = delays_in_samples.max()
 
         impulse_response = np.zeros((len(timestamps),
                                      self.receiver.num_antennas,
@@ -498,13 +525,12 @@ class MultipathFadingChannel(Channel):
 
         interpolation_filter: Optional[np.ndarray] = None
         if self.impulse_response_interpolation:
-            interpolation_filter = self.__interpolation_filter(self.scenario.sampling_rate)
+            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate)
 
         for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths),
                                                         self.los_gains, self.non_los_gains):
 
             for rx_idx, tx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
-
                 signal_weights = power ** .5 * self.__tap(timestamps, los_gain, nlos_gain)
 
                 if interpolation_filter is not None:
@@ -516,7 +542,8 @@ class MultipathFadingChannel(Channel):
 
         return self.gain * impulse_response
 
-    def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
+    def __tap(self, timestamps: np.ndarray, 
+              los_gain: complex, nlos_gain: complex) -> np.ndarray:
         """Generate a single fading sequence tap.
 
         Implements equation (18) of the underlying paper.
@@ -525,7 +552,6 @@ class MultipathFadingChannel(Channel):
             timestamps (np.ndarray): Time instances at which the channel should be sampled.
             los_gain (complex): Gain of the line-of-sight (specular) model component.
             nlos_gain (complex): Gain of the non-line-of-sight model components.
-
         Returns:
             np.ndarray: Channel gains at requested timestamps.
         """
@@ -551,7 +577,6 @@ class MultipathFadingChannel(Channel):
         los_doppler = self.los_doppler_frequency
         los_phase = self.random_generator.uniform(0, 2*pi)
         los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
-
         return los_component + nlos_component
 
     @property
@@ -572,8 +597,7 @@ class MultipathFadingChannel(Channel):
         else:
             return min_rate
 
-    @lru_cache(maxsize=1)
-    def __interpolation_filter(self, sampling_rate: float) -> np.ndarray:
+    def interpolation_filter(self, sampling_rate: float) -> np.ndarray:
         """Create an interpolation filter matrix.
 
         Args:
@@ -583,8 +607,9 @@ class MultipathFadingChannel(Channel):
             np.ndarray:
                 Interpolation filter matrix containing filters for each configured resolvable path.
         """
+        num_delay_samples = int(self.max_delay_with_desync * sampling_rate)
 
-        num_delay_samples = int(ceil(self.max_delay * sampling_rate))
+        filter_instances = np.zeros((num_delay_samples+1, self.num_resolvable_paths))
 
         filter_instances = np.empty((self.num_resolvable_paths, num_delay_samples+1), float)
 
@@ -624,7 +649,9 @@ class MultipathFadingChannel(Channel):
             'los_doppler_frequency': node.los_doppler_frequency,
             'transmit_precoding': node.transmit_precoding,
             'receive_postcoding': node.receive_postcoding,
-            'interpolate_signals': node.interpolate_signals
+            'interpolate_signals': node.interpolate_signals,
+            'sync_offset_low': node.sync_offset_low,
+            'sync_offset_high': node.sync_offset_high
         }
 
         transmitter_index, receiver_index = node.indices
