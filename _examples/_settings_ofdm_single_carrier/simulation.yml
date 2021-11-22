@@ -1,7 +1,6 @@
 !<Simulation>
 
-num_drops: 10                   # Maximum number of simulation runs
-
+max_num_drops: 10               # Maximum number of simulation runs
 min_num_drops: 5                # Minimum number of simulation runs
 confidence_level: .9
 confidence_margin: .1
