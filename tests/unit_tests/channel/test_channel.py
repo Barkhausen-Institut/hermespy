@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 """Test channel model for wireless transmission links."""
 
-from datetime import time
 import unittest
 from unittest.mock import Mock
 
 import numpy as np
 from numpy.testing import assert_array_equal
 from numpy.random import default_rng
-
 
 from hermespy.channel import Channel
 
@@ -20,6 +18,7 @@ __version__ = "0.1.0"
 __maintainer__ = "Tobias Kronauer"
 __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
+
 
 class TestChannel(unittest.TestCase):
     """Test the channel model base class."""
@@ -33,8 +32,8 @@ class TestChannel(unittest.TestCase):
         self.generator = default_rng(0)
         self.scenario = Mock()
         self.scenario.sampling_rate = 1e3
-        self.sync_offset_low = 0
-        self.sync_offset_high = 0
+        self.sync_offset_low = 0.
+        self.sync_offset_high = 0.
         self.channel = Channel(
             transmitter=self.transmitter,
             receiver=self.receiver,
@@ -101,6 +100,46 @@ class TestChannel(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             self.channel.receiver = Mock()
+
+    def test_sync_offset_low_setget(self) -> None:
+        """Synchronization offset lower bound property getter should return setter argument."""
+
+        expected_sync_offset = 1.2345
+        self.channel.sync_offset_low = expected_sync_offset
+
+        self.assertEqual(expected_sync_offset, self.channel.sync_offset_low)
+
+    def test_sync_offset_low_validation(self) -> None:
+        """Synchronization offset lower bound property setter should raise ValueError on negative arguments."""
+
+        with self.assertRaises(ValueError):
+            self.channel.sync_offset_low = -1.0
+
+        try:
+            self.channel.sync_offset_low = 0.
+
+        except ValueError:
+            self.fail()
+
+    def test_sync_offset_high_setget(self) -> None:
+        """Synchronization offset upper bound property getter should return setter argument."""
+
+        expected_sync_offset = 1.2345
+        self.channel.sync_offset_high = expected_sync_offset
+
+        self.assertEqual(expected_sync_offset, self.channel.sync_offset_high)
+
+    def test_sync_offset_high_validation(self) -> None:
+        """Synchronization offset upper bound property setter should raise ValueError on negative arguments."""
+
+        with self.assertRaises(ValueError):
+            self.channel.sync_offset_high = -1.0
+
+        try:
+            self.channel.sync_offset_high = 0.
+
+        except ValueError:
+            self.fail()
 
     def test_gain_setget(self) -> None:
         """Gain property getter must return setter parameter."""

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 from typing import Type, Tuple, TYPE_CHECKING, Optional
-from abc import ABC
 from itertools import product
 
 import numpy as np
@@ -87,12 +86,12 @@ class Channel:
                  scenario: Optional[Scenario] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
-                 sync_offset_low: Optional[int] = None,
-                 sync_offset_high: Optional[int] = None,
+                 sync_offset_low: float = 0.,
+                 sync_offset_high: float = 0.,
                  random_generator: Optional[rnd.Generator] = None,
                  impulse_response_interpolation: bool = True
                  ) -> None:
-        """Class constructor.
+        """Channel model initialization.
 
         Args:
             transmitter (Transmitter, optional):
@@ -111,6 +110,12 @@ class Channel:
             gain (float, optional):
                 Channel power gain.
                 1.0 by default.
+
+            sync_offset_low (float, optional):
+                Minimum synchronization error in seconds.
+
+            sync_offset_high (float, optional):
+                Maximum synchronization error in seconds.
                 
             random_generator (rnd.Generator, optional):
                 Generator object for random number sequences.
@@ -124,8 +129,8 @@ class Channel:
         self.__receiver = None
         self.__gain = 1.0
         self.__scenario = None
-        self.__sync_offset_low = 0
-        self.__sync_offset_high = 0
+        self.sync_offset_low = sync_offset_low
+        self.__sync_offset_high = sync_offset_high
         self.recent_response = None
         self.impulse_response_interpolation = impulse_response_interpolation
 
@@ -143,16 +148,6 @@ class Channel:
 
         if gain is not None:
             self.gain = gain
-
-        if sync_offset_low is not None:
-            if sync_offset_low < 0:
-                raise ValueError("Lower bound must be >= 0.")
-            self.__sync_offset_low = sync_offset_low
-
-        if sync_offset_high is not None:
-            if sync_offset_high < 0:
-                raise ValueError("Higher bound must be >= 0.")
-            self.__sync_offset_high = sync_offset_high
 
         self._verify_sync_offsets()
 
@@ -236,19 +231,55 @@ class Channel:
 
     @property
     def sync_offset_low(self) -> float:
+        """Synchronization error minimum.
+
+        Returns:
+            float: Minimum synchronization error in seconds.
+        """
+
         return self.__sync_offset_low
+
+    @sync_offset_low.setter
+    def sync_offset_low(self, value: float) -> None:
+        """Configure the synchronization error minimum.
+
+        Args:
+            value (float): Minimum synchronization error in seconds.
+
+        Raises:
+            ValueError: If `value` is smaller than zero.
+        """
+
+        if value < 0:
+            raise ValueError("Synchronization offset lower bound must be greater or equal to zero")
+
+        self.__sync_offset_low = value
 
     @property
     def sync_offset_high(self) -> float:
+        """Synchronization error maximum.
+
+        Returns:
+            float: Maximum synchronization error in seconds.
+        """
+
         return self.__sync_offset_high
 
-    @property
-    def current_sync_offset(self) -> float:
-        return self.__current_sync_offset
+    @sync_offset_high.setter
+    def sync_offset_high(self, value: float) -> None:
+        """Configure the synchronization error maximum.
 
-    def calculate_new_sync_delay(self) -> None:
-        self.__current_sync_offset = self.random_generator.uniform(
-                low=self.sync_offset_low, high=self.sync_offset_high)
+        Args:
+            value (float): Maximum synchronization error in seconds.
+
+        Raises:
+            ValueError: If `value` is smaller than zero.
+        """
+
+        if value < 0:
+            raise ValueError("Synchronization offset upper bound must be greater or equal to zero")
+
+        self.__sync_offset_high = value
 
     @property
     def gain(self) -> float:
@@ -398,10 +429,6 @@ class Channel:
 
         return self.__transmitter.index, self.__receiver.index
 
-    @property
-    def sync_offset_delay_samples(self) -> int:
-        return int(self.__current_sync_offset * self.scenario.sampling_rate)
-
     def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation]:
         """Modifies the input signal and returns it after channel propagation.
 
@@ -462,6 +489,8 @@ class Channel:
             (self.receiver.num_antennas,
              transmitted_signal.shape[1] + num_delay_samples),
             dtype=complex)
+
+        sync_offset = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
         interpolation_filter: Optional[np.ndarray] = None
         if self.impulse_response_interpolation:
