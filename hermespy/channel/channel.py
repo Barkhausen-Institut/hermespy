@@ -26,7 +26,7 @@ __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel(ABC):
+class Channel:
     """Implements an ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
@@ -75,6 +75,8 @@ class Channel(ABC):
     __transmitter: Optional[Transmitter]
     __receiver: Optional[Receiver]
     __gain: float
+    __sync_offset_low: float
+    __sync_offset_high: float
     __random_generator: Optional[rnd.Generator]
     __scenario: Optional[Scenario]
     impulse_response_interpolation: bool
@@ -85,6 +87,8 @@ class Channel(ABC):
                  scenario: Optional[Scenario] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
+                 sync_offset_low: Optional[int] = None,
+                 sync_offset_high: Optional[int] = None,
                  random_generator: Optional[rnd.Generator] = None,
                  impulse_response_interpolation: bool = True
                  ) -> None:
@@ -114,13 +118,14 @@ class Channel(ABC):
             impulse_response_interpolation (bool, optional):
                 Allow the impulse response to be interpolated during sampling.
         """
-
         # Default parameters
         self.__active = True
         self.__transmitter = None
         self.__receiver = None
         self.__gain = 1.0
         self.__scenario = None
+        self.__sync_offset_low = 0
+        self.__sync_offset_high = 0
         self.recent_response = None
         self.impulse_response_interpolation = impulse_response_interpolation
 
@@ -138,6 +143,22 @@ class Channel(ABC):
 
         if gain is not None:
             self.gain = gain
+
+        if sync_offset_low is not None:
+            if sync_offset_low < 0:
+                raise ValueError("Lower bound must be >= 0.")
+            self.__sync_offset_low = sync_offset_low
+
+        if sync_offset_high is not None:
+            if sync_offset_high < 0:
+                raise ValueError("Higher bound must be >= 0.")
+            self.__sync_offset_high = sync_offset_high
+
+        self._verify_sync_offsets()
+
+    def _verify_sync_offsets(self):
+        if not (self.sync_offset_low <= self.sync_offset_high):
+            raise ValueError("Lower bound of uniform distribution must be smaller than higher bound.")
 
     @property
     def active(self) -> bool:
@@ -212,6 +233,22 @@ class Channel(ABC):
             raise RuntimeError("Overwriting a receiver configuration is not supported")
 
         self.__receiver = new_receiver
+
+    @property
+    def sync_offset_low(self) -> float:
+        return self.__sync_offset_low
+
+    @property
+    def sync_offset_high(self) -> float:
+        return self.__sync_offset_high
+
+    @property
+    def current_sync_offset(self) -> float:
+        return self.__current_sync_offset
+
+    def calculate_new_sync_delay(self) -> None:
+        self.__current_sync_offset = self.random_generator.uniform(
+                low=self.sync_offset_low, high=self.sync_offset_high)
 
     @property
     def gain(self) -> float:
@@ -361,6 +398,10 @@ class Channel(ABC):
 
         return self.__transmitter.index, self.__receiver.index
 
+    @property
+    def sync_offset_delay_samples(self) -> int:
+        return int(self.__current_sync_offset * self.scenario.sampling_rate)
+
     def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation]:
         """Modifies the input signal and returns it after channel propagation.
 
@@ -410,16 +451,23 @@ class Channel(ABC):
 
         # Generate the channel's impulse response
         num_signal_samples = transmitted_signal.shape[1]
-        impulse_response = self.impulse_response(np.arange(num_signal_samples) / self.scenario.sampling_rate)
+        impulse_response = self.impulse_response(
+            np.arange(num_signal_samples) / self.scenario.sampling_rate)
 
-        # The maximum delay (in samples) is modeled by the last impulse response dimension
+        # The maximum delay in samples is modeled by the last impulse response dimension
         num_delay_samples = impulse_response.shape[3] - 1
 
         # Propagate the signal
-        received_signal = np.zeros((self.receiver.num_antennas, transmitted_signal.shape[1] + num_delay_samples),
-                                   dtype=complex)
+        received_signal = np.zeros(
+            (self.receiver.num_antennas,
+             transmitted_signal.shape[1] + num_delay_samples),
+            dtype=complex)
 
-        for delay_index in range(impulse_response.shape[3]):
+        interpolation_filter: Optional[np.ndarray] = None
+        if self.impulse_response_interpolation:
+            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate)
+
+        for delay_index in range(num_delay_samples+1):
             for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
                 delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * transmitted_signal[tx_idx, :]
@@ -439,6 +487,7 @@ class Channel(ABC):
         Args:
             timestamps (np.ndarray):
                 Time instants with length `T` to calculate the response for.
+
 
         Returns:
             np.ndarray:
@@ -469,8 +518,47 @@ class Channel(ABC):
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
 
+        impulse_responses = self._add_sync_offset(impulse_responses)
+        # Save newly generated response as most recent impulse response
+        self.recent_response = impulse_responses
+
         # Return resulting impulse response
         return impulse_responses
+
+    def _add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
+        self.calculate_new_sync_delay()
+        delay_samples = self.current_sync_offset * self.scenario.sampling_rate
+        if delay_samples > 0:
+            delays = np.zeros(
+                (impulse_responses.shape[0],
+                impulse_responses.shape[1],
+                impulse_responses.shape[2],
+                delay_samples),
+                dtype=complex
+            )
+
+            impulse_responses = np.concatenate(
+                (delays, impulse_responses),
+                axis=3
+            )
+
+        return impulse_responses
+
+    def interpolation_filter(self, sampling_rate: float) -> np.ndarray:
+        """Create an interpolation filter matrix.
+
+        Args:
+            sampling_rate: The sampling rate to which to interpolate.
+
+        Returns:
+            np.ndarray:
+                Interpolation filter matrix containing filters for each configured resolvable path.
+        """
+        delay_samples = np.arange(self.sync_offset_delay_samples)
+        interp_filter = np.sinc(delay_samples * sampling_rate)
+        interp_filter /= np.sqrt(np.sum(interp_filter ** 2))
+
+        return interp_filter
 
     @property
     def min_sampling_rate(self) -> float:
@@ -501,8 +589,10 @@ class Channel(ABC):
         """
 
         state = {
+            'gain': node.__gain,
             'active': node.__active,
-            'gain': node.__gain
+            'sync_offset_low': node.__sync_offset_low,
+            'sync_offset_high': node.__sync_offset_high
         }
 
         transmitter_index, receiver_index = node.indices

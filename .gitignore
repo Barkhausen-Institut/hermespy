@@ -6,7 +6,7 @@ _results_*/
 docs/build/
 results/
 .idea/
-env/
+env*/
 matlab_env/
 
 # IDE specific
@@ -26,6 +26,7 @@ build/
 dist/
 .coverage
 MANIFEST
+pip-wheel-metadata/
 
 # misc
 *~

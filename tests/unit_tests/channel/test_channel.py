@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Test channel model for wireless transmission links."""
 
+from datetime import time
 import unittest
 from unittest.mock import Mock
 
@@ -20,7 +21,6 @@ __maintainer__ = "Tobias Kronauer"
 __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-
 class TestChannel(unittest.TestCase):
     """Test the channel model base class."""
 
@@ -33,8 +33,17 @@ class TestChannel(unittest.TestCase):
         self.generator = default_rng(0)
         self.scenario = Mock()
         self.scenario.sampling_rate = 1e3
-
-        self.channel = Channel(self.transmitter, self.receiver, self.scenario, self.active, self.gain, self.generator)
+        self.sync_offset_low = 0
+        self.sync_offset_high = 0
+        self.channel = Channel(
+            transmitter=self.transmitter,
+            receiver=self.receiver,
+            active=self.active,
+            gain=self.gain,
+            random_generator=self.generator,
+            scenario=self.scenario,
+            sync_offset_low=self.sync_offset_low,
+            sync_offset_high=self.sync_offset_high)
 
         # Number of discrete-time samples generated for baseband_signal propagation testing
         self.propagate_signal_lengths = [1, 10, 100, 1000]
@@ -54,6 +63,8 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(self.gain, self.channel.gain, "Unexpected gain parameter initialization")
         self.assertEqual(self.generator, self.channel.random_generator)
         self.assertEqual(self.scenario, self.channel.scenario)
+        self.assertEqual(self.sync_offset_low, self.channel.sync_offset_low)
+        self.assertEqual(self.sync_offset_high, self.channel.sync_offset_high)
 
     def test_active_setget(self) -> None:
         """Active property getter must return setter parameter."""
@@ -377,3 +388,100 @@ class TestChannel(unittest.TestCase):
     def test_from_yaml(self) -> None:
         """Test YAML serialization recall validity."""
         pass
+
+
+class TestSyncOffset(unittest.TestCase):
+    def setUp(self) -> None:
+        self.SEED = 42
+        self.rng_default_seed_1 = np.random.default_rng(self.SEED)
+        self.rng_default_seed_2 = np.random.default_rng(self.SEED)
+
+        self.scenario = Mock()
+        self.scenario.sampling_rate = 1e3
+        self.sample_duration = 1/self.scenario.sampling_rate
+        self.scenario.random_generator = np.random.default_rng()
+
+        self.mock_transmitter = Mock()
+        self.mock_transmitter.num_antennas = 1
+
+        self.mock_receiver = Mock()
+        self.mock_receiver.num_antennas = 1
+
+        self.signal = (
+            np.random.randint(low=1, high=4, size=(1,100))
+            + 1j * np.random.randint(low=1, high=4, size=(1,100))
+        )
+        self.channel_without_delay = self.create_channel(0, 0)
+
+    def test_no_delay_for_default_parameters(self) -> None:
+        ch = self.create_channel(None, None)
+
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.signal)[0],
+            self.propagate_without_delay(
+                signal=self.signal,
+                rng=self.rng_default_seed_2
+            )
+        )
+
+    def test_one_exact_sample_delay(self) -> None:
+        ch = self.create_channel(self.sample_duration, self.sample_duration)
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.signal)[0],
+            np.hstack(
+                (np.zeros((1,1), dtype=complex),
+                self.propagate_without_delay(
+                    signal=self.signal,
+                    rng=self.rng_default_seed_2)))
+        )
+
+
+    def test_non_int_sample_delay_gets_truncated(self) -> None:
+        ch = self.create_channel(1.5*self.sample_duration, 1.5*self.sample_duration)
+
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.signal)[0],
+            np.hstack(
+                (np.zeros((1,1), dtype=complex),
+                 self.propagate_without_delay(
+                     signal=self.signal,
+                     rng=self.rng_default_seed_2)))
+        )
+
+    def test_sample_is_picked(self) -> None:
+        SYNC_OFFSET_LOW = 0
+        SYNC_OFFSET_HIGH = 10*self.sample_duration
+        rng_local = np.random.default_rng(self.SEED)
+
+        delay = rng_local.uniform(low=SYNC_OFFSET_LOW, high=SYNC_OFFSET_HIGH) * self.scenario.sampling_rate
+        ch = self.create_channel(SYNC_OFFSET_LOW, SYNC_OFFSET_HIGH)
+        np.testing.assert_array_almost_equal(
+            ch.propagate(self.signal)[0],
+            np.hstack(
+                (np.zeros((1, int(delay)), dtype=complex),
+                 self.propagate_without_delay(
+                     signal=self.signal,
+                     rng=self.rng_default_seed_2)))
+        )
+
+    def propagate_without_delay(self,
+                                signal: np.ndarray,
+                                ch: Channel = None,
+                                rng: np.random.Generator = None) -> np.ndarray:
+        if ch is None:
+            ch = self.channel_without_delay
+
+        ch.random_generator = rng
+        return ch.propagate(signal)[0]
+
+    def create_channel(self, sync_low: float, sync_high: float) -> Channel:
+        return Channel(
+            transmitter=self.mock_transmitter,
+            receiver=self.mock_receiver,
+            scenario=self.scenario,
+            active=True,
+            gain=1,
+            sync_offset_low=sync_low,
+            sync_offset_high=sync_high,
+            random_generator=self.rng_default_seed_1
+        )

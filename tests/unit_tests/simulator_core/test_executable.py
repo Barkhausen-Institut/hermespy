@@ -38,13 +38,13 @@ class TestExecutable(unittest.TestCase):
         self.calc_transmit_stft = True
         self.calc_receive_stft = True
         self.spectrum_fft_size = 20
-        self.num_drops = 1
+        self.max_num_drops = 1
         self.verbosity = Verbosity.NONE
 
         with tempfile.TemporaryDirectory() as tempdir:
             self.executable = ExecutableStub(self.plot_drop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
                                              self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size,
-                                             self.num_drops, tempdir, self.verbosity)
+                                             self.max_num_drops, tempdir, self.verbosity)
 
     def test_init(self) -> None:
         """Executable initialization parameters should be properly stored."""
@@ -55,7 +55,7 @@ class TestExecutable(unittest.TestCase):
         self.assertEqual(self.calc_transmit_stft, self.executable.calc_transmit_stft)
         self.assertEqual(self.calc_receive_stft, self.executable.calc_receive_stft)
         self.assertEqual(self.spectrum_fft_size, self.executable.spectrum_fft_size)
-        self.assertEqual(self.num_drops, self.executable.num_drops)
+        self.assertEqual(self.max_num_drops, self.executable.max_num_drops)
         self.assertEqual(self.verbosity, self.executable.verbosity)
 
     def test_add_scenario(self) -> None:
