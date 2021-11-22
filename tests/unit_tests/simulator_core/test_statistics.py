@@ -48,7 +48,7 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
         mean = 0.0
         means: List[float] = []
         for n in range(1, 5+1):
-            mean = self.stats.update_mean(
+            mean = self.stats._Statistics__update_mean(
                          old_mean=mean,
                          no_old_samples=n-1,
                          new_sample=samples[n-1])

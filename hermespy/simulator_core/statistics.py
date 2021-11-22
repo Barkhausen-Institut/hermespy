@@ -330,7 +330,7 @@ class Statistics:
                     self.bit_error_max[snr_index, tx_modem, rx_modem] = max(bit_error_max, bit_error)
 
                     bit_error_mean = self.bit_error_mean[snr_index, tx_modem, rx_modem]
-                    self.bit_error_mean[snr_index, tx_modem, rx_modem] = self.update_mean(
+                    self.bit_error_mean[snr_index, tx_modem, rx_modem] = self.__update_mean(
                         old_mean=bit_error_mean,
                         no_old_samples=self.bit_error_num_drops[snr_index, tx_modem, rx_modem] - 1,
                         new_sample=bit_error
@@ -354,7 +354,7 @@ class Statistics:
                     self.block_error_max[snr_index, tx_modem, rx_modem] = max(block_error_max, block_error)
 
                     block_error_mean = self.block_error_mean[snr_index, tx_modem, rx_modem]
-                    self.block_error_mean[snr_index, tx_modem, rx_modem] = self.update_mean(
+                    self.block_error_mean[snr_index, tx_modem, rx_modem] = self.__update_mean(
                         old_mean=block_error_mean,
                         no_old_samples=self.block_error_num_drops[snr_index, tx_modem, rx_modem] - 1,
                         new_sample=block_error
@@ -363,7 +363,7 @@ class Statistics:
 
         self.__num_drops[snr_index] += 1
 
-    def update_mean(self, old_mean: float,
+    def __update_mean(self, old_mean: float,
                           no_old_samples: int,
                           new_sample: float) -> float:
         """Updates mean iteratively.
