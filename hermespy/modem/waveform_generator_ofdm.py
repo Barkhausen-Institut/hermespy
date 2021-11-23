@@ -13,9 +13,11 @@ from scipy.constants import pi
 from scipy.interpolate import griddata
 from numba import jit
 
+from hermespy.channel import ChannelStateInformation, ChannelStateDimension
 from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
-from hermespy.channel import ChannelStateInformation, ChannelStateDimension
+from hermespy.signal import Signal
+
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -601,6 +603,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 #                 fft_size: int = 1,
                  channel_estimation: Union[str, ChannelEstimation] = ChannelEstimation.IDEAL,
                  subcarrier_spacing: float = 1e3,
+                 num_subcarriers: int = 128,
                  dc_suppression: bool = True,
                  resources: Optional[List[FrameResource]] = None,
                  structure: Optional[List[FrameSection]] = None,
@@ -614,8 +617,11 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             subcarrier_spacing (float, optional):
                 Spacing between individual subcarriers in Hz. ToDo: Check.
 
+            num_subcarriers (int, optional):
+                Maximum number of subcarriers.
+
             dc_suppression (bool, optional):
-                Suppress the direct current component during waveform generation.
+                Suppress the direct current component during waveform generation. 1  # ToDo: Re-implement
 
         """
 
@@ -627,11 +633,11 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 #        self.pilot_subcarriers = pilot_subcarriers if pilot_subcarriers is not None else []
 #        self.pilot_symbols = pilot_symbols if pilot_symbols is not None else []
 #        self.reference_symbols = reference_symbols if reference_symbols is not None else []
-#        self.fft_size = fft_size
         if isinstance(channel_estimation, str):
             channel_estimation = ChannelEstimation[channel_estimation]
         self.channel_estimation_algorithm = channel_estimation
         self.subcarrier_spacing = subcarrier_spacing
+        self.num_subcarriers = num_subcarriers
         self.dc_suppression = dc_suppression
         self.resources = [] if resources is None else resources
         self.structure = []
@@ -639,9 +645,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         if structure is not None:
             for section in structure:
                 self.add_section(section)
-
-        # Initial parameter checks
-        # TODO
 
         self._mapping = PskQamMapping(self.modulation_order)
 
@@ -751,7 +754,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         detected_bits = self._mapping.detect_bits(data_symbols).astype(int)
         return detected_bits
 
-    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+    def modulate(self, data_symbols: np.ndarray) -> Signal:
 
         # The number of samples in time domain the frame should contain, given the current sample frequency
         output_signal = np.empty(0, dtype=complex)
@@ -770,7 +773,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             section_signal = section.modulate(section_data_symbols)
             output_signal = np.append(output_signal, section_signal)
 
-        return output_signal
+        return Signal(output_signal, self.sampling_rate, carrier_frequency=self.modem.carrier_frequency)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
@@ -912,44 +915,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         channel_estimation[holes] = interpolated_holes
         return channel_estimation[..., np.newaxis]   # Append an additional axis for multiple transmit antennas
 
-        # adjust sizes of matrices, consider only occupied subcarriers
-#        reference_frame = np.moveaxis(self.reference_frame, -1, 0)
-#        rx_signal = rx_signal[:, :, self._resource_element_mapping]
-#        ref_freq_idx = np.any(reference_frame, axis=(0, 1))
-#        ref_idx = reference_frame != 0
-#
-#        # LS channel estimation (averaged over time)
-#        channel_estimation_time_freq = np.zeros(rx_signal.shape, dtype=complex)
-#        channel_estimation_time_freq[ref_idx] = rx_signal[ref_idx] / reference_frame[ref_idx]
-#        channel_estimation = np.zeros((self.param.number_rx_antennas, self.param.number_tx_antennas,
-#                                       self.param.number_occupied_subcarriers), dtype=complex)
-#        channel_estimation[0, 0, ref_freq_idx] = (np.sum(channel_estimation_time_freq[:, :, ref_freq_idx], axis=1) /
-#                                                  np.sum(ref_idx[:, :, ref_freq_idx], axis=1))
-#
-#        # extend matrix to all N_FFT subcarriers
-#        channel_estimation_freq = np.zeros((self.param.number_rx_antennas, self.param.number_tx_antennas,
-#                                            self.param.fft_size), dtype=complex)
-#        channel_estimation_freq[:, :, self._resource_element_mapping] = channel_estimation"""
-#
-#
-#        if np.any(channel_estimation_freq[:, :, self._resource_element_mapping] == 0) or frequency_bins.size:
-#            # if stream_responses is missing at any frequency or different frequencies
-#            # then interpolate
-#            ch_est_freqs = np.where(stream_responses != 0)[1]
-#            ch_est_freqs[ch_est_freqs > self.param.fft_size / 2] = (ch_est_freqs[ch_est_freqs > self.param.fft_size / 2]
-#                                                                    - self.param.fft_size)
-#            ch_est_freqs = ch_est_freqs * self.param.subcarrier_spacing
-#            ch_est_freqs = np.fft.fftshift(ch_est_freqs)
-#
-#            interp_function = interpolate.interp1d(ch_est_freqs, np.fft.fftshift(stream_responses))
-#
-#            stream_responses = interp_function(frequency_bins)
-#
-#        # multiple antennas
-#        # check interpolation
-#
-#        return channel_estimation_freq
-
     @property
     def bits_per_frame(self) -> int:
         return self.symbols_per_frame * self._mapping.bits_per_symbol
@@ -971,6 +936,38 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return 1  # ToDo: Re-implement
 #        return self.num_occupied_subcarriers / self.fft_size
+
+    @property
+    def num_subcarriers(self) -> int:
+        """Maximum number of subcarriers.
+
+        Sometimes also referred to as FFT-size.
+
+        Returns:
+            int: Number of subcarriers.
+        """
+
+        return self.__num_subcarriers
+
+    @num_subcarriers.setter
+    def num_subcarriers(self, value: int) -> None:
+        """Modify the maximum number of subcarriers.
+
+        Args:
+            value (int): New maximum number of subcarriers.
+
+        Raises:
+            ValueError: If `value` is smaller than one.
+        """
+
+        if value < 1:
+            raise ValueError("Number of subcarriers must be greater or equal to one")
+
+        self.__num_subcarriers = value
+
+    @property
+    def sampling_rate(self) -> float:
+        return self.oversampling_factor * self.subcarrier_spacing * self.__num_subcarriers
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorOfdm],
