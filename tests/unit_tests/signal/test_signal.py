@@ -164,6 +164,14 @@ class TestSignal(unittest.TestCase):
         assert_array_almost_equal(samples, down_signal.samples, decimal=1)
         self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
 
+    def test_superimpose_power(self) -> None:
+        """Superimposing two signal models should yield approximately the sum of both model's individual power."""
+
+        expected_power = 4 * self.signal.power
+        self.signal.superimpose(self.signal)
+
+        assert_array_almost_equal(expected_power, self.signal.power)
+
     def test_timestamps(self) -> None:
         """Timestamps property should return the correct sampling times."""
 
@@ -173,5 +181,3 @@ class TestSignal(unittest.TestCase):
     def test_plot(self) -> None:
         """The plot routine should not raise any exceptions."""
         pass
-
-

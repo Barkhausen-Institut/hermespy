@@ -8,7 +8,9 @@ from typing import Sequence
 import matplotlib.pyplot as plt
 import numpy as np
 from numba import jit, complex128
+from scipy.constants import pi
 from scipy.fft import fft, fftshift, fftfreq
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -178,15 +180,15 @@ class Signal:
         self.__carrier_frequency = value
 
     @property
-    def power(self) -> Sequence[float]:
+    def power(self) -> np.ndarray:
         """Compute the power of the modeled signal.
 
         Returns:
-            Sequence[float]: The power of each modeled stream.
+            np.ndarray:: The power of each modeled stream within a numpy vector.
         """
 
-        stream_power = np.sum(self.__samples.real ** 2 + self.__samples.imag ** 2, axis=1) / (2 * self.num_samples + 1)
-        return stream_power.tolist()
+        stream_power = np.sum(self.__samples.real ** 2 + self.__samples.imag ** 2, axis=1) / self.num_samples
+        return stream_power
 
     def resample(self, sampling_rate: float) -> Signal:
         """Resample the modeled signal to a different sampling rate.
@@ -207,10 +209,74 @@ class Signal:
             raise ValueError("Sampling rate for resampling must be greater than zero.")
 
         # Resample the internal samples
-        samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
+        if self.__sampling_rate != sampling_rate:
+            samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
+
+        # Skip resampling if both sampling rates are identical
+        else:
+            samples = self.__samples.copy()
 
         # Create a new signal object from the resampled samples and return it as result
         return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay)
+
+    def superimpose(self, added_signal: Signal) -> None:
+        """Superimpose an additive signal model to this model.
+
+        Internally re-samples `added_signal` to this model's sampling rate, if required.
+        Mixes `added_signal` according to the carrier-frequency distance.
+
+        Raises:
+            ValueError: If `added_signal` contains a different number of streams than this signal model.
+            NotImplementedError: If the delays if this signal and `added_signal` differ.
+        """
+
+        if added_signal.num_streams != self.num_streams:
+            raise ValueError("Superimposing signal models with different stream counts is not defined")
+
+        if self.delay != added_signal.delay:
+            raise NotImplementedError("Superimposing signal models of differing delay is not yet supported")
+
+        # Resample the added signal
+        resampled_added_signal = added_signal.resample(self.__sampling_rate)
+
+        # Extend the samples matrix if required
+        if self.num_samples < resampled_added_signal.num_samples:
+            self.__samples = np.append(self.__samples, np.zeros((self.num_streams,
+                                                                 resampled_added_signal.num_samples - self.num_samples),
+                                                                dtype=complex))
+
+        # Mix the added signal onto this signal's samples according to the carrier frequency distance
+        frequency_distance = resampled_added_signal.carrier_frequency - self.carrier_frequency
+        self.__mix(self.__samples, resampled_added_signal.samples, self.__sampling_rate, frequency_distance)
+
+    @staticmethod
+    #@jit(nopython=True)
+    def __mix(target_samples: np.ndarray,
+              added_samples: np.ndarray,
+              sampling_rate: float,
+              frequency_distance: float) -> None:
+        """Internal subroutine to mix two sets of signal model samples.
+
+        Args:
+            target_samples (np.ndarray):
+                Target samples onto which `added_samples` will be mixed.
+
+            added_samples (np.ndarray):
+                Samples to be mixed ont `target_samples`.
+
+            sampling_rate (float):
+                Sampling rate in Hz, which both `target_samples` and `added_samples` must share.
+
+            frequency_distance (float):
+                Distance between the carrier frequencies of `target_samples` and `added_samples` in Hz.
+        """
+
+        # ToDo: Reminder, mixing like this currently does not account for possible delays.
+        num_samples = added_samples.shape[1]
+        mix_sinusoid = np.exp(2j * pi * np.arange(num_samples) * frequency_distance / sampling_rate)
+
+        for stream_idx in range(added_samples.shape[0]):
+            target_samples[stream_idx, :num_samples] += added_samples[stream_idx, :] * mix_sinusoid
 
     @property
     def timestamps(self) -> np.ndarray:
@@ -220,7 +286,7 @@ class Signal:
             np.ndarray: Vector of length T containing sample-timestamps in seconds.
         """
 
-        return np.arange(self.num_samples) / self.__sampling_rate
+        return np.arange(self.num_samples) / self.__sampling_rate - self.delay
 
     def plot(self) -> None:
         """Plot the current signal in time- and frequency-domain."""
