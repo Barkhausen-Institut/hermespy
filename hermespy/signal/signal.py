@@ -2,8 +2,11 @@
 """HermesPy Signal Model."""
 
 from __future__ import annotations
+from math import ceil
+from typing import Sequence
 
 import numpy as np
+from numba import jit, complex128
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -21,7 +24,7 @@ class Signal:
     Attributes:
 
         __samples (np.ndarray):
-            An MxT matrix containing uniformly sampled base-band-samples of the modeled signal.
+            An MxT matrix containing uniformly sampled base-band samples of the modeled signal.
             M is the number of individual streams, T the number of available samples.
 
         __sampling_rate (float):
@@ -49,7 +52,7 @@ class Signal:
 
         Args:
             samples (np.ndarray):
-                An MxT matrix containing uniformly sampled base-band-samples of the modeled signal.
+                An MxT matrix containing uniformly sampled base-band samples of the modeled signal.
                 M is the number of individual streams, T the number of available samples.
 
             sampling_rate (float):
@@ -171,3 +174,84 @@ class Signal:
             raise ValueError("The carrier frequency of modeled signals must be greater or equal to zero")
 
         self.__carrier_frequency = value
+
+    @property
+    def power(self) -> Sequence[float]:
+        """Compute the power of the modeled signal.
+
+        Returns:
+            Sequence[float]: The power of each modeled stream.
+        """
+
+        stream_power = np.sum(self.__samples.real ** 2 + self.__samples.imag ** 2, axis=1) / (2 * self.num_samples + 1)
+        return stream_power.tolist()
+
+    def resample(self, sampling_rate: float) -> Signal:
+        """Resample the modeled signal to a different sampling rate.
+
+        Args:
+            sampling_rate (float):
+                Sampling rate of the new signal model in Hz.
+
+        Returns:
+            Signal:
+                The resampled signal model.
+
+        Raises:
+            ValueError: If `sampling_rate` is smaller or equal to zero.
+        """
+
+        if sampling_rate <= 0.:
+            raise ValueError("Sampling rate for resampling must be greater than zero.")
+
+        # Resample the internal samples
+        samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
+
+        # Create a new signal object from the resampled samples and return it as result
+        return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay)
+
+    @staticmethod
+    @jit(nopython=True)
+    def __resample(signal: np.ndarray,
+                   input_sampling_rate: float,
+                   output_sampling_rate: float) -> np.ndarray:
+        """Internal subroutine to resample a given set of samples to a new sampling rate.
+
+        Uses sinc-interpolation, therefore `signal` is assumed to be band-limited.
+
+        Arguments:
+
+            signal (np.ndarray):
+                MxT matrix of M signal-streams to be resampled, each containing T time-discrete samples.
+
+            input_sampling_rate (float):
+                Rate at which `signal` is sampled in Hz.
+
+            output_sampling_rate (float):
+                Rate at which the resampled signal will be sampled in Hz.
+
+        Returns:
+            np.ndarray:
+                MxT' matrix of M resampled signal streams.
+                The number of samples T' depends on the sampling rate relations, i.e.
+                T' = T * output_sampling_rate / input_sampling_rate .
+        """
+
+        num_streams = signal.shape[0]
+
+        num_input_samples = signal.shape[1]
+        num_output_samples = ceil(num_input_samples * output_sampling_rate / input_sampling_rate)
+
+        input_timestamps = np.arange(num_input_samples) / input_sampling_rate
+        output_timestamps = np.arange(num_output_samples) / output_sampling_rate
+
+        output = np.empty((num_streams, num_output_samples), dtype=complex128)
+        for output_idx in np.arange(num_output_samples):
+
+            # Sinc interpolation weights for single output sample
+            interpolation_weights = np.sinc((input_timestamps - output_timestamps[output_idx]) * input_sampling_rate) + 0j
+
+            # Resample all streams simultaneously
+            output[:, output_idx] = signal @ interpolation_weights
+
+        return output

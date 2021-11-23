@@ -5,7 +5,8 @@ import unittest
 
 import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+from scipy.constants import pi
 
 from hermespy.signal import Signal
 
@@ -108,4 +109,58 @@ class TestSignal(unittest.TestCase):
         except ValueError:
             self.fail()
 
-        
+    def test_resampling_power_up(self) -> None:
+        """Resampling to a higher sampling rate should not affect the signal power."""
+
+        # Create an oversampled sinusoid signal
+        frequency = 0.1 * self.sampling_rate
+        self.num_samples = 1000
+        timestamps = np.arange(self.num_samples) / self.sampling_rate
+        samples = np.outer(np.exp(2j * pi * np.array([0, .33, .66])), np.exp(2j * pi * timestamps * frequency))
+        self.signal.samples = samples
+
+        expected_sampling_rate = 2 * self.sampling_rate
+        resampled_signal = self.signal.resample(expected_sampling_rate)
+
+        expected_power = self.signal.power
+        resampled_power = resampled_signal.power
+
+        assert_array_almost_equal(expected_power, resampled_power, decimal=3)
+        self.assertEqual(expected_sampling_rate, resampled_signal.sampling_rate)
+
+    def test_resampling_power_down(self) -> None:
+        """Resampling to a lower sampling rate should not affect the signal power."""
+
+        # Create an oversampled sinusoid signal
+        frequency = 0.1 * self.sampling_rate
+        self.num_samples = 1000
+        timestamps = np.arange(self.num_samples) / self.sampling_rate
+        samples = np.outer(np.exp(2j * pi * np.array([0, .33, .66])), np.exp(2j * pi * timestamps * frequency))
+        self.signal.samples = samples
+
+        expected_sampling_rate = .5 * self.sampling_rate
+        resampled_signal = self.signal.resample(expected_sampling_rate)
+
+        expected_power = self.signal.power
+        resampled_power = resampled_signal.power
+
+        assert_array_almost_equal(expected_power, resampled_power, decimal=3)
+        self.assertEqual(expected_sampling_rate, resampled_signal.sampling_rate)
+
+    def test_resampling_circular(self) -> None:
+        """Up- and subsequently down-sampling a signal model should result in the identical signal."""
+
+        # Create an oversampled sinusoid signal
+        frequency = 0.3 * self.sampling_rate
+        timestamps = np.arange(self.num_samples) / self.sampling_rate
+        samples = np.outer(np.exp(2j * pi * np.array([0, 0.33, 0.66])), np.exp(2j * pi * timestamps * frequency))
+        self.signal.samples = samples
+
+        # Up-sample and down-sample again
+        up_signal = self.signal.resample(1.5 * self.sampling_rate)
+        down_signal = up_signal.resample(self.sampling_rate)
+
+        # Compare to the initial samples
+        assert_array_almost_equal(samples, down_signal.samples, decimal=1)
+        self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
+
