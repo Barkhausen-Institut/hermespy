@@ -102,6 +102,10 @@ class Signal:
             ValueError: If `value` can't be interpreted as a matrix.
         """
 
+        # Expand value vectors to matrices, indicating a signal model with one stream
+        if value.ndim == 1:
+            value = value[np.newaxis, :]
+
         if value.ndim != 2:
             raise ValueError("Signal model samples must be a matrix (a two-dimensional array)")
 
@@ -358,6 +362,10 @@ class Signal:
             ValueError: If the number of streams don't align.
         """
 
+        # Adapt number of streams to fit the appended signal if this signal is empty
+        if self.num_streams < 1:
+            self.__samples = np.empty((signal.num_streams, 0), dtype=complex)
+
         if signal.num_streams != self.num_streams:
             raise ValueError("Appending signal models with differing amount of streams is not defined")
 
@@ -371,7 +379,7 @@ class Signal:
         self.__samples = np.append(self.__samples, signal.samples, axis=1)
 
     def append_streams(self, signal: Signal) -> None:
-        """Append samples in time-domain to the signal model.
+        """Append streams to the signal model.
 
         Args:
             signal (Signal): The signal to be appended.
@@ -379,6 +387,10 @@ class Signal:
         Raise:
             ValueError: If the number of samples don't align.
         """
+
+        # Adapt the number of samples if this signal is empty to match the signal to be appended
+        if self.num_samples < 1:
+            self.__samples = np.empty((0, signal.num_samples), dtype=complex)
 
         if signal.num_samples != self.num_samples:
             raise ValueError("Appending signal models streams with differing amount of samples is not supproted")

@@ -429,8 +429,8 @@ class WaveformGenerator(ABC):
 
         self.__modem = handle
 
-    @abstractmethod
     @property
+    @abstractmethod
     def sampling_rate(self) -> float:
         """Rate at which the waveform generator signal is internally sampled.
 

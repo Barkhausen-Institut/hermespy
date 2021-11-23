@@ -8,6 +8,7 @@ import numpy as np
 import numpy.random as rnd
 
 from hermespy.modem import Modem
+from hermespy.signal import Signal
 from hermespy.source import BitsSource
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.precoding import SymbolPrecoding
@@ -92,8 +93,8 @@ class Transmitter(Modem):
 
     def send(self,
              drop_duration: Optional[float] = None,
-             data_bits: Optional[np.array] = None) -> np.ndarray:
-        """Returns an array with the complex baseband samples of a waveform generator.
+             data_bits: Optional[np.array] = None) -> Signal:
+        """Returns an array with the complex base-band samples of a waveform generator.
 
         The signal may be distorted by RF impairments.
 
@@ -102,9 +103,9 @@ class Transmitter(Modem):
             data_bits (np.array, optional): Data bits to be sent via this transmitter.
 
         Returns:
-            np.ndarray:
-                Complex baseband samples, rows denoting transmitter antennas and
-                columns denoting samples.
+            Signal:
+                Signal model carrying the `data_bits` in multiple streams, each stream encoding multiple
+                radio frequency band communication frames.
 
         Raises:
             ValueError: If not enough data bits were provided to generate as single frame.
@@ -125,7 +126,7 @@ class Transmitter(Modem):
         samples_per_frame = self.waveform_generator.samples_in_frame
 
         # Number of frames fitting into the selected drop duration
-        frames_per_stream = int(np.ceil(drop_duration / self.waveform_generator.frame_duration))
+        frames_per_stream = int(drop_duration / self.waveform_generator.frame_duration)
 
         # Number of code bits required to generate all frames for all streams
         num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream / self.precoding.rate)
@@ -149,31 +150,36 @@ class Transmitter(Modem):
                                "match the number of transmit antennas")
 
         # Generate a dedicated base-band signal for each symbol stream
-        signal_streams = np.empty((symbol_streams.shape[0], num_samples), dtype=complex)
+        signal = Signal(np.empty((0, 0), dtype=complex),
+                        self.waveform_generator.sampling_rate,
+                        self.carrier_frequency)
 
         for stream_idx, stream_symbols in enumerate(symbol_streams):
+
+            stream_signal = Signal(np.empty((0, 0), dtype=complex),
+                                   self.waveform_generator.sampling_rate,
+                                   self.carrier_frequency)
+
             for frame_idx in range(frames_per_stream):
 
                 data_symbols = stream_symbols[frame_idx*symbols_per_frame:(1+frame_idx)*symbols_per_frame]
-                frame = self.waveform_generator.modulate(data_symbols, timestamps)
 
-                frame_start_idx = min(num_samples, frame_idx * samples_per_frame)
-                frame_end_idx = min(num_samples, (1 + frame_idx) * samples_per_frame)
-                frame_length = frame_end_idx - frame_start_idx
+                frame_signal = self.waveform_generator.modulate(data_symbols)
+                stream_signal.append_samples(frame_signal)
 
-                signal_streams[stream_idx, frame_start_idx:frame_end_idx] = frame[:frame_length]
+            signal.append_streams(stream_signal)
 
         # Apply stream coding, for instance beam-forming
         # TODO: Not yet supported.
 
         # Simulate the radio-frequency chain
-        transmitted_signal = self.rf_chain.send(signal_streams)
+        signal.samples = self.rf_chain.send(signal.samples)
 
         # Scale resulting signal by configured power factor
-        transmitted_signal *= np.sqrt(self.power)
+        signal.samples *= np.sqrt(self.power)
 
         # We're finally done, blow the fanfares, throw confetti, etc.
-        return transmitted_signal
+        return signal
 
     @classmethod
     def from_yaml(cls: Type[Transmitter], constructor: SafeConstructor, node: Node) -> Transmitter:
