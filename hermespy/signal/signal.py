@@ -72,7 +72,7 @@ class Signal:
                 Zero by default.
         """
 
-        self.samples = samples
+        self.samples = samples.copy()
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.delay = delay
@@ -347,3 +347,47 @@ class Signal:
             output[:, output_idx] = signal @ interpolation_weights
 
         return output
+
+    def append_samples(self, signal: Signal) -> None:
+        """Append samples in time-domain to the signal model.
+
+        Args:
+            signal (Signal): The signal to be appended.
+
+        Raise:
+            ValueError: If the number of streams don't align.
+        """
+
+        if signal.num_streams != self.num_streams:
+            raise ValueError("Appending signal models with differing amount of streams is not defined")
+
+        if signal.carrier_frequency != self.__carrier_frequency:
+            raise ValueError("Appending signals of differing carrier frequencies is not defined")
+
+        # Resample the signal if required
+        if signal.sampling_rate != self.sampling_rate:
+            raise NotImplementedError("Resampling not yet implemented")
+
+        self.__samples = np.append(self.__samples, signal.samples, axis=1)
+
+    def append_streams(self, signal: Signal) -> None:
+        """Append samples in time-domain to the signal model.
+
+        Args:
+            signal (Signal): The signal to be appended.
+
+        Raise:
+            ValueError: If the number of samples don't align.
+        """
+
+        if signal.num_samples != self.num_samples:
+            raise ValueError("Appending signal models streams with differing amount of samples is not supproted")
+
+        if signal.carrier_frequency != self.__carrier_frequency:
+            raise ValueError("Appending signals of differing carrier frequencies is not defined")
+
+        # Resample the signal if required
+        if signal.sampling_rate != self.sampling_rate:
+            raise NotImplementedError("Resampling not yet implemented")
+
+        self.__samples = np.append(self.__samples, signal.samples, axis=0)

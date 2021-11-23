@@ -181,3 +181,55 @@ class TestSignal(unittest.TestCase):
     def test_plot(self) -> None:
         """The plot routine should not raise any exceptions."""
         pass
+
+    def test_append_samples(self) -> None:
+        """Appending a signal model should yield the proper result."""
+
+        samples = self.signal.samples.copy()
+        append_samples = self.signal.samples + 1j
+        append_signal = Signal(append_samples, self.signal.sampling_rate, self.signal.carrier_frequency)
+
+        self.signal.append_samples(append_signal)
+
+        assert_array_equal(np.append(samples, append_samples, axis=1), self.signal.samples)
+
+    def test_append_samples_assert(self) -> None:
+        """Appending to a signal model should raise a ValueError if the models don't match."""
+
+        with self.assertRaises(ValueError):
+
+            samples = self.signal.samples[0, :]
+            append_signal = Signal(samples, self.signal.sampling_rate, self.signal.carrier_frequency)
+            self.signal.append_samples(append_signal)
+
+        with self.assertRaises(ValueError):
+
+            samples = self.signal.samples
+            append_signal = Signal(samples, self.signal.sampling_rate, 0.)
+            self.signal.append_samples(append_signal)
+
+    def test_append_streams(self) -> None:
+        """Appending a signal model should yield the proper result."""
+
+        samples = self.signal.samples.copy()
+        append_samples = self.signal.samples + 1j
+        append_signal = Signal(append_samples, self.signal.sampling_rate, self.signal.carrier_frequency)
+
+        self.signal.append_streams(append_signal)
+
+        assert_array_equal(np.append(samples, append_samples, axis=0), self.signal.samples)
+
+    def test_append_stream_assert(self) -> None:
+        """Appending to a signal model should raise a ValueError if the models don't match."""
+
+        with self.assertRaises(ValueError):
+
+            samples = self.signal.samples[:, 0]
+            append_signal = Signal(samples, self.signal.sampling_rate, self.signal.carrier_frequency)
+            self.signal.append_streams(append_signal)
+
+        with self.assertRaises(ValueError):
+
+            samples = self.signal.samples
+            append_signal = Signal(samples, self.signal.sampling_rate, 0.)
+            self.signal.append_streams(append_signal)
