@@ -130,7 +130,7 @@ class Channel:
         self.__gain = 1.0
         self.__scenario = None
         self.sync_offset_low = sync_offset_low
-        self.__sync_offset_high = sync_offset_high
+        self.sync_offset_high = sync_offset_high
         self.recent_response = None
         self.impulse_response_interpolation = impulse_response_interpolation
 
@@ -478,23 +478,23 @@ class Channel:
 
         # Generate the channel's impulse response
         num_signal_samples = transmitted_signal.shape[1]
-        impulse_response = self.impulse_response(
-            np.arange(num_signal_samples) / self.scenario.sampling_rate)
+        impulse_response = self.impulse_response(np.arange(num_signal_samples) / self.scenario.sampling_rate)
+
+        # Consider the a random synchronization offset between transmitter and receiver
+        sync_offset = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
+        sync_offset_samples = int(sync_offset * self.scenario.sampling_rate)
 
         # The maximum delay in samples is modeled by the last impulse response dimension
-        num_delay_samples = impulse_response.shape[3] - 1
+        num_delay_samples = sync_offset_samples + impulse_response.shape[3] - 1
+
+        # Pad the impulse response with zeros to model the synchronization offset
+        # ToDo: Interpolate the third dimension for a more precise synchronization offset modeling
+        impulse_response = np.append(np.zeros((*impulse_response.shape[:3], sync_offset_samples), dtype=complex),
+                                     impulse_response, axis=3)
 
         # Propagate the signal
-        received_signal = np.zeros(
-            (self.receiver.num_antennas,
-             transmitted_signal.shape[1] + num_delay_samples),
-            dtype=complex)
-
-        sync_offset = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
-
-        interpolation_filter: Optional[np.ndarray] = None
-        if self.impulse_response_interpolation:
-            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate)
+        received_signal = np.zeros((self.receiver.num_antennas,
+                                    transmitted_signal.shape[1] + num_delay_samples), dtype=complex)
 
         for delay_index in range(num_delay_samples+1):
             for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
@@ -547,30 +547,10 @@ class Channel:
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
 
-        impulse_responses = self._add_sync_offset(impulse_responses)
         # Save newly generated response as most recent impulse response
         self.recent_response = impulse_responses
 
         # Return resulting impulse response
-        return impulse_responses
-
-    def _add_sync_offset(self, impulse_responses: np.ndarray) -> np.ndarray:
-        self.calculate_new_sync_delay()
-        delay_samples = self.current_sync_offset * self.scenario.sampling_rate
-        if delay_samples > 0:
-            delays = np.zeros(
-                (impulse_responses.shape[0],
-                impulse_responses.shape[1],
-                impulse_responses.shape[2],
-                delay_samples),
-                dtype=complex
-            )
-
-            impulse_responses = np.concatenate(
-                (delays, impulse_responses),
-                axis=3
-            )
-
         return impulse_responses
 
     def interpolation_filter(self, sampling_rate: float) -> np.ndarray:

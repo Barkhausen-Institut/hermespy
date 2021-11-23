@@ -420,6 +420,38 @@ class TestChannel(unittest.TestCase):
 
                 assert_array_equal(propagated_signal, expected_csi_signal.T)
 
+    def test_synchronization_offset_no_interpolation(self) -> None:
+        """The synchronization offset should be applied properly by padding both
+        the CSI and propagated signal with zeros in the time-domain."""
+
+        self.transmitter.num_antennas = 1
+        self.receiver.num_antennas = 1
+
+        mock_generator = Mock()
+        self.channel.random_generator = mock_generator
+        self.channel.impulse_response_interpolation = False  # Disables interpolation routines
+
+        for num_samples in self.propagate_signal_lengths:
+            for offset_samples in [0, 1, 10, 100]:
+
+                signal = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
+
+                offset = offset_samples / self.scenario.sampling_rate
+
+                mock_generator.uniform.return_value = 0.
+                instant_signal, instant_channel = self.channel.propagate(signal)
+
+                mock_generator.uniform.return_value = offset
+                offset_signal, offset_channel = self.channel.propagate(signal)
+
+                # The signals should be expanded by the proper amount of samples
+                self.assertEqual(offset_signal.shape[1] - instant_signal.shape[1], offset_samples)
+
+                # The fist entries should be zeros, the rest of the signal should be identical
+                assert_array_equal(signal, offset_signal[::, offset_samples:])
+                assert_array_equal(np.zeros((offset_signal.shape[0], offset_samples), dtype=complex),
+                                   offset_signal[:, :offset_samples])
+
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
         pass
@@ -427,100 +459,3 @@ class TestChannel(unittest.TestCase):
     def test_from_yaml(self) -> None:
         """Test YAML serialization recall validity."""
         pass
-
-
-class TestSyncOffset(unittest.TestCase):
-    def setUp(self) -> None:
-        self.SEED = 42
-        self.rng_default_seed_1 = np.random.default_rng(self.SEED)
-        self.rng_default_seed_2 = np.random.default_rng(self.SEED)
-
-        self.scenario = Mock()
-        self.scenario.sampling_rate = 1e3
-        self.sample_duration = 1/self.scenario.sampling_rate
-        self.scenario.random_generator = np.random.default_rng()
-
-        self.mock_transmitter = Mock()
-        self.mock_transmitter.num_antennas = 1
-
-        self.mock_receiver = Mock()
-        self.mock_receiver.num_antennas = 1
-
-        self.signal = (
-            np.random.randint(low=1, high=4, size=(1,100))
-            + 1j * np.random.randint(low=1, high=4, size=(1,100))
-        )
-        self.channel_without_delay = self.create_channel(0, 0)
-
-    def test_no_delay_for_default_parameters(self) -> None:
-        ch = self.create_channel(None, None)
-
-        np.testing.assert_array_almost_equal(
-            ch.propagate(self.signal)[0],
-            self.propagate_without_delay(
-                signal=self.signal,
-                rng=self.rng_default_seed_2
-            )
-        )
-
-    def test_one_exact_sample_delay(self) -> None:
-        ch = self.create_channel(self.sample_duration, self.sample_duration)
-        np.testing.assert_array_almost_equal(
-            ch.propagate(self.signal)[0],
-            np.hstack(
-                (np.zeros((1,1), dtype=complex),
-                self.propagate_without_delay(
-                    signal=self.signal,
-                    rng=self.rng_default_seed_2)))
-        )
-
-
-    def test_non_int_sample_delay_gets_truncated(self) -> None:
-        ch = self.create_channel(1.5*self.sample_duration, 1.5*self.sample_duration)
-
-        np.testing.assert_array_almost_equal(
-            ch.propagate(self.signal)[0],
-            np.hstack(
-                (np.zeros((1,1), dtype=complex),
-                 self.propagate_without_delay(
-                     signal=self.signal,
-                     rng=self.rng_default_seed_2)))
-        )
-
-    def test_sample_is_picked(self) -> None:
-        SYNC_OFFSET_LOW = 0
-        SYNC_OFFSET_HIGH = 10*self.sample_duration
-        rng_local = np.random.default_rng(self.SEED)
-
-        delay = rng_local.uniform(low=SYNC_OFFSET_LOW, high=SYNC_OFFSET_HIGH) * self.scenario.sampling_rate
-        ch = self.create_channel(SYNC_OFFSET_LOW, SYNC_OFFSET_HIGH)
-        np.testing.assert_array_almost_equal(
-            ch.propagate(self.signal)[0],
-            np.hstack(
-                (np.zeros((1, int(delay)), dtype=complex),
-                 self.propagate_without_delay(
-                     signal=self.signal,
-                     rng=self.rng_default_seed_2)))
-        )
-
-    def propagate_without_delay(self,
-                                signal: np.ndarray,
-                                ch: Channel = None,
-                                rng: np.random.Generator = None) -> np.ndarray:
-        if ch is None:
-            ch = self.channel_without_delay
-
-        ch.random_generator = rng
-        return ch.propagate(signal)[0]
-
-    def create_channel(self, sync_low: float, sync_high: float) -> Channel:
-        return Channel(
-            transmitter=self.mock_transmitter,
-            receiver=self.mock_receiver,
-            scenario=self.scenario,
-            active=True,
-            gain=1,
-            sync_offset_low=sync_low,
-            sync_offset_high=sync_high,
-            random_generator=self.rng_default_seed_1
-        )
