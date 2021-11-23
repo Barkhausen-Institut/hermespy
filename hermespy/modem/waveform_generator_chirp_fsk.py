@@ -14,6 +14,7 @@ from scipy import integrate
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem import Modem
 from hermespy.modem.waveform_generator import WaveformGenerator
+from hermespy.signal import Signal
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -382,7 +383,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         return self.num_pilot_chirps + self.num_data_chirps
 
     @property
-    def chirp_time(self) -> np.array:
+    def chirp_time(self) -> np.ndarray:
         """Chirp timestamps.
 
         Returns:
@@ -435,10 +436,10 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         offset = self._calculate_frequency_offsets(data_bits)
         return offset
 
-    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray = np.empty(0)) -> np.ndarray:
+    def modulate(self, data_symbols: np.ndarray) -> Signal:
 
         prototypes, _ = self._prototypes()
-        signal = np.empty(self.samples_in_frame, dtype=complex)
+        samples = np.empty(self.samples_in_frame, dtype=complex)
 
         sample_idx = 0
         samples_in_chirp = self.samples_in_chirp
@@ -446,16 +447,16 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         # Modulate pilot symbols
         for _ in range(self.num_pilot_chirps):
 
-            signal[sample_idx:sample_idx+samples_in_chirp] = prototypes[0, :]
+            samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[0, :]
             sample_idx += samples_in_chirp
 
         # Modulate data symbols
         for symbol in data_symbols:
 
-            signal[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
+            samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
             sample_idx += samples_in_chirp
 
-        return signal
+        return Signal(samples, self.sampling_rate)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,

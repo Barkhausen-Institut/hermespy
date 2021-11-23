@@ -10,6 +10,7 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 from hermespy.channel import ChannelStateInformation
+from hermespy.signal import Signal
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -37,10 +38,10 @@ class WaveformGenerator(ABC):
     __modulation_order: int
 
     def __init__(self,
-                 modem: Modem = None,
-                 oversampling_factor: int = None,
-                 modulation_order: int = None) -> None:
-        """Object initialization.
+                 modem: Optional[Modem] = None,
+                 oversampling_factor: int = 1,
+                 modulation_order: int = 16) -> None:
+        """Waveform Generator initialization.
 
         Args:
             modem (Modem, optional):
@@ -57,9 +58,8 @@ class WaveformGenerator(ABC):
 
         # Default parameters
         self.__modem = None
-        self.__sampling_rate = None
-        self.__oversampling_factor = 4
-        self.__modulation_order = 256
+        self.oversampling_factor = oversampling_factor
+        self.modulation_order = modulation_order
 
         if modem is not None:
             self.modem = modem
@@ -88,7 +88,6 @@ class WaveformGenerator(ABC):
         """
 
         state = {
-            "sampling_rate": node.__sampling_rate,
             "oversampling_factor": node.__oversampling_factor,
             "modulation_order": node.__modulation_order,
         }
@@ -296,20 +295,16 @@ class WaveformGenerator(ABC):
         ...
 
     @abstractmethod
-    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        """Modulate a stream of data symbols to a base-band baseband_signal.
+    def modulate(self, data_symbols: np.ndarray) -> Signal:
+        """Modulate a stream of data symbols to a base-band signal containing a single data frame.
 
         Args:
 
             data_symbols (np.ndarray):
                 Vector of data symbols to be modulated.
 
-            timestamps (np.ndarray):
-                Vector if sample times in seconds, at which the resulting base-band baseband_signal should be sampled.
-
         Returns:
-            np.ndarray:
-                Complex-valued vector containing samples of the modulated base-band signals.
+            Signal: Signal model of a single modulate data frame.
         """
         ...
 
@@ -320,15 +315,15 @@ class WaveformGenerator(ABC):
                     channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
         """Simulates time-synchronization at the receiver-side.
 
-        Sorts baseband_signal-sections into frames in time-domain.
+        Sorts base-band signal-sections into frames in time-domain.
 
         Args:
 
             signal (np.ndarray):
-                Vector of complex base-band baseband_signal samples of a single input stream with `num_samples` entries.
+                Vector of complex base-band samples of a single input stream with `num_samples` entries.
 
             channel_state (ChannelStateInformation):
-                State of the wireless transmission channel over which `baseband_signal` has been propagated.
+                State of the wireless transmission channel over which `signal` has been propagated.
 
         Returns:
             List[Tuple[np.ndarray, ChannelStateInformation]]:
@@ -433,3 +428,13 @@ class WaveformGenerator(ABC):
             handle.waveform_generator = self
 
         self.__modem = handle
+
+    @abstractmethod
+    @property
+    def sampling_rate(self) -> float:
+        """Rate at which the waveform generator signal is internally sampled.
+
+        Returns:
+            float: Sampling rate in Hz.
+        """
+        ...
