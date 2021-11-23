@@ -164,3 +164,14 @@ class TestSignal(unittest.TestCase):
         assert_array_almost_equal(samples, down_signal.samples, decimal=1)
         self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
 
+    def test_timestamps(self) -> None:
+        """Timestamps property should return the correct sampling times."""
+
+        expected_timestamps = np.arange(self.num_samples) / self.sampling_rate
+        assert_array_equal(expected_timestamps, self.signal.timestamps)
+
+    def test_plot(self) -> None:
+        """The plot routine should not raise any exceptions."""
+        pass
+
+

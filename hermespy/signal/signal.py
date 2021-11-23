@@ -5,8 +5,10 @@ from __future__ import annotations
 from math import ceil
 from typing import Sequence
 
+import matplotlib.pyplot as plt
 import numpy as np
 from numba import jit, complex128
+from scipy.fft import fft, fftshift, fftfreq
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -209,6 +211,30 @@ class Signal:
 
         # Create a new signal object from the resampled samples and return it as result
         return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay)
+
+    @property
+    def timestamps(self) -> np.ndarray:
+        """The sample-points of the signal model.
+
+        Returns:
+            np.ndarray: Vector of length T containing sample-timestamps in seconds.
+        """
+
+        return np.arange(self.num_samples) / self.__sampling_rate
+
+    def plot(self) -> None:
+        """Plot the current signal in time- and frequency-domain."""
+
+        fig, axes = plt.subplots(self.num_streams, 2, squeeze=False)
+        timestamps = self.timestamps
+
+        for stream_idx, stream_samples in enumerate(self.__samples):
+
+            axes[stream_idx, 0].plot(timestamps, stream_samples.real)
+            axes[stream_idx, 1].plot(fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate)),
+                                     abs(fftshift(fft(stream_samples))))
+
+        fig.suptitle("Signal Model")
 
     @staticmethod
     @jit(nopython=True)
