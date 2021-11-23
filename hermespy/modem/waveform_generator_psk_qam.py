@@ -7,12 +7,12 @@ from enum import Enum
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
-from sparse import COO
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
-from hermespy.channel import ChannelStateInformation
+from hermespy.signal import Signal
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -259,7 +259,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
         return self.__mapping.detect_bits(data_symbols)
 
-    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+    def modulate(self, data_symbols: np.ndarray) -> Signal:
 
         self._set_sampling_indices()
         self._set_pulse_correlation_matrix()
@@ -271,7 +271,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         frame[self._symbol_idx[start_index_data: end_index_data]] = data_symbols
 
         output_signal = self.tx_filter.filter(frame)
-        return output_signal
+        return Signal(output_signal, self.sampling_rate, self.modem.carrier_frequency)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
