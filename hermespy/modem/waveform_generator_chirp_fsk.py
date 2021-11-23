@@ -45,7 +45,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
     def __init__(self,
                  modem: Modem = None,
-                 oversampling_factor: float = None,
+                 oversampling_factor: int = 1,
                  modulation_order: int = None,
                  chirp_duration: float = None,
                  chirp_bandwidth: float = None,
@@ -369,7 +369,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 The number of samples.
         """
 
-        return int(ceil(self.chirp_duration * self.modem.scenario.sampling_rate))
+        return int(ceil(self.chirp_duration * self.sampling_rate))
 
     @property
     def chirps_in_frame(self) -> int:
@@ -403,7 +403,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         """
 
         return (self.samples_in_chirp * self.chirps_in_frame +
-                int((np.around(self.__guard_interval * self.modem.scenario.sampling_rate))))
+                int((np.around(self.__guard_interval * self.sampling_rate))))
 
     @property
     def symbol_energy(self) -> float:
@@ -456,7 +456,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
             sample_idx += samples_in_chirp
 
-        return Signal(samples, self.sampling_rate)
+        return Signal(samples, self.sampling_rate, carrier_frequency=self.modem.carrier_frequency)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
@@ -557,3 +557,9 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         symbol_energy = sum(abs(prototypes[0, :])**2)
         return prototypes, symbol_energy
+
+    @property
+    def sampling_rate(self) -> float:
+
+        # Sampling rate scales with the chirp bandwidth
+        return self.oversampling_factor * self.__chirp_bandwidth
