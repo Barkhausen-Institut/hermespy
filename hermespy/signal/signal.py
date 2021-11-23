@@ -250,7 +250,7 @@ class Signal:
         self.__mix(self.__samples, resampled_added_signal.samples, self.__sampling_rate, frequency_distance)
 
     @staticmethod
-    #@jit(nopython=True)
+    @jit(nopython=True)
     def __mix(target_samples: np.ndarray,
               added_samples: np.ndarray,
               sampling_rate: float,
