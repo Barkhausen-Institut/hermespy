@@ -606,10 +606,8 @@ class MultipathFadingChannel(Channel):
             np.ndarray:
                 Interpolation filter matrix containing filters for each configured resolvable path.
         """
+
         num_delay_samples = int(self.max_delay_with_desync * sampling_rate)
-
-        filter_instances = np.zeros((num_delay_samples+1, self.num_resolvable_paths))
-
         filter_instances = np.empty((self.num_resolvable_paths, num_delay_samples+1), float)
 
         for path_idx, delay in enumerate(self.__delays):
