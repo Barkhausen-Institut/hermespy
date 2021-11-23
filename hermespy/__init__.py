@@ -1,6 +1,7 @@
 from .channel import Channel
 from .modem import Transmitter, Receiver, WaveformGeneratorOfdm, WaveformGeneratorPskQam, WaveformGeneratorChirpFsk
 from .scenario import Scenario
+from .signal import Signal
 from .simulator_core import Simulation, HardwareLoop
 
 __author__ = "Jan Adler"
@@ -13,4 +14,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 __all__ = ['Channel', 'Transmitter', 'Receiver', 'WaveformGeneratorPskQam', 'WaveformGeneratorOfdm',
-           'Scenario', 'Simulation',  'HardwareLoop',  'WaveformGeneratorOfdm']
+           'Scenario', 'Simulation',  'HardwareLoop',  'WaveformGeneratorOfdm', 'Signal']
