@@ -3,9 +3,7 @@
 
 from __future__ import annotations
 from itertools import product
-from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, Type, Union, List, Tuple
-from math import ceil
 
 import numpy as np
 import numpy.random as rnd
@@ -13,9 +11,8 @@ from numpy import cos, exp
 from scipy.constants import pi
 from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 
-from hermespy.channel.channel import Channel
+from hermespy.channel.channel import Channel, ChannelStateInformation
 from hermespy.helpers.resampling import delay_resampling_matrix
-from hermespy.scenario import Scenario
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -128,8 +125,8 @@ class MultipathFadingChannel(Channel):
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None,
                  interpolate_signals: bool = None,
-                 sync_offset_low: Optional[float] = None,
-                 sync_offset_high: Optional[float] = None,
+                 sync_offset_low: float = 0.,
+                 sync_offset_high: float = 0.,
                  impulse_response_interpolation: bool = True) -> None:
         """Object initialization.
 
@@ -263,11 +260,6 @@ class MultipathFadingChannel(Channel):
 
         self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
         self.non_los_gains[rice_inf_pos] = 0.0
-
-    @property
-    def max_delay_with_desync(self) -> float:
-        """Returns maximum delay including sync offset."""
-        return self.max_delay + self.current_sync_offset
 
     @property
     def delays(self) -> np.ndarray:
@@ -484,7 +476,7 @@ class MultipathFadingChannel(Channel):
 
         self.__los_angle = angle
 
-    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation]:
 
         propagated_signal = transmitted_signal.copy()
 
@@ -504,19 +496,9 @@ class MultipathFadingChannel(Channel):
 
         return propagated_signal, impulse_response
 
-    def _calculate_path_delays_in_samples(self) -> np.array:
-        self.calculate_new_sync_delay()
-
-        delays_in_samples = np.round(self.__delays * self.scenario.sampling_rate).astype(int)
-        # max_delay_in_samples = int(ceil(self.__delays[-1] * self.scenario.sampling_rate))
-
-        delays_in_samples += int(self.current_sync_offset * self.scenario.sampling_rate)
-        return delays_in_samples
-
     def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
-        delays_in_samples = self._calculate_path_delays_in_samples()
-        max_delay_in_samples = delays_in_samples.max()
 
+        max_delay_in_samples = int(self.__delays[-1] * self.scenario.sampling_rate)
         impulse_response = np.zeros((len(timestamps),
                                      self.receiver.num_antennas,
                                      self.transmitter.num_antennas,
@@ -607,7 +589,7 @@ class MultipathFadingChannel(Channel):
                 Interpolation filter matrix containing filters for each configured resolvable path.
         """
 
-        num_delay_samples = int(self.max_delay_with_desync * sampling_rate)
+        num_delay_samples = int(self.__delays[-1] * sampling_rate)
         filter_instances = np.empty((self.num_resolvable_paths, num_delay_samples+1), float)
 
         for path_idx, delay in enumerate(self.__delays):
