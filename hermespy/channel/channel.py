@@ -470,7 +470,7 @@ class Channel:
                     ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0))
 
         # Generate the channel's impulse response
-        impulse_response = self.impulse_response(transmitted_signal.timestamps)
+        impulse_response = self.impulse_response(transmitted_signal.timestamps, transmitted_signal.sampling_rate)
 
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
@@ -498,15 +498,20 @@ class Channel:
 
         return propagated_signal, channel_state
 
-    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+    def impulse_response(self,
+                         timestamps: np.ndarray,
+                         sampling_rate: float) -> np.ndarray:
         """Sample a new channel impulse response.
 
         Note that this is the core routine from which `propagate` will create the channel state.
 
         Args:
+
             timestamps (np.ndarray):
                 Time instants with length `T` to calculate the response for.
 
+            sampling_rate (float):
+                The rate at which the delay taps will be sampled, i.e. the delay resolution.
 
         Returns:
             np.ndarray:
