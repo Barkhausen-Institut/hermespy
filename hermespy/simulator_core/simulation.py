@@ -72,6 +72,8 @@ class Simulation(Executable):
     plot_drop_received_bits: bool
     plot_drop_bit_errors: bool
     plot_drop_block_errors: bool
+    plot_drop_transmitted_symbols: bool
+    plot_drop_received_symbols: bool
     plot_drop_transmit_stft: bool
     plot_drop_receive_stft: bool
     plot_drop_transmit_spectrum: bool
@@ -86,6 +88,8 @@ class Simulation(Executable):
                  spectrum_fft_size: int = 0,
                  plot_bit_error: bool = True,
                  plot_block_error: bool = True,
+                 plot_drop_transmitted_symbols: bool = False,
+                 plot_drop_received_symbols: bool = False,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
                  noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
@@ -121,6 +125,12 @@ class Simulation(Executable):
 
             plot_block_error (bool, optional):
                 Plot resulting block error rate after simulation.
+
+            plot_drop_transmitted_symbols (bool, optional):
+                Plot the constellation of transmitted symbols
+
+            plot_drop_received_symbols (bool, optional);
+                Plot the constellation of received symbols.
 
             snr_type (Union[str, SNRType]):
                 The signal to noise ratio metric to be used.
@@ -160,6 +170,8 @@ class Simulation(Executable):
         self.plot_drop_received_bits = False
         self.plot_drop_bit_errors = False
         self.plot_drop_block_errors = False
+        self.plot_drop_transmitted_symbols = plot_drop_transmitted_symbols
+        self.plot_drop_received_symbols = plot_drop_received_symbols
         self.plot_drop_transmit_stft = False
         self.plot_drop_receive_stft = False
         self.plot_drop_transmit_spectrum = False
@@ -234,9 +246,9 @@ class Simulation(Executable):
                     data_bits = scenario.generate_data_bits()
 
                     # Generate radio-frequency band signal emitted from each transmitter
-                    transmitted_signals = Simulation.transmit(scenario=scenario,
-                                                              drop_run_flag=drop_run_flag,
-                                                              data_bits=data_bits)
+                    transmitted_signals, transmitted_symbols = Simulation.transmit(scenario=scenario,
+                                                                                   drop_run_flag=drop_run_flag,
+                                                                                   data_bits=data_bits)
 
                     # Simulate propagation over channel model
                     propagation_matrix = Simulation.propagate(scenario,
@@ -251,9 +263,9 @@ class Simulation(Executable):
                                                           snr)
 
                     # Receive and demodulate signal
-                    detected_bits = Simulation.detect(scenario,
-                                                      received_signals,
-                                                      drop_run_flag)
+                    detected_bits, received_symbols = Simulation.detect(scenario,
+                                                                        received_signals,
+                                                                        drop_run_flag)
 
                     # Collect block sizes
                     transmit_block_sizes = scenario.transmit_block_sizes
@@ -263,9 +275,9 @@ class Simulation(Executable):
                     received_samples = [received_signal[0] for received_signal in received_signals]
 
                     # Save generated signals
-                    drop = SimulationDrop(data_bits, transmitted_signals, transmit_block_sizes, received_samples,
-                                          detected_bits, receive_block_sizes, True, self.spectrum_fft_size,
-                                          scenario.sampling_rate)
+                    drop = SimulationDrop(data_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
+                                          received_samples, received_symbols, detected_bits, receive_block_sizes,
+                                          True, self.spectrum_fft_size, scenario.sampling_rate)
 
                     # Print drop statistics if verbosity flag is set
                     if self.verbosity.value <= Verbosity.INFO.value:
@@ -305,6 +317,12 @@ class Simulation(Executable):
 
                         if self.plot_drop_bit_errors:
                             drop.plot_bit_errors()
+
+                        if self.plot_drop_transmitted_symbols:
+                            drop.plot_transmitted_symbols()
+
+                        if self.plot_drop_received_symbols:
+                            drop.plot_received_symbols()
 
                         if self.plot_drop_block_errors:
                             drop.plot_block_errors()
@@ -522,7 +540,7 @@ class Simulation(Executable):
     def transmit(scenario: Scenario,
                  drop_run_flag: Optional[np.ndarray] = None,
                  drop_duration: Optional[float] = None,
-                 data_bits: Optional[np.array] = None) -> List[Signal]:
+                 data_bits: Optional[np.array] = None) -> Tuple[List[Signal], List[Optional[np.ndarray]]]:
         """Simulate signals emitted by all transmitters registered with a scenario.
 
         Args:
@@ -551,13 +569,22 @@ class Simulation(Executable):
             sending_tx_idx = np.arange(len(scenario.transmitters))
 
         transmitted_signals: List[Optional[Signal]] = []
+        transmitted_symbols: List[Optional[np.ndarray]] = []
+
         if data_bits is None:
 
             for transmitter_idx, transmitter in enumerate(scenario.transmitters):
+
                 if transmitter_idx in sending_tx_idx:
-                    transmitted_signals.append(transmitter.send(drop_duration))
+
+                    signal, symbols = transmitter.send(drop_duration)
+                    transmitted_signals.append(signal)
+                    transmitted_symbols.append(symbols)
+
                 else:
+
                     transmitted_signals.append(None)
+                    transmitted_symbols.append(None)
 
         else:
 
@@ -567,11 +594,17 @@ class Simulation(Executable):
             for transmitter_idx, (transmitter, data) in enumerate(
                                                             zip(scenario.transmitters, data_bits)):
                 if transmitter_idx in sending_tx_idx:
-                    transmitted_signals.append(transmitter.send(drop_duration, data))
-                else:
-                    transmitted_signals.append(None)
 
-        return transmitted_signals
+                    signal, symbols = transmitter.send(drop_duration)
+                    transmitted_signals.append(signal)
+                    transmitted_symbols.append(symbols)
+
+                else:
+
+                    transmitted_signals.append(None)
+                    transmitted_symbols.append(None)
+
+        return transmitted_signals, transmitted_symbols
 
     @staticmethod
     def propagate(scenario: Scenario,
@@ -685,6 +718,7 @@ class Simulation(Executable):
 
         # Prepare the receive signals
         received_signals: List[Tuple[Optional[Signal], Optional[ChannelStateInformation], Optional[float]]] = []
+
         for receiver_index, (receiver, transmitted_signals) in enumerate(zip(scenario.receivers,
                                                                              propagation_matrix)):
             impinging_signals = [tx_tuple[0]
@@ -704,8 +738,8 @@ class Simulation(Executable):
 
                 if impinging_signals[0] is None:
                     received_signals.append((None, None, None))
-                else:
 
+                else:
                     # Model rf-signal reception at the respective receiver
                     received_signal = receiver.receive(impinging_signals, noise_variance)
 
@@ -735,7 +769,8 @@ class Simulation(Executable):
     @staticmethod
     def detect(scenario: Scenario,
                received_signals: List[Tuple[Signal, ChannelStateInformation, float]],
-               drop_run_flag: Optional[np.ndarray] = None) -> List[np.ndarray]:
+               drop_run_flag: Optional[np.ndarray] = None) -> Tuple[List[Optional[np.ndarray]],
+                                                                    List[Optional[np.ndarray]]]:
         """Detect bits from base-band signals.
 
         Calls the waveform-generator's receive-chain routines of each respective receiver.
@@ -763,21 +798,29 @@ class Simulation(Executable):
         if scenario.num_receivers != len(received_signals):
             raise ValueError("Less received signals than scenario receivers provided")
 
-        receiver_bits: List[np.ndarray] = []
-
         if drop_run_flag is None:
             active_rx_idx = np.arange(len(scenario.receivers))
         else:
             active_rx_idx = np.flatnonzero(np.all(drop_run_flag, axis=0))
 
+        received_bits: List[Optional[np.ndarray]] = []
+        received_symbols: List[Optional[np.ndarray]] = []
+
         for receiver, (signal, channel, noise) in zip(scenario.receivers, received_signals):
-            bits = None
 
+            # Only demodulate active receiver signals
             if receiver.index in active_rx_idx and signal is not None:
-                bits = receiver.demodulate(signal, channel, noise)
-            receiver_bits.append(bits)
 
-        return receiver_bits
+                bits, symbols = receiver.demodulate(signal, channel, noise)
+                received_bits.append(bits)
+                received_symbols.append(symbols)
+
+            else:
+
+                received_bits.append(None)
+                received_symbols.append(None)
+
+        return received_bits, received_symbols
 
     @classmethod
     def to_yaml(cls: Type[Simulation],

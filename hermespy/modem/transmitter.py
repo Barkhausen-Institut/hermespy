@@ -2,10 +2,11 @@
 """HermesPy transmitting modem."""
 
 from __future__ import annotations
-from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
-from typing import Type, List, Any, Optional
+from typing import Type, List, Any, Optional, Tuple
+
 import numpy as np
 import numpy.random as rnd
+from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 
 from hermespy.modem import Modem
 from hermespy.signal import Signal
@@ -93,7 +94,7 @@ class Transmitter(Modem):
 
     def send(self,
              drop_duration: Optional[float] = None,
-             data_bits: Optional[np.array] = None) -> Signal:
+             data_bits: Optional[np.array] = None) -> Tuple[Signal, np.ndarray]:
         """Returns an array with the complex base-band samples of a waveform generator.
 
         The signal may be distorted by RF impairments.
@@ -103,9 +104,10 @@ class Transmitter(Modem):
             data_bits (np.array, optional): Data bits to be sent via this transmitter.
 
         Returns:
-            Signal:
-                Signal model carrying the `data_bits` in multiple streams, each stream encoding multiple
-                radio frequency band communication frames.
+            Signal, np.ndarray:
+                - Signal model carrying the `data_bits` in multiple streams, each stream encoding multiple
+                  radio frequency band communication frames.
+                - Numpy vector of symbols to which `data_bits` were mapped
 
         Raises:
             ValueError: If not enough data bits were provided to generate as single frame.
@@ -115,15 +117,8 @@ class Transmitter(Modem):
         if drop_duration is None:
             drop_duration = self.waveform_generator.frame_duration
 
-        # coded_bits = self.encoder.encoder(data_bits)
-        num_samples = int(np.ceil(drop_duration * self.scenario.sampling_rate))
-        timestamps = np.arange(num_samples) / self.scenario.sampling_rate
-
         # Number of data symbols per transmitted frame
         symbols_per_frame = self.waveform_generator.symbols_per_frame
-
-        # Length of frame in samples
-        samples_per_frame = self.waveform_generator.samples_in_frame
 
         # Number of frames fitting into the selected drop duration
         frames_per_stream = int(drop_duration / self.waveform_generator.frame_duration)
@@ -179,7 +174,7 @@ class Transmitter(Modem):
         signal.samples *= np.sqrt(self.power)
 
         # We're finally done, blow the fanfares, throw confetti, etc.
-        return signal
+        return signal, symbols
 
     @classmethod
     def from_yaml(cls: Type[Transmitter], constructor: SafeConstructor, node: Node) -> Transmitter:
