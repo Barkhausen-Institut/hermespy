@@ -2,8 +2,8 @@
 """HermesPy Signal Model."""
 
 from __future__ import annotations
+from copy import deepcopy
 from math import ceil
-from typing import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -209,6 +209,15 @@ class Signal:
 
         stream_power = np.sum(self.__samples.real ** 2 + self.__samples.imag ** 2, axis=1) / self.num_samples
         return stream_power
+
+    def copy(self) -> Signal:
+        """Copy this signal model to a new object.
+
+        Returns:
+            Signal: A copy of this signal model.
+        """
+
+        return deepcopy(self)
 
     def resample(self, sampling_rate: float) -> Signal:
         """Resample the modeled signal to a different sampling rate.
