@@ -2,20 +2,20 @@
 """HermesPy Receiving Modem."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Type, List, Optional, Union, Tuple
 from math import floor
+from typing import TYPE_CHECKING, Type, List, Optional, Union, Tuple
 
 import numpy as np
 import numpy.random as rnd
 from ruamel.yaml import RoundTripConstructor, Node
 from ruamel.yaml.comments import CommentedOrderedMap
-from scipy.constants import pi
 
+from hermespy.channel import Channel, ChannelStateDimension, ChannelStateInformation
 from hermespy.modem import Modem
 from hermespy.modem.precoding import SymbolPrecoding
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.noise import Noise
-from hermespy.channel import ChannelStateDimension, ChannelStateInformation
+from hermespy.signal import Signal
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -63,57 +63,54 @@ class Receiver(Modem):
         self.noise = Noise() if noise is None else noise
         self.reference_transmitter = reference_transmitter
 
-    def receive(self, rf_signals: List[Tuple[np.ndarray, float]],
-                noise_variance: float) -> np.ndarray:
-        """Receive and down-mix radio-frequency-band signals to baseband signals over the receiver's hardware chain.
+    def receive(self, rf_signals: List[Signal],
+                noise_variance: float) -> Signal:
+        """Receive and down-mix radio-frequency-band signals to base-band signals over the receiver's hardware chain.
 
         Args:
-            rf_signals (List[Tuple[np.ndarray, float]]):
-                List containing pairs of rf-band samples and their respective carrier frequencies.
+
+            rf_signals (List[Signal]):
+                List containing radio-frequency band signal models impinging onto the receiver
 
             noise_variance (float):
                 Variance (i.e. power) of the thermal noise added to the signals during reception.
 
-            Raises:
-                ValueError:
-                    If the first dimension of each rf signal does not match the number of receive antennas.
-                    If `noise_variance` is smaller than zero.
+        Returns:
+
+            Signal:
+                A superposition of all `rf_signals` mixed to the base-band, distorted by noise and
+                hardware-effects.
+
+        Raises:
+
+            ValueError:
+                If the first dimension of each rf signal does not match the number of receive antennas.
+                If `noise_variance` is smaller than zero.
         """
 
-        max_signal_length = 0
-        for rf_signal, _ in rf_signals:
+        baseband_signal = Signal.empty(self.waveform_generator.sampling_rate,
+                                       carrier_frequency=self.carrier_frequency,
+                                       num_streams=self.num_antennas)
 
-            # Make sure the rf signal contains a stream for each antenna
-            if rf_signal.shape[0] != self.num_antennas:
-                raise ValueError("Number of input signal streams must be equal to the number of receiving antennas")
-
-            max_signal_length = max(max_signal_length, rf_signal.shape[1])
-
-        timestamps = 2j * pi * np.arange(max_signal_length) / self.scenario.sampling_rate
-        baseband_signal = np.zeros((self.num_antennas, max_signal_length), dtype=complex)
-
-        # Down-mix each rf-band signal to baseband and superimpose them at the receiver-side
-        for rf_signal, carrier_frequency in rf_signals:
-
-            frequency_difference = carrier_frequency - self.carrier_frequency
-            mix_oscillation = np.exp(timestamps[:rf_signal.shape[1]] * frequency_difference)
-
-            for antenna_idx, rf_antenna_signal in enumerate(rf_signal):
-                baseband_signal[antenna_idx, :rf_signal.shape[1]] += mix_oscillation * rf_antenna_signal
+        # Down-mix each rf-band signal to base-band and superimpose them at the receiver-side
+        for rf_signal in rf_signals:
+            baseband_signal.superimpose(rf_signal)
 
         # Scale resulting signal to unit power (relative to the configured transmitter reference)
-        scaled_signal = baseband_signal / np.sqrt(self.received_power)
+        baseband_signal.samples /= np.sqrt(self.received_power)
 
         # Add receive noise
-        noisy_signal = self.__noise.add_noise(scaled_signal, noise_variance)
+        noisy_signal = baseband_signal.copy()
+        noisy_signal.samples = self.__noise.add_noise(baseband_signal.samples, noise_variance)
 
         # Simulate the radio-frequency chain
-        received_signal = self.rf_chain.receive(noisy_signal)
+        received_signal = noisy_signal.copy()
+        received_signal.samples = self.rf_chain.receive(received_signal.samples)
 
         # Return resulting base-band superposition
         return received_signal
 
-    def demodulate(self, baseband_signal: np.ndarray,
+    def demodulate(self, baseband_signal: Signal,
                    channel_state: ChannelStateInformation,
                    noise_variance: float) -> np.ndarray:
         """Demodulates the signal received.
@@ -121,7 +118,7 @@ class Receiver(Modem):
         The received signal may be distorted by RF imperfections before demodulation and decoding.
 
         Args:
-            baseband_signal (np.ndarray):
+            baseband_signal (Signal):
                 Received signal noisy base-band signal.
 
             channel_state (ChannelStateInformation):
@@ -137,7 +134,7 @@ class Receiver(Modem):
             ValueError: If the first dimension of `input_signals` does not match the number of receive antennas.
         """
 
-        if baseband_signal.shape[0] != self.num_antennas:
+        if baseband_signal.num_streams != self.num_antennas:
             raise ValueError("Number of input signals must be equal to the number of antennas")
 
         if channel_state.num_receive_streams != self.num_antennas:
@@ -148,7 +145,7 @@ class Receiver(Modem):
         if self.waveform_generator is None:
             return np.empty((self.num_antennas, 0), dtype=complex)
 
-        num_samples = baseband_signal.shape[1]
+        num_samples = baseband_signal.num_samples
 
         # Number of frames within the received samples
         frames_per_stream = int(floor(num_samples / self.waveform_generator.samples_in_frame))
@@ -164,7 +161,7 @@ class Receiver(Modem):
 
         # Synchronize all streams into frames
         frames: List[List[Tuple[np.ndarray, ChannelStateInformation]]] = []
-        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(baseband_signal,
+        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(baseband_signal.samples,
                                                                        channel_state.received_streams())):
 
             frame = self.waveform_generator.synchronize(rx_signal, stream_transform)
