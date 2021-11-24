@@ -10,6 +10,7 @@ import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
+from hermespy.signal import Signal
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -429,30 +430,25 @@ class Channel:
 
         return self.__transmitter.index, self.__receiver.index
 
-    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation]:
+    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
         """Modifies the input signal and returns it after channel propagation.
 
-        For the ideal channel in the base class, the MIMO channel is modeled as a matrix of one's.
-        The routine samples a new impulse response.
+        For the ideal channel in the base class, the MIMO channel is modeled as a matrix of ones.
+        The routine samples a new impulse response, which will be converted to ChannelStateInformation.
 
         Args:
 
-            transmitted_signal (np.ndarray):
-                Input signal antenna signals to be propagated of this channel instance.
-                The array is expected to be two-dimensional with shape `num_transmit_antennas`x`num_samples`.
+            transmitted_signal (Signal):
+                Radio-Frequency band antenna signals to be propagated of this channel instance.
 
         Returns:
-            (np.ndarray, ChannelStateInformation):
+            (Signal, ChannelStateInformation):
                 Tuple of the distorted signal after propagation and the respective channel state.
-
-                The propagated signal is a two-dimensional array with shape
-                `num_receive_antennas`x`num_propagated_samples`.
-                Note that the channel may append samples to the propagated signal,
-                so that `num_propagated_samples` is generally not equal to `num_samples`.
+                Note that the channel may append samples to the propagated signal.
         Raises:
 
             ValueError:
-                If the first dimension of `transmitted_signal` is not one or the number of transmitting antennas.
+                If the number of streams in `transmitted_signal` is not one or the number of transmitting antennas.
 
             RuntimeError:
                 If the scenario configuration is not supported by the default channel model.
@@ -461,57 +457,51 @@ class Channel:
                 If the channel is currently floating.
         """
 
-        if transmitted_signal.ndim != 2:
-            raise ValueError("Transmitted signal must be a matrix (an array of two dimensions)")
-
         if self.transmitter is None or self.receiver is None:
             raise RuntimeError("Channel is floating, making propagation simulation impossible")
 
-        if transmitted_signal.shape[0] != self.transmitter.num_antennas:
+        if transmitted_signal.num_streams != self.transmitter.num_antennas:
             raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         # If the channel is inactive, propagation will result in signal loss
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
-            return (np.empty((self.receiver.num_antennas, 0), dtype=complex),
+            return (Signal.empty(transmitted_signal.sampling_rate),
                     ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0))
 
         # Generate the channel's impulse response
-        num_signal_samples = transmitted_signal.shape[1]
-        impulse_response = self.impulse_response(np.arange(num_signal_samples) / self.scenario.sampling_rate)
+        impulse_response = self.impulse_response(transmitted_signal.timestamps)
 
         # Consider the a random synchronization offset between transmitter and receiver
-        sync_offset = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
-        sync_offset_samples = int(sync_offset * self.scenario.sampling_rate)
+        sync_offset: float = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
         # The maximum delay in samples is modeled by the last impulse response dimension
-        num_delay_samples = sync_offset_samples + impulse_response.shape[3] - 1
-
-        # Pad the impulse response with zeros to model the synchronization offset
-        # ToDo: Interpolate the third dimension for a more precise synchronization offset modeling
-        impulse_response = np.append(np.zeros((*impulse_response.shape[:3], sync_offset_samples), dtype=complex),
-                                     impulse_response, axis=3)
+        num_delay_samples = impulse_response.shape[3] - 1
 
         # Propagate the signal
-        received_signal = np.zeros((self.receiver.num_antennas,
-                                    transmitted_signal.shape[1] + num_delay_samples), dtype=complex)
+        received_samples = np.zeros((self.receiver.num_antennas,
+                                    transmitted_signal.num_samples + num_delay_samples), dtype=complex)
 
         for delay_index in range(num_delay_samples+1):
             for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
-                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * transmitted_signal[tx_idx, :]
-                received_signal[rx_idx, delay_index:delay_index+num_signal_samples] += delayed_signal
+                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] *\
+                                 transmitted_signal.samples[tx_idx, :]
+                received_samples[rx_idx, delay_index:delay_index+transmitted_signal.num_samples] += delayed_signal
 
+        propagated_signal = Signal(received_samples,
+                                   transmitted_signal.sampling_rate,
+                                   carrier_frequency=transmitted_signal.carrier_frequency,
+                                   delay=transmitted_signal.delay+sync_offset)
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
                                                 impulse_response.transpose(1, 2, 0, 3))
 
-        return received_signal, channel_state
+        return propagated_signal, channel_state
 
     def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
-        """Calculate the channel impulse responses.
+        """Sample a new channel impulse response.
 
-        This method can be used for instance by the transceivers to obtain the channel state
-        information.
+        Note that this is the core routine from which `propagate` will create the channel state.
 
         Args:
             timestamps (np.ndarray):
@@ -552,22 +542,6 @@ class Channel:
 
         # Return resulting impulse response
         return impulse_responses
-
-    def interpolation_filter(self, sampling_rate: float) -> np.ndarray:
-        """Create an interpolation filter matrix.
-
-        Args:
-            sampling_rate: The sampling rate to which to interpolate.
-
-        Returns:
-            np.ndarray:
-                Interpolation filter matrix containing filters for each configured resolvable path.
-        """
-        delay_samples = np.arange(self.sync_offset_delay_samples)
-        interp_filter = np.sinc(delay_samples * sampling_rate)
-        interp_filter /= np.sqrt(np.sum(interp_filter ** 2))
-
-        return interp_filter
 
     @property
     def min_sampling_rate(self) -> float:
