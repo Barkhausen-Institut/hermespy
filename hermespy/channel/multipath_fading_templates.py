@@ -237,8 +237,8 @@ class MultipathFading5GTDL(MultipathFadingChannel):
                  los_doppler_frequency: Optional[float] = None,
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None,
-                 sync_offset_low: Optional[float] = None,
-                 sync_offset_high: Optional[float] = None,
+                 sync_offset_low: float = 0.,
+                 sync_offset_high: float = 0.,
                  random_generator: Optional[np.random.Generator] = None) -> None:
         """Model initialization.
 

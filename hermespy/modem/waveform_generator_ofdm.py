@@ -429,7 +429,7 @@ class FrameSymbolSection(FrameSection):
             sample_index += samples_per_slot
 
         slot_samples = baseband_signal[sample_indices].reshape((samples_per_slot, num_slots), order='F')
-        slot_channel_state = channel_state[:, :, channel_sample_indices, :].to_frequency_selectivity(num_bins=self.num_subcarriers)
+        slot_channel_state = channel_state[:, :, channel_sample_indices, :].to_frequency_selectivity(num_bins=self.frame.num_subcarriers)
 
         # Transform grid back to data symbols
         ofdm_grid = fft(slot_samples, n=self.frame.num_subcarriers, axis=0, norm='ortho')
@@ -439,7 +439,7 @@ class FrameSymbolSection(FrameSection):
     def resource_mask(self) -> np.ndarray:
 
         # Initialize the base mask as all false
-        num_subcarriers = self.num_subcarriers
+        num_subcarriers = self.frame.num_subcarriers
         mask = np.ndarray((len(ElementType), num_subcarriers, self.num_timeslots), dtype=bool) * False
 
         for resource_section, resource_idx in enumerate(self.pattern):
@@ -575,7 +575,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 #    pilot_subcarriers: List[np.ndarray]
 #    pilot_symbols: List[np.ndarray]
 #    reference_symbols: List[np.ndarray]
-#    __fft_size: int
     __subcarrier_spacing: float
     __num_subcarriers: int
     dc_suppression: bool
@@ -760,7 +759,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         # Recover OFDM grid
         symbol_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=complex)
-        resource_mask = np.empty((len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=bool)
+        resource_mask = np.zeros((len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=bool)
         section_channel_states: List[ChannelStateInformation] = []
 
         sample_index = 0
