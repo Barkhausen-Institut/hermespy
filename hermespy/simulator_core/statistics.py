@@ -633,16 +633,16 @@ class Statistics:
 
         if self.__calc_transmit_spectrum:
             for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_tx, self._frequency_range_tx)):
-
-                mat_dict["frequency_tx_" + str(idx)] = fft.fftshift(frequency)
-                mat_dict["power_spectral_density_tx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
+                if periodogram is not None and frequency is not None:
+                    mat_dict["frequency_tx_" + str(idx)] = fft.fftshift(frequency)
+                    mat_dict["power_spectral_density_tx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
 
         if self.__calc_transmit_stft:
             for idx, (time, freq, power) in enumerate(self._stft_tx):
-
-                mat_dict["stft_time_tx_" + str(idx)] = time
-                mat_dict["stft_frequency_tx" + str(idx)] = freq
-                mat_dict["stft_power_tx" + str(idx)] = power
+                if time is not None and freq is not None and power is not None:
+                    mat_dict["stft_time_tx_" + str(idx)] = time
+                    mat_dict["stft_frequency_tx" + str(idx)] = freq
+                    mat_dict["stft_power_tx" + str(idx)] = power
 
         if self.__calc_receive_spectrum:
             for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_rx, self._frequency_range_rx)):
@@ -652,10 +652,10 @@ class Statistics:
 
         if self.__calc_receive_stft:
             for idx, (time, freq, power) in enumerate(self._stft_rx):
-
-                mat_dict["stft_time_rx_" + str(idx)] = time
-                mat_dict["stft_frequency_rx_" + str(idx)] = freq
-                mat_dict["stft_power_rx_" + str(idx)] = power
+                if time is not None and freq is not None and power is not None:
+                    mat_dict["stft_time_rx_" + str(idx)] = time
+                    mat_dict["stft_frequency_rx_" + str(idx)] = freq
+                    mat_dict["stft_power_rx_" + str(idx)] = power
 
         ber_theory = np.nan * np.ones((self.__scenario.num_transmitters,
                                       self.__scenario.num_receivers,

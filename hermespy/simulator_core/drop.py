@@ -2,15 +2,17 @@
 """HermesPy data drop."""
 
 from __future__ import annotations
-from typing import List, Optional, Tuple
-from scipy.signal import stft, welch
-from scipy.fft import fftshift
-from statistics import mean
-from numpy import real, imag
-import numpy as np
-import matplotlib.pyplot as plt
 from enum import IntEnum
+from statistics import mean
+from typing import List, Optional, Tuple
 
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy import real, imag
+from scipy.fft import fftshift
+from scipy.signal import stft, welch
+
+from hermespy.signal import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -144,9 +146,9 @@ class Drop:
     """
 
     __transmitted_bits: List[np.ndarray]
-    __transmitted_signals: List[np.ndarray]
+    __transmitted_signals: List[Signal]
     __transmit_block_sizes: List[int]
-    __received_signals: List[np.ndarray]
+    __received_signals: List[Signal]
     __received_bits: List[np.ndarray]
     __receive_block_sizes: List[int]
     __bit_errors: Optional[List[List[Optional[np.ndarray]]]]
@@ -163,7 +165,7 @@ class Drop:
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
-                 transmitted_signals: List[np.ndarray],
+                 transmitted_signals: List[Signal],
                  transmit_block_sizes: List[int],
                  received_signals: List[np.ndarray],
                  received_bits: List[np.ndarray],
@@ -175,7 +177,7 @@ class Drop:
 
         Args:
             transmitted_bits (List[np.ndarray]): Bits fed into the transmitting modems.
-            transmitted_signals (List[np.ndarray]): Modulated signals emitted by transmitting modems.
+            transmitted_signals (List[Signal]): Modulated signals emitted by transmitting modems.
             transmit_block_sizes (List[int]): Bit block sizes for each transmitter.
             received_signals (List[np.ndarray]): Modulated signals impinging onto receiving modems.
             received_bits (List[np.ndarray]): Bits output by receiving modems.
@@ -222,7 +224,7 @@ class Drop:
         return self.__transmitted_bits
 
     @property
-    def transmitted_signals(self) -> List[np.ndarray]:
+    def transmitted_signals(self) -> List[Signal]:
         """Access transmitted signals."""
 
         return self.__transmitted_signals
@@ -265,10 +267,12 @@ class Drop:
                 # Skip error computation if padding is disabled and the stream lengths don't match
                 if receiver_bits is None:
                     transmit_errors.append(None)
-                elif (len(receiver_bits) != len(transmitter_bits) 
-                      and not self.__pad_bit_errors):
-                        transmit_errors.append(None)
+
+                elif len(receiver_bits) != len(transmitter_bits) and not self.__pad_bit_errors:
+                    transmit_errors.append(None)
+
                 else:
+
                     # Pad bit sequences (if required)
                     num_bits = max(len(receiver_bits), len(transmitter_bits))
                     padded_transmission = np.append(transmitter_bits, np.zeros(num_bits - len(transmitter_bits)))
@@ -415,9 +419,14 @@ class Drop:
         self.__transmit_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__transmitted_signals:
 
+            # Skip if no signal is available
+            if antenna_signals is None:
+                self.__transmit_stft.append((None, None, None))
+                continue
+
             # Consider only the first antenna signal
-            signal: np.ndarray = antenna_signals[0]
-            window_size = len(signal)
+            signal: np.ndarray = antenna_signals.samples[0, :]
+            window_size = antenna_signals.num_samples
 
             # Make sure that signal is at least as long as FFT and pad it
             # with zeros is needed
@@ -429,7 +438,7 @@ class Drop:
             # Compute stft TODO: Add sampling rate
             frequency, time, transform = stft(signal, nperseg=window_size,
                                               noverlap=int(.5 * window_size),
-                                              return_onesided=False)
+                                              return_onesided=False, fs=antenna_signals.sampling_rate)
 
             # Append result tuple
             self.__transmit_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
@@ -457,26 +466,30 @@ class Drop:
 
         self.__receive_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__received_signals:
-            if antenna_signals is not None:
-                # Consider only the first antenna signal
-                signal: np.ndarray = antenna_signals[0]
-                window_size = len(signal)
-                # Make sure that signal is at least as long as FFT and pad it
-                # with zeros is needed
-                if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
 
-                    signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
-                    window_size = self.__spectrum_fft_size
-
-                # Compute stft TODO: Add sampling rate
-                frequency, time, transform = stft(signal, nperseg=window_size,
-                                                    noverlap=int(.5 * window_size),
-                                                    return_onesided=False)
-
-                # Append result tuple
-                self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
-            else:
+            if antenna_signals is None:
                 self.__receive_stft.append((None, None, None))
+                continue
+
+            # Consider only the first antenna signal
+            signal: np.ndarray = antenna_signals.samples[0, :]
+            window_size = antenna_signals.num_samples
+
+            # Make sure that signal is at least as long as FFT and pad it
+            # with zeros is needed
+            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+
+                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                window_size = self.__spectrum_fft_size
+
+            # Compute stft TODO: Add sampling rate
+            frequency, time, transform = stft(signal, nperseg=window_size,
+                                              noverlap=int(.5 * window_size),
+                                              return_onesided=False,
+                                              fs=antenna_signals.sampling_rate)
+
+            # Append result tuple
+            self.__receive_stft.append((fftshift(frequency), time, fftshift(transform, 0)))
 
         return self.__receive_stft
 
@@ -499,12 +512,13 @@ class Drop:
         if self.__transmit_spectrum is not None:
             return self.__transmit_spectrum
 
-        self.__transmit_spectrum: List[Tuple[np.ndarray, np.ndarray]] = []
+        self.__transmit_spectrum: List[Tuple[Optional[np.ndarray], Optional[np.ndarray]]] = []
         for antenna_signals in self.__transmitted_signals:
             if antenna_signals is not None:
+
                 # Consider only the first antenna signal
-                signal: np.ndarray = antenna_signals[0]
-                window_size = len(signal)
+                signal: np.ndarray = antenna_signals.samples[0, :]
+                window_size = antenna_signals.num_samples
 
                 # Make sure that signal is at least as long as FFT and pad it
                 # with zeros is needed
@@ -515,7 +529,7 @@ class Drop:
 
                 # TODO: Integrate sampling rate
                 frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
-                                            return_onesided=False) # , fs=sampling_rate,
+                                            return_onesided=False, fs=antenna_signals.sampling_rate)
 
                 self.__transmit_spectrum.append((frequency, periodogram))
             else:
@@ -585,12 +599,12 @@ class Drop:
 
         # The grid width is the maximum number of transmitting antennas within this drop
         for transmission in self.__transmitted_signals:
-            grid_width = max(grid_width, transmission.shape[0])
+            grid_width = max(grid_width, transmission.num_streams)
 
         figure, axes = plt.subplots(grid_height, grid_width, squeeze=False)
         for transmission_index, transmission in enumerate(self.__transmitted_signals):
 
-            for antenna_index, antenna_emission in enumerate(transmission):
+            for antenna_index, antenna_emission in enumerate(transmission.samples):
                 visualization.plot(axes[transmission_index, antenna_index], antenna_emission)
 
             # Add y-label
@@ -620,22 +634,22 @@ class Drop:
 
         # The grid width is the maximum number of transmitting antennas within this drop
         for transmission in self.__received_signals:
-            grid_width = max(grid_width, transmission.shape[0])
+            grid_width = max(grid_width, transmission.num_streams)
 
         figure, axes = plt.subplots(grid_height, grid_width, squeeze=False)
         for transmission_index, transmission in enumerate(self.__received_signals):
 
-            for antenna_index, antenna_emission in enumerate(transmission):
+            for antenna_index, antenna_emission in enumerate(transmission.samples):
                 visualization.plot(axes[transmission_index, antenna_index], antenna_emission)
 
             # Add y-label
-            axes[transmission_index, 0].set(ylabel="Tx {}".format(transmission_index))
+            axes[transmission_index, 0].set(ylabel="Rx {}".format(transmission_index))
 
         # Add labels
         figure.suptitle("Received Signals")
 
         for antenna_index in range(grid_width):
-            axes[-1, antenna_index].set(xlabel="N {}".format(antenna_index))
+            axes[-1, antenna_index].set(xlabel="M {}".format(antenna_index))
 
     def plot_transmitted_bits(self) -> None:
         """Plot transmitted bits into a grid."""
@@ -736,22 +750,18 @@ class Drop:
     def plot_transmit_stft(self) -> None:
         """Plot the short-time Fourier transform of transmitted waveforms."""
 
-        # Fetch stft
-        stft = self.transmit_stft
-
         figure, axes = plt.subplots(self.__num_transmissions, 1, squeeze=False)
         figure.suptitle("Transmit Short-Time Fourier Transform")
 
-        for transmission_index in range(self.__num_transmissions):
+        for transmission_index, (frequency, time, transform) in enumerate(self.transmit_stft):
 
-            time, frequency, transform = stft[transmission_index]
+            if time is not None and frequency is not None and transform is not None:
 
-            if self.__sampling_rate is not None:
+                axes[transmission_index, 0].pcolormesh(frequency, time, abs(transform), shading='auto')
 
-                frequency *= self.__sampling_rate
-                time /= self.__sampling_rate
+            else:
+                pass
 
-            axes[transmission_index, 0].pcolormesh(frequency, time, abs(transform), shading='auto')
             axes[transmission_index, 0].set(ylabel="Frequency [Hz]")
             axes[transmission_index, 0].set(xlabel="Time [sec]")
             
@@ -767,11 +777,6 @@ class Drop:
         for reception_index in range(self.__num_receptions):
 
             time, frequency, transform = stft[reception_index]
-
-            if self.__sampling_rate is not None:
-
-                frequency *= self.__sampling_rate
-                time /= self.__sampling_rate
 
             axes[reception_index, 0].pcolormesh(frequency, time, abs(transform), shading='auto')
             axes[reception_index, 0].set(ylabel="Frequency [Hz]")

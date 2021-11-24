@@ -63,7 +63,7 @@ class SymbolPrecoding:
 
         self.modem = modem
         self.__symbol_precoders = []
-        self.debug = True
+        self.debug = False
 
     @classmethod
     def to_yaml(cls: Type[SymbolPrecoding], representer: SafeRepresenter, node: SymbolPrecoding) -> Node:
