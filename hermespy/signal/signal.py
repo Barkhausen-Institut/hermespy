@@ -80,6 +80,8 @@ class Signal:
     @classmethod
     def empty(cls,
               sampling_rate: float,
+              num_streams: int = 0,
+              num_samples: int = 0,
               **kwargs) -> Signal:
         """Create a new empty signal model instance.
 
@@ -87,11 +89,17 @@ class Signal:
             sampling_rate (float):
                 Sampling rate of the modeled signal in Hz (in the base-band).
 
+            num_streams (int, optional):
+                Number of signal streams within this empty model.
+
+            num_samples (int, optional):
+                Number of signal samples within this empty model.
+
             kwargs:
-                Additional initialization arguments.
+                Additional initialization arguments, piped through to the class init.
         """
 
-        return Signal(np.empty((0, 0,), dtype=complex), sampling_rate, **kwargs)
+        return Signal(np.empty((num_streams, num_samples), dtype=complex), sampling_rate, **kwargs)
 
     @property
     def samples(self) -> np.ndarray:
