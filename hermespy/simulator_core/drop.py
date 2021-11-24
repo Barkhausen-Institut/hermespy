@@ -559,26 +559,28 @@ class Drop:
         self.__receive_spectrum: List[Tuple[np.ndarray, np.ndarray]] = []
         for antenna_signals in self.__received_signals:
 
-            if antenna_signals is not None:
-                # Consider only the first antenna signal
-                signal: np.ndarray = antenna_signals[0]
-                window_size = len(signal)
+            if antenna_signals is None:
 
-                # Make sure that signal is at least as long as FFT and pad it
-                # with zeros is needed
-                if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
-
-                    signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
-                    window_size = self.__spectrum_fft_size
-
-                # TODO: Integrate sampling rate
-                frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
-                                            return_onesided=False) # , fs=sampling_rate,
-
-                self.__receive_spectrum.append((frequency, periodogram))
-            else:
                 self.__receive_spectrum.append((None, None))
+                continue
 
+            # Consider only the first antenna signal
+            signal: np.ndarray = antenna_signals.samples[0, :]
+            window_size = antenna_signals.num_samples
+
+            # Make sure that signal is at least as long as FFT and pad it
+            # with zeros is needed
+            if self.__spectrum_fft_size and len(signal) < self.__spectrum_fft_size:
+
+                signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
+                window_size = self.__spectrum_fft_size
+
+            # TODO: Integrate sampling rate
+            frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
+                                           return_onesided=False, fs=antenna_signals.sampling_rate)
+
+            self.__receive_spectrum.append((frequency, periodogram))
+            
         return self.__receive_spectrum
 
     def plot_transmitted_signals(self,
