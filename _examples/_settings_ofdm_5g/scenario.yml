@@ -16,6 +16,7 @@ Modems:
       modulation_order: 2
       subcarrier_spacing: 30e3
       dc_suppression: False
+      num_subcarriers: 3300
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
@@ -85,6 +86,7 @@ Modems:
       subcarrier_spacing: 30e3
       dc_suppression: False
       channel_estimation: IDEAL
+      num_subcarriers: 3300
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
