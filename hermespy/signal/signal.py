@@ -280,7 +280,7 @@ class Signal:
         if self.num_samples < resampled_added_signal.num_samples:
             self.__samples = np.append(self.__samples, np.zeros((self.num_streams,
                                                                  resampled_added_signal.num_samples - self.num_samples),
-                                                                dtype=complex))
+                                                                dtype=complex), axis=1)
 
         # Mix the added signal onto this signal's samples according to the carrier frequency distance
         frequency_distance = resampled_added_signal.carrier_frequency - self.carrier_frequency
