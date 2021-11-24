@@ -8,16 +8,16 @@ from abc import abstractmethod
 from functools import lru_cache
 
 import numpy as np
+from numba import jit
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 from scipy.constants import pi
+from scipy.fft import fft, ifft
 from scipy.interpolate import griddata
-from numba import jit
 
 from hermespy.channel import ChannelStateInformation, ChannelStateDimension
 from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
 from hermespy.signal import Signal
-
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -387,17 +387,8 @@ class FrameSymbolSection(FrameSection):
         grid.T[mask[ElementType.NULL.value, ::].T] = 0.
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
-        num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
-
-        num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
-
-        idft_matrix = self.frame.inverse_fourier_weights(self.frame.modem.scenario.sampling_rate,
-                                                         num_slot_samples,
-                                                         grid.shape[0],
-                                                         self.frame.subcarrier_spacing,
-                                                         self.frame.dc_suppression)
-
-        resource_signals = idft_matrix @ grid
+        num_slot_samples = self.frame.num_subcarriers * self.frame.oversampling_factor
+        resource_signals = ifft(grid, n=num_slot_samples, axis=0, norm='ortho')
 
         # Add the cyclic prefix to each time slot while simultaneously flatten the resource signals into time domain
         signals = []
@@ -406,17 +397,17 @@ class FrameSymbolSection(FrameSection):
             pattern_idx = resource_idx % len(self.pattern)
             cp_ratio = self.frame.resources[self.pattern[pattern_idx]].cp_ratio
 
-            num_prefix_samples = int(round(num_samples_per_slot * cp_ratio))
+            num_prefix_samples = int(round(num_slot_samples * cp_ratio))
             signals.append(np.append(resource_samples[-num_prefix_samples:], resource_samples))
 
-        return np.concatenate(signals, axis=0)
+        signal_samples = np.concatenate(signals, axis=0)
+        return signal_samples
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
                    channel_state: ChannelStateInformation) -> Tuple[np.ndarray, ChannelStateInformation]:
 
-        rel_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
-        samples_per_slot = int(round(rel_samples_per_slot))
+        samples_per_slot = self.frame.num_subcarriers * self.frame.oversampling_factor
 
         # Remove the cyclic prefixes before transformation into time-domain
         sample_index = 0
@@ -429,7 +420,7 @@ class FrameSymbolSection(FrameSection):
             pattern_idx = slot_idx % len(self.pattern)
             resource = self.frame.resources[self.pattern[pattern_idx]]
 
-            num_prefix_samples = int(round(rel_samples_per_slot * resource.cp_ratio))
+            num_prefix_samples = int(round(samples_per_slot * resource.cp_ratio))
             sample_index += num_prefix_samples
 
             sample_indices = np.append(sample_indices, np.arange(sample_index, sample_index + samples_per_slot))
@@ -438,16 +429,10 @@ class FrameSymbolSection(FrameSection):
             sample_index += samples_per_slot
 
         slot_samples = baseband_signal[sample_indices].reshape((samples_per_slot, num_slots), order='F')
-        num_slot_samples = int(round(self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing))
         slot_channel_state = channel_state[:, :, channel_sample_indices, :].to_frequency_selectivity(num_bins=self.num_subcarriers)
 
         # Transform grid back to data symbols
-        dft_matrix = self.frame.fourier_weights(self.frame.modem.scenario.sampling_rate,
-                                                num_slot_samples,
-                                                self.num_subcarriers,
-                                                self.frame.subcarrier_spacing,
-                                                self.frame.dc_suppression)
-        ofdm_grid = dft_matrix @ slot_samples
+        ofdm_grid = fft(slot_samples, n=self.frame.num_subcarriers, axis=0, norm='ortho')
         return ofdm_grid, slot_channel_state
 
     @property
@@ -592,6 +577,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 #    reference_symbols: List[np.ndarray]
 #    __fft_size: int
     __subcarrier_spacing: float
+    __num_subcarriers: int
     dc_suppression: bool
     resources: List[FrameResource]
     structure: List[FrameSection]
@@ -603,7 +589,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 #                 fft_size: int = 1,
                  channel_estimation: Union[str, ChannelEstimation] = ChannelEstimation.IDEAL,
                  subcarrier_spacing: float = 1e3,
-                 num_subcarriers: int = 128,
+                 num_subcarriers: int = 1200,
                  dc_suppression: bool = True,
                  resources: Optional[List[FrameResource]] = None,
                  structure: Optional[List[FrameSection]] = None,
@@ -737,15 +723,6 @@ class WaveformGeneratorOfdm(WaveformGenerator):
 
         return num
 
-    @property
-    def num_subcarriers(self) -> int:
-
-        num = 0
-        for section in self.structure:
-            num = max(num, section.num_subcarriers)
-
-        return num
-
     def map(self, data_bits: np.ndarray) -> np.ndarray:
         return self._mapping.get_symbols(data_bits)
 
@@ -773,7 +750,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             section_signal = section.modulate(section_data_symbols)
             output_signal = np.append(output_signal, section_signal)
 
-        return Signal(output_signal, self.sampling_rate, carrier_frequency=self.modem.carrier_frequency)
+        signal_model = Signal(output_signal, self.sampling_rate, carrier_frequency=self.modem.carrier_frequency)
+        return signal_model
 
     def demodulate(self,
                    baseband_signal: np.ndarray,

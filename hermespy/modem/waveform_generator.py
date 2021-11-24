@@ -336,7 +336,7 @@ class WaveformGenerator(ABC):
         """
 
         if len(signal) != channel_state.num_samples + channel_state.num_delay_taps - 1:
-            raise ValueError("Baseband baseband_signal and channel state contain a different amount of samples")
+            raise ValueError("Baseband baseband signal and channel state contain a different amount of samples")
 
         if channel_state.num_receive_streams != 1:
             raise ValueError("Channel state during synchronization may only contain a single receive stream")
