@@ -8,11 +8,12 @@ from typing import TYPE_CHECKING, Optional, Type, Union, List, Tuple
 import numpy as np
 import numpy.random as rnd
 from numpy import cos, exp
-from scipy.constants import pi
 from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
+from scipy.constants import pi
 
 from hermespy.channel.channel import Channel, ChannelStateInformation
 from hermespy.helpers.resampling import delay_resampling_matrix
+from hermespy.signal import Signal
 
 if TYPE_CHECKING:
     from hermespy.scenario import Scenario
@@ -222,7 +223,7 @@ class MultipathFadingChannel(Channel):
         self.__delays = self.__delays[sorting]
         self.__power_profile = self.__power_profile[sorting]
         self.__rice_factors = self.__rice_factors[sorting]
-        self.__num_sinusoids = 20       # TODO: Old implementation was 20. WHY? Slightly more than 8 seems sufficient...
+        self.__num_sinusoids = 20
         self.los_angle = los_angle
         self.__transmit_precoding = None
         self.__receive_postcoding = None
@@ -476,13 +477,13 @@ class MultipathFadingChannel(Channel):
 
         self.__los_angle = angle
 
-    def propagate(self, transmitted_signal: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation]:
+    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
 
         propagated_signal = transmitted_signal.copy()
 
         # Introduce transmit precoding
         if self.__transmit_precoding is not None:
-            propagated_signal = self.__transmit_precoding @ propagated_signal
+            propagated_signal.samples = self.__transmit_precoding @ propagated_signal.samples
 
         # Propagate over channel impulse response
         propagated_signal, impulse_response = Channel.propagate(self, propagated_signal)
@@ -492,13 +493,13 @@ class MultipathFadingChannel(Channel):
 
         # Introduce receive postcoding
         if self.__receive_postcoding is not None:
-            propagated_signal = self.__receive_postcoding @ propagated_signal
+            propagated_signal.samples = self.__receive_postcoding @ propagated_signal.samples
 
         return propagated_signal, impulse_response
 
-    def impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+    def impulse_response(self, timestamps: np.ndarray, sampling_rate: float) -> np.ndarray:
 
-        max_delay_in_samples = int(self.__delays[-1] * self.scenario.sampling_rate)
+        max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
         impulse_response = np.zeros((len(timestamps),
                                      self.receiver.num_antennas,
                                      self.transmitter.num_antennas,
@@ -506,7 +507,7 @@ class MultipathFadingChannel(Channel):
 
         interpolation_filter: Optional[np.ndarray] = None
         if self.impulse_response_interpolation:
-            interpolation_filter = self.interpolation_filter(self.scenario.sampling_rate)
+            interpolation_filter = self.interpolation_filter(sampling_rate)
 
         for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths),
                                                         self.los_gains, self.non_los_gains):
