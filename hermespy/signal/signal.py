@@ -426,7 +426,7 @@ class Signal:
             self.__samples = np.empty((0, signal.num_samples), dtype=complex)
 
         if signal.num_samples != self.num_samples:
-            raise ValueError("Appending signal models streams with differing amount of samples is not supproted")
+            raise ValueError("Appending signal models streams with differing amount of samples is not supported")
 
         if signal.carrier_frequency != self.__carrier_frequency:
             raise ValueError("Appending signals of differing carrier frequencies is not defined")
