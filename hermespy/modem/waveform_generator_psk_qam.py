@@ -618,6 +618,10 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     def power(self) -> float:
         return 1 / self.oversampling_factor
 
+    @property
+    def sampling_rate(self) -> float:
+        return self.symbol_rate * self.oversampling_factor
+
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorPskQam],
                 representer: SafeRepresenter,
