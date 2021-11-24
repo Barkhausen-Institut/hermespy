@@ -72,6 +72,9 @@ class Drop:
         __transmitted_bits (List[np.ndarray]):
             Bits fed into the transmitting modems.
 
+        __transmitted_symbols (List[Optional[np.ndarray]]):
+            Symbols to which the transmitted bits where mapped.
+
         __transmitted_signals (List[np.ndarray]):
             Modulated signals emitted by transmitting modems.
 
@@ -80,6 +83,9 @@ class Drop:
 
         _received_signals (List[np.ndarray]):
             Modulated signals impinging onto receiving modems.
+
+        __received_symbols (List[Optional[np.ndarray]]):
+            Symbols from which the received bits where mapped.
 
         __received_bits (List[np.ndarray]):
             Bits output by receiving modems.
@@ -146,9 +152,11 @@ class Drop:
     """
 
     __transmitted_bits: List[np.ndarray]
+    __transmitted_symbols: List[Optional[np.ndarray]]
     __transmitted_signals: List[Signal]
     __transmit_block_sizes: List[int]
     __received_signals: List[Signal]
+    __received_symbols: List[Optional[np.ndarray]]
     __received_bits: List[np.ndarray]
     __receive_block_sizes: List[int]
     __bit_errors: Optional[List[List[Optional[np.ndarray]]]]
@@ -165,9 +173,11 @@ class Drop:
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
+                 transmitted_symbols: List[Optional[np.ndarray]],
                  transmitted_signals: List[Signal],
                  transmit_block_sizes: List[int],
-                 received_signals: List[np.ndarray],
+                 received_signals: List[Signal],
+                 received_symbols: List[Optional[np.ndarray]],
                  received_bits: List[np.ndarray],
                  receive_block_sizes: List[int],
                  pad_bit_errors: bool = True,
@@ -177,10 +187,12 @@ class Drop:
 
         Args:
             transmitted_bits (List[np.ndarray]): Bits fed into the transmitting modems.
+            transmitted_symbols (List[Optional[np.ndarray]]): Symbols to which the transmitted bits were mapped.
             transmitted_signals (List[Signal]): Modulated signals emitted by transmitting modems.
             transmit_block_sizes (List[int]): Bit block sizes for each transmitter.
-            received_signals (List[np.ndarray]): Modulated signals impinging onto receiving modems.
+            received_signals (List[Signal]): Modulated signals impinging onto receiving modems.
             received_bits (List[np.ndarray]): Bits output by receiving modems.
+            received_symbols (List[Optional[np.ndarray]]): Symbols from which the received bits were mapped.
             receive_block_sizes (List[int]): Bit block sizes for each receiver.
             pad_bit_errors (bool, optional): Pad bit streams during error computation.
             spectrum_fft_size (int, optional): Number of discrete frequency bins within time-frequency transformations.
@@ -196,9 +208,11 @@ class Drop:
             raise ValueError("Receive argument lists must be of identical length")
 
         self.__transmitted_bits = transmitted_bits
+        self.__transmitted_symbols = transmitted_symbols
         self.__transmitted_signals = transmitted_signals
         self.__transmit_block_sizes = transmit_block_sizes
         self.__received_signals = received_signals
+        self.__received_symbols = received_symbols
         self.__received_bits = received_bits
         self.__receive_block_sizes = receive_block_sizes
         self.__bit_errors = None
@@ -224,16 +238,28 @@ class Drop:
         return self.__transmitted_bits
 
     @property
+    def transmitted_symbols(self) -> List[Optional[np.ndarray]]:
+        """Transmitted symbols."""
+
+        return self.__transmitted_symbols
+
+    @property
     def transmitted_signals(self) -> List[Signal]:
         """Access transmitted signals."""
 
         return self.__transmitted_signals
 
     @property
-    def received_signals(self) -> List[np.ndarray]:
+    def received_signals(self) -> List[Signal]:
         """Access received signals."""
 
         return self.__received_signals
+
+    @property
+    def received_symbols(self) -> List[Optional[np.ndarray]]:
+        """Received symbols."""
+
+        return self.__received_symbols
 
     @property
     def received_bits(self) -> List[np.ndarray]:
@@ -824,6 +850,38 @@ class Drop:
             axes[reception_index, 0].set(xlabel="Frequency [Hz]")
             axes[reception_index, 0].set(ylabel="Power [dB]")
 
+    def plot_transmitted_symbols(self) -> None:
+        """Plot the transmitted symbol constellation."""
+
+        figure, axes = plt.subplots(len(self.__transmitted_symbols), squeeze=False)
+        figure.suptitle("Transmitted Symbol Constellations")
+
+        for transmission_idx, symbols in enumerate(self.__transmitted_symbols):
+
+            axes[transmission_idx, 0].scatter(symbols.real, symbols.imag)
+            axes[transmission_idx, 0].title.set_text(f"Tx {transmission_idx}")
+            axes[transmission_idx, 0].set(ylabel="Imag")
+            axes[transmission_idx, 0].set(xlabel="Real")
+            axes[transmission_idx, 0].grid(True, which='both')
+            axes[transmission_idx, 0].axhline(y=0, color='k')
+            axes[transmission_idx, 0].axvline(x=0, color='k')
+
+    def plot_received_symbols(self) -> None:
+        """Plot the received symbol constellation."""
+
+        figure, axes = plt.subplots(len(self.__received_symbols), squeeze=False)
+        figure.suptitle("Received Symbol Constellations")
+
+        for rx_idx, symbols in enumerate(self.received_symbols):
+
+            axes[rx_idx, 0].scatter(symbols.real, symbols.imag)
+            axes[rx_idx, 0].title.set_text(f"Rx {rx_idx}")
+            axes[rx_idx, 0].set(ylabel="Imag")
+            axes[rx_idx, 0].set(xlabel="Real")
+            axes[rx_idx, 0].grid(True, which='both')
+            axes[rx_idx, 0].axhline(y=0, color='k')
+            axes[rx_idx, 0].axvline(x=0, color='k')
+
     def plot(self) -> None:
         """Use matplotlib to visualize the drop.
 
@@ -831,6 +889,7 @@ class Drop:
         """
 
         self.plot_transmitted_bits()
+        self.plot_transmitted_symbols()
         self.plot_transmitted_signals()
         self.plot_received_signals()
         self.plot_received_bits()

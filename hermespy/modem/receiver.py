@@ -112,7 +112,7 @@ class Receiver(Modem):
 
     def demodulate(self, baseband_signal: Signal,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float) -> np.ndarray:
+                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray]:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
@@ -128,7 +128,9 @@ class Receiver(Modem):
                 Power of the incoming noise, required for equalization and channel estimation.
 
         Returns:
-            np.array: Detected bits as a list of data blocks for the drop.
+            (np.array, np.ndarray):
+                - Detected bits as a list of data blocks for the drop.
+                - Detected symbols after decoding.
 
         Raises:
             ValueError: If the first dimension of `input_signals` does not match the number of receive antennas.
@@ -205,7 +207,7 @@ class Receiver(Modem):
         data_bits = self.encoder_manager.decode(code_bits, num_data_bits)
 
         # We're finally done, blow the fanfares, throw confetti, etc.
-        return data_bits
+        return data_bits, decoded_symbols
 
     @classmethod
     def from_yaml(cls: Type[Receiver], constructor: RoundTripConstructor, node: Node) -> Receiver:
