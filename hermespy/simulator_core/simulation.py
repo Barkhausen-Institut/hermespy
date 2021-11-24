@@ -595,7 +595,7 @@ class Simulation(Executable):
                                                             zip(scenario.transmitters, data_bits)):
                 if transmitter_idx in sending_tx_idx:
 
-                    signal, symbols = transmitter.send(drop_duration)
+                    signal, symbols = transmitter.send(drop_duration, data)
                     transmitted_signals.append(signal)
                     transmitted_symbols.append(symbols)
 
