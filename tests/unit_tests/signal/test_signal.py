@@ -47,6 +47,16 @@ class TestSignal(unittest.TestCase):
         self.assertEqual(self.carrier_frequency, self.signal.carrier_frequency)
         self.assertEqual(self.delay, self.signal.delay)
 
+    def test_empty(self) -> None:
+        """Using the empty initializer should result in an empty signal model."""
+
+        sampling_rate = 2
+        empty_signal = Signal.empty(sampling_rate)
+
+        self.assertEqual(sampling_rate, empty_signal.sampling_rate)
+        self.assertEqual(0, empty_signal.num_samples)
+        self.assertEqual(0, empty_signal.num_streams)
+
     def test_samples_setget(self) -> None:
         """Samples property getter should return setter argument."""
 
