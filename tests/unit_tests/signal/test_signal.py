@@ -119,6 +119,15 @@ class TestSignal(unittest.TestCase):
         except ValueError:
             self.fail()
 
+    def test_copy(self) -> None:
+        """Copying a signal model should result in a completely independent instance."""
+
+        samples = self.signal.samples.copy()
+        signal_copy = self.signal.copy()
+        signal_copy.samples += 1j
+
+        assert_array_equal(samples, self.signal.samples)
+
     def test_resampling_power_up(self) -> None:
         """Resampling to a higher sampling rate should not affect the signal power."""
 
