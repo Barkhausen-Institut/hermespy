@@ -77,6 +77,22 @@ class Signal:
         self.carrier_frequency = carrier_frequency
         self.delay = delay
 
+    @classmethod
+    def empty(cls,
+              sampling_rate: float,
+              **kwargs) -> Signal:
+        """Create a new empty signal model instance.
+
+        Args:
+            sampling_rate (float):
+                Sampling rate of the modeled signal in Hz (in the base-band).
+
+            kwargs:
+                Additional initialization arguments.
+        """
+
+        return Signal(np.empty((0, 0,), dtype=complex), sampling_rate, **kwargs)
+
     @property
     def samples(self) -> np.ndarray:
         """Uniformly sampled c
