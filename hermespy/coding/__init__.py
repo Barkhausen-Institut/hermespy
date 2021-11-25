@@ -1,8 +1,8 @@
-from __future__ import annotations
 from .encoder import Encoder
 from .encoder_manager import EncoderManager
 from .block_interleaver import BlockInterleaver
 from .repetition_encoder import RepetitionEncoder
+from .scrambler import Scrambler3GPP, Scrambler80211a
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
