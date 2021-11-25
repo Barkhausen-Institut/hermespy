@@ -60,88 +60,43 @@ class PowerAmplifier:
     __adjust_power_after_pa: bool
 
     def __init__(self,
-                 model: Model = None,
-                 tx_power: float = None,
-                 saturation_amplitude: float = None,
-                 input_backoff_pa_db: float = None,
-                 rapp_smoothness_factor: float = None,
-                 saleh_alpha_a: float = None,
-                 saleh_alpha_phi: float = None,
-                 saleh_beta_a: float = None,
-                 saleh_beta_phi: float = None,
+                 model: Model = Model.NONE,
+                 tx_power: float = 1.0,
+                 saturation_amplitude: float = 0.0,
+                 input_backoff_pa_db: float = 0.0,
+                 rapp_smoothness_factor: float = 1.0,
+                 saleh_alpha_a: float = 2.0,
+                 saleh_alpha_phi: float = 1.0,
+                 saleh_beta_a: float = 2.0,
+                 saleh_beta_phi: float = 1.0,
                  custom_pa_input: np.array = None,
                  custom_pa_output: np.array = None,
                  custom_pa_gain: np.array = None,
                  custom_pa_phase: np.array = None,
-                 adjust_power_after_pa: bool = None) -> None:
+                 adjust_power_after_pa: bool = False) -> None:
         """Creates a power amplifier object
 
         TODO: ARGUMENTS
         """
 
-        self.__model = self.Model.NONE
-        self.__tx_power = 1.0
-        self.__saturation_amplitude = 0.0
-        self.__input_backoff_pa_db = 0.0
-        self.__rapp_smoothness_factor = 1.0
-        self.__power_backoff = 1.0
-        self.__saleh_alpha_a = 2.0
-        self.__saleh_alpha_phi = 1.0
-        self.__saleh_beta_a = 2.0
-        self.__saleh_beta_phi = 1.0
-        self.__custom_pa_input = np.empty(0, dtype=float)
-        self.__custom_pa_output = np.empty(0, dtype=float)
-        self.__custom_pa_gain = np.empty(0, dtype=float)
-        self.__custom_pa_phase = np.empty(0, dtype=float)
-        self.__adjust_power_after_pa = False
+        self.__model = model
+        self.__tx_power = tx_power
+        self.__saturation_amplitude = saturation_amplitude
+        self.__input_backoff_pa_db = input_backoff_pa_db
+        self.__rapp_smoothness_factor = rapp_smoothness_factor
+        self.__power_backoff = 10**(input_backoff_pa_db/10)
+        self.__saleh_alpha_a = saleh_alpha_a
+        self.__saleh_alpha_phi = saleh_alpha_phi
+        self.__saleh_beta_a = saleh_beta_a
+        self.__saleh_beta_phi = saleh_beta_phi
+        self.__custom_pa_input = np.empty(0, dtype=float) if custom_pa_input is None else custom_pa_input
+        self.__custom_pa_output = np.empty(0, dtype=float) if custom_pa_output is None else custom_pa_output
+        self.__custom_pa_gain = np.empty(0, dtype=float) if custom_pa_gain is None else custom_pa_gain
+        self.__custom_pa_phase = np.empty(0, dtype=float) if custom_pa_phase is None else custom_pa_phase
+        self.__adjust_power_after_pa = adjust_power_after_pa
 
-        if model is not None:
-            self.model = model
-
-        if tx_power is not None:
-            self.__tx_power = tx_power
-
-        if saturation_amplitude is not None:
-            self.__saturation_amplitude = saturation_amplitude
-
-        if input_backoff_pa_db is not None:
-            self.__input_backoff_pa_db = input_backoff_pa_db
-
-        if rapp_smoothness_factor is not None:
-            self.rapp_smoothness_factor = rapp_smoothness_factor
-
-        if saleh_alpha_a is not None:
-            self.__saleh_alpha_a = saleh_alpha_a
-
-        if saleh_alpha_phi is not None:
-            self.__saleh_alpha_phi = saleh_alpha_phi
-
-        if saleh_beta_a is not None:
-            self.__saleh_beta_a = saleh_beta_a
-
-        if saleh_beta_phi is not None:
-            self.__saleh_beta_phi = saleh_beta_phi
-
-        if custom_pa_input is not None:
-            self.__custom_pa_input = custom_pa_input
-
-        if custom_pa_output is not None:
-            self.__custom_pa_output = custom_pa_output
-
-        if custom_pa_gain is not None:
-            self.__custom_pa_gain = custom_pa_gain
-
-        if custom_pa_phase is not None:
-            self.__custom_pa_phase = custom_pa_phase
-
-        if adjust_power_after_pa is not None:
-            self.__adjust_power_after_pa = adjust_power_after_pa
-
-        if self.__model != self.Model.NONE:
-            self.__power_backoff = 10**(self.__input_backoff_pa_db/10)
-
-            saturation_power = tx_power * self.__power_backoff
-            self.__saturation_amplitude = np.sqrt(saturation_power)
+        saturation_power = tx_power * self.__power_backoff
+        self.__saturation_amplitude = np.sqrt(saturation_power)
 
     @classmethod
     def to_yaml(cls: Type[PowerAmplifier], representer: RoundTripRepresenter, node: PowerAmplifier) -> Node:

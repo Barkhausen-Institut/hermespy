@@ -8,8 +8,10 @@ Modems:
   # Transmitter configuration
   - Transmitter
 
-    Precoding:
-      - SM
+    Encoding:
+      - Repetition
+        block_size: 1000
+        repetitions: 4
 
     # Waveform configuration
     WaveformPskQam:
@@ -19,11 +21,11 @@ Modems:
       modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
-      oversampling_factor: 2
+      oversampling_factor: 4
 
       # Filter settings
-      #filter:
-      #  filter_type: ROOT_RAISED_COSINE
+      filter:
+        filter_type: ROOT_RAISED_COSINE
 
       # Frame settings
       num_preamble_symbols: 10
@@ -34,8 +36,10 @@ Modems:
   # Receiver configuration
   - Receiver
 
-    Precoding:
-      - MMSE-Time
+    Encoding:
+      - Repetition
+        block_size: 1000
+        repetitions: 4
 
     # Waveform configuration
     WaveformPskQam:
@@ -45,11 +49,11 @@ Modems:
       modulation_order: 16
       chirp_bandwidth: 100e6
       chirp_duration: 1e-6
-      oversampling_factor: 2
+      oversampling_factor: 4
 
       # Filter settings
-      #filter:
-      #  filter_type: ROOT_RAISED_COSINE
+      filter:
+        filter_type: ROOT_RAISED_COSINE
 
       # Frame settings
       num_preamble_symbols: 10
@@ -57,8 +61,12 @@ Modems:
       pilot_rate: 1e6
       guard_interval: 1e-6
 
+    # Power amplifier modeling
+    RfChain:
 
-Channels:
+      PowerAmplifier:
 
-  - COST256 0 0
-    model_type: RURAL
+        model: RAPP
+        input_backoff_pa_db: 10
+        adjust_power_after_pa: False
+        rapp_smoothness_factor: 50

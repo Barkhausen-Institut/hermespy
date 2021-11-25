@@ -57,7 +57,7 @@ class RepetitionEncoder(Encoder):
             np.ndarray: The encoded `bits` block.
         """
 
-        code = np.repeat(bits, self.repetitions)
+        code = np.tile(bits, self.repetitions)
         return code
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
@@ -70,7 +70,7 @@ class RepetitionEncoder(Encoder):
             np.ndarray: A decoded block of bits.
         """
 
-        code = encoded_bits.reshape((self.repetitions, self.bit_block_size), order='F')
+        code = encoded_bits.reshape((self.repetitions, self.bit_block_size))
         bits = (np.sum(code, axis=0) / self.repetitions) >= 0.5  # Majority voting
 
         return bits.astype(int)

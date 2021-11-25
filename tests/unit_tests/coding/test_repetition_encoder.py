@@ -23,6 +23,8 @@ class TestRepetitionEncoder(unittest.TestCase):
 
     def setUp(self) -> None:
 
+        self.generator = np.random.default_rng(42)
+
         # Default parameters
         self.block_size = 8
         self.repetitions = 3
@@ -42,7 +44,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         """Test the encoding behaviour of a single data block being repeated multiple times."""
 
         data = np.arange(self.encoder.bit_block_size)
-        expected_code = np.repeat(data, self.repetitions)
+        expected_code = np.tile(data, self.repetitions)
 
         code = self.encoder.encode(deepcopy(data))
         assert_array_equal(expected_code, code)
@@ -70,11 +72,21 @@ class TestRepetitionEncoder(unittest.TestCase):
 
         expected_data = np.array([1, 0, 1, 0, 1, 0, 0, 1])
 
-        code = np.repeat(expected_data, self.repetitions)
+        code = np.tile(expected_data, self.repetitions)
         code[0::self.repetitions] = np.array([0, 1, 0, 1, 0, 1, 1, 0])
 
         data = self.encoder.decode(code)
         assert_array_equal(expected_data, data)
+
+    def test_encode_decode(self) -> None:
+        """Encoding and subsequent decoding should yield identical bit strings."""
+
+        bits = self.generator.integers(0, 2, self.block_size)
+
+        encoded_bits = self.encoder.encode(bits)
+        decoded_bits = self.encoder.decode(encoded_bits)
+
+        assert_array_equal(bits, decoded_bits)
 
     def test_decoding_default(self) -> None:
         """Test the decoding behaviour of a single code block without repetitions."""

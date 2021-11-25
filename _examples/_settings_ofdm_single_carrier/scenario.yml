@@ -105,5 +105,5 @@ Modems:
 Channels:
 
   - 5GTDL 0 0
-    type: E
+    type: A
     rms_delay: 1e-6
