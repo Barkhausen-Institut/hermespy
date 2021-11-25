@@ -28,9 +28,7 @@ class TestScenario(unittest.TestCase):
 
         self.random_generator = rnd.default_rng(0)
         self.drop_duration = 1e-3
-        self.sampling_rate = 4e6
         self.scenario = Scenario(drop_duration=self.drop_duration,
-                                 sampling_rate=self.sampling_rate,
                                  random_generator=self.random_generator)
 
         self.num_transmitters = 2
@@ -42,7 +40,7 @@ class TestScenario(unittest.TestCase):
             modem = Mock()
 
             # Mock waveform generator max frame duration property
-            modem.waveform_generator.max_frame_duration = (1+t) * 1e-4
+            modem.waveform_generator.frame_duration = (1+t) * 1e-4
             modem.generate_data_bits.return_value = np.ones(1+t)
             modem.encoder_manager.bit_block_size = 1 + t
 
@@ -63,7 +61,6 @@ class TestScenario(unittest.TestCase):
 
         self.assertEqual(self.drop_duration, self.scenario.drop_duration)
         self.assertIs(self.random_generator, self.scenario.random_generator)
-        self.assertIs(self.sampling_rate, self.scenario.sampling_rate)
 
     def test_receivers_get(self) -> None:
         """Receivers property should return a list of all added receiver modems."""
@@ -297,23 +294,6 @@ class TestScenario(unittest.TestCase):
             expected_block_sizes.append(receiver.encoder_manager.bit_block_size)
 
         self.assertCountEqual(expected_block_sizes, self.scenario.receive_block_sizes)
-
-    def test_sampling_rate_setget(self) -> None:
-        """Sampling rate property getter should return setter argument."""
-
-        sampling_rate = 1.0
-        self.scenario.sampling_rate = sampling_rate
-
-        self.assertEqual(sampling_rate, self.scenario.sampling_rate)
-
-    def test_sampling_rate_validation(self) -> None:
-        """Sampling rate property setter should raise ValueError on arguments zero or negative."""
-
-        with self.assertRaises(ValueError):
-            self.scenario.sampling_rate = 0.0
-
-        with self.assertRaises(ValueError):
-            self.scenario.sampling_rate = -1.0
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""

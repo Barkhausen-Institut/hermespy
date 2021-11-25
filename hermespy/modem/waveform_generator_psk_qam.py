@@ -366,7 +366,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             frame_signal = self.rx_filter.filter(frame_signal)
 
             # get channel gains (first tap only)
-            timestamps = (timestamp_in_samples + symbol_idx) / self.modem.scenario.sampling_rate
+            timestamps = (timestamp_in_samples + symbol_idx) / self.sampling_rate
             channel = self.modem.reference_channel.impulse_response(timestamps)
             channel = channel[:, :, :, 0].ravel()
 
@@ -433,7 +433,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         if self.__pilot_rate == 0:
             return 0
 
-        return int(np.round(self.modem.scenario.sampling_rate / self.pilot_rate))
+        return int(round(self.sampling_rate / self.pilot_rate))
 
     @property
     def num_guard_samples(self) -> int:
@@ -443,7 +443,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             int: Number of samples.
         """
 
-        return int(np.round(self.guard_interval * self.modem.scenario.sampling_rate))
+        return int(round(self.guard_interval * self.sampling_rate))
 
     @property
     def guard_interval(self) -> float:

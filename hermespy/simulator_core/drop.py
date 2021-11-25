@@ -148,9 +148,6 @@ class Drop:
             Rate of bit block errors that occured during transmission.
             A matrix of dimensions `num_transmitters`x`num_receivers`.
             Matrix fields representing invalid links will be set to None.
-
-        __sampling_rate (Optional[float]):
-            Sampling rate at which the drop has been created.
     """
 
     __transmitted_bits: List[np.ndarray]
@@ -171,7 +168,6 @@ class Drop:
     __receive_spectrum: Optional[List[Tuple[np.ndarray, np.ndarray]]]
     __bit_error_rates: Optional[List[List[Optional[float]]]]
     __block_error_rates: Optional[List[List[Optional[float]]]]
-    __sampling_rate: Optional[float]
 
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
@@ -183,8 +179,7 @@ class Drop:
                  received_bits: List[np.ndarray],
                  receive_block_sizes: List[int],
                  pad_bit_errors: bool = True,
-                 spectrum_fft_size: Optional[int] = None,
-                 sampling_rate: Optional[float] = None) -> None:
+                 spectrum_fft_size: Optional[int] = None) -> None:
         """Object initialization.
 
         Args:
@@ -198,7 +193,6 @@ class Drop:
             receive_block_sizes (List[int]): Bit block sizes for each receiver.
             pad_bit_errors (bool, optional): Pad bit streams during error computation.
             spectrum_fft_size (int, optional): Number of discrete frequency bins within time-frequency transformations.
-            sampling_rate (float, optional): Sampling rate at which the drop has been created.
         Raises:
             ValueError: If argument List dimensions do not match.
         """
@@ -227,7 +221,6 @@ class Drop:
         self.__receive_spectrum = None
         self.__bit_error_rates = None
         self.__block_error_rates = None
-        self.__sampling_rate = sampling_rate
 
         # Infer parameters
         self.__num_transmissions = len(self.transmitted_bits)
@@ -825,9 +818,6 @@ class Drop:
 
             frequency, periodogram = spectrum[transmission_index]
 
-            if self.__sampling_rate is not None:
-                frequency *= self.__sampling_rate
-
             axes[transmission_index, 0].plot(fftshift(frequency), fftshift(10 * np.log10(periodogram)))
             axes[transmission_index, 0].set(xlabel="Frequency [Hz]")
             axes[transmission_index, 0].set(ylabel="Power [dB]")
@@ -844,9 +834,6 @@ class Drop:
         for reception_index in range(self.__num_receptions):
 
             frequency, periodogram = spectrum[reception_index]
-
-            if self.__sampling_rate is not None:
-                frequency *= self.__sampling_rate
 
             axes[reception_index, 0].plot(fftshift(frequency), fftshift(10 * np.log10(periodogram)))
             axes[reception_index, 0].set(xlabel="Frequency [Hz]")
