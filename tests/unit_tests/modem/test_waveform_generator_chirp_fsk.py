@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import numpy as np
 from math import ceil
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 
 __author__ = "Tobias Kronauer"
@@ -40,7 +41,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
             "guard_interval": 4e-6,
         }
 
-        self.modem.scenario.sampling_rate = self.parameters["chirp_bandwidth"] * self.parameters["oversampling_factor"]
+        self.modem.carrier_frequency = 1.0
 
         self.generator.__init__(**self.parameters)
 
@@ -215,7 +216,7 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
     def test_samples_in_chirp_calculation(self) -> None:
         """Test the calculation for the number of samples within one chirp."""
 
-        expected_samples_in_chirp = int(ceil(self.parameters["chirp_duration"] * self.modem.scenario.sampling_rate))
+        expected_samples_in_chirp = int(ceil(self.parameters["chirp_duration"] * self.generator.sampling_rate))
         self.assertEqual(expected_samples_in_chirp, self.generator.samples_in_chirp,
                          "Samples in chirp calculation produced unexpected result")
 
@@ -261,10 +262,10 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         """Verify the proper demodulation of received signals."""
 
         rx_signal = self.__read_saved_results_from_file('rx_signal.npy')
-        impulse_response = np.ones(rx_signal.shape, dtype=complex)
+        channel_state = ChannelStateInformation.Ideal(num_samples=rx_signal.shape[0])
         noise_variance = 0.0
 
-        received_symbols, _, _ = self.generator.demodulate(rx_signal, impulse_response, noise_variance)
+        received_symbols, _, _ = self.generator.demodulate(rx_signal, channel_state, noise_variance)
         received_bits = self.generator.unmap(received_symbols)
 
         received_bits_expected = self.__read_saved_results_from_file('received_bits.npy').ravel()
@@ -276,16 +277,13 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         self.generator.guard_interval = 0.0
         self.generator.num_pilot_chirps = 0
 
-        # define test parameters
-        num_frames = 12
+        data_bits = np.random.randint(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        transmitted_signal = self.generator.modulate(data_symbols)
 
-        data_bits = np.random.randint(0, 2, (num_frames, self.generator.bits_per_frame))
-        data_symbols = [self.generator.map(bits) for bits in data_bits]
-        transmitted_signal = np.array([self.generator.modulate(symbols) for symbols in data_symbols])
-
-        symbol_energy = np.sum(abs(transmitted_signal.flatten())**2) / (self.generator.num_pilot_chirps +
-                                                                        self.generator.num_data_chirps)
-        bit_energy = symbol_energy / self.generator.bits_per_symbol / num_frames
+        symbol_energy = np.sum(abs(transmitted_signal.samples.flatten())**2) / (self.generator.num_pilot_chirps +
+                                                                                self.generator.num_data_chirps)
+        bit_energy = symbol_energy / self.generator.bits_per_symbol
 
         # compare the measured energy with the expected values
         self.assertAlmostEqual(bit_energy, self.generator.bit_energy,
@@ -298,14 +296,14 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         self.generator.num_pilot_chirps = 0
 
         # define test parameters
-        num_frames = 12
-        num_symbols = num_frames * self.generator.chirps_in_frame
+        num_symbols = self.generator.chirps_in_frame
 
-        data_bits = np.random.randint(0, 2, (num_frames, self.generator.bits_per_frame))
-        data_symbols = [self.generator.map(bits) for bits in data_bits]
-        transmitted_signal = np.array([self.generator.modulate(symbols) for symbols in data_symbols])
+        data_bits = np.random.randint(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        transmitted_signal = self.generator.modulate(data_symbols)
 
-        symbol_energy = np.sum(abs(transmitted_signal.flatten())**2) / (num_symbols + self.generator.num_pilot_chirps)
+        symbol_energy = np.sum(abs(transmitted_signal.samples.flatten())**2) / (num_symbols +
+                                                                                self.generator.num_pilot_chirps)
 
         # compare the measured energy with the expected values
         self.assertAlmostEqual(symbol_energy, self.generator.symbol_energy,
@@ -317,23 +315,22 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         """
 
         # define test parameters
-        num_frames = 100
-        num_samples = num_frames * self.generator.samples_in_frame
+        num_samples = self.generator.samples_in_frame
 
-        data_bits = np.random.randint(0, 2, (num_frames, self.generator.bits_per_frame))
-        data_symbols = [self.generator.map(bits) for bits in data_bits]
-        transmitted_signal = np.array([self.generator.modulate(symbol) for symbol in data_symbols])
+        data_bits = np.random.randint(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        transmitted_signal = self.generator.modulate(data_symbols)
 
-        power = np.sum(abs(transmitted_signal.flatten())**2) / num_samples
+        power = np.sum(abs(transmitted_signal.samples.flatten())**2) / num_samples
         self.assertAlmostEqual(power, self.generator.power, places=1,
-                               msg="Unexpected baseband_signal energy transmitted")
+                               msg="Unexpected baseband signal energy transmitted")
 
     def test_bandwidth(self) -> None:
         """Bandwidth property should return chirp bandwidth."""
 
         self.assertEqual(self.parameters['chirp_bandwidth'], self.generator.bandwidth)
 
-    def __read_saved_results_from_file(self, file_name: str) -> np.ndarray:
+    def __read_saved_results_from_file(self, file_name: str) -> dict[str, np.ndarray]:
         """Internal helper function for reading numpy arrays from save files.
 
         Args:
@@ -349,7 +346,5 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         if not os.path.exists(os.path.join(self.parent_dir, file_name)):
             raise FileNotFoundError(
                 f"{file_name} must be in same folder as this file.")
-        else:
-            results = np.load(os.path.join(self.parent_dir, file_name))
 
-        return results
+        return np.load(os.path.join(self.parent_dir, file_name))

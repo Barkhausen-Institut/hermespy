@@ -63,16 +63,12 @@ class ChannelStateInformation:
         __num_frequency_bins (int):
             Number of discrete frequency bins in frequency-selectivity mode.
             Recovers the 4th matrix dimension during conversions.
-
-        __tol (float):
-            Values smaller than tol will be rounded to zero to speed up computations.
     """
 
     __state_format: ChannelStateFormat
     __state: np.ndarray
     __num_delay_taps: int
     __num_frequency_bins: int
-    __tol = 1e-6
 
     def __init__(self,
                  state_format: ChannelStateFormat,
@@ -393,7 +389,6 @@ class ChannelStateInformation:
 
     def __from_impulse_response(self, transformation: Union[COO, np.ndarray]) -> None:
 
-
         for delay_idx in range(self.__num_delay_taps):
 
             diagonal_elements = diagonal(transformation, axis1=3, axis2=2, offset=delay_idx)
@@ -405,27 +400,28 @@ class ChannelStateInformation:
         self.__state[:, :, :diagonal_elements.shape[2], :].flat = diagonal_elements.todense()
 
     @staticmethod
-    def Ideal(num_receive_streams: int,
-              num_transmit_streams: int,
-              num_samples: int) -> ChannelStateInformation:
+    def Ideal(num_samples: int,
+              num_receive_streams: int = 1,
+              num_transmit_streams: int = 1) -> ChannelStateInformation:
         """Initialize an ideal channel state.
 
         Args:
-            num_receive_streams (int):
-                Number of emerging data streams after channel propagation.
-
-            num_transmit_streams (int):
-                Number of data streams feeding into the channel before propagation.
 
             num_samples (int):
                 Number of timestamps at which the channel state has been sampled.
+
+            num_receive_streams (int, optional):
+                Number of emerging data streams after channel propagation.
+
+            num_transmit_streams (int, optional):
+                Number of data streams feeding into the channel before propagation.
 
         Returns:
             ChannelStateInformation:
                 Ideal channel state information of a non-distorting channel.
         """
 
-        state = np.ones((num_receive_streams, num_transmit_streams, num_samples, 1), dtype=complex)
+        state = np.ones((num_receive_streams, num_transmit_streams, num_samples, 1), dtype=np.complex)
         return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, state)
 
     def received_streams(self) -> Generator[ChannelStateInformation, ChannelStateInformation, None]:
