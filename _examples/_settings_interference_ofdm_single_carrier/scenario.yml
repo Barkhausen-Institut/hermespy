@@ -28,10 +28,10 @@ Modems:
       chirp_duration: 1e-6        # Duration each dedicated chirp in s
 
       # Filter settings
-      #filter:
-      #  filter_type: ROOT_RAISED_COSINE
-      #  pulse_width: .5
-      #  roll_off: .5
+      filter:
+        filter_type: ROOT_RAISED_COSINE
+        bandwidth_factor: .5
+        roll_off: .5
 
       # Frame settings
       num_preamble_symbols: 50    # Number of preamble chirps before data
@@ -55,10 +55,10 @@ Modems:
       chirp_duration: 1e-6        # Duration each dedicated chirp in s
 
       # Filter settings
-      #filter:
-      #  filter_type: ROOT_RAISED_COSINE
-      #  pulse_width: .5
-      #  roll_off: .5
+      filter:
+        filter_type: ROOT_RAISED_COSINE
+        bandwidth_factor: .5
+        roll_off: .5
 
       # Frame settings
       num_preamble_symbols: 50    # Number of preamble chirps before data
@@ -78,6 +78,7 @@ Modems:
       modulation_order: 16
       subcarrier_spacing: 15e3
       dc_suppression: False
+      num_subcarriers: 1200
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
@@ -129,7 +130,7 @@ Modems:
 
     # Spatial precoding with zero-forcing channel equalization
     Precoding:
-      - ZF
+      - ZF-Time
 
     WaveformOFDM:
 
@@ -137,6 +138,7 @@ Modems:
       modulation_order: 16
       subcarrier_spacing: 15e3
       dc_suppression: False
+      num_subcarriers: 1200
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
