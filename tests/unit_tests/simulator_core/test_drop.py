@@ -4,7 +4,6 @@ import unittest
 import numpy as np
 from scipy.fft import fftshift
 from scipy import signal
-from scipy.signal.spectral import periodogram
 
 from hermespy.simulator_core.drop import Drop
 

@@ -469,9 +469,9 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         # ToDo: Unfortunately the demodulation-scheme is non-linear. Is there a better way?
         symbols = np.argmax(symbol_metrics, axis=1)
-        channel_state = ChannelStateInformation.Ideal(channel_state.num_transmit_streams,
-                                                      channel_state.num_receive_streams,
-                                                      len(symbols))
+        channel_state = ChannelStateInformation.Ideal(len(symbols),
+                                                      channel_state.num_transmit_streams,
+                                                      channel_state.num_receive_streams)
         noises = np.repeat(noise_variance, self.num_data_chirps)
 
         return symbols, channel_state, noises
