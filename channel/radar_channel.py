@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
 """Radar Channel Model."""
 from __future__ import annotations
-
-from scipy import constants
+from typing import Type
 
 import numpy as np
-import numpy.random as rnd
-from typing import TYPE_CHECKING, Optional, Type
 from ruamel.yaml import SafeRepresenter, MappingNode
+from scipy import constants
 
 from channel.channel import Channel
 from tools.math import db2lin, lin2db, DbConversionType
 
-if TYPE_CHECKING:
-    from modem import Transmitter, Receiver
-    from scenario import Scenario
+__author__ = "Andre Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Andre Noll Barreto", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class RadarChannel(Channel):
-    """Implements a monostatic radar channel in baseband.
+    """Implements a monostatic radar channel in base-band.
 
     The radar channel is currently implemented as a single-point reflector.
     The model also considers the presence of self-interference due to leakage from transmitter to receiver.
@@ -35,6 +38,7 @@ class RadarChannel(Channel):
     Currently only one transmit and receive antennas is supported.
     Only a radial velocity is considered.
     """
+
     yaml_tag = u'RadarChannel'
     yaml_matrix = True
 
@@ -52,19 +56,14 @@ class RadarChannel(Channel):
     def __init__(self,
                  target_range: float,
                  radar_cross_section: float,
-                 target_exists: Optional[bool] = True,
-                 tx_rx_isolation_db: Optional[float] = float("inf"),
-                 tx_antenna_gain_db: Optional[float] = 0,
-                 rx_antenna_gain_db: Optional[float] = 0,
-                 losses_db: Optional[float] = 0,
-                 velocity: Optional[float] = 0,
-                 filter_response_in_samples: Optional[int] = 21,
-                 transmitter: Optional[Transmitter] = None,
-                 receiver: Optional[Receiver] = None,
-                 active: Optional[bool] = None,
-                 gain: Optional[float] = None,
-                 random_generator: Optional[rnd.Generator] = None,
-                 scenario: Optional[Scenario] = None
+                 target_exists: bool = True,
+                 tx_rx_isolation_db: float = float("inf"),
+                 tx_antenna_gain_db: float = 0,
+                 rx_antenna_gain_db: float = 0,
+                 losses_db: float = 0,
+                 velocity: float = 0,
+                 filter_response_in_samples: int = 21,
+                 **kwargs
                  ) -> None:
         """Object initialization.
 
@@ -79,12 +78,6 @@ class RadarChannel(Channel):
             losses_db(float, optional): any additional atmospheric and/or cable losses, in dB (default = 0)
             velocity(float, optional): radial velocity, in m/s (default = 0)
             filter_response_in_samples(int, optional): length of interpolation filter in samples (default = 7)
-            transmitter (Transmitter, optional): The modem transmitting into this channel.
-            receiver (Receiver, optional): The modem receiving from this channel.
-            active (bool, optional): Channel activity flag.
-            gain (float, optional): Channel power gain.
-            random_generator (rnd.Generator, optional): Generator object for random number sequences.
-            scenario (Scenario, optional): Scenario this channel is attached to.
 
         Raises:
             ValueError:
@@ -95,13 +88,7 @@ class RadarChannel(Channel):
         """
 
         # Init base class
-        Channel.__init__(self,
-                         transmitter=transmitter,
-                         receiver=receiver,
-                         active=active,
-                         gain=gain,
-                         random_generator=random_generator,
-                         scenario=scenario)
+        Channel.__init__(self, **kwargs)
 
         if self.num_inputs > 1 or self.num_outputs > 1:
             raise ValueError("Multiple antennas are not supported")
