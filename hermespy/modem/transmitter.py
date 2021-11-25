@@ -12,7 +12,7 @@ from hermespy.modem import Modem
 from hermespy.signal import Signal
 from hermespy.source import BitsSource
 from hermespy.modem.waveform_generator import WaveformGenerator
-from hermespy.modem.precoding import SymbolPrecoding
+from hermespy.precoding import SymbolPrecoding
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

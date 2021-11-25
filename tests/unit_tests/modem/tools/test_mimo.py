@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import numpy.testing as nt
 
-from hermespy.modem.precoding.mimo import Mimo
+from hermespy.precoding.mimo import Mimo
 
 
 class TestMimo(unittest.TestCase):

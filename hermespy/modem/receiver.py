@@ -12,7 +12,7 @@ from ruamel.yaml.comments import CommentedOrderedMap
 
 from hermespy.channel import Channel, ChannelStateDimension, ChannelStateInformation
 from hermespy.modem import Modem
-from hermespy.modem.precoding import SymbolPrecoding
+from hermespy.precoding import SymbolPrecoding
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.noise import Noise
 from hermespy.signal import Signal

@@ -20,7 +20,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-from hermespy.modem.precoding import SymbolPrecoding
+from hermespy.precoding import SymbolPrecoding
 from hermespy.coding import EncoderManager
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.rf_chain import RfChain
