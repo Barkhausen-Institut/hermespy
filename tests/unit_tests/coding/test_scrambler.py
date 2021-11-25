@@ -2,9 +2,17 @@ import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from modem.coding.scrambler import Scrambler3GPP, Scrambler80211a, PseudoRandomGenerator
-from parameters_parser.parameters_scrambler import ParametersScrambler
-from .utils import assert_frame_equality
+from hermespy.coding.scrambler import PseudoRandomGenerator
+from hermespy.coding import Scrambler3GPP, Scrambler80211a
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler", "Tobias Kronauer"]
+__license__ = "AGPLv3"
+__version__ = "0.2.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestPseudoRandomGenerator(unittest.TestCase):
@@ -45,19 +53,18 @@ class TestScrambler3GPP(unittest.TestCase):
     def setUp(self) -> None:
         """Set up testing."""
 
-        self.scrambler = Scrambler3GPP(ParametersScrambler(), 31)
+        self.scrambler = Scrambler3GPP()
 
     def test_coding(self) -> None:
         """Test encoding and subsequent decoding behaviour."""
 
         data = np.random.randint(0, 2, 31)
-        code = self.scrambler.encode([data])
+        code = self.scrambler.encode(data)
 
-        descrambler = Scrambler3GPP(ParametersScrambler(), 31)
+        descrambler = Scrambler3GPP()
         decoded_data = descrambler.decode(code)
 
-        assert_array_equal(data, decoded_data[0],
-                           "Encoding and subsequent decoding did not produce identical results")
+        assert_array_equal(data, decoded_data)
 
 
 class TestScrambler80211a(unittest.TestCase):
@@ -66,7 +73,7 @@ class TestScrambler80211a(unittest.TestCase):
     def setUp(self) -> None:
         """Set up testing."""
 
-        self.scrambler = Scrambler80211a(ParametersScrambler(), 31)
+        self.scrambler = Scrambler80211a()
 
     def test_seed(self) -> None:
         """Seed getter should return setter value."""
@@ -84,7 +91,7 @@ class TestScrambler80211a(unittest.TestCase):
     def test_sequence(self) -> None:
         """Make sure the scrambler produces an expected sequence internally."""
 
-        self.scrambler.seed = np.ones(7, dtype=int)
+        self.scrambler.seed = np.ones(7, dtype=np.int8)
         expected_sequence = np.array([0, 0, 0, 0, 1, 1, 1, 0,
                                       1, 1, 1, 1, 0, 0, 1, 0,
                                       1, 1, 0, 0, 1, 0, 0, 1,
@@ -104,13 +111,13 @@ class TestScrambler80211a(unittest.TestCase):
         """
 
         self.scrambler.seed = np.array([1, 0, 1, 1, 1, 0, 1])
-        data = np.zeros(72, dtype=int)
+        data = np.zeros(72, dtype=np.int8)
         data[[18, 25, 41, 42, 43, 45, 61, 62, 67]] = 1
-        expected_scramble = np.zeros(72, dtype=int)
+        expected_scramble = np.zeros(72, dtype=np.int8)
         expected_scramble[[1, 2, 4, 5, 11, 12, 15, 16, 20, 23, 24, 28, 29, 30, 31, 33, 34,
                            36, 42, 47, 48, 49, 50, 51, 53, 56, 58, 61, 63, 65, 66, 71]] = 1
 
-        assert_frame_equality([expected_scramble], self.scrambler.encode([data]))
+        assert_array_equal(expected_scramble, self.scrambler.encode(data))
 
     def test_decode(self) -> None:
         """Test the de-scrambling against the example tables of IEEE 802.11a.
@@ -119,10 +126,10 @@ class TestScrambler80211a(unittest.TestCase):
         """
 
         self.scrambler.seed = np.array([1, 0, 1, 1, 1, 0, 1])
-        scramble = np.zeros(72, dtype=int)
+        scramble = np.zeros(72, dtype=np.int8)
         scramble[[1, 2, 4, 5, 11, 12, 15, 16, 20, 23, 24, 28, 29, 30, 31, 33, 34,
                   36, 42, 47, 48, 49, 50, 51, 53, 56, 58, 61, 63, 65, 66, 71]] = 1
-        expected_data = np.zeros(72, dtype=int)
+        expected_data = np.zeros(72, dtype=np.int8)
         expected_data[[18, 25, 41, 42, 43, 45, 61, 62, 67]] = 1
 
-        assert_frame_equality([expected_data], self.scrambler.decode([scramble]))
+        assert_array_equal(expected_data, self.scrambler.decode(scramble))
