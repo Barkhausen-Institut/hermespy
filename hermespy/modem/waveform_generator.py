@@ -225,13 +225,6 @@ class WaveformGenerator(ABC):
         return self.samples_in_frame / self.sampling_rate
 
     @property
-    def max_frame_duration(self) -> float:
-        """float: Maximum length of a data frame (in seconds)"""
-
-        # TODO: return (self.samples_in_frame + self._samples_overhead_in_frame) / self.sampling_rate
-        return self.samples_in_frame / self.modem.scenario.sampling_rate
-
-    @property
     @abstractmethod
     def bit_energy(self) -> float:
         """Returns the theoretical average (discrete-time) bit energy of the modulated baseband_signal.

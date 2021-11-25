@@ -48,53 +48,6 @@ class TestBitsSource(unittest.TestCase):
             # Assert that all bits are actually either zeros or ones
             self.assertEqual(True, np.any((bits == 1) | (bits == 0)))
 
-#    def test_get_number_of_errors(self) -> None:
-#        """
-#        Test if BitsSource.get_number_of_errors method calculates the right number of errors
-#        """
-#
-#        block_error_probability = self.rnd.rand()
-#
-#        number_of_frames = self.rnd.randint(2, 20)
-#        bits_in_drop = list()
-#
-#        for idx in range(number_of_frames):
-#            number_of_blocks = self.rnd.randint(1, 10)
-#            block_size = self.rnd.randint(1, 5000)
-#            bits = self.source.get_bits(block_size, number_of_blocks)
-#            frame = np.ndarray((number_of_blocks, block_size))
-#
-#            for block_iter, block in enumerate(bits):
-#                frame[block_iter, :] = deepcopy(block)
-#            bits_in_drop.append(frame)
-#
-#        number_of_errors = self.source.get_number_of_errors(bits_in_drop)
-#
-#        self.assertEqual(number_of_errors.number_of_bit_errors, 0)
-#        self.assertEqual(number_of_errors.number_of_block_errors, 0)
-#
-#        number_of_block_errors = 0
-#        number_of_bit_errors = 0
-#
-#        for frame_idx, frame in enumerate(bits_in_drop):
-#            for block in frame:
-#                if self.rnd.rand() < block_error_probability:
-#                    number_of_block_errors += 1
-#                    # all blocks in the frame have the same size
-#                    errors_in_block = self.rnd.randint(1, block.size)
-#                    number_of_bit_errors += errors_in_block
-#                    error_idx = self.rnd.choice(
-#                        block.size, errors_in_block, replace=False)
-#                    block[error_idx] = np.logical_not(block[error_idx])
-#
-#        number_of_errors = self.source.get_number_of_errors(bits_in_drop)
-#        self.assertEqual(
-#            number_of_errors.number_of_block_errors,
-#            number_of_block_errors)
-#        self.assertEqual(
-#            number_of_errors.number_of_bit_errors,
-#            number_of_bit_errors)
-        
     def test_random_generator_setget(self) -> None:
         """Random generator property getter should return setter argument."""
 
