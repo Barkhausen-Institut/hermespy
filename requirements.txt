@@ -1,5 +1,5 @@
 matplotlib~=3.4.3
-numpy~=1.21.3
+numpy~=1.20.3
 scipy~=1.7.1
 pytest-mypy~=0.8.1
 pytest-flake8~=1.0.7
