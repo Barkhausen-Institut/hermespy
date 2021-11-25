@@ -388,7 +388,13 @@ class Channel:
         Returns:
             int:
                 The number of input streams.
+
+        Raises:
+            RuntimeError: If the channel is currently floating.
         """
+
+        if self.__transmitter is None:
+            raise RuntimeError("Error trying to access the number of inputs of a floating channel")
 
         return self.__transmitter.num_antennas
 
@@ -401,7 +407,13 @@ class Channel:
         Returns:
             int:
                 The number of output streams.
+
+        Raises:
+            RuntimeError: If the channel is currently floating.
         """
+
+        if self.__receiver is None:
+            raise RuntimeError("Error trying to access the number outputs of a floating channel")
 
         return self.__receiver.num_antennas
 
