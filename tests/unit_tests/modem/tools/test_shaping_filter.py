@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import numpy.testing as npt
-from modem.tools.shaping_filter import ShapingFilter
+from hermespy.modem.tools.shaping_filter import ShapingFilter
 from matplotlib import pyplot as plt
 from scipy import signal
 
@@ -15,10 +15,10 @@ class TestShapingFilter(unittest.TestCase):
     def test_raised_cosine(self) -> None:
         """
         Test if a raise cosine pulse satisfies the desired properties, i.e., given a discrete sequence x[k], with x(t) a
-        zero-padded upsampled signal, then if y(t) = x(t) * h(t), with h(t) a raised-cosine filter, then
+        zero-padded upsampled baseband_signal, then if y(t) = x(t) * h(t), with h(t) a raised-cosine filter, then
         y(kTs) = A s[k].
         A sequence of 100 random symbols is generated, filtered by a raised cosine filter, and sampled. The sampled
-        signal must be (nearly) equal to the original sequence, except for a multiplying factor.
+        baseband_signal must be (nearly) equal to the original sequence, except for a multiplying factor.
         This is tested for several different oversampling rates and FIR lengths.
         """
 
@@ -58,10 +58,10 @@ class TestShapingFilter(unittest.TestCase):
     def test_root_raised_cosine(self) -> None:
         """
         Test if a root-raise cosine pulse satisfies the desired properties, i.e., given a discrete sequence x[k], with
-        x(t) a zero-padded upsampled signal, then if y(t) = x(t) * h(t) * h(t), with h(t) a root-raised-cosine filter,
+        x(t) a zero-padded upsampled baseband_signal, then if y(t) = x(t) * h(t) * h(t), with h(t) a root-raised-cosine filter,
         then y(kTs) = A s[k].
         A sequence of 100 random symbols is generated, filtered twice by a root-raised-cosine filter, and sampled. The
-        sampled signal must be (nearly) equal to the original sequence.
+        sampled baseband_signal must be (nearly) equal to the original sequence.
         However, this is true only for very long impulse responses (because of truncation), and only one combination of
         filter length and oversampling rate is tested.
         """
@@ -129,7 +129,7 @@ class TestShapingFilter(unittest.TestCase):
     def test_rectangular(self) -> None:
         """
         Test if filtering with a rectangular pulse behaves as expected.
-        A sequence of 100 random symbols is generated, and upsampled with zero-padding. The filtered signal must consist
+        A sequence of 100 random symbols is generated, and upsampled with zero-padding. The filtered baseband_signal must consist
         of a series of rectangular pulses of the desired length and complex amplitude given by the random symbols.
         """
 
@@ -228,7 +228,7 @@ def plot_fmcw() -> None:
     input_signal = np.array([1])
     impulse_response = fmcw.filter(input_signal)
 
-    # upconvert chirp to generate a passband real-valued chirp signal
+    # upconvert chirp to generate a passband real-valued chirp baseband_signal
     time = np.arange(impulse_response.size) / sampling_rate
     impulse_response_upconverted = np.real(
         impulse_response *

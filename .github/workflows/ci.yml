@@ -21,10 +21,10 @@ jobs:
       with:
         lfs: true
 
-    - name: Set up Python 3.7.7
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7.7
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -46,10 +46,10 @@ jobs:
       with:
         lfs: false
 
-    - name: Setup python 3.7.7
+    - name: Setup python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7.7
+        python-version: 3.9
 
     - name: Install doc dependencies
       run: |
@@ -80,10 +80,10 @@ jobs:
         lfs: true
         fetch-depth: 0
         
-    - name: Setup python 3.7.7
+    - name: Setup python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7.7
+        python-version: 3.9
         
     - name: Install build tools
       run: pip install --upgrade build twine
@@ -133,5 +133,3 @@ jobs:
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
         packages_dir: dist/
-        
-    

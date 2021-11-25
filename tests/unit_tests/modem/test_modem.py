@@ -1,240 +1,276 @@
-from modem.coding.encoder_factory import EncoderFactory
+# -*- coding: utf-8 -*-
+"""HermesPy testing for modem base class."""
+
 import unittest
+from unittest.mock import Mock
+
 import numpy as np
-import unittest.mock
-from unittest.mock import patch, Mock
-
 from numpy import random as rnd
-import copy
+from numpy.testing import assert_array_equal, assert_almost_equal
+from scipy.constants import speed_of_light
 
-from modem.modem import Modem
-from parameters_parser.parameters_tx_modem import ParametersTxModem
-from parameters_parser.parameters_psk_qam import ParametersPskQam
-from source.bits_source import BitsSource
-from modem.coding.encoder_manager import EncoderManager
-from modem.coding.repetition_encoder import RepetitionEncoder
-from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
+from hermespy.modem.modem import Modem
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler", "Tobias Kronauer"]
+__license__ = "AGPLv3"
+__version__ = "0.2.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestModem(unittest.TestCase):
+    """Modem Base Class Test Case"""
 
     def setUp(self) -> None:
-        # do some general setup that is required for creating the Modem
-        rng_src = rnd.RandomState(42)
-        rng_hw = rnd.RandomState(43)
-        self.params_psk_am = ParametersPskQam()
-        self.params_psk_am.modulation_order = 2
-        self.params_psk_am.symbol_rate = 125e3
-        self.params_psk_am.bandwidth = self.params_psk_am.symbol_rate
-        self.params_psk_am.filter_type = 'ROOT_RAISED_COSINE'
-        self.params_psk_am.roll_off_factor = .5
-        self.params_psk_am.oversampling_factor = 8
-        self.params_psk_am.filter_length_in_symbols = 16
-        self.params_psk_am.sampling_rate = 3e3
-        self.params_psk_am.number_preamble_symbols = 0
-        self.params_psk_am.number_postamble_symbols = 0
-        self.params_psk_am.number_data_symbols = 100
-        self.params_psk_am.guard_interval = 1e-3
-        self.params_psk_am.bits_per_symbol = int(
-            np.log2(self.params_psk_am.modulation_order))
-        self.params_psk_am.bits_in_frame = self.params_psk_am.number_data_symbols * \
-            self.params_psk_am.bits_per_symbol
-        self.source = BitsSource(rng_src)
 
-        # generate patch for ParametersModem
-        self.patch_parameters_modem = patch(
-            'parameters_parser.parameters_modem.ParametersModem')
-        MockParametersModem = self.patch_parameters_modem.start()
-        mock_parameters_modem = MockParametersModem()
+        self.scenario = Mock()
+        self.scenario.sampling_rate = 1e6
 
-        # create modem; ParametersModem needs to be mocked since it is abstract
-        mock_parameters_modem.encoding_type = ["REPETITION"]
-        mock_parameters_modem.encoding_params = [ParametersRepetitionEncoder()]
-        mock_parameters_modem.technology = self.params_psk_am
-        mock_parameters_modem.crc_bits = 0
+        self.position = np.zeros(3)
+        self.orientation = np.zeros(3)
+        self.carrier_frequency = 1e9
+        self.num_antennas = 3
 
-        self.modem = Modem(mock_parameters_modem, self.source, rng_hw, rng_src)
+        self.encoding = Mock()
+        self.precoding = Mock()
+        self.waveform = Mock()
+        self.rfchain = Mock()
 
-        # assign necessary mocks
-        self.mock_rf_chain = Mock()
-        self.mock_waveform_generator = Mock()
-        self.mock_waveform_generator.get_bit_energy.return_value = 1
-        self.mock_waveform_generator.get_symbol_energy.return_value = 1
-        self.modem.rf_chain = self.mock_rf_chain
-        self.modem.waveform_generator = self.mock_waveform_generator
+        self.random_generator = rnd.default_rng(42)
 
-    def tearDown(self) -> None:
-        self.patch_parameters_modem.stop()
+        self.modem = Modem(scenario=self.scenario, position=self.position, orientation=self.orientation,
+                           carrier_frequency=self.carrier_frequency, num_antennas=self.num_antennas,
+                           encoding=self.encoding, precoding=self.precoding, waveform=self.waveform,
+                           rfchain=self.rfchain, random_generator=self.random_generator)
 
-    def test_scaling_of_energy_with_code_ratio(self) -> None:
-        N = 2
-        K = 1
-        params_encoder = ParametersRepetitionEncoder()
-        params_encoder.encoded_bits_n = N
-        params_encoder.data_bits_k = K
+    def test_initialization(self) -> None:
+        """Initialization parameters should be properly stored as class attributes."""
 
-        encoder_factory = EncoderFactory()
-        encoder = encoder_factory.get_encoder(
-            params_encoder, "repetition", self.params_psk_am.bits_in_frame, np.random.RandomState())
-        encoder_manager = EncoderManager()
-        encoder_manager.add_encoder(encoder)
+        self.assertIs(self.scenario, self.modem.scenario)
+        self.assertIs(self.position, self.modem.position)
+        self.assertIs(self.orientation, self.modem.orientation)
+        self.assertIs(self.carrier_frequency, self.modem.carrier_frequency)
+        self.assertIs(self.encoding, self.modem.encoder_manager)
+        self.assertIs(self.precoding, self.modem.precoding)
+        self.assertIs(self.waveform, self.modem.waveform_generator)
+        self.assertIs(self.rfchain, self.modem.rf_chain)
+        self.assertIs(self.random_generator, self.modem.random_generator)
+
+    def test_init_topology(self) -> None:
+        """If no topology is specified, the modem should represent a half-wavelength ULA by default."""
+
+        half_wavelength = .5 * speed_of_light / self.carrier_frequency
+        expected_topology = half_wavelength * np.outer(np.arange(self.num_antennas), np.array([1., 0., 0.]))
+
+        assert_almost_equal(expected_topology, self.modem.topology)
+
+    def test_scenario_setget(self) -> None:
+        """Scenario property setter should return getter argument."""
+
+        self.modem = Modem()
+        self.modem.scenario = self.scenario
+
+        self.assertIs(self.scenario, self.modem.scenario)
+
+    def test_scenario_set_validation(self) -> None:
+        """Overwriting a scenario property should raise a RuntimeError."""
+
+        with self.assertRaises(RuntimeError):
+            self.modem.scenario = Mock()
+
+    def test_scenario_get_validation(self) -> None:
+        """Scenario property getter should raise a RuntimeError if no scenario has been specified."""
+
+        self.modem = Modem()
+        with self.assertRaises(RuntimeError):
+            _ = self.modem.scenario
+
+    def test_is_attached(self) -> None:
+        """The is_attached property should return the proper modem attachment state."""
+
+        self.assertTrue(self.modem.is_attached)
+        self.assertFalse(Modem().is_attached)
+
+    def test_random_generator_setget(self) -> None:
+        """Random generator property getter should return setter argument."""
+
+        random_generator = Mock()
+        self.modem.random_generator = random_generator
+
+        self.assertIs(random_generator, self.modem.random_generator)
+
+    def test_random_generator_get_validation(self) -> None:
+        """Random generator getter should raise a RuntimeError if the modem is floating
+        and no generator has ben specified."""
+
+        self.modem = Modem()
+        with self.assertRaises(RuntimeError):
+            _ = self.modem.random_generator
+
+        self.modem.scenario = self.scenario
+        try:
+            _ = self.modem.random_generator
+
+        except RuntimeError:
+            self.fail()
+
+    def test_position_setget(self) -> None:
+        """Position property getter should return setter argument."""
+
+        position = np.arange(3)
+        self.modem.position = position
+
+        assert_array_equal(position, self.modem.position)
+
+    def test_position_validation(self) -> None:
+        """Position property setter should raise ValueError on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            self.modem.position = np.arange(4)
+
+        with self.assertRaises(ValueError):
+            self.modem.position = np.array([[1, 2, 3]])
+
+        try:
+            self.modem.position = np.arange(1)
+
+        except ValueError:
+            self.fail()
+
+    def test_position_expansion(self) -> None:
+        """Position property setter should expand vector dimensions if required."""
+
+        position = np.array([1.0])
+        expected_position = np.array([1.0, 0.0, 0.0])
+        self.modem.position = position
+
+        assert_almost_equal(expected_position, self.modem.position)
+
+    def test_orientation_setget(self) -> None:
+        """Modem orientation property getter should return setter argument."""
+
+        orientation = np.arange(3)
+        self.modem.orientation = orientation
+
+        assert_array_equal(orientation, self.modem.orientation)
+
+    def test_orientation_validation(self) -> None:
+        """Modem orientation property setter should raise ValueError on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            self.modem.orientation = np.array([[1, 2, 3], [4, 5, 6]])
+
+        with self.assertRaises(ValueError):
+            self.modem.orientation = np.array([1, 2])
+
+    def test_topology_setget(self) -> None:
+        """Modem topology property getter should return setter argument."""
+
+        topology = np.arange(9).reshape((3, 3))
+        self.modem.topology = topology
+
+        assert_array_equal(topology, self.modem.topology)
+
+    def test_topology_set_expansion(self) -> None:
+        """Topology property setter automatically expands input dimensions."""
+
+        topology = np.arange(3)
+        expected_topology = np.zeros((3, 3), dtype=float)
+        expected_topology[:, 0] = topology
+
+        self.modem.topology = topology
+        assert_array_equal(expected_topology, self.modem.topology)
+
+    def test_topology_validation(self) -> None:
+        """Topology property setter should raise ValueErrors on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            self.modem.topology = np.empty(0)
+
+        with self.assertRaises(ValueError):
+            self.modem.topology = np.array([[1, 2, 3, 4]])
+
+    def test_carrier_frequency_setget(self) -> None:
+        """Carrier frequency property setter should return getter argument."""
+
+        carrier_frequency = 20
+        self.modem.carrier_frequency = carrier_frequency
+
+        self.assertEqual(carrier_frequency, self.modem.carrier_frequency)
+
+    def test_carrier_frequency_validation(self) -> None:
+        """Carrier frequency property should return ValueError on negative arguments."""
+
+        with self.assertRaises(ValueError):
+            self.modem.carrier_frequency = -1.0
+
+        try:
+            self.modem.carrier_frequency = 0.0
+
+        except ValueError:
+            self.fail()
+
+    def test_linear_topology(self) -> None:
+        """Linear topology property flag should return proper topology status."""
+
+        self.modem.topology = np.arange(3)
+        self.assertTrue(self.modem.linear_topology)
+
+        self.modem.topology = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0]])
+        self.assertFalse(self.modem.linear_topology)
+
+    def test_num_antennas(self) -> None:
+        """Num antennas property should return proper number of antennas."""
+
+        self.modem.topology = np.arange(3)
+        self.assertEqual(3, self.modem.num_antennas)
+
+        self.modem.topology = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0]])
+        self.assertEqual(2, self.modem.num_antennas)
+
+    def test_num_streams(self) -> None:
+        """Number of streams property should return proper number of streams."""
+
+        self.modem.topology = np.arange(3)
+        self.assertEqual(3, self.modem.num_streams)
+
+        self.modem.topology = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0]])
+        self.assertEqual(2, self.modem.num_streams)
+
+    def test_encoder_manager_setget(self) -> None:
+        """Encoder manager property getter should return setter argument."""
+
+        encoder_manager = Mock()
         self.modem.encoder_manager = encoder_manager
 
-        symbol_energy_n2k1 = self.modem.get_symbol_energy()
-        bit_energy_n2k1 = self.modem.get_bit_energy()
+        self.assertIs(encoder_manager, self.modem.encoder_manager)
+        self.assertIs(encoder_manager.modem, self.modem)
 
-        params_encoder.encoded_bits_n = 1
-        symbol_energy_n1k1 = self.modem.get_symbol_energy()
-        bit_energy_n1k1 = self.modem.get_bit_energy()
+    def test_waveform_generator_setget(self) -> None:
+        """Waveform generator property getter should return setter argument."""
 
-        self.assertEqual(symbol_energy_n1k1 * N / K, symbol_energy_n2k1)
-        self.assertEqual(bit_energy_n1k1 * N / K, bit_energy_n2k1)
+        waveform_generator = Mock()
+        self.modem.waveform_generator = waveform_generator
 
-    def test_send(self):
-        """Tests if RfChain.send and waveform_generator.create_frame are properly called."""
+        self.assertIs(waveform_generator, self.modem.waveform_generator)
+        self.assertIs(waveform_generator.modem, self.modem)
+        
+    def test_rf_chain_setget(self) -> None:
+        """Radio frequency chain property getter should return setter argument."""
 
-        # define method parameters
-        DROP_LENGTH = 0.1
+        rf_chain = Mock()
+        self.modem.rf_chain = rf_chain
 
-        TIMESTAMP = 30000
-        INITIAL_SAMPLE_NUM = 0
-        FRAME = np.ones((1, int(np.ceil(DROP_LENGTH * self.params_psk_am.sampling_rate))))
+        self.assertIs(rf_chain, self.modem.rf_chain)
+        
+    def test_precoding_setget(self) -> None:
+        """Precoding configuration property getter should return setter argument."""
 
-        # define return values
-        self.mock_waveform_generator.create_frame = Mock(
-            return_value=(FRAME, TIMESTAMP, INITIAL_SAMPLE_NUM)
-        )
+        precoding = Mock()
+        self.modem.precoding = precoding
 
-        _ = self.modem.send(DROP_LENGTH)
-        np.testing.assert_array_equal(
-            self.mock_waveform_generator.create_frame.call_args[0][1],
-            self.source.bits_in_drop[0]
-        )
-        self.assertEqual(
-            self.mock_waveform_generator.create_frame.call_args[0][0],
-            0
-        )
-        np.testing.assert_array_equal(
-            self.mock_rf_chain.send.call_args[0][0],
-            FRAME
-        )
-
-    def test_receive(self) -> None:
-        """Tests if RfChain.receive and WaveformGenerator.receive are properly called."""
-
-        # define method parameters
-        SIGNAL = np.zeros((1, 3))
-        RET_VAL_RF_CHAIN = SIGNAL
-        NOISE = 42
-        # define return values
-        self.mock_rf_chain.receive = Mock(return_value=RET_VAL_RF_CHAIN)
-        self.mock_waveform_generator.receive_frame = Mock(
-            return_value=([np.array([0, 0, 0])], np.zeros(0))
-        )
-        self.mock_waveform_generator.db_to_linear = Mock(return_value=NOISE)
-
-        other_modem = copy.copy(self.modem)
-        self.modem.paired_tx_modem = other_modem
-        _ = self.modem.receive(SIGNAL, NOISE)
-        np.testing.assert_array_equal(
-            self.mock_rf_chain.receive.call_args[0][0],
-            SIGNAL
-        )
-        np.testing.assert_array_equal(
-            self.mock_waveform_generator.receive_frame.call_args[0][0],
-            SIGNAL
-        )
-        self.assertEqual(
-            self.mock_waveform_generator.receive_frame.call_args[0][1], 0)
-        self.assertEqual(
-            self.mock_waveform_generator.receive_frame.call_args[0][2], NOISE)
-
-    def test_get_bit_energy(self) -> None:
-        _ = self.modem.get_bit_energy()
-        self.mock_waveform_generator.get_bit_energy.assert_called_once()
-
-    def test_get_symbol_energy(self) -> None:
-        _ = self.modem.get_symbol_energy()
-        self.mock_waveform_generator.get_symbol_energy.assert_called_once()
-
-    def test_set_channel(self) -> None:
-        mock_channel = Mock()
-        self.modem.set_channel(mock_channel)
-        self.mock_waveform_generator.set_channel.assert_called_once_with(
-            mock_channel)
-
-    def test_tx_power(self) -> None:
-        """
-        Tests if transmit power is set up correctly.
-        In this test a modem is created with a given desired power, and it is checked whether the resulting signal has
-        the expected power.
-        """
-
-        desired_power_db = 5
-
-        number_of_drops = 5
-        number_of_frames = 2
-
-        relative_difference = .01  # relative difference between desired and measured power
-
-        param_tech = ParametersPskQam()
-
-        frame_duration = 1e-3
-        param_tech.modulation_order = 16
-        param_tech.symbol_rate = 125e6
-        param_tech.bandwidth = param_tech.symbol_rate
-        param_tech.filter_type = 'ROOT_RAISED_COSINE'
-        param_tech.roll_off_factor = .3
-        param_tech.oversampling_factor = 8
-        param_tech.filter_length_in_symbols = 16
-        param_tech.number_preamble_symbols = 0
-        param_tech.number_postamble_symbols = 0
-        param_tech.number_data_symbols = int(
-            frame_duration * param_tech.symbol_rate)
-        param_tech.guard_interval = .1e-3
-        param_tech.bits_per_symbol = int(np.log2(param_tech.modulation_order))
-        param_tech.bits_in_frame = param_tech.bits_per_symbol * \
-            param_tech.number_data_symbols
-        param_tech.sampling_rate = param_tech.symbol_rate * param_tech.oversampling_factor
-
-        param = ParametersTxModem()
-
-        param.technology = param_tech
-        param.position = np.asarray([0, 0, 0])
-        param.velocity = np.asarray([0, 0, 0])
-        param.number_of_antennas = 1
-        param.carrier_frequency = 1e9
-        param.tx_power = 10 ** (desired_power_db / 10)
-        param.encoding_type = ["REPETITION"]
-        param.encoding_params = [ParametersRepetitionEncoder()]
-
-        source = BitsSource(np.random.RandomState())
-
-        modem = Modem(param, source, np.random.RandomState(), np.random.RandomState(), tx_modem=None)
-
-        power_sum = 0
-
-        for idx in range(number_of_drops):
-            signal = modem.send(
-                frame_duration * number_of_frames
-            )
-            power = np.sum(
-                np.real(signal)**2 + np.imag(signal)**2) / signal.size
-
-            power_sum += power
-
-        power_avg = power_sum / number_of_drops
-
-        # compensate for guard interval
-        power_avg = power_avg * \
-            (frame_duration + param_tech.guard_interval) / frame_duration
-
-        self.assertAlmostEqual(
-            power_avg,
-            param.tx_power,
-            delta=param.tx_power *
-            relative_difference)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertIs(precoding, self.modem.precoding)
+        self.assertIs(precoding.modem, self.modem)

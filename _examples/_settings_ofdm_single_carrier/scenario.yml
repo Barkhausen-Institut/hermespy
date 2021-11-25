@@ -1,0 +1,109 @@
+!<Scenario>
+
+# Fix the random number generation to a global seed
+# Setting this seed will result in an identical simulator output for each run
+random_seed: 15
+
+# Section describing all wireless devices transmitting and receiving within this scenario
+# A SISO link between two Quadrature Amplitude Modulation devices and two orthogonal frequency division multiplexing devices
+# The devices interfere with each other
+Modems:
+
+  # A single transmitting OFDM modem
+  - Transmitter
+
+    carrier_frequency: 3e9    # Center frequency of the rf-band baseband_signal in Hz
+    power: 1                  # Average transmit power in dBW
+    num_antennas: 2
+
+    Precoding:
+      - DFT
+      - SM
+
+    WaveformOFDM:
+
+      # Symbol modulation settings
+      modulation_order: 16
+      subcarrier_spacing: 15e3
+      dc_suppression: False
+      num_subcarriers: 100
+
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
+      Resources:
+
+        - repetitions: 20
+          cp_ratio: 0.078125
+          elements:
+            - type: DATA
+              repetitions: 5
+
+        - repetitions: 20
+          cp_ratio: 0.0703125
+          elements:
+            - type: DATA
+              repetitions: 5
+
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
+
+        - Symbol
+          num_repetitions: 2
+          pattern: [0, 1]
+
+        - Guard
+          num_repetitions: 1
+          duration: 2e-3
+
+  # A single receiving OFDM modem
+  - Receiver
+
+    carrier_frequency: 3e9        # Center frequency of the rf-band baseband_signal in Hz
+    reference_transmitter: 0      # ID of the referenced modem transmitting to this receiver
+    num_antennas: 2
+
+    Precoding:
+      - DFT
+      - SM
+      - MMSE-Space
+      - MMSE-Time
+
+    WaveformOFDM:
+
+      # Symbol modulation settings
+      modulation_order: 16
+      subcarrier_spacing: 15e3
+      dc_suppression: False
+      num_subcarriers: 100
+      channel_estimation: IDEAL
+
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
+      Resources:
+
+        - repetitions: 20
+          cp_ratio: 0.078125
+          elements:
+            - type: DATA
+              repetitions: 5
+
+        - repetitions: 20
+          cp_ratio: 0.0703125
+          elements:
+            - type: DATA
+              repetitions: 5
+
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
+
+        - Symbol
+          num_repetitions: 2
+          pattern: [0, 1]
+
+        - Guard
+          num_repetitions: 1
+          duration: 2e-3
+
+Channels:
+
+  - 5GTDL 0 0
+    type: A
+    rms_delay: 1e-6

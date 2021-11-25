@@ -1,0 +1,20 @@
+!<Simulation>
+  plot_drop: false
+  plot_drop_transmitted_signals: true
+  plot_drop_transmit_spectrum: true
+  plot_drop_received_signals: true
+  plot_drop_bit_errors: true
+  calc_transmit_spectrum: true
+  calc_receive_spectrum: false
+  calc_transmit_stft: false
+  calc_receive_stft: false
+  noise_loop: [24, 20, 16, 12, 8, 4, 0, -4, -8, -12]
+  snr_type: EBN0
+  max_num_drops: 20
+  min_num_drops: 5
+  spectrum_fft_size: 512
+  confidence_level: 0.9
+  confidence_margin: .1
+  confidence_metric: BER
+  plot_bit_error: true
+  plot_block_error: false

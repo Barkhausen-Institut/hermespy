@@ -1,0 +1,77 @@
+!<Scenario>
+
+# Fix the random number generation to a global seed
+# Setting this seed will result in an identical simulator output for each run
+random_seed: 11
+
+# Section describing all wireless devices transmitting and receiving within this scenario
+# A SISO link between two frequency-shift keying devices
+Modems:
+
+  # A single transmitter
+  - Transmitter:
+
+      carrier_frequency: 865e6      # Center frequency of Rf-band baseband_signal
+      num_antennas: 2               # Transmitter features two antennas
+      position: [10., 10., 10.]     # Position of the modem within the scenario
+
+      # Channel precoding
+      Precoding:
+        - SM
+
+      # Bit encoding before mapping to modulation symbols
+      Encoding:
+
+        # Repetition encoding, repeating bit sections for redundancy
+        - Repetition:
+            block_size: 16          # Block size
+            repetitions: 3          # Number of times the bits within the block get repeated
+
+      # Configuration of the waveform emitted by this transmitter
+      WaveformChirpFsk:
+
+        chirp_bandwidth: 500e3      # Bandwidth of each dedicated chirp in Hz
+        chirp_duration: .512e-3     # Duration each dedicated chirp in s
+        freq_difference: 1953.125   # Frequency offset between each modulated data symbol
+        num_data_chirps: 20         # Number of chirps generated per data frame
+        modulation_order: 256       # Modulation order, in other words 16 bit per data chirp
+
+        guard_interval: 0.          # Pause between frame transmissions in seconds
+
+  # A single receiver
+  - Receiver:
+
+      carrier_frequency: 865e6      # Center frequency of Rf-band baseband_signal
+      num_antennas: 2               # Receiver features two antennas
+      position: [200., 200., 200.]  # Position of the modem within the scenario
+
+
+      # Channel precoding
+      Precoding:
+        - SC
+
+      # Bit encoding before mapping to modulation symbols
+      Encoding:
+
+        # Repetition encoding, repeating bit sections for redundancy
+        - Repetition:
+            block_size: 16          # Block size
+            repetitions: 3          # Number of times the bits within the block get repeated
+
+      # Configuration of the waveform emitted by this transmitter
+      WaveformChirpFsk:
+
+        chirp_bandwidth: 500e3      # Bandwidth of each dedicated chirp in Hz
+        chirp_duration: .512e-3     # Duration each dedicated chirp in s
+        freq_difference: 1953.125   # Frequency offset between each modulated data symbol
+        num_data_chirps: 20         # Number of chirps generated per data frame
+        modulation_order: 256       # Modulation order, in other words 16 bit per data chirp
+
+        guard_interval: 0.          # Pause between frame transmissions in seconds
+
+# Wireless channel models between transmitters and receivers
+# This section describes a NxM matrix, M being the number of transmitting and N being the number of receiving modems
+Channels:
+
+  - Quadriga 0 0
+    active: true
