@@ -19,8 +19,8 @@ Modems:
 
         # Repetition encoding, repeating bit sections for redundancy
         - Repetition:
-            block_size: 16    # Block size
-            repetitions: 3    # Number of times the bits within the block get repeated
+            bit_block_size: 16    # Block size
+            repetitions: 3        # Number of times the bits within the block get repeated
 
       # Configuration of the waveform emitted by this transmitter
       WaveformChirpFsk:
@@ -44,8 +44,8 @@ Modems:
 
         # Repetition encoding, repeating bit sections for redundancy
         - Repetition:
-            block_size: 16    # Block size
-            repetitions: 3    # Number of times the bits within the block get repeated
+            bit_block_size: 16    # Block size
+            repetitions: 3        # Number of times the bits within the block get repeated
 
       # Configuration of the waveform emitted by this transmitter
       WaveformChirpFsk:
