@@ -44,15 +44,13 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     __guard_interval: float
 
     def __init__(self,
-                 modem: Modem = None,
-                 oversampling_factor: int = 1,
-                 modulation_order: int = None,
                  chirp_duration: float = None,
                  chirp_bandwidth: float = None,
                  freq_difference: float = None,
                  num_pilot_chirps: int = None,
                  num_data_chirps: int = None,
-                 guard_interval: float = None) -> None:
+                 guard_interval: float = None,
+                 **kwargs) -> None:
         """Frequency Shift Keying Waveform Generator object initialization.
 
         Args:
@@ -62,6 +60,9 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
             chirp_bandwidth (float, optional):
                 Bandwidth of a single chirp in Hz.
+
+            kwargs:
+                Base waveform generator initialization arguments.
         """
 
         # Default parameters
@@ -81,9 +82,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         if freq_difference is not None:
             self.freq_difference = freq_difference
 
-        if oversampling_factor is not None:
-            self.oversampling_factor = oversampling_factor
-
         if num_pilot_chirps is not None:
             self.num_pilot_chirps = num_pilot_chirps
 
@@ -93,10 +91,8 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         if guard_interval is not None:
             self.guard_interval = guard_interval
 
-        WaveformGenerator.__init__(self,
-                                   modem=modem,
-                                   oversampling_factor=oversampling_factor,
-                                   modulation_order=modulation_order)
+        # Init base class
+        WaveformGenerator.__init__(self, **kwargs)
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorChirpFsk],
