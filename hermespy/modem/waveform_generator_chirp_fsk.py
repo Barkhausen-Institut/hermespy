@@ -6,13 +6,11 @@ from typing import Tuple, Type
 from math import ceil
 from functools import lru_cache
 
-
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from scipy import integrate
 
 from hermespy.channel import ChannelStateInformation
-from hermespy.modem import Modem
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.signal import Signal
 
@@ -387,7 +385,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 Chirp timestamps.
         """
 
-        return np.arange(self.samples_in_chirp) / self.modem.scenario.sampling_rate
+        return np.arange(self.samples_in_chirp) / self.sampling_rate
 
     @property
     def samples_in_frame(self) -> int:
@@ -435,7 +433,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     def modulate(self, data_symbols: np.ndarray) -> Signal:
 
         prototypes, _ = self._prototypes()
-        samples = np.empty(self.samples_in_frame, dtype=complex)
+        samples = np.empty(self.samples_in_frame, dtype=np.complex)
 
         sample_idx = 0
         samples_in_chirp = self.samples_in_chirp
@@ -541,7 +539,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         f1 = -f0
 
         # non-coherent detection
-        prototypes = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
+        prototypes = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=np.complex)
 
         for idx in range(self.modulation_order):
             initial_frequency = f0 + idx * self.freq_difference
