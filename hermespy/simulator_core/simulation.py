@@ -210,13 +210,7 @@ class Simulation(Executable):
             # Plot scenario information +
             if self.verbosity.value <= Verbosity.INFO.value:
 
-                print(f"\nScenario Simulation #{s}, sampled at {scenario.sampling_rate:.2E}Hz")
-
-                # Warn if the sampling rate is too low
-                if self.verbosity.value <= Verbosity.WARNING.value and scenario.sampling_rate < \
-                        scenario.min_sampling_rate:
-                    print('\033[93m' + "Warning: The chosen sampling rate might be too low" + '\033[0m')
-
+                print(f"\nScenario Simulation #{s}")
                 print(f"{'SNR':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
                 print("="*75)
 
@@ -277,7 +271,7 @@ class Simulation(Executable):
                     # Save generated signals
                     drop = SimulationDrop(data_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
                                           received_samples, received_symbols, detected_bits, receive_block_sizes,
-                                          True, self.spectrum_fft_size, scenario.sampling_rate)
+                                          True, self.spectrum_fft_size)
 
                     # Print drop statistics if verbosity flag is set
                     if self.verbosity.value <= Verbosity.INFO.value:

@@ -457,7 +457,7 @@ class FrameSymbolSection(FrameSection):
         
         num = 0
 
-        num_samples_per_slot = self.frame.modem.scenario.sampling_rate / self.frame.subcarrier_spacing
+        num_samples_per_slot = self.frame.sampling_rate / self.frame.subcarrier_spacing
 
         # Add up the additional samples from cyclic prefixes
         for resource_idx in self.pattern:
@@ -513,7 +513,7 @@ class FrameGuardSection(FrameSection):
     @property
     def num_samples(self) -> int:
 
-        num = int(round(self.num_repetitions * self.__duration * self.frame.modem.scenario.sampling_rate))
+        num = int(round(self.num_repetitions * self.__duration * self.frame.sampling_rate))
         return num
 
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
@@ -710,7 +710,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             duration += section.duration
 
         return duration"""
-        return self.samples_in_frame / self.modem.scenario.sampling_rate
+        return self.samples_in_frame / self.sampling_rate
 
     @property
     def samples_in_frame(self) -> int:

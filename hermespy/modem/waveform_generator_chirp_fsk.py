@@ -540,7 +540,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         # Chirp parameter inference
         slope = self.chirp_bandwidth / self.chirp_duration
-        chirp_time = np.arange(self.samples_in_chirp) / self.modem.scenario.sampling_rate
+        chirp_time = np.arange(self.samples_in_chirp) / self.sampling_rate
         f0 = -.5 * self.chirp_bandwidth
         f1 = -f0
 
@@ -552,7 +552,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             frequency = chirp_time * slope + initial_frequency
             frequency[frequency > f1] -= self.chirp_bandwidth
 
-            phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.modem.scenario.sampling_rate, initial=0)
+            phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
             prototypes[idx, :] = np.exp(1j * phase)
 
         symbol_energy = sum(abs(prototypes[0, :])**2)

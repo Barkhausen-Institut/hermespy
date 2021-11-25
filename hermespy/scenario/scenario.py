@@ -4,18 +4,15 @@
 from __future__ import annotations
 import numpy as np
 import numpy.random as rnd
-from typing import List, Type, TYPE_CHECKING, Optional
+from typing import List, Type, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
-from itertools import product
 
 from hermespy.modem import Modem, Transmitter, Receiver
 from hermespy.channel import Channel
 from hermespy.source.bits_source import BitsSource
 from hermespy.noise.noise import Noise
 
-if TYPE_CHECKING:
-    from hermespy.channel.rx_sampler import RxSampler
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -62,16 +59,12 @@ class Scenario:
 
     def __init__(self,
                  drop_duration: float = 0.0,
-                 sampling_rate: float = 1e6,
                  random_generator: Optional[rnd.Generator] = None) -> None:
         """Object initialization.
 
         Args:
             drop_duration (float, optional):
                 The default drop duration in seconds.
-
-            sampling_rate (float, optional):
-                Rate at which simulated and generated signals will be digitally discretized in Hz.
 
             random_generator (rnd.Generator, optional):
                 The generator object used to create pseudo-random number sequences.
@@ -81,12 +74,9 @@ class Scenario:
         self.__receivers = []
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.drop_duration = drop_duration
-        self.sampling_rate = sampling_rate
         self.random_generator = rnd.default_rng(random_generator)
 
         self.sources: List[BitsSource] = []
-        self.rx_samplers: List[RxSampler] = []
-
         self.noise: List[Noise] = []
 
     @property
@@ -400,81 +390,6 @@ class Scenario:
 
         self.__drop_duration = duration
 
-    @property
-    def sampling_rate(self) -> float:
-        """Access the rate at which the analog signals are sampled.
-
-        Returns:
-            float:
-                Signal sampling rate in Hz.
-        """
-
-        return self.__sampling_rate
-
-    @sampling_rate.setter
-    def sampling_rate(self, value: float) -> None:
-        """Modify the rate at which the analog signals are sampled.
-
-        Args:
-            value (float):
-                Signal sampling rate in Hz.
-
-        Raises:
-            ValueError:
-                If the sampling rate is less or equal to zero.
-        """
-
-        if value <= 0.0:
-            raise ValueError("Sampling rate must be greater than zero")
-
-        self.__sampling_rate = value
-
-    @property
-    def min_sampling_rate(self) -> float:
-        """Minimal sampling rate required to render the scenario without aliasing.
-
-        Returns:
-            float: Minimal sapling rate in Hz.
-        """
-
-        sampling_rate = 0.0
-
-        for (tx_id, transmitter), (rx_id, receiver) in product(enumerate(self.__transmitters),
-                                                               enumerate(self.__receivers)):
-
-            # Select the proper channel connecting transmitter and receiver
-            channel = self.__channels[tx_id, rx_id]
-
-            # Skip link requirements if the channel is disabled
-            if not channel.active:
-                continue
-
-            # Consider the channel sampling rate requirements
-            sampling_rate = max(sampling_rate, channel.min_sampling_rate)
-
-            # Consider the link requirements between transmitter and receiver
-            if transmitter.carrier_frequency > receiver.carrier_frequency:
-                link_bandwidth = transmitter.carrier_frequency - receiver.carrier_frequency + .5 * \
-                                 transmitter.waveform_generator.bandwidth
-
-            else:
-                link_bandwidth = receiver.carrier_frequency - transmitter.carrier_frequency + .5 * \
-                                 transmitter.waveform_generator.bandwidth
-
-            sampling_rate = max(sampling_rate, 2 * link_bandwidth)
-
-        for transmitter in self.__transmitters:
-            sampling_rate = max(sampling_rate,
-                                transmitter.waveform_generator.bandwidth *
-                                transmitter.waveform_generator.oversampling_factor)
-
-        for receiver in self.__receivers:
-            sampling_rate = max(sampling_rate,
-                                receiver.waveform_generator.bandwidth *
-                                receiver.waveform_generator.oversampling_factor)
-
-        return sampling_rate
-
     def generate_data_bits(self) -> List[np.ndarray]:
         """Generate a set of data bits required to generate a single drop within this scenario.
 
@@ -571,9 +486,6 @@ class Scenario:
                 channel.receiver = scenario.receivers[receiver_index]
                 channel.scenario = scenario
                 scenario.__channels[transmitter_index, receiver_index] = channel
-
-        # Configure sampling rate
-        scenario.sampling_rate = scenario.min_sampling_rate if sampling_rate is None else sampling_rate
 
         # A configured scenario emerges from the depths
         return scenario

@@ -222,7 +222,7 @@ class WaveformGenerator(ABC):
             float: Frame length in seconds.
         """
 
-        return self.samples_in_frame / self.modem.scenario.sampling_rate
+        return self.samples_in_frame / self.sampling_rate
 
     @property
     def max_frame_duration(self) -> float:
