@@ -6,8 +6,8 @@ from itertools import product
 from typing import TYPE_CHECKING, Optional, Type, Union, List, Tuple
 
 import numpy as np
-import numpy.random as rnd
 from numpy import cos, exp
+import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 from scipy.constants import pi
 
@@ -19,13 +19,13 @@ if TYPE_CHECKING:
     from hermespy.scenario import Scenario
     from hermespy.modem import Transmitter, Receiver
 
-__author__ = "Tobias Kronauer"
+__author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.0"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -520,11 +520,12 @@ class MultipathFadingChannel(Channel):
                                                                        interpolation_filter[path_idx, :])
 
                 else:
-                    impulse_response[:, rx_idx, tx_idx, delays_in_samples[path_idx]] += signal_weights
+                    delay_idx = int(self.__delays[path_idx] * sampling_rate)
+                    impulse_response[:, rx_idx, tx_idx, delay_idx] += signal_weights
 
         return self.gain * impulse_response
 
-    def __tap(self, timestamps: np.ndarray, 
+    def __tap(self, timestamps: np.ndarray,
               los_gain: complex, nlos_gain: complex) -> np.ndarray:
         """Generate a single fading sequence tap.
 

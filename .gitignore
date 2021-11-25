@@ -30,3 +30,12 @@ pip-wheel-metadata/
 
 # misc
 *~
+
+# docs-specific
+docssource/channel.rst
+docssource/modem.*
+docssource/modules.rst
+docssource/scenario.rst
+docssource/simulator_core.*
+docssource/source.rst
+docs/

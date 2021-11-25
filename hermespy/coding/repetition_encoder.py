@@ -23,16 +23,16 @@ class RepetitionEncoder(Encoder):
     """Exemplary implementation of a repetition channel encoder."""
 
     yaml_tag = 'Repetition'
-    __block_size: int
+    __bit_block_size: int
     __repetitions: int
 
     def __init__(self,
-                 block_size: int = 32,
+                 bit_block_size: int = 32,
                  repetitions: int = 2) -> None:
         """Object initialization.
 
         Args:
-            block_size (int, optional): The number of input bits per data block.
+            bit_block_size (int, optional): The number of input bits per data block.
             repetitions (int, optional): The number of times the input bit block is repeated.
 
         Raises:
@@ -41,7 +41,7 @@ class RepetitionEncoder(Encoder):
 
         # Default parameters
         Encoder.__init__(self)
-        self.bit_block_size = block_size
+        self.bit_block_size = bit_block_size
         self.repetitions = repetitions
 
         if self.bit_block_size * repetitions > self.code_block_size:
@@ -83,7 +83,7 @@ class RepetitionEncoder(Encoder):
             int: The number of bits.
         """
 
-        return self.__block_size
+        return self.__bit_block_size
 
     @bit_block_size.setter
     def bit_block_size(self, num_bits: int) -> None:
@@ -99,7 +99,7 @@ class RepetitionEncoder(Encoder):
         if num_bits < 1:
             raise ValueError("Number data bits must be greater or equal to one")
 
-        self.__block_size = num_bits
+        self.__bit_block_size = num_bits
 
     @property
     def code_block_size(self) -> int:
@@ -109,7 +109,7 @@ class RepetitionEncoder(Encoder):
             int: The number of bits.
         """
 
-        return self.__repetitions * self.__block_size
+        return self.__repetitions * self.__bit_block_size
 
     @property
     def repetitions(self) -> int:
@@ -155,7 +155,7 @@ class RepetitionEncoder(Encoder):
         """
 
         state = {
-            "block_size": node.bit_block_size,
+            "bit_block_size": node.bit_block_size,
             "repetitions": node.repetitions
         }
 
