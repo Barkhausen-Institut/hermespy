@@ -6,9 +6,8 @@ from unittest.mock import Mock
 
 import numpy as np
 from numpy.testing import assert_array_equal
-from scipy.constants import pi
 
-from hermespy.modem.precoding import SpatialMultiplexing
+from hermespy.precoding import SpatialMultiplexing
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

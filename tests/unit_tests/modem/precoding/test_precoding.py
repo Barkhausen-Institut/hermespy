@@ -7,7 +7,7 @@ from fractions import Fraction
 
 import numpy as np
 
-from hermespy.modem.precoding import SymbolPrecoding
+from hermespy.precoding import SymbolPrecoding
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

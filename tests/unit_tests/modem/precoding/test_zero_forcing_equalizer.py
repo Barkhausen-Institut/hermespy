@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
-from hermespy.modem.precoding import ZFTimeEqualizer, ZFSpaceEqualizer
+from hermespy.precoding import ZFTimeEqualizer
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

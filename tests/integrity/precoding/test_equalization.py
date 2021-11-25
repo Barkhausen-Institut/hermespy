@@ -11,7 +11,7 @@ from numpy.testing import assert_array_equal
 
 from hermespy.scenario import Scenario
 from hermespy.modem import Transmitter, Receiver, WaveformGeneratorOfdm, WaveformGeneratorPskQam
-from hermespy.modem.precoding import SpatialMultiplexing, MMSEqualizer
+from hermespy.precoding import SpatialMultiplexing, MMSEqualizer
 from hermespy.modem.waveform_generator_ofdm import FrameElement, FrameResource, FrameSymbolSection, ElementType
 from hermespy.channel import Channel
 
