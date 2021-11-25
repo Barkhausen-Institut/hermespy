@@ -1,0 +1,14 @@
+!<Simulation>
+
+max_num_drops: 200              # Maximum number of simulation runs
+min_num_drops: 50               # Minimum number of simulation runs
+confidence_level: .9
+confidence_margin: .1
+confidence_metric: BER
+
+noise_loop: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2]  # dB
+snr_type: EBN0                  # SNR is defined as the ratio between bit energy and noise power
+
+calc_transmit_spectrum: true    # Calculate the average transmit spectrum over all drops
+calc_transmit_stft: true        # Calculate the average short-time Fourier transform over all drops
+spectrum_fft_size: 512          # Stft and transmit spectrum should both feature 512 frequency bins

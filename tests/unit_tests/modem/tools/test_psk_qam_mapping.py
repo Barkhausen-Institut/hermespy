@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from modem.tools.psk_qam_mapping import PskQamMapping
+from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from matplotlib import pyplot as plt
 
 

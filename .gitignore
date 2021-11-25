@@ -1,17 +1,19 @@
 # folders
+
 .mypy_cache/
 __pycache__
 _results_*/
 docs/build/
 results/
 .idea/
-env/
+env*/
 matlab_env/
 
 # IDE specific
 .vscode/
 
 # python-specific
+
 *.pyc
 .python-version
 
@@ -20,11 +22,11 @@ wheel/
 *.egg-info/
 *.pyd
 _skbuild/
+build/
+dist/
+.coverage
+MANIFEST
 pip-wheel-metadata/
-
-# other build stuff
-CMakeFiles/
-modem/coding/ldpc_binding.cpython-*
 
 # misc
 *~

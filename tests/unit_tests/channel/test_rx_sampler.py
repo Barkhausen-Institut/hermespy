@@ -1,4 +1,3 @@
-import unittest
 import unittest.mock
 from unittest.mock import patch
 import os
@@ -8,7 +7,7 @@ from numpy import random
 import scipy
 from scipy import io
 
-from channel.rx_sampler import RxSampler
+from hermespy.channel.rx_sampler import RxSampler
 
 
 class TestRxSampler(unittest.TestCase):
@@ -69,21 +68,18 @@ class TestRxSampler(unittest.TestCase):
         # due to the reading manner by scipy, some reshaping/flattening
         # needs to be performed.
         test_results_mat = io.loadmat(
-            os.path.join(
-                "tests", "unit_tests", "channel", "res",
-                "computeFactors_variable_results.mat")
+            os.path.join("res", "computeFactors_variable_results.mat")
         )
         test_results_struct = test_results_mat["rxSamplerMembers"]
         test_results = test_results_struct[0, 0]
 
-        oversample_rate = np.asscalar(test_results["oversampleRate"])
+        oversample_rate = test_results["oversampleRate"].item()
         interpolate_factors_tx = (
             test_results["interpolateFactorTx"].ravel().astype(float)
         )
-        interpolate_factor_rx = np.asscalar(
-            test_results["interpolateFactorRx"])
-        decimate_factor_tx = np.asscalar(test_results["decimateFactorTx"])
-        decimate_factor_rx = np.asscalar(test_results["decimateFactorRx"])
+        interpolate_factor_rx = test_results["interpolateFactorRx"].item()
+        decimate_factor_tx = test_results["decimateFactorTx"].item()
+        decimate_factor_rx = test_results["decimateFactorRx"].item()
 
         # set properties of tx
         tx_sampling_rate = np.array(
@@ -153,16 +149,16 @@ class TestRxSampler(unittest.TestCase):
         # by reading the matlab file
         test_variables = io.loadmat(
             os.path.join(
-                ".", "tests", "unit_tests", "channel", "res", "resample_different_samples_rates_variables.mat"
+                "res", "resample_different_samples_rates_variables.mat"
             )
         )
 
-        rx_sampling_rate = np.asscalar(test_variables["rxSamplingRate"])
-        rx_center_freq = np.asscalar(test_variables["rxCenterFreq"])
+        rx_sampling_rate = test_variables["rxSamplingRate"].item()
+        rx_center_freq = test_variables["rxCenterFreq"].item()
         tx_sampling_rate = test_variables["txSamplingRate"].ravel()
         tx_center_freq = test_variables["txCenterFreq"].ravel()
-        no_rx_antennas = np.asscalar(test_variables["numberOfRxAntennas"])
-        no_rx_symbols = np.asscalar(test_variables["numberOfRxSymbols"])
+        no_rx_antennas = test_variables["numberOfRxAntennas"].item()
+        no_rx_symbols = test_variables["numberOfRxSymbols"].item()
         signal_in = test_variables["signalIn"].ravel()
         signal_resampled_matlab = test_variables["signalOut"]
 
@@ -197,18 +193,15 @@ class TestRxSampler(unittest.TestCase):
         """Tests if matlab and scipy built-in resample methods yield same results."""
         variables_mat = io.loadmat(
             os.path.join(
-                "tests",
-                "unit_tests",
-                "channel",
                 "res",
                 "resample_builtIn_test.mat")
         )
 
         # read variables from matfile
         signal_resampled = variables_mat["signalResampled"].ravel()
-        signal_in = variables_mat["signal"].ravel()
-        interpolate_factor = np.asscalar(variables_mat["interpolateFactor"])
-        decimate_factor = np.asscalar(variables_mat["decimateFactor"])
+        signal_in = variables_mat["baseband_signal"].ravel()
+        interpolate_factor = variables_mat["interpolateFactor"].item()
+        decimate_factor = variables_mat["decimateFactor"].item()
 
         signal_resampled_scipy = scipy.signal.resample_poly(
             x=signal_in, up=interpolate_factor, down=decimate_factor
@@ -225,18 +218,18 @@ class TestRxSampler(unittest.TestCase):
     def calculate_snr_complex_signals(
         self, signal_matlab: np.array, signal_scipy: np.array
     ) -> float:
-        """This functions calculates "SNR" between matlab and scipy signal.
+        """This functions calculates "SNR" between matlab and scipy baseband_signal.
 
-        The difference between the matlab and the scipy-signal is considered
-        as noise. Therefore, the method compares the matlab-signal with the
-        scipy signal.
+        The difference between the matlab and the scipy-baseband_signal is considered
+        as noise. Therefore, the method compares the matlab-baseband_signal with the
+        scipy baseband_signal.
 
         Args:
-            signal_matlab (np.array): Matlab signal.
-            signal_scipy (np.array): Scipy signal.
+            signal_matlab (np.array): Matlab baseband_signal.
+            signal_scipy (np.array): Scipy baseband_signal.
 
         Returns:
-            (float) signal to noise ratio.
+            (float) baseband_signal to noise ratio.
 
         """
         power_scipy_signal = signal_scipy * np.conj(signal_scipy)

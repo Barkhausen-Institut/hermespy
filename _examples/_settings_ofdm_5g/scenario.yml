@@ -1,0 +1,131 @@
+!<Scenario>
+
+Modems:
+
+  # Transmitting OFDM modem
+  - Transmitter
+
+    Encoding:
+      - LDPC
+        block_size: 256
+        rate: [1, 2]
+
+    WaveformOFDM:
+
+      # Symbol modulation settings
+      modulation_order: 2
+      subcarrier_spacing: 30e3
+      dc_suppression: False
+      num_subcarriers: 3300
+
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
+      Resources:
+
+        - repetitions: 1
+          cp_ratio: 0.0703125
+          elements:
+            - type: NULL
+              repetitions: 600
+            - type: DATA
+              repetitions: 2100
+            - type: NULL
+              repetitions: 600
+
+        - repetitions: 1
+          cp_ratio: 0.078125
+          elements:
+            - type: NULL
+              repetitions: 600
+            - type: DATA
+              repetitions: 2100
+            - type: NULL
+              repetitions: 600
+
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
+
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
+
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6
+
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
+
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6
+
+    # 2x2 MIMO with Single-Carrier Spatial Precoding
+    num_antennas: 2
+    Precoding:
+      - SM
+
+
+  # Receiving OFDM modem
+  - Receiver
+
+    Encoding:
+      - LDPC
+        block_size: 256
+        rate: [1, 2]
+
+    # 2x2 MIMO with Single-Carrier Spatial Precoding
+    num_antennas: 2
+    Precoding:
+      - SM
+
+    WaveformOFDM:
+
+      # Symbol modulation settings
+      modulation_order: 2
+      subcarrier_spacing: 30e3
+      dc_suppression: False
+      channel_estimation: IDEAL
+      num_subcarriers: 3300
+
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
+      Resources:
+
+        - repetitions: 1
+          cp_ratio: 0.0703125
+          elements:
+            - type: NULL
+              repetitions: 600
+            - type: DATA
+              repetitions: 2100
+            - type: NULL
+              repetitions: 600
+
+        - repetitions: 1
+          cp_ratio: 0.078125
+          elements:
+            - type: NULL
+              repetitions: 600
+            - type: DATA
+              repetitions: 2100
+            - type: NULL
+              repetitions: 600
+
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
+
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
+
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6
+
+        - Symbol
+          num_repetitions: 1
+          pattern: [1, 0, 0, 0]
+
+        - Guard
+          num_repetitions: 3
+          duration: 35.677083e-6

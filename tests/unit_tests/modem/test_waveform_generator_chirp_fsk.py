@@ -1,379 +1,350 @@
-from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
+# -*- coding: utf-8 -*-
+"""Chirp Frequency Shift Keying generator testing."""
+
 import unittest
 import os
-
+from unittest.mock import Mock
 import numpy as np
-from scipy import integrate
+from math import ceil
 
-from modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
-from modem.modem import Modem
-from parameters_parser.parameters_chirp_fsk import ParametersChirpFsk
-from parameters_parser.parameters_tx_modem import ParametersTxModem
-from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
-from source.bits_source import BitsSource
+from hermespy.channel import ChannelStateInformation
+from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.1.0"
+__maintainer__ = "Tobias Kronauer"
+__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestWaveformGeneratorChirpFsk(unittest.TestCase):
+    """Test the chirp frequency shift keying waveform generation."""
+
     def setUp(self) -> None:
-        self.params_cfsk = ParametersChirpFsk()
-        self.params_cfsk.modulation_order = 32
-        self.params_cfsk.chirp_duration = 4e-6
-        self.params_cfsk.chirp_bandwidth = 200e6
-        self.params_cfsk.freq_difference = 5e6
-        self.params_cfsk.oversampling_factor = 4
-        self.params_cfsk.number_data_chirps = 20
-        self.params_cfsk.number_pilot_chirps = 2
-        self.params_cfsk.guard_interval = 4e-6
-        self.params_cfsk.sampling_rate = (
-            self.params_cfsk.chirp_bandwidth * self.params_cfsk.oversampling_factor
-        )
-        self.params_cfsk.bits_per_symbol = 5
-        self.params_cfsk.bits_in_frame = 100
 
-        self.modem_params = ParametersTxModem()
-        self.modem_params.number_of_antennas = 1
-        self.modem_params.technology = self.params_cfsk
-        self.modem_params.encoding_params = [ParametersRepetitionEncoder()]
+        self.generator = WaveformGeneratorChirpFsk.__new__(WaveformGeneratorChirpFsk)
+        self.modem = Mock()
+        self.modem.waveform_generator = self.generator
 
-        self.source = BitsSource(np.random.RandomState(42))
-        self.waveform_generator_chirp_fsk = WaveformGeneratorChirpFsk(self.params_cfsk)
-        self.modem_chirp_fsk = Modem(
-            self.modem_params,
-            self.source,
-            np.random.RandomState(42),
-            np.random.RandomState(43))
+        self.parameters = {
+            "modem": self.modem,
+            "oversampling_factor": 4,
+            "modulation_order": 32,
+            "chirp_duration": 4e-6,
+            "chirp_bandwidth": 200e6,
+            "freq_difference": 5e6,
+            "num_pilot_chirps": 2,
+            "num_data_chirps": 20,
+            "guard_interval": 4e-6,
+        }
+
+        self.modem.carrier_frequency = 1.0
+
+        self.generator.__init__(**self.parameters)
+
+        self.data_bits_per_symbol = 5
+        self.data_bits_in_frame = 100
+        self.data_bits = np.random.randint(0, 2, self.data_bits_in_frame)
 
         self.parent_dir = os.path.join(
             os.path.dirname(
                 os.path.abspath(__file__)), 'res')
 
-    def test_proper_samples_in_chirp_calculation(self) -> None:
-        samples_in_chirp_expected = int(
-            np.around(
-                self.params_cfsk.chirp_duration *
-                self.params_cfsk.sampling_rate)
-        )
-        self.assertEqual(
-            samples_in_chirp_expected, self.waveform_generator_chirp_fsk._samples_in_chirp
-        )
+    def test_init(self) -> None:
+        """Test that the init routine properly assigns all parameters"""
 
-    def test_proper_samples_in_frame_calculation(self) -> None:
-        samples_in_frame_expected = (
-            self.waveform_generator_chirp_fsk._samples_in_chirp
-            * self.waveform_generator_chirp_fsk._chirps_in_frame
-            + int((np.around(self.params_cfsk.guard_interval *
-                             self.params_cfsk.sampling_rate)))
-        )
+        self.assertIs(self.modem, self.generator.modem,
+                      "Modem init produced unexpected result")
+        self.assertEqual(self.generator.oversampling_factor, self.parameters["oversampling_factor"],
+                         "Oversampling factor init produced unexpected result")
+        self.assertEqual(self.generator.modulation_order, self.parameters["modulation_order"],
+                         "Modulation order init produced unexpected result")
+        self.assertEqual(self.generator.chirp_duration, self.parameters["chirp_duration"],
+                         "Chirp duration init produced unexpected result")
+        self.assertEqual(self.generator.chirp_bandwidth, self.parameters["chirp_bandwidth"],
+                         "Chirp bandwidth init produced unexpected result")
+        self.assertEqual(self.generator.freq_difference, self.parameters["freq_difference"],
+                         "Frequency difference init produced unexpected result")
+        self.assertEqual(self.generator.num_pilot_chirps, self.parameters["num_pilot_chirps"],
+                         "Number of pilot chirps init produced unexpected result")
+        self.assertEqual(self.generator.num_data_chirps, self.parameters["num_data_chirps"],
+                         "Number of data chirps init produced unexpected result")
+        self.assertEqual(self.generator.guard_interval, self.parameters["guard_interval"],
+                         "Guard interval init produced unexpected result")
 
-        self.assertEqual(
-            samples_in_frame_expected, self.waveform_generator_chirp_fsk._samples_in_frame
-        )
+    def test_frame_duration(self) -> None:
+        """Test the valid calculation of frame durations."""
 
-    def test_proper_chirps_in_frame_calculation(self) -> None:
-        chirps_in_frame_expected = (
-            self.params_cfsk.number_pilot_chirps + self.params_cfsk.number_data_chirps
-        )
-        self.assertEqual(
-            chirps_in_frame_expected, self.waveform_generator_chirp_fsk._chirps_in_frame
-        )
+        frame_duration = self.parameters["chirp_duration"] * (self.parameters["num_pilot_chirps"] +
+                                                              self.parameters["num_data_chirps"])
+        expected_duration = self.parameters["guard_interval"] + frame_duration
 
-    def test_proper_chirp_init(self) -> None:
-        f0 = -self.params_cfsk.chirp_bandwidth / 2
-        f1 = -f0
+        self.assertEqual(self.generator.frame_duration, expected_duration,
+                         "Frame duration computation produced unexpected result")
 
-        slope = self.params_cfsk.chirp_bandwidth / self.params_cfsk.chirp_duration
-        self.assertEqual(f0, self.waveform_generator_chirp_fsk._f0)
-        self.assertEqual(f1, self.waveform_generator_chirp_fsk._f1)
-        self.assertEqual(slope, self.waveform_generator_chirp_fsk._slope)
+    def test_chirp_duration(self) -> None:
+        """Test the valid calculation of chirp durations."""
 
-    def test_proper_chirp_offset_calculation_at_frame_creation(self) -> None:
-        offset_expected = np.array(
-            [8, 17, 1, 14, 23, 31, 7, 8, 7, 27, 10,
-                24, 0, 27, 26, 29, 10, 11, 31, 30]
-        )
-        offset_calculated = self.waveform_generator_chirp_fsk._calculate_frequency_offsets(
-            self.source.get_bits(self.params_cfsk.bits_in_frame)
-        )
+        expected_duration = self.parameters["chirp_duration"]
+        self.assertEqual(expected_duration, self.generator.chirp_duration,
+                         "Chirp duration get produced unexpected result")
 
-        np.testing.assert_array_equal(offset_expected, offset_calculated)
+    def test_chirp_duration_get_set(self) -> None:
+        """Test that chirp duration getter returns set value."""
 
-    def test_frequency_chirp_calculation(self) -> None:
-        initial_frequencies = np.array([1, 10])
-        samples_in_chirp = self.waveform_generator_chirp_fsk._samples_in_chirp
-        slope = self.waveform_generator_chirp_fsk._slope
-        chirp_time = self.waveform_generator_chirp_fsk._chirp_time
-        f1 = self.waveform_generator_chirp_fsk._f1
+        chirp_duration = 20
+        self.generator.chirp_duration = chirp_duration
 
-        no_samples = initial_frequencies.size * samples_in_chirp
+        self.assertEqual(chirp_duration, self.generator.chirp_duration,
+                         "Chirp duration set/get returned unexpected result")
 
-        f_expected = np.zeros(no_samples, dtype=complex)
-        f_expected[:samples_in_chirp] = initial_frequencies[0] + \
-            slope * chirp_time
-        f_expected[samples_in_chirp:] = initial_frequencies[1] + \
-            slope * chirp_time
-        f_expected[f_expected > f1] -= self.params_cfsk.chirp_bandwidth
+    def test_chirp_duration_validation(self) -> None:
+        """Test the validation of chirp duration parameters during set."""
 
-        a_expected = np.ones(no_samples, dtype=complex)
+        with self.assertRaises(ValueError):
+            self.generator.chirp_duration = -1.0
 
-        f, a = self.waveform_generator_chirp_fsk._calculate_chirp_frequencies(
-            initial_frequencies
-        )
+        try:
+            self.generator.chirp_duration = 0.0
 
-        np.testing.assert_array_almost_equal(f_expected, f[:no_samples])
-        np.testing.assert_array_almost_equal(a_expected, a[:no_samples])
+        except ValueError:
+            self.fail("Chirp duration set produced unexpected exception")
 
-    def test_proper_new_timestamp_after_frame_creation(self) -> None:
-        timestamp = 0
-        new_timestamp_expected = (
-            timestamp + self.waveform_generator_chirp_fsk._samples_in_frame
-        )
+    def test_chirp_bandwidth_get_set(self) -> None:
+        """Test that chirp bandwidth get returns set value."""
 
-        _, new_timestamp, initial_sample_num = self.waveform_generator_chirp_fsk.create_frame(
-            timestamp, self.source.get_bits(self.params_cfsk.bits_in_frame)
-        )
+        bandwidth = 1.0
+        self.generator.chirp_bandwidth = bandwidth
 
-        self.assertEqual(new_timestamp_expected, new_timestamp)
-        self.assertEqual(timestamp, initial_sample_num)
+        self.assertEqual(bandwidth, self.generator.chirp_bandwidth,
+                         "Chirp bandwidth set/get returned unexpected result")
 
-    def test_proper_time_signal_creation(self) -> None:
-        initial_frequencies = np.array(
-            [
-                -1.0e08,
-                -1.0e08,
-                -6.0e07,
-                -1.5e07,
-                -9.5e07,
-                -3.0e07,
-                1.5e07,
-                5.5e07,
-                -6.5e07,
-                -6.0e07,
-                -6.5e07,
-                3.5e07,
-                -5.0e07,
-                2.0e07,
-                -1.0e08,
-                3.5e07,
-                3.0e07,
-                4.5e07,
-                -5.0e07,
-                -4.5e07,
-                5.5e07,
-                5.0e07,
-            ]
-        )
+    def test_chirp_bandwidth_validation(self) -> None:
+        """Test the validation of chirp bandwidth parameters during set"""
 
-        f, a = self.waveform_generator_chirp_fsk._calculate_chirp_frequencies(
-            initial_frequencies
-        )
+        with self.assertRaises(ValueError):
+            self.generator.chirp_bandwidth = -1.0
 
-        phase = (
-            2
-            * np.pi
-            * integrate.cumtrapz(f, dx=1 / self.params_cfsk.sampling_rate, initial=0)
-        )
+        with self.assertRaises(ValueError):
+            self.generator.chirp_bandwidth = 0.0
 
-        output_signal_expected = a * np.exp(1j * phase)
+    def test_freq_difference_get_set(self) -> None:
+        """Test that frequency difference get returns set value."""
 
-        output_signal, _, _ = self.waveform_generator_chirp_fsk.create_frame(
-            0, self.source.get_bits(self.params_cfsk.bits_in_frame)
-        )
+        freq_difference = 0.5
+        self.generator.freq_difference = freq_difference
 
-        np.testing.assert_array_almost_equal(
-            output_signal_expected[np.newaxis, :], output_signal)
+        self.assertEqual(freq_difference, self.generator.freq_difference,
+                         "Frequency difference set/get returned unexpected result")
+
+    def test_freq_difference_validation(self) -> None:
+        """Test the validation of frequency difference during set"""
+
+        with self.assertRaises(ValueError):
+            self.generator.freq_difference = -1.0
+
+        with self.assertRaises(ValueError):
+            self.generator.freq_difference = 0.0
+
+    def test_num_pilot_chirps_get_set(self) -> None:
+        """Test that the number of pilot chirps get returns set value."""
+
+        num_pilot_chirps = 2
+        self.generator.num_pilot_chirps = num_pilot_chirps
+
+        self.assertEqual(num_pilot_chirps, self.generator.num_pilot_chirps,
+                         "Number of pilot chirps set/get returned unexpected result")
+
+    def test_num_pilot_chirps_validation(self) -> None:
+        """Test the validation of the number of pilot chirps during set"""
+
+        with self.assertRaises(ValueError):
+            self.generator.num_pilot_chirps = -1
+
+    def test_num_data_chirps_get_set(self) -> None:
+        """Test that the number of data chirps get returns set value."""
+
+        num_data_chirps = 2
+        self.generator.num_data_chirps = num_data_chirps
+
+        self.assertEqual(num_data_chirps, self.generator.num_data_chirps,
+                         "Number of data chirps set/get returned unexpected result")
+
+    def test_num_data_chirps_validation(self) -> None:
+        """Test the validation of the number of data chirps during set"""
+
+        with self.assertRaises(ValueError):
+            self.generator.num_data_chirps = -1
+
+    def test_guard_interval_get_set(self) -> None:
+        """Test that the guard interval get returns set value."""
+
+        guard_interval = 2.0
+        self.generator.guard_interval = guard_interval
+
+        self.assertEqual(guard_interval, self.generator.guard_interval,
+                         "Guard interval set/get returned unexpected result")
+
+    def test_guard_interval_validation(self) -> None:
+        """Test the validation of the guard interval during set"""
+
+        with self.assertRaises(ValueError):
+            self.generator.guard_interval = -1.0
+
+        try:
+            self.generator.guard_interval = 0.0
+
+        except ValueError:
+            self.fail("Guard interval set produced unexpected exception")
+
+    def test_bits_per_symbol_calculation(self) -> None:
+        """Test the calculation of bits per symbol."""
+
+        expected_bits_per_symbol = int(np.log2(self.parameters["modulation_order"]))
+        self.assertEqual(expected_bits_per_symbol, self.generator.bits_per_symbol,
+                         "Bits per symbol calculation produced unexpected result")
+
+    def test_bits_per_frame_calculation(self) -> None:
+        """Test the calculation of number of bits contained within a single frame."""
+
+        self.assertEqual(self.data_bits_in_frame, self.generator.bits_per_frame,
+                         "Bits per frame calculation produced unexpected result")
+
+    def test_samples_in_chirp_calculation(self) -> None:
+        """Test the calculation for the number of samples within one chirp."""
+
+        expected_samples_in_chirp = int(ceil(self.parameters["chirp_duration"] * self.generator.sampling_rate))
+        self.assertEqual(expected_samples_in_chirp, self.generator.samples_in_chirp,
+                         "Samples in chirp calculation produced unexpected result")
+
+    def test_chirps_in_frame_calculation(self) -> None:
+        """Test the calculation for the number of chirps per transmitted frame"""
+
+        chirps_in_frame_expected = self.parameters["num_pilot_chirps"] + self.parameters["num_data_chirps"]
+
+        self.assertEqual(chirps_in_frame_expected, self.generator.chirps_in_frame,
+                         "Calculation of number of chirps in frame produced unexpected result")
 
     def test_prototype_chirps_for_modulation_symbols(self) -> None:
-        cos_signal_expected = self.read_saved_results_from_file(
-            'cos_signal.npy')
-        sin_signal_expected = self.read_saved_results_from_file(
-            'sin_signal.npy')
+        """The generated prototypes for FSK signals must be proper."""
 
-        np.testing.assert_array_almost_equal(
-            cos_signal_expected, self.waveform_generator_chirp_fsk._prototype_function["cos"]
-        )
+        cos_signal_expected = self.__read_saved_results_from_file('cos_signal.npy')
+        sin_signal_expected = self.__read_saved_results_from_file('sin_signal.npy')
 
-        np.testing.assert_array_almost_equal(
-            sin_signal_expected, self.waveform_generator_chirp_fsk._prototype_function["sin"]
-        )
+        prototypes, _ = self.generator._prototypes()
+        expected_prototypes = .5 * cos_signal_expected + .5j * sin_signal_expected
+
+        np.testing.assert_array_almost_equal(prototypes, expected_prototypes)
 
     def test_bit_energy_calculation(self) -> None:
-        cos_signal_expected = self.read_saved_results_from_file(
-            'cos_signal.npy')
+        """Test the energy calculation for a single transmitted bit."""
+
+        cos_signal_expected = self.__read_saved_results_from_file('cos_signal.npy')
         symbol_energy = sum(abs(cos_signal_expected[0, :]) ** 2)
 
-        bit_energy_expected = symbol_energy / self.params_cfsk.bits_per_symbol
-        bit_energy = self.waveform_generator_chirp_fsk.get_bit_energy()
+        bit_energy_expected = symbol_energy / self.generator.bits_per_symbol
+        bit_energy = self.generator.bit_energy
         self.assertAlmostEqual(bit_energy_expected, bit_energy)
 
     def test_symbol_energy_calculation(self) -> None:
-        cos_signal_expected = self.read_saved_results_from_file(
-            'cos_signal.npy')
+        """Test the energy calculation for a single transmitted symbol."""
+
+        cos_signal_expected = self.__read_saved_results_from_file('cos_signal.npy')
         symbol_energy_expected = sum(abs(cos_signal_expected[0, :]) ** 2)
 
-        symbol_energy = self.waveform_generator_chirp_fsk.get_symbol_energy()
+        symbol_energy = self.generator.symbol_energy
         self.assertAlmostEqual(symbol_energy_expected, symbol_energy)
 
-    def read_saved_results_from_file(self, file_name: str) -> np.ndarray:
-        if not os.path.exists(os.path.join(self.parent_dir, file_name)):
-            raise FileNotFoundError(
-                f"{file_name} must be in same folder as this file.")
-        else:
-            results = np.load(os.path.join(self.parent_dir, file_name))
-
-        return results
-
     def test_rx_signal_properly_demodulated(self) -> None:
-        rx_signal = self.read_saved_results_from_file('rx_signal.npy')
-        rx_signal = np.reshape(rx_signal, (1, rx_signal.shape[0]))
+        """Verify the proper demodulation of received signals."""
 
-        received_bits, _ = self.waveform_generator_chirp_fsk.receive_frame(
-            rx_signal, 0, 0)
-        received_bits_expected = self.read_saved_results_from_file(
-            'received_bits.npy').ravel()
+        rx_signal = self.__read_saved_results_from_file('rx_signal.npy')
+        channel_state = ChannelStateInformation.Ideal(num_samples=rx_signal.shape[0])
+        noise_variance = 0.0
 
-        np.testing.assert_array_equal(received_bits[0], received_bits_expected)
+        received_symbols, _, _ = self.generator.demodulate(rx_signal, channel_state, noise_variance)
+        received_bits = self.generator.unmap(received_symbols)
 
-    def test_rx_signal_demodulation_long_signal(self) -> None:
-        signal_overlength = 3
-        rx_signal = self.read_saved_results_from_file('rx_signal.npy')
-        rx_signal = np.append(rx_signal, np.ones(signal_overlength))
-        rx_signal = np.reshape(rx_signal, (1, rx_signal.shape[0]))
-
-        _, left_over_rx_signal = self.waveform_generator_chirp_fsk.receive_frame(
-            rx_signal, 0, 0)
-
-        self.assertEqual(left_over_rx_signal.shape[1], signal_overlength)
+        received_bits_expected = self.__read_saved_results_from_file('received_bits.npy').ravel()
+        np.testing.assert_array_equal(received_bits[:len(received_bits_expected)], received_bits_expected)
 
     def test_proper_bit_energy_calculation(self) -> None:
         """Tests if theoretical bit energy is calculated correctly"""
 
-        # define test parameters
-        number_of_drops = 5
-        number_of_frames = 2
-        relative_difference = .01  # relative difference between desired and measured power
+        self.generator.guard_interval = 0.0
+        self.generator.num_pilot_chirps = 0
 
-        modem = self.modem_chirp_fsk
+        data_bits = np.random.randint(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        transmitted_signal = self.generator.modulate(data_symbols)
 
-        bit_energy = self.estimate_energy(modem, number_of_drops,
-                                          number_of_frames, self.source.get_bits(
-                                              self.params_cfsk.bits_in_frame),
-                                          'bit_energy')
+        symbol_energy = np.sum(abs(transmitted_signal.samples.flatten())**2) / (self.generator.num_pilot_chirps +
+                                                                                self.generator.num_data_chirps)
+        bit_energy = symbol_energy / self.generator.bits_per_symbol
 
         # compare the measured energy with the expected values
-        self.assertAlmostEqual(
-            bit_energy,
-            modem.get_bit_energy(),
-            delta=bit_energy *
-            relative_difference)
+        self.assertAlmostEqual(bit_energy, self.generator.bit_energy,
+                               msg="Unexpected bit energy transmitted")
 
     def test_proper_symbol_energy_calculation(self) -> None:
         """Tests if theoretical symbol energy is calculated correctly"""
 
+        self.generator.guard_interval = 0.0
+        self.generator.num_pilot_chirps = 0
+
         # define test parameters
-        number_of_drops = 4
-        number_of_frames = 3
-        relative_difference = .01  # relative difference between desired and measured power
+        num_symbols = self.generator.chirps_in_frame
 
-        modem = self.modem_chirp_fsk
+        data_bits = np.random.randint(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        transmitted_signal = self.generator.modulate(data_symbols)
 
-        symbol_energy = self.estimate_energy(modem, number_of_drops,
-                                             number_of_frames, self.source.get_bits(
-                                                 self.params_cfsk.bits_in_frame),
-                                             'symbol_energy')
+        symbol_energy = np.sum(abs(transmitted_signal.samples.flatten())**2) / (num_symbols +
+                                                                                self.generator.num_pilot_chirps)
 
         # compare the measured energy with the expected values
-        self.assertAlmostEqual(
-            symbol_energy,
-            modem.get_symbol_energy(),
-            delta=symbol_energy *
-            relative_difference)
+        self.assertAlmostEqual(symbol_energy, self.generator.symbol_energy,
+                               msg="Unexpected symbol energy transmitted")
 
     def test_proper_power_calculation(self) -> None:
-        """Tests if theoretical signal power is calculated correctly"""
-
-        # define test parameters
-        number_of_drops = 5
-        number_of_frames = 3
-        relative_difference = .01  # relative difference between desired and measured power
-
-        modem = self.modem_chirp_fsk
-
-        power = self.estimate_energy(modem, number_of_drops,
-                                     number_of_frames, self.source.get_bits(
-                                         self.params_cfsk.bits_in_frame),
-                                     'power')
-
-        # compare the measured energy with the expected values
-        self.assertAlmostEqual(
-            power,
-            modem.waveform_generator.get_power(),
-            delta=power *
-            relative_difference)
-
-    @staticmethod
-    def estimate_energy(modem: Modem, number_of_drops: int, number_of_frames: int,
-                        data_bits: np.array, energy_type: str) -> float:
-        """Generates a signal with a few drops and frames and measures average energy or power.
-        In this method a signal is generated over several drops, and the average power or bit/symbol energy is
-        calculated.
-
-        Args:
-            modem(Modem): modem for which transmit energy is calculated
-            number_of_drops(int): number of drops for which signal is generated
-            number_of_frames(int): number of frames generated in each drop
-            data_bits(np.array): Data bits to send
-            energy_type(str): what type of energy is to be returned.
-                              Allowed values are 'bit_energy', 'symbol_energy' and 'power'
-
-        Returns:
-            power_or_energy(float): estimated power or bit/symbol-energy, depending on the value of `energy_type`
+        """Tests if theoretical baseband_signal power is calculated correctly
+        TODO: Check power calculation, since the delta is currently ~0.5, which seems kind of high
         """
 
-        energy_sum = 0
-        preamble_energy_sum = 0
+        # define test parameters
+        num_samples = self.generator.samples_in_frame
 
-        # create an index for the preamble samples
-        number_preamble_samples = modem.param.technology.number_pilot_chirps * \
-            modem.waveform_generator._samples_in_chirp
-        preamble_samples = np.asarray([], dtype=int)
-        for idx in range(number_of_frames):
-            preamble_samples = np.append(preamble_samples, np.arange(number_preamble_samples) +
-                                         idx * modem.waveform_generator.samples_in_frame)
+        data_bits = np.random.randint(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        transmitted_signal = self.generator.modulate(data_symbols)
 
-        # calculate average energy
-        for idx in range(number_of_drops):
-            signal = modem.send(
-                modem.waveform_generator.max_frame_length *
-                number_of_frames)
-            energy = np.sum(np.real(signal)**2 + np.imag(signal)**2)
-            preamble_energy = np.sum(
-                np.real(signal[:, preamble_samples])**2 +
-                np.imag(signal[:, preamble_samples])**2)
+        power = np.sum(abs(transmitted_signal.samples.flatten())**2) / num_samples
+        self.assertAlmostEqual(power, self.generator.power, places=1,
+                               msg="Unexpected baseband signal energy transmitted")
 
-            energy_sum += energy
-            preamble_energy_sum += preamble_energy
+    def test_bandwidth(self) -> None:
+        """Bandwidth property should return chirp bandwidth."""
 
-        energy_avg = energy_sum / number_of_drops
-        preamble_energy_avg = preamble_energy_sum / number_of_drops
-        data_energy = energy_avg - preamble_energy_avg
+        self.assertEqual(self.parameters['chirp_bandwidth'], self.generator.bandwidth)
 
-        power_or_energy = None
-        if energy_type == 'bit_energy':
-            number_of_bits = modem.param.technology.bits_in_frame * number_of_frames
-            power_or_energy = data_energy / number_of_bits
-        elif energy_type == 'symbol_energy':
-            number_of_symbols = modem.waveform_generator._chirps_in_frame * number_of_frames
-            power_or_energy = energy_avg / number_of_symbols
-        elif energy_type == 'power':
-            number_of_data_samples = number_of_frames * \
-                int(modem.param.technology.number_data_chirps *
-                    modem.waveform_generator._samples_in_chirp)
-            power_or_energy = data_energy / number_of_data_samples
-        else:
-            raise ValueError("invalid 'energy_type'")
+    def __read_saved_results_from_file(self, file_name: str) -> dict[str, np.ndarray]:
+        """Internal helper function for reading numpy arrays from save files.
 
-        return power_or_energy
+        Args:
+            file_name (str): The file location.
 
+        Returns:
+            np.ndarray: The contained numpy array.
 
-if __name__ == '__main__':
-    unittest.main()
+        Raises:
+            FileNotFoundError: If `file_name` does not exist within the parent directory.
+        """
+
+        if not os.path.exists(os.path.join(self.parent_dir, file_name)):
+            raise FileNotFoundError(
+                f"{file_name} must be in same folder as this file.")
+
+        return np.load(os.path.join(self.parent_dir, file_name))
