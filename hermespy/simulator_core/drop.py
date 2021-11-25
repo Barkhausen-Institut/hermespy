@@ -23,6 +23,8 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
+plt.style.use(['dark_background'])
+
 
 class ComplexVisualization(IntEnum):
     """How to visualize complex numbers in a 2D plot."""

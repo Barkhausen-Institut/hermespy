@@ -18,7 +18,7 @@ __all__ = ['Executable', 'Verbosity', 'Simulation', 'HardwareLoop', 'SNRType', '
 import sys
 from inspect import getmembers
 modules = ['channel', 'modem', 'scenario', 'simulator_core', 'source', 'coding', 'modem.precoding', 'modem.tools',
-           'noise']
+           'noise', 'modem.rf_chain_models']
 for module in modules:
     for _, member in getmembers(sys.modules['hermespy.' + module]):
 

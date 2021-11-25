@@ -281,18 +281,19 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         self._set_sampling_indices()
         self._set_pulse_correlation_matrix()
 
+        # Filter the signal
         filtered_signal = self.rx_filter.filter(baseband_signal)
-        filtered_channel_state = self.rx_filter.filter(channel_state.to_impulse_response().state)
+        #filtered_channel_state = self.rx_filter.filter(channel_state.to_impulse_response().state)
 
-        start_index_data = self.num_preamble_symbols
-        end_index_data = self.num_preamble_symbols + self.num_data_symbols
-        symbol_indices = self._symbol_idx[start_index_data:end_index_data]
+        # Equalize the signal
+        symbol_indices = self._data_symbol_idx + self.rx_filter.delay_in_samples + self.tx_filter.delay_in_samples
+        channel_state = channel_state[:, :, symbol_indices, :]
+        equalized_symbols = self._equalizer(filtered_signal[symbol_indices],
+                                            channel_state.state[0, 0, :, 0],
+                                            noise_variance)
+        noise = np.repeat(noise_variance, len(equalized_symbols))
 
-        symbols = filtered_signal[symbol_indices]
-        channel_state.state = filtered_channel_state[:, :, symbol_indices, :]
-        noise = np.repeat(noise_variance, len(symbols))
-
-        return symbols, channel_state, noise
+        return equalized_symbols, channel_state, noise
 
     @property
     def bandwidth(self) -> float:

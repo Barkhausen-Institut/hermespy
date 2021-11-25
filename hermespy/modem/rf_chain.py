@@ -112,7 +112,7 @@ class RfChain:
                 Newly created `RfChain` instance.
         """
 
-        state = constructor.construct_mapping(node)
+        state = constructor.construct_mapping(node, deep=True)
         power_amplifier = state.pop(PowerAmplifier.yaml_tag, None)
 
         rf_chain = cls(**state)
