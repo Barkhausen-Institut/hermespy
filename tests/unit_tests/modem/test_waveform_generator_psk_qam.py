@@ -20,8 +20,9 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         # create a QPSK modem with method stubs
 
         # create input parameters for QPSK modem creation
-        rng = np.random.RandomState(42)
-        self.source_qpsk = BitsSource(rng)
+        rng_src = np.random.RandomState(42)
+        rng_hw = np.random.RandomState(43)
+        self.source_qpsk = BitsSource(rng_src)
 
         # define parameters
         self.params_qpsk = ParametersPskQam()
@@ -55,7 +56,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         self.modem_qpsk_params.encoding_params = [ParametersRepetitionEncoder()]
 
         self.waveform_generator_qpsk = WaveformGeneratorPskQam(self.params_qpsk)
-        self.modem_qpsk = Modem(self.modem_qpsk_params, self.source_qpsk, rng)
+        self.modem_qpsk = Modem(self.modem_qpsk_params, self.source_qpsk, rng_hw, rng_src)
 
         # create (method) stubs for dependencies
         self.waveform_generator_qpsk._mapping.get_symbols = lambda bits: bits[::int(  # type: ignore
@@ -71,8 +72,9 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         # create a full QAM modem
 
         # create input parameters for QAM modem creation
-        rng = np.random.RandomState(42)
-        self.source_qam = BitsSource(rng)
+        rng_src = np.random.RandomState(42)
+        rng_hw = np.random.RandomState(43)
+        self.source_qam = BitsSource(rng_src)
 
         # define parameters
         self.params_qam = ParametersPskQam()
@@ -105,7 +107,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         self.modem_qam_params.encoding_params = [ParametersRepetitionEncoder()]
 
         self.waveform_generator_qam = WaveformGeneratorPskQam(self.params_qam)
-        self.modem_qam = Modem(self.modem_qam_params, self.source_qam, rng)
+        self.modem_qam = Modem(self.modem_qam_params, self.source_qam, rng_hw, rng_src)
         ########################################
 
     def test_proper_samples_in_frame_calculation(self) -> None:

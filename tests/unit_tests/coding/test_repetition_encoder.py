@@ -26,16 +26,16 @@ class TestRepetitionEncoder(unittest.TestCase):
         self.generator = np.random.default_rng(42)
 
         # Default parameters
-        self.block_size = 8
+        self.bit_block_size = 8
         self.repetitions = 3
 
-        self.encoder = RepetitionEncoder(self.block_size,
+        self.encoder = RepetitionEncoder(self.bit_block_size,
                                          self.repetitions)
 
     def test_init(self) -> None:
         """Test valid parameter initialization during object construction."""
 
-        self.assertEqual(self.block_size, self.encoder.bit_block_size,
+        self.assertEqual(self.bit_block_size, self.encoder.bit_block_size,
                          "Unexpected bit block size initialized")
         self.assertEqual(self.repetitions, self.encoder.repetitions,
                          "Unexpected repetition count initialized")
@@ -81,7 +81,7 @@ class TestRepetitionEncoder(unittest.TestCase):
     def test_encode_decode(self) -> None:
         """Encoding and subsequent decoding should yield identical bit strings."""
 
-        bits = self.generator.integers(0, 2, self.block_size)
+        bits = self.generator.integers(0, 2, self.bit_block_size)
 
         encoded_bits = self.encoder.encode(bits)
         decoded_bits = self.encoder.decode(encoded_bits)

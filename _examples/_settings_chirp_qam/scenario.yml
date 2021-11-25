@@ -10,7 +10,7 @@ Modems:
 
     Encoding:
       - Repetition
-        block_size: 1000
+        bit_block_size: 1000
         repetitions: 4
 
     # Waveform configuration
@@ -38,7 +38,7 @@ Modems:
 
     Encoding:
       - Repetition
-        block_size: 1000
+        bit_block_size: 1000
         repetitions: 4
 
     # Waveform configuration

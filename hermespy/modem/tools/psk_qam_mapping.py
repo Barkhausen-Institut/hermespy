@@ -241,51 +241,39 @@ class PskQamMapping(object):
         # use 3GPP mapping for BPSK, QPSK, 16-,64- and 256-QAM
         elif self.modulation_order == 2:
             # BPSK
-            llr = self.get_llr_3gpp(
-                2, np.real(rx_symbols), False) / noise_variance
+            llr = self.get_llr_3gpp(2, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 4 and self.is_complex:
             # QPSK
-            llr[0::2] = self.get_llr_3gpp(
-                2, np.real(rx_symbols), True) / noise_variance
-            llr[1::2] = self.get_llr_3gpp(
-                2, np.imag(rx_symbols), True) / noise_variance
+            llr[0::2] = self.get_llr_3gpp(2, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(2, np.imag(rx_symbols), noise_variance, True)
 
         elif self.modulation_order == 4 and not self.is_complex:
             # 4-PAM
-            llr = self.get_llr_3gpp(
-                4, np.real(rx_symbols), False) / noise_variance
+            llr = self.get_llr_3gpp(4, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 8 and not self.is_complex:
             # 8-PAM
-            llr = self.get_llr_3gpp(
-                8, np.real(rx_symbols), False) / noise_variance
+            llr = self.get_llr_3gpp(8, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 16 and not self.is_complex:
             # 16-PAM
-            llr = self.get_llr_3gpp(
-                16, np.real(rx_symbols), False) / noise_variance
+            llr = self.get_llr_3gpp(16, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 16 and self.is_complex:
             # 16-QAM
-            llr[0::2] = self.get_llr_3gpp(
-                4, np.real(rx_symbols), True) / noise_variance
-            llr[1::2] = self.get_llr_3gpp(
-                4, np.imag(rx_symbols), True) / noise_variance
+            llr[0::2] = self.get_llr_3gpp(4, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(4, np.imag(rx_symbols), noise_variance, True)
 
         elif self.modulation_order == 64 and self.is_complex:
             # 64-QAM
-            llr[0::2] = self.get_llr_3gpp(
-                8, np.real(rx_symbols), True) / noise_variance
-            llr[1::2] = self.get_llr_3gpp(
-                8, np.imag(rx_symbols), True) / noise_variance
+            llr[0::2] = self.get_llr_3gpp(8, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(8, np.imag(rx_symbols), noise_variance, True)
 
         elif self.modulation_order == 256 and self.is_complex:
             # 256-QAM
-            llr[0::2] = self.get_llr_3gpp(
-                16, np.real(rx_symbols), True) / noise_variance
-            llr[1::2] = self.get_llr_3gpp(
-                16, np.imag(rx_symbols), True) / noise_variance
+            llr[0::2] = self.get_llr_3gpp(16, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(16, np.imag(rx_symbols), noise_variance, True)
 
         else:
             raise ValueError("Unsupported modulation scheme")
@@ -339,7 +327,7 @@ class PskQamMapping(object):
         return symbols
 
     @staticmethod
-    def get_llr_3gpp(modulation_order, rx_symbols: np.ndarray,
+    def get_llr_3gpp(modulation_order, rx_symbols: np.ndarray, noise_variance: np.ndarray,
                      is_complex: bool) -> np.ndarray:
         """Returns LLR for each bit based on a received symbol, following 1D 3GPP modulation mapping.
 
@@ -360,6 +348,7 @@ class PskQamMapping(object):
         Args:
             modulation_order(int): modulation order M. M=2, 4, 8, 16 are supported
             rx_symbols(np.ndarray): array with K received symbols
+            noise_variance(np.ndarray): float or array with noise varaiance of K symbols
             is_complex(bool):
                 if True, then complex modulation is considered (PSK/QAM),
                 If False, then real-valued modulation is considered (PAM)
@@ -372,7 +361,7 @@ class PskQamMapping(object):
             rx_symbols = rx_symbols * np.sqrt(2)
 
         if modulation_order == 2:
-            llr = -2 * rx_symbols
+            llr = -2 * rx_symbols / noise_variance
 
         elif modulation_order == 4:
             llr = np.zeros([2, rx_symbols.size])
@@ -382,11 +371,11 @@ class PskQamMapping(object):
             llr[0, :] = 2 * ((rx_symbols <= -2) * (-4 * (1 + rx_symbols))
                              + np.logical_and(rx_symbols > -2, rx_symbols <= 2)
                              * (-2 * rx_symbols)
-                             + (rx_symbols > 2) * (4 * (1 - rx_symbols)))
+                             + (rx_symbols > 2) * (4 * (1 - rx_symbols))) / noise_variance
 
             llr[1, :] = 2 * ((rx_symbols <= 0) * (-2 * (2 + rx_symbols)
                                                   ) + (rx_symbols > 0)
-                             * (-2 * (2 - rx_symbols)))
+                             * (-2 * (2 - rx_symbols))) / noise_variance
 
             llr = llr / 5
 
@@ -406,7 +395,7 @@ class PskQamMapping(object):
                              * (2 * (1 - rx_symbols)) +
                              np.bitwise_and(rx_symbols > 4, rx_symbols <= 6)
                              * (3 * (2 - rx_symbols)) +
-                             (rx_symbols > 6) * (4 * (3 - rx_symbols)))
+                             (rx_symbols > 6) * (4 * (3 - rx_symbols))) / noise_variance
 
             llr[1, :] = 4 * ((rx_symbols <= -6) * (-2 * (5 + rx_symbols)) +
                              np.bitwise_and(rx_symbols > -6, rx_symbols <= -2)
@@ -417,14 +406,14 @@ class PskQamMapping(object):
                              * (-2 * (3 - rx_symbols)) +
                              np.bitwise_and(rx_symbols > 2, rx_symbols <= 6)
                              * (-(4 - rx_symbols)) +
-                             (rx_symbols > 6) * (-2 * (5 - rx_symbols)))
+                             (rx_symbols > 6) * (-2 * (5 - rx_symbols))) / noise_variance
 
             llr[2, :] = 4 * ((rx_symbols <= -4) * (-(6 + rx_symbols)) +
                              np.bitwise_and(rx_symbols > -4, rx_symbols <= 0)
                              * (2 + rx_symbols) +
                              np.bitwise_and(rx_symbols > 0, rx_symbols <= 4)
                              * (2 - rx_symbols) +
-                             (rx_symbols > 4) * (-(6 - rx_symbols)))
+                             (rx_symbols > 4) * (-(6 - rx_symbols))) / noise_variance
             llr = llr / 21
 
         elif modulation_order == 16:
@@ -459,7 +448,7 @@ class PskQamMapping(object):
                              * 3 * (5 - rx_symbols) +
                              np.bitwise_and(rx_symbols > 12, rx_symbols <= 14)
                              * 3.5 * (6 - rx_symbols) +
-                             (rx_symbols > 14) * 4 * (7 - rx_symbols))
+                             (rx_symbols > 14) * 4 * (7 - rx_symbols)) / noise_variance
 
             llr[1, :] = 8 * ((rx_symbols <= -14) * (-2 * (11 + rx_symbols)) -
                              np.bitwise_and(rx_symbols > -14, rx_symbols <= -12)
@@ -486,7 +475,7 @@ class PskQamMapping(object):
                              * (9 - rx_symbols) -
                              np.bitwise_and(rx_symbols > 12, rx_symbols <= 14)
                              * 1.5 * (10 - rx_symbols) -
-                             (rx_symbols > 14) * 2 * (11 - rx_symbols))
+                             (rx_symbols > 14) * 2 * (11 - rx_symbols)) / noise_variance
 
             llr[2, :] = 8 * ((rx_symbols <= -14) * (-13 - rx_symbols) -
                              np.bitwise_and(rx_symbols > -14, rx_symbols <= -10)
@@ -509,7 +498,7 @@ class PskQamMapping(object):
                              * (11 - rx_symbols) -
                              np.bitwise_and(rx_symbols > 10, rx_symbols <= 14)
                              * 0.5 * (12 - rx_symbols) -
-                             (rx_symbols > 14) * (13 - rx_symbols))
+                             (rx_symbols > 14) * (13 - rx_symbols)) / noise_variance
 
             llr[3, :] = 8 * ((rx_symbols <= -12) * (-0.5 * (14 + rx_symbols)) +
                              np.bitwise_and(rx_symbols > -12, rx_symbols <= -8)
@@ -524,7 +513,7 @@ class PskQamMapping(object):
                              * 0.5 * (6 - rx_symbols) +
                              np.bitwise_and(rx_symbols > 8, rx_symbols <= 12)
                              * 0.5 * (10 - rx_symbols) -
-                             (rx_symbols > 12) * 0.5 * (14 - rx_symbols))
+                             (rx_symbols > 12) * 0.5 * (14 - rx_symbols)) / noise_variance
 
             llr = llr / 85
 
