@@ -6,7 +6,6 @@ from unittest.mock import Mock
 
 from hermespy.channel import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
 
-
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -84,7 +83,6 @@ class Test5GTDL(unittest.TestCase):
         self.sync_offset_low = 3
         self.sync_offset_high = 5
 
-
     def test_init(self) -> None:
         """Test the template initializations."""
 
@@ -98,6 +96,8 @@ class Test5GTDL(unittest.TestCase):
 
             self.assertIs(self.transmitter, channel.transmitter)
             self.assertIs(self.receiver, channel.receiver)
+            self.assertEqual(self.sync_offset_low, channel.sync_offset_low)
+            self.assertEqual(self.sync_offset_high, channel.sync_offset_high)
 
     def test_init_validation(self) -> None:
         """Template initialization should raise ValueError on invalid model type."""
@@ -135,6 +135,15 @@ class TestExponential(unittest.TestCase):
     """Test the exponential template for the multipath fading channel model."""
 
     def setUp(self) -> None:
+
+        self.tap_interval = 1e-5
+        self.rms_delay = 1e-8
+
+        self.channel = MultipathFadingExponential(tap_interval=self.tap_interval,
+                                                  rms_delay=self.rms_delay)
+
+    def test_init(self) -> None:
+        """Initialization arguments should be properly parsed."""
         pass
 
     def test_init_validation(self) -> None:
