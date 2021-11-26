@@ -1,15 +1,19 @@
-import unittest
-import numpy as np
-from unittest.mock import Mock
-from numpy.random import default_rng
+# -*- coding: utf-8 -*-
+"""Test Radar Channel."""
 
-from channel.radar_channel import RadarChannel
+import unittest
+from unittest.mock import Mock
+
+import numpy as np
+from numpy.random import default_rng
 from scipy import constants
+
+from hermespy.channel import RadarChannel
 from tools.math import db2lin, DbConversionType
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Andre Noll Barreto"]
+__credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.1.0"
 __maintainer__ = "Jan Adler"
@@ -135,7 +139,7 @@ class TestRadarChannel(unittest.TestCase):
         interval = interval_in_samples / self.transmitter.sampling_rate
 
         number_of_samples = int(np.ceil(interval * self.transmitter.sampling_rate * number_of_pulses))
-        output_signal = np.zeros((1, number_of_samples), dtype=complex)
+        output_signal = np.zeros((1, number_of_samples), dtype=np.complex)
 
         interval_in_samples = int(np.around(interval * self.transmitter.sampling_rate))
 
@@ -320,5 +324,3 @@ class TestRadarChannel(unittest.TestCase):
         atol = np.maximum(np.abs(np.sinc(self.channel.filter_response_in_samples/2)),
                           np.abs(np.sinc(np.floor(self.channel.filter_response_in_samples/2))))
         np.testing.assert_allclose(channel_state_info, observed_csi, atol=atol)
-
-        pass

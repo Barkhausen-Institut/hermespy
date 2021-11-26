@@ -7,7 +7,7 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 from scipy import constants
 
-from channel.channel import Channel
+from .channel import Channel
 from tools.math import db2lin, lin2db, DbConversionType
 
 __author__ = "Andre Noll Barreto"
@@ -290,7 +290,7 @@ class RadarChannel(Channel):
         min_delay_in_samples = int(np.max(np.floor(min_delay * self.transmitter.sampling_rate) - filter_overhead, 0))
         max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate) + filter_overhead)
 
-        delayed_signal = np.zeros((1, samples_in_frame + max_delay_in_samples), dtype=complex)
+        delayed_signal = np.zeros((1, samples_in_frame + max_delay_in_samples), dtype=np.complex)
 
         if self.target_exists:
 
@@ -346,7 +346,7 @@ class RadarChannel(Channel):
         max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate)) + filter_overhead
 
         impulse_response = np.zeros((timestamps.size, self.num_outputs, self.num_inputs,
-                                     max_delay_in_samples), dtype=complex)
+                                     max_delay_in_samples), dtype=np.complex)
 
         for idx, timestamp in enumerate(timestamps):
             delay = np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
