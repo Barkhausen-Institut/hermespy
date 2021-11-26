@@ -10,7 +10,9 @@ import numpy.random as rnd
 from scipy.constants import pi
 from math import floor
 
+from hermespy.channel import ChannelStateFormat, ChannelStateInformation
 from hermespy.modem import WaveformGenerator
+from hermespy.signal import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -60,18 +62,22 @@ class WaveformGeneratorDummy(WaveformGenerator):
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
         return data_symbols
 
-    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
-        return data_symbols
+    def modulate(self, data_symbols: np.ndarray) -> Signal:
+        return Signal(data_symbols, self.sampling_rate)
 
     def demodulate(self,
                    signal: np.ndarray,
-                   impulse_response: np.ndarray,
-                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        return signal, impulse_response, np.repeat(noise_variance, signal.shape)
+                   channel_state: ChannelStateInformation,
+                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+        return signal, channel_state, np.tile(np.array([noise_variance]), signal.shape)
 
     @property
     def bandwidth(self) -> float:
         return 100.
+
+    @property
+    def sampling_rate(self) -> float:
+        return 1e3
 
 
 class TestWaveformGenerator(unittest.TestCase):
@@ -80,9 +86,7 @@ class TestWaveformGenerator(unittest.TestCase):
     def setUp(self) -> None:
 
         self.rnd = rnd.default_rng(42)
-
         self.modem = Mock()
-        self.modem.scenario.sampling_rate = 1e6
 
         self.waveform_generator = WaveformGeneratorDummy(modem=self.modem)
 
@@ -127,23 +131,30 @@ class TestWaveformGenerator(unittest.TestCase):
         for num_samples in num_samples_test:
 
             signal = np.exp(2j * self.rnd.uniform(0, pi, num_samples))
-            response = np.ones((num_samples, 1), dtype=complex)
+            channel_state = ChannelStateInformation.Ideal(num_samples=num_samples)
 
-            frames, responses = self.waveform_generator.synchronize(signal, response)
+            synchronized_frames = self.waveform_generator.synchronize(signal, channel_state)
 
             # Number of frames is the number of frames that fit into the samples
-            num_frames = frames.shape[0]
+            num_frames = len(synchronized_frames)
             expected_num_frames = int(floor(num_samples / self.waveform_generator.samples_in_frame))
             self.assertEqual(expected_num_frames, num_frames)
 
-            # Frame and response should have equal length
-            self.assertCountEqual(frames.shape, responses.shape)
+            # Frames and channel states should each contain the correct amount of samples
+            for frame_signal, frame_channel_state in synchronized_frames:
+
+                self.assertEqual(self.waveform_generator.samples_in_frame, frame_signal.shape[0])
+                self.assertEqual(self.waveform_generator.samples_in_frame, frame_channel_state.num_samples)
 
     def test_synchronize_validation(self) -> None:
         """Synchronization should raise a ValueError if the signal shape does match the stream response shape."""
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronize(np.zeros(10), np.zeros((10, 2)))
+            _ = self.waveform_generator.synchronize(np.zeros(10),
+                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                                            np.zeros((10, 2))))
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronize(np.zeros((10, 2)), np.zeros((10, 2)))
+            _ = self.waveform_generator.synchronize(np.zeros((10, 2)),
+                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                                            np.zeros((10, 2))))
