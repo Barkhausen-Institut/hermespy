@@ -42,8 +42,8 @@ class MMSETimeEqualizer(SymbolPrecoder):
                stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         num_symbols = symbol_stream.shape[1]
-        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=float)
+        equalized_symbols = np.empty(symbol_stream.shape, dtype=np.complex)
+        equalized_noises = np.empty(stream_noises.shape, dtype=np.float)
 
         # Equalize in space in a first step
         for idx, (symbols, stream_state, noise) in enumerate(zip(symbol_stream,
@@ -54,12 +54,12 @@ class MMSETimeEqualizer(SymbolPrecoder):
             linear_state = stream_state.linear
             transform = np.sum(linear_state[0, :, :, :], axis=0, keepdims=False)
 
-            inverse = inv(transform.T.conj() @ transform + diags(noise))
-            symbol_equalizer = inverse @ transform[:num_symbols, :].T.conj()
-            channel_equalizer = inverse @ transform.T.conj()
+            inverse = inv(transform @ transform.T.conj() + diags(noise))
+            equalizer = transform.T @ inverse
+            #channel_equalizer = transform.T.conj() @ inverse
 
-            equalized_symbols[idx, :] = symbol_equalizer @ symbols
-            equalized_channel = tensordot(channel_equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
+            equalized_symbols[idx, :] = equalizer @ symbols
+            equalized_channel = tensordot(equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
 
             stream_state.linear = equalized_channel
 

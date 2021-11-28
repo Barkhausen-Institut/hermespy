@@ -8,7 +8,7 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
 from numpy import tensordot
 from sparse import tensordot
-from scipy.sparse.linalg import inv
+from scipy.linalg.decomp_svd import svd
 
 from .symbol_precoder import SymbolPrecoder
 from hermespy.channel import ChannelStateInformation
@@ -41,9 +41,9 @@ class ZFTimeEqualizer(SymbolPrecoder):
                channel_state: ChannelStateInformation,
                stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
-        num_symbols = symbol_stream.shape[1]
-        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=float)
+        equalized_symbols = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=np.complex)
+        equalized_noises = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=np.float)
+        equalized_channel_state = ChannelStateInformation(channel_state.state_format)
 
         # Equalize in space in a first step
         for idx, (symbols, stream_state, noise) in enumerate(zip(symbol_stream,
@@ -54,15 +54,16 @@ class ZFTimeEqualizer(SymbolPrecoder):
             linear_state = stream_state.linear
             transform = np.sum(linear_state[0, ::], axis=0, keepdims=False)
 
-            inverse = inv(transform.T.conj() @ transform)
-            symbol_equalizer = inverse @ transform[:num_symbols, :].T.conj()
-            channel_equalizer = inverse @ transform.T.conj()
+            # Compute the pseudo-inverse from the singular-value-decomposition of the linear channel transform
+            # noinspection PyTupleAssignmentBalance
+            u, s, vh = svd(transform.todense(), full_matrices=False, check_finite=False)
+            u /= s
 
-            equalized_symbols[idx, :] = symbol_equalizer @ symbols
-            equalized_channel = tensordot(channel_equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
-
-            stream_state.linear = equalized_channel
-            equalized_noises[idx, :] = noise * np.diag(inverse).real
+            equalizer = (u @ vh).conj().T
+            equalized_symbols[idx, :] = equalizer @ symbols
+            equalized_csi_slice = tensordot(equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
+            equalized_channel_state.append_linear(equalized_csi_slice, 0)
+            equalized_noises[idx, :] = noise[:stream_state.num_samples] * s
 
         return equalized_symbols, channel_state, equalized_noises
 

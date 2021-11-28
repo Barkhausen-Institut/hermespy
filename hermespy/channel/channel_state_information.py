@@ -72,7 +72,7 @@ class ChannelStateInformation:
 
     def __init__(self,
                  state_format: ChannelStateFormat,
-                 state: np.ndarray,
+                 state: Optional[np.ndarray] = None,
                  num_delay_taps: Optional[int] = None,
                  num_frequency_bins: Optional[int] = None) -> None:
         """Channel State Information object initialization.
@@ -81,7 +81,7 @@ class ChannelStateInformation:
             state_format (ChannelStateFormat):
                 Format of the `state` from which to initialize the channel state information.
 
-            state (np.ndarray):
+            state (np.ndarray, optional):
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
@@ -134,7 +134,7 @@ class ChannelStateInformation:
 
     def set_state(self,
                   state_format: ChannelStateFormat,
-                  state: np.ndarray,
+                  state: Optional[np.ndarray] = None,
                   num_delay_taps: Optional[int] = None,
                   num_frequency_bins: Optional[int] = None) -> None:
         """Set a new channel state.
@@ -143,7 +143,7 @@ class ChannelStateInformation:
             state_format (ChannelStateFormat):
                 Format of the `state` from which to initialize the channel state information.
 
-            state (np.ndarray):
+            state (np.ndarray, optional):
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
@@ -158,6 +158,8 @@ class ChannelStateInformation:
             ValueError:
                 If `state` dimensions are invalid.
         """
+
+        state = np.empty((0, 0, 0, 1), dtype=np.complex) if state is None else state
 
         if state_format not in ChannelStateFormat:
             raise ValueError("Unknown channel state format flag")
@@ -319,10 +321,10 @@ class ChannelStateInformation:
         """
 
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
-            self.__from_impulse_response(transformation)
+            self.__from_impulse_response(self.__state, transformation, self.num_delay_taps)
 
         elif self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
-            self.__from_frequency_selectivity(transformation)
+            self.__from_frequency_selectivity(self.__state, transformation)
 
         else:
             raise RuntimeError("To linear CSI conversion encountered invalid internal state format")
@@ -387,17 +389,21 @@ class ChannelStateInformation:
                              shape=(num_rx, num_tx, num_symbols, num_symbols))
         return transformation
 
-    def __from_impulse_response(self, transformation: Union[COO, np.ndarray]) -> None:
+    @staticmethod
+    def __from_impulse_response(state: np.ndarray,
+                                transformation: Union[COO, np.ndarray],
+                                num_taps: int) -> None:
 
-        for delay_idx in range(self.__num_delay_taps):
+        for delay_idx in range(num_taps):
 
             diagonal_elements = diagonal(transformation, axis1=3, axis2=2, offset=delay_idx)
-            self.__state[:, :, :diagonal_elements.shape[2], delay_idx] = diagonal_elements.todense()
+            state[:, :, :diagonal_elements.shape[2], delay_idx] = diagonal_elements.todense()
 
-    def __from_frequency_selectivity(self, transformation: Union[COO, np.ndarray]) -> None:
+    @staticmethod
+    def __from_frequency_selectivity(state: np.ndarray, transformation: Union[COO, np.ndarray]) -> None:
 
         diagonal_elements = diagonal(transformation, axis1=2, axis2=3)
-        self.__state[:, :, :diagonal_elements.shape[2], :].flat = diagonal_elements.todense()
+        state[:, :, :diagonal_elements.shape[2], :].flat = diagonal_elements.todense()
 
     @staticmethod
     def Ideal(num_samples: int,
@@ -510,3 +516,31 @@ class ChannelStateInformation:
             for tx_id, transmit_states in enumerate(receive_states):
 
                 axes[rx_id, tx_id].imshow(abs(transmit_states))
+
+    def append(self,
+               state: ChannelStateInformation,
+               axis: int) -> None:
+        """Append a channel state slice to this channel state.
+
+        Args:
+
+            state (ChannelStateInformation):
+                The channel state information to append along `axis`.
+
+            axis (int):
+                The dimension along which to append the `linear_state`.
+        """
+
+    def append_linear(self,
+                      linear_state: np.ndarray,
+                      axis: int) -> None:
+        """Append a linear channel state slice to this channel state.
+
+        Args:
+
+            linear_state (np.ndarray):
+                The linear state matrix to be appended along `axis`.
+
+            axis (int):
+                The dimension along which to append the `linear_state`.
+        """
