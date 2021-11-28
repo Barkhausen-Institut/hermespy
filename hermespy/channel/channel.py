@@ -2,7 +2,7 @@
 """Channel model for wireless transmission links."""
 
 from __future__ import annotations
-from typing import Type, Tuple, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Tuple, Type
 from itertools import product
 
 import numpy as np
@@ -326,13 +326,13 @@ class Channel:
             RuntimeError: If trying to access the random generator of a floating channel.
         """
 
+        if self.__random_generator is not None:
+            return self.__random_generator
+
         if self.__scenario is None:
             raise RuntimeError("Trying to access the random generator of a floating channel")
 
-        if self.__random_generator is None:
-            return self.__scenario.random_generator
-
-        return self.__random_generator
+        return self.scenario.random_generator
 
     @random_generator.setter
     def random_generator(self, generator: Optional[rnd.Generator]) -> None:
@@ -480,7 +480,7 @@ class Channel:
 
         # Propagate the signal
         received_samples = np.zeros((self.receiver.num_antennas,
-                                    transmitted_signal.num_samples + num_delay_samples), dtype=complex)
+                                    transmitted_signal.num_samples + num_delay_samples), dtype=np.complex)
 
         for delay_index in range(num_delay_samples+1):
             for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
@@ -494,7 +494,7 @@ class Channel:
                                    carrier_frequency=transmitted_signal.carrier_frequency,
                                    delay=transmitted_signal.delay+sync_offset)
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                impulse_response.transpose(1, 2, 0, 3))
+                                                impulse_response.transpose((1, 2, 0, 3)))
 
         return propagated_signal, channel_state
 
@@ -526,18 +526,18 @@ class Channel:
 
         # MISO case
         if self.receiver.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((1, self.transmitter.num_antennas), dtype=complex),
+            impulse_responses = np.tile(np.ones((1, self.transmitter.num_antennas), dtype=np.complex),
                                         (timestamps.size, 1, 1))
 
         # SIMO case
         elif self.transmitter.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((self.receiver.num_antennas, 1), dtype=complex),
+            impulse_responses = np.tile(np.ones((self.receiver.num_antennas, 1), dtype=np.complex),
                                         (timestamps.size, 1, 1))
 
         # MIMO case
         else:
-            impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas, dtype=complex),
-                                        (timestamps.size, 1, 1))
+            impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas,
+                                               dtype=np.complex), (timestamps.size, 1, 1))
 
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
