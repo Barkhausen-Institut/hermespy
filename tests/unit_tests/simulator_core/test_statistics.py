@@ -33,11 +33,14 @@ class TestUpdateStoppingCriteria(unittest.TestCase):
         self.transmitted_bits = [np.ones(10)]
         self.received_bits = [np.zeros(10)]
 
-    def create_drop(self, transmitted_bits: List[np.array], received_bits: List[np.array]) -> Drop:
+    def create_drop(self, transmitted_bits: List[np.ndarray], received_bits: List[np.ndarray]) -> Drop:
+
         return Drop(transmitted_bits=transmitted_bits,
+                    transmitted_symbols=transmitted_bits,
                     transmitted_signals=[None],
                     transmit_block_sizes=[len(bits) for bits in transmitted_bits],
                     received_signals=[None],
+                    received_symbols=received_bits,
                     received_bits=received_bits,
                     receive_block_sizes=[len(bits) for bits in received_bits])
 
