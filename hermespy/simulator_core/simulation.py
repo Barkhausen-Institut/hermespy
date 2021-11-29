@@ -212,8 +212,8 @@ class Simulation(Executable):
             if self.verbosity.value <= Verbosity.INFO.value:
 
                 print(f"\nScenario Simulation #{s}")
-                print(f"{'SNR':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
-                print("="*75)
+                print(f"{'SNR':<10}{'Drop':<10}{'Link':<15}{'BER':<15}{'BLER':<15}")
+                print("="*60)
 
             # Initialize plot statistics with current scenario state
             statistics = Statistics(scenario=scenario,
@@ -244,7 +244,7 @@ class Simulation(Executable):
                         if self.verbosity.value <= Verbosity.INFO.value:
 
                             info_str = f" Stopping criteria for SNR tap #{noise_index} met "
-                            padding = .5 * max(75 - len(info_str), 0)
+                            padding = .5 * max(65 - len(info_str), 0)
                             print('-' * floor(padding) + info_str + '-' * ceil(padding))
 
                         break
@@ -292,20 +292,20 @@ class Simulation(Executable):
                         bers = drop.bit_error_rates
                         blers = drop.block_error_rates
 
-                        for (tx_id, tx_bers), tx_blers in zip(enumerate(bers), blers):
-                            for (rx_id, ber), bler in zip(enumerate(tx_bers), tx_blers):
+                        for tx_id, (tx_bers, tx_blers) in enumerate(zip(bers, blers)):
+                            for rx_id, (ber, bler) in enumerate(zip(tx_bers, tx_blers)):
 
                                 link_str = f"{tx_id}x{rx_id}"
-                                ber_str = "-" if ber is None else f"{bler:.4f}"
+                                ber_str = "-" if ber is None else f"{ber:.4f}"
                                 bler_str = "-" if bler is None else f"{bler:.4f}"
 
                                 if tx_id == 0 and rx_id == 0:
 
                                     snr_str = f"{10 * np.log10(snr):.1f}"
-                                    print(f"{snr_str:<15}{d:<15}{link_str:<15}{ber_str:<15}{bler_str:<15}")
+                                    print(f"{snr_str:<10}{d:<10}{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
                                 else:
-                                    print(" " * 30 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
+                                    print(" " * 20 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
                     # Visualize plot if requested
                     if self.plot_drop:
