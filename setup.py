@@ -1,5 +1,8 @@
 from skbuild import setup
 from setuptools import find_packages
+from sphinx.setup_command import BuildDoc
+
+cmdclass = {'build_sphinx': BuildDoc}
 
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -39,4 +42,11 @@ setup(
         'console_scripts': ['hermes=hermespy.bin:hermes'],
     },
     install_requires=['matplotlib', 'numpy', 'scipy', 'data-science-types', 'ruamel.yaml', 'numba', 'sparse'],
+    command_options={
+        'build_sphinx': {
+            #'project': ('setup.py', name),
+            #'version': ('setup.py', version),
+            #'release': ('setup.py', release),
+            'source_dir': ('setup.py', 'docssource')},
+    },
 )

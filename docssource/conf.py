@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../hermespy')))
 
 
 # -- Project information -----------------------------------------------------
@@ -28,6 +28,7 @@ author = 'Barkhausen Institut'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinxcontrib.apidoc',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
@@ -37,6 +38,12 @@ extensions = [
     'sphinx.ext.autosummary',
     'm2r2'
 ]
+
+# APIdoc
+apidoc_module_dir = '../hermespy'
+apidoc_output_dir = 'api'
+apidoc_excluded_paths = []
+apidoc_separate_modules = True
 
 autoclass_content = "both"
 add_module_names = False
