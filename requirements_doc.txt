@@ -1,5 +1,6 @@
 sphinx==3.2.0
 sphinx-autodoc-typehints
+sphinxcontrib-apidoc
+sphinx-rtd-theme
 msmb-theme==1.2.0
 m2r2==0.2.5
-
