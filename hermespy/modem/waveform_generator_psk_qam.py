@@ -325,61 +325,6 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         else:
             self.__equalization = method
 
-    def create_frame(self, timestamp: int,
-                     data_bits: np.array) -> Tuple[np.ndarray, int, int]:
-
-        self._set_sampling_indices()
-        self._set_pulse_correlation_matrix()
-
-        frame = np.zeros(self.samples_in_frame, dtype=complex)
-        frame[self._symbol_idx[:self.num_preamble_symbols]] = 1
-        start_index_data = self.num_preamble_symbols
-        end_index_data = self.num_preamble_symbols + self.num_data_symbols
-        frame[self._symbol_idx[start_index_data: end_index_data]
-              ] = self.__mapping.get_symbols(data_bits)
-        frame[self._symbol_idx[end_index_data:]] = 1
-
-        output_signal = self.tx_filter.filter(frame)
-
-        initial_sample_num = timestamp - self.tx_filter.delay_in_samples
-        timestamp += self.samples_in_frame
-
-        return output_signal[np.newaxis, :], timestamp, initial_sample_num
-
-    def receive_frame(self,
-                      rx_signal: np.ndarray,
-                      timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[np.ndarray, np.ndarray]:
-
-        self._set_sampling_indices()
-        self._set_pulse_correlation_matrix()
-
-        useful_signal_length = self.samples_in_frame + self.rx_filter.delay_in_samples
-
-        if rx_signal.shape[1] < useful_signal_length:
-            bits = np.empty(0, dtype=int)
-            rx_signal = np.array([])
-        else:
-            frame_signal = rx_signal[0, :useful_signal_length].ravel()
-            symbol_idx = self._data_symbol_idx + self.rx_filter.delay_in_samples + self.tx_filter.delay_in_samples
-
-            frame_signal = self.rx_filter.filter(frame_signal)
-
-            # get channel gains (first tap only)
-            timestamps = (timestamp_in_samples + symbol_idx) / self.sampling_rate
-            channel = self.modem.reference_channel.impulse_response(timestamps)
-            channel = channel[:, :, :, 0].ravel()
-
-            # equalize
-            rx_symbols = self._equalizer(frame_signal[symbol_idx], channel, noise_var)
-
-            # detect
-            bits = self.__mapping.detect_bits(rx_symbols)
-
-            rx_signal = rx_signal[:, self.samples_in_frame:]
-
-        return np.ravel(bits), rx_signal
-
     def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
         """Equalize the received data symbols
 
