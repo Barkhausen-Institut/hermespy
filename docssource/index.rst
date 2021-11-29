@@ -2,8 +2,7 @@
 HermesPy Documentation
 **********************
 
-Welcome to the official documentation of hermespy the **Heterogeneous Radio Mobile Simulator**.
-This documentation provides a general high-level introduction to the simulator features as well as
+Welcome to the official documentation of HermesPy, the **Heterogeneous Radio Mobile Simulator**.
 
 HermesPy is a semi-static link-level simulator based on time-driven mechanisms.
 It aims to enable the simulation and evaluation of transmission protocols deployed by

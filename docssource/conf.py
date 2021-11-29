@@ -29,6 +29,7 @@ author = 'Barkhausen Institut'
 # ones.
 extensions = [
     'sphinxcontrib.apidoc',
+    'sphinxcontrib.mermaid',
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
@@ -36,7 +37,8 @@ extensions = [
     'sphinx.ext.inheritance_diagram',
     'sphinx_autodoc_typehints',
     'sphinx.ext.autosummary',
-    'm2r2'
+    'm2r2',
+    'sphinx_rtd_dark_mode'
 ]
 
 # APIdoc
@@ -77,6 +79,9 @@ autodoc_default_options = {
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+
+# Sphinx RTD dark mode
+default_dark_mode = True
 
 
 # Add any paths that contain custom static files (such as style sheets) here,
