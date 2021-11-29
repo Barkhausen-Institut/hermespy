@@ -213,7 +213,7 @@ class Simulation(Executable):
 
                 print(f"\nScenario Simulation #{s}")
                 print(f"{'SNR':<10}{'Drop':<10}{'Link':<15}{'BER':<15}{'BLER':<15}")
-                print("="*60)
+                print("="*65)
 
             # Initialize plot statistics with current scenario state
             statistics = Statistics(scenario=scenario,
