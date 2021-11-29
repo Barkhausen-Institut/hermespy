@@ -2,6 +2,7 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
+from math import ceil, floor
 from typing import List, Type, Optional, Union, Tuple
 
 import numpy as np
@@ -231,11 +232,23 @@ class Simulation(Executable):
             # Save most recent drop
             drop: Optional[SimulationDrop] = None
 
-            for d in range(self.max_num_drops):
-                run_flags = statistics.run_flag_matrix
+            for noise_index, snr in enumerate(self.noise_loop):
 
-                for noise_index, snr in enumerate(self.noise_loop):
-                    drop_run_flag = run_flags[:, :, noise_index]
+                for d in range(self.max_num_drops):
+
+                    drop_run_flag = statistics.run_flag_matrix[:, :, noise_index]
+
+                    # Prematurely abort the drop loop if all stopping criteria have been met
+                    if np.sum(drop_run_flag.flatten()) == 0:
+
+                        if self.verbosity.value <= Verbosity.INFO.value:
+
+                            info_str = f" Stopping criteria for SNR tap #{noise_index} met "
+                            padding = .5 * max(75 - len(info_str), 0)
+                            print('-' * floor(padding) + info_str + '-' * ceil(padding))
+
+                        break
+
                     # Generate data bits to be transmitted
                     data_bits = scenario.generate_data_bits()
 
