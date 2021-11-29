@@ -2,10 +2,10 @@
 Command Line Tool
 =================
 
-This section outlines how to use **HermesPy** as a command line tool
+This section outlines how to use HermesPy as a command line tool
 and provides some reference examples to get new users accustomed with the process of configuring scenarios.
 
-Once **HermesPy** is installed within any python environment,
+Once HermesPy is installed within any python environment,
 users may call the command line interface by entering the command ``hermes``
 in both Linux and Windows environments.
 Check :doc:`/api/hermespy.bin.hermes` for a detailed description of all command line options.
@@ -14,7 +14,7 @@ In short, entering
 
 .. code-block:: console
 
-    hermes -p /path/to/settings -o /path/to/output
+   hermes -p /path/to/settings -o /path/to/output
 
 is the most common use-case of the command line interface.
 All configuration files located under */path/to/settings* are parsed and interpreted as
@@ -39,9 +39,9 @@ This scenario is represented by the following *scenario.yml* file:
 .. code-block:: yml
    :linenos:
 
-    !<Scenario>
+   !<Scenario>
 
-    Modems:
+   Modems:
 
       - Transmitter
 
@@ -79,6 +79,6 @@ Assuming both *scenario.yml* and  *simulation.yml* are located within */path/to/
 
 .. code-block:: console
 
-    hermes -p /path/to/settings
+   hermes -p /path/to/settings
 
 will result in the rendering of four plots displaying the respective information.
