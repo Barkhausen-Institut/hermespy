@@ -234,6 +234,7 @@ class Statistics:
 
         for drop in drops:
             self.add_drop(drop, snr_index)
+
     @property
     def run_flag_matrix(self) -> np.ndarray:
         """Returns run_flag matrix of last drop."""
@@ -378,7 +379,6 @@ class Statistics:
         """
         return no_old_samples / (no_old_samples + 1) * old_mean + 1 / (no_old_samples+1) * new_sample
 
-
     def update_stopping_criteria(self, snr_index: int) -> None:
         """Updates the stopping criteria.
 
@@ -388,7 +388,7 @@ class Statistics:
         for rx_modem_idx in range(self.__scenario.num_receivers):
             for tx_modem_idx in range(self.__scenario.num_transmitters):
                 if self.__num_drops[snr_index] >= self.__min_num_drops:
-                    if self.__run_flag_matrix[tx_modem_idx, rx_modem_idx, snr_index] == True:
+                    if self.__run_flag_matrix[tx_modem_idx, rx_modem_idx, snr_index]:
 
                         if self.__confidence_metric == ConfidenceMetric.BER:
                             self.__update_flag_matrix_ber(snr_index, tx_modem_idx, rx_modem_idx)
@@ -446,159 +446,30 @@ class Statistics:
         np.seterr(**old_settings)
         return confidence_margin
 
-    def estimate_confidence_intervals_mean(self, data: np.array, 
-                                                 alpha: float) -> Tuple[float, float]:
+    def estimate_confidence_intervals_mean(self,
+                                           data: np.ndarray,
+                                           alpha: float) -> Tuple[float, float]:
         """Estimates bayesian confidence intervals for the mean.
 
         Args:
-            data (np.array): Data samples.
+            data (np.ndarray): Data samples.
             alpha (float): Probability that return confidence interval contains true parameter.
 
         Returns:
             (float, float): Lower and upper bound of estimated mean.
         """
-        lower_bound = data[0]
-        upper_bound = data[0]
-        if len(data) > 1:
+
+        lower_bound = min(data)
+        upper_bound = max(data)
+
+        if lower_bound != upper_bound:
+
             estimates = stats.bayes_mvs(data=data, alpha=alpha)
 
-            if not np.isnan(estimates[0][1][0]):
-                lower_bound = estimates[0][1][0]
-                if lower_bound < 0:
-                    lower_bound = 0
-                upper_bound = estimates[0][1][1]
+            lower_bound = estimates[0][1][0]
+            upper_bound = estimates[0][1][1]
 
         return lower_bound, upper_bound
-        """for rx_modem_idx, received_signals in enumerate(received_bits):
-
-            # get respective snr indices
-            snr_indices = list(np.where(self.run_flag[rx_modem_idx])[0])
-
-            # get respective tx_modem
-            tx_modem = self.param_scenario.rx_modem_params[rx_modem_idx].tx_modem
-
-            # since there are different SNR values added to the received signal,
-            # we have multiple (#snr) signals for one receiver!
-
-            for signal_idx, snr_idx in enumerate(snr_indices):
-                rx_signal = [frame[signal_idx, :]
-                             for frame in received_signals]
-                error_stats = sources[tx_modem].get_number_of_errors(rx_signal)
-                num_bits = error_stats.number_of_bits
-                number_of_bit_errors = error_stats.number_of_bit_errors
-                num_blocks = error_stats.number_of_blocks
-                number_of_block_errors = error_stats.number_of_block_errors
-
-                self.ber[rx_modem_idx][snr_idx] = np.append(
-                    self.ber[rx_modem_idx][snr_idx], number_of_bit_errors / num_bits
-                )
-                self.fer[rx_modem_idx][snr_idx] = np.append(
-                    self.fer[rx_modem_idx][snr_idx],
-                    number_of_block_errors / num_blocks,
-                )
-
-                # update b(l)er statistics
-                self.bit_error_sum[rx_modem_idx][snr_idx] = np.mean(
-                    self.ber[rx_modem_idx][snr_idx]
-                )
-                self.bit_error_min[rx_modem_idx][snr_idx] = np.min(
-                    self.ber[rx_modem_idx][snr_idx]
-                )
-                self.bit_error_max[rx_modem_idx][snr_idx] = np.max(
-                    self.ber[rx_modem_idx][snr_idx]
-                )
-
-                self.block_error_sum[rx_modem_idx][snr_idx] = np.mean(
-                    self.fer[rx_modem_idx][snr_idx]
-                )
-                self.block_error_min[rx_modem_idx][snr_idx] = np.min(
-                    self.fer[rx_modem_idx][snr_idx]
-                )
-                self.block_error_max[rx_modem_idx][snr_idx] = np.max(
-                    self.fer[rx_modem_idx][snr_idx]
-                )
-
-                # calculate confidence margins
-                if self.__num_drops >= self.param_general.min_num_drops:
-                    # define those to save typing
-                    ber_lower = self.bit_error_min[rx_modem_idx][snr_idx]
-                    fer_lower = self.block_error_min[rx_modem_idx][snr_idx]
-                    ber_upper = self.bit_error_max[rx_modem_idx][snr_idx]
-                    fer_upper = self.block_error_max[rx_modem_idx][snr_idx]
-
-                    # start with BER calculation
-                    ber_rx = self.ber[rx_modem_idx][snr_idx]
-
-                    if self.__num_drops > 1:
-                        ber_stats = stats.bayes_mvs(
-                            ber_rx, alpha=self.param_general.confidence_level
-                        )
-                        if not np.isnan(ber_stats[0][1][0]):
-                            ber_lower = ber_stats[0][1][0]
-                            if ber_lower < 0:
-                                ber_lower = 0
-                            ber_upper = ber_stats[0][1][1]
-                    else:
-                        ber_upper = self.ber[rx_modem_idx][snr_idx]
-                        ber_lower = self.ber[rx_modem_idx][snr_idx]
-
-                    # do the same stuff for fer
-                    fer_rx = self.fer[rx_modem_idx][snr_idx]
-
-                    if self.__num_drops > 1:
-                        fer_stats = stats.bayes_mvs(
-                            fer_rx, alpha=self.param_general.confidence_level
-                        )
-
-                        if not np.isnan(fer_stats[0][1][0]):
-                            fer_lower = fer_stats[0][1][0]
-                            if fer_lower < 0:
-                                fer_lower = 0
-                            fer_upper = fer_stats[0][1][1]
-                    else:
-                        fer_lower = self.fer[rx_modem_idx][snr_idx]
-                        fer_upper = self.fer[rx_modem_idx][snr_idx]
-
-                    self.bit_error_min[rx_modem_idx][snr_idx] = ber_lower
-                    self.block_error_min[rx_modem_idx][snr_idx] = fer_lower
-                    self.bit_error_max[rx_modem_idx][snr_idx] = ber_upper
-                    self.block_error_max[rx_modem_idx][snr_idx] = fer_upper
-
-            # update stopping criteria
-            if (
-                self.param_general.confidence_margin > 0
-                and self.__num_drops >= self.param_general.min_num_drops
-            ):
-                old_settings = np.seterr(divide="ignore", invalid="ignore")
-
-                if self.param_general.confidence_metric == "BER":
-                    confidence_margin = (
-                                                self.bit_error_max[rx_modem_idx] -
-                                                self.bit_error_min[rx_modem_idx]
-                    ) / self.bit_error_sum[rx_modem_idx]
-                elif self.param_general.confidence_metric == "fer":
-                    confidence_margin = (
-                                                self.block_error_max[rx_modem_idx] -
-                                                self.block_error_min[rx_modem_idx]
-                    ) / self.block_error_sum[rx_modem_idx]
-
-                self.run_flag[rx_modem_idx] = np.logical_or(
-                    confidence_margin > self.param_general.confidence_margin,
-                    np.isnan(confidence_margin),
-                )
-                np.seterr(**old_settings)
-
-            if self.param_general.verbose:
-                print(f"Drop {self.__num_drops} (Rx {rx_modem_idx + 1}):")
-                for snr, idx in zip(self.get_snr_list(
-                        rx_modem_idx), snr_indices):
-                    print(
-                        "\tSNR = {:f} dB, BER = {:f}, fer = {:f}".format(
-                            snr,
-                            self.ber[rx_modem_idx][idx][-1],
-                            self.fer[rx_modem_idx][idx][-1],
-                        )
-                    )"""
 
     def save(self, results_dir: str) -> None:
         """averages out the stored statistics from all the drops and store them in a matlab file.
