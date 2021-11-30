@@ -2,7 +2,7 @@
 """Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple, Optional, Type, Union
+from typing import Any, Tuple, Optional, Type, Union
 from enum import Enum
 
 import numpy as np
@@ -13,9 +13,6 @@ from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from hermespy.signal import Signal
-
-if TYPE_CHECKING:
-    from hermespy.modem import Modem
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -35,7 +32,6 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     - arbitrary constellation, as defined in modem.tools.psk_qam_mapping:PskQamMapping
 
     This implementation has currently the following limitations:
-    - SISO only
     - hard output only (no LLR)
     - no reference signal
     - ideal channel estimation
@@ -72,10 +68,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     __symbol_rate: float
 
     def __init__(self,
-                 modem: Optional[Modem] = None,
                  symbol_rate: float = 0.0,
-                 oversampling_factor: int = 2,
-                 modulation_order: Optional[int] = None,
                  tx_filter: Optional[ShapingFilter] = None,
                  rx_filter: Optional[ShapingFilter] = None,
                  chirp_duration: float = 0.0,
@@ -86,24 +79,14 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                  num_postamble_symbols: int = 0,
                  pilot_rate: float = 0.0,
                  guard_interval: float = 0.0,
-                 complex_modulation: bool = True) -> None:
-        """Waveform Generator PSK-QAM object initialization.
+                 complex_modulation: bool = True,
+                 **kwargs: Any) -> None:
+        """Waveform Generator PSK-QAM initialization.
 
         Args:
 
-            modem (Modem, optional):
-                A modem this generator is attached to.
-                By default, the generator is considered to be floating.
-
             symbol_rate (float, optional):
                 Rate at which symbols are being generated.
-
-            oversampling_factor (int, optional):
-                The factor at which the simulated signal is oversampled.
-
-            modulation_order (int, optional):
-                Order of modulation.
-                Must be a non-negative power of two.
 
             tx_filter (ShapingFilter, optional):
                 The shaping filter applied during signal generation.
@@ -129,24 +112,21 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             pilot_rate (int, optional):
                 Pilot symbol rate.
 
-            guard_interval (float, optional):
-                Guard interval between frames in seconds.
+            kwargs (Any):
+                Waveform generator base class initialization parameters.
         """
 
         # Initialize base class
-        WaveformGenerator.__init__(self,
-                                   modem=modem,
-                                   oversampling_factor=oversampling_factor,
-                                   modulation_order=modulation_order)
+        WaveformGenerator.__init__(self, **kwargs)
 
         if tx_filter is None:
-            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, oversampling_factor)
+            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
         else:
             self.tx_filter = tx_filter
             
         if rx_filter is None:
-            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, oversampling_factor)
+            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
         else:
             self.rx_filter = tx_filter
