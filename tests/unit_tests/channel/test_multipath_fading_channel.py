@@ -35,9 +35,9 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.active = True
         self.gain = 1.0
 
-        self.delays = np.zeros(1, dtype=np.float)
-        self.power_profile = np.ones(1, dtype=np.float)
-        self.rice_factors = np.zeros(1, dtype=np.float)
+        self.delays = np.zeros(1, dtype=float)
+        self.power_profile = np.ones(1, dtype=float)
+        self.rice_factors = np.zeros(1, dtype=float)
 
         self.sampling_rate = 1e6
         self.transmit_frequency = pi * self.sampling_rate
@@ -352,7 +352,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         Test the propagation through a SISO multipath channel with fading.
         """
 
-        test_delays = np.array([1., 2., 3., 4.], dtype=np.float) / self.sampling_rate
+        test_delays = np.array([1., 2., 3., 4.], dtype=float) / self.sampling_rate
 
         reference_params = self.channel_params.copy()
         delayed_params = self.channel_params.copy()

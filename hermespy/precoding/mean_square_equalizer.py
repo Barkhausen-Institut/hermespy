@@ -42,8 +42,8 @@ class MMSETimeEqualizer(SymbolPrecoder):
                stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         num_symbols = symbol_stream.shape[1]
-        equalized_symbols = np.empty(symbol_stream.shape, dtype=np.complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=np.float)
+        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
+        equalized_noises = np.empty(stream_noises.shape, dtype=float)
 
         # Equalize in space in a first step
         for idx, (symbols, stream_state, noise) in enumerate(zip(symbol_stream,

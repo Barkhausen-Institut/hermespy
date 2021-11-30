@@ -139,7 +139,7 @@ class TestRadarChannel(unittest.TestCase):
         interval = interval_in_samples / self.transmitter.sampling_rate
 
         number_of_samples = int(np.ceil(interval * self.transmitter.sampling_rate * number_of_pulses))
-        output_signal = np.zeros((1, number_of_samples), dtype=np.complex)
+        output_signal = np.zeros((1, number_of_samples), dtype=complex)
 
         interval_in_samples = int(np.around(interval * self.transmitter.sampling_rate))
 
