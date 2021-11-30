@@ -158,3 +158,13 @@ class TestWaveformGenerator(unittest.TestCase):
             _ = self.waveform_generator.synchronize(np.zeros((10, 2)),
                                                     ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
                                                                             np.zeros((10, 2))))
+
+    def test_modem_setget(self) -> None:
+        """Modem property getter should return setter argument."""
+
+        modem = Mock()
+
+        self.waveform_generator.modem = modem
+
+        self.assertIs(self.waveform_generator, modem.waveform_generator)
+        self.assertIs(self.waveform_generator.modem, modem)
