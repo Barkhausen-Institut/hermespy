@@ -29,7 +29,7 @@ class TestPseudoRandomGenerator(unittest.TestCase):
         """Test the first generated bit."""
 
         for bit in self.expected_output:
-            self.assertEquals(self.generator.generate(), bit, "Unexpected generator result")
+            self.assertEqual(self.generator.generate(), bit, "Unexpected generator result")
 
     def test_generate_sequence(self) -> None:
         """Test the sequence generation."""
