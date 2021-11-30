@@ -4,6 +4,7 @@
 __pycache__
 _results_*/
 docs/build/
+docssource/api
 results/
 .idea/
 env*/
