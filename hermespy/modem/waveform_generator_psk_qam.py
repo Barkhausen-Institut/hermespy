@@ -68,17 +68,17 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     __symbol_rate: float
 
     def __init__(self,
-                 symbol_rate: float = 0.0,
+                 symbol_rate: float = 100e6,
                  tx_filter: Optional[ShapingFilter] = None,
                  rx_filter: Optional[ShapingFilter] = None,
-                 chirp_duration: float = 0.0,
-                 chirp_bandwidth: float = 0.0,
+                 chirp_duration: float = 1e-6,
+                 chirp_bandwidth: float = 100e6,
                  equalization: Union[str, WaveformGeneratorPskQam.Equalization] = 'NONE',
-                 num_preamble_symbols: int = 0,
-                 num_data_symbols: int = 1,
+                 num_preamble_symbols: int = 2,
+                 num_data_symbols: int = 100,
                  num_postamble_symbols: int = 0,
-                 pilot_rate: float = 0.0,
-                 guard_interval: float = 0.0,
+                 pilot_rate: float = 1e6,
+                 guard_interval: float = 1e-6,
                  complex_modulation: bool = True,
                  **kwargs: Any) -> None:
         """Waveform Generator PSK-QAM initialization.
