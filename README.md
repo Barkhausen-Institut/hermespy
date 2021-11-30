@@ -10,7 +10,7 @@ You can find an introductory video here: https://www.barkhauseninstitut.org/en/r
 
 ## Features
 
-The current release version 0.2.0 serves as a platform for joint development.
+The current release version 0.2.2 serves as a platform for joint development.
 Its main focus is to provide a software architecture that can be easily extended.
 Detailed core features as well as a release plan can be found in the [features](FEATURES.md) section.
 
@@ -74,7 +74,7 @@ Make sure to have [Git LFS](https://git-lfs.github.com/) installed.
       pip install -e .
       ```
 
-[Quadriga channel model v0.2.0](https://quadriga-channel-model.de/) is supported by HermesPy.
+[Quadriga channel model v0.2.2](https://quadriga-channel-model.de/) is supported by HermesPy.
 For it to be used, some preliminary steps need to be taken.
 It can be run with either Octave or matlab. For **octave**, under Windows, you need to set the environment variable that tells python where to find octave-cli executable by calling
 
