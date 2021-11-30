@@ -346,7 +346,7 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
-                expected_impulse_response = gain * np.ones((response_length, 1, 1, 1), dtype=np.float)
+                expected_impulse_response = gain * np.ones((response_length, 1, 1, 1), dtype=float)
 
                 impulse_response = self.channel.impulse_response(timestamps, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
@@ -362,7 +362,7 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
-                expected_impulse_response = np.zeros((response_length, 3, 1, 1), dtype=np.complex)
+                expected_impulse_response = np.zeros((response_length, 3, 1, 1), dtype=complex)
                 expected_impulse_response[:, :, 0, :] = gain
 
                 impulse_response = self.channel.impulse_response(timestamps, self.impulse_response_sampling_rate)
@@ -379,7 +379,7 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
-                expected_impulse_response = np.zeros((response_length, 1, 3, 1), dtype=np.complex)
+                expected_impulse_response = np.zeros((response_length, 1, 3, 1), dtype=complex)
                 expected_impulse_response[:, 0, :, :] = gain
 
                 impulse_response = self.channel.impulse_response(timestamps, self.impulse_response_sampling_rate)
@@ -397,7 +397,7 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
-                expected_impulse_response = gain * np.tile(np.eye(num_antennas, num_antennas, dtype=np.complex),
+                expected_impulse_response = gain * np.tile(np.eye(num_antennas, num_antennas, dtype=complex),
                                                            (response_length, 1, 1))
                 expected_impulse_response = np.expand_dims(expected_impulse_response, axis=-1)
 
@@ -410,7 +410,7 @@ class TestChannel(unittest.TestCase):
         with self.assertRaises(RuntimeError):
 
             floating_channel = Channel()
-            floating_channel.impulse_response(np.empty(0, dtype=np.complex), self.impulse_response_sampling_rate)
+            floating_channel.impulse_response(np.empty(0, dtype=complex), self.impulse_response_sampling_rate)
 
     def test_channel_state_information(self) -> None:
         """Propagating over the linear channel state model should return identical results."""

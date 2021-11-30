@@ -41,8 +41,8 @@ class ZFTimeEqualizer(SymbolPrecoder):
                channel_state: ChannelStateInformation,
                stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
-        equalized_symbols = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=np.complex)
-        equalized_noises = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=np.float)
+        equalized_symbols = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=complex)
+        equalized_noises = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=float)
         equalized_channel_state = ChannelStateInformation(channel_state.state_format)
 
         # Equalize in space in a first step

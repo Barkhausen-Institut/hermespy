@@ -203,7 +203,7 @@ class SymbolPrecoding:
 
         # If only a nuclear noise variance is provided, expand it to an array
         if isinstance(stream_noises, float):
-            stream_noises = np.array([[stream_noises]], dtype=np.float).repeat(input_stream.shape[0], axis=0)\
+            stream_noises = np.array([[stream_noises]], dtype=float).repeat(input_stream.shape[0], axis=0)\
                 .repeat(input_stream.shape[1], axis=1)
 
         symbols_iteration = input_stream.copy()
