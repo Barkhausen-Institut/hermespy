@@ -249,42 +249,7 @@ class Simulation(Executable):
 
                         break
 
-                    # Generate data bits to be transmitted
-                    data_bits = scenario.generate_data_bits()
-
-                    # Generate radio-frequency band signal emitted from each transmitter
-                    transmitted_signals, transmitted_symbols = Simulation.transmit(scenario=scenario,
-                                                                                   drop_run_flag=drop_run_flag,
-                                                                                   data_bits=data_bits)
-
-                    # Simulate propagation over channel model
-                    propagation_matrix = Simulation.propagate(scenario,
-                                                              transmitted_signals,
-                                                              drop_run_flag)
-
-                    # Simulate signal reception and mixing at the receiver-side
-                    received_signals = Simulation.receive(scenario,
-                                                          propagation_matrix,
-                                                          drop_run_flag,
-                                                          self.snr_type,
-                                                          snr)
-
-                    # Receive and demodulate signal
-                    detected_bits, received_symbols = Simulation.detect(scenario,
-                                                                        received_signals,
-                                                                        drop_run_flag)
-
-                    # Collect block sizes
-                    transmit_block_sizes = scenario.transmit_block_sizes
-                    receive_block_sizes = scenario.receive_block_sizes
-
-                    # ToDo: Maybe change the structure here
-                    received_samples = [received_signal[0] for received_signal in received_signals]
-
-                    # Save generated signals
-                    drop = SimulationDrop(data_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
-                                          received_samples, received_symbols, detected_bits, receive_block_sizes,
-                                          True, self.spectrum_fft_size)
+                    drop = self.drop(snr, s, drop_run_flag)
 
                     # Print drop statistics if verbosity flag is set
                     if self.verbosity.value <= Verbosity.INFO.value:
@@ -381,6 +346,73 @@ class Simulation(Executable):
                     drop.plot_receive_stft()
 
             plt.show()
+
+    def drop(self,
+             snr: float,
+             scenario_index: int = 0,
+             drop_run_flag: Optional[np.ndarray] = None) -> SimulationDrop:
+        """Generate a single simulation drop.
+
+        Args:
+
+            snr (float):
+                The signal-to-noise-ratio at the receiver-side.
+
+            scenario_index (int, optional):
+                Index of the scenario for which to generate a drop.
+
+            drop_run_flag (np.ndarray, optional):
+                Drop run flags.
+
+        Returns:
+            SimulationDrop: The generated drop.
+
+        Raises:
+            RuntimeError: If no scenario has been added to the simulation yet.
+        """
+
+        if len(self.scenarios) < 1:
+            raise RuntimeError("Error trying to generate a drop for a simulation without a scenario")
+
+        scenario = self.scenarios[scenario_index]
+
+        # Generate data bits to be transmitted
+        data_bits = scenario.generate_data_bits()
+
+        # Generate radio-frequency band signal emitted from each transmitter
+        transmitted_signals, transmitted_symbols = Simulation.transmit(scenario=scenario,
+                                                                       drop_run_flag=drop_run_flag,
+                                                                       data_bits=data_bits)
+
+        # Simulate propagation over channel model
+        propagation_matrix = Simulation.propagate(scenario,
+                                                  transmitted_signals,
+                                                  drop_run_flag)
+
+        # Simulate signal reception and mixing at the receiver-side
+        received_signals = Simulation.receive(scenario,
+                                              propagation_matrix,
+                                              drop_run_flag,
+                                              self.snr_type,
+                                              snr)
+
+        # Receive and demodulate signal
+        detected_bits, received_symbols = Simulation.detect(scenario,
+                                                            received_signals,
+                                                            drop_run_flag)
+
+        # Collect block sizes
+        transmit_block_sizes = scenario.transmit_block_sizes
+        receive_block_sizes = scenario.receive_block_sizes
+
+        # ToDo: Maybe change the structure here
+        received_samples = [received_signal[0] for received_signal in received_signals]
+
+        # Save generated signals
+        drop = SimulationDrop(data_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
+                              received_samples, received_symbols, detected_bits, receive_block_sizes,
+                              True, self.spectrum_fft_size)
+        return drop
 
     @property
     def snr_type(self) -> SNRType:

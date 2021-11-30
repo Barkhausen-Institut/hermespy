@@ -87,7 +87,10 @@ def hermes(args: Optional[List[str]] = None) -> None:
         executable: Executable = factory.load(input_parameters_dir)
 
         # Configure executable
-        if results_dir is not None:
+        if results_dir is None:
+            executable.results_dir = Executable.default_results_dir()
+
+        else:
             executable.results_dir = results_dir
 
     except ConstructorError as error:
