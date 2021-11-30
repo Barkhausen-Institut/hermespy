@@ -30,7 +30,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     packages=find_packages(exclude=['tests']),
-    package_dir={"": ""},
+    package_dir={"hermespy": "hermespy"},
     include_package_data=True,
     exclude_package_data={
         '': ['3rdparty', 'tests'],
