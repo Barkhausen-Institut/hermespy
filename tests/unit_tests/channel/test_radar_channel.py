@@ -9,7 +9,7 @@ from numpy.random import default_rng
 from scipy import constants
 
 from hermespy.channel import RadarChannel
-from tools.math import db2lin, DbConversionType
+from hermespy.tools import db2lin, DbConversionType
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

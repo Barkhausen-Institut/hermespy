@@ -12,7 +12,7 @@ import numpy as np
 # choose the desired plots here
 
 # common path where the results can be found
-results_path = os.path.join(os.getcwd(), "..", "results")
+results_path = os.path.join(os.getcwd(), "../..", "results")
 
 # list with the folders containing the simulation results
 dirs = ["SISO", "MRC", "SFBC_2tx"]
