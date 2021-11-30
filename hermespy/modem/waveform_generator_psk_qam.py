@@ -68,17 +68,17 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     __symbol_rate: float
 
     def __init__(self,
-                 symbol_rate: float = 0.0,
+                 symbol_rate: float = 100e6,
                  tx_filter: Optional[ShapingFilter] = None,
                  rx_filter: Optional[ShapingFilter] = None,
-                 chirp_duration: float = 0.0,
-                 chirp_bandwidth: float = 0.0,
+                 chirp_duration: float = 1e-6,
+                 chirp_bandwidth: float = 100e6,
                  equalization: Union[str, WaveformGeneratorPskQam.Equalization] = 'NONE',
-                 num_preamble_symbols: int = 0,
-                 num_data_symbols: int = 1,
+                 num_preamble_symbols: int = 2,
+                 num_data_symbols: int = 100,
                  num_postamble_symbols: int = 0,
-                 pilot_rate: float = 0.0,
-                 guard_interval: float = 0.0,
+                 pilot_rate: float = 1e6,
+                 guard_interval: float = 1e-6,
                  complex_modulation: bool = True,
                  **kwargs: Any) -> None:
         """Waveform Generator PSK-QAM initialization.
@@ -474,24 +474,23 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         """ Determines the sampling instants for pilots and data at a given frame
         """
 
-        if self._data_symbol_idx is None:
-            # create a vector with the position of every pilot and data symbol in a
-            # frame
-            preamble_symbol_idx = np.arange(
-                self.num_preamble_symbols) * self.num_pilot_samples
-            start_idx = self.num_preamble_symbols * self.num_pilot_samples
-            self._data_symbol_idx = start_idx + \
-                np.arange(self.num_data_symbols) * \
-                self.oversampling_factor
-            start_idx += self.num_data_symbols * self.oversampling_factor
-            postamble_symbol_idx = start_idx + \
-                np.arange(self.num_postamble_symbols) * \
-                self.num_pilot_samples
-            self._symbol_idx = np.concatenate(
-                (preamble_symbol_idx, self._data_symbol_idx, postamble_symbol_idx))
+        # create a vector with the position of every pilot and data symbol in a
+        # frame
+        preamble_symbol_idx = np.arange(
+            self.num_preamble_symbols) * self.num_pilot_samples
+        start_idx = self.num_preamble_symbols * self.num_pilot_samples
+        self._data_symbol_idx = start_idx + \
+            np.arange(self.num_data_symbols) * \
+            self.oversampling_factor
+        start_idx += self.num_data_symbols * self.oversampling_factor
+        postamble_symbol_idx = start_idx + \
+            np.arange(self.num_postamble_symbols) * \
+            self.num_pilot_samples
+        self._symbol_idx = np.concatenate(
+            (preamble_symbol_idx, self._data_symbol_idx, postamble_symbol_idx))
 
-            self._data_symbol_idx += int(.5 * self.oversampling_factor)
-            self._symbol_idx += int(.5 * self.oversampling_factor)
+        self._data_symbol_idx += int(.5 * self.oversampling_factor)
+        self._symbol_idx += int(.5 * self.oversampling_factor)
 
     def _set_pulse_correlation_matrix(self):
         """ Creates a matrix with autocorrelation among pulses at different instants
