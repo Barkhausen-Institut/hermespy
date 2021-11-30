@@ -33,7 +33,7 @@ class TestCrcEncoder(unittest.TestCase):
         """Initialization arguments should be properly stored as class attributes."""
 
         self.assertEqual(self.bit_block_size, self.encoder.bit_block_size)
-        self.assertEquals(self.check_block_size, self.encoder.check_block_size)
+        self.assertEqual(self.check_block_size, self.encoder.check_block_size)
 
     def test_encoding(self) -> None:
         pass
