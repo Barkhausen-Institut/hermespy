@@ -541,10 +541,10 @@ class FrameGuardSection(FrameSection):
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
-                   ideal_channel: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+                   channel_state: ChannelStateInformation) -> Tuple[np.ndarray, ChannelStateInformation]:
 
         # Guard sections naturally don't encode anything
-        return np.empty(0, dtype=complex), np.empty(0, dtype=complex)
+        return np.empty((self.frame.num_subcarriers, 0), dtype=complex), ChannelStateInformation.Ideal(0)
 
     @classmethod
     def from_yaml(cls: Type[FrameGuardSection],
