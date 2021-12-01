@@ -2,6 +2,7 @@
 """Test HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
 import unittest
+from typing import Tuple
 from unittest.mock import Mock
 
 import numpy as np
@@ -9,8 +10,9 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from numpy.random import default_rng
 from scipy.constants import pi
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -108,6 +110,62 @@ class TestFrameResource(unittest.TestCase):
         expected_mask[2, [3, 4, 5, 9, 10, 11]] = True   # NULL symbol mask
 
         assert_array_equal(expected_mask, self.resource.mask)
+
+
+class FrameSectionMock(FrameSection):
+
+    def __init__(self, *args) -> None:
+        FrameSection.__init__(self, *args)
+
+    @property
+    def num_samples(self) -> int:
+        return 1
+
+    @property
+    def duration(self) -> float:
+        return 1.
+
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
+        pass
+
+    def demodulate(self,
+                   baseband_signal: np.ndarray,
+                   channel_state: ChannelStateInformation) -> Tuple[np.ndarray, ChannelStateInformation]:
+        pass
+
+
+class TestFrameSection(unittest.TestCase):
+    """Test OFDM frame section."""
+
+    def setUp(self) -> None:
+
+        self.frame = Mock()
+        self.num_repetitions = 2
+
+        self.section = FrameSectionMock(self.num_repetitions, self.frame)
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as attributes."""
+
+        self.assertIs(self.frame, self.section.frame)
+        self.assertEqual(self.num_repetitions, self.section.num_repetitions)
+
+    def test_num_repetitions_setget(self) -> None:
+        """Number of repetitions property getter should return setter argument."""
+
+        num_repetitions = 3
+        self.section.num_repetitions = num_repetitions
+
+        self.assertEqual(num_repetitions, self.section.num_repetitions)
+
+    def test_num_repetitions_validation(self) -> None:
+        """Number of repetitions property setter should raise ValueError on arguments smaller than zero."""
+
+        with self.assertRaises(ValueError):
+            self.section.num_repetitions = 0
+
+        with self.assertRaises(ValueError):
+            self.section.num_repetitions = -1
 
 
 class TestWaveformGeneratorOFDM(unittest.TestCase):

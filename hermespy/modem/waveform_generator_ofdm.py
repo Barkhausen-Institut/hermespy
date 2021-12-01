@@ -210,7 +210,7 @@ class FrameSection:
     """OFDM Frame configuration time axis."""
 
     frame: Optional[WaveformGeneratorOfdm]
-    num_repetitions: int
+    __num_repetitions: int
 
     def __init__(self,
                  num_repetitions: int = 1,
@@ -218,6 +218,32 @@ class FrameSection:
 
         self.frame = frame
         self.num_repetitions = num_repetitions
+
+    @property
+    def num_repetitions(self) -> int:
+        """Number of section repetitions in the time-domain of an OFDM grid.
+
+        Returns:
+            int: The number of repetitions.
+        """
+
+        return self.__num_repetitions
+
+    @num_repetitions.setter
+    def num_repetitions(self, value: int) -> None:
+        """Number of section repetitions in the time-domain of an OFDM grid.
+
+        Args:
+            value (int): The number of repetitions.
+
+        Raises:
+            ValueError: If `value` is smaller than one.
+        """
+
+        if value < 1:
+            raise ValueError("OFDM frame number of repetitions must be greater or equal to one")
+
+        self.__num_repetitions = value
 
     @property
     def num_symbols(self) -> int:
@@ -241,7 +267,7 @@ class FrameSection:
 
     @property
     def num_words(self) -> int:
-        """Number of OFDM symbols, i.e. words of subcarrierr symbols this section can modulate.
+        """Number of OFDM symbols, i.e. words of subcarrier symbols this section can modulate.
 
         Returns:
             int: The number of words.
