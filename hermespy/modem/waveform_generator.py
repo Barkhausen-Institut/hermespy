@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from math import floor, sqrt
 from typing import Tuple, TYPE_CHECKING, Optional, Type, List
-from math import floor
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
@@ -192,7 +192,7 @@ class WaveformGenerator(ABC):
             int: Number of bits per symbol
         """
 
-        return 2 ** self.__modulation_order
+        return sqrt(self.__modulation_order)
 
     @property
     @abstractmethod
