@@ -495,36 +495,42 @@ class FrameGuardSection(FrameSection):
 
     def __init__(self,
                  duration: float,
-                 num_repetitions: int = 1) -> None:
+                 num_repetitions: int = 1,
+                 frame: Optional[WaveformGeneratorOfdm] = None) -> None:
 
-        FrameSection.__init__(self, num_repetitions=num_repetitions)
+        FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
         self.duration = duration
 
     @property
     def duration(self) -> float:
+        """Guard section duration in seconds.
+
+        Returns:
+            float: Duration in seconds.
+        """
+
         return self.__duration
 
     @duration.setter
-    def duration(self, secs: float) -> None:
-        """Modify guard section duration.
+    def duration(self, value: float) -> None:
+        """Guard section duration in seconds.
 
         Args:
-            secs (float): New duration in seconds.
+            value (float): New duration.
 
         Raises:
-            ValueError: If secs is smaller than zero.
+            ValueError: If `value` is smaller than zero.
         """
 
-        if secs < 0.0:
+        if value < 0.0:
             raise ValueError("Guard section duration must be greater or equal to zero")
 
-        self.__duration = secs
+        self.__duration = value
 
     @property
     def num_samples(self) -> int:
 
-        num = int(round(self.num_repetitions * self.__duration * self.frame.sampling_rate))
-        return num
+        return int(self.num_repetitions * self.__duration * self.frame.sampling_rate)
 
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
 
@@ -543,10 +549,7 @@ class FrameGuardSection(FrameSection):
     @classmethod
     def from_yaml(cls: Type[FrameGuardSection],
                   constructor: SafeConstructor,
-                  node: Union[ScalarNode, MappingNode]) -> FrameGuardSection:
-
-        if isinstance(node, ScalarNode):
-            return cls()
+                  node: MappingNode) -> FrameGuardSection:
 
         return cls(**constructor.construct_mapping(node))
 
