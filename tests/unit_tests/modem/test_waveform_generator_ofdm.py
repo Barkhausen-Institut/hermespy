@@ -225,7 +225,7 @@ class TestFrameSymbolSection(unittest.TestCase):
 
         self.assertEqual(18, self.section.num_subcarriers)
 
-    def test_modulate_demodulate_cyclic(self) -> None:
+    def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating an OFDM symbol section should yield correct symbols."""
 
         expected_symbols = np.exp(2j * self.rnd.uniform(0, pi, self.section.num_symbols))
@@ -234,7 +234,7 @@ class TestFrameSymbolSection(unittest.TestCase):
         channel_state = ChannelStateInformation.Ideal(num_samples=modulated_signal.shape[0])
         ofdm_grid, channel_state_grid = self.section.demodulate(modulated_signal, channel_state)
 
-        symbols = ofdm_grid[self.section.resource_mask[ElementType.DATA.value]]
+        symbols = ofdm_grid.T[self.section.resource_mask[ElementType.DATA.value].T]
         assert_array_almost_equal(expected_symbols, symbols)
 
     def test_resource_mask(self) -> None:
@@ -316,56 +316,93 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
 
         self.subcarrier_spacing = 1e3
         self.num_subcarriers = 100
+        self.oversampling_factor = 2
 
-        self.random_generator = default_rng(42)
+        self.rng = default_rng(42)
 
         self.modem = Mock()
-        self.modem.random_generator = self.random_generator
-        self.modem.scenario.sampling_rate = 4 * self.num_subcarriers * self.subcarrier_spacing
+        self.modem.random_generator = self.rng
+        self.modem.carrier_frequency = 100e6
 
-        self.waveform_generator = WaveformGeneratorOfdm(subcarrier_spacing=self.subcarrier_spacing, modem=self.modem)
+        self.repetitions_a = 2
+        self.cp_ratio_a = 0.1
+        self.elements_a = [FrameElement(ElementType.DATA, 2),
+                           FrameElement(ElementType.REFERENCE, 1),
+                           FrameElement(ElementType.NULL, 3)]
+        self.resource_a = FrameResource(self.repetitions_a, self.cp_ratio_a, self.elements_a)
+
+        self.repetitions_b = 3
+        self.cp_ratio_b = 0.0
+        self.elements_b = [FrameElement(ElementType.REFERENCE, 2),
+                           FrameElement(ElementType.DATA, 1),
+                           FrameElement(ElementType.NULL, 3)]
+        self.resource_b = FrameResource(self.repetitions_b, self.cp_ratio_b, self.elements_b)
+
+        self.section_a = FrameSymbolSection(2, [1, 0, 1])
+        self.section_b = FrameGuardSection(1e-3)
+        self.section_c = FrameSymbolSection(2, [0, 1, 0])
+
+        self.resources = [self.resource_a, self.resource_b]
+        self.sections = [self.section_a, self.section_b, self.section_c]
+
+        self.generator = WaveformGeneratorOfdm(subcarrier_spacing=self.subcarrier_spacing, modem=self.modem,
+                                               resources=self.resources, structure=self.sections,
+                                               num_subcarriers=self.num_subcarriers,
+                                               oversampling_factor=self.oversampling_factor)
 
     def test_init(self) -> None:
         """Object initialization arguments should be properly stored as class attributes."""
 
-        self.assertIs(self.modem, self.waveform_generator.modem)
-        self.assertEqual(self.subcarrier_spacing, self.waveform_generator.subcarrier_spacing)
+        self.assertIs(self.modem, self.generator.modem)
+        self.assertEqual(self.subcarrier_spacing, self.generator.subcarrier_spacing)
 
     def test_add_resource(self) -> None:
         """Added resources should be properly appended to the resource list."""
 
         resource = Mock()
-        self.waveform_generator.add_resource(resource)
+        self.generator.add_resource(resource)
 
-        self.assertIn(resource, self.waveform_generator.resources)
+        self.assertIn(resource, self.generator.resources)
 
     def test_add_section(self) -> None:
         """Added sections should be properly appended to the section list."""
 
         section = Mock()
-        self.waveform_generator.add_section(section)
+        self.generator.add_section(section)
 
-        self.assertIn(section, self.waveform_generator.structure)
-        self.assertIs(self.waveform_generator, section.frame)
+        self.assertIn(section, self.generator.structure)
+        self.assertIs(self.generator, section.frame)
 
     def test_subcarrier_spacing_setget(self) -> None:
         """Subcarrier spacing property getter should return setter argument."""
 
         spacing = 123
-        self.waveform_generator.subcarrier_spacing = spacing
+        self.generator.subcarrier_spacing = spacing
 
-        self.assertEqual(spacing, self.waveform_generator.subcarrier_spacing)
+        self.assertEqual(spacing, self.generator.subcarrier_spacing)
 
     def test_subcarrier_spacing_assert(self) -> None:
         """Subcarrier spacing property setter should raise ValueError on arguments zero or smaller."""
 
         with self.assertRaises(ValueError):
-            self.waveform_generator.subcarrier_spacing = -1.
+            self.generator.subcarrier_spacing = -1.
 
         with self.assertRaises(ValueError):
-            self.waveform_generator.subcarrier_spacing = 0.
+            self.generator.subcarrier_spacing = 0.
 
     def test_reference_based_channel_estimation(self) -> None:
         """Reference-based channel estimation should properly estimate channel at reference points."""
 
         pass
+
+    def test_modulate_demodulate(self) -> None:
+        """Modulating and subsequently de-modulating a data frame should yield identical symbols."""
+
+        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
+                            np.arange(1, 1 + self.generator.symbols_per_frame))
+
+        baseband_signal = self.generator.modulate(expected_symbols)
+        channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
+        symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
+
+        assert_array_almost_equal(expected_symbols, symbols)

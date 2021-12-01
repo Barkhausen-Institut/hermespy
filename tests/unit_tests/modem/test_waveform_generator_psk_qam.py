@@ -1,114 +1,47 @@
+# -*- coding: utf-8 -*-
+"""Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation Testing."""
+
 import unittest
 from unittest.mock import Mock
 
 import numpy as np
 
-from parameters_parser.parameters_psk_qam import ParametersPskQam
-from parameters_parser.parameters_tx_modem import ParametersTxModem
-from parameters_parser.parameters_repetition_encoder import ParametersRepetitionEncoder
 from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
 from hermespy.modem.modem import Modem
-from hermespy.source import BitsSource
-import tests.unit_tests.modem.utils as utils
+
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.2.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestWaveformGeneratorPskQam(unittest.TestCase):
+    """Test the Phase-Shift-Keying / Quadrature Amplitude Modulation Waveform Generator."""
 
     def setUp(self) -> None:
 
-        ########################################
-        # create a QPSK modem with method stubs
+        self.rng = np.random.default_rng(42)
 
-        # create input parameters for QPSK modem creation
-        rng_src = np.random.RandomState(42)
-        rng_hw = np.random.RandomState(43)
-        self.source_qpsk = BitsSource(rng_src)
+        self.modem = Mock()
+        self.filter_type = 'ROOT_RAISED_COSINE'
+        self.symbol_rate = 125e3
+        self.oversampling_factor = 8
+        self.modulation_order = 16
+        self.guard_interval = 1e-3
+        self.chirp_bandwidth = 100e6
+        self.chirp_duration = 1e-6
 
-        # define parameters
-        self.params_qpsk = ParametersPskQam()
-        self.params_qpsk.modulation_order = 4
+        self.generator = WaveformGeneratorPskQam(modem=self.modem, symbol_rate=self.symbol_rate,
+                                                 oversampling_factor=self.oversampling_factor,
+                                                 modulation_order=self.modulation_order,
+                                                 guard_interval=self.guard_interval,
+                                                 chirp_duration=self.chirp_duration,
+                                                 chirp_bandwidth=self.chirp_bandwidth)
 
-        self.params_qpsk.guard_interval = 1e-3
-
-        self.params_qpsk.filter_type = 'ROOT_RAISED_COSINE'
-        self.params_qpsk.symbol_rate = 125e3
-        self.params_qpsk.bandwidth = self.params_qpsk.symbol_rate
-        self.params_qpsk.oversampling_factor = 8
-        self.params_qpsk.sampling_rate = self.params_qpsk.symbol_rate * \
-            self.params_qpsk.oversampling_factor
-
-        self.params_qpsk.filter_length_in_symbols = 16
-        self.params_qpsk.roll_off_factor = .5
-
-        frame_duration = 9e-3
-        self.params_qpsk.number_preamble_symbols = 0
-        self.params_qpsk.number_postamble_symbols = 0
-        self.params_qpsk.number_data_symbols = int(
-            frame_duration * self.params_qpsk.symbol_rate)
-
-        self.params_qpsk.bits_per_symbol = int(
-            np.log2(self.params_qpsk.modulation_order))
-        self.params_qpsk.bits_in_frame = self.params_qpsk.bits_per_symbol * \
-            self.params_qpsk.number_data_symbols
-
-        self.modem_qpsk_params = ParametersTxModem()
-        self.modem_qpsk_params.technology = self.params_qpsk
-        self.modem_qpsk_params.encoding_params = [ParametersRepetitionEncoder()]
-
-        self.waveform_generator_qpsk = WaveformGeneratorPskQam(self.params_qpsk)
-        self.modem_qpsk = Modem(self.modem_qpsk_params, self.source_qpsk, rng_hw, rng_src)
-
-        # create (method) stubs for dependencies
-        self.waveform_generator_qpsk._mapping.get_symbols = lambda bits: bits[::int(  # type: ignore
-            np.log2(self.params_qpsk.modulation_order))]
-        self.waveform_generator_qpsk._filter_tx.filter = lambda frame: frame  # type: ignore
-        self.waveform_generator_qpsk._filter_rx.filter = lambda frame: frame  # type: ignore
-        self.waveform_generator_qpsk._filter_rx.delay_in_samples = 0
-
-        self.timestamp = 0
-        ########################################
-
-        ########################################
-        # create a full QAM modem
-
-        # create input parameters for QAM modem creation
-        rng_src = np.random.RandomState(42)
-        rng_hw = np.random.RandomState(43)
-        self.source_qam = BitsSource(rng_src)
-
-        # define parameters
-        self.params_qam = ParametersPskQam()
-        self.params_qam.modulation_order = 64
-        self.params_qam.modulation_is_complex = True
-
-        self.params_qam.symbol_rate = 250e3
-        self.params_qam.bandwidth = self.params_qam.symbol_rate
-        self.params_qam.oversampling_factor = 16
-        self.params_qam.sampling_rate = self.params_qam.symbol_rate * \
-            self.params_qam.oversampling_factor
-        self.params_qam.filter_type = "ROOT_RAISED_COSINE"
-
-        self.params_qam.filter_length_in_symbols = 16
-        self.params_qam.roll_off_factor = .2
-
-        frame_duration = 5e-3
-        self.params_qam.number_preamble_symbols = 0
-        self.params_qam.number_postamble_symbols = 0
-        self.params_qam.number_data_symbols = int(
-            frame_duration * self.params_qam.symbol_rate)
-        self.params_qam.guard_interval = .5e-3
-        self.params_qam.bits_per_symbol = int(
-            np.log2(self.params_qam.modulation_order))
-        self.params_qam.bits_in_frame = self.params_qam.bits_per_symbol * \
-            self.params_qam.number_data_symbols
-
-        self.modem_qam_params = ParametersTxModem()
-        self.modem_qam_params.technology = self.params_qam
-        self.modem_qam_params.encoding_params = [ParametersRepetitionEncoder()]
-
-        self.waveform_generator_qam = WaveformGeneratorPskQam(self.params_qam)
-        self.modem_qam = Modem(self.modem_qam_params, self.source_qam, rng_hw, rng_src)
-        ########################################
 
     def test_proper_samples_in_frame_calculation(self) -> None:
         frame_duration = self.params_qpsk.number_data_symbols / self.params_qpsk.symbol_rate
@@ -119,7 +52,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
             samples_in_frame_expected)
 
     def test_proper_frame_length(self) -> None:
-        self.modem_qpsk.waveform_generator._filter_tx.delay_in_samples = 0
+        self.modem_qpsk.generator._filter_tx.delay_in_samples = 0
         bits_in_frame = utils.flatten_blocks(
             self.source_qpsk.get_bits(
                 self.params_qpsk.bits_in_frame))
@@ -258,7 +191,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         # compare the measured energy with the expected values
         self.assertAlmostEqual(
             power,
-            modem.waveform_generator.get_power(),
+            modem.generator.get_power(),
             delta=power *
             relative_difference)
 
