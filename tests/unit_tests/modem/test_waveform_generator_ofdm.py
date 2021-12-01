@@ -258,6 +258,7 @@ class TestFrameGuardSection(unittest.TestCase):
         self.num_repetitions = 3
         self.frame = Mock()
         self.frame.sampling_rate = 1e5
+        self.frame.num_subcarriers = 10
 
         self.section = FrameGuardSection(self.duration, self.num_repetitions, self.frame)
 
@@ -305,7 +306,7 @@ class TestFrameGuardSection(unittest.TestCase):
     def test_demodulate(self) -> None:
         """Demodulation should return an empty tuple."""
 
-        _ = self.section.demodulate()
+        _ = self.section.demodulate(np.empty(0, dtype=complex), ChannelStateInformation.Ideal(0))
 
 
 class TestWaveformGeneratorOFDM(unittest.TestCase):
