@@ -427,7 +427,7 @@ class ChannelStateInformation:
                 Ideal channel state information of a non-distorting channel.
         """
 
-        state = np.ones((num_receive_streams, num_transmit_streams, num_samples, 1), dtype=np.complex)
+        state = np.ones((num_receive_streams, num_transmit_streams, num_samples, 1), dtype=complex)
         return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, state)
 
     def received_streams(self) -> Generator[ChannelStateInformation, ChannelStateInformation, None]:

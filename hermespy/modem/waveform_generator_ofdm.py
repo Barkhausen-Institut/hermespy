@@ -8,6 +8,7 @@ from abc import abstractmethod
 from functools import lru_cache
 
 import numpy as np
+import numpy.ma as ma
 from numba import jit
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 from scipy.constants import pi
@@ -392,7 +393,7 @@ class FrameSymbolSection(FrameSection):
         grid[mask[ElementType.REFERENCE.value]] = 1. + 0j
 
         # Data fields carry the supplied data symbols
-        grid[mask[ElementType.DATA.value]] = symbols
+        grid.T[mask[ElementType.DATA.value].T] = symbols
 
         # NULL fields are just that... zero
         grid[mask[ElementType.NULL.value]] = 0j
@@ -768,7 +769,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     def demodulate(self,
                    baseband_signal: np.ndarray,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+                   noise_variance: float = 0.0) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         # Recover OFDM grid
         symbol_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=complex)
@@ -809,12 +810,12 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         channel_state_estimation = self.__channel_estimation(symbol_grid, ideal_channel_state, resource_mask)
 
         # Recover the data symbols, as well as the respective channel weights from the resource grids
-        data_mask = resource_mask[ElementType.DATA.value, ::]
+        data_mask = resource_mask[ElementType.DATA.value]
         channel_state_estimation = channel_state_estimation[:, :, data_mask.flatten(), :]
         data_symbols = symbol_grid.T[data_mask.T]
         noise_variances = np.repeat(noise_variance, self.symbols_per_frame)
 
-        return data_symbols.flatten(), channel_state_estimation, noise_variances
+        return data_symbols, channel_state_estimation, noise_variances
 
     @property
     def bandwidth(self) -> float:
