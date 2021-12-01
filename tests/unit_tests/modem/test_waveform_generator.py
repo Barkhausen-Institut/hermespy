@@ -10,6 +10,7 @@ import numpy.random as rnd
 from scipy.constants import pi
 from math import floor
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.modem import WaveformGenerator
 
 __author__ = "Jan Adler"
@@ -60,7 +61,7 @@ class WaveformGeneratorDummy(WaveformGenerator):
     def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
         return data_symbols
 
-    def modulate(self, data_symbols: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
+    def modulate(self, data_symbols: np.ndarray) -> np.ndarray:
         return data_symbols
 
     def demodulate(self,
@@ -71,7 +72,11 @@ class WaveformGeneratorDummy(WaveformGenerator):
 
     @property
     def bandwidth(self) -> float:
-        return 100.
+        return 100e3
+
+    @property
+    def sampling_rate(self) -> float:
+        return self.bandwidth * self.oversampling_factor
 
 
 class TestWaveformGenerator(unittest.TestCase):
@@ -127,23 +132,22 @@ class TestWaveformGenerator(unittest.TestCase):
         for num_samples in num_samples_test:
 
             signal = np.exp(2j * self.rnd.uniform(0, pi, num_samples))
-            response = np.ones((num_samples, 1), dtype=complex)
+            response = ChannelStateInformation.Ideal(num_samples)
 
-            frames, responses = self.waveform_generator.synchronize(signal, response)
+            synchronization = self.waveform_generator.synchronize(signal, response)
 
             # Number of frames is the number of frames that fit into the samples
-            num_frames = frames.shape[0]
+            num_frames = len(synchronization)
             expected_num_frames = int(floor(num_samples / self.waveform_generator.samples_in_frame))
             self.assertEqual(expected_num_frames, num_frames)
-
-            # Frame and response should have equal length
-            self.assertCountEqual(frames.shape, responses.shape)
 
     def test_synchronize_validation(self) -> None:
         """Synchronization should raise a ValueError if the signal shape does match the stream response shape."""
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronize(np.zeros(10), np.zeros((10, 2)))
+            _ = self.waveform_generator.synchronize(np.zeros(10),
+                                                    ChannelStateInformation.Ideal(10, num_receive_streams=2))
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronize(np.zeros((10, 2)), np.zeros((10, 2)))
+            _ = self.waveform_generator.synchronize(np.zeros((10, 2)),
+                                                    ChannelStateInformation.Ideal(10, num_receive_streams=2))

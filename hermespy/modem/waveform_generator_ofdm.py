@@ -16,9 +16,6 @@ from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
 from hermespy.signal import Signal
 
-if TYPE_CHECKING:
-    from hermespy.modem import Modem
-
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
