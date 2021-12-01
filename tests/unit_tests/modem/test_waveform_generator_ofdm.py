@@ -11,7 +11,7 @@ from numpy.random import default_rng
 from scipy.constants import pi
 
 from hermespy.channel import ChannelStateInformation
-from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameResource
+from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
 from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection
 
 __author__ = "André Noll Barreto"
@@ -247,6 +247,66 @@ class TestFrameSymbolSection(unittest.TestCase):
         modulated_signal = self.section.modulate(np.ones(self.section.num_symbols, dtype=complex))
 
         self.assertEqual(modulated_signal.shape[0], expected_num_samples)
+
+
+class TestFrameGuardSection(unittest.TestCase):
+    """Test OFDM frame guard section."""
+
+    def setUp(self) -> None:
+
+        self.duration = 1.23e-3
+        self.num_repetitions = 3
+        self.frame = Mock()
+        self.frame.sampling_rate = 1e5
+
+        self.section = FrameGuardSection(self.duration, self.num_repetitions, self.frame)
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as object attributes."""
+
+        self.assertEqual(self.num_repetitions, self.section.num_repetitions)
+        self.assertEqual(self.duration, self.section.duration)
+        self.assertIs(self.frame, self.section.frame)
+
+    def test_duration_setget(self) -> None:
+        """Duration property getter should return setter argument."""
+
+        duration = 4.56
+        self.section.duration = duration
+
+        self.assertEqual(duration, self.section.duration)
+
+    def test_duration_validation(self) -> None:
+        """Duration property setter should raise ValueError on arguments smaller than zero."""
+
+        with self.assertRaises(ValueError):
+            self.section.duration = -1.0
+
+        try:
+            self.section.duration = 0.
+
+        except ValueError:
+            self.fail()
+
+    def test_num_samples(self) -> None:
+        """Number of samples property should compute the correct amount of samples."""
+
+        expected_num_samples = int(self.num_repetitions * self.duration * self.frame.sampling_rate)
+        self.assertEqual(expected_num_samples, self.section.num_samples)
+
+    def test_modulate(self) -> None:
+        """Modulation should return a zero-vector."""
+
+        expected_signal = np.zeros(self.section.num_samples, dtype=complex)
+        signal = self.section.modulate(np.empty(0, dtype=complex))
+
+        assert_array_equal(expected_signal, signal)
+
+    def test_demodulate(self) -> None:
+        """Demodulation should return an empty tuple."""
+
+        _ = self.section.demodulate()
+
 
 class TestWaveformGeneratorOFDM(unittest.TestCase):
     """Test Orthogonal Frequency Division Multiplexing Waveform Generator."""
