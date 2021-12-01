@@ -63,16 +63,16 @@ class Receiver(Modem):
         self.noise = Noise() if noise is None else noise
         self.reference_transmitter = reference_transmitter
 
-    def receive(self, rf_signals: List[Signal],
-                noise_variance: float) -> Signal:
+    def receive(self, rf_signals: Union[List[Signal], Signal],
+                noise_variance: float = 0.0) -> Signal:
         """Receive and down-mix radio-frequency-band signals to base-band signals over the receiver's hardware chain.
 
         Args:
 
-            rf_signals (List[Signal]):
+            rf_signals (Union[List[Signal], Signal]):
                 List containing radio-frequency band signal models impinging onto the receiver
 
-            noise_variance (float):
+            noise_variance (float, optional):
                 Variance (i.e. power) of the thermal noise added to the signals during reception.
 
         Returns:
@@ -93,8 +93,12 @@ class Receiver(Modem):
                                        num_streams=self.num_antennas)
 
         # Down-mix each rf-band signal to base-band and superimpose them at the receiver-side
-        for rf_signal in rf_signals:
-            baseband_signal.superimpose(rf_signal)
+        if isinstance(rf_signals, Signal):
+            baseband_signal.superimpose(rf_signals)
+
+        else:
+            for rf_signal in rf_signals:
+                baseband_signal.superimpose(rf_signal)
 
         # Scale resulting signal to unit power (relative to the configured transmitter reference)
         baseband_signal.samples /= np.sqrt(self.received_power)
@@ -112,7 +116,7 @@ class Receiver(Modem):
 
     def demodulate(self, baseband_signal: Signal,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[np.ndarray, np.ndarray]:
+                   noise_variance: float = 0.0) -> Tuple[np.ndarray, np.ndarray]:
         """Demodulates the signal received.
 
         The received signal may be distorted by RF imperfections before demodulation and decoding.
@@ -124,7 +128,7 @@ class Receiver(Modem):
             channel_state (ChannelStateInformation):
                 State of the channel over which `baseband_signal` has been propagated.
 
-            noise_variance (float):
+            noise_variance (float, optional):
                 Power of the incoming noise, required for equalization and channel estimation.
 
         Returns:
@@ -141,11 +145,6 @@ class Receiver(Modem):
 
         if channel_state.num_receive_streams != self.num_antennas:
             raise ValueError("Number of channel state receive streams does not match the number of receiver antennas")
-
-        # If no receiving waveform generator is configured, no signal is being received
-        # TODO: Check if this is really a valid case
-        if self.waveform_generator is None:
-            return np.empty((self.num_antennas, 0), dtype=complex)
 
         num_samples = baseband_signal.num_samples
 

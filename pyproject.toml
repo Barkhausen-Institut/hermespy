@@ -1,6 +1,7 @@
 [build-system]
 requires = [
     "setuptools",
+    "sphinx",
     "wheel",
     "pybind11",
     "scikit-build",

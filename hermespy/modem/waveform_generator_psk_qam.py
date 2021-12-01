@@ -474,24 +474,23 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         """ Determines the sampling instants for pilots and data at a given frame
         """
 
-        if self._data_symbol_idx is None:
-            # create a vector with the position of every pilot and data symbol in a
-            # frame
-            preamble_symbol_idx = np.arange(
-                self.num_preamble_symbols) * self.num_pilot_samples
-            start_idx = self.num_preamble_symbols * self.num_pilot_samples
-            self._data_symbol_idx = start_idx + \
-                np.arange(self.num_data_symbols) * \
-                self.oversampling_factor
-            start_idx += self.num_data_symbols * self.oversampling_factor
-            postamble_symbol_idx = start_idx + \
-                np.arange(self.num_postamble_symbols) * \
-                self.num_pilot_samples
-            self._symbol_idx = np.concatenate(
-                (preamble_symbol_idx, self._data_symbol_idx, postamble_symbol_idx))
+        # create a vector with the position of every pilot and data symbol in a
+        # frame
+        preamble_symbol_idx = np.arange(
+            self.num_preamble_symbols) * self.num_pilot_samples
+        start_idx = self.num_preamble_symbols * self.num_pilot_samples
+        self._data_symbol_idx = start_idx + \
+            np.arange(self.num_data_symbols) * \
+            self.oversampling_factor
+        start_idx += self.num_data_symbols * self.oversampling_factor
+        postamble_symbol_idx = start_idx + \
+            np.arange(self.num_postamble_symbols) * \
+            self.num_pilot_samples
+        self._symbol_idx = np.concatenate(
+            (preamble_symbol_idx, self._data_symbol_idx, postamble_symbol_idx))
 
-            self._data_symbol_idx += int(.5 * self.oversampling_factor)
-            self._symbol_idx += int(.5 * self.oversampling_factor)
+        self._data_symbol_idx += int(.5 * self.oversampling_factor)
+        self._symbol_idx += int(.5 * self.oversampling_factor)
 
     def _set_pulse_correlation_matrix(self):
         """ Creates a matrix with autocorrelation among pulses at different instants
