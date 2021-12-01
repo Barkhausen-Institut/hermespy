@@ -780,7 +780,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
     def modulate(self, data_symbols: np.ndarray) -> Signal:
 
         # The number of samples in time domain the frame should contain, given the current sample frequency
-        output_signal = np.empty(0, dtype=np.complex)
+        output_signal = np.empty(0, dtype=complex)
 
         sent_data_symbols = 0
         for section in self.structure:
@@ -805,8 +805,8 @@ class WaveformGeneratorOfdm(WaveformGenerator):
                    noise_variance: float = 0.0) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         # Recover OFDM grid
-        symbol_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=np.complex)
-        resource_mask = np.zeros((len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=np.bool)
+        symbol_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=complex)
+        resource_mask = np.zeros((len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=bool)
         section_channel_states: List[ChannelStateInformation] = []
 
         sample_index = 0
@@ -949,10 +949,10 @@ class WaveformGeneratorOfdm(WaveformGenerator):
         """
 
         propagated_reference_symbols = symbol_grid.T[resource_mask[ElementType.REFERENCE.value, ::].T]
-        reference_symbols = np.ones(len(propagated_reference_symbols), dtype=np.complex)
+        reference_symbols = np.ones(len(propagated_reference_symbols), dtype=complex)
         reference_channel_estimation = propagated_reference_symbols / reference_symbols
 
-        channel_estimation = np.zeros(symbol_grid.shape, dtype=np.complex)
+        channel_estimation = np.zeros(symbol_grid.shape, dtype=complex)
         channel_estimation.T[resource_mask[ElementType.REFERENCE.value, ::].T] = reference_channel_estimation
 
         interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
