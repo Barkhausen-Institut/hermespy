@@ -299,16 +299,6 @@ class FrameSection:
         """
         ...
 
-    @property
-    @abstractmethod
-    def duration(self) -> float:
-        """Duration of this frame element in time domain.
-
-        Returns:
-            float: Duration in seconds.
-        """
-        ...
-
     @abstractmethod
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
         """Modulate this section into a complex base-band signal.
@@ -382,22 +372,12 @@ class FrameSymbolSection(FrameSection):
     @property
     def num_subcarriers(self) -> int:
 
-        # ToDo: Resources with different numbers of subcarriers are currently not supported
         num = 0
-        if len(self.pattern) > 0:
-            num = self.frame.resources[self.pattern[0]].num_subcarriers
+
+        for resource_idx in set(self.pattern):
+            num = max(num, self.frame.resources[resource_idx].num_subcarriers)
 
         return num
-
-    @property
-    def num_timeslots(self) -> int:
-        return len(self.pattern) * self.num_repetitions
-
-    @property
-    def duration(self) -> float:
-
-        duration = self.num_timeslots / self.frame.subcarrier_spacing
-        return duration
 
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
 
@@ -405,17 +385,17 @@ class FrameSymbolSection(FrameSection):
         mask = self.resource_mask
 
         # Fill up the time-frequency grid exploiting the mask
-        grid = np.empty(mask.shape[1:], complex)
+        grid = np.zeros((self.frame.num_subcarriers, self.num_words), complex)
 
         # Reference fields all currently carry the complex symbol 1+j0
         # ToDo: Implement reference symbol configurations
-        grid.T[mask[ElementType.REFERENCE.value, ::].T] = 1.
+        grid[mask[ElementType.REFERENCE.value]] = 1. + 0j
 
         # Data fields carry the supplied data symbols
-        grid.T[mask[ElementType.DATA.value, ::].T] = symbols
+        grid[mask[ElementType.DATA.value]] = symbols
 
-        # NULL fields are just that... zero ToDo: Check with André if this is correct
-        grid.T[mask[ElementType.NULL.value, ::].T] = 0.
+        # NULL fields are just that... zero
+        grid[mask[ElementType.NULL.value]] = 0j
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
         num_slot_samples = self.frame.num_subcarriers * self.frame.oversampling_factor
@@ -428,8 +408,12 @@ class FrameSymbolSection(FrameSection):
             pattern_idx = resource_idx % len(self.pattern)
             cp_ratio = self.frame.resources[self.pattern[pattern_idx]].cp_ratio
 
-            num_prefix_samples = int(round(num_slot_samples * cp_ratio))
-            signals.append(np.append(resource_samples[-num_prefix_samples:], resource_samples))
+            num_prefix_samples = int(num_slot_samples * cp_ratio)
+
+            if num_prefix_samples > 0:
+                signals.append(resource_samples[-num_prefix_samples:])
+
+            signals.append(resource_samples)
 
         signal_samples = np.concatenate(signals, axis=0)
         return signal_samples
@@ -451,7 +435,7 @@ class FrameSymbolSection(FrameSection):
             pattern_idx = slot_idx % len(self.pattern)
             resource = self.frame.resources[self.pattern[pattern_idx]]
 
-            num_prefix_samples = int(round(samples_per_slot * resource.cp_ratio))
+            num_prefix_samples = int(samples_per_slot * resource.cp_ratio)
             sample_index += num_prefix_samples
 
             sample_indices = np.append(sample_indices, np.arange(sample_index, sample_index + samples_per_slot))
@@ -463,7 +447,7 @@ class FrameSymbolSection(FrameSection):
         slot_channel_state = channel_state[:, :, channel_sample_indices, :].to_frequency_selectivity(num_bins=self.frame.num_subcarriers)
 
         # Transform grid back to data symbols
-        ofdm_grid = fft(slot_samples, n=self.frame.num_subcarriers, axis=0, norm='ortho')
+        ofdm_grid = fft(slot_samples, n=samples_per_slot, axis=0, norm='ortho')[:self.frame.num_subcarriers, :]
         return ofdm_grid, slot_channel_state
 
     @property
@@ -471,31 +455,26 @@ class FrameSymbolSection(FrameSection):
 
         # Initialize the base mask as all false
         num_subcarriers = self.frame.num_subcarriers
-        mask = np.ndarray((len(ElementType), num_subcarriers, self.num_timeslots), dtype=bool) * False
+        mask = np.zeros((len(ElementType), num_subcarriers, len(self.pattern)), dtype=bool)
 
-        for resource_section, resource_idx in enumerate(self.pattern):
+        for word_idx, resource_idx in enumerate(self.pattern):
 
             resource = self.frame.resources[resource_idx]
-            resource_mask = resource.resource_mask
+            mask[:, :resource.num_subcarriers, word_idx] = resource.mask
 
-            repeated_mask = np.repeat(resource_mask[..., np.newaxis], self.num_repetitions, axis=2)
-            mask[:, :resource_mask.shape[1], resource_section::len(self.pattern)] = repeated_mask
-
-        return mask
+        return np.tile(mask, (1, 1, self.num_repetitions))
 
     @property
     def num_samples(self) -> int:
-        
-        num = 0
 
-        num_samples_per_slot = self.frame.sampling_rate / self.frame.subcarrier_spacing
+        num_samples_per_slot = self.frame.num_subcarriers * self.frame.oversampling_factor
+        num = len(self.pattern) * num_samples_per_slot
 
         # Add up the additional samples from cyclic prefixes
         for resource_idx in self.pattern:
-            num += int(round(num_samples_per_slot * self.frame.resources[resource_idx].cp_ratio))
+            num += int(num_samples_per_slot * self.frame.resources[resource_idx].cp_ratio)
 
         # Add up the base samples from each timeslot
-        num += int(round(num_samples_per_slot)) * len(self.pattern)
         return num * self.num_repetitions
 
     @classmethod

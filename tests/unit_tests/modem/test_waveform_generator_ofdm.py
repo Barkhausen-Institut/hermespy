@@ -168,6 +168,86 @@ class TestFrameSection(unittest.TestCase):
             self.section.num_repetitions = -1
 
 
+class TestFrameSymbolSection(unittest.TestCase):
+    """Test OFDM frame symbol section."""
+
+    def setUp(self) -> None:
+
+        self.rnd = np.random.default_rng(42)
+
+        self.repetitions_a = 2
+        self.cp_ratio_a = 0.1
+        self.elements_a = [FrameElement(ElementType.DATA, 2),
+                           FrameElement(ElementType.REFERENCE, 1),
+                           FrameElement(ElementType.NULL, 3)]
+        self.resource_a = FrameResource(self.repetitions_a, self.cp_ratio_a, self.elements_a)
+
+        self.repetitions_b = 3
+        self.cp_ratio_b = 0.0
+        self.elements_b = [FrameElement(ElementType.REFERENCE, 2),
+                           FrameElement(ElementType.DATA, 1),
+                           FrameElement(ElementType.NULL, 3)]
+        self.resource_b = FrameResource(self.repetitions_b, self.cp_ratio_b, self.elements_b)
+
+        self.frame = Mock()
+        self.frame.num_subcarriers = 20
+        self.frame.oversampling_factor = 4
+        self.frame.resources = [self.resource_a, self.resource_b]
+        self.num_repetitions = 2
+        self.pattern = [0, 1, 0]
+
+        self.section = FrameSymbolSection(self.num_repetitions, self.pattern, self.frame)
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as object attributes."""
+
+        self.assertEqual(self.num_repetitions, self.section.num_repetitions)
+        self.assertCountEqual(self.pattern, self.section.pattern)
+        self.assertIs(self.frame, self.section.frame)
+
+    def test_num_symbols(self) -> None:
+        """Number of symbols property should return the correct data symbol count."""
+
+        self.assertEqual(22, self.section.num_symbols)
+
+    def test_num_references(self) -> None:
+        """Number of references property should return the correct reference symbol count."""
+
+        self.assertEqual(20, self.section.num_references)
+
+    def test_num_words(self) -> None:
+        """Number of words property should return the correct word count."""
+
+        self.assertIs(6, self.section.num_words)
+
+    def test_num_subcarriers(self) -> None:
+        """Number of subcarriers property should return the correct number of occupied subcarriers"""
+
+        self.assertEqual(18, self.section.num_subcarriers)
+
+    def test_modulate_demodulate_cyclic(self) -> None:
+        """Modulating and subsequently de-modulating an OFDM symbol section should yield correct symbols."""
+
+        expected_symbols = np.exp(2j * self.rnd.uniform(0, pi, self.section.num_symbols))
+
+        modulated_signal = self.section.modulate(expected_symbols)
+        channel_state = ChannelStateInformation.Ideal(num_samples=modulated_signal.shape[0])
+        ofdm_grid, channel_state_grid = self.section.demodulate(modulated_signal, channel_state)
+
+        symbols = ofdm_grid[self.section.resource_mask[ElementType.DATA.value]]
+        assert_array_almost_equal(expected_symbols, symbols)
+
+    def test_resource_mask(self) -> None:
+        _ = self.section.resource_mask
+
+    def test_num_samples(self) -> None:
+        """Number of samples property should compute the correct sample count."""
+
+        expected_num_samples = self.section.num_samples
+        modulated_signal = self.section.modulate(np.ones(self.section.num_symbols, dtype=complex))
+
+        self.assertEqual(modulated_signal.shape[0], expected_num_samples)
+
 class TestWaveformGeneratorOFDM(unittest.TestCase):
     """Test Orthogonal Frequency Division Multiplexing Waveform Generator."""
 
