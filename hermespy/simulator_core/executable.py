@@ -42,7 +42,7 @@ class Executable(ABC):
         calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
         __spectrum_fft_size (int): Number of FFT bins considered during computation.
         __max_num_drops (int): Number of maximum executions per scenario.
-        __results_dir (str): Directory in which all execution artifacts will be dropped.
+        __results_dir (Optional[str]): Directory in which all execution artifacts will be dropped.
         __verbosity (Verbosity): Information output behaviour during execution.
     """
 
@@ -55,7 +55,7 @@ class Executable(ABC):
     calc_receive_stft: bool
     __spectrum_fft_size: int
     __max_num_drops: int
-    __results_dir: str
+    __results_dir: Optional[str]
     __verbosity: Verbosity
 
     def __init__(self,
@@ -91,7 +91,7 @@ class Executable(ABC):
         self.calc_receive_stft = calc_receive_stft
         self.spectrum_fft_size = spectrum_fft_size
         self.max_num_drops = max_num_drops
-        self.results_dir = Executable.__default_results_dir() if results_dir is None else results_dir
+        self.results_dir = results_dir
         self.verbosity = verbosity
 
     @abstractmethod
@@ -181,7 +181,7 @@ class Executable(ABC):
         return self.__results_dir
 
     @results_dir.setter
-    def results_dir(self, directory: str) -> None:
+    def results_dir(self, directory: Optional[str]) -> None:
         """Modify the directory in which the execution results will be saved.
 
         Args:
@@ -190,6 +190,10 @@ class Executable(ABC):
         Raises:
             ValueError: If `directory` does not exist within the filesystem.
         """
+
+        if directory is None:
+            self.__results_dir = None
+            return
 
         if not path.exists(directory):
             raise ValueError("The provided results directory does not exist")
@@ -225,7 +229,7 @@ class Executable(ABC):
             self.__verbosity = new_verbosity
 
     @staticmethod
-    def __default_results_dir() -> str:
+    def default_results_dir() -> str:
         """Create a default directory to store execution results.
 
         Returns:

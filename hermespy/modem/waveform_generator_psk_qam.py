@@ -2,7 +2,7 @@
 """Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple, Optional, Type, Union
+from typing import Any, Tuple, Optional, Type, Union
 from enum import Enum
 
 import numpy as np
@@ -13,9 +13,6 @@ from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from hermespy.signal import Signal
-
-if TYPE_CHECKING:
-    from hermespy.modem import Modem
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -35,7 +32,6 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     - arbitrary constellation, as defined in modem.tools.psk_qam_mapping:PskQamMapping
 
     This implementation has currently the following limitations:
-    - SISO only
     - hard output only (no LLR)
     - no reference signal
     - ideal channel estimation
@@ -72,38 +68,25 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     __symbol_rate: float
 
     def __init__(self,
-                 modem: Optional[Modem] = None,
-                 symbol_rate: float = 0.0,
-                 oversampling_factor: int = 2,
-                 modulation_order: Optional[int] = None,
+                 symbol_rate: float = 100e6,
                  tx_filter: Optional[ShapingFilter] = None,
                  rx_filter: Optional[ShapingFilter] = None,
-                 chirp_duration: float = 0.0,
-                 chirp_bandwidth: float = 0.0,
+                 chirp_duration: float = 1e-6,
+                 chirp_bandwidth: float = 100e6,
                  equalization: Union[str, WaveformGeneratorPskQam.Equalization] = 'NONE',
-                 num_preamble_symbols: int = 0,
-                 num_data_symbols: int = 1,
+                 num_preamble_symbols: int = 2,
+                 num_data_symbols: int = 100,
                  num_postamble_symbols: int = 0,
-                 pilot_rate: float = 0.0,
-                 guard_interval: float = 0.0,
-                 complex_modulation: bool = True) -> None:
-        """Waveform Generator PSK-QAM object initialization.
+                 pilot_rate: float = 1e6,
+                 guard_interval: float = 1e-6,
+                 complex_modulation: bool = True,
+                 **kwargs: Any) -> None:
+        """Waveform Generator PSK-QAM initialization.
 
         Args:
 
-            modem (Modem, optional):
-                A modem this generator is attached to.
-                By default, the generator is considered to be floating.
-
             symbol_rate (float, optional):
                 Rate at which symbols are being generated.
-
-            oversampling_factor (int, optional):
-                The factor at which the simulated signal is oversampled.
-
-            modulation_order (int, optional):
-                Order of modulation.
-                Must be a non-negative power of two.
 
             tx_filter (ShapingFilter, optional):
                 The shaping filter applied during signal generation.
@@ -129,24 +112,21 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             pilot_rate (int, optional):
                 Pilot symbol rate.
 
-            guard_interval (float, optional):
-                Guard interval between frames in seconds.
+            kwargs (Any):
+                Waveform generator base class initialization parameters.
         """
 
         # Initialize base class
-        WaveformGenerator.__init__(self,
-                                   modem=modem,
-                                   oversampling_factor=oversampling_factor,
-                                   modulation_order=modulation_order)
+        WaveformGenerator.__init__(self, **kwargs)
 
         if tx_filter is None:
-            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, oversampling_factor)
+            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
         else:
             self.tx_filter = tx_filter
             
         if rx_filter is None:
-            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, oversampling_factor)
+            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
         else:
             self.rx_filter = tx_filter
@@ -324,61 +304,6 @@ class WaveformGeneratorPskQam(WaveformGenerator):
 
         else:
             self.__equalization = method
-
-    def create_frame(self, timestamp: int,
-                     data_bits: np.array) -> Tuple[np.ndarray, int, int]:
-
-        self._set_sampling_indices()
-        self._set_pulse_correlation_matrix()
-
-        frame = np.zeros(self.samples_in_frame, dtype=complex)
-        frame[self._symbol_idx[:self.num_preamble_symbols]] = 1
-        start_index_data = self.num_preamble_symbols
-        end_index_data = self.num_preamble_symbols + self.num_data_symbols
-        frame[self._symbol_idx[start_index_data: end_index_data]
-              ] = self.__mapping.get_symbols(data_bits)
-        frame[self._symbol_idx[end_index_data:]] = 1
-
-        output_signal = self.tx_filter.filter(frame)
-
-        initial_sample_num = timestamp - self.tx_filter.delay_in_samples
-        timestamp += self.samples_in_frame
-
-        return output_signal[np.newaxis, :], timestamp, initial_sample_num
-
-    def receive_frame(self,
-                      rx_signal: np.ndarray,
-                      timestamp_in_samples: int,
-                      noise_var: float) -> Tuple[np.ndarray, np.ndarray]:
-
-        self._set_sampling_indices()
-        self._set_pulse_correlation_matrix()
-
-        useful_signal_length = self.samples_in_frame + self.rx_filter.delay_in_samples
-
-        if rx_signal.shape[1] < useful_signal_length:
-            bits = np.empty(0, dtype=int)
-            rx_signal = np.array([])
-        else:
-            frame_signal = rx_signal[0, :useful_signal_length].ravel()
-            symbol_idx = self._data_symbol_idx + self.rx_filter.delay_in_samples + self.tx_filter.delay_in_samples
-
-            frame_signal = self.rx_filter.filter(frame_signal)
-
-            # get channel gains (first tap only)
-            timestamps = (timestamp_in_samples + symbol_idx) / self.sampling_rate
-            channel = self.modem.reference_channel.impulse_response(timestamps)
-            channel = channel[:, :, :, 0].ravel()
-
-            # equalize
-            rx_symbols = self._equalizer(frame_signal[symbol_idx], channel, noise_var)
-
-            # detect
-            bits = self.__mapping.detect_bits(rx_symbols)
-
-            rx_signal = rx_signal[:, self.samples_in_frame:]
-
-        return np.ravel(bits), rx_signal
 
     def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
         """Equalize the received data symbols

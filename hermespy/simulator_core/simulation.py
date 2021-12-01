@@ -2,6 +2,7 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
+from math import ceil, floor
 from typing import List, Type, Optional, Union, Tuple
 
 import numpy as np
@@ -211,8 +212,8 @@ class Simulation(Executable):
             if self.verbosity.value <= Verbosity.INFO.value:
 
                 print(f"\nScenario Simulation #{s}")
-                print(f"{'SNR':<15}{'Drop':<15}{'Link':<15}{'BER':<15}{'FER':<15}")
-                print("="*75)
+                print(f"{'SNR':<10}{'Drop':<10}{'Link':<15}{'BER':<15}{'BLER':<15}")
+                print("="*65)
 
             # Initialize plot statistics with current scenario state
             statistics = Statistics(scenario=scenario,
@@ -231,47 +232,24 @@ class Simulation(Executable):
             # Save most recent drop
             drop: Optional[SimulationDrop] = None
 
-            for d in range(self.max_num_drops):
-                run_flags = statistics.run_flag_matrix
+            for noise_index, snr in enumerate(self.noise_loop):
 
-                for noise_index, snr in enumerate(self.noise_loop):
-                    drop_run_flag = run_flags[:, :, noise_index]
-                    # Generate data bits to be transmitted
-                    data_bits = scenario.generate_data_bits()
+                for d in range(self.max_num_drops):
 
-                    # Generate radio-frequency band signal emitted from each transmitter
-                    transmitted_signals, transmitted_symbols = Simulation.transmit(scenario=scenario,
-                                                                                   drop_run_flag=drop_run_flag,
-                                                                                   data_bits=data_bits)
+                    drop_run_flag = statistics.run_flag_matrix[:, :, noise_index]
 
-                    # Simulate propagation over channel model
-                    propagation_matrix = Simulation.propagate(scenario,
-                                                              transmitted_signals,
-                                                              drop_run_flag)
+                    # Prematurely abort the drop loop if all stopping criteria have been met
+                    if np.sum(drop_run_flag.flatten()) == 0:
 
-                    # Simulate signal reception and mixing at the receiver-side
-                    received_signals = Simulation.receive(scenario,
-                                                          propagation_matrix,
-                                                          drop_run_flag,
-                                                          self.snr_type,
-                                                          snr)
+                        if self.verbosity.value <= Verbosity.INFO.value:
 
-                    # Receive and demodulate signal
-                    detected_bits, received_symbols = Simulation.detect(scenario,
-                                                                        received_signals,
-                                                                        drop_run_flag)
+                            info_str = f" Stopping criteria for SNR tap #{noise_index} met "
+                            padding = .5 * max(65 - len(info_str), 0)
+                            print('-' * floor(padding) + info_str + '-' * ceil(padding))
 
-                    # Collect block sizes
-                    transmit_block_sizes = scenario.transmit_block_sizes
-                    receive_block_sizes = scenario.receive_block_sizes
+                        break
 
-                    # ToDo: Maybe change the structure here
-                    received_samples = [received_signal[0] for received_signal in received_signals]
-
-                    # Save generated signals
-                    drop = SimulationDrop(data_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
-                                          received_samples, received_symbols, detected_bits, receive_block_sizes,
-                                          True, self.spectrum_fft_size)
+                    drop = self.drop(snr, s, drop_run_flag)
 
                     # Print drop statistics if verbosity flag is set
                     if self.verbosity.value <= Verbosity.INFO.value:
@@ -279,20 +257,20 @@ class Simulation(Executable):
                         bers = drop.bit_error_rates
                         blers = drop.block_error_rates
 
-                        for (tx_id, tx_bers), tx_blers in zip(enumerate(bers), blers):
-                            for (rx_id, ber), bler in zip(enumerate(tx_bers), tx_blers):
+                        for tx_id, (tx_bers, tx_blers) in enumerate(zip(bers, blers)):
+                            for rx_id, (ber, bler) in enumerate(zip(tx_bers, tx_blers)):
 
                                 link_str = f"{tx_id}x{rx_id}"
-                                ber_str = "-" if ber is None else f"{bler:.4f}"
+                                ber_str = "-" if ber is None else f"{ber:.4f}"
                                 bler_str = "-" if bler is None else f"{bler:.4f}"
 
                                 if tx_id == 0 and rx_id == 0:
 
                                     snr_str = f"{10 * np.log10(snr):.1f}"
-                                    print(f"{snr_str:<15}{d:<15}{link_str:<15}{ber_str:<15}{bler_str:<15}")
+                                    print(f"{snr_str:<10}{d:<10}{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
                                 else:
-                                    print(" " * 30 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
+                                    print(" " * 20 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
                     # Visualize plot if requested
                     if self.plot_drop:
@@ -368,6 +346,73 @@ class Simulation(Executable):
                     drop.plot_receive_stft()
 
             plt.show()
+
+    def drop(self,
+             snr: float,
+             scenario_index: int = 0,
+             drop_run_flag: Optional[np.ndarray] = None) -> SimulationDrop:
+        """Generate a single simulation drop.
+
+        Args:
+
+            snr (float):
+                The signal-to-noise-ratio at the receiver-side.
+
+            scenario_index (int, optional):
+                Index of the scenario for which to generate a drop.
+
+            drop_run_flag (np.ndarray, optional):
+                Drop run flags.
+
+        Returns:
+            SimulationDrop: The generated drop.
+
+        Raises:
+            RuntimeError: If no scenario has been added to the simulation yet.
+        """
+
+        if len(self.scenarios) < 1:
+            raise RuntimeError("Error trying to generate a drop for a simulation without a scenario")
+
+        scenario = self.scenarios[scenario_index]
+
+        # Generate data bits to be transmitted
+        data_bits = scenario.generate_data_bits()
+
+        # Generate radio-frequency band signal emitted from each transmitter
+        transmitted_signals, transmitted_symbols = Simulation.transmit(scenario=scenario,
+                                                                       drop_run_flag=drop_run_flag,
+                                                                       data_bits=data_bits)
+
+        # Simulate propagation over channel model
+        propagation_matrix = Simulation.propagate(scenario,
+                                                  transmitted_signals,
+                                                  drop_run_flag)
+
+        # Simulate signal reception and mixing at the receiver-side
+        received_signals = Simulation.receive(scenario,
+                                              propagation_matrix,
+                                              drop_run_flag,
+                                              self.snr_type,
+                                              snr)
+
+        # Receive and demodulate signal
+        detected_bits, received_symbols = Simulation.detect(scenario,
+                                                            received_signals,
+                                                            drop_run_flag)
+
+        # Collect block sizes
+        transmit_block_sizes = scenario.transmit_block_sizes
+        receive_block_sizes = scenario.receive_block_sizes
+
+        # ToDo: Maybe change the structure here
+        received_samples = [received_signal[0] for received_signal in received_signals]
+
+        # Save generated signals
+        drop = SimulationDrop(data_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
+                              received_samples, received_symbols, detected_bits, receive_block_sizes,
+                              True, self.spectrum_fft_size)
+        return drop
 
     @property
     def snr_type(self) -> SNRType:
