@@ -1,5 +1,8 @@
 from skbuild import setup
 from setuptools import find_packages
+from sphinx.setup_command import BuildDoc
+
+cmdclass = {'build_sphinx': BuildDoc}
 
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -27,7 +30,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     packages=find_packages(exclude=['tests']),
-    package_dir={"": ""},
+    package_dir={"hermespy": "hermespy"},
     include_package_data=True,
     exclude_package_data={
         '': ['3rdparty', 'tests'],
@@ -39,4 +42,11 @@ setup(
         'console_scripts': ['hermes=hermespy.bin:hermes'],
     },
     install_requires=['matplotlib', 'numpy', 'scipy', 'data-science-types', 'ruamel.yaml', 'numba', 'sparse'],
+    command_options={
+        'build_sphinx': {
+            #'project': ('setup.py', name),
+            #'version': ('setup.py', version),
+            #'release': ('setup.py', release),
+            'source_dir': ('setup.py', 'docssource')},
+    },
 )
