@@ -27,8 +27,8 @@ __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.0"
-__maintainer__ = "André Noll Barreto"
-__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -184,7 +184,13 @@ class FrameResource:
         return self.__repetitions * num
 
     @property
-    def resource_mask(self) -> np.ndarray:
+    def mask(self) -> np.ndarray:
+        """Boolean mask selecting a specific type of element from the OFDM grid.
+
+        Returns:
+            np.ndarray:
+                Mask of dimension `num_element_types`x`num_subcarriers`.
+        """
 
         # Initialize the base mask as all false
         mask = np.ndarray((len(ElementType), self.num_subcarriers), dtype=bool) * False
@@ -196,8 +202,7 @@ class FrameResource:
             element_count += element.repetitions
 
         # Repeat the subcarrier masks according to the configured number of repetitions.
-        mask = mask[:, :element_count].repeat(self.__repetitions, axis=1)
-
+        mask = np.tile(mask[:, :element_count], (1, self.__repetitions))
         return mask
 
 

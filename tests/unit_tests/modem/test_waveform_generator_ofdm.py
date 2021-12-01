@@ -5,12 +5,109 @@ import unittest
 from unittest.mock import Mock
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from numpy.random import default_rng
 from scipy.constants import pi
 
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameResource
 from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType
+
+__author__ = "André Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["André Barreto", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.2.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
+
+class TestFrameResource(unittest.TestCase):
+    """Test a single OFDM frame resource."""
+
+    def setUp(self) -> None:
+
+        self.repetitions = 2
+        self.cp_ratio = 0.01
+        self.elements = [FrameElement(ElementType.DATA, 2),
+                         FrameElement(ElementType.REFERENCE, 1),
+                         FrameElement(ElementType.NULL, 3)]
+
+        self.resource = FrameResource(self.repetitions, self.cp_ratio, self.elements)
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as class attributes."""
+
+        self.assertEqual(self.repetitions, self.resource.repetitions)
+        self.assertEqual(self.cp_ratio, self.resource.cp_ratio)
+        self.assertCountEqual(self.elements, self.resource.elements)
+
+    def test_repetitions_setget(self) -> None:
+        """Repetitions property getter should return setter argument."""
+
+        repetitions = 10
+        self.resource.repetitions = repetitions
+
+        self.assertEqual(repetitions, self.resource.repetitions)
+
+    def test_repetitions_validation(self) -> None:
+        """Repetitions property setter should raise ValueError on arguments smaller than one."""
+
+        with self.assertRaises(ValueError):
+            self.resource.repetitions = 0
+
+        with self.assertRaises(ValueError):
+            self.resource.repetitions = -1
+
+    def test_cp_ratio_setget(self) -> None:
+        """Cyclic prefix ratio property getter should return setter argument."""
+
+        cp_ratio = .5
+        self.resource.cp_ratio = .5
+
+        self.assertEqual(cp_ratio, self.resource.cp_ratio)
+
+    def test_cp_ratio_validation(self) -> None:
+        """Cyclic prefix ratio property setter should raise ValueError on arguments
+        smaller than zero or bigger than one."""
+
+        with self.assertRaises(ValueError):
+            self.resource.cp_ratio = -1.0
+
+        with self.assertRaises(ValueError):
+            self.resource.cp_ratio = 1.5
+
+        try:
+            self.resource.cp_ratio = 0.0
+            self.resource.cp_ratio = 1.0
+
+        except ValueError:
+            self.fail()
+
+    def test_num_subcarriers(self) -> None:
+        """Number of subcarriers property should return the correct subcarrier count."""
+
+        self.assertEqual(12, self.resource.num_subcarriers)
+
+    def test_num_symbols(self) -> None:
+        """Number of symbols property should return the correct data symbol count."""
+
+        self.assertEqual(4, self.resource.num_symbols)
+
+    def test_num_references(self) -> None:
+        """Number of references property should return the correct reference symbol count."""
+
+        self.assertEqual(2, self.resource.num_references)
+
+    def test_resource_mask(self) -> None:
+        """Resource mask property should return a mask selecting the proper elements."""
+
+        expected_mask = np.zeros((3, 12), bool)
+        expected_mask[1, [0, 1, 6, 7]] = True           # Data symbol mask
+        expected_mask[0, [2, 8]] = True                 # Reference symbol mask
+        expected_mask[2, [3, 4, 5, 9, 10, 11]] = True   # NULL symbol mask
+
+        assert_array_equal(expected_mask, self.resource.mask)
 
 
 class TestWaveformGeneratorOFDM(unittest.TestCase):
@@ -68,93 +165,6 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.waveform_generator.subcarrier_spacing = 0.
-
-    def test_section_demodulation_symbol_transformation(self) -> None:
-        """Data and noise signals should be properly transformed to frequency domain
-        and mapped to their respective symbol slots."""
-
-        # Build a basic communication frame containing only a single symbol slot with 100 data subcarriers
-        num_elements = 50
-        symbol_elements = [FrameElement(ElementType.DATA) for _ in range(num_elements)]
-        resource = FrameResource(repetitions=2, cp_ratio=0.2, elements=symbol_elements)
-        self.waveform_generator.add_resource(resource)
-
-        section = FrameSymbolSection(pattern=[0], frame=self.waveform_generator)
-        self.waveform_generator.add_section(section)
-
-        # Generate two separate symbol streams, one modeling data, one modeling noise
-        expected_data_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
-        expected_noise_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
-
-        # Mock modulation by directly calling the section modulator
-        data_signal = section.modulate(expected_data_symbols)
-        noise_signal = section.modulate(expected_noise_symbols)[..., np.newaxis]
-
-        data_symbols, noise_symbols = section.demodulate(data_signal, noise_signal)
-
-        assert_array_almost_equal(expected_data_symbols[..., np.newaxis], data_symbols)
-        assert_array_almost_equal(expected_noise_symbols[..., np.newaxis, np.newaxis], noise_symbols)
-
-    def test_frame_demodulation_symbol_transformation(self) -> None:
-        """Data and noise signals should be properly transformed to frequency domain
-        and mapped to their respective symbol slots."""
-
-        # Build a basic communication frame containing only a single symbol slot with 100 data subcarriers
-        num_elements = 50
-        symbol_elements = [FrameElement(ElementType.DATA) for _ in range(num_elements)]
-        resource = FrameResource(repetitions=2, cp_ratio=0.2, elements=symbol_elements)
-        self.waveform_generator.add_resource(resource)
-
-        section = FrameSymbolSection(pattern=[0], frame=self.waveform_generator)
-        self.waveform_generator.add_section(section)
-
-        # Generate two separate symbol streams, one modeling data, one modeling noise
-        expected_data_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
-        expected_noise_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
-
-        # Mock modulation by directly calling the section modulator
-        data_signal = section.modulate(expected_data_symbols)
-        noise_signal = section.modulate(expected_noise_symbols)[..., np.newaxis]
-        noise_variance = 0.
-
-        data_symbols, noise_symbols, noise_variances = self.waveform_generator.demodulate(data_signal, noise_signal,
-                                                                                          noise_variance)
-
-        assert_array_almost_equal(expected_data_symbols, data_symbols)
-        assert_array_almost_equal(expected_noise_symbols[..., np.newaxis], noise_symbols)
-
-    def test_channel_propagation_impulse_response_assumptions(self) -> None:
-        """Data and noise signals should be properly transformed to frequency domain
-        and mapped to their respective symbol slots."""
-
-        # Build a basic communication frame containing only a single symbol slot with 100 data subcarriers
-        num_elements = 50
-        symbol_elements = [FrameElement(ElementType.DATA) for _ in range(num_elements)]
-        resource = FrameResource(repetitions=2, cp_ratio=0.2, elements=symbol_elements)
-        self.waveform_generator.add_resource(resource)
-
-        section = FrameSymbolSection(pattern=[0], frame=self.waveform_generator)
-        self.waveform_generator.add_section(section)
-
-        # Generate two separate symbol streams, one modeling data, one modeling noise
-        expected_data_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
-        expected_noise_symbols = np.exp(2j * self.random_generator.uniform(0, pi, 100))
-
-        # Mock modulation by directly calling the section modulator
-        data_signal = section.modulate(expected_data_symbols)
-        noise_signal = section.modulate(expected_noise_symbols)
-        noise_variance = 0.
-
-        propagated_data_signal = data_signal * noise_signal
-
-        data_symbols, impulse_symbols, noise_variances = self.waveform_generator.demodulate(propagated_data_signal,
-                                                                                            noise_signal[
-                                                                                                ..., np.newaxis],
-                                                                                            noise_variance)
-
-        equalized_data_symbols = data_symbols / impulse_symbols[:, 0]
-        assert_array_almost_equal(equalized_data_symbols, expected_data_symbols)
-
 
     def test_reference_based_channel_estimation(self) -> None:
         """Reference-based channel estimation should properly estimate channel at reference points."""
