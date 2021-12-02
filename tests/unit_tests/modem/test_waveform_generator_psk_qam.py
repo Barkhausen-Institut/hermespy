@@ -5,9 +5,12 @@ import unittest
 from unittest.mock import Mock
 
 import numpy as np
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+from scipy.constants import pi
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
-from hermespy.modem.modem import Modem
+from hermespy.modem.tools import ShapingFilter
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -27,227 +30,265 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         self.rng = np.random.default_rng(42)
 
         self.modem = Mock()
+        self.modem.carrier_frequency = 100e6
+
         self.filter_type = 'ROOT_RAISED_COSINE'
         self.symbol_rate = 125e3
         self.oversampling_factor = 8
         self.modulation_order = 16
         self.guard_interval = 1e-3
-        self.chirp_bandwidth = 100e6
-        self.chirp_duration = 1e-6
+        self.num_data_symbols = 1000
+
+        shaping_filter = ShapingFilter(filter_type=self.filter_type,
+                                       samples_per_symbol=self.oversampling_factor)
+
+        self.tx_filter = ShapingFilter(filter_type=self.filter_type,
+                                       samples_per_symbol=self.oversampling_factor,
+                                       is_matched=False,
+                                       length_in_symbols=shaping_filter.length_in_symbols,
+                                       roll_off=shaping_filter.roll_off,
+                                       bandwidth_factor=1.)
+
+        self.rx_filter = ShapingFilter(filter_type=self.filter_type,
+                                       samples_per_symbol=self.oversampling_factor,
+                                       is_matched=True,
+                                       length_in_symbols=shaping_filter.length_in_symbols,
+                                       roll_off=shaping_filter.roll_off,
+                                       bandwidth_factor=1.)
 
         self.generator = WaveformGeneratorPskQam(modem=self.modem, symbol_rate=self.symbol_rate,
                                                  oversampling_factor=self.oversampling_factor,
                                                  modulation_order=self.modulation_order,
                                                  guard_interval=self.guard_interval,
-                                                 chirp_duration=self.chirp_duration,
-                                                 chirp_bandwidth=self.chirp_bandwidth)
+                                                 tx_filter=self.tx_filter,
+                                                 rx_filter=self.rx_filter,
+                                                 num_data_symbols=self.num_data_symbols)
 
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as object attributes."""
 
-    def test_proper_samples_in_frame_calculation(self) -> None:
-        frame_duration = self.params_qpsk.number_data_symbols / self.params_qpsk.symbol_rate
-        samples_in_frame_expected = int(np.ceil((frame_duration + self.params_qpsk.guard_interval)
-                                                * self.params_qpsk.sampling_rate))
-        self.assertEqual(
-            self.waveform_generator_qpsk._samples_in_frame,
-            samples_in_frame_expected)
+        self.assertIs(self.modem, self.generator.modem)
+        self.assertEqual(self.symbol_rate, self.generator.symbol_rate)
+        self.assertEqual(self.oversampling_factor, self.generator.oversampling_factor)
+        self.assertEqual(self.guard_interval, self.generator.guard_interval)
+        self.assertIs(self.rx_filter, self.generator.rx_filter)
+        self.assertIs(self.tx_filter, self.generator.tx_filter)
+        self.assertEqual(self.num_data_symbols, self.generator.num_data_symbols)
 
-    def test_proper_frame_length(self) -> None:
-        self.modem_qpsk.generator._filter_tx.delay_in_samples = 0
-        bits_in_frame = utils.flatten_blocks(
-            self.source_qpsk.get_bits(
-                self.params_qpsk.bits_in_frame))
+    def test_symbol_rate_setget(self) -> None:
+        """Symbol rate property getter should return setter argument."""
 
-        output_signal, _, _ = self.waveform_generator_qpsk.create_frame(
-            self.timestamp, bits_in_frame)
+        symbol_rate = 10
+        self.generator.symbol_rate = symbol_rate
 
-        self.assertEqual(
-            output_signal.size,
-            self.waveform_generator_qpsk._samples_in_frame)
+        self.assertEqual(symbol_rate, self.generator.symbol_rate)
 
-    def test_tx_filter_time_delay(self) -> None:
-        self.waveform_generator_qpsk._filter_tx.delay_in_samples = 5
-        bits_in_frame = utils.flatten_blocks(
-            self.source_qpsk.get_bits(
-                self.params_qpsk.bits_in_frame))
+    def test_symbol_rate_validation(self) -> None:
+        """Symbol rate property should raise ValueError on arguments smaller than zero."""
 
-        _, _, initial_sample_num = self.waveform_generator_qpsk.create_frame(
-            self.timestamp, bits_in_frame)
+        with self.assertRaises(ValueError):
+            self.generator.symbol_rate = -1.0
 
-        self.assertEqual(
-            initial_sample_num,
-            self.timestamp - self.waveform_generator_qpsk._filter_tx.delay_in_samples
-        )
+        try:
+            self.generator.symbol_rate = 0.
 
-    def test_timestamp_on_frame_creation(self) -> None:
-        self.waveform_generator_qpsk._filter_tx.delay_in_samples = 5
-        bits_in_frame = utils.flatten_blocks(
-            self.source_qpsk.get_bits(
-                self.params_qpsk.bits_in_frame))
+        except ValueError:
+            self.fail()
 
-        _, new_timestamp, _ = self.waveform_generator_qpsk.create_frame(
-            self.timestamp, bits_in_frame)
+    def test_map_unmap(self) -> None:
+        """Mapping and subsequently un-mapping a bit stream should yield identical bits."""
 
-        self.assertEqual(
-            new_timestamp,
-            self.timestamp + self.waveform_generator_qpsk._samples_in_frame
-        )
+        expected_bits = self.rng.integers(0, 2, self.generator.bits_per_frame)
 
-    def test_too_short_signal_length_for_demodulation(self) -> None:
-        # define input parameters
-        timestamp_in_samples = 0
-        rx_signal = np.ones((1, 3))  # empty baseband_signal cannot be demodulated
+        symbols = self.generator.map(expected_bits)
+        bits = self.generator.unmap(symbols)
 
-        demodulated_bits, left_over_rx_signal = self.waveform_generator_qpsk.receive_frame(
-            rx_signal, timestamp_in_samples, 0)
+        assert_array_equal(expected_bits, bits)
 
-        self.assertIsNone(demodulated_bits[0])
-        np.testing.assert_array_equal(left_over_rx_signal, np.array([]))
+    def test_modulate_demodulate_no_filter(self) -> None:
+        """Modulating and subsequently de-modulating a symbol stream should yield identical symbols."""
 
-    def test_demodulating_signal_length_one_sample_longer_than_frame(
-            self) -> None:
-        # define received baseband_signal. length of baseband_signal is 1 sample longer than the
-        # length of a frame
-        frame_overlap = 1
-        rx_signal = np.random.randint(
-            1,
-            size=(
-                1,
-                self.waveform_generator_qpsk._samples_in_frame +
-                frame_overlap))
+        self.generator.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
+        self.generator.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
-        timestamp_in_samples = 0
+        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
+                            np.arange(1, 1 + self.generator.symbols_per_frame))
 
-        # impulse response is the same as its input
-        self.waveform_generator_qpsk._channel = Mock()
-        symbols_in_frame = self.waveform_generator_qpsk.param.number_data_symbols
-        self.waveform_generator_qpsk._channel.get_impulse_response = lambda timestamps: np.ones(
-            (symbols_in_frame, 1, 1, 1))
+        baseband_signal = self.generator.modulate(expected_symbols)
+        channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
+        symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        bits, remaining_rx_signal = self.waveform_generator_qpsk.receive_frame(
-            rx_signal, timestamp_in_samples, 0)
+        assert_array_almost_equal(expected_symbols, symbols)
 
-        self.assertEqual(len(bits[0]),
-                         self.waveform_generator_qpsk.param.bits_in_frame)
-        self.assertEqual(remaining_rx_signal.shape[1], frame_overlap)
+    def test_modulate_demodulate(self) -> None:
+        """Modulating and subsequently de-modulating a symbol stream should yield identical symbols."""
 
-    def test_proper_bit_energy_calculation(self) -> None:
-        """Tests if theoretical bit energy is calculated correctly"""
+        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
+                            np.arange(1, 1 + self.generator.symbols_per_frame))
 
-        # define test parameters
-        number_of_drops = 5
-        number_of_frames = 2
-        relative_difference = .05  # relative difference between desired and measured power
+        baseband_signal = self.generator.modulate(expected_symbols)
+        channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
+        symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        modem = self.modem_qpsk
-        bit_energy = self.estimate_energy(modem, number_of_drops,
-                                          number_of_frames, self.source_qam.get_bits(
-                                              self.params_qam.bits_in_frame),
-                                          'bit_energy')
+        assert_array_almost_equal(expected_symbols, symbols)
 
-        # compare the measured energy with the expected values
-        self.assertAlmostEqual(
-            bit_energy,
-            modem.get_bit_energy(),
-            delta=bit_energy * relative_difference
-        )
+    def test_equalization_setget(self) -> None:
+        """Equalization property getter should return setter argument."""
 
-    def test_proper_symbol_energy_calculation(self) -> None:
-        """Tests if theoretical symbol energy is calculated correctly"""
+        equalization = self.generator.Equalization.MMSE
+        self.generator.equalization = equalization
 
-        # define test parameters
-        number_of_drops = 4
-        number_of_frames = 3
-        relative_difference = .05  # relative difference between desired and measured power
+        self.assertEqual(equalization, self.generator.equalization)
+        
+    def test_guard_interval_setget(self) -> None:
+        """Guard interval property getter should return setter argument."""
+        
+        guard_interval = 1.23
+        self.generator.guard_interval = 1.23
+        
+        self.assertEqual(guard_interval, self.generator.guard_interval)
+        
+    def test_guard_interval_validation(self) -> None:
+        """Guard interval property should raise ValueError on arguments smaller than zero."""
 
-        modem = self.modem_qam
+        with self.assertRaises(ValueError):
+            self.generator.guard_interval = -1.0
 
-        symbol_energy = self.estimate_energy(modem, number_of_drops,
-                                             number_of_frames, self.source_qam.get_bits(
-                                                 self.params_qam.bits_in_frame),
-                                             'symbol_energy')
+        try:
+            self.generator.guard_interval = 0.
 
-        # compare the measured energy with the expected values
-        self.assertAlmostEqual(
-            symbol_energy,
-            modem.get_symbol_energy(),
-            delta=symbol_energy *
-            relative_difference)
+        except ValueError:
+            self.fail()
 
-    def test_proper_power_calculation(self) -> None:
-        """Tests if theoretical baseband_signal power is calculated correctly"""
+    def test_pilot_rate_setget(self) -> None:
+        """Pilot rate property getter should return setter argument."""
 
-        # define test parameters
-        number_of_drops = 5
-        number_of_frames = 3
-        relative_difference = .05  # relative difference between desired and measured power
+        pilot_rate = 1.23
+        self.generator.pilot_rate = 1.23
 
-        modem = self.modem_qam
+        self.assertEqual(pilot_rate, self.generator.pilot_rate)
 
-        power = self.estimate_energy(modem, number_of_drops,
-                                     number_of_frames, self.source_qam.get_bits(
-                                         self.params_qam.bits_in_frame),
-                                     'power')
+    def test_symbol_samples_in_frame(self) -> None:
+        """Symbol samples in frame property should compute the correct sample count."""
 
-        # compare the measured energy with the expected values
-        self.assertAlmostEqual(
-            power,
-            modem.generator.get_power(),
-            delta=power *
-            relative_difference)
+        self.generator.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
+        symbols = np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame))
+        signal = self.generator.modulate(symbols)
 
-    @staticmethod
-    def estimate_energy(modem: Modem, number_of_drops: int, number_of_frames: int,
-                        data_bits: np.array, energy_type: str) -> float:
-        """Generates a baseband_signal with a few drops and frames and measures average energy or power.
-        In this method a baseband_signal is generated over several drops, and the average power or bit/symbol energy is
-        calculated.
+        self.assertEqual(signal.num_samples, self.generator.symbol_samples_in_frame)
 
-        Args:
-            modem(Modem): modem for which transmit energy is calculated
-            number_of_drops(int): number of drops for which baseband_signal is generated
-            number_of_frames(int): number of frames generated in each drop
-            data_bits(np.array): the data bits to be sent created by the BitsSource
-            energy_type(str): what type of energy is to be returned.
-                              Allowed values are 'bit_energy', 'symbol_energy' and 'power'
+    def test_samples_in_frame(self) -> None:
+        """Samples in frame property should compute the correct sample count."""
 
-        Returns:
-            power_or_energy(float): estimated power or bit/symbol-energy, depending on the value of `energy_type`
-        """
+        symbols = np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame))
+        signal = self.generator.modulate(symbols)
 
-        energy_sum = 0
+        self.assertEqual(signal.num_samples, self.generator.samples_in_frame)
 
-        frame_duration = modem.param.technology.number_data_symbols / \
-            modem.param.technology.symbol_rate
-        number_pilot_symbols = modem.param.technology.number_preamble_symbols + \
-            modem.param.technology.number_postamble_symbols
-        if number_pilot_symbols > 0:
-            frame_duration += number_pilot_symbols / \
-                modem.param.technology.pilot_symbol_rate
+    def test_pilot_rate_validation(self) -> None:
+        """Pilot rate property should raise ValueError on arguments smaller than zero."""
 
-        for idx in range(number_of_drops):
-            signal = modem.send(frame_duration * number_of_frames)
-            energy = np.sum(np.real(signal)**2 + np.imag(signal)**2)
+        with self.assertRaises(ValueError):
+            self.generator.pilot_rate = -1.0
 
-            energy_sum += energy
+        try:
+            self.generator.pilot_rate = 0.
 
-        energy_avg = energy_sum / number_of_drops
-        if energy_type == 'bit_energy':
-            number_of_bits = modem.param.technology.bits_in_frame * number_of_frames
-            power_or_energy = energy_avg / number_of_bits
-        elif energy_type == 'symbol_energy':
-            symbols_in_frame = number_pilot_symbols + \
-                modem.param.technology.number_data_symbols
-            number_of_symbols = symbols_in_frame * number_of_frames
-            power_or_energy = energy_avg / number_of_symbols
-        elif energy_type == 'power':
-            number_of_data_samples = number_of_frames * \
-                int(np.ceil(frame_duration * modem.param.technology.sampling_rate))
-            power_or_energy = energy_avg / number_of_data_samples
-        else:
-            raise ValueError("invalid 'energy_type'")
+        except ValueError:
+            self.fail()
+            
+    def test_num_data_symbols_setget(self) -> None:
+        """Number of pilot symbols property getter should return setter argument."""
 
-        return power_or_energy
+        num_data_symbols = 1.23
+        self.generator.num_data_symbols = 1.23
 
+        self.assertEqual(num_data_symbols, self.generator.num_data_symbols)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_num_data_symbols_validation(self) -> None:
+        """Number of pilot symbols property setter should raise ValueError on arguments smaller than zero."""
+
+        with self.assertRaises(ValueError):
+            self.generator.num_data_symbols = -1
+
+        try:
+            self.generator.num_data_symbols = 0
+            self.generator.num_data_symbols = 10
+
+        except ValueError:
+            self.fail()
+
+    def test_bits_per_frame(self) -> None:
+        """Bits per frame property should compute correct amount of data bits per frame."""
+
+        signal = (self.rng.normal(0, 1.0, self.generator.samples_in_frame) +
+                  1j * self.rng.normal(0, 1.0, self.generator.samples_in_frame))
+        channel_state = ChannelStateInformation.Ideal(self.generator.samples_in_frame)
+
+        data_symbols, _, _ = self.generator.demodulate(signal, channel_state)
+        bits = self.generator.unmap(data_symbols)
+
+        self.assertEqual(len(bits), self.generator.bits_per_frame)
+
+    def test_symbols_per_frame(self) -> None:
+        """Symbols per frame property should compute correct amount of symbols per frame."""
+
+        signal = (self.rng.normal(0, 1.0, self.generator.samples_in_frame) +
+                  1j * self.rng.normal(0, 1.0, self.generator.samples_in_frame))
+        channel_state = ChannelStateInformation.Ideal(self.generator.samples_in_frame)
+
+        symbols, _, _ = self.generator.demodulate(signal, channel_state)
+
+        self.assertEqual(len(symbols), self.generator.symbols_per_frame)
+
+    def test_bit_energy(self) -> None:
+        """Bit energy property should compute correct bit energy."""
+
+        self.generator.pilot_rate = 0.
+        self.generator.guard_interval = 0.
+
+        data_bits = self.rng.integers(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        signal = self.generator.modulate(data_symbols)
+
+        energy = np.linalg.norm(signal.samples) ** 2 / self.generator.bits_per_frame
+        self.assertAlmostEqual(energy, self.generator.bit_energy, places=2)
+
+    def test_symbol_energy(self) -> None:
+        """Symbol energy property should compute correct symbol energy."""
+
+        self.generator.pilot_rate = 0.
+        self.generator.guard_interval = 0.
+
+        data_bits = self.rng.integers(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        signal = self.generator.modulate(data_symbols)
+
+        energy = np.linalg.norm(signal.samples) ** 2 / self.generator.symbols_per_frame
+        self.assertAlmostEqual(energy, self.generator.symbol_energy, places=1)
+
+    def test_power(self) -> None:
+        """Power property should compute correct bit power."""
+
+        self.generator.pilot_rate = 0.
+        self.generator.guard_interval = 0.
+
+        data_bits = self.rng.integers(0, 2, self.generator.bits_per_frame)
+        data_symbols = self.generator.map(data_bits)
+        signal = self.generator.modulate(data_symbols)
+
+        energy = np.linalg.norm(signal.samples) ** 2 / self.generator.samples_in_frame
+        self.assertAlmostEqual(energy, self.generator.power, places=2)
+
+    def test_sampling_rate(self) -> None:
+        """Sampling rate property should compute correct sampling rate."""
+
+        self.assertEqual(8 * 125e3, self.generator.sampling_rate)
+
+    def test_to_yaml(self) -> None:
+        """Serialization to YAML."""
+        pass
+
+    def test_from_yaml(self) -> None:
+        """Serialization from YAML."""
+        pass

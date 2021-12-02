@@ -129,7 +129,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
         else:
-            self.rx_filter = tx_filter
+            self.rx_filter = rx_filter
 
         self.symbol_rate = symbol_rate
         self.chirp_duration = chirp_duration
@@ -244,7 +244,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         self._set_sampling_indices()
         self._set_pulse_correlation_matrix()
 
-        frame = np.zeros(self.samples_in_frame, dtype=complex)
+        frame = np.zeros(self.symbol_samples_in_frame, dtype=complex)
         frame[self._symbol_idx[:self.num_preamble_symbols]] = 1
         start_index_data = self.num_preamble_symbols
         end_index_data = self.num_preamble_symbols + self.num_data_symbols
@@ -256,7 +256,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
     def demodulate(self,
                    baseband_signal: np.ndarray,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+                   noise_variance: float = 0.) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
         self._set_sampling_indices()
         self._set_pulse_correlation_matrix()
@@ -423,12 +423,21 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         self.__pilot_rate = rate
 
     @property
+    def symbol_samples_in_frame(self) -> int:
+        """Number of samples per frame without filtering.
+
+        Returns:
+            int: Number of samples.
+        """
+
+        return ((self.num_preamble_symbols + self.num_postamble_symbols) * self.num_pilot_samples +
+                self.num_guard_samples +
+                self.oversampling_factor * self.num_data_symbols)
+
+    @property
     def samples_in_frame(self) -> int:
 
-        return int((self.num_preamble_symbols + self.num_postamble_symbols) *
-                   self.num_pilot_samples +
-                   self.num_guard_samples +
-                   self.oversampling_factor * self.num_data_symbols)
+        return self.symbol_samples_in_frame + self.tx_filter.number_of_samples - 1
 
     @property
     def num_data_symbols(self) -> int:
@@ -468,7 +477,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             int: Number of samples.
         """
 
-        return self.rx_filter.delay_in_samples
+        return self.tx_filter.delay_in_samples
 
     def _set_sampling_indices(self) -> None:
         """ Determines the sampling instants for pilots and data at a given frame
