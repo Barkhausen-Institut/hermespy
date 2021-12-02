@@ -96,7 +96,7 @@ class TestExecutable(unittest.TestCase):
 
         self.assertEqual(num_drops, self.executable.max_num_drops)
 
-    def test_num_drops_validation(self) -> None:
+    def test_max_num_drops_validation(self) -> None:
         """Number of drops property setter should raise ValueError on arguments smaller than one."""
 
         with self.assertRaises(ValueError):
