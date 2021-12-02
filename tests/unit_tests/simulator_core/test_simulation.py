@@ -3,12 +3,11 @@
 
 import unittest
 from unittest.mock import Mock
-from typing import List, Tuple
 
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.modem import Receiver
+from hermespy.channel import ChannelStateInformation
 from hermespy.scenario.scenario import Scenario
 from hermespy.simulator_core import Simulation, SNRType
 
@@ -66,9 +65,20 @@ class TestSimulation(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.simulation.noise_loop = []
+            
+    def test_min_num_drops_setget(self) -> None:
+        """Number of drops property getter should return setter argument."""
+
+        num_drops = 20
+        self.simulation.min_num_drops = num_drops
+
+        self.assertEqual(num_drops, self.simulation.min_num_drops)
+
+    def test_min_num_drops_validation(self) -> None:
+        """Number of drops property setter should raise ValueError on arguments smaller than one."""
 
         with self.assertRaises(ValueError):
-            self.simulation.noise_loop = [[2, 3], [4, 5]]
+            self.simulation.min_num_drops = -1
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
@@ -78,60 +88,9 @@ class TestSimulation(unittest.TestCase):
         """Test YAML serialization recall validity."""
         pass
 
-class TestReceiver(Receiver):
-    """Overrides some methods from Receiver to facilitate testing."""
-    def __init__(self, no_antennas: int, scenario: Scenario) -> None:
-        self.no_antennas = no_antennas
-        self.__scenario = scenario
-        self.reference_transmitter = Mock()
-        self.reference_transmitter.index = 0
-
-    @property
-    def reference_transmitter(self) -> Mock:
-        return self.__reference_transmitter
-
-    @reference_transmitter.setter
-    def reference_transmitter(self, val: Mock) -> None:
-        self.__reference_transmitter = val
-
-    @property
-    def scenario(self) -> Scenario:
-        return self.__scenario
-
-    @scenario.setter
-    def scenario(self, val: Scenario) -> None:
-        self.__scenario = val
-
-    def receive(self, rf_signals: List[Tuple[np.ndarray, float]],
-                noise_variance: float) -> np.ndarray:
-        """Receive signals and just add them.
-
-        Args:
-            rf_signals (List[Tuple[np.ndarray, float]]):
-                List containing pairs of rf-band samples and their respective carrier frequencies.
-
-            noise_variance (float):
-                Variance (i.e. power) of the thermal noise added to the signals during reception.
-        """
-
-        if not np.array_equal(rf_signals[0][0], np.array([0])):
-            no_samples = rf_signals[0][0].shape[1]
-            received_signal = np.zeros((self.no_antennas, no_samples))
-
-        for signal, _  in rf_signals:
-            if signal is not None:
-                if not np.array_equal(signal, np.array([0])):
-                    for antenna_idx in range(signal.shape[0]):
-                        received_signal[antenna_idx, :] += signal[antenna_idx, :]
-                else:
-                    received_signal = np.array([0])
-
-        return received_signal
-
-    def demodulate(self, signal, channel, noise) -> np.array:
-        return np.ones(10)
 
 class TestStoppingCriteria(unittest.TestCase):
+
     def setUp(self) -> None:
         self.no_rx = 2
         self.no_tx = 3
@@ -142,17 +101,25 @@ class TestStoppingCriteria(unittest.TestCase):
 
         self.scenario = Scenario()
         self.scenario.drop_duration = 0.1
-        self.scenario.add_receiver(TestReceiver(1, self.scenario))
-        self.scenario.add_receiver(TestReceiver(1, self.scenario))
 
-        mock_transmitter = Mock()
-        mock_transmitter.send.return_value = np.array([0])
-        self.scenario.add_transmitter(mock_transmitter)
-        self.scenario.add_transmitter(mock_transmitter)
-        self.scenario.add_transmitter(mock_transmitter)
-        
+        for _ in range(self.no_tx):
+
+            mock_transmitter = Mock()
+            mock_transmitter.send.return_value = (np.array([0]), np.array([1j]))
+            self.scenario.add_transmitter(mock_transmitter)
+
+        for rx_idx in range(self.no_rx):
+
+            mock_receiver = Mock()
+            mock_receiver.receive = lambda signals, noise: signals[0]
+            mock_receiver.demodulate = lambda signal, channel, noise: (np.array([0]), np.array([1j]))
+            mock_receiver.reference_transmitter.index = rx_idx
+            mock_receiver.index = rx_idx
+
+            self.scenario.add_receiver(mock_receiver)
+
         mock_channel = Mock()
-        mock_channel.propagate.return_value = (np.array([0]), np.array([0]))
+        mock_channel.propagate.return_value = (np.array([0]), ChannelStateInformation.Ideal(num_samples=1))
 
         for rx_idx in range(self.no_rx):
             for tx_idx in range(self.no_tx):
@@ -164,20 +131,22 @@ class TestStoppingCriteria(unittest.TestCase):
         Simulation.calculate_noise_variance = Mock(return_value=0.0)
 
     def test_simulation_not_run_for_rx0(self) -> None:
+
         self.drop_run_flag[:, :] = True
         self.drop_run_flag[:, 0] = False
 
-        tx_signals = Simulation.transmit(self.scenario, self.drop_run_flag)
+        tx_signals, _ = Simulation.transmit(self.scenario, self.drop_run_flag)
         propagation_matrix = Simulation.propagate(self.scenario, tx_signals, self.drop_run_flag)
         received_signals = Simulation.receive(self.scenario, propagation_matrix, self.drop_run_flag)
-        detected_bits = Simulation.detect(self.scenario, received_signals, self.drop_run_flag)
+        detected_bits, _ = Simulation.detect(self.scenario, received_signals, self.drop_run_flag)
 
         self.assertIsNone(detected_bits[0])
         self.assertIsNotNone(detected_bits[1])
 
     def test_no_flagging_if_no_run_flag_is_passed(self) -> None:
+
         self.drop_run_flag[:, :] = True
-        tx_signals = Simulation.transmit(self.scenario)
+        tx_signals, _ = Simulation.transmit(self.scenario)
         propagation_matrix = Simulation.propagate(self.scenario, tx_signals)
         received_signals = Simulation.receive(self.scenario, propagation_matrix)
         detected_bits = Simulation.detect(self.scenario, received_signals)
@@ -186,16 +155,18 @@ class TestStoppingCriteria(unittest.TestCase):
         self.assertIsNotNone(detected_bits[1])
 
     def test_do_not_send_if_tx0_is_flagged(self) -> None:
+
         self.drop_run_flag[:, :] = True
         self.drop_run_flag[0, :] = False
-        transmitted_signals = Simulation.transmit(self.scenario, self.drop_run_flag, None, None)
+        transmitted_signals, _ = Simulation.transmit(self.scenario, self.drop_run_flag, None, None)
 
         self.assertIsNone(transmitted_signals[0])
         self.assertIsNotNone(transmitted_signals[1])
         self.assertIsNotNone(transmitted_signals[2])
 
     def test_propagation_not_from_tx1_2_to_rx0(self) -> None:
-        tx_signals = [np.random.randint(low=0, high=2,size=100) for _ in range(self.no_tx)]
+
+        tx_signals = [np.random.randint(low=0, high=2, size=100) for _ in range(self.no_tx)]
 
         propagation_matrix = Simulation.propagate(
             self.scenario, tx_signals, self.drop_run_flag
@@ -203,31 +174,11 @@ class TestStoppingCriteria(unittest.TestCase):
         self.assertEqual(propagation_matrix[0][1], tuple((None, None)))
         self.assertEqual(propagation_matrix[0][2], tuple((None, None)))
 
-    def test_do_not_receive_from_tx1_2_to_rx0(self) -> None:
-        propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1,100)),
-                                np.random.randint(low=0, high=2, size=(1,100)))
-                                for _ in range(self.no_tx)] for _ in range(self.no_rx)]
-
-        expected_received_signals = [
-            propagation_matrix[0][0][0],
-            propagation_matrix[1][0][0] + propagation_matrix[1][1][0] + propagation_matrix[1][2][0]
-        ]
-        received_signals = Simulation.receive(
-            self.scenario, propagation_matrix, self.drop_run_flag)
-
-        np.testing.assert_array_almost_equal(
-            received_signals[0][0],
-            expected_received_signals[0]
-        )
-        np.testing.assert_array_almost_equal(
-            received_signals[1][0],
-            expected_received_signals[1]
-        )
-
     def test_do_not_receive_at_rx0_at_all(self) -> None:
-        propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1,100)),
-                                np.random.randint(low=0, high=2, size=(1,100)))
-                                for _ in range(self.no_tx)] for _ in range(self.no_rx)]
+
+        propagation_matrix = [[(np.random.randint(low=0, high=2, size=(1, 100)),
+                                np.random.randint(low=0, high=2, size=(1, 100)))
+                               for _ in range(self.no_tx)] for _ in range(self.no_rx)]
         self.drop_run_flag[:, 0] = False
         received_signals = Simulation.receive(
             self.scenario, propagation_matrix, self.drop_run_flag
@@ -236,11 +187,9 @@ class TestStoppingCriteria(unittest.TestCase):
         self.assertEqual(received_signals[0], (None, None, None))
 
     def test_no_detection_at_rx0(self) -> None:
+
         self.drop_run_flag[:, 0] = False
-        received_signals = [
-            (Mock(), Mock(), Mock()) for _ in range(self.no_rx)
-        ]
-        receiver_bits = Simulation.detect(self.scenario, received_signals, self.drop_run_flag)
+        received_signals = [(Mock(), Mock(), Mock()) for _ in range(self.no_rx)]
+        receiver_bits, _ = Simulation.detect(self.scenario, received_signals, self.drop_run_flag)
         self.assertIsNone(receiver_bits[0])
         self.assertIsNotNone(receiver_bits[1])
-
