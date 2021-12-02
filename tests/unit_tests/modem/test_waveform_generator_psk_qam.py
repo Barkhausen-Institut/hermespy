@@ -34,26 +34,25 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
 
         self.filter_type = 'ROOT_RAISED_COSINE'
         self.symbol_rate = 125e3
-        self.oversampling_factor = 8
+        self.oversampling_factor = 16
         self.modulation_order = 16
         self.guard_interval = 1e-3
         self.num_data_symbols = 1000
-
-        shaping_filter = ShapingFilter(filter_type=self.filter_type,
-                                       samples_per_symbol=self.oversampling_factor)
+        self.filter_length_in_symbols = 16
+        self.roll_off_factor = .3
 
         self.tx_filter = ShapingFilter(filter_type=self.filter_type,
                                        samples_per_symbol=self.oversampling_factor,
                                        is_matched=False,
-                                       length_in_symbols=shaping_filter.length_in_symbols,
-                                       roll_off=shaping_filter.roll_off,
+                                       length_in_symbols=self.filter_length_in_symbols,
+                                       roll_off=self.roll_off_factor,
                                        bandwidth_factor=1.)
 
         self.rx_filter = ShapingFilter(filter_type=self.filter_type,
                                        samples_per_symbol=self.oversampling_factor,
                                        is_matched=True,
-                                       length_in_symbols=shaping_filter.length_in_symbols,
-                                       roll_off=shaping_filter.roll_off,
+                                       length_in_symbols=self.filter_length_in_symbols,
+                                       roll_off=self.roll_off_factor,
                                        bandwidth_factor=1.)
 
         self.generator = WaveformGeneratorPskQam(modem=self.modem, symbol_rate=self.symbol_rate,
@@ -74,6 +73,21 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         self.assertIs(self.rx_filter, self.generator.rx_filter)
         self.assertIs(self.tx_filter, self.generator.tx_filter)
         self.assertEqual(self.num_data_symbols, self.generator.num_data_symbols)
+
+    def test_shaping_filter_match(self) -> None:
+
+        from scipy.signal import convolve
+        symbols = [1.0, -1.0, 1j]
+        symbol_samples = np.zeros(3 * self.oversampling_factor, dtype=complex)
+        symbol_samples[::self.oversampling_factor] = symbols
+
+        tx = convolve(symbol_samples, self.tx_filter.impulse_response)
+        rx = convolve(tx, self.rx_filter.impulse_response)
+
+        delay_offset = self.tx_filter.delay_in_samples + self.rx_filter.delay_in_samples
+        x = rx[delay_offset:delay_offset+3*self.oversampling_factor:self.oversampling_factor]
+
+        assert_array_almost_equal(symbols, x, decimal=3)
 
     def test_symbol_rate_setget(self) -> None:
         """Symbol rate property getter should return setter argument."""
@@ -123,14 +137,14 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a symbol stream should yield identical symbols."""
 
-        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
-                            np.arange(1, 1 + self.generator.symbols_per_frame))
+        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)))
+        # * np.arange(1, 1 + self.generator.symbols_per_frame))
 
         baseband_signal = self.generator.modulate(expected_symbols)
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        assert_array_almost_equal(expected_symbols, symbols)
+        assert_array_almost_equal(expected_symbols, symbols, decimal=2)
 
     def test_equalization_setget(self) -> None:
         """Equalization property getter should return setter argument."""
@@ -283,7 +297,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
     def test_sampling_rate(self) -> None:
         """Sampling rate property should compute correct sampling rate."""
 
-        self.assertEqual(8 * 125e3, self.generator.sampling_rate)
+        self.assertEqual(self.oversampling_factor * self.symbol_rate, self.generator.sampling_rate)
 
     def test_to_yaml(self) -> None:
         """Serialization to YAML."""
