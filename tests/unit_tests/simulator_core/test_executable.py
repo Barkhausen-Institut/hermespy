@@ -88,22 +88,22 @@ class TestExecutable(unittest.TestCase):
         except ValueError:
             self.fail("Spectrum FFT size setter should not raise ValueError on zero argument")
 
-    def test_num_drops_setget(self) -> None:
+    def test_max_num_drops_setget(self) -> None:
         """Number of drops property getter should return setter argument."""
 
         num_drops = 20
-        self.executable.num_drops = num_drops
+        self.executable.max_num_drops = num_drops
 
-        self.assertEqual(num_drops, self.executable.num_drops)
+        self.assertEqual(num_drops, self.executable.max_num_drops)
 
     def test_num_drops_validation(self) -> None:
         """Number of drops property setter should raise ValueError on arguments smaller than one."""
 
         with self.assertRaises(ValueError):
-            self.executable.num_drops = 0
+            self.executable.max_num_drops = 0
 
         with self.assertRaises(ValueError):
-            self.executable.num_drops = -1
+            self.executable.max_num_drops = -1
 
     def test_results_dir_setget(self) -> None:
         """Results directory property getter should return setter argument."""
