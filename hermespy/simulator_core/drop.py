@@ -150,9 +150,9 @@ class Drop:
 
     __transmitted_bits: List[np.ndarray]
     __transmitted_symbols: List[Optional[np.ndarray]]
-    __transmitted_signals: List[Signal]
+    __transmitted_signals: List[Optional[Signal]]
     __transmit_block_sizes: List[int]
-    __received_signals: List[Signal]
+    __received_signals: List[Optional[Signal]]
     __received_symbols: List[Optional[np.ndarray]]
     __received_bits: List[np.ndarray]
     __receive_block_sizes: List[int]
@@ -170,9 +170,9 @@ class Drop:
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
                  transmitted_symbols: List[Optional[np.ndarray]],
-                 transmitted_signals: List[Signal],
+                 transmitted_signals: List[Optional[Signal]],
                  transmit_block_sizes: List[int],
-                 received_signals: List[Signal],
+                 received_signals: List[Optional[Signal]],
                  received_symbols: List[Optional[np.ndarray]],
                  received_bits: List[np.ndarray],
                  receive_block_sizes: List[int],
