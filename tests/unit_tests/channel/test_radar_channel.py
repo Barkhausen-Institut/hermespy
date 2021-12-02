@@ -5,7 +5,7 @@ from numpy.random import default_rng
 
 from channel.radar_channel import RadarChannel
 from scipy import constants
-from tools.math import db2lin, DbConversionType
+from tools import db2lin, DbConversionType
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

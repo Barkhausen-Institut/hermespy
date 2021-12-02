@@ -87,8 +87,8 @@ class Simulation(Executable):
                  calc_transmit_stft: bool = False,
                  calc_receive_stft: bool = False,
                  spectrum_fft_size: int = 0,
-                 plot_bit_error: bool = True,
-                 plot_block_error: bool = True,
+                 plot_bit_error: bool = False,
+                 plot_block_error: bool = False,
                  plot_drop_transmitted_symbols: bool = False,
                  plot_drop_received_symbols: bool = False,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
@@ -202,8 +202,12 @@ class Simulation(Executable):
         if self.max_num_drops < self.min_num_drops:
             raise ValueError("Minimum number of drops must be smaller than maximum number of drops.")
 
-    def run(self) -> None:
-        """Run the full simulation configuration."""
+    def run(self) -> Statistics:
+        """Run the full simulation configuration.
+
+        Returns:
+            Statistics: Statistics of the simulation.
+        """
 
         # Iterate over scenarios
         for s, scenario in enumerate(self.scenarios):
@@ -321,7 +325,7 @@ class Simulation(Executable):
                     # if self.confidence_metric is not ConfidenceMetric.DISABLED and d >= self.min_num_drops:
 
             # Dump statistics results
-            statistics.save(self.results_dir)
+            # statistics.save(self.results_dir)
 
             # Plot statistics results, if flags apply
             if self.calc_transmit_spectrum:
@@ -346,6 +350,8 @@ class Simulation(Executable):
                     drop.plot_receive_stft()
 
             plt.show()
+
+            return statistics
 
     def drop(self,
              snr: float,
