@@ -433,7 +433,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
     def modulate(self, data_symbols: np.ndarray) -> Signal:
 
         prototypes, _ = self._prototypes()
-        samples = np.empty(self.samples_in_frame, dtype=np.complex)
+        samples = np.empty(self.samples_in_frame, dtype=complex)
 
         sample_idx = 0
         samples_in_chirp = self.samples_in_chirp
@@ -539,7 +539,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         f1 = -f0
 
         # non-coherent detection
-        prototypes = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=np.complex)
+        prototypes = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
 
         for idx in range(self.modulation_order):
             initial_frequency = f0 + idx * self.freq_difference
