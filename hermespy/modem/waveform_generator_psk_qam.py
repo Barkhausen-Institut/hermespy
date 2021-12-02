@@ -241,15 +241,25 @@ class WaveformGeneratorPskQam(WaveformGenerator):
 
     def modulate(self, data_symbols: np.ndarray) -> Signal:
 
-        self._set_sampling_indices()
-        self._set_pulse_correlation_matrix()
-
         frame = np.zeros(self.symbol_samples_in_frame, dtype=complex)
-        frame[self._symbol_idx[:self.num_preamble_symbols]] = 1
-        start_index_data = self.num_preamble_symbols
-        end_index_data = self.num_preamble_symbols + self.num_data_symbols
-        frame[self._symbol_idx[start_index_data: end_index_data]] = data_symbols
 
+        # Set preamble symbols
+        num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
+        frame[:num_preamble_samples:self.oversampling_factor] = 1.
+
+        # Set data symbols
+        num_data_samples = self.oversampling_factor * self.__num_data_symbols
+        data_start_idx = num_preamble_samples
+        data_stop_idx = data_start_idx + num_data_samples
+        frame[data_start_idx:data_stop_idx:self.oversampling_factor] = data_symbols
+
+        # Set postamble symbols
+        num_postamble_samples = self.oversampling_factor * self.num_postamble_symbols
+        postamble_start_idx = data_stop_idx
+        postamble_stop_idx = postamble_start_idx + num_postamble_samples
+        frame[postamble_start_idx:postamble_stop_idx:self.oversampling_factor] = 1.
+
+        # Generate waveforms by treating the frame as a comb and convolving with the impulse response
         output_signal = self.tx_filter.filter(frame)
         return Signal(output_signal, self.sampling_rate, self.modem.carrier_frequency)
 
@@ -258,22 +268,35 @@ class WaveformGeneratorPskQam(WaveformGenerator):
                    channel_state: ChannelStateInformation,
                    noise_variance: float = 0.) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
-        self._set_sampling_indices()
-        self._set_pulse_correlation_matrix()
-
         # Filter the signal
         filtered_signal = self.rx_filter.filter(baseband_signal)
-        #filtered_channel_state = self.rx_filter.filter(channel_state.to_impulse_response().state)
+        filter_delay = self.tx_filter.delay_in_samples + self.rx_filter.delay_in_samples
 
-        # Equalize the signal
-        symbol_indices = self._data_symbol_idx + self.rx_filter.delay_in_samples + self.tx_filter.delay_in_samples
-        channel_state = channel_state[:, :, symbol_indices, :]
-        equalized_symbols = self._equalizer(filtered_signal[symbol_indices],
-                                            channel_state.state[0, 0, :, 0],
-                                            noise_variance)
-        noise = np.repeat(noise_variance, len(equalized_symbols))
+        # Extract preamble symbols
+        num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
+        preamble_start_idx = filter_delay
+        preamble_stop_idx = preamble_start_idx + num_preamble_samples
+        # preamble = filtered_signal[preamble_start_idx:preamble_stop_idx:self.oversampling_factor]
 
-        return equalized_symbols, channel_state, noise
+        # Extract data symbols
+        num_data_samples = self.oversampling_factor * self.__num_data_symbols
+        data_start_idx = preamble_stop_idx
+        data_stop_idx = data_start_idx + num_data_samples
+        data = filtered_signal[data_start_idx:data_stop_idx:self.oversampling_factor]
+        channel_state = channel_state[:, :, data_start_idx:data_stop_idx:self.oversampling_factor, :]
+
+        # Extract postamble symbols
+        # num_postamble_samples = self.oversampling_factor * self.num_postamble_symbols
+        # postamble_start_idx = data_stop_idx
+        # postamble_stop_idx = postamble_start_idx + num_postamble_samples
+        # postamble = filtered_signal[postamble_start_idx:postamble_stop_idx:self.oversampling_factor]
+
+        equalized_data = self._equalizer(data,
+                                         channel_state.state[0, 0, :, 0],
+                                         noise_variance)
+        noise = np.repeat(noise_variance, len(equalized_data))
+
+        return equalized_data, channel_state, noise
 
     @property
     def bandwidth(self) -> float:
@@ -324,7 +347,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             equalized_signal(np.ndarray): data symbols after ISI equalization and channel compensation
         """
 
-        if self._pulse_correlation_matrix.size:
+        if self._pulse_correlation_matrix:
             snr_factor = 0  # ZF
             h_matrix = self._pulse_correlation_matrix
             h_matrix_hermitian = h_matrix.conjugate().T
@@ -430,9 +453,10 @@ class WaveformGeneratorPskQam(WaveformGenerator):
             int: Number of samples.
         """
 
-        return ((self.num_preamble_symbols + self.num_postamble_symbols) * self.num_pilot_samples +
-                self.num_guard_samples +
-                self.oversampling_factor * self.num_data_symbols)
+        return ((self.num_preamble_symbols +
+                 self.num_postamble_symbols +
+                 self.num_data_symbols) * self.oversampling_factor +
+                self.num_guard_samples)
 
     @property
     def samples_in_frame(self) -> int:
