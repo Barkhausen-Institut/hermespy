@@ -47,7 +47,7 @@ class PowerAmplifier:
     yaml_tag = 'PowerAmplifier'
     __model: Model
     __saturation_amplitude: float
-    __input_backoff_pa_db: float
+    input_backoff_pa_db: float
     __rapp_smoothness_factor: float
     __saleh_alpha_a: float
     __saleh_alpha_phi: float
@@ -57,7 +57,7 @@ class PowerAmplifier:
     __custom_pa_output: np.array
     __custom_pa_gain: np.array
     __custom_pa_phase: np.array
-    __adjust_power_after_pa: bool
+    adjust_power_after_pa: bool
 
     def __init__(self,
                  model: Model = Model.NONE,
@@ -82,7 +82,7 @@ class PowerAmplifier:
         self.__model = model
         self.__tx_power = tx_power
         self.__saturation_amplitude = saturation_amplitude
-        self.__input_backoff_pa_db = input_backoff_pa_db
+        self.input_backoff_pa_db = input_backoff_pa_db
         self.__rapp_smoothness_factor = rapp_smoothness_factor
         self.__power_backoff = 10**(input_backoff_pa_db/10)
         self.__saleh_alpha_a = saleh_alpha_a
@@ -93,7 +93,7 @@ class PowerAmplifier:
         self.__custom_pa_output = np.empty(0, dtype=float) if custom_pa_output is None else custom_pa_output
         self.__custom_pa_gain = np.empty(0, dtype=float) if custom_pa_gain is None else custom_pa_gain
         self.__custom_pa_phase = np.empty(0, dtype=float) if custom_pa_phase is None else custom_pa_phase
-        self.__adjust_power_after_pa = adjust_power_after_pa
+        self.adjust_power_after_pa = adjust_power_after_pa
 
         saturation_power = tx_power * self.__power_backoff
         self.__saturation_amplitude = np.sqrt(saturation_power)
@@ -119,17 +119,17 @@ class PowerAmplifier:
             'model': node.__model.name,
             'tx_power': node.__tx_power,
             'saturation_amplitude':  node.__saturation_amplitude,
-            'input_backoff_pa_db': node.__input_backoff_pa_db,
+            'input_backoff_pa_db': node.input_backoff_pa_db,
             'rapp_smoothness_factor': node.__rapp_smoothness_factor,
             'saleh_alpha_a': node.__saleh_alpha_a,
             'saleh_alpha_phi': node.__saleh_alpha_phi,
             'saleh_beta_a': node.__saleh_beta_a,
             'saleh_beta_phi': node.__saleh_beta_phi,
-            #'custom_pa_input': node.__custom_pa_input,
-            #'custom_pa_output': node.__custom_pa_output,
-            #'custom_pa_gain': node.__custom_pa_gain,
-            #'custom_pa_phase': node.__custom_pa_phase,
-            'adjust_power_after_pa': node.__adjust_power_after_pa
+            # 'custom_pa_input': node.__custom_pa_input,
+            # 'custom_pa_output': node.__custom_pa_output,
+            # 'custom_pa_gain': node.__custom_pa_gain,
+            # 'custom_pa_phase': node.__custom_pa_phase,
+            'adjust_power_after_pa': node.adjust_power_after_pa
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
@@ -202,7 +202,7 @@ class PowerAmplifier:
         else:
             ValueError(f"Power amplifier model {self.__model.name} not supported")
 
-        if self.__adjust_power_after_pa:
+        if self.adjust_power_after_pa:
             loss = np.linalg.norm(output_signal) / np.linalg.norm(input_signal)
             output_signal = output_signal / loss
 
