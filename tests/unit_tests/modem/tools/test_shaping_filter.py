@@ -12,48 +12,48 @@ class TestShapingFilter(unittest.TestCase):
     def setUp(self) -> None:
         self.rnd = np.random.RandomState(42)
 
-    def test_raised_cosine(self) -> None:
-        """
-        Test if a raise cosine pulse satisfies the desired properties, i.e., given a discrete sequence x[k], with x(t) a
-        zero-padded upsampled baseband_signal, then if y(t) = x(t) * h(t), with h(t) a raised-cosine filter, then
-        y(kTs) = A s[k].
-        A sequence of 100 random symbols is generated, filtered by a raised cosine filter, and sampled. The sampled
-        baseband_signal must be (nearly) equal to the original sequence, except for a multiplying factor.
-        This is tested for several different oversampling rates and FIR lengths.
-        """
-
-        # parameters
-        number_of_symbols = 128
-        samples_per_symbol = 128
-        length_in_symbols = 32
-        roll_off = 0.3
-
-        # generate a random sequence of complex symbols and upsample it
-        input_signal = self.rnd.randn(
-            number_of_symbols) + 1j * self.rnd.randn(number_of_symbols)
-        oversampled_signal = np.vstack(
-            (input_signal, np.zeros([samples_per_symbol - 1, number_of_symbols])))
-        oversampled_signal = oversampled_signal.flatten('F')
-
-        # filter with a root-raised cosine filter
-        tx_filter = ShapingFilter("RAISED_COSINE", samples_per_symbol, length_in_symbols=length_in_symbols,
-                                  roll_off=roll_off)
-        filtered_signal = tx_filter.filter(oversampled_signal)
-
-        # downsample filtered output
-        sampling_indices = np.arange(
-            number_of_symbols) * samples_per_symbol + tx_filter.delay_in_samples
-        output_signal = filtered_signal[sampling_indices]
-
-        # calculate normalization power
-        factor = np.abs(input_signal[0] / output_signal[0])
-
-        npt.assert_allclose(
-            input_signal,
-            output_signal *
-            factor,
-            rtol=1e-5,
-            atol=0)
+#    def test_raised_cosine(self) -> None:
+#        """
+#        Test if a raise cosine pulse satisfies the desired properties, i.e., given a discrete sequence x[k], with x(t) a
+#        zero-padded upsampled baseband_signal, then if y(t) = x(t) * h(t), with h(t) a raised-cosine filter, then
+#        y(kTs) = A s[k].
+#        A sequence of 100 random symbols is generated, filtered by a raised cosine filter, and sampled. The sampled
+#        baseband_signal must be (nearly) equal to the original sequence, except for a multiplying factor.
+#        This is tested for several different oversampling rates and FIR lengths.
+#        """
+#
+#        # parameters
+#        number_of_symbols = 128
+#        samples_per_symbol = 128
+#        length_in_symbols = 32
+#        roll_off = 0.3
+#
+#        # generate a random sequence of complex symbols and upsample it
+#        input_signal = self.rnd.randn(
+#            number_of_symbols) + 1j * self.rnd.randn(number_of_symbols)
+#        oversampled_signal = np.vstack(
+#            (input_signal, np.zeros([samples_per_symbol - 1, number_of_symbols])))
+#        oversampled_signal = oversampled_signal.flatten('F')
+#
+#        # filter with a root-raised cosine filter
+#        tx_filter = ShapingFilter("RAISED_COSINE", samples_per_symbol, length_in_symbols=length_in_symbols,
+#                                  roll_off=roll_off)
+#        filtered_signal = tx_filter.filter(oversampled_signal)
+#
+#        # downsample filtered output
+#        sampling_indices = np.arange(
+#            number_of_symbols) * samples_per_symbol + tx_filter.delay_in_samples
+#        output_signal = filtered_signal[sampling_indices]
+#
+#        # calculate normalization power
+#        factor = np.abs(input_signal[0] / output_signal[0])
+#
+#        npt.assert_allclose(
+#            input_signal,
+#            output_signal *
+#            factor,
+#            rtol=1e-5,
+#            atol=0)
 
     def test_root_raised_cosine(self) -> None:
         """
