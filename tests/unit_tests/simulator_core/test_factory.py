@@ -16,8 +16,6 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-
-
 class TestFactory(unittest.TestCase):
     """Test the factory responsible to convert config files to executable simulations."""
 
@@ -46,4 +44,3 @@ class TestFactory(unittest.TestCase):
 
         self.assertTrue(MockClass.yaml_tag in self.factory.registered_tags,
                         "Mock class tag not registered as expected for serialization")
-
