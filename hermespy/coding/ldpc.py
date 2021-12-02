@@ -123,7 +123,7 @@ class LDPC(Encoder):
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
 
         # Transform bits from {0, 1} format to {-1, 1}
-        codes = -encoded_bits.copy()
+        codes = -encoded_bits.astype(int)
         codes[codes > -.5] = 1.
         eps = 2.22045e-16
 
