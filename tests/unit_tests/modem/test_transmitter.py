@@ -9,6 +9,7 @@ import numpy.random as rnd
 from math import ceil
 
 from hermespy.modem import Transmitter
+from hermespy.signal import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -28,15 +29,18 @@ class TestTransmitter(unittest.TestCase):
         self.power = 0.9
         self.scenario = Mock()
         self.scenario.random_generator = rnd.default_rng(0)
-        self.scenario.sampling_rate = 1e3
+        self.sampling_rate = 1e3
+        self.carrier_frequency = 1e8
 
         self.waveform_generator = Mock()
+        self.waveform_generator.sampling_rate = self.sampling_rate
         self.waveform_generator.symbols_per_frame = 100
         self.waveform_generator.samples_in_frame = 100
         self.waveform_generator.bits_per_frame = 100
-        self.waveform_generator.frame_duration = 100 / self.scenario.sampling_rate
+        self.waveform_generator.frame_duration = 100 / self.sampling_rate
         self.waveform_generator.map = lambda bits: bits
-        self.waveform_generator.modulate = lambda symbols, timestamps: symbols
+        self.waveform_generator.modulate = lambda symbols: Signal(symbols, sampling_rate=self.sampling_rate,
+                                                                  carrier_frequency=self.carrier_frequency)
 
         self.encoder_manager = Mock()
         self.encoder_manager.encode = lambda bits, num_bits: np.append(bits, np.zeros(num_bits - len(bits)))
@@ -51,7 +55,7 @@ class TestTransmitter(unittest.TestCase):
 
         self.transmitter = Transmitter(power=self.power, scenario=self.scenario, waveform=self.waveform_generator,
                                        encoding=self.encoder_manager, precoding=self.precoding,
-                                       bits_source=self.bits_source)
+                                       bits_source=self.bits_source, carrier_frequency=self.carrier_frequency)
 
     def test_init(self) -> None:
         """Object initialization arguments should be properly stored."""
