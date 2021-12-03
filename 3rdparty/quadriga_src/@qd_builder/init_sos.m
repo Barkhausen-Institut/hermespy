@@ -120,7 +120,7 @@ else
         h_builder.sos = lsf_sos;
     end
     
-    % Initialize the SOS generator for the ground reflection coefficient
+    % Initialize the SOS rng for the ground reflection coefficient
     if ~h_builder.simpar.use_3GPP_baseline && SC_lambda > 0 && ( isempty( h_builder.gr_sos ) || force )
         h_builder.gr_sos = qd_sos( acf, 'Uniform', SC_lambda );
         h_builder.gr_sos.sos_phase(:,2) = h_builder.gr_sos.sos_phase(:,1);

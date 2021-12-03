@@ -2,7 +2,7 @@
 """Channel model for wireless transmission links."""
 
 from __future__ import annotations
-from typing import Type, Tuple, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Tuple, Type
 from itertools import product
 
 import numpy as np
@@ -326,13 +326,13 @@ class Channel:
             RuntimeError: If trying to access the random generator of a floating channel.
         """
 
+        if self.__random_generator is not None:
+            return self.__random_generator
+
         if self.__scenario is None:
             raise RuntimeError("Trying to access the random generator of a floating channel")
 
-        if self.__random_generator is None:
-            return self.__scenario.random_generator
-
-        return self.__random_generator
+        return self.scenario.random_generator
 
     @random_generator.setter
     def random_generator(self, generator: Optional[rnd.Generator]) -> None:
@@ -388,7 +388,13 @@ class Channel:
         Returns:
             int:
                 The number of input streams.
+
+        Raises:
+            RuntimeError: If the channel is currently floating.
         """
+
+        if self.__transmitter is None:
+            raise RuntimeError("Error trying to access the number of inputs of a floating channel")
 
         return self.__transmitter.num_antennas
 
@@ -401,7 +407,13 @@ class Channel:
         Returns:
             int:
                 The number of output streams.
+
+        Raises:
+            RuntimeError: If the channel is currently floating.
         """
+
+        if self.__receiver is None:
+            raise RuntimeError("Error trying to access the number outputs of a floating channel")
 
         return self.__receiver.num_antennas
 
@@ -482,7 +494,7 @@ class Channel:
                                    carrier_frequency=transmitted_signal.carrier_frequency,
                                    delay=transmitted_signal.delay+sync_offset)
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                impulse_response.transpose(1, 2, 0, 3))
+                                                impulse_response.transpose((1, 2, 0, 3)))
 
         return propagated_signal, channel_state
 
@@ -524,8 +536,8 @@ class Channel:
 
         # MIMO case
         else:
-            impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas, dtype=complex),
-                                        (timestamps.size, 1, 1))
+            impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas,
+                                               dtype=complex), (timestamps.size, 1, 1))
 
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)

@@ -479,31 +479,6 @@ class Simulation(Executable):
         self.__noise_loop = loop
 
     @property
-    def max_num_drops(self) -> int:
-        """Maximum number of drops before confidence check may terminate execution.
-
-        Returns:
-            int: Maximum number of drops.
-        """
-        return self.__max_num_drops
-
-    @max_num_drops.setter
-    def max_num_drops(self, val: int) -> None:
-        """Modify maximum number of drops before confidence check may terminate execution.
-
-        Args:
-            val (int): maximum number of drops.
-
-        Raises:
-            ValueError: If `num_drops` is smaller than zero.
-        """
-
-        if val < 0:
-            raise ValueError("Maximum number of drops must be greater or equal to zero.")
-
-        self.__max_num_drops = val
-
-    @property
     def min_num_drops(self) -> int:
         """Minimum number of drops before confidence check may terminate execution.
 
@@ -609,7 +584,7 @@ class Simulation(Executable):
             raise ValueError("Drop duration must be greater or equal to zero")
 
         if drop_run_flag is not None:
-            sending_tx_idx = np.flatnonzero(np.all(drop_run_flag, axis=1))
+            sending_tx_idx = np.flatnonzero(np.sum(drop_run_flag, axis=1))
         else:
             sending_tx_idx = np.arange(len(scenario.transmitters))
 
@@ -636,8 +611,7 @@ class Simulation(Executable):
             if len(data_bits) != len(scenario.transmitters):
                 raise ValueError("Data bits to be transmitted contain insufficient streams")
             
-            for transmitter_idx, (transmitter, data) in enumerate(
-                                                            zip(scenario.transmitters, data_bits)):
+            for transmitter_idx, (transmitter, data) in enumerate(zip(scenario.transmitters, data_bits)):
                 if transmitter_idx in sending_tx_idx:
 
                     signal, symbols = transmitter.send(drop_duration, data)

@@ -2,7 +2,7 @@
 """Precoding configuration of communication symbols."""
 
 from __future__ import annotations
-from typing import Optional, List, Type, TYPE_CHECKING
+from typing import Optional, List, Type, TYPE_CHECKING, Union
 from fractions import Fraction
 
 import numpy as np
@@ -170,7 +170,7 @@ class SymbolPrecoding:
     def decode(self,
                input_stream: np.ndarray,
                channel_states: ChannelStateInformation,
-               stream_noises: np.ndarray) -> np.array:
+               stream_noises: Union[float, np.ndarray]) -> np.array:
         """Decode a data symbol stream after reception.
 
         Args:
@@ -183,7 +183,7 @@ class SymbolPrecoding:
             channel_states (ChannelStateInformation):
                 The channel state estimates for each input symbol within `input_stream`.
 
-            stream_noises (np.ndarray):
+            stream_noises (Union[float, np.ndarray]):
                 The noise variances for each data symbol within `input_stream`.
                 Identical dimensionality to `input_stream`.
 
@@ -198,8 +198,13 @@ class SymbolPrecoding:
         if input_stream.shape[0] != channel_states.num_receive_streams:
             raise ValueError("Input streams and channel states must have identical number of streams")
 
-        if input_stream.shape[1] != channel_states.num_symbols:
-            raise ValueError("Input streams and channel states must have identical number of symbols")
+        # if input_stream.shape[1] != channel_states.num_symbols:
+        #     raise ValueError("Input streams and channel states must have identical number of symbols")
+
+        # If only a nuclear noise variance is provided, expand it to an array
+        if isinstance(stream_noises, float) or isinstance(stream_noises, int):
+            stream_noises = np.array([[stream_noises]], dtype=float).repeat(input_stream.shape[0], axis=0)\
+                .repeat(input_stream.shape[1], axis=1)
 
         symbols_iteration = input_stream.copy()
         channel_state_iteration = channel_states

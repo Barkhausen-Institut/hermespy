@@ -7,8 +7,8 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 from scipy import constants
 
-from channel.channel import Channel
-from tools import db2lin, lin2db, DbConversionType
+from hermespy.channel import Channel
+from hermespy.tools import db2lin, lin2db, DbConversionType
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

@@ -1,15 +1,19 @@
-import unittest
-import numpy as np
-from unittest.mock import Mock
-from numpy.random import default_rng
+# -*- coding: utf-8 -*-
+"""Test Radar Channel."""
 
-from channel.radar_channel import RadarChannel
+import unittest
+from unittest.mock import Mock
+
+import numpy as np
+from numpy.random import default_rng
 from scipy import constants
-from tools import db2lin, DbConversionType
+
+from hermespy.channel import RadarChannel
+from hermespy.tools import db2lin, DbConversionType
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Andre Noll Barreto"]
+__credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.1.0"
 __maintainer__ = "Jan Adler"
@@ -320,5 +324,3 @@ class TestRadarChannel(unittest.TestCase):
         atol = np.maximum(np.abs(np.sinc(self.channel.filter_response_in_samples/2)),
                           np.abs(np.sinc(np.floor(self.channel.filter_response_in_samples/2))))
         np.testing.assert_allclose(channel_state_info, observed_csi, atol=atol)
-
-        pass
