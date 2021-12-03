@@ -23,3 +23,15 @@ wheel-linux:
     - mkdir wheel/
   script:
     - pip wheel -v . --wheel-dir wheel/
+
+pages:
+  stage: deploy
+  #  only:
+  #    - master
+  before_script:
+    - pip install -r requirements.txt
+  script:
+    - python -m setuptools.py build_sphinx
+  artifacts:
+    paths:
+      - _skbuild/setuptools/sphinx/html
