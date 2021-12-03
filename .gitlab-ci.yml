@@ -31,7 +31,7 @@ pages:
   before_script:
     - pip install -r requirements.txt
   script:
-    - python -m setuptools.py build_sphinx
+    - python -m setup.py build_sphinx
   artifacts:
     paths:
       - _skbuild/setuptools/sphinx/html
