@@ -6,5 +6,6 @@ sphinxcontrib-apidoc
 sphinxcontrib-mermaid
 sphinx-rtd-theme
 sphinx-rtd-dark-mode
+sphinx-tabs
 msmb-theme==1.2.0
 m2r2==0.3.1
