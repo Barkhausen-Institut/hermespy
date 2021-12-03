@@ -65,7 +65,7 @@ class MMSETimeEqualizer(SymbolPrecoder):
             equalized_symbols[idx, :] = equalizer @ symbols
             equalized_csi_slice = tensordot(equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
             equalized_channel_state.append_linear(equalized_csi_slice, 0)
-            equalized_noises[idx, :] = noise[:stream_state.num_samples] * (s ** 2 + noise_variance) - 1
+            equalized_noises[idx, :] = noise[:stream_state.num_samples] * (s ** 2 + noise_variance)
 
         return equalized_symbols, channel_state, equalized_noises
 
@@ -154,7 +154,7 @@ class MMSESpaceEqualizer(SymbolPrecoder):
 
             symbol_stream[:, time_idx] = equalizer @ symbols
             channel_state.state[:, :, time_idx, :] = np.tensordot(equalizer, csi.linear[:, :, 0, :], axes=(1, 0))
-            stream_noises[:, time_idx] = noise * (s ** 2 + noise_variance) - 1
+            stream_noises[:, time_idx] = noise * (s ** 2 + noise_variance)
 
         return symbol_stream, channel_state, stream_noises
 
