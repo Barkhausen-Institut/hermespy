@@ -16,7 +16,7 @@ __status__ = "Prototype"
 
 
 class TestPseudoRandomGenerator(unittest.TestCase):
-    """Test the pseudo random numbers generator."""
+    """Test the pseudo random numbers rng."""
 
     def setUp(self) -> None:
 
@@ -29,7 +29,7 @@ class TestPseudoRandomGenerator(unittest.TestCase):
         """Test the first generated bit."""
 
         for bit in self.expected_output:
-            self.assertEqual(self.generator.generate(), bit, "Unexpected generator result")
+            self.assertEqual(self.generator.generate(), bit, "Unexpected rng result")
 
     def test_generate_sequence(self) -> None:
         """Test the sequence generation."""
@@ -38,7 +38,7 @@ class TestPseudoRandomGenerator(unittest.TestCase):
                            "Unexpected sequence generated")
 
     def test_reset(self) -> None:
-        """Test the generator reset behaviour."""
+        """Test the rng reset behaviour."""
 
         _ = self.generator.generate_sequence(1000)
         self.generator.reset()

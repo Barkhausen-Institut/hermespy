@@ -44,7 +44,7 @@ properties
     rx_positions = [];
     
     sos = [];                  	% The large-scale parameter SOS generators
-    gr_sos = [];                % The SOS generator for the ground reflection coefficient
+    gr_sos = [];                % The SOS rng for the ground reflection coefficient
     path_sos = [];              % The SOS generators for the generation of MPCs
     xpr_sos = [];               % The SOS generators for the generation of the linear NLOS polarization
     pin_sos = [];               % The SOS generators for the generation of initial phases

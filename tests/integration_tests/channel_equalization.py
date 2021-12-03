@@ -10,7 +10,7 @@ from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
 from hermespy.channel import MultipathFading5GTDL, MultipathFadingCost256
-from hermespy.precoding import SymbolPrecoding, MMSETimeEqualizer, ZFTimeEqualizer
+from hermespy.precoding import SymbolPrecoding, MMSETimeEqualizer, ZFTimeEqualizer, ZFSpaceEqualizer
 from hermespy.signal import Signal
 
 __author__ = "Jan Adler"
@@ -75,14 +75,15 @@ class TestMMSEChannelEqualization(unittest.TestCase):
 
             assert_array_almost_equal(self.samples, equalized_signal)
 
-            #propagated_signal.samples += self.generator.normal(0, noise_variance, propagated_signal.num_samples)
+            #propagated_signal.samples += self.rng.normal(0, noise_variance, propagated_signal.num_samples)
 
 
             #equalized_signal = self.precoding.decode(propagated_signal.samples, channel_state, noise_variance)
             #assert_array_almost_equal(self.samples, equalized_signal, decimal=1)
 
 
-class TestZeroForcingChannelEqualization(unittest.TestCase):
+class TestZeroForcingTimeEqualization(unittest.TestCase):
+    """Test Zero-Forcing channel equalization in time-domain."""
 
     def setUp(self) -> None:
 
@@ -139,3 +140,47 @@ class TestZeroForcingChannelEqualization(unittest.TestCase):
 
             equalized_signal = self.precoding.decode(propagated_signal.samples, channel_state, 0.)
             assert_array_almost_equal(self.samples, equalized_signal)
+
+
+class TestZeroForcingSpaceEqualization(unittest.TestCase):
+    """Test Zero-Forcing channel equalization in space-domain."""
+
+    def setUp(self) -> None:
+
+        self.precoding = SymbolPrecoding()
+        self.equalizer = ZFSpaceEqualizer()
+        self.precoding[0] = self.equalizer
+
+        self.transmitter = Mock()
+        self.transmitter.num_antennas = 1
+        self.receiver = Mock()
+        self.receiver.num_antennas = 1
+
+        self.rng = np.random.default_rng(42)
+        self.num_samples = 100
+        self.sampling_rate = 1e6
+
+        self.num_antennas = [1, 2, 4]
+
+    def test_equalize_5GTDL(self) -> None:
+        """Test equalization of 5GTDL multipath fading channels."""
+
+        for model_type, num_antennas in product(MultipathFading5GTDL.TYPE, self.num_antennas):
+
+            self.transmitter.num_antennas = num_antennas
+            self.receiver.num_antennas = num_antennas
+
+            samples = np.exp(2j * self.rng.uniform(0., pi, (num_antennas, self.num_samples)))
+            signal = Signal(samples, self.sampling_rate)
+            noise = np.zeros((num_antennas, self.num_samples))
+
+            channel = MultipathFading5GTDL(model_type=model_type,
+                                           rms_delay=0.,
+                                           transmitter=self.transmitter,
+                                           receiver=self.receiver,
+                                           random_generator=self.rng)
+
+            propagated_signal, channel_state = channel.propagate(signal)
+
+            equalized_signal, _, _ = self.equalizer.decode(propagated_signal.samples, channel_state, noise)
+            assert_array_almost_equal(samples, equalized_signal)

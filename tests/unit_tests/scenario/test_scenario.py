@@ -39,7 +39,7 @@ class TestScenario(unittest.TestCase):
 
             modem = Mock()
 
-            # Mock waveform generator max frame duration property
+            # Mock waveform rng max frame duration property
             modem.waveform_generator.frame_duration = (1+t) * 1e-4
             modem.generate_data_bits.return_value = np.ones(1+t)
             modem.encoder_manager.bit_block_size = 1 + t

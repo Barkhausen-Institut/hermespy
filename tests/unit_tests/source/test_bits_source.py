@@ -49,7 +49,7 @@ class TestBitsSource(unittest.TestCase):
             self.assertEqual(True, np.any((bits == 1) | (bits == 0)))
 
     def test_random_generator_setget(self) -> None:
-        """Random generator property getter should return setter argument."""
+        """Random rng property getter should return setter argument."""
 
         generator = np.random.default_rng()
         self.source.random_generator = generator
@@ -57,12 +57,12 @@ class TestBitsSource(unittest.TestCase):
         self.assertIs(generator, self.source.random_generator)
 
     def test_random_generator_set_seed(self) -> None:
-        """Random generator property should allow for array-like seeds."""
+        """Random rng property should allow for array-like seeds."""
 
         self.source.random_generator = "123asdbasbd"
 
     def test_random_generator_get_default(self) -> None:
-        """Random generator property getter should return transmitter generator if not specified."""
+        """Random rng property getter should return transmitter rng if not specified."""
 
         self.transmitter.random_generator = Mock()
         self.source.random_generator = None

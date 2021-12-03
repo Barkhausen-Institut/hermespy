@@ -138,7 +138,7 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
         """Modulating and subsequently de-modulating a symbol stream should yield identical symbols."""
 
         expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)))
-        # * np.arange(1, 1 + self.generator.symbols_per_frame))
+        # * np.arange(1, 1 + self.rng.symbols_per_frame))
 
         baseband_signal = self.generator.modulate(expected_symbols)
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)

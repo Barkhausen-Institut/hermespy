@@ -33,7 +33,7 @@ function [ loss, scale_sf, loss_init, scale_sf_init ] = get_pl( h_builder, evalt
 %
 %   scale_sf
 %   In some scenarios, the SF might change with distance between Tx and Rx. Hence, the shadow
-%   fading provided by the LSFs generator has to be changed accordingly. The second output
+%   fading provided by the LSFs rng has to be changed accordingly. The second output
 %   parameter "scale_sf" can be used for scaling the (logarithmic) SF value.
 %
 %   loss_init

@@ -60,6 +60,7 @@ class ZFTimeEqualizer(SymbolPrecoder):
             u /= s
 
             equalizer = (u @ vh).conj().T
+
             equalized_symbols[idx, :] = equalizer @ symbols
             equalized_csi_slice = tensordot(equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
             equalized_channel_state.append_linear(equalized_csi_slice, 0)
@@ -139,14 +140,19 @@ class ZFSpaceEqualizer(SymbolPrecoder):
                                                              channel_state.samples(),
                                                              stream_noises.T)):
 
-            linear_state: np.ndarray = np.sum(csi.linear[:, :, 0, :].todense(), axis=2, keepdims=False)
+            # Combine the responses of all superimposed transmit antennas for equalization
+            transform = np.sum(csi.linear[:, :, 0, :], axis=2, keepdims=False)
 
-            inverse = np.linalg.inv(linear_state.T.conj() @ linear_state)
-            equalizer = inverse @ linear_state.T.conj()
+            # Compute the pseudo-inverse from the singular-value-decomposition of the linear channel transform
+            # noinspection PyTupleAssignmentBalance
+            u, s, vh = svd(transform.todense(), full_matrices=False, check_finite=False)
+            u /= s
+
+            equalizer = (u @ vh).conj().T
 
             symbol_stream[:, time_idx] = equalizer @ symbols
             channel_state.state[:, :, time_idx, :] = np.tensordot(equalizer, csi.linear[:, :, 0, :], axes=(1, 0))
-            stream_noises[:, time_idx] = noise * np.diag(inverse).real
+            stream_noises[:, time_idx] = noise * s
 
         return symbol_stream, channel_state, stream_noises
 

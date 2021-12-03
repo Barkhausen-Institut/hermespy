@@ -521,20 +521,20 @@ class TestMultipathFadingChannel(unittest.TestCase):
         tx_samples = rand.normal(0, 1, frame_size) + 1j * rand.normal(0, 1, frame_size)
         tx_signal = Signal(tx_samples, self.sampling_rate)
 
-        channel_no_gain.random_generator = np.random.default_rng(42)  # Reset random number generator
+        channel_no_gain.random_generator = np.random.default_rng(42)  # Reset random number rng
         signal_out_no_gain, _ = channel_no_gain.propagate(tx_signal)
 
-        channel_gain.random_generator = np.random.default_rng(42)   # Reset random number generator
+        channel_gain.random_generator = np.random.default_rng(42)   # Reset random number rng
         signal_out_gain, _ = channel_gain.propagate(tx_signal)
 
         assert_array_almost_equal(signal_out_gain.samples, signal_out_no_gain.samples * gain)
 
         timestamps = np.array([0, 100, 500]) / self.sampling_rate
 
-        channel_no_gain.random_generator = np.random.default_rng(50)  # Reset random number generator
+        channel_no_gain.random_generator = np.random.default_rng(50)  # Reset random number rng
         channel_state_info_no_gain = channel_no_gain.impulse_response(timestamps, self.sampling_rate)
 
-        channel_gain.random_generator = np.random.default_rng(50)   # Reset random number generator
+        channel_gain.random_generator = np.random.default_rng(50)   # Reset random number rng
         channel_state_info_gain = channel_gain.impulse_response(timestamps, self.sampling_rate)
 
         npt.assert_array_almost_equal(channel_state_info_gain, channel_state_info_no_gain * gain)
