@@ -159,7 +159,7 @@ class ChannelStateInformation:
                 If `state` dimensions are invalid.
         """
 
-        state = np.empty((0, 0, 0, 1), dtype=np.complex) if state is None else state
+        state = np.empty((0, 0, 0, 1), dtype=complex) if state is None else state
 
         if state_format not in ChannelStateFormat:
             raise ValueError("Unknown channel state format flag")

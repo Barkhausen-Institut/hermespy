@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_equal
 
+from hermespy.channel import ChannelStateInformation, ChannelStateFormat
 from hermespy.precoding import SpatialMultiplexing
 
 __author__ = "Jan Adler"
@@ -39,17 +40,14 @@ class TestSpatialMultiplexing(unittest.TestCase):
         """Encoding and subsequently decoding a data stream should lead to identical symbols."""
 
         input_stream = self.generator.random((1, 400))
-        input_responses = self.generator.random((1, 400, 2))
-
-        encoded_stream = self.precoder.encode(input_stream)
-        encoded_responses = input_responses.reshape((4, 100, -1), order='F')
-
+        channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                self.generator.random((4, 1, 100, 1)))
         stream_noise = self.generator.random((4, 100))
 
-        decoded_stream, decoded_responses, _ = self.precoder.decode(encoded_stream, encoded_responses, stream_noise)
+        encoded_stream = self.precoder.encode(input_stream)
+        decoded_stream, decoded_responses, _ = self.precoder.decode(encoded_stream, channel_state, stream_noise)
 
         assert_array_equal(input_stream, decoded_stream)
-        assert_array_equal(input_responses, decoded_responses)
 
     def test_num_input_streams(self) -> None:
         """The number of input streams is always one."""
