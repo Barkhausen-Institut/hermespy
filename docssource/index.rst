@@ -26,13 +26,16 @@ HermesPy may be used in one of two modes of operation:
    See :doc:`/getting_started_library` for further information.
 
 We highly recommend studying the instructions in the respective getting-started sections prior to working with Hermes.
-Installation instructions, feature set, and release plan can be found on `GitHub <https://github.com/Barkhausen-Institut/hermespy/>`_.
+In order to install HermesPy on your system, follow the instructions outlined in
+:doc:`/installation`.
+Feature set, and release plan can be found on `GitHub <https://github.com/Barkhausen-Institut/hermespy/>`_.
 
 .. toctree::
    :maxdepth: 3
    :glob:
 
    self
+   installation
    getting_started
    high_level_description
    parameter_description
