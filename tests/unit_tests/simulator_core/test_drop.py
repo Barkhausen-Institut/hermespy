@@ -1,75 +1,49 @@
-from typing import List, Tuple, List
-import unittest 
+# -*- coding: utf-8 -*-
+"""Test HermesPy Simulation Drop."""
+
+import unittest
 
 import numpy as np
-from scipy.fft import fftshift
-from scipy import signal
+from scipy.constants import pi
 
 from hermespy.simulator_core.drop import Drop
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler", "Tobias Kronauer"]
+__license__ = "AGPLv3"
+__version__ = "0.2.2"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
-class TestDrop(Drop):
-    def __init__(self, received_signals: List[np.array],
-                 received_bits = [None], received_block_sizes = [0]):
-        super().__init__([], [], [], received_signals, received_bits, received_block_sizes)
 
-class TestStoppingCrtiteria(unittest.TestCase):
+class TestDrop(unittest.TestCase):
+    """Test simulation drop."""
+
     def setUp(self) -> None:
-        self.received_signals_one_modem = [np.random.randint(low=0, high=10, size=(1,10))]
-        self.drop_one_modem = TestDrop(received_signals=self.received_signals_one_modem)
-        self.window_size_one_modem = 10
 
-    def test_receive_stft_properly_calculated_for_non_none_signals(self) -> None:
-        f, t, transform = signal.stft(
-                            self.received_signals_one_modem[0][0],
-                            nperseg=self.window_size_one_modem,
-                            noverlap = int(.5*self.window_size_one_modem),
-                            return_onesided=False)
-        receive_stft = self.drop_one_modem.receive_stft
-        np.testing.assert_array_almost_equal(
-            fftshift(f), receive_stft[0][0]
-        )
-        np.testing.assert_array_almost_equal(
-            t, receive_stft[0][1]
-        )
-        np.testing.assert_array_almost_equal(
-            fftshift(transform, 0), receive_stft[0][2]
-        )
+        self.rng = np.random.default_rng(42)
+        self.num_transmitters = 2
+        self.num_receivers = 2
+        self.num_bits = 256
+        self.num_symbols = 64
+        self.num_samples = 128
+        self.block_size = 32
 
-    def test_receive_spectrum_properly_calculated_for_non_none_signals(self) -> None:
-        f, periodogram = signal.welch(self.received_signals_one_modem[0][0],
-                                nperseg=self.window_size_one_modem,
-                                noverlap=int(.5*self.window_size_one_modem),
-                                return_onesided=False)
+        self.transmitted_bits = [self.rng.integers(0, 2, self.num_bits) for _ in range(self.num_transmitters)]
+        self.received_bits = [self.rng.integers(0, 2, self.num_bits) for _ in range(self.num_receivers)]
+        self.transmitted_symbols = [np.exp(2j * self.rng.uniform(0, 2*pi, self.num_symbols))
+                                    for _ in range(self.num_transmitters)]
+        self.received_symbols = [np.exp(2j * self.rng.uniform(0, 2*pi, self.num_symbols))
+                                 for _ in range(self.num_receivers)]
+        self.transmitted_signals = [np.exp(2j * self.rng.uniform(0, 2*pi, self.num_samples))
+                                    for _ in range(self.num_transmitters)]
+        self.received_signals = [np.exp(2j * self.rng.uniform(0, 2*pi, self.num_samples))
+                                 for _ in range(self.num_receivers)]
+        self.block_sizes = [self.block_size for _ in range(self.num_receivers)]
 
-        receive_spectrum = self.drop_one_modem.receive_spectrum
-        np.testing.assert_array_almost_equal(
-            f, receive_spectrum[0][0]
-        )
-        np.testing.assert_array_almost_equal(
-            periodogram, receive_spectrum[0][1]
-        )
-
-    def test_receive_spectrum_returns_none_for_none_signals(self) -> None:
-        received_signals = [
-            np.random.randint(low=0, high=10, size=(1,10)),
-            None]
-        drop = TestDrop(received_signals=received_signals,
-                        received_bits=[None, None],
-                        received_block_sizes=[0,0])
-
-        receive_spectrum = drop.receive_spectrum
-        self.assertEquals(receive_spectrum[1], (None, None))
-        self.assertIsNotNone(receive_spectrum[0][0])
-        self.assertIsNotNone(receive_spectrum[0][1])
-
-    def test_none_stft_for_none_signals(self) -> None:
-        received_signals = [
-            np.random.randint(low=0, high=10, size=(1,10)),
-            None]
-        drop = TestDrop(received_signals=received_signals,
-                        received_bits=[None, None],
-                        received_block_sizes=[0,0])
-        receive_stft = drop.receive_stft
-
-        self.assertEquals(receive_stft[1], (None, None, None))
+        self.drop = Drop(transmitted_bits=self.transmitted_bits, received_bits=self.received_bits,
+                         transmitted_symbols=self.transmitted_symbols, received_symbols=self.received_symbols,
+                         transmitted_signals=self.transmitted_signals, received_signals=self.received_signals,
+                         transmit_block_sizes=self.block_sizes, receive_block_sizes=self.block_sizes)

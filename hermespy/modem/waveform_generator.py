@@ -320,16 +320,16 @@ class WaveformGenerator(ABC):
 
         Returns:
             List[Tuple[np.ndarray, ChannelStateInformation]]:
-                Tuple of baseband_signal samples and channel transformations sorted into frames
+                Tuple of `signal` samples and channel transformations sorted into frames
 
         Raises:
             ValueError:
                 If the number of received streams in `channel_state` does not equal one.
-                If the length of `baseband_signal` and the number of samples in `channel_state` are not identical.
+                If the length of `signal` and the number of samples in `channel_state` are not identical.
         """
 
         if len(signal) != channel_state.num_samples + channel_state.num_delay_taps - 1:
-            raise ValueError("Baseband baseband signal and channel state contain a different amount of samples")
+            raise ValueError("Base-band signal and channel state contain a different amount of samples")
 
         if channel_state.num_receive_streams != 1:
             raise ValueError("Channel state during synchronization may only contain a single receive stream")
@@ -339,7 +339,7 @@ class WaveformGenerator(ABC):
 
         # Slice signals and channel state information into frame-sized portions
         # Default synchronization does NOT account for possible delays,
-        # i.e. assume the the first baseband-baseband_signal's sample to also be the first frame's initial sample
+        # i.e. assume the the first base-band signal's sample to also be the first frame's initial sample
         synchronized_frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
         for frame_idx in range(num_frames):
 
@@ -351,14 +351,14 @@ class WaveformGenerator(ABC):
 
     @abstractmethod
     def demodulate(self,
-                   baseband_signal: np.ndarray,
+                   signal: np.ndarray,
                    channel_state: ChannelStateInformation,
                    noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
         """Demodulate a base-band signal stream to data symbols.
 
         Args:
 
-            baseband_signal (np.ndarray):
+            signal (np.ndarray):
                 Vector of complex-valued base-band samples of a single communication frame.
 
             channel_state (ChannelStateInformation):

@@ -9,7 +9,7 @@ function [ ds, kf, sf, asD, asA, esD, esA, xpr ] =...
 %   lsp_vals        The distribution values of the LSPs (see below) [ 8 x 9 x F ]
 %   lsp_xcorr       The Cross-correlation matrix for the LSPs [ 8 x 8 ]
 %   lsf_sos         Pre-initialized SOS generators for the LSF generation [ 1 x 8 ]
-%                   If left empty, SOS generator are initialized from the "lsp_vals"
+%                   If left empty, SOS rng are initialized from the "lsp_vals"
 %   ES_D_mu_A       Linear distance-dependence of the ES_D
 %   ES_D_mu_min     Minimum value of ES_D_mu if using distance-dependence.
 %

@@ -25,7 +25,7 @@ function o2i_loss_dB = gen_o2i_loss( h_layout, method, low_loss_fraction, SC_lam
 %
 %   SC_lambda
 %   Random variables for the 'low_loss_fraction' are spatially consistent. 'SC_lambda' describes
-%   the decorrelation distance of the random generator. Default: 50 m.
+%   the decorrelation distance of the random rng. Default: 50 m.
 %
 %   max_indoor_dist
 %   The maximum indoor distance between the building wall and the UE. Default is 25 m.

@@ -30,16 +30,18 @@ class TestTransmitter(unittest.TestCase):
         self.carrier_frequency = 2e3
         self.scenario = Mock()
         self.scenario.random_generator = rnd.default_rng(0)
+        self.sampling_rate = 1e3
+        self.carrier_frequency = 1e8
 
         self.waveform_generator = Mock()
+        self.waveform_generator.sampling_rate = self.sampling_rate
         self.waveform_generator.symbols_per_frame = 100
         self.waveform_generator.samples_in_frame = 100
         self.waveform_generator.bits_per_frame = 100
-        self.waveform_generator.frame_duration = 100 / 1e3
+        self.waveform_generator.frame_duration = 100 / self.sampling_rate
         self.waveform_generator.map = lambda bits: bits
-        self.waveform_generator.modulate = lambda symbols: Signal(symbols, sampling_rate=1e3,
+        self.waveform_generator.modulate = lambda symbols: Signal(symbols, sampling_rate=self.sampling_rate,
                                                                   carrier_frequency=self.carrier_frequency)
-        self.waveform_generator.sampling_rate = 1e3
 
         self.encoder_manager = Mock()
         self.encoder_manager.encode = lambda bits, num_bits: np.append(bits, np.zeros(num_bits - len(bits)))

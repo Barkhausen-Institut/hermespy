@@ -2,6 +2,7 @@ from .channel_state_information import ChannelStateDimension, ChannelStateFormat
 from .channel import Channel
 from .multipath_fading_channel import MultipathFadingChannel
 from .multipath_fading_templates import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
+from .radar_channel import RadarChannel
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -28,4 +29,4 @@ from .quadriga_channel import QuadrigaChannel
 
 __all__ = ['ChannelStateDimension', 'ChannelStateFormat', 'ChannelStateInformation', 'Channel',
            'MultipathFadingChannel', 'MultipathFading5GTDL', 'MultipathFadingCost256', 'MultipathFadingExponential',
-           'QuadrigaChannel', 'QuadrigaInterface']
+           'QuadrigaChannel', 'QuadrigaInterface', 'RadarChannel']

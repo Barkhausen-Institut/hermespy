@@ -6,9 +6,8 @@ from typing import Type, Tuple
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
-from sparse import tensordot, diagonal
-from scipy.sparse import diags
-from scipy.sparse.linalg import inv
+from sparse import tensordot
+from scipy.linalg.decomp_svd import svd
 
 from .symbol_precoder import SymbolPrecoder
 from hermespy.channel import ChannelStateInformation
@@ -41,30 +40,32 @@ class MMSETimeEqualizer(SymbolPrecoder):
                channel_state: ChannelStateInformation,
                stream_noises: np.ndarray) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
 
-        num_symbols = symbol_stream.shape[1]
-        equalized_symbols = np.empty(symbol_stream.shape, dtype=complex)
-        equalized_noises = np.empty(stream_noises.shape, dtype=float)
+        equalized_symbols = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=complex)
+        equalized_noises = np.empty((channel_state.num_receive_streams, channel_state.num_samples), dtype=float)
+        equalized_channel_state = ChannelStateInformation(channel_state.state_format)
 
         # Equalize in space in a first step
         for idx, (symbols, stream_state, noise) in enumerate(zip(symbol_stream,
                                                                  channel_state.received_streams(),
                                                                  stream_noises)):
 
+            noise_variance = np.mean(noise)
+
             # Combine the responses of all superimposed transmit antennas for equalization
             linear_state = stream_state.linear
-            transform = np.sum(linear_state[0, :, :, :], axis=0, keepdims=False)
+            transform = np.sum(linear_state[0, ::], axis=0, keepdims=False)
 
-            inverse = inv(transform.T.conj() @ transform + diags(noise))
-            symbol_equalizer = inverse @ transform[:num_symbols, :].T.conj()
-            channel_equalizer = inverse @ transform.T.conj()
+            # Compute the pseudo-inverse from the singular-value-decomposition of the linear channel transform
+            # noinspection PyTupleAssignmentBalance
+            u, s, vh = svd(transform.todense(), full_matrices=False, check_finite=False)
+            u *= s / (s ** 2 + noise_variance)
 
-            equalized_symbols[idx, :] = symbol_equalizer @ symbols
-            equalized_channel = tensordot(channel_equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
+            equalizer = (u @ vh).T.conj()
 
-            stream_state.linear = equalized_channel
-
-            norm = diagonal(inverse).todense().real
-            equalized_noises[idx, :] = noise * norm / (1 - noise * norm)
+            equalized_symbols[idx, :] = equalizer @ symbols
+            equalized_csi_slice = tensordot(equalizer, linear_state, axes=(1, 2)).transpose((1, 2, 0, 3))
+            equalized_channel_state.append_linear(equalized_csi_slice, 0)
+            equalized_noises[idx, :] = noise[:stream_state.num_samples] * (s ** 2 + noise_variance)
 
         return equalized_symbols, channel_state, equalized_noises
 
@@ -139,18 +140,21 @@ class MMSESpaceEqualizer(SymbolPrecoder):
         for time_idx, (symbols, csi, noise) in enumerate(zip(symbol_stream.T,
                                                              channel_state.samples(),
                                                              stream_noises.T)):
+            noise_variance = np.mean(noise)
 
-            linear_state: np.ndarray = np.sum(csi.linear[:, :, 0, :].todense(), axis=2, keepdims=False)
-            noise_covariance = np.diag(noise)
+            # Combine the responses of all superimposed transmit antennas for equalization
+            transform = np.sum(csi.linear[:, :, 0, :], axis=2, keepdims=False)
 
-            inverse = np.linalg.inv(linear_state.T.conj() @ linear_state + noise_covariance)
-            equalizer = inverse @ linear_state.T.conj()
+            # Compute the pseudo-inverse from the singular-value-decomposition of the linear channel transform
+            # noinspection PyTupleAssignmentBalance
+            u, s, vh = svd(transform.todense(), full_matrices=False, check_finite=False)
+            u *= s / (s ** 2 + noise_variance)
+
+            equalizer = (u @ vh).T.conj()
 
             symbol_stream[:, time_idx] = equalizer @ symbols
             channel_state.state[:, :, time_idx, :] = np.tensordot(equalizer, csi.linear[:, :, 0, :], axes=(1, 0))
-
-            norm = np.diag(inverse).real
-            stream_noises[:, time_idx] = noise * norm / (1 - noise * norm)
+            stream_noises[:, time_idx] = noise * (s ** 2 + noise_variance)
 
         return symbol_stream, channel_state, stream_noises
 

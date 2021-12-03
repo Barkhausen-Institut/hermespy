@@ -7,23 +7,24 @@ from fractions import Fraction
 
 import numpy as np
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.precoding import SymbolPrecoding
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.0"
+__version__ = "0.2.2"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestMMSEqualizer(unittest.TestCase):
+class TestSymbolPrecoding(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        # Random generator
+        # Random rng
         self.generator = np.random.default_rng(42)
 
         # Mock modem
@@ -54,15 +55,19 @@ class TestMMSEqualizer(unittest.TestCase):
     def test_decode_validation(self) -> None:
         """Decoding should result in a RuntimeError, if multiple streams result."""
 
+        num_samples = 10
+        num_streams = 2
+
         precoder = Mock()
-        precoder.decode = lambda symbols, streams, noise: (symbols.repeat(2, axis=0),
-                                                           streams.repeat(2, axis=0),
-                                                           noise.repeat(2, axis=0))
+        precoder.decode = lambda symbols, channels, noise: (symbols, channels, noise)
 
         self.precoding[0] = precoder
-        symbols = self.generator.random((1, 10))
-        channel = self.generator.random((1, 10, 1))
-        noise = self.generator.random((1, 10))
+        input_symbols = self.generator.random((num_streams, num_samples))
+        input_channel = ChannelStateInformation.Ideal(num_samples=num_samples, num_receive_streams=num_streams)
+        input_noise = self.generator.random((num_streams, num_samples))
 
         with self.assertRaises(RuntimeError):
-            _ = self.precoding.decode(symbols, channel, noise)
+            _ = self.precoding.decode(input_symbols, input_channel, input_noise)
+
+        with self.assertRaises(ValueError):
+            _ = self.precoding.decode(input_symbols[0, :], input_channel, input_noise)

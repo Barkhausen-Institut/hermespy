@@ -71,7 +71,7 @@ class TestRMSEEqualization(unittest.TestCase):
         self.scenario.set_channel(0, 0, self.channel)
 
     def test_quam(self) -> None:
-        """Test equalization for the QAM waveform generator."""
+        """Test equalization for the QAM waveform rng."""
 
         self.transmitter.waveform_generator = WaveformGeneratorPskQam(modulation_order=64, num_data_symbols=30)
         self.receiver.waveform_generator = WaveformGeneratorPskQam(modulation_order=64, num_data_symbols=30)
@@ -87,7 +87,7 @@ class TestRMSEEqualization(unittest.TestCase):
         assert_array_equal(transmitted_bits, received_bits)
 
     def test_ofdm(self) -> None:
-        """Test equalization for the OFDM waveform generator."""
+        """Test equalization for the OFDM waveform rng."""
 
         # OFDM frame configuration
         symbol_elements = [FrameElement(ElementType.DATA) for _ in range(120)]

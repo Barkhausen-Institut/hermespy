@@ -16,14 +16,12 @@ from hermespy.signal import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Jan Adler"]
+__credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "0.2.2"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-plt.style.use(['dark_background'])
 
 
 class ComplexVisualization(IntEnum):
@@ -83,7 +81,7 @@ class Drop:
         __transmit_block_sizes (List[int]):
             Bit block sizes for each transmitter.
 
-        _received_signals (List[np.ndarray]):
+        __received_signals (List[np.ndarray]):
             Modulated signals impinging onto receiving modems.
 
         __received_symbols (List[Optional[np.ndarray]]):
@@ -123,7 +121,7 @@ class Drop:
             For each transmitter, a tuple of frequency bins, timestamps and respective stft matrix is cached.
             If no result has been computed yet, the attribute is None.
 
-        _receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
+        __receive_stft (Optional[List[Tuple[np.ndarray, np.ndarray, np.ndarray]]]):
             Short time fourier transform of the transmitted antenna signals.
             By default only the first antenna within an array is considered.
             For each receiver, a tuple of frequency bins, timestamps and respective stft matrix is cached.
@@ -140,21 +138,21 @@ class Drop:
             If no result has been computed yet, the attribute is None.
 
         __bit_error_rates (Optional[List[List[Optional[float]]]]):
-            Rate of bit errors that occured during transmission.
+            Rate of bit errors that occurred during transmission.
             A matrix of dimensions `num_transmitters`x`num_receivers`.
             Matrix fields representing invalid links will be set to None.
 
         __block_error_rates (Optional[List[List[Optional[float]]]]):
-            Rate of bit block errors that occured during transmission.
+            Rate of bit block errors that occurred during transmission.
             A matrix of dimensions `num_transmitters`x`num_receivers`.
             Matrix fields representing invalid links will be set to None.
     """
 
     __transmitted_bits: List[np.ndarray]
     __transmitted_symbols: List[Optional[np.ndarray]]
-    __transmitted_signals: List[Signal]
+    __transmitted_signals: List[Optional[Signal]]
     __transmit_block_sizes: List[int]
-    __received_signals: List[Signal]
+    __received_signals: List[Optional[Signal]]
     __received_symbols: List[Optional[np.ndarray]]
     __received_bits: List[np.ndarray]
     __receive_block_sizes: List[int]
@@ -172,9 +170,9 @@ class Drop:
     def __init__(self,
                  transmitted_bits: List[np.ndarray],
                  transmitted_symbols: List[Optional[np.ndarray]],
-                 transmitted_signals: List[Signal],
+                 transmitted_signals: List[Optional[Signal]],
                  transmit_block_sizes: List[int],
-                 received_signals: List[Signal],
+                 received_signals: List[Optional[Signal]],
                  received_symbols: List[Optional[np.ndarray]],
                  received_bits: List[np.ndarray],
                  receive_block_sizes: List[int],
@@ -437,7 +435,7 @@ class Drop:
         if self.__transmit_stft is not None:
             return self.__transmit_stft
 
-        self.__transmit_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+        self.__transmit_stft: List[Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]] = []
         for antenna_signals in self.__transmitted_signals:
 
             # Skip if no signal is available
@@ -456,7 +454,7 @@ class Drop:
                 signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
                 window_size = self.__spectrum_fft_size
 
-            # Compute stft TODO: Add sampling rate
+            # Compute stft
             frequency, time, transform = stft(signal, nperseg=window_size,
                                               noverlap=int(.5 * window_size),
                                               return_onesided=False, fs=antenna_signals.sampling_rate)
@@ -485,7 +483,7 @@ class Drop:
         if self.__receive_stft is not None:
             return self.__receive_stft
 
-        self.__receive_stft: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+        self.__receive_stft: List[Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]] = []
         for antenna_signals in self.__received_signals:
 
             if antenna_signals is None:
@@ -503,7 +501,7 @@ class Drop:
                 signal = np.append(signal, np.zeros(self.__spectrum_fft_size - len(signal), dtype=complex))
                 window_size = self.__spectrum_fft_size
 
-            # Compute stft TODO: Add sampling rate
+            # Compute stft
             frequency, time, transform = stft(signal, nperseg=window_size,
                                               noverlap=int(.5 * window_size),
                                               return_onesided=False,
@@ -550,7 +548,7 @@ class Drop:
 
                 # TODO: Integrate sampling rate
                 frequency, periodogram = welch(signal, nperseg=window_size, noverlap=int(.5 * window_size),
-                                            return_onesided=False, fs=antenna_signals.sampling_rate)
+                                               return_onesided=False, fs=antenna_signals.sampling_rate)
 
                 self.__transmit_spectrum.append((frequency, periodogram))
             else:
@@ -577,7 +575,7 @@ class Drop:
         if self.__receive_spectrum is not None:
             return self.__receive_spectrum
 
-        self.__receive_spectrum: List[Tuple[np.ndarray, np.ndarray]] = []
+        self.__receive_spectrum: List[Tuple[Optional[np.ndarray], Optional[np.ndarray]]] = []
         for antenna_signals in self.__received_signals:
 
             if antenna_signals is None:
@@ -792,14 +790,14 @@ class Drop:
         """Plot the short-time Fourier transform of received waveforms."""
 
         # Fetch stft
-        stft = self.receive_stft
+        receive_stft = self.receive_stft
 
         figure, axes = plt.subplots(self.__num_receptions, 1, squeeze=False)
         figure.suptitle("Receive Short-Time Fourier Transform")
 
         for reception_index in range(self.__num_receptions):
 
-            time, frequency, transform = stft[reception_index]
+            time, frequency, transform = receive_stft[reception_index]
 
             axes[reception_index, 0].pcolormesh(frequency, time, abs(transform), shading='auto')
             axes[reception_index, 0].set(ylabel="Frequency [Hz]")
@@ -855,6 +853,7 @@ class Drop:
             axes[transmission_idx, 0].axhline(y=0, color='k')
             axes[transmission_idx, 0].axvline(x=0, color='k')
 
+    # noinspection PyTypeChecker
     def plot_received_symbols(self) -> None:
         """Plot the received symbol constellation."""
 

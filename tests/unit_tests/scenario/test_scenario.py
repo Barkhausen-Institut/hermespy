@@ -39,7 +39,7 @@ class TestScenario(unittest.TestCase):
 
             modem = Mock()
 
-            # Mock waveform generator max frame duration property
+            # Mock waveform rng max frame duration property
             modem.waveform_generator.frame_duration = (1+t) * 1e-4
             modem.generate_data_bits.return_value = np.ones(1+t)
             modem.encoder_manager.bit_block_size = 1 + t
@@ -263,7 +263,7 @@ class TestScenario(unittest.TestCase):
         max_frame_duration = self.num_transmitters * 1e-4     # Results from the setUp transmit mock
         self.scenario.drop_duration = 0.0
 
-        self.assertEquals(max_frame_duration, self.scenario.drop_duration)
+        self.assertEqual(max_frame_duration, self.scenario.drop_duration)
 
     def test_generate_data_bits(self) -> None:
         """The data bit generation routine should create sets of source bits required by all registered
