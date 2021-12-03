@@ -34,4 +34,4 @@ pages:
     - python -m setup build_sphinx
   artifacts:
     paths:
-      - _skbuild/setuptools/sphinx/html
+      - documentation/html

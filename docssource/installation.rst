@@ -8,7 +8,7 @@ or clone the source code from the `GitHub`_ and build the package from scratch.
 Both methods will be described in the following sections.
 
 Install from PyPi
----------
+-----------------
 
 Pulling HermesPy from `PyPi`_ is the recommended installation method for end-users who do not
 intend to extend the HermesPy source code.
@@ -34,7 +34,9 @@ python -m venv env
 pip install hermespy
 ```
 
-### From Source
+Install from Source
+-------------------
+
 This is the recommended method for developers.
 You can build the package from scratch at any system by cloning the repository source via
 ```commandline
