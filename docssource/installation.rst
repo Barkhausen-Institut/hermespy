@@ -21,7 +21,7 @@ Install the package by executing the following commands within a terminal:
 
 .. tabs::
 
-   .. code-tab:: bash Windows
+   .. code-tab:: batch Windows
 
       conda create -n <envname> python=3.9
       conda activate <envname>
@@ -66,7 +66,7 @@ Install the package by executing the following commands within a terminal:
 
 .. tabs::
 
-   .. code-tab:: bash Windows
+   .. code-tab:: batch Windows
 
       conda create -n <envname> python=3.9
       conda activate <envname>
@@ -83,7 +83,7 @@ Executing these statements sequentially results in the following actions:
 
 #. Creation of a new virtual environment titled `<envname>`
 #. Activate the newly created environment
-#. Install the HermesPy wheel from PyPi within the environment
+#. Install the HermesPy wheel from source within the environment
 
 Note that if you plan on utilizing HermesPy within an already existing Python environment,
 you may omit step one and replace `<envname>` by the title of the existing environment.
@@ -105,12 +105,12 @@ For it to be used, some preliminary steps need to be taken.
 `Quadriga`_ is based on `Matlab`_ and can be executed by either the `Matlab`_ interpreter or its open-source
 equivalent `Octave`_.
 
-In order to execute the`Matlab`_ interpreter, the `matlab.engine`_ package provided by `Matlab`_ needs to be installed
+In order to execute the `Matlab`_ interpreter the `matlab.engine`_ package provided by `Matlab`_ needs to be installed
 manually.
 
-In order to execute the `Octave`_ interpreter (under Windows),
-the additional `oct2py`_ package needs to be installed (`pip install oct2py`).
-The extension of the `PATH` variable may be required for `oct2py`_ to locate the octave
+In order to execute the `Octave`_ interpreter the additional `oct2py`_ package needs to be installed
+(`pip install oct2py`).
+Under Windows, an extension of the `PATH` variable may be required for `oct2py`_ to be able to locate the octave
 command line interface:
 
 .. code-block:: bash
