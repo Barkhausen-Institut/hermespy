@@ -26,8 +26,8 @@ wheel-linux:
 
 pages:
   stage: deploy
-  #  only:
-  #    - master
+  only:
+    - master
   before_script:
     - pip install -r requirements_doc.txt
   script:
