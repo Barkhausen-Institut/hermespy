@@ -1,0 +1,7 @@
+hermespy.coding.ldpc\_binding.ldpc module
+=========================================
+
+.. automodule:: hermespy.coding.ldpc_binding.ldpc
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+hermespy.coding.encoder\_manager module
+=======================================
+
+.. automodule:: hermespy.coding.encoder_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:

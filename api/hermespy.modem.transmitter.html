@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermespy.modem.transmitter module &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hermespy.modem.waveform_generator module" href="hermespy.modem.waveform_generator.html" />
+    <link rel="prev" title="hermespy.modem.rf_chain module" href="hermespy.modem.rf_chain.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hermespy</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hermespy.html">hermespy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="hermespy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="hermespy.beamformer.html">hermespy.beamformer package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.bin.html">hermespy.bin package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.channel.html">hermespy.channel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.coding.html">hermespy.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.helpers.html">hermespy.helpers package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="hermespy.modem.html">hermespy.modem package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.noise.html">hermespy.noise package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.precoding.html">hermespy.precoding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.scenario.html">hermespy.scenario package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.signal.html">hermespy.signal package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.simulator_core.html">hermespy.simulator_core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.source.html">hermespy.source package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.tools.html">hermespy.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hermespy.html#module-hermespy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+          <li><a href="hermespy.html">hermespy package</a> &raquo;</li>
+          <li><a href="hermespy.modem.html">hermespy.modem package</a> &raquo;</li>
+      <li>hermespy.modem.transmitter module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hermespy.modem.transmitter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-hermespy.modem.transmitter">
+<span id="hermespy-modem-transmitter-module"></span><h1>hermespy.modem.transmitter module<a class="headerlink" href="#module-hermespy.modem.transmitter" title="Permalink to this headline"></a></h1>
+<p>HermesPy transmitting modem.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Transmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bits_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hermespy.modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.modem.Modem</span></code></a></p>
+<p>Transmitting modem within a scenario configuration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.__power">
+<span class="sig-name descname"><span class="pre">__power</span></span><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.__power" title="Permalink to this definition"></a></dt>
+<dd><p>Mean transmission power in Watts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.bits_source">
+<span class="sig-name descname"><span class="pre">bits_source</span></span><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.bits_source" title="Permalink to this definition"></a></dt>
+<dd><p>Source of bits to be transmitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hermespy.source.bits_source.html#hermespy.source.bits_source.BitsSource" title="hermespy.source.bits_source.BitsSource">BitsSource</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Object initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>power</strong> (<em>float</em><em>, </em><em>optional</em>) – Average power of the transmitted signal. 1.0 By default.</p></li>
+<li><p><strong>bits_source</strong> (<a class="reference internal" href="hermespy.source.bits_source.html#hermespy.source.bits_source.BitsSource" title="hermespy.source.bits_source.BitsSource"><em>BitsSource</em></a><em>, </em><em>optional</em>) – Source of bits to be transmitted.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Modem configuration parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Transmitter'</span></em><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">bits_source</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">BitsSource</span></em><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.power" title="Permalink to this definition"></a></dt>
+<dd><p>Power of the transmitted signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Transmit power in Watt.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.send">
+<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drop_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.send" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an array with the complex base-band samples of a waveform generator.</p>
+<p>The signal may be distorted by RF impairments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>drop_duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Length of signal in seconds.</p></li>
+<li><p><strong>data_bits</strong> (<em>np.array</em><em>, </em><em>optional</em>) – Data bits to be sent via this transmitter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Signal model carrying the <cite>data_bits</cite> in multiple streams, each stream encoding multiple
+radio frequency band communication frames.</p></li>
+<li><p>Numpy vector of symbols to which <cite>data_bits</cite> were mapped</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hermespy.html#hermespy.Signal" title="hermespy.Signal">Signal</a>, np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If not enough data bits were provided to generate as single frame.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>Transmitter</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>RoundTripConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>Transmitter</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>Transmitter</cite> instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.transmitter.Transmitter" title="hermespy.modem.transmitter.Transmitter">Transmitter</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If <cite>node</cite> is neither a scalar or a map.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.index">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.index" title="Permalink to this definition"></a></dt>
+<dd><p>The index of this transmitter in the scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The index.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.paired_modems">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">paired_modems</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="hermespy.modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><span class="pre">hermespy.modem.modem.Modem</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.paired_modems" title="Permalink to this definition"></a></dt>
+<dd><p>The modems connected to this modem over an active channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of paired modems.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="hermespy.modem.html#hermespy.modem.Modem" title="hermespy.modem.Modem">Modem</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.transmitter.Transmitter.generate_data_bits">
+<span class="sig-name descname"><span class="pre">generate_data_bits</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.transmitter.Transmitter.generate_data_bits" title="Permalink to this definition"></a></dt>
+<dd><p>Generate data bits required to build a single transmit data frame for this modem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A vector of hard data bits in 0/1 format.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hermespy.modem.rf_chain.html" class="btn btn-neutral float-left" title="hermespy.modem.rf_chain module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hermespy.modem.waveform_generator.html" class="btn btn-neutral float-right" title="hermespy.modem.waveform_generator module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

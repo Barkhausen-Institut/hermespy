@@ -1,0 +1,7 @@
+hermespy.precoding.symbol\_precoder module
+==========================================
+
+.. automodule:: hermespy.precoding.symbol_precoder
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,18 @@
+hermespy.helpers package
+========================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.helpers.resampling
+
+Module contents
+---------------
+
+.. automodule:: hermespy.helpers
+   :members:
+   :undoc-members:
+   :show-inheritance:

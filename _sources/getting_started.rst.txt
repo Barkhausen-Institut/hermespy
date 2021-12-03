@@ -1,360 +1,347 @@
+.. |br| raw:: html
+
+     <br>
+
+***************
 Getting Started
-===============
-This file serves to describe how to make you first steps with Hermespy.
+***************
 
-In general, it is recommended to read :doc:`Parameters Description <parameter_description>` at first. In the first section `First Simple Simulation`_, we will describe how you can define a simple simulation. A rather `Complex Simulation`_ is described afterwards.
+Assuming HermesPy is properly :doc:`installed</installation>` within the currently selected Python environment,
+users may define custom scenarios to be investigated.
 
-A few examples with different configurations are given in the **_examples** folder
+This section outlines how to include HermesPy into your own Python projects and provides
+basic reference examples to get new users accustomed to the API.
 
------------------------
-First Simple Simulation
------------------------
+=====================
+HermesPy Architecture
+=====================
 
-Let's start defining a simple simulation. Let us assume we want to simulate the following:
+In its core, the HermesPy API aims to abstract the process of wireless communication signal processing
+within a strictly object-oriented class structure.
+Each processing step is represented by a dedicated class and can be adapted and customized
+by the library user.
+Considering a single link between a receiving and transmitting modem,
+the software architecture is outlined in the following flowchart:
 
-1. 1 transmitter, 1 receiver modem
-2. modulation scheme is PSK/QAM
-3. carrier frequency is 1 GHz
-4. we have a multipath channel
-5. we want to simulate over SNR values between 1 and 30
+.. mermaid::
 
-^^^^^^^^^^^^^
-Define Modems
-^^^^^^^^^^^^^
+   %%{init: {'theme': 'dark'}}%%
+   flowchart TD
 
-Everything concerning **modem setup** needs to be done in the **settings_scenario.ini** file.
-Let us open it and create the transmitter modem:
+      subgraph TX[Transmitter]
+            direction LR
 
-.. code-block:: ini
+            BSTX(BitSource) --> BCTX(Bit-Encoding) --> MAPTX
 
-   [TxModem_1]
-   # defines the modulation scheme
-   technology_param_file = settings_psk_qam.ini
+            subgraph WRX[WaveformGenerator]
+                direction LR
+                MAPTX(Mapping) --> PRETX(Precoding) --> MODTX(Modulation)
+            end
 
-   # we want to have no encoding
-   encoder_param_file = none
 
-   carrier_frequency = 1e9
+            MODTX --> RFTX(RF-Chain)
+      end
 
-   tx_power_db = 0
+      TX --> F[Channel] --> RX
 
-   number_of_antennas = 1
-   device_type = BASE_STATION
+      subgraph RX[Receiver]
+            direction RL
 
+            RFRX(RF-Chain) --> SRX(Synchronization)
 
-Let us define the receiver modem as well. Simply insert the following lines below the transmitter modem.
+            subgraph WTX[WaveformGenerator]
+                direction RL
+                SRX --> MODRX(De-Modulation) --> PRERX(Precoding) --> MAPRX(Un-Mapping)
+            end
 
-.. code-block:: ini
+            MAPRX --> BCRX(Bit-Decoding)
 
-   [RxModem_1]
-   tx_modem = 1
+      end
 
-   number_of_antennas = 1
+Each HermesPy :doc:`Scenario </api/hermespy.scenario.scenario>` consists of multiple links
+between :doc:`Transmitters </api/hermespy.modem.transmitter>`
+and :doc:`Receivers </api/hermespy.modem.receiver>`, which are both :doc:`Modems </api/hermespy.modem.modem>`.
+Transmitters feed :doc:`Signal</api/hermespy.signal.signal>` models of electromagnetic waves
+into a wireless transmission :doc:`Channel </api/hermespy.channel.channel>`.
+After propagation over said channel, receivers subsequently pick up the distorted signals.
 
-   device_type = UE
-   
-The parameters are described in :doc:`Parameters Description <parameter_description>`.
+Both transmitters and receivers perform a sequence of processing steps in order to
+exchange information represented by binary bit-streams:
 
-Our **first requirement** from our desired simulation is thus fulfilled. Note that the definition of the receiver modem is significantly shorter as technology and coding parameters are chosen from the definition of the respective transmitter modem which is indicated by ``tx_modem = 1``. Carrier frequency is picked from it as well.
+#. :doc:`BitsSource</api/hermespy.source.bits_source>` *(transmitters only)* |br|
+   Generate a sequence of bits to be transmitted.
 
-Our **second requirement** is to use PSK/QAM as modulation scheme. We did this by setting ``technology_param_file = settings_psk_qam.ini``. **You can change relevant modulation parameters by modifying the _settings/settings_psk_qam.ini** and by reading :doc:`Parameters Description <parameter_description>` carefully.
+#. :doc:`Bit-Encoding</api/hermespy.coding.encoder_manager>` |br|
+   Perform operations on the bit-sequence to add redundancy and correct errors.
 
-The **carrier frequency** was set at the transmitter receiver modem only, as the carrier frequency is taken for the receiver from the respective transmitter modem by setting ``tx_modem = 1``. The carrier frequency at the transmitter side was defined by ``carrier_frequency = 1e9``.
+#. :doc:`Waveform-Generation </api/hermespy.modem.waveform_generator>` |br|
+   Map bits to communication symbols, modulate the symbols to electromagnetic baseband-signals.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
-Define Multipath Channel
-^^^^^^^^^^^^^^^^^^^^^^^^
+#. :doc:`Radio-Frequency Chain </api/hermespy.modem.rf_chain>` |br|
+   Mix and amplify the baseband-signals to radio-frequency-band signals.
 
-Channels in general are defined between a pair of Modems.
+Note that receivers perform the inverse processing steps in reverse order.
 
-.. note::
-   Channels are treated independently in Hermes. It is therefore possible to define multiple different channels at the same time. If you want to define a dependent channel for all the modems, Quadriga needs to be chosen as a parameter.
+========
+Library
+========
 
-As we only have one receiver and one transmitter modem, a channel **must** be defined between the of these. For each pair of tx-rx-modem a channel must be defined:
+This chapter provides several examples outlining the utilization of HermesPy as a library.
 
-.. code-block:: ini
+Transmissions
+-------------
 
-   [Channel_1_to_1]
-   multipath_model = STOCHASTIC
-   attenuation_db = 3
+The following code generates the samples of a single communication frame
+transmitted by a PSK/QAM modem:
 
-   delays = 0, 1e-6, 3e-6
-   power_delay_profile_db = 0, -3, -6
-   k_rice_db = 3, -inf, -inf
+.. code-block:: python
+   :linenos:
 
-We define a **stochastic** multipath model with an attenuation of 3db. We defined three paths with a delay of ``delays = 0, 1e-6, 3e-6`` per path. The power delay profiles are described in ``power_delay_profile_db`` with respective ``k_rice`` factors. We define one LOS path.
+   import matplotlib.pyplot as plt
+   from hermespy import Scenario, Transmitter
+   from hermespy.modem import WaveformGeneratorPskQam
 
-Your **settings_scenario.ini** file should look like this right now:
+   transmitter = Transmitter()
+   transmitter.waveform_generator = WaveformGeneratorPskQam()
 
-.. code-block:: ini
+   scenario = Scenario()
+   scenario.add_transmitter(transmitter)
 
-   [TxModem_1]
-   # defines the modulation scheme
-   technology_param_file = settings_psk_qam.ini
+   signal, _ = transmitter.send()
+   signal.plot()
+   plt.show()
 
-   # we want to have no encoding
-   encoder_param_file = none
+Within this snippet, multiple statements lead to the generation and simulation of a single communication frame signal.
 
-   carrier_frequency = 1e9
+* Initially, the required Python modules are imported *(lines 1-3)*.
+* A new transmitter modem handle is created *(line 5)*.
+* The waveform to be generated by the transmitter is configured by assigning a specific
+  :doc:`Waveform Generator </api/hermespy.modem.waveform_generator>` instance to the transmitter's
+  waveform_generator property *(line 6)*. |br|
+  In our case, this is an instance of a :doc:`PKS/QAM </api/hermespy.modem.waveform_generator_psk_qam>`
+  waveform generator.
+* The transmitter is inserted into an empty simulation scenario *(lines 8-9)*
+* An electromagnetic waveform, encoding a single communication frame, emitted by the transmitter
+  is generated and plotted *(lines 11-13)*
 
-   tx_power_db = 0
+Executing the snippet will result in a plot similar to
 
-   number_of_antennas = 1
-   device_type = BASE_STATION
+.. image:: images/getting_started_signal_plot.png
+  :alt: PSK/QAM default waveform plot
 
-   [RxModem_1]
-   tx_modem = 1
+which visualizes the generated samples in time-domain (left sub-plot) and its respective
+discrete fourier transform (right sub-plot).
 
-   number_of_antennas = 1
+While this is only a minimal example, it highlights the philosophy behind the HermesPy API, namely that
+each signal processing step is represented by a class modeling its functionality.
+Instances of those classes are assigned to property slots, where they will be executed sequentially
+during signal simulation.
+Changing the waveform generated by the transmitter defined in the previous snippet
+is therefore as simple as assigning a different type of
+:doc:`Waveform Generator </api/hermespy.modem.waveform_generator>`
+to its waveform_generator property slot.
 
-   device_type = UE
-   
-   [Channel_1_to_1]
-   multipath_model = STOCHASTIC
-   attenuation_db = 3
+Of course, a multitude of parameters can be configured to customize the behaviour of each processing step.
+For instance, the frame generated by a :doc:`PKS/QAM </api/hermespy.modem.waveform_generator_psk_qam>` waveform
+generator features a preamble of multiple reference symbols at the beginning of the communication frame.
+They may be removed by specifying the respective property
 
-   delays = 0, 1e-6, 3e-6
-   power_delay_profile_db = 0, -3, -6
-   k_rice_db = 3, -inf, -inf
+.. code-block:: python
 
-Let us fulfill the **fifth requirement** right now.
+   transmitter.waveform_generator.num_preamble_symbols = 0
 
-^^^^^^^^^^^^^^^^^^
- Tweak Simulation
-^^^^^^^^^^^^^^^^^^
+configuring the number of preamble symbols, resulting in a signal waveform similar to
 
-Simatulion related parameters are to be changed in **settings_general.ini**.
+.. image:: images/getting_started_signal_plot_no_preamble.png
+  :alt: PSK/QAM waveform plot without preamble
 
-This file is full of default values, which are related to the simulation. To keep it simple, let us only change the SNR values to loop over right now. As this concerns the **NoiseLoop**, the respective SNR-vector can be found there:
+in which the preamble has clearly been removed.
+Describing all configurable parameters is beyond the scope of this introduction,
+the API documentation of each processing step should be consulted for detailed descriptions.
 
-.. code-block:: ini
+A full communication link over an ideal channel between a single transmitter and receiver modem is established
+by adding receiver to the scenario:
 
-   snr_vector = np.arange(0, 30, 1)
+.. code-block:: python
+   :linenos:
 
-Save it and then run the simulation!
+   from hermespy import Scenario, Transmitter, Receiver
+   from hermespy.modem import WaveformGeneratorPskQam
 
-------------------
-Complex Simulation
-------------------
+   transmitter = Transmitter()
+   transmitter.waveform_generator = WaveformGeneratorPskQam()
 
-Le us define a more complex simulation now. We want to have
+   receiver = Receiver()
+   receiver.waveform_generator = WaveformGeneratorPskQam()
 
-1. Three Transmitters and two receivers. The transmitters send at 1GHz, 1.5Ghz, and 2Ghz.
-2. Modulation Schemes should be Chirp-FSK, PSK/QAM, and OFDM.
-3. The two receivers should listen to PSK/QAM and OFDM.
-4. The OFDM Modem should use LDPC Encoding.
-5. SNR type should be ``Es/NO(dB)``.
-6. We want to have one 5G Phy channel model for the OFDM pair and a COST-259 Model for the other pair.
+   scenario = Scenario()
+   scenario.add_transmitter(transmitter)
+   scenario.add_receiver(receiver)
 
+   transmitted_signal, _ = transmitter.send()
+   propagated_signal, channel_state = scenario.channel(transmitter, receiver).propagate(transmitted_signal)
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Define Transmitters and Receivers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   received_signal = receiver.receive(propagated_signal)
+   received_bits, received_symbols = receiver.demodulate(propagated_signal, channel_state)
 
-**settings_scenario.ini** is once again your friend. Let us define the **three transmitters**:
+The relevant sections in lines *14-15* highlight how a signal transmission over the channel between
+two modems is simulated by selecting the respective channel and propagating a waveform over it.
+As a result, a tuple of the waveform after propagation and its respective channel state information is returned.
+In lines *17-18* the propagated signal is down-mixed by the receiver's radio-frequency chain and demodulated
+into symbols, and subsequently mapped to bits.
 
-.. code-block:: ini
+Simulations
+-----------
 
-   [TxModem_1]
-   technology_param_file = settings_chirp_fsk.ini
-   encoder_param_file = none
+Evaluating multiple transmissions in scenarios featuring several modems can become quite tedious,
+which is why HermesPy offers the :doc:`Simulation </api/hermespy.simulator_core.simulation>` helper class.
+Considering the same scenario as before, the following snippet demonstrates how
+a single communication drop at 40dB signal-to-noise ratio can be generated:
 
-   carrier_frequency = 1e9
+.. code-block:: python
+   :linenos:
 
-   tx_power_db = 0
+   import matplotlib.pyplot as plt
+   from hermespy import Scenario, Transmitter, Receiver, Simulation
+   from hermespy.modem import WaveformGeneratorPskQam
 
-   number_of_antennas = 1
+   transmitter = Transmitter()
+   transmitter.waveform_generator = WaveformGeneratorPskQam()
 
-   device_type = BASE_STATION
+   receiver = Receiver()
+   receiver.waveform_generator = WaveformGeneratorPskQam()
 
-   [TxModem_2]
-   technology_param_file = settings_psk_qam.ini
-   encoder_param_file = none
+   scenario = Scenario()
+   scenario.add_transmitter(transmitter)
+   scenario.add_receiver(receiver)
 
-   carrier_frequency = 1.5e9
+   simulation = Simulation()
+   simulation.add_scenario(scenario)
 
-   tx_power_db = 0
+   drop = simulation.drop(40.)
+   drop.plot_received_symbols()
+   drop.plot_bit_errors()
 
-   number_of_antennas = 1
+   plt.show()
 
-   device_type = BASE_STATION
+Note that lines *5-16* are identical to the previous snippet, defining a scenario with a single receiver
+and transmitter modem emitting :doc:`PKS/QAM </api/hermespy.modem.waveform_generator_psk_qam>` waveforms.
+However, the scenario is now being managed by the :doc:`Simulation </api/hermespy.simulator_core.simulation>` helper.
+It generates and visualizes a single information exchange between all scenario modems *(lines 18)*.
+In HermesPy, this is referred to as a :doc:`Drop </api/hermespy.simulator_core.drop>`.
+Visualizing the received symbols *(line 19)* and bit errors *(line 20)* during transmission
+results in the following constellation and bit error plots:
 
-   [TxModem_3]
-   technology_param_file = settings_ofdm.ini
-   encoder_param_file = settings_ldpc_encoder.ini
+.. list-table::
 
-   carrier_frequency = 2e9
+    * - .. figure:: /images/getting_started_constellation_low_noise.png
 
-   tx_power_db = 0
+           Symbol Constellation, Low Noise
 
-   number_of_antennas = 2
+      - .. figure:: /images/getting_started_errors_low_noise.png
 
-   device_type = BASE_STATION
+           Bit Errors, Low Noise
 
-``[TxModem_<i>]`` sections, ``i`` being the 1-index based transmitter modem indices, denote the transmitter definitions. We have three as required by our **first bulletpoint**. ``carrier_frequency`` are set as required.
+Of course, due to the high signal-to-noise ratio and the ideal channel model, no bit errors occur during transmission.
+Generating another drop at a much lower ratio, namely 5dB,
 
-The **second requirement** is fulfilled by setting the ``technology`` parameter. Note that we changed the encoding of ``[TxModem_3]`` (our OFDM modem) to ``encoding_param_file = settings_ldpc_encoder.ini``. Therefore, we use the LDPC encoder defined by the **_settings/coding/settings_ldpc_encoder.ini** file! Maybe you realized that we changed the ``number_of_antennas`` to 2 for our OFDM modem.
+.. code-block:: python
 
-Let's define the **receiver modems**. They are quite easy as the important parts are already defined by the transmitters:
+   drop = simulation.drop(5.)
 
-.. code-block:: ini
+leads to several bit-errors during data transmission:
 
-   [RxModem_1]
-   tx_modem = 2
+.. list-table::
 
-   number_of_antennas = 1
+    * - .. figure:: /images/getting_started_constellation_high_noise.png
 
-   device_type = UE
+           Symbol Constellation, High Noise
 
-   [RxModem_2]
-   tx_modem = 3
+      - .. figure:: /images/getting_started_errors_high_noise.png
 
-   number_of_antennas = 2
+           Bit Errors, High Noise
 
-   device_type = UE
+=================
+Command Line Tool
+=================
 
-We want to have two receivers, as opposed to three transmitters. Therefore, we have only the sections ``[RxModem_1]`` and ``[RxModem_2]``. The receiver modems needs to know to which transmitter they are "connected", therefore ``tx_modem`` needs to be set accordingly. The technology, carrier frequency, and coding are set internally in accordance to this pairing. In our case, ``[RxModem_1]`` listens to ``[TxModem_2]`` and ``[RxModem_2]`` listens to ``[TxModem_3]``. For our OFDM modem, we also defined the number of antennas. Thus, **requirements 1 to 4 are fulfilled right now**.
+This section outlines how to use HermesPy as a command line tool
+and provides some reference examples to get new users accustomed with the process of configuring scenarios.
 
-.. note::
+Once HermesPy is installed within any python environment,
+users may call the command line interface by executing the command ``hermes``
+in both Linux and Windows command line terminals.
+Consult :doc:`/api/hermespy.bin.hermes` for a detailed description of all available command line options.
 
-   We also changed the ``device_type``. This is important for the channel definition later on.
+In short, entering
 
-Let's continue with the simulation.
+.. code-block:: bash
 
-^^^^^^^^^^
-Simulation
-^^^^^^^^^^
+   hermes -p /path/to/settings -o /path/to/output
 
-The default values are quite fine for simulation purposes usually. However, we want to change the SNR type. Let's do it:
+is the most common use-case of the command line interface.
+All configuration files located under */path/to/settings* are parsed and interpreted as
+an executable scenario configuration.
+The configuration is subsequently being executed.
+All data resulting from this execution will be stored within */path/to/output*.
 
-.. code-block:: ini
+-----------
+First Steps
+-----------
 
-   [NoiseLoop]
-   snr_type = Es/N0(dB)
+Let's start by configuring a basic simulation scenario.
+It should consist of:
 
-We successfully changed the ``snr_type``.
+#. A single transmitting modem, a single receiving modem, both featuring a single ideal antenna
+#. A Quadrature-Amplitude modulation scheme
+#. A central carrier frequency of 1GHz
+#. An ideal channel between both transmitting and receiving modem
 
-^^^^^^^^^^^^^^^^^^
-Channel Definition
-^^^^^^^^^^^^^^^^^^
+This scenario is represented by the following *scenario.yml* file:
 
-Although no receiver is listening to ``[TxModem_1]``, there might be interferences occurring if the carrier frequencies are close to each other. Therefore channels need to be defined to this modem as well. In general:
+.. code-block:: yaml
+   :linenos:
 
-.. note::
+   !<Scenario>
 
-   There must be a channel definition between each possible tx-rx-pair, independent of the fact if the very tx-rx-pair listens to each other or not. If we have ``N_T`` transmitters and ``N_R`` receivers, ``N_T * N_R`` channels need to be defined.
+   Modems:
 
-For simplicity's sake, let's say that all tx-rx-channel have an AWGN channel, i.e.:
+      - Transmitter
 
-.. code-block:: ini
+        carrier_frequency: 1e9
 
-   [Channel_<i>_to_<j>]
-   multipath_model = NONE
+        WaveformPskQam:
+            num_data_symbols: 100
 
-``i`` denotes the **transmitter** and ``j`` denotes the **receiver**. However, we have two exceptions as defined in **bulletpoint 6**:
+      - Receiver
 
-6. We want to have one 5G Phy channel model for the OFDM pair and a COST-259 Model for the other pair.
+        carrier_frequency: 1e9
 
-OFDM-pair means ``i=3``, ``j=2``, i.e:
+        WaveformPskQam:
+            num_data_symbols: 100
 
-.. code-block:: ini
 
-   [Channel_3_to_2]
-   multipath_model = 5G_TDL
-   tdl_type = A
-   rms_delay = 90e-9
-   correlation = LOW
-   custom_correlation = 0.5
+A second *simulation.yml* file determines the execution behaviour of the scenario.
+For now, the baseband-waveforms as well as the mapped symbol constellations
+at both the transmitter and receiver should be plotted:
 
-Please check the description in :doc:`Parameter Description <parameter_description>` for a detailed description of the parameters.
+.. code-block:: yaml
+   :linenos:
 
-For the PSK/QAM pair, we want to have a COST-259 Channel model. In this case, ``i=2, j=1``, yielding:
+    !<Simulation>
 
-.. code-block:: ini
+    snr: [20]
 
-   [Channel_2_to_1]
-   multipath_model = COST259
-   cost_type = hilly_terrain
+    plot_drop: true
+    plot_drop_transmitted_signals: true
+    plot_drop_received_signals: true
+    plot_drop_transmitted_symbols: true
+    plot_drop_received_symbols: true
 
-That should be self explanatory.
+Assuming both *scenario.yaml* and  *simulation.yml* are located within */path/to/settings*, calling
 
-In total our **settings_scenario.ini** - file should look like this:
+.. code-block:: bash
 
-.. code-block:: ini
+   hermes -p /path/to/settings
 
-   [TxModem_1]
-   technology_param_file = settings_chirp_fsk.ini
-   encoder_param_file = none
-
-   carrier_frequency = 1e9
-
-   tx_power_db = 0
-
-   number_of_antennas = 1
-
-   device_type = BASE_STATION
-
-   [TxModem_2]
-   technology_param_file = settings_psk_qam.ini
-   encoder_param_file = none
-
-   carrier_frequency = 1.5e9
-
-   tx_power_db = 0
-
-   number_of_antennas = 1
-
-   device_type = BASE_STATION
-
-   [TxModem_3]
-   technology_param_file = settings_ofdm.ini
-   encoder_param_file = settings_ldpc_encoder.ini
-
-   carrier_frequency = 2e9
-
-   tx_power_db = 0
-
-   number_of_antennas = 2
-
-   device_type = BASE_STATION
-
-   [RxModem_1]
-   tx_modem = 2
-
-   number_of_antennas = 1
-
-   device_type = UE
-
-   [RxModem_2]
-   tx_modem = 3
-
-   number_of_antennas = 2
-
-   device_type = UE
-
-   [Channel_1_to_1]
-   multipath_model = NONE
-
-   [Channel_2_to_1]
-   multipath_model = COST259
-   cost_type = hilly_terrain
-
-   [Channel_3_to_1]
-   multipath_model = NONE
-
-   [Channel_1_to_2]
-   multipath_model = NONE
-
-   [Channel_2_to_2]
-   multipath_model = NONE
-
-   [Channel_3_to_2]
-   multipath_model = 5G_TDL
-   tdl_type = A
-   rms_delay = 90e-9
-   correlation = LOW
-   custom_correlation = 0.5
-
-.. note::
-
-   The order the Channels are defined is of no importance. That means, it does not matter if you start by defining ``[Channel_1_to_1]`` or ``[Channel_2_to_2]`` for the first channel. It is only important that you define all possible channels.
+will result in the rendering of four plots displaying the respective information.

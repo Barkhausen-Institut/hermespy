@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermespy.channel.radar_channel module &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hermespy.coding package" href="hermespy.coding.html" />
+    <link rel="prev" title="hermespy.channel.quadriga_interface_octave module" href="hermespy.channel.quadriga_interface_octave.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hermespy</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hermespy.html">hermespy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="hermespy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="hermespy.beamformer.html">hermespy.beamformer package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.bin.html">hermespy.bin package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="hermespy.channel.html">hermespy.channel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.coding.html">hermespy.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.helpers.html">hermespy.helpers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.modem.html">hermespy.modem package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.noise.html">hermespy.noise package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.precoding.html">hermespy.precoding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.scenario.html">hermespy.scenario package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.signal.html">hermespy.signal package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.simulator_core.html">hermespy.simulator_core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.source.html">hermespy.source package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.tools.html">hermespy.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hermespy.html#module-hermespy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+          <li><a href="hermespy.html">hermespy package</a> &raquo;</li>
+          <li><a href="hermespy.channel.html">hermespy.channel package</a> &raquo;</li>
+      <li>hermespy.channel.radar_channel module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hermespy.channel.radar_channel.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-hermespy.channel.radar_channel">
+<span id="hermespy-channel-radar-channel-module"></span><h1>hermespy.channel.radar_channel module<a class="headerlink" href="#module-hermespy.channel.radar_channel" title="Permalink to this headline"></a></h1>
+<p>Radar Channel Model.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_cross_section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tx_rx_isolation_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tx_antenna_gain_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx_antenna_gain_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losses_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_response_in_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">21</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hermespy.channel.channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.channel.Channel</span></code></a></p>
+<p>Implements a monostatic radar channel in base-band.</p>
+<p>The radar channel is currently implemented as a single-point reflector.
+The model also considers the presence of self-interference due to leakage from transmitter to receiver.</p>
+<p>Attenuation is considered constant and calculated according to the radar range equation. The received signal is
+considered to have the same power as the transmitted signal, and attenuation will be taken into account in the level
+of the self-interference.</p>
+<p>Moving targets are also taken into account, considering both Doppler and a change in the delay during a drop.</p>
+<p>Both the reflected signal and the self interference will have a random phase.</p>
+<p>Obs.:
+Currently only one transmit and receive antennas is supported.
+Only a radial velocity is considered.</p>
+<p>Object initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_range</strong> (<em>float</em>) – distance from transmitter to target object</p></li>
+<li><p><strong>radar_cross_section</strong> (<em>float</em>) – in m**2</p></li>
+<li><p><strong>target_exists</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if there is a target, False if there is only noise/clutter</p></li>
+<li><p><strong>tx_rx_isolation_db</strong> (<em>float</em><em>, </em><em>optional</em>) – isolation between transmitter and receiver (leakage) in dB
+(default = inf)</p></li>
+<li><p><strong>tx_antenna_gain_db</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>rx_antenna_gain_db</strong> (<em>float</em><em>, </em><em>optional</em>) – antenna gains in dBi (default = 0)</p></li>
+<li><p><strong>losses_db</strong> (<em>float</em><em>, </em><em>optional</em>) – any additional atmospheric and/or cable losses, in dB (default = 0)</p></li>
+<li><p><strong>velocity</strong> (<em>float</em><em>, </em><em>optional</em>) – radial velocity, in m/s (default = 0)</p></li>
+<li><p><strong>filter_response_in_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – length of interpolation filter in samples (default = 7)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If target_range &lt; 0.
+    If radar_cross_section &lt; 0.
+    If carrier_frequency &lt;= 0.
+    If more than one antenna is considered.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'RadarChannel'</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.yaml_matrix">
+<span class="sig-name descname"><span class="pre">yaml_matrix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.yaml_matrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.target_exists">
+<span class="sig-name descname"><span class="pre">target_exists</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.target_exists" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.target_range">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.target_range" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured target range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>range [m]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.radar_cross_section">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radar_cross_section</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.radar_cross_section" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured radar cross section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>radar cross section [m**2]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.tx_rx_isolation_db">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tx_rx_isolation_db</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.tx_rx_isolation_db" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured TX/RX isolation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>TX/RX isolation [dB]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.tx_antenna_gain_db">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tx_antenna_gain_db</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.tx_antenna_gain_db" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured TX antenna gain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>TX antenna gain [dBi]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.impulse_response_interpolation">
+<span class="sig-name descname"><span class="pre">impulse_response_interpolation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.impulse_response_interpolation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.rx_antenna_gain_db">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rx_antenna_gain_db</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.rx_antenna_gain_db" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured RX antenna gain</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>RX antenna gain [dBi]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.losses_db">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">losses_db</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.losses_db" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured (atmospheric and cable) losses</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>losses [dB]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.velocity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.velocity" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured velocity</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>velocity [m/s]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.filter_response_in_samples">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">filter_response_in_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.filter_response_in_samples" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured interpolation filter response length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>length of interpolation filter in samples</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.delay">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.delay" title="Permalink to this definition"></a></dt>
+<dd><p>Get delay from target</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>propagation delay [s]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.attenuation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attenuation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.attenuation" title="Permalink to this definition"></a></dt>
+<dd><p>Get attenuation of returned echo</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>power attenuation in linear scale</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.attenuation_db">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attenuation_db</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.attenuation_db" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.init_drop">
+<span class="sig-name descname"><span class="pre">init_drop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.init_drop" title="Permalink to this definition"></a></dt>
+<dd><p>Initializes random channel parameters for each drop, by selecting random phases</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.propagate">
+<span class="sig-name descname"><span class="pre">propagate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tx_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.propagate" title="Permalink to this definition"></a></dt>
+<dd><p>Modifies the input signal and returns it after channel propagation.</p>
+<p>Currently only a single antenna is supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx_signal</strong> (<em>np.ndarray</em>) – Input signal to channel with shape of <cite>N_tx_antennas x n_samples</cite>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Signal after channel propagation, containing echo and self interference.
+If input is an array of size ‘number_tx_antennas’ X ‘number_of_samples’, then the output is of size
+‘number_rx_antennas’ X ‘number_of_samples’ + L, with L accounting for the propagation delay and filter
+overhead.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.get_impulse_response">
+<span class="sig-name descname"><span class="pre">get_impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.get_impulse_response" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the channel impulse response.</p>
+<p>This method can be used for instance by the transceivers to obtain the
+channel state information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timestamps</strong> (<em>np.array</em>) – Time instants with length T to calculate the
+response for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Impulse response in all ‘number_rx_antennas’ x ‘number_tx_antennas’ channels
+at the time instants given in vector ‘timestamps’.
+<cite>impulse_response</cite> is a 4D-array, with the following dimensions:
+1- sampling instants, 2 - Rx antennas, 3 - Tx antennas, 4 - delays
+(in samples)
+The shape is T x number_rx_antennas x number_tx_antennas x (L+1)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a radar channel object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel"><em>RadarChannel</em></a>) – The channel instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hermespy.channel.quadriga_interface_octave.html" class="btn btn-neutral float-left" title="hermespy.channel.quadriga_interface_octave module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hermespy.coding.html" class="btn btn-neutral float-right" title="hermespy.coding package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

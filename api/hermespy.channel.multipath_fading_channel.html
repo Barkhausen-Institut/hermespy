@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermespy.channel.multipath_fading_channel module &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hermespy.channel.multipath_fading_templates module" href="hermespy.channel.multipath_fading_templates.html" />
+    <link rel="prev" title="hermespy.channel.channel_state_information module" href="hermespy.channel.channel_state_information.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hermespy</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hermespy.html">hermespy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="hermespy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="hermespy.beamformer.html">hermespy.beamformer package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.bin.html">hermespy.bin package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="hermespy.channel.html">hermespy.channel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.coding.html">hermespy.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.helpers.html">hermespy.helpers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.modem.html">hermespy.modem package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.noise.html">hermespy.noise package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.precoding.html">hermespy.precoding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.scenario.html">hermespy.scenario package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.signal.html">hermespy.signal package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.simulator_core.html">hermespy.simulator_core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.source.html">hermespy.source package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.tools.html">hermespy.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hermespy.html#module-hermespy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+          <li><a href="hermespy.html">hermespy package</a> &raquo;</li>
+          <li><a href="hermespy.channel.html">hermespy.channel package</a> &raquo;</li>
+      <li>hermespy.channel.multipath_fading_channel module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hermespy.channel.multipath_fading_channel.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-hermespy.channel.multipath_fading_channel">
+<span id="hermespy-channel-multipath-fading-channel-module"></span><h1>hermespy.channel.multipath_fading_channel module<a class="headerlink" href="#module-hermespy.channel.multipath_fading_channel" title="Permalink to this headline"></a></h1>
+<p>Multipath Fading Channel Model.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipathFadingChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rice_factors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_sinusoids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">los_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doppler_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">los_doppler_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transmit_precoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receive_postcoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate_signals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset_low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sync_offset_high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">impulse_response_interpolation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hermespy.channel.channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.channel.Channel</span></code></a></p>
+<p>Implements a stochastic fading multipath channel.</p>
+<p>For MIMO systems, the received signal is the addition of the signal transmitted
+at all antennas.
+The channel model is defined in the parameters, which should have the following fields:
+- param.delays - numpy.ndarray containing the delays of all significant paths (in s)
+- param.power_delay_profile - numpy.ndarray containing the average power of each path
+(in linear scale). It must have the same number of elements as ‘param.delays’
+- param.k_factor_rice: numpy.ndarray containing the K-factor of the Ricean
+distribution for each path (in linear scale). It must have the same number of
+elements as ‘param.delays’</p>
+<p>The channel is time-variant, with the auto-correlation depending on  its maximum
+‘doppler_frequency’ (in Hz).
+Realizations in different drops are independent.</p>
+<p>The model supports multiple antennas, and the correlation among different antennas can be
+specified in parameters ‘tx_cov_matrix’ and ‘rx_cov_matrix’, for the both transmitter and
+at the receiver side, respectively.
+They both must be Hermitian, positive definite square matrices.</p>
+<p>Rayleigh/Rice fading and uncorrelated scattering is considered. Fading follows Jakes’
+Doppler spectrum, using the simulation approach from:</p>
+<blockquote>
+<div><p><cite>C. Xiao, Zheng, Y. and Beaulieu, N. “Novel sum-of-sinusoids simulation models for
+rayleigh and rician fading channels. IEEE Trans. Wireless Comm., 5(12), 2006</cite></p>
+</div></blockquote>
+<p>which is based on the sum of sinusoids with random phases.</p>
+<p>If the delays are not multiple of the sampling interval, then sinc-based interpolation is
+considered.</p>
+<p>Antenna correlation considers the Kronecker model, as described in:</p>
+<blockquote>
+<div><p>K. Yu, M. Bengtsson, B. Ottersten, D. McNamara, P. Karlsson, and M. Beach, “A wideband
+statistical model for NLOS indoor MIMO channels,” IEEE Veh. Technol. Conf.
+(VTC - Spring), 2002</p>
+</div></blockquote>
+<p>The channel will provide ‘number_rx_antennas’ outputs to a signal
+consisting of ‘number_tx_antennas’ inputs. A random number generator,
+given by ‘rnd’ may be needed. The sampling rate is the same at both input and output
+of the channel, and is given by ‘sampling_rate’ samples/second.
+<cite>tx_cov_matrix</cite> and <cite>rx_cov_matrix</cite> are covariance matrices for transmitter
+and receiver.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__delays">
+<span class="sig-name descname"><span class="pre">__delays</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__delays" title="Permalink to this definition"></a></dt>
+<dd><p>Delay per propagation case in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__power_profile">
+<span class="sig-name descname"><span class="pre">__power_profile</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__power_profile" title="Permalink to this definition"></a></dt>
+<dd><p>Power per propagation case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__rice_factors">
+<span class="sig-name descname"><span class="pre">__rice_factors</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__rice_factors" title="Permalink to this definition"></a></dt>
+<dd><p>Rice factor per propagation case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__max_delay">
+<span class="sig-name descname"><span class="pre">__max_delay</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__max_delay" title="Permalink to this definition"></a></dt>
+<dd><p>Maximum propagation delay in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">__num_resolvable</span> <span class="pre">paths</span></span></dt>
+<dd><p>Number of resolvable paths within the multipath model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__num_sinusoids">
+<span class="sig-name descname"><span class="pre">__num_sinusoids</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__num_sinusoids" title="Permalink to this definition"></a></dt>
+<dd><p>Number of sinusoids components per sample sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__los_angle">
+<span class="sig-name descname"><span class="pre">__los_angle</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__los_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Line of sight angle of arrival.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_gains">
+<span class="sig-name descname"><span class="pre">los_gains</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_gains" title="Permalink to this definition"></a></dt>
+<dd><p>Path gains for line of sight component in sample sequence, derived from rice factor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.non_los_gains">
+<span class="sig-name descname"><span class="pre">non_los_gains</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.non_los_gains" title="Permalink to this definition"></a></dt>
+<dd><p>Path gains for non-line of sight in sample sequence, derived from rice factor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__transmit_precoding">
+<span class="sig-name descname"><span class="pre">__transmit_precoding</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__transmit_precoding" title="Permalink to this definition"></a></dt>
+<dd><p>Precoding matrix for antenna streams before propagation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__receive_postcoding">
+<span class="sig-name descname"><span class="pre">__receive_postcoding</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__receive_postcoding" title="Permalink to this definition"></a></dt>
+<dd><p>Postcoding matrix for antenna streams after propagation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__doppler_frequency">
+<span class="sig-name descname"><span class="pre">__doppler_frequency</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__doppler_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Doppler frequency in Hz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__los_doppler_frequency">
+<span class="sig-name descname"><span class="pre">__los_doppler_frequency</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.__los_doppler_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Optional doppler frequency for the line of sight component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.interpolate_signals">
+<span class="sig-name descname"><span class="pre">interpolate_signals</span></span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.interpolate_signals" title="Permalink to this definition"></a></dt>
+<dd><p>Interpolate signals during time-delay modeling. Disabled by default.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Object initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>delays</strong> (<em>np.ndarray</em>) – Delay in seconds of each individual multipath tap.</p></li>
+<li><p><strong>power_profile</strong> (<em>np.ndarray</em>) – Power loss factor of each individual multipath tap.</p></li>
+<li><p><strong>rice_factors</strong> (<em>np.ndarray</em>) – Rice factor balancing line of sight and multipath in each individual channel tap.</p></li>
+<li><p><strong>transmitter</strong> (<a class="reference internal" href="hermespy.html#hermespy.Transmitter" title="hermespy.Transmitter"><em>Transmitter</em></a><em>, </em><em>optional</em>) – The modem transmitting into this channel.</p></li>
+<li><p><strong>receiver</strong> (<a class="reference internal" href="hermespy.html#hermespy.Receiver" title="hermespy.Receiver"><em>Receiver</em></a><em>, </em><em>optional</em>) – The modem receiving from this channel.</p></li>
+<li><p><strong>scenario</strong> (<a class="reference internal" href="hermespy.html#hermespy.Scenario" title="hermespy.Scenario"><em>Scenario</em></a><em>, </em><em>optional</em>) – The scenario this channel is attached to.</p></li>
+<li><p><strong>active</strong> (<em>bool</em><em>, </em><em>optional</em>) – Channel activity flag.</p></li>
+<li><p><strong>gain</strong> (<em>float</em><em>, </em><em>optional</em>) – Channel power gain.</p></li>
+<li><p><strong>random_generator</strong> (<em>rnd.Generator</em><em>, </em><em>optional</em>) – Generator object for random number sequences.</p></li>
+<li><p><strong>num_sinusoids</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of sinusoids used to sample the statistical distribution.</p></li>
+<li><p><strong>los_angle</strong> (<em>float</em><em>, </em><em>optional</em>) – Angle phase of the line of sight component within the statistical distribution.</p></li>
+<li><p><strong>doppler_frequency</strong> (<em>float</em><em>, </em><em>optional</em>) – Doppler frequency shift of the statistical distribution.</p></li>
+<li><p><strong>transmit_precoding</strong> (<em>np.ndarray</em>) – Transmit precoding matrix.</p></li>
+<li><p><strong>receive_postcoding</strong> (<em>np.ndarray</em>) – Receive postcoding matrix.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <cite>delays</cite>, <cite>power_profile</cite> and <cite>rice_factors</cite> is not identical.
+    If delays are smaller than zero.
+    If power factors are smaller than zero.
+    If rice factors are smaller than zero.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'MultipathFading'</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.yaml_matrix">
+<span class="sig-name descname"><span class="pre">yaml_matrix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.yaml_matrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.delay_resolution_error">
+<span class="sig-name descname"><span class="pre">delay_resolution_error</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.4</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.delay_resolution_error" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">interpolate_signals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.impulse_response_interpolation">
+<span class="sig-name descname"><span class="pre">impulse_response_interpolation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.impulse_response_interpolation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">los_gains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><a class="headerlink" href="#id1" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.delays">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delays</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.delays" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured path delays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Path delays.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.power_profile">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power_profile</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.power_profile" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured power profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Power profile.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.rice_factors">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.rice_factors" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured rice factors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factors.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.doppler_frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">doppler_frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.doppler_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Access doppler frequency shift.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Doppler frequency shift in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_doppler_frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">los_doppler_frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_doppler_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Access doppler frequency shift of the line of sight component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Doppler frequency shift in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.transmit_precoding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_precoding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.transmit_precoding" title="Permalink to this definition"></a></dt>
+<dd><p>Access transmit precoding matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Transmit precoding matrix, None if no matrix ix configured.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Optional[np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.receive_postcoding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive_postcoding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.receive_postcoding" title="Permalink to this definition"></a></dt>
+<dd><p>Access receive postcoding matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Receive postcoding matrix, None if no matrix ix configured.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Optional[np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.max_delay">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_delay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.max_delay" title="Permalink to this definition"></a></dt>
+<dd><p>Access the maximum multipath delay.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The maximum delay.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.num_resolvable_paths">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_resolvable_paths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.num_resolvable_paths" title="Permalink to this definition"></a></dt>
+<dd><p>Access the configured number of fading sequences generating a single impulse response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of sequences.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.num_sinusoids">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_sinusoids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.num_sinusoids" title="Permalink to this definition"></a></dt>
+<dd><p>Access the configured number of sinusoids within one fading sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of sinusoids.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_angle">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">los_angle</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Access configured angle of arrival of the specular model component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The AoA in radians, <cite>None</cite> if it is not configured.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Optional[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.propagate">
+<span class="sig-name descname"><span class="pre">propagate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmitted_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.propagate" title="Permalink to this definition"></a></dt>
+<dd><p>Modifies the input signal and returns it after channel propagation.</p>
+<p>For the ideal channel in the base class, the MIMO channel is modeled as a matrix of ones.
+The routine samples a new impulse response, which will be converted to ChannelStateInformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>transmitted_signal</strong> (<a class="reference internal" href="hermespy.html#hermespy.Signal" title="hermespy.Signal"><em>Signal</em></a>) – Radio-Frequency band antenna signals to be propagated of this channel instance.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of the distorted signal after propagation and the respective channel state.
+Note that the channel may append samples to the propagated signal.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="hermespy.html#hermespy.Signal" title="hermespy.Signal">Signal</a>, <a class="reference internal" href="hermespy.channel.html#hermespy.channel.ChannelStateInformation" title="hermespy.channel.ChannelStateInformation">ChannelStateInformation</a>)</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the number of streams in <cite>transmitted_signal</cite> is not one or the number of transmitting antennas.</p></li>
+<li><p><strong>RuntimeError</strong> – If the scenario configuration is not supported by the default channel model.</p></li>
+<li><p><strong>RuntimeError</strong> – If the channel is currently floating.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.impulse_response">
+<span class="sig-name descname"><span class="pre">impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.impulse_response" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a new channel impulse response.</p>
+<p>Note that this is the core routine from which <cite>propagate</cite> will create the channel state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamps</strong> (<em>np.ndarray</em>) – Time instants with length <cite>T</cite> to calculate the response for.</p></li>
+<li><p><strong>sampling_rate</strong> (<em>float</em>) – The rate at which the delay taps will be sampled, i.e. the delay resolution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Impulse response in all <cite>number_rx_antennas</cite> x <cite>number_tx_antennas</cite>.
+4-dimensional array of size <cite>T x number_rx_antennas x number_tx_antennas x (L+1)</cite>
+where <cite>L</cite> is the maximum path delay (in samples). For the ideal
+channel in the base class, <cite>L = 0</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.min_sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">min_sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.min_sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Minimal sampling rate required to adequately model the channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The minimal sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.interpolation_filter">
+<span class="sig-name descname"><span class="pre">interpolation_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.interpolation_filter" title="Permalink to this definition"></a></dt>
+<dd><p>Create an interpolation filter matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sampling_rate</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – The sampling rate to which to interpolate.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Interpolation filter matrix containing filters for each configured resolvable path.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a channel object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel" title="hermespy.channel.multipath_fading_channel.MultipathFadingChannel"><em>MultipathFadingChannel</em></a>) – The channel instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_channel.MultipathFadingChannel.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>MultipathFadingChannel</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>MultipathFadingChannel</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>MultipathFadingChannel</cite> instance. The internal references to modems will be <cite>None</cite> and need to be
+initialized by the <cite>scenario</cite> YAML constructor.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.channel.multipath_fading_channel.MultipathFadingChannel" title="hermespy.channel.multipath_fading_channel.MultipathFadingChannel">MultipathFadingChannel</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hermespy.channel.channel_state_information.html" class="btn btn-neutral float-left" title="hermespy.channel.channel_state_information module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hermespy.channel.multipath_fading_templates.html" class="btn btn-neutral float-right" title="hermespy.channel.multipath_fading_templates module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

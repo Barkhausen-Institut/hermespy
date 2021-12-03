@@ -1,0 +1,18 @@
+hermespy.scenario package
+=========================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.scenario.scenario
+
+Module contents
+---------------
+
+.. automodule:: hermespy.scenario
+   :members:
+   :undoc-members:
+   :show-inheritance:

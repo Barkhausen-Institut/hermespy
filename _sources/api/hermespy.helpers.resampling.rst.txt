@@ -1,0 +1,7 @@
+hermespy.helpers.resampling module
+==================================
+
+.. automodule:: hermespy.helpers.resampling
+   :members:
+   :undoc-members:
+   :show-inheritance:

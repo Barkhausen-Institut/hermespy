@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/tabs.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="_static/dark_mode_js/default_dark.js"></script>
+        <script src="_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting_started.html" />
+    <link rel="prev" title="HermesPy Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-from-pypi">Install from PyPi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-quadriga">Install Quadriga</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">hermespy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h1>
+<p>There are two supported ways to install HermesPy on your system.
+Users may either pull pre-built wheels from the official python package index <a class="reference external" href="https://pypi.org/">PyPi</a> or
+or clone the source code from the <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy">GitHub</a> and build the package from scratch.</p>
+<p>Both methods will be described in the following sections.</p>
+<div class="section" id="install-from-pypi">
+<h2>Install from PyPi<a class="headerlink" href="#install-from-pypi" title="Permalink to this headline"></a></h2>
+<p>Pulling HermesPy from <a class="reference external" href="https://pypi.org/">PyPi</a> is the recommended installation method for end-users who do not
+intend to extend the HermesPy source code.</p>
+<p>HermesPy is registered as an official <a class="reference external" href="https://pypi.org/project/hermespy/">package</a> within the python package index.
+Binaries for Windows, most Linux distributions and MacOS, built from the newest release version
+of HermesPy, are distributed via the index, enabling easy installations for most operating systems.</p>
+<p>Install the package by executing the following commands within a terminal:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-V2luZG93cw==" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-V2luZG93cw==" name="V2luZG93cw==" role="tab" tabindex="0">Windows</button><button aria-controls="panel-0-TGludXg=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-TGludXg=" name="TGludXg=" role="tab" tabindex="-1">Linux</button></div><div aria-labelledby="tab-0-V2luZG93cw==" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-V2luZG93cw==" name="V2luZG93cw==" role="tabpanel" tabindex="0"><div class="highlight-batch notranslate"><div class="highlight"><pre><span></span>conda create -n <span class="p">&lt;</span>envname<span class="p">&gt;</span> python=3.9
+conda activate <span class="p">&lt;</span>envname&gt;
+conda install pip
+pip install hermespy
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-TGludXg=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-TGludXg=" name="TGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m venv env
+. env/bin/activate
+pip install hermespy
+</pre></div>
+</div>
+</div></div>
+<p>Executing these statements sequentially results in the following actions:</p>
+<ol class="arabic simple">
+<li><p>Creation of a new virtual environment titled <cite>&lt;envname&gt;</cite></p></li>
+<li><p>Activate the newly created environment</p></li>
+<li><p>Install the HermesPy wheel from PyPi within the environment</p></li>
+</ol>
+<p>Note that if you plan on utilizing HermesPy within an already existing Python environment,
+you may omit step one and replace <cite>&lt;envname&gt;</cite> by the title of the existing environment.</p>
+</div>
+<div class="section" id="install-from-source">
+<h2>Install from Source<a class="headerlink" href="#install-from-source" title="Permalink to this headline"></a></h2>
+<p>Cloning the HermesPy source code and manually building / installing its package is the recommended way
+for developers who plan on extending the HermesPy source code.
+Additionally, it can also be applied by users who, for any reason, are unable to install HermesPy from
+the index.</p>
+<p>Using the <a class="reference external" href="https://git-scm.com/">Git</a> command line interface,
+the HermesPy source code can be copied to any system by executing</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone &lt;this-repo&gt;
+<span class="nb">cd</span> hermespy/
+</pre></div>
+</div>
+<p>within a terminal.
+Make sure to have the <a class="reference external" href="https://git-lfs.github.com/">LFS</a> extension to <a class="reference external" href="https://git-scm.com/">Git</a> installed.</p>
+<p>Install the package by executing the following commands within a terminal:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-V2luZG93cw==" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-V2luZG93cw==" name="V2luZG93cw==" role="tab" tabindex="0">Windows</button><button aria-controls="panel-1-TGludXg=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-TGludXg=" name="TGludXg=" role="tab" tabindex="-1">Linux</button></div><div aria-labelledby="tab-1-V2luZG93cw==" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-V2luZG93cw==" name="V2luZG93cw==" role="tabpanel" tabindex="0"><div class="highlight-batch notranslate"><div class="highlight"><pre><span></span>conda create -n <span class="p">&lt;</span>envname<span class="p">&gt;</span> python=3.9
+conda activate <span class="p">&lt;</span>envname&gt;
+conda install pip
+pip install .
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-TGludXg=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-TGludXg=" name="TGludXg=" role="tabpanel" tabindex="0"><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m venv env
+. env/bin/activate
+pip install .
+</pre></div>
+</div>
+</div></div>
+<p>Executing these statements sequentially results in the following actions:</p>
+<ol class="arabic simple">
+<li><p>Creation of a new virtual environment titled <cite>&lt;envname&gt;</cite></p></li>
+<li><p>Activate the newly created environment</p></li>
+<li><p>Install the HermesPy wheel from source within the environment</p></li>
+</ol>
+<p>Note that if you plan on utilizing HermesPy within an already existing Python environment,
+you may omit step one and replace <cite>&lt;envname&gt;</cite> by the title of the existing environment.</p>
+<p><strong>If you plan to alter the source code in any way, we recommend appending the editable flag</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -e .
+</pre></div>
+</div>
+<p><strong>during installation.</strong></p>
+</div>
+<div class="section" id="install-quadriga">
+<h2>Install Quadriga<a class="headerlink" href="#install-quadriga" title="Permalink to this headline"></a></h2>
+<p>In addition to its native channel models, HermesPy supports the <a class="reference external" href="https://quadriga-channel-model.de/">Quadriga</a> channel model as an external
+dependency.
+For it to be used, some preliminary steps need to be taken.
+<a class="reference external" href="https://quadriga-channel-model.de/">Quadriga</a> is based on <a class="reference external" href="https://www.mathworks.com/products/matlab.html">Matlab</a> and can be executed by either the <a class="reference external" href="https://www.mathworks.com/products/matlab.html">Matlab</a> interpreter or its open-source
+equivalent <a class="reference external" href="https://www.gnu.org/software/octave/index">Octave</a>.</p>
+<p>In order to execute the <a class="reference external" href="https://www.mathworks.com/products/matlab.html">Matlab</a> interpreter the <a class="reference external" href="https://www.mathworks.com/help/matlab/matlab-engine-for-python.html">matlab.engine</a> package provided by <a class="reference external" href="https://www.mathworks.com/products/matlab.html">Matlab</a> needs to be installed
+manually.</p>
+<p>In order to execute the <a class="reference external" href="https://www.gnu.org/software/octave/index">Octave</a> interpreter the additional <a class="reference external" href="https://pypi.org/project/oct2py/">oct2py</a> package needs to be installed
+(<cite>pip install oct2py</cite>).
+Under Windows, an extension of the <cite>PATH</cite> variable may be required for <a class="reference external" href="https://pypi.org/project/oct2py/">oct2py</a> to be able to locate the octave
+command line interface:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>setx PATH <span class="s2">&quot;%PATH%;&lt;path-to-octave-cli&gt;&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="HermesPy Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

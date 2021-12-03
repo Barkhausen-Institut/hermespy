@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermespy.modem.tools.shaping_filter module &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hermespy.modem.modem module" href="hermespy.modem.modem.html" />
+    <link rel="prev" title="hermespy.modem.tools.psk_qam_mapping module" href="hermespy.modem.tools.psk_qam_mapping.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hermespy</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hermespy.html">hermespy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="hermespy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="hermespy.beamformer.html">hermespy.beamformer package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.bin.html">hermespy.bin package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.channel.html">hermespy.channel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.coding.html">hermespy.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.helpers.html">hermespy.helpers package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="hermespy.modem.html">hermespy.modem package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.noise.html">hermespy.noise package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.precoding.html">hermespy.precoding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.scenario.html">hermespy.scenario package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.signal.html">hermespy.signal package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.simulator_core.html">hermespy.simulator_core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.source.html">hermespy.source package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.tools.html">hermespy.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hermespy.html#module-hermespy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+          <li><a href="hermespy.html">hermespy package</a> &raquo;</li>
+          <li><a href="hermespy.modem.html">hermespy.modem package</a> &raquo;</li>
+          <li><a href="hermespy.modem.tools.html">hermespy.modem.tools package</a> &raquo;</li>
+      <li>hermespy.modem.tools.shaping_filter module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hermespy.modem.tools.shaping_filter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-hermespy.modem.tools.shaping_filter">
+<span id="hermespy-modem-tools-shaping-filter-module"></span><h1>hermespy.modem.tools.shaping_filter module<a class="headerlink" href="#module-hermespy.modem.tools.shaping_filter" title="Permalink to this headline"></a></h1>
+<p>Shaping Filter for Communcation Links.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapingFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_per_symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_in_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandwidth_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roll_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_matched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements a shaping/reception filter for a communications link.</p>
+<p>Currently, raised-cosine, root-raised-cosine, rectangular and FMCW
+(frequency modulated continuous wave) filters are implemented.
+An FIR filter with truncated impulse response is created.
+The filter is normalized, i.e., the impulse response has unit energy.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.samples_per_symbol">
+<span class="sig-name descname"><span class="pre">samples_per_symbol</span></span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.samples_per_symbol" title="Permalink to this definition"></a></dt>
+<dd><p>samples per modulation symbol</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.number_of_samples">
+<span class="sig-name descname"><span class="pre">number_of_samples</span></span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.number_of_samples" title="Permalink to this definition"></a></dt>
+<dd><p>filter length in samples</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.delay_in_samples">
+<span class="sig-name descname"><span class="pre">delay_in_samples</span></span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.delay_in_samples" title="Permalink to this definition"></a></dt>
+<dd><p>delay introduced by filter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.impulse_response">
+<span class="sig-name descname"><span class="pre">impulse_response</span></span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.impulse_response" title="Permalink to this definition"></a></dt>
+<dd><p>filter impulse response</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Creates an object for a transmission/reception filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filter_type</strong> (<em>str</em>) – Determines filter, currently supported:
+- RAISED_COSINE
+- ROOT_RAISED_COSINE
+- RECTANGULAR
+- FMCW
+- NONE</p></li>
+<li><p><strong>samples_per_symbol</strong> (<em>int</em>) – number of samples per modulation symbol.</p></li>
+<li><p><strong>length_in_symbols</strong> (<em>int</em>) – filter length in modulation symbols.</p></li>
+<li><p><strong>bandwidth_factor</strong> (<em>float</em>) – filter bandwidth can be expanded/reduced by this factor
+(default = 1), relatively to the symbol rate.
+For (root)-raised cosine, the Nyquist symbol rate will be
+multiplied by this factor
+For rectangular pulses, the pulse width in time will be divided by this factor.
+For FMCW, the sweep bandwidth will be given by the symbol rate multiplied by this
+factor.</p></li>
+<li><p><strong>roll_off</strong> (<em>float</em>) – Roll off factor between 0 and 1. Only relevant for (root)-raised cosine filters.</p></li>
+<li><p><strong>is_matched</strong> (<em>bool</em>) – if True, then a matched filter is considered.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FilterType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Type of filter applied to the signal.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.NONE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.ROOT_RAISED_COSINE">
+<span class="sig-name descname"><span class="pre">ROOT_RAISED_COSINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.ROOT_RAISED_COSINE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.RAISED_COSINE">
+<span class="sig-name descname"><span class="pre">RAISED_COSINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.RAISED_COSINE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.RECTANGULAR">
+<span class="sig-name descname"><span class="pre">RECTANGULAR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.RECTANGULAR" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.FMCW">
+<span class="sig-name descname"><span class="pre">FMCW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.FilterType.FMCW" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ShapingFilter'</span></em><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.filter" title="Permalink to this definition"></a></dt>
+<dd><p>Filters the input signal with the shaping filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_signal</strong> (<em>np.array</em>) – Input signal with N samples to filter.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Filtered signal with  <cite>N + samples_per_symbol*length_in_symbols - 1</cite> samples.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize an <cite>ShapingFilter</cite> object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.modem.tools.shaping_filter.ShapingFilter" title="hermespy.modem.tools.shaping_filter.ShapingFilter"><em>ShapingFilter</em></a>) – The <cite>ShapingFilter</cite> instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.tools.shaping_filter.ShapingFilter.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.tools.shaping_filter.ShapingFilter.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>ShapingFilter</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>ShapingFilter</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>ShapingFilter</cite> instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.tools.shaping_filter.ShapingFilter" title="hermespy.modem.tools.shaping_filter.ShapingFilter">ShapingFilter</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hermespy.modem.tools.psk_qam_mapping.html" class="btn btn-neutral float-left" title="hermespy.modem.tools.psk_qam_mapping module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hermespy.modem.modem.html" class="btn btn-neutral float-right" title="hermespy.modem.modem module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

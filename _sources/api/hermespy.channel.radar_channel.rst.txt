@@ -1,0 +1,7 @@
+hermespy.channel.radar\_channel module
+======================================
+
+.. automodule:: hermespy.channel.radar_channel
+   :members:
+   :undoc-members:
+   :show-inheritance:

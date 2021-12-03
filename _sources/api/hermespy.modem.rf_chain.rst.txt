@@ -1,0 +1,7 @@
+hermespy.modem.rf\_chain module
+===============================
+
+.. automodule:: hermespy.modem.rf_chain
+   :members:
+   :undoc-members:
+   :show-inheritance:

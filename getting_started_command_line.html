@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Command Line Tool &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="_static/dark_mode_js/default_dark.js"></script>
+        <script src="_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">hermespy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Command Line Tool</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/getting_started_command_line.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="command-line-tool">
+<h1>Command Line Tool<a class="headerlink" href="#command-line-tool" title="Permalink to this headline"></a></h1>
+<p>This section outlines how to use HermesPy as a command line tool
+and provides some reference examples to get new users accustomed with the process of configuring scenarios.</p>
+<p>Once HermesPy is installed within any python environment,
+users may call the command line interface by entering the command <code class="docutils literal notranslate"><span class="pre">hermes</span></code>
+in both Linux and Windows environments.
+Check <a class="reference internal" href="api/hermespy.bin.hermes.html"><span class="doc">hermespy.bin.hermes module</span></a> for a detailed description of all command line options.</p>
+<p>In short, entering</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">hermes -p /path/to/settings -o /path/to/output</span>
+</pre></div>
+</div>
+<p>is the most common use-case of the command line interface.
+All configuration files located under <em>/path/to/settings</em> are parsed and interpreted as
+an executable scenario configuration.
+The configuration is subsequently being executed.
+All data resulting from this execution will be stored within <em>/path/to/output</em>.</p>
+<div class="section" id="first-steps">
+<h2>First Steps<a class="headerlink" href="#first-steps" title="Permalink to this headline"></a></h2>
+<p>Let’s start by configuring a basic simulation scenario.
+It should consist of:</p>
+<ol class="arabic simple">
+<li><p>A single transmitting modem, a single receiving modem, both featuring a single ideal antenna</p></li>
+<li><p>A Quadrature-Amplitude modulation scheme</p></li>
+<li><p>A central carrier frequency of 1GHz</p></li>
+<li><p>An ideal channel between both transmitting and receiving modem</p></li>
+</ol>
+<p>This scenario is represented by the following <em>scenario.yml</em> file:</p>
+<div class="highlight-yml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span>!&lt;Scenario&gt;
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span>Modems:
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span>   - Transmitter
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span>     carrier_frequency: 1e9
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span>     WaveformPskQam:
+<span class="linenos">10</span>         num_data_symbols: 100
+<span class="linenos">11</span>
+<span class="linenos">12</span>   - Receiver
+<span class="linenos">13</span>
+<span class="linenos">14</span>     carrier_frequency: 1e9
+<span class="linenos">15</span>
+<span class="linenos">16</span>     WaveformPskQam:
+<span class="linenos">17</span>         num_data_symbols: 100
+</pre></div>
+</div>
+<p>A second <em>simulation.yml</em> file determines the execution behaviour of the scenario.
+For now, the baseband-waveforms as well as the mapped symbol constellations
+at both the transmitter and receiver should be plotted:</p>
+<div class="highlight-yml notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span> !&lt;Simulation&gt;
+<span class="linenos">2</span>
+<span class="linenos">3</span> snr: [20]
+<span class="linenos">4</span>
+<span class="linenos">5</span> plot_drop: true
+<span class="linenos">6</span> plot_drop_transmitted_signals: true
+<span class="linenos">7</span> plot_drop_received_signals: true
+<span class="linenos">8</span> plot_drop_transmitted_symbols: true
+<span class="linenos">9</span> plot_drop_received_symbols: true
+</pre></div>
+</div>
+<p>Assuming both <em>scenario.yml</em> and  <em>simulation.yml</em> are located within <em>/path/to/settings</em>, calling</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">hermes -p /path/to/settings</span>
+</pre></div>
+</div>
+<p>will result in the rendering of four plots displaying the respective information.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+hermespy.simulator\_core.tools.theoretical\_results module
+==========================================================
+
+.. automodule:: hermespy.simulator_core.tools.theoretical_results
+   :members:
+   :undoc-members:
+   :show-inheritance:

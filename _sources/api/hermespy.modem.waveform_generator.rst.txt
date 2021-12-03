@@ -1,0 +1,7 @@
+hermespy.modem.waveform\_generator module
+=========================================
+
+.. automodule:: hermespy.modem.waveform_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:

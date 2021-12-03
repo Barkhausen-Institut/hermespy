@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermespy.simulator_core.factory module &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hermespy.simulator_core.hardware_loop module" href="hermespy.simulator_core.hardware_loop.html" />
+    <link rel="prev" title="hermespy.simulator_core.executable module" href="hermespy.simulator_core.executable.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hermespy</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hermespy.html">hermespy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="hermespy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="hermespy.beamformer.html">hermespy.beamformer package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.bin.html">hermespy.bin package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.channel.html">hermespy.channel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.coding.html">hermespy.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.helpers.html">hermespy.helpers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.modem.html">hermespy.modem package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.noise.html">hermespy.noise package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.precoding.html">hermespy.precoding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.scenario.html">hermespy.scenario package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.signal.html">hermespy.signal package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="hermespy.simulator_core.html">hermespy.simulator_core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.source.html">hermespy.source package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.tools.html">hermespy.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hermespy.html#module-hermespy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+          <li><a href="hermespy.html">hermespy package</a> &raquo;</li>
+          <li><a href="hermespy.simulator_core.html">hermespy.simulator_core package</a> &raquo;</li>
+      <li>hermespy.simulator_core.factory module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hermespy.simulator_core.factory.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-hermespy.simulator_core.factory">
+<span id="hermespy-simulator-core-factory-module"></span><h1>hermespy.simulator_core.factory module<a class="headerlink" href="#module-hermespy.simulator_core.factory" title="Permalink to this headline"></a></h1>
+<p>HermesPy serialization factory.</p>
+<p>This module implements the main interface for loading and dumping HermesPy configurations.</p>
+<blockquote>
+<div><p>Dumping to text file:</p>
+<blockquote>
+<div><p>factory = Factory()
+factory.to_file(“config.yml”, simulation)</p>
+</div></blockquote>
+<p>Loading from text file:</p>
+<blockquote>
+<div><p>factory = Factory()
+simulation = factory.from_file(“config.yml”)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>SerializableClasses (List): List of classes permitted to be dumped to / loaded from YAML config files.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Factory</span></span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Helper class to load HermesPy simulation scenarios from YAML configuration files.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.extensions">
+<span class="sig-name descname"><span class="pre">extensions</span></span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.extensions" title="Permalink to this definition"></a></dt>
+<dd><p>List of recognized filename extensions for serialization files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Set[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Object initialization.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">extensions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['.yml',</span> <span class="pre">'.yaml',</span> <span class="pre">'.cfg']</span></em><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.clean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.clean" title="Permalink to this definition"></a></dt>
+<dd><p>Access clean flag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Clean flag.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.registered_tags">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registered_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.registered_tags" title="Permalink to this definition"></a></dt>
+<dd><p>Read registered YAML tags.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Set of registered YAML tags.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Set[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.load" title="Permalink to this definition"></a></dt>
+<dd><p>Load a serialized executable configuration from a filesystem location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – Path to a file or a folder featuring serialization files.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An executable HermesPy object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hermespy.simulator_core.html#hermespy.simulator_core.Executable" title="hermespy.simulator_core.Executable">Executable</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – If <cite>path</cite> does not contain an executable object.</p></li>
+<li><p><strong>RuntimeError</strong> – If <cite>path</cite> contains more than one executable object.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.refurbish_tags">
+<span class="sig-name descname"><span class="pre">refurbish_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">serialization</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.refurbish_tags" title="Permalink to this definition"></a></dt>
+<dd><p>Callback to restore explicit YAML tags to serialization streams.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.from_path">
+<span class="sig-name descname"><span class="pre">from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.from_path" title="Permalink to this definition"></a></dt>
+<dd><p>Load a configuration from an arbitrary file system path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>paths</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Set</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Paths to a file or a folder featuring .yml config files.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of serializable objects recalled from <cite>paths</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[Any]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the provided <cite>path</cite> does not exist on the filesystem.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.from_folder">
+<span class="sig-name descname"><span class="pre">from_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.from_folder" title="Permalink to this definition"></a></dt>
+<dd><p>Load a configuration from a folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – Path to the folder configuration.</p></li>
+<li><p><strong>recurse</strong> (<em>bool</em><em>, </em><em>optional</em>) – Recurse into sub-folders within <cite>path</cite>.</p></li>
+<li><p><strong>follow_links</strong> (<em>bool</em><em>, </em><em>optional</em>) – Follow links within <cite>path</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of serializable objects recalled from <cite>path</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[Any]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>path</cite> is not a directory.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.to_folder">
+<span class="sig-name descname"><span class="pre">to_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.to_folder" title="Permalink to this definition"></a></dt>
+<dd><p>Dump a configuration to a folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – Path to the folder configuration.</p></li>
+<li><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.from_str">
+<span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.from_str" title="Permalink to this definition"></a></dt>
+<dd><p>Load a configuration from a string object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str</em>) – The configuration to be loaded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of serialized objects within <cite>path</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.to_str">
+<span class="sig-name descname"><span class="pre">to_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.to_str" title="Permalink to this definition"></a></dt>
+<dd><p>Dump a configuration to a folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>String containing full YAML configuration.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RepresenterError</strong> – If objects in <code class="docutils literal notranslate"><span class="pre">*args</span></code> are unregistered classes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.from_file">
+<span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.from_file" title="Permalink to this definition"></a></dt>
+<dd><p>Load a configuration from a single YAML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>str</em>) – Path to the folder configuration.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of serialized objects within <cite>path</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.to_file">
+<span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.to_file" title="Permalink to this definition"></a></dt>
+<dd><p>Dump a configuration to a single YML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – Path to the configuration file.</p></li>
+<li><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RepresenterError</strong> – If objects in <code class="docutils literal notranslate"><span class="pre">*args</span></code> are unregistered classes.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.from_stream">
+<span class="sig-name descname"><span class="pre">from_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.from_stream" title="Permalink to this definition"></a></dt>
+<dd><p>Load a configuration from an arbitrary text stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>stream</strong> (<em>TextIOBase</em>) – Text stream containing the configuration.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of serialized objects within <cite>stream</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[Any]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ConstructorError</strong> – If YAML parsing fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.factory.Factory.to_stream">
+<span class="sig-name descname"><span class="pre">to_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.factory.Factory.to_stream" title="Permalink to this definition"></a></dt>
+<dd><p>Dump a configuration to an arbitrary text stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> (<em>TextIOBase</em>) – Text stream to the configuration.</p></li>
+<li><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RepresenterError</strong> – If objects in <code class="docutils literal notranslate"><span class="pre">*args</span></code> are unregistered classes.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hermespy.simulator_core.executable.html" class="btn btn-neutral float-left" title="hermespy.simulator_core.executable module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hermespy.simulator_core.hardware_loop.html" class="btn btn-neutral float-right" title="hermespy.simulator_core.hardware_loop module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

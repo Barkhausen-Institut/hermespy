@@ -1,0 +1,7 @@
+hermespy.scenario.scenario module
+=================================
+
+.. automodule:: hermespy.scenario.scenario
+   :members:
+   :undoc-members:
+   :show-inheritance:

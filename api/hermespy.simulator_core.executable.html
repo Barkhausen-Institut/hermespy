@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermespy.simulator_core.executable module &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hermespy.simulator_core.factory module" href="hermespy.simulator_core.factory.html" />
+    <link rel="prev" title="hermespy.simulator_core.drop module" href="hermespy.simulator_core.drop.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hermespy</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hermespy.html">hermespy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="hermespy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="hermespy.beamformer.html">hermespy.beamformer package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.bin.html">hermespy.bin package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.channel.html">hermespy.channel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.coding.html">hermespy.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.helpers.html">hermespy.helpers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.modem.html">hermespy.modem package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.noise.html">hermespy.noise package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.precoding.html">hermespy.precoding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.scenario.html">hermespy.scenario package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.signal.html">hermespy.signal package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="hermespy.simulator_core.html">hermespy.simulator_core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.source.html">hermespy.source package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.tools.html">hermespy.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hermespy.html#module-hermespy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+          <li><a href="hermespy.html">hermespy package</a> &raquo;</li>
+          <li><a href="hermespy.simulator_core.html">hermespy.simulator_core package</a> &raquo;</li>
+      <li>hermespy.simulator_core.executable module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hermespy.simulator_core.executable.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-hermespy.simulator_core.executable">
+<span id="hermespy-simulator-core-executable-module"></span><h1>hermespy.simulator_core.executable module<a class="headerlink" href="#module-hermespy.simulator_core.executable" title="Permalink to this headline"></a></h1>
+<p>HermesPy base for executable configurations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Verbosity">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Verbosity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.executable.Verbosity" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Information output behaviour configuration of an executable.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Verbosity.ALL">
+<span class="sig-name descname"><span class="pre">ALL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Verbosity.ALL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Verbosity.INFO">
+<span class="sig-name descname"><span class="pre">INFO</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Verbosity.INFO" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Verbosity.WARNING">
+<span class="sig-name descname"><span class="pre">WARNING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Verbosity.WARNING" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Verbosity.ERROR">
+<span class="sig-name descname"><span class="pre">ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Verbosity.ERROR" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Verbosity.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Verbosity.NONE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Executable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_transmit_spectrum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_receive_spectrum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_transmit_stft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_receive_stft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spectrum_fft_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_drops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Verbosity.INFO</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract base class for executable configurations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.plot_drop">
+<span class="sig-name descname"><span class="pre">plot_drop</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.plot_drop" title="Permalink to this definition"></a></dt>
+<dd><p>Plot each drop during execution of scenarios.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.calc_transmit_spectrum">
+<span class="sig-name descname"><span class="pre">calc_transmit_spectrum</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.calc_transmit_spectrum" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the transmitted signals frequency domain spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.calc_receive_spectrum">
+<span class="sig-name descname"><span class="pre">calc_receive_spectrum</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.calc_receive_spectrum" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the received signals frequency domain spectra.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.calc_transmit_stft">
+<span class="sig-name descname"><span class="pre">calc_transmit_stft</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.calc_transmit_stft" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the short time Fourier transform of transmitted signals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.calc_receive_stft">
+<span class="sig-name descname"><span class="pre">calc_receive_stft</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.calc_receive_stft" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the short time Fourier transform of received signals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.__spectrum_fft_size">
+<span class="sig-name descname"><span class="pre">__spectrum_fft_size</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.__spectrum_fft_size" title="Permalink to this definition"></a></dt>
+<dd><p>Number of FFT bins considered during computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.__max_num_drops">
+<span class="sig-name descname"><span class="pre">__max_num_drops</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.__max_num_drops" title="Permalink to this definition"></a></dt>
+<dd><p>Number of maximum executions per scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.__results_dir">
+<span class="sig-name descname"><span class="pre">__results_dir</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.__results_dir" title="Permalink to this definition"></a></dt>
+<dd><p>Directory in which all execution artifacts will be dropped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.__verbosity">
+<span class="sig-name descname"><span class="pre">__verbosity</span></span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.__verbosity" title="Permalink to this definition"></a></dt>
+<dd><p>Information output behaviour during execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.simulator_core.executable.Verbosity" title="hermespy.simulator_core.executable.Verbosity">Verbosity</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Object initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plot_drop</strong> (<em>bool</em>) – Plot each drop during execution of scenarios.</p></li>
+<li><p><strong>calc_transmit_spectrum</strong> (<em>bool</em>) – Compute the transmitted signals frequency domain spectra.</p></li>
+<li><p><strong>calc_receive_spectrum</strong> (<em>bool</em>) – Compute the received signals frequency domain spectra.</p></li>
+<li><p><strong>calc_transmit_stft</strong> (<em>bool</em>) – Compute the short time Fourier transform of transmitted signals.</p></li>
+<li><p><strong>calc_receive_stft</strong> (<em>bool</em>) – Compute the short time Fourier transform of received signals.</p></li>
+<li><p><strong>spectrum_fft_size</strong> (<em>int</em>) – Number of discrete frequency bins computed within the Fast Fourier Transforms.</p></li>
+<li><p><strong>max_num_drops</strong> (<em>int</em>) – Maximum Number of drops per executed scenario.</p></li>
+<li><p><strong>results_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Directory in which all execution artifacts will be dropped.</p></li>
+<li><p><strong>verbosity</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#hermespy.simulator_core.executable.Verbosity" title="hermespy.simulator_core.executable.Verbosity"><code class="xref py py-class docutils literal notranslate"><span class="pre">Verbosity</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – (Union[str, Verbosity], optional): Information output behaviour during execution.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Executable'</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">plot_drop</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">calc_transmit_spectrum</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id1" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">calc_receive_spectrum</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">calc_transmit_stft</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id3" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">calc_receive_stft</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id4" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.run">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.run" title="Permalink to this definition"></a></dt>
+<dd><p>Execute the configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.add_scenario">
+<span class="sig-name descname"><span class="pre">add_scenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.add_scenario" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new scenario description to this executable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scenario</strong> (<a class="reference internal" href="hermespy.html#hermespy.Scenario" title="hermespy.Scenario"><em>Scenario</em></a>) – The scenario description to be added.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.scenarios">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scenarios</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="hermespy.scenario.scenario.html#hermespy.scenario.scenario.Scenario" title="hermespy.scenario.scenario.Scenario"><span class="pre">hermespy.scenario.scenario.Scenario</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.scenarios" title="Permalink to this definition"></a></dt>
+<dd><p>Access scenarios within this executable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Scenarios within this executable.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="hermespy.html#hermespy.Scenario" title="hermespy.Scenario">Scenario</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.spectrum_fft_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spectrum_fft_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.spectrum_fft_size" title="Permalink to this definition"></a></dt>
+<dd><p>Number of discrete frequency bins considered during Fast Fourier Transform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of bins.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.max_num_drops">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_num_drops</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.max_num_drops" title="Permalink to this definition"></a></dt>
+<dd><p>Access number of drops per executed scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of drops.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.results_dir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">results_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.results_dir" title="Permalink to this definition"></a></dt>
+<dd><p>Directory in which the execution results will be saved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The directory.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.verbosity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbosity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.simulator_core.executable.Verbosity" title="hermespy.simulator_core.executable.Verbosity"><span class="pre">hermespy.simulator_core.executable.Verbosity</span></a></em><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.verbosity" title="Permalink to this definition"></a></dt>
+<dd><p>Information output behaviour during execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Configuration flag.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.simulator_core.executable.Verbosity" title="hermespy.simulator_core.executable.Verbosity">Verbosity</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulator_core.executable.Executable.default_results_dir">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_results_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulator_core.executable.Executable.default_results_dir" title="Permalink to this definition"></a></dt>
+<dd><p>Create a default directory to store execution results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Path to the newly created directory.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hermespy.simulator_core.drop.html" class="btn btn-neutral float-left" title="hermespy.simulator_core.drop module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hermespy.simulator_core.factory.html" class="btn btn-neutral float-right" title="hermespy.simulator_core.factory module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

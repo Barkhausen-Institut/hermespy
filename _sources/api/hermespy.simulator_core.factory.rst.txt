@@ -1,0 +1,7 @@
+hermespy.simulator\_core.factory module
+=======================================
+
+.. automodule:: hermespy.simulator_core.factory
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermespy.channel.multipath_fading_templates module &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hermespy.channel.quadriga_channel module" href="hermespy.channel.quadriga_channel.html" />
+    <link rel="prev" title="hermespy.channel.multipath_fading_channel module" href="hermespy.channel.multipath_fading_channel.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hermespy</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="hermespy.html">hermespy package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="hermespy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="hermespy.beamformer.html">hermespy.beamformer package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.bin.html">hermespy.bin package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="hermespy.channel.html">hermespy.channel package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.coding.html">hermespy.coding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.helpers.html">hermespy.helpers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.modem.html">hermespy.modem package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.noise.html">hermespy.noise package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.precoding.html">hermespy.precoding package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.scenario.html">hermespy.scenario package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.signal.html">hermespy.signal package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.simulator_core.html">hermespy.simulator_core package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.source.html">hermespy.source package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hermespy.tools.html">hermespy.tools package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hermespy.html#module-hermespy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">hermespy</a> &raquo;</li>
+          <li><a href="hermespy.html">hermespy package</a> &raquo;</li>
+          <li><a href="hermespy.channel.html">hermespy.channel package</a> &raquo;</li>
+      <li>hermespy.channel.multipath_fading_templates module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hermespy.channel.multipath_fading_templates.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-hermespy.channel.multipath_fading_templates">
+<span id="hermespy-channel-multipath-fading-templates-module"></span><h1>hermespy.channel.multipath_fading_templates module<a class="headerlink" href="#module-hermespy.channel.multipath_fading_templates" title="Permalink to this headline"></a></h1>
+<p>Multipath Fading Channel prebuilt templates.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipathFadingCost256</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TYPE.URBAN</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">los_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doppler_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">los_doppler_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hermespy.channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel" title="hermespy.channel.multipath_fading_channel.MultipathFadingChannel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.multipath_fading_channel.MultipathFadingChannel</span></code></a></p>
+<p>COST256 Multipath Fading Channel models.</p>
+<p>Model initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_type</strong> (<a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE" title="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE"><em>TYPE</em></a>) – The model type..</p></li>
+<li><p><strong>los_angle</strong> (<em>float</em><em>, </em><em>optional</em>) – Angle phase of the line of sight component within the statistical distribution.</p></li>
+<li><p><strong>doppler_frequency</strong> (<em>float</em><em>, </em><em>optional</em>) – Doppler frequency shift of the statistical distribution.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – <cite>MultipathFadingChannel</cite> initialization parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>model_type</cite> is not supported.
+    If <cite>los_angle</cite> is defined in HILLY model type.</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TYPE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Supported model types.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.URBAN">
+<span class="sig-name descname"><span class="pre">URBAN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.URBAN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.RURAL">
+<span class="sig-name descname"><span class="pre">RURAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.RURAL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.HILLY">
+<span class="sig-name descname"><span class="pre">HILLY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.HILLY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'COST256'</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.yaml_matrix">
+<span class="sig-name descname"><span class="pre">yaml_matrix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.yaml_matrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.model_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE" title="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE"><span class="pre">TYPE</span></a></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.model_type" title="Permalink to this definition"></a></dt>
+<dd><p>Access the configured model type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The configured model type.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE" title="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE">MultipathFadingCost256.TYPE</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a channel object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256" title="hermespy.channel.multipath_fading_templates.MultipathFadingCost256"><em>MultipathFadingCost256</em></a>) – The channel instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>MultipathFadingCost256</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>MultipathFadingCost256</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>MultipathFadingCost256</cite> instance.
+The internal references to modems will be <cite>None</cite> and need to be
+initialized by the <cite>scenario</cite> YAML constructor.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hermespy.html#hermespy.Channel" title="hermespy.Channel">Channel</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.los_gains">
+<span class="sig-name descname"><span class="pre">los_gains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.los_gains" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.interpolate_signals">
+<span class="sig-name descname"><span class="pre">interpolate_signals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.interpolate_signals" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingCost256.impulse_response_interpolation">
+<span class="sig-name descname"><span class="pre">impulse_response_interpolation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.impulse_response_interpolation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipathFading5GTDL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rms_delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doppler_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">los_doppler_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hermespy.channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel" title="hermespy.channel.multipath_fading_channel.MultipathFadingChannel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.multipath_fading_channel.MultipathFadingChannel</span></code></a></p>
+<p>5G TDL Multipath Fading Channel models.</p>
+<p>Model initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_type</strong> (<a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE" title="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE"><em>TYPE</em></a>) – The model type.</p></li>
+<li><p><strong>rms_delay</strong> (<em>float</em>) – Root-Mean-Squared delay in seconds.</p></li>
+<li><p><strong>num_sinusoids</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of sinusoids used to sample the statistical distribution.</p></li>
+<li><p><strong>doppler_frequency</strong> (<em>float</em><em>, </em><em>optional</em>) – Doppler frequency shift of the statistical distribution.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – <cite>MultipathFadingChannel</cite> initialization parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>model_type</cite> is not supported.
+    If <cite>rms_delay</cite> is smaller than zero.
+    If <cite>los_angle</cite> is specified in combination with <cite>model_type</cite> D or E.</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TYPE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Supported model types.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.A">
+<span class="sig-name descname"><span class="pre">A</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.A" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.B">
+<span class="sig-name descname"><span class="pre">B</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.B" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.C">
+<span class="sig-name descname"><span class="pre">C</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.C" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.D">
+<span class="sig-name descname"><span class="pre">D</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.D" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.E">
+<span class="sig-name descname"><span class="pre">E</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE.E" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'5GTDL'</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.yaml_matrix">
+<span class="sig-name descname"><span class="pre">yaml_matrix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.yaml_matrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.model_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE" title="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.TYPE"><span class="pre">TYPE</span></a></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.model_type" title="Permalink to this definition"></a></dt>
+<dd><p>Access the configured model type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The configured model type.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>MultipathFading5gTDL.TYPE</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a channel object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL" title="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL"><em>MultipathFading5GTDL</em></a>) – The channel instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>MultipathFading5GTDL</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>MultipathFading5GTDL</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>MultipathFading5GTDL</cite> instance.
+The internal references to modems will be <cite>None</cite> and need to be
+initialized by the <cite>scenario</cite> YAML constructor.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hermespy.html#hermespy.Channel" title="hermespy.Channel">Channel</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.los_gains">
+<span class="sig-name descname"><span class="pre">los_gains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.los_gains" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.interpolate_signals">
+<span class="sig-name descname"><span class="pre">interpolate_signals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.interpolate_signals" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.impulse_response_interpolation">
+<span class="sig-name descname"><span class="pre">impulse_response_interpolation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL.impulse_response_interpolation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultipathFadingExponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tap_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rms_delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hermespy.channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel" title="hermespy.channel.multipath_fading_channel.MultipathFadingChannel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.multipath_fading_channel.MultipathFadingChannel</span></code></a></p>
+<p>Exponential Multipath Fading Channel models.</p>
+<p>Exponential Multipath Channel Model initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tap_interval</strong> (<em>float</em><em>, </em><em>optional</em>) – Tap interval in seconds.</p></li>
+<li><p><strong>rms_delay</strong> (<em>float</em><em>, </em><em>optional</em>) – Root-Mean-Squared delay in seconds.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – <cite>MultipathFadingChannel</cite> initialization parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – On invalid arguments.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Exponential'</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential.yaml_matrix">
+<span class="sig-name descname"><span class="pre">yaml_matrix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.yaml_matrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential.los_gains">
+<span class="sig-name descname"><span class="pre">los_gains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">np.ndarray</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.los_gains" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential.interpolate_signals">
+<span class="sig-name descname"><span class="pre">interpolate_signals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.interpolate_signals" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential.impulse_response_interpolation">
+<span class="sig-name descname"><span class="pre">impulse_response_interpolation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.impulse_response_interpolation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a channel object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential" title="hermespy.channel.multipath_fading_templates.MultipathFadingExponential"><em>MultipathFadingExponential</em></a>) – The channel instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.multipath_fading_templates.MultipathFadingExponential.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>MultipathFadingExponential</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>MultipathFadingExponential</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>MultipathFadingExponential</cite> instance.
+The internal references to modems will be <cite>None</cite> and need to be
+initialized by the <cite>scenario</cite> YAML constructor.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="hermespy.html#hermespy.Channel" title="hermespy.Channel">Channel</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hermespy.channel.multipath_fading_channel.html" class="btn btn-neutral float-left" title="hermespy.channel.multipath_fading_channel module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hermespy.channel.quadriga_channel.html" class="btn btn-neutral float-right" title="hermespy.channel.quadriga_channel module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+hermespy.coding.ldpc\_binding package
+=====================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.coding.ldpc_binding.ldpc
+
+Module contents
+---------------
+
+.. automodule:: hermespy.coding.ldpc_binding
+   :members:
+   :undoc-members:
+   :show-inheritance:

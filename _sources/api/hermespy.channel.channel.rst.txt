@@ -1,0 +1,7 @@
+hermespy.channel.channel module
+===============================
+
+.. automodule:: hermespy.channel.channel
+   :members:
+   :undoc-members:
+   :show-inheritance:

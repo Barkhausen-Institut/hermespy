@@ -1,0 +1,18 @@
+hermespy.source package
+=======================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.source.bits_source
+
+Module contents
+---------------
+
+.. automodule:: hermespy.source
+   :members:
+   :undoc-members:
+   :show-inheritance:

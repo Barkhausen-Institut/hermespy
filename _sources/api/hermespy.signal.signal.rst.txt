@@ -1,0 +1,7 @@
+hermespy.signal.signal module
+=============================
+
+.. automodule:: hermespy.signal.signal
+   :members:
+   :undoc-members:
+   :show-inheritance:

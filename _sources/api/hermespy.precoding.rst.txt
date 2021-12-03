@@ -1,0 +1,27 @@
+hermespy.precoding package
+==========================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.precoding.mean_square_equalizer
+   hermespy.precoding.mimo
+   hermespy.precoding.precoder_dft
+   hermespy.precoding.ratio_combining
+   hermespy.precoding.single_carrier
+   hermespy.precoding.space_time_block_coding
+   hermespy.precoding.spatial_multiplexing
+   hermespy.precoding.symbol_precoder
+   hermespy.precoding.symbol_precoding
+   hermespy.precoding.zero_forcing_equalizer
+
+Module contents
+---------------
+
+.. automodule:: hermespy.precoding
+   :members:
+   :undoc-members:
+   :show-inheritance:

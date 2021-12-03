@@ -1,0 +1,7 @@
+hermespy.channel.quadriga\_interface\_matlab module
+===================================================
+
+.. automodule:: hermespy.channel.quadriga_interface_matlab
+   :members:
+   :undoc-members:
+   :show-inheritance:

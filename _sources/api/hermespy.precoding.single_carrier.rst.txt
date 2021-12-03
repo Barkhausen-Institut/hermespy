@@ -1,0 +1,7 @@
+hermespy.precoding.single\_carrier module
+=========================================
+
+.. automodule:: hermespy.precoding.single_carrier
+   :members:
+   :undoc-members:
+   :show-inheritance:

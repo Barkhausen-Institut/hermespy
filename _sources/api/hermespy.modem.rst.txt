@@ -1,0 +1,34 @@
+hermespy.modem package
+======================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.modem.rf_chain_models
+   hermespy.modem.tools
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.modem.modem
+   hermespy.modem.receiver
+   hermespy.modem.rf_chain
+   hermespy.modem.transmitter
+   hermespy.modem.waveform_generator
+   hermespy.modem.waveform_generator_chirp_fsk
+   hermespy.modem.waveform_generator_ofdm
+   hermespy.modem.waveform_generator_psk_qam
+
+Module contents
+---------------
+
+.. automodule:: hermespy.modem
+   :members:
+   :undoc-members:
+   :show-inheritance:

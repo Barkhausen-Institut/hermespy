@@ -1,0 +1,32 @@
+hermespy.coding package
+=======================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.coding.ldpc_binding
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.coding.block_interleaver
+   hermespy.coding.cyclic_redundancy_check
+   hermespy.coding.encoder
+   hermespy.coding.encoder_manager
+   hermespy.coding.ldpc
+   hermespy.coding.repetition_encoder
+   hermespy.coding.scrambler
+
+Module contents
+---------------
+
+.. automodule:: hermespy.coding
+   :members:
+   :undoc-members:
+   :show-inheritance:

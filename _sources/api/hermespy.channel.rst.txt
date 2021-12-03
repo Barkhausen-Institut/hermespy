@@ -1,0 +1,26 @@
+hermespy.channel package
+========================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hermespy.channel.channel
+   hermespy.channel.channel_state_information
+   hermespy.channel.multipath_fading_channel
+   hermespy.channel.multipath_fading_templates
+   hermespy.channel.quadriga_channel
+   hermespy.channel.quadriga_interface
+   hermespy.channel.quadriga_interface_matlab
+   hermespy.channel.quadriga_interface_octave
+   hermespy.channel.radar_channel
+
+Module contents
+---------------
+
+.. automodule:: hermespy.channel
+   :members:
+   :undoc-members:
+   :show-inheritance:

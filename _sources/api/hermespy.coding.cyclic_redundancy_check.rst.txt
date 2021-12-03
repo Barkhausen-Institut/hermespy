@@ -1,0 +1,7 @@
+hermespy.coding.cyclic\_redundancy\_check module
+================================================
+
+.. automodule:: hermespy.coding.cyclic_redundancy_check
+   :members:
+   :undoc-members:
+   :show-inheritance:

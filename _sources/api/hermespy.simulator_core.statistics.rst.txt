@@ -1,0 +1,7 @@
+hermespy.simulator\_core.statistics module
+==========================================
+
+.. automodule:: hermespy.simulator_core.statistics
+   :members:
+   :undoc-members:
+   :show-inheritance:

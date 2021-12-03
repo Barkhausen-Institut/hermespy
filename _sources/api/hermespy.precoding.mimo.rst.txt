@@ -1,0 +1,7 @@
+hermespy.precoding.mimo module
+==============================
+
+.. automodule:: hermespy.precoding.mimo
+   :members:
+   :undoc-members:
+   :show-inheritance:

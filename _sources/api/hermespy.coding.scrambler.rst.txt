@@ -1,0 +1,7 @@
+hermespy.coding.scrambler module
+================================
+
+.. automodule:: hermespy.coding.scrambler
+   :members:
+   :undoc-members:
+   :show-inheritance:

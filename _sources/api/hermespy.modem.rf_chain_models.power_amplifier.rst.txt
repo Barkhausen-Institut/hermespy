@@ -1,0 +1,7 @@
+hermespy.modem.rf\_chain\_models.power\_amplifier module
+========================================================
+
+.. automodule:: hermespy.modem.rf_chain_models.power_amplifier
+   :members:
+   :undoc-members:
+   :show-inheritance:

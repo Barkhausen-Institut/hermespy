@@ -1,0 +1,7 @@
+hermespy.precoding.zero\_forcing\_equalizer module
+==================================================
+
+.. automodule:: hermespy.precoding.zero_forcing_equalizer
+   :members:
+   :undoc-members:
+   :show-inheritance:
