@@ -31,12 +31,11 @@ In order to install HermesPy on your system, follow the instructions outlined in
 Feature set, and release plan can be found on `GitHub <https://github.com/Barkhausen-Institut/hermespy/>`_.
 
 .. toctree::
+   :hidden:
    :maxdepth: 3
    :glob:
 
    self
    installation
    getting_started
-   high_level_description
-   parameter_description
    api/modules
