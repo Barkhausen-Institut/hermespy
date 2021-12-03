@@ -3,8 +3,8 @@
 .mypy_cache/
 __pycache__
 _results_*/
-docs/build/
 docssource/api
+documentation/
 results/
 .idea/
 env*/

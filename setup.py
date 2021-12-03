@@ -44,9 +44,11 @@ setup(
     install_requires=['matplotlib', 'numpy', 'scipy', 'data-science-types', 'ruamel.yaml', 'numba', 'sparse'],
     command_options={
         'build_sphinx': {
-            #'project': ('setup.py', name),
-            #'version': ('setup.py', version),
-            #'release': ('setup.py', release),
-            'source_dir': ('setup.py', 'docssource')},
+            # 'project': ('setup.py', name),
+            # 'version': ('setup.py', version),
+            # 'release': ('setup.py', release),
+            'source_dir': ('setup.py', 'docssource'),
+            'build_dir': ('setup.py', 'documentation'),
+        }
     },
 )

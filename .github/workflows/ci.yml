@@ -57,79 +57,11 @@ jobs:
         pip install -r requirements_doc.txt
 
     - name: Build documentation
-      run: cd docssource && make api && make gh-pages && make install
+      run: python -m setup build_sphinx
 
     - name: Create github pages
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       uses: JamesIves/github-pages-deploy-action@4.1.2
       with:
         branch: gh-pages
-        folder: docs
-
-
-  Build-Windows:
-  
-    needs: Testing
-    runs-on: windows-latest
-    name: Build Windows Dist
-    steps:
-    
-    - name: Checkout full repository
-      uses: actions/checkout@v2
-      with:
-        lfs: true
-        fetch-depth: 0
-        
-    - name: Setup python 3.9
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-        
-    - name: Install build tools
-      run: pip install --upgrade build twine
-
-    - name: Build distribution and wheel
-      run: python -m build --sdist --wheel --outdir dist/
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: dist-windows
-        path: dist/*
-
-    - name: Check metadata
-      run: python -m twine check dist/*
-
-
-  Distribute:
-  
-    needs: [Testing, Build-Windows]
-    runs-on: ubuntu-latest
-    environment: pypi
-    name: Distribute to PyPI
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    steps:
-    
-    - name: Create additional directories
-      run: mkdir artifacts/ && mkdir dist/
-    
-    - name: Download Windows artifacts
-      uses: actions/download-artifact@v2
-      with:
-        name: dist-windows
-        path: artifacts/
-        
-    - name: Move artifacts
-      run: mv artifacts/* dist/ && ls -l dist/
-     
-    - name: Publish to PyPI-Test
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
-        
-    - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: dist/
+        folder: documentation/html
