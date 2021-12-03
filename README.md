@@ -10,7 +10,7 @@ You can find an introductory video here: https://www.barkhauseninstitut.org/en/r
 
 ## Features
 
-The current release version 0.2.2 serves as a platform for joint development.
+The current release version 0.2.3 serves as a platform for joint development.
 Its main focus is to provide a software architecture that can be easily extended.
 Detailed core features as well as a release plan can be found in the [features](FEATURES.md) section.
 

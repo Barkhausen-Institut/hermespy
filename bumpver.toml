@@ -1,6 +1,6 @@
 [bumpver]
 
-current_version = "0.2.2"
+current_version = "0.2.3"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bumb to version {new_version}"
 commit = false
@@ -12,7 +12,7 @@ push = false
 # Root directory files
 "README.md" = [ "{version}" ]
 "bumpver.toml" = [ 'current_version = "{version}"' ]
-"setup.py" = [ 'version="{version}"' ]
+"setup.py" = [ 'version="{version}"', "'version': ('setup.py', '{version}')" ]
 
 # Source files
 "hermespy/bin/*.py" = [ '__version__ = "{version}"' ]
