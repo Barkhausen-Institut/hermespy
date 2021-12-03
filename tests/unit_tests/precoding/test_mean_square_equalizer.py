@@ -24,7 +24,7 @@ class TestMMSESpaceEqualizer(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        # Random generator
+        # Random rng
         self.generator = np.random.default_rng(42)
 
         # Precoder to be tested

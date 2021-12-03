@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Chirp Frequency Shift Keying generator testing."""
+"""Chirp Frequency Shift Keying rng testing."""
 
 import unittest
 import os

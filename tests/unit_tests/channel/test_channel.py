@@ -163,7 +163,7 @@ class TestChannel(unittest.TestCase):
             self.fail("Gain property set to zero raised unexpected exception")
 
     def test_random_generator_setget(self) -> None:
-        """Random generator property getter should return setter argument."""
+        """Random rng property getter should return setter argument."""
 
         generator = Mock()
         self.channel.random_generator = generator
@@ -171,7 +171,7 @@ class TestChannel(unittest.TestCase):
         self.assertIs(generator, self.channel.random_generator)
 
     def test_random_generator_get_default(self) -> None:
-        """Random generator property getter should return scenario generator if not specified."""
+        """Random rng property getter should return scenario rng if not specified."""
 
         self.scenario.random_generator = Mock()
         self.channel.random_generator = None

@@ -21,7 +21,7 @@ __status__ = "Prototype"
 
 
 class PseudoRandomGenerator:
-    """A generator for pseudo-random bit sequences.
+    """A rng for pseudo-random bit sequences.
 
     See also TS 138 211 section 5.2.1 for details.
     """
@@ -38,7 +38,7 @@ class PseudoRandomGenerator:
 
         Args:
             init_sequence(np.ndarray):
-                A sequence of 31 bits initializing the generator.
+                A sequence of 31 bits initializing the rng.
 
             offset(int):
                 Gold sequence parameter controlling the sequence offset.
@@ -64,12 +64,12 @@ class PseudoRandomGenerator:
             self.__forward_x1()
             self.__forward_x2()
 
-        # Store the initial queues in order to reset the generator to n = 0
+        # Store the initial queues in order to reset the rng to n = 0
         self.__initial_queue_x1 = self.__queue_x1.copy()
         self.__initial_queue_x2 = self.__queue_x2.copy()
 
     def generate(self) -> int:
-        """Generate the next bit within the generator sequence.
+        """Generate the next bit within the rng sequence.
 
         Returns:
             int:
@@ -97,9 +97,9 @@ class PseudoRandomGenerator:
         return sequence
 
     def reset(self) -> None:
-        """Resets the generator to its default state.
+        """Resets the rng to its default state.
 
-        This implies reverting the queues back to their original state (at generator position n = 0).
+        This implies reverting the queues back to their original state (at rng position n = 0).
         """
 
         self.__queue_x1 = self.__initial_queue_x1.copy()
@@ -128,7 +128,7 @@ class Scrambler3GPP(Encoder):
     Attributes:
 
         __random_generator (PseudoRandomGenerator):
-            Random generator used to generate scramble sequences.
+            Random rng used to generate scramble sequences.
     """
 
     yaml_tag: str = u'SCRAMBLER_3GPP'
@@ -148,7 +148,7 @@ class Scrambler3GPP(Encoder):
         # Init base class (Encoder)
         Encoder.__init__(self)
 
-        # Initialize the pseudo random generator
+        # Initialize the pseudo random rng
         seed = self.__default_seed.copy() if seed is None else seed
         self.__random_generator = PseudoRandomGenerator(seed)
 
