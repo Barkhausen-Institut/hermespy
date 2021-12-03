@@ -263,7 +263,7 @@ class TestScenario(unittest.TestCase):
         max_frame_duration = self.num_transmitters * 1e-4     # Results from the setUp transmit mock
         self.scenario.drop_duration = 0.0
 
-        self.assertEquals(max_frame_duration, self.scenario.drop_duration)
+        self.assertEqual(max_frame_duration, self.scenario.drop_duration)
 
     def test_generate_data_bits(self) -> None:
         """The data bit generation routine should create sets of source bits required by all registered
