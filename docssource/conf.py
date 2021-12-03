@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../h
 # -- Project information -----------------------------------------------------
 
 project = 'hermespy'
-copyright = '2020, Barkhausen Institut'
-author = 'Barkhausen Institut'
+copyright = '2020, Barkhausen Institut gGmbH'
+author = 'Barkhausen Institut gGmbH'
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,7 +38,8 @@ extensions = [
     'sphinx_autodoc_typehints',
     'sphinx.ext.autosummary',
     'm2r2',
-    'sphinx_rtd_dark_mode'
+    'sphinx_rtd_dark_mode',
+    'sphinx_tabs.tabs',
 ]
 
 # APIdoc

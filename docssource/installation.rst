@@ -17,74 +17,113 @@ HermesPy is registered as an official `package`_ within the python package index
 Binaries for Windows, most Linux distributions and MacOS, built from the newest release version
 of HermesPy, are distributed via the index, enabling easy installations for most operating systems.
 
-Install the package via
+Install the package by executing the following commands within a terminal:
 
-##### Windows users:
-```commandline
-conda create -n <envname> python=3.9
-conda activate <envname>
-conda install pip
-pip install hermespy
-```
+.. tabs::
 
-##### Linux users
-```commandline
-python -m venv env
-. env/bin/activate
-pip install hermespy
-```
+   .. code-tab:: bash Windows
+
+      conda create -n <envname> python=3.9
+      conda activate <envname>
+      conda install pip
+      pip install hermespy
+
+   .. code-tab:: bash Linux
+
+      python -m venv env
+      . env/bin/activate
+      pip install hermespy
+
+Executing these statements sequentially results in the following actions:
+
+#. Creation of a new virtual environment titled `<envname>`
+#. Activate the newly created environment
+#. Install the HermesPy wheel from PyPi within the environment
+
+Note that if you plan on utilizing HermesPy within an already existing Python environment,
+you may omit step one and replace `<envname>` by the title of the existing environment.
 
 Install from Source
 -------------------
 
-This is the recommended method for developers.
-You can build the package from scratch at any system by cloning the repository source via
-```commandline
-git clone <this-repo>
-cd hermespy/
-```
-Make sure to have [Git LFS](https://git-lfs.github.com/) installed.
-#### Windows users
-1. Create a new virtual environment using conda or any environment manager of your choice and install the default
-   python package manager pip
-   ```commandline
-   conda create -n <envname> python=3.9
-   conda activate <envname>
-   conda install pip
-   ```
-2. Install HermesPy as well as its dependencies using pip
-   ````commandline
-   pip install -r requirements.txt
-   pip install -e .
-   ````
+Cloning the HermesPy source code and manually building / installing its package is the recommended way
+for developers who plan on extending the HermesPy source code.
+Additionally, it can also be applied by users who, for any reason, are unable to install HermesPy from
+the index.
 
-#### Linux users
-   1. Make sure the `python` symlink is linked to python3.9
-   2. Create a new virtual environment using venv or any environment manager of your choice and install the default
-      python package manager pip
-      ```commandline
+Using the `Git`_ command line interface,
+the HermesPy source code can be copied to any system by executing
+
+.. code-block:: bash
+
+   git clone <this-repo>
+   cd hermespy/
+
+within a terminal.
+Make sure to have the `LFS`_ extension to `Git`_ installed.
+
+Install the package by executing the following commands within a terminal:
+
+.. tabs::
+
+   .. code-tab:: bash Windows
+
+      conda create -n <envname> python=3.9
+      conda activate <envname>
+      conda install pip
+      pip install .
+
+   .. code-tab:: bash Linux
+
       python -m venv env
       . env/bin/activate
-      ```
-      3. Install HermesPy as well as its dependencies using pip
-      ```commandline
-      pip install -r requirements.txt
-      pip install -e .
-      ```
+      pip install .
 
-[Quadriga channel model v0.2.2](https://quadriga-channel-model.de/) is supported by HermesPy.
+Executing these statements sequentially results in the following actions:
+
+#. Creation of a new virtual environment titled `<envname>`
+#. Activate the newly created environment
+#. Install the HermesPy wheel from PyPi within the environment
+
+Note that if you plan on utilizing HermesPy within an already existing Python environment,
+you may omit step one and replace `<envname>` by the title of the existing environment.
+
+**If you plan to alter the source code in any way, we recommend appending the editable flag**
+
+.. code-block:: bash
+
+   pip install -e .
+
+**during installation.**
+
+Install Quadriga
+----------------
+
+In addition to its native channel models, HermesPy supports the `Quadriga`_ channel model as an external
+dependency.
 For it to be used, some preliminary steps need to be taken.
-It can be run with either Octave or matlab. For **octave**, under Windows, you need to set the environment variable that tells python where to find octave-cli executable by calling
+`Quadriga`_ is based on `Matlab`_ and can be executed by either the `Matlab`_ interpreter or its open-source
+equivalent `Octave`_.
 
-```commandline
-setx PATH "%PATH%;<path-to-octave-cli>
-```
+In order to execute the`Matlab`_ interpreter, the `matlab.engine`_ package provided by `Matlab`_ needs to be installed
+manually.
 
-and install `oct2py` via `pip install oct2py` (Ubuntu sets the environment variable automatically).
+In order to execute the `Octave`_ interpreter (under Windows),
+the additional `oct2py`_ package needs to be installed (`pip install oct2py`).
+The extension of the `PATH` variable may be required for `oct2py`_ to locate the octave
+command line interface:
 
-If you want to run **matlab**, you must use the `matlab.engine` package provided by Matlab.
-Refer to [this](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html) link.
+.. code-block:: bash
+
+   setx PATH "%PATH%;<path-to-octave-cli>"
 
 .. _PyPi: https://pypi.org/
 .. _GitHub: https://github.com/Barkhausen-Institut/hermespy
 .. _package: https://pypi.org/project/hermespy/
+.. _Git: https://git-scm.com/
+.. _LFS: https://git-lfs.github.com/
+.. _Quadriga: https://quadriga-channel-model.de/
+.. _Matlab: https://www.mathworks.com/products/matlab.html
+.. _Octave: https://www.gnu.org/software/octave/index
+.. _matlab.engine: https://www.mathworks.com/help/matlab/matlab-engine-for-python.html
+.. _oct2py: https://pypi.org/project/oct2py/
