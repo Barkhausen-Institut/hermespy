@@ -279,7 +279,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.assertEqual(None, channel.los_angle)
 
     def test_impulse_response_seed(self) -> None:
-        """Re-setting the random generator seed should result in identical impulse responses."""
+        """Re-setting the random rng seed should result in identical impulse responses."""
 
         channel = MultipathFadingChannel(**self.channel_params)
         timestamps = np.arange(self.num_samples) / self.sampling_rate

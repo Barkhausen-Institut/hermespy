@@ -202,7 +202,7 @@ class SymbolPrecoding:
         #     raise ValueError("Input streams and channel states must have identical number of symbols")
 
         # If only a nuclear noise variance is provided, expand it to an array
-        if isinstance(stream_noises, float):
+        if isinstance(stream_noises, float) or isinstance(stream_noises, int):
             stream_noises = np.array([[stream_noises]], dtype=float).repeat(input_stream.shape[0], axis=0)\
                 .repeat(input_stream.shape[1], axis=1)
 
