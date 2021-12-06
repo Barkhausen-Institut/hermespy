@@ -113,13 +113,14 @@ class RfChain:
         """
 
         state = constructor.construct_mapping(node, deep=True)
-        power_amplifier = state.pop(PowerAmplifier.yaml_tag, None)
+        power_amplifier = state.pop('PowerAmplifier', None)
 
         rf_chain = cls(**state)
-        yield rf_chain
 
         if power_amplifier is not None:
             rf_chain.power_amplifier = power_amplifier
+
+        return rf_chain
 
     def send(self, input_signal: np.ndarray) -> np.ndarray:
         """Returns the distorted version of signal in "input_signal".
@@ -153,8 +154,7 @@ class RfChain:
         eta_alpha = np.cos(eps_delta/2) + 1j * eps_a * np.sin(eps_delta/2)
         eta_beta = eps_a * np.cos(eps_delta/2) - 1j * np.sin(eps_delta/2)
 
-        return (eta_alpha * x + eta_beta * np.conj(x))
-
+        return eta_alpha * x + eta_beta * np.conj(x)
 
     def receive(self, input_signal: np.ndarray) -> np.ndarray:
         """Returns the distorted version of signal in "input_signal".
