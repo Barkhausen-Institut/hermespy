@@ -2,20 +2,97 @@
 """Test Power Amplifier Models."""
 
 import unittest
+from unittest.mock import patch
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_array_less
 
-from hermespy.modem.rf_chain_models.power_amplifier import PowerAmplifier
+from hermespy.modem.rf_chain_models.power_amplifier import \
+    PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.1.0"
+__version__ = "0.2.3"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class TestPowerAmplifier(unittest.TestCase):
+    """Test power amplifier model base class."""
+
+    def setUp(self) -> None:
+
+        self.rng = np.random.default_rng(42)
+        self.num_samples = 1000
+
+        self.saturation_amplitude = .5
+        self.pa = PowerAmplifier(saturation_amplitude=self.saturation_amplitude)
+
+    def test_init(self) -> None:
+        """Initialization arguments should be properly stored as object attributes."""
+
+        self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
+
+    def test_saturation_amplitude_setget(self) -> None:
+        """Saturation amplitude property getter should return setter argument."""
+
+        saturation_amplitude = 100
+        self.pa.saturation_amplitude = saturation_amplitude
+
+        self.assertEqual(saturation_amplitude, self.pa.saturation_amplitude)
+
+    def test_saturation_amplitude_validation(self) -> None:
+        """Saturation amplitude property setter should raise ValueError on negative arguments."""
+
+        with self.assertRaises(ValueError):
+            self.pa.saturation_amplitude = -1.0
+
+        try:
+            self.pa.saturation_amplitude = 0.
+
+        except ValueError:
+            self.fail()
+
+    def test_adjust_power_setget(self) -> None:
+        """Adjust power flag get should return set value."""
+
+        self.pa.adjust_power = True
+        self.assertEqual(True, self.pa.adjust_power)
+
+    def test_send_no_adjust(self) -> None:
+        """Sending a signal without adjustment should not alter the signal in any way."""
+
+        expected_signal = self.rng.normal(size=self.num_samples) + 1j*self.rng.normal(size=self.num_samples)
+        signal = self.pa.send(expected_signal)
+
+        assert_array_equal(expected_signal, signal)
+
+    def test_send_adjust(self) -> None:
+        """Power loss should be adjusted if the respective flag is enabled."""
+
+        number_of_samples = 1000
+        signal = np.random.normal(size=number_of_samples) + 1j*np.random.normal(size=number_of_samples)
+
+        with patch.object(self.pa, 'model', new=lambda input_signal: 2 * input_signal):
+
+            self.pa.adjust_power = True
+            output = self.pa.send(signal)
+
+        power_in = np.mean(np.real(signal)**2 + np.imag(signal)**2)
+        power_out = np.mean(np.real(output)**2 + np.imag(output)**2)
+
+        self.assertAlmostEqual(power_in, power_out)
+
+    def test_model(self) -> None:
+        """Model function should be a stub directly returning the input as output."""
+
+        expected_signal = self.rng.normal(size=self.num_samples) + 1j*self.rng.normal(size=self.num_samples)
+        signal = self.pa.send(expected_signal)
+
+        assert_array_equal(expected_signal, signal)
 
 
 class TestRappPowerAmplifier(unittest.TestCase):
@@ -24,88 +101,79 @@ class TestRappPowerAmplifier(unittest.TestCase):
     def setUp(self) -> None:
 
         self.rng = np.random.default_rng(42)
+        self.num_samples = 1000
 
-        self.tx_power = 1.0
-        self.input_backoff_pa_db = 2
-        self.rapp_smoothness_factor = 1
+        self.saturation_amplitude = 10 ** (2 / 10)
+        self.smoothness_factor = 1.
 
-        self.pa = PowerAmplifier(PowerAmplifier.Model.RAPP,
-                                 tx_power=self.tx_power,
-                                 input_backoff_pa_db=self.input_backoff_pa_db,
-                                 rapp_smoothness_factor=self.rapp_smoothness_factor)
+        self.pa = RappPowerAmplifier(saturation_amplitude=self.saturation_amplitude,
+                                     smoothness_factor=self.smoothness_factor)
 
-    def test_signal_distortion(self) -> None:
+    def test_init(self) -> None:
+        """Initialization arguments should be properly stored as object attributes."""
+
+        self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
+        self.assertEqual(self.smoothness_factor, self.pa.smoothness_factor)
+
+    def test_smoothness_factor_setget(self) -> None:
+        """Smoothness factor property getter should return setter argument."""
+
+        smoothness_factor = 1.23
+        self.pa.smoothness_factor = 1.23
+
+        self.assertEqual(smoothness_factor, self.pa.smoothness_factor)
+
+    def test_smoothness_factor_validation(self) -> None:
+        """Smoothness factor property setter should raise ValueError on arguments smaller than one."""
+
+        with self.assertRaises(ValueError):
+            self.pa.smoothness_factor = 0.5
+
+        try:
+            self.pa.smoothness_factor = 1.0
+
+        except ValueError:
+            self.fail()
+
+    def test_model(self) -> None:
         """Signal should be properly distorted."""
 
-        number_of_samples = 1000
-        signal = self.rng.normal(size=number_of_samples) + 1j*self.rng.normal(size=number_of_samples)
-        output = self.pa.send(signal)
+        signal = self.rng.normal(size=self.num_samples) + 1j*self.rng.normal(size=self.num_samples)
+        output = self.pa.model(signal)
 
-        rms_voltage = np.sqrt(self.tx_power)
-        saturation_amp = rms_voltage * 10**(self.input_backoff_pa_db / 20.)
-
-        p = self.rapp_smoothness_factor
-        expected_output = signal / (1 + (np.abs(signal) / saturation_amp)**(2 * p)) ** (1 / (2 * p))
+        p = self.smoothness_factor
+        expected_output = signal / (1 + (np.abs(signal) / self.saturation_amplitude)**(2 * p)) ** (1 / (2 * p))
 
         assert_array_almost_equal(expected_output, output)
 
-    def test_power_adjusted(self) -> None:
 
-        number_of_samples = 1000
-        signal = np.random.normal(size=number_of_samples) + 1j*np.random.normal(size=number_of_samples)
-
-        self.pa.adjust_power_after_pa = True
-        output = self.pa.send(signal)
-
-        power_in = np.mean(np.real(signal)**2 + np.imag(signal)**2)
-        power_out = np.mean(np.real(output)**2 + np.imag(output)**2)
-
-        self.assertAlmostEqual(power_in, power_out)
-
-
-class TestClipPowerAmplifier(unittest.TestCase):
-    """Test the Clip power amplifier model."""
+class TestClippingPowerAmplifier(unittest.TestCase):
+    """Test the Clipping power amplifier model."""
 
     def setUp(self) -> None:
 
         self.rng = np.random.default_rng(42)
+        self.num_samples = 1000
 
-        self.tx_power = 1.0
-        self.input_backoff_pa_db = 0.
+        self.saturation_amplitude = 10 ** (2 / 10)
 
-        self.pa = PowerAmplifier(PowerAmplifier.Model.CLIP,
-                                 tx_power=self.tx_power,
-                                 input_backoff_pa_db=self.input_backoff_pa_db)
+        self.pa = ClippingPowerAmplifier(saturation_amplitude=self.saturation_amplitude)
 
-    def test_signal_clipped(self) -> None:
-        """Signal should be properly clipped"""
+    def test_init(self) -> None:
+        """Initialization arguments should be properly stored as object attributes."""
 
-        number_of_samples = 1000
-        signal = np.random.normal(size=number_of_samples) + 1j*np.random.normal(size=number_of_samples)
-        output = self.pa.send(signal)
+        self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
 
-        self.assertFalse(np.any(np.abs(output) > 1.0))
+    def test_model(self) -> None:
+        """Signal should be properly clipped."""
+
+        signal = np.random.normal(size=self.num_samples) + 1j*np.random.normal(size=self.num_samples)
+        output = self.pa.model(signal)
+
+        assert_array_less(output, self.saturation_amplitude + 1e-5)
 
         non_distorted_index = np.abs(signal) <= 1.0
         assert_array_equal(signal[non_distorted_index], output[non_distorted_index])
-
-    def test_signal_clipped_backoff(self) -> None:
-
-        input_backoff_pa_db = 3
-        self.pa = PowerAmplifier(PowerAmplifier.Model.CLIP,
-                                 tx_power=self.tx_power,
-                                 input_backoff_pa_db=input_backoff_pa_db)
-
-        number_of_samples = 1000
-        signal = np.random.normal(size=number_of_samples) + 1j*np.random.normal(size=number_of_samples)
-        output = self.pa.send(signal)
-
-        backoff = 10**(input_backoff_pa_db / 20)
-
-        self.assertAlmostEqual(np.max(np.abs(output)), backoff)
-
-        non_distorted_index = np.abs(signal) <= backoff
-        np.testing.assert_array_equal(signal[non_distorted_index], output[non_distorted_index])
 
 
 class TestSalehPowerAmplifier(unittest.TestCase):
@@ -114,39 +182,98 @@ class TestSalehPowerAmplifier(unittest.TestCase):
     def setUp(self) -> None:
 
         self.rng = np.random.default_rng(42)
+        self.num_samples = 1000
 
-        self.tx_power = 1.0
-        self.alpha_a = 1.9638
-        self.alpha_phi = 2.5293
-        self.beta_a = 0.9945
-        self.beta_phi = 2.8168
-        self.input_backoff_pa_db = 2
+        self.saturation_amplitude = 10 ** (2 / 10)
+        self.amplitude_alpha = 1.9638
+        self.amplitude_beta = 0.9945
+        self.phase_alpha = 2.5293
+        self.phase_beta = 2.8168
 
-        self.pa = PowerAmplifier(PowerAmplifier.Model.SALEH,
-                                 tx_power=self.tx_power,
-                                 input_backoff_pa_db=self.input_backoff_pa_db,
-                                 saleh_alpha_a=self.alpha_a,
-                                 saleh_alpha_phi=self.alpha_phi,
-                                 saleh_beta_a=self.beta_a,
-                                 saleh_beta_phi=self.beta_phi)
+        self.pa = SalehPowerAmplifier(saturation_amplitude=self.saturation_amplitude,
+                                      amplitude_alpha=self.amplitude_alpha,
+                                      amplitude_beta=self.amplitude_beta,
+                                      phase_alpha=self.phase_alpha,
+                                      phase_beta=self.phase_beta)
 
-    def test_signal_distortion(self) -> None:
+    def test_init(self) -> None:
+        """Initialization arguments should be properly stored as object attributes."""
+
+        self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
+        self.assertEqual(self.amplitude_alpha, self.pa.amplitude_alpha)
+        self.assertEqual(self.amplitude_beta, self.pa.amplitude_beta)
+        self.assertEqual(self.phase_alpha, self.pa.phase_alpha)
+        self.assertEqual(self.phase_beta, self.pa.phase_beta)
+        
+    def test_amplitude_alpha_setget(self) -> None:
+        """Amplitude alpha property getter should return setter argument."""
+
+        amplitude_alpha = 1.23
+        self.pa.amplitude_alpha = 1.23
+
+        self.assertEqual(amplitude_alpha, self.pa.amplitude_alpha)
+
+    def test_amplitude_alpha_validation(self) -> None:
+        """Amplitude alpha property setter should raise ValueError on arguments smaller than one."""
+
+        with self.assertRaises(ValueError):
+            self.pa.amplitude_alpha = -1.0
+
+        try:
+            self.pa.amplitude_alpha = 0.0
+
+        except ValueError:
+            self.fail()
+            
+    def test_amplitude_beta_setget(self) -> None:
+        """Amplitude beta property getter should return setter argument."""
+
+        amplitude_beta = 1.23
+        self.pa.amplitude_beta = 1.23
+
+        self.assertEqual(amplitude_beta, self.pa.amplitude_beta)
+
+    def test_amplitude_beta_validation(self) -> None:
+        """Amplitude beta property setter should raise ValueError on arguments smaller than one."""
+
+        with self.assertRaises(ValueError):
+            self.pa.amplitude_beta = -1.0
+
+        try:
+            self.pa.amplitude_beta = 0.0
+
+        except ValueError:
+            self.fail()
+            
+    def test_phase_alpha_setget(self) -> None:
+        """Phase alpha property getter should return setter argument."""
+
+        phase_alpha = 1.23
+        self.pa.phase_alpha = 1.23
+
+        self.assertEqual(phase_alpha, self.pa.phase_alpha)
+        
+    def test_phase_beta_setget(self) -> None:
+        """Phase beta property getter should return setter argument."""
+
+        phase_beta = 1.23
+        self.pa.phase_beta = 1.23
+
+        self.assertEqual(phase_beta, self.pa.phase_beta)
+
+    def test_model(self) -> None:
         """Signal should be properly distorted."""
 
-        number_of_samples = 1000
-        signal = np.random.normal(size=number_of_samples) + 1j*np.random.normal(size=number_of_samples)
+        self.rng = np.random.default_rng(42)
+        self.num_samples = 1000
+
+        signal = np.random.normal(size=self.num_samples) + 1j*np.random.normal(size=self.num_samples)
         output = self.pa.send(signal)
 
-        rms_voltage = np.sqrt(self.tx_power)
-        saturation_amp = rms_voltage * 10**(self.input_backoff_pa_db / 20.)
+        r = np.abs(signal) / self.saturation_amplitude
 
-        r = np.abs(signal) / saturation_amp
-
-        expected_amp = (r * self.alpha_a / (1 + self.beta_a * r**2) *
-                        saturation_amp)
-        expected_phase = (np.angle(signal) +
-                          (r**2 * self.alpha_phi /
-                           (1 + self.beta_phi * r**2)))
+        expected_amp = (r * self.amplitude_alpha / (1 + self.amplitude_beta * r**2) * self.saturation_amplitude)
+        expected_phase = (np.angle(signal) + (r**2 * self.phase_alpha / (1 + self.phase_beta * r**2)))
 
         expected_output = expected_amp * np.exp(1j * expected_phase)
         assert_array_almost_equal(output, expected_output)
@@ -157,49 +284,41 @@ class TestCustomPowerAmplifier(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        self.tx_power = 1.
-        self.pa_input = np.array([0.00881, 0.01109, 0.01396, 0.01757, 0.02213, 0.02786, 0.03508,
-                                  0.04416, 0.05559, 0.06998, 0.08810, 0.11092, 0.13964, 0.17579,
-                                  0.22131, 0.27861, 0.35075, 0.44157, 0.55590, 0.69984, 0.88105,
-                                  1.10917, 1.39637, 1.75792, 2.21309, 2.78612, 3.50752, 4.41570,
-                                  5.55904, 6.99842, 8.81049])
-        self.pa_output = np.array([0.00881, 0.01109, 0.01396, 0.01757, 0.02213, 0.02786, 0.03503,
-                                   0.04411, 0.05553, 0.06990, 0.08800, 0.11078, 0.13932, 0.17539,
-                                   0.22055, 0.27701, 0.34754, 0.43501, 0.54263, 0.67143, 0.81564,
-                                   0.95830, 1.07771, 1.16815, 1.23595, 1.28529, 1.32434, 1.36301,
-                                   1.40120, 1.45211, 1.50661])
-        self.pa_phase = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07,
-                                  0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18,
-                                  0.19, .25, .30, .5, .8])
-        self.pa_gain = self.pa_output / self.pa_input
+        self.rng = np.random.default_rng(42)
+        self.num_samples = 1000
 
-        self.input_backoff_pa_db = 5
+        self.saturation_amplitude = 10 ** (5 / 10)
+        self.input = np.array([0.00881, 0.01109, 0.01396, 0.01757, 0.02213, 0.02786, 0.03508,
+                               0.04416, 0.05559, 0.06998, 0.08810, 0.11092, 0.13964, 0.17579,
+                               0.22131, 0.27861, 0.35075, 0.44157, 0.55590, 0.69984, 0.88105,
+                               1.10917, 1.39637, 1.75792, 2.21309, 2.78612, 3.50752, 4.41570,
+                               5.55904, 6.99842, 8.81049])
+        self.output = np.array([0.00881, 0.01109, 0.01396, 0.01757, 0.02213, 0.02786, 0.03503,
+                                0.04411, 0.05553, 0.06990, 0.08800, 0.11078, 0.13932, 0.17539,
+                                0.22055, 0.27701, 0.34754, 0.43501, 0.54263, 0.67143, 0.81564,
+                                0.95830, 1.07771, 1.16815, 1.23595, 1.28529, 1.32434, 1.36301,
+                                1.40120, 1.45211, 1.50661])
+        self.phase = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07,
+                               0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18,
+                               0.19, .25, .30, .5, .8])
+        self.gain = self.output / self.input
 
-        self.pa = PowerAmplifier(PowerAmplifier.Model.CUSTOM, self.tx_power,
-                                 custom_pa_input=self.pa_input,
-                                 custom_pa_output=self.pa_output,
-                                 custom_pa_phase=self.pa_phase,
-                                 custom_pa_gain=self.pa_gain,
-                                 input_backoff_pa_db=self.input_backoff_pa_db)
+        self.pa = CustomPowerAmplifier(saturation_amplitude=self.saturation_amplitude,
+                                       input=self.input,
+                                       gain=self.gain,
+                                       phase=self.phase)
 
-    def test_signal_distortion(self) -> None:
+    def test_model(self) -> None:
         """Signal should be properly distorted."""
 
-        number_of_samples = 100
+        rnd_indices = self.rng.integers(self.input.size, size=self.num_samples)
+        phases = 2 * np.pi * self.rng.random(self.num_samples)
+        signal = self.input[rnd_indices] * self.saturation_amplitude * np.exp(1j * phases)
 
-        rnd_indices = np.random.randint(self.pa_input.size, size=number_of_samples)
+        output = self.pa.model(signal)
 
-        rms_voltage = np.sqrt(self.tx_power)
-        saturation_amp = rms_voltage * 10**(self.input_backoff_pa_db / 20.)
-
-        phases = 2 * np.pi * np.random.random(number_of_samples)
-        signal = (self.pa_input[rnd_indices]
-                  * (saturation_amp / rms_voltage)) * np.exp(1j * phases)
-
-        output = self.pa.send(signal)
-
-        expected_amp = self.pa_output[rnd_indices] * (saturation_amp / rms_voltage)
-        expected_phase = phases + self.pa_phase[rnd_indices]
+        expected_amp = self.output[rnd_indices] * self.saturation_amplitude
+        expected_phase = phases + self.phase[rnd_indices]
 
         expected_output = expected_amp * np.exp(1j * expected_phase)
         assert_array_almost_equal(expected_output, output)

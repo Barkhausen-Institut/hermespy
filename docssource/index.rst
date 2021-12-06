@@ -38,4 +38,6 @@ Feature set, and release plan can be found on `GitHub <https://github.com/Barkha
    self
    installation
    getting_started
-   api/modules
+   api/api
+   references
+   developer_hints

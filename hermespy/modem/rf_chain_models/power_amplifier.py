@@ -1,105 +1,221 @@
+# -*- coding: utf-8 -*-
+"""
+=========================
+Power Amplifier Modeling
+=========================
+
+Power amplification modeling represents a single processing step within the radio-frequency hardware model of
+transmitting modems.
+
+Each power amplifier model instance implements an equation
+
+.. math::
+
+   s'(t) = f\\lbrace s(t), t \\rbrace \\in \\mathbb{C}
+
+distorting complex-valued signal samples :math:`s(t) \\in \\mathbb{C}` feeding into the power amplifier.
+For time-invariant (i.e. memoryless) models :math:`f\\lbrace s(t), t \\rbrace = f\\lbrace s(t) \\rbrace`.
+"""
+
 from __future__ import annotations
+from abc import abstractmethod
+from math import sqrt
+from typing import Any, Optional, Type, Union
+
+import matplotlib.pyplot as plt
 import numpy as np
-from enum import Enum
-from typing import Type
-from ruamel.yaml import Node, RoundTripRepresenter, RoundTripConstructor, SafeConstructor
+from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter, RoundTripConstructor, SafeConstructor
+from ruamel.yaml.constructor import ConstructorError
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.3"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class PowerAmplifier:
-    """This module implements a distortion model for a power amplifier (PA).
+    """Base class of a power-amplifier model.
 
-    The following PA models are currently supported:
+    Implements a distortion-less amplification model
 
-    - Rapp's model, as described in
-      C. Rapp, "Effects of HPA Nonlinearity on a 4-PI DPSK/OFDM Signal for a digital Sound Broadcasting System"
-      in Proc. Eur. Conf. Satellite Comm., 1991
+    .. math::
 
-    - Saleh's model, as described in
-      A.A.M. Saleh, "Frequency-independent and frequency dependent nonlinear models of TWT amplifiers"
-      in IEEE Trans. Comm., Nov. 1981
+       s'(t) = s(t) \\text{,}
 
-    - any custom AM/AM and AM/PM response as a vector
-
-    Currently only memoryless models are supported.
-
-    TODO: Refactor models into dedicated subclasses of `PowerAmplifier`
+    which may be overwritten by classes inheriting from this base.
     """
 
-    class Model(Enum):
-        """Supported power amplifier models.
-        """
+    yaml_tag: str = u'Distortionless'
+    """YAML serialization tag."""
 
-        NONE = 0
-        CLIP = 1
-        RAPP = 2
-        SALEH = 3
-        CUSTOM = 4
+    adjust_power: bool
+    """Power adjustment flag.
+    
+    If enabled, the power amplifier will normalize the distorted signal after propagation modeling.
+    """
 
-    yaml_tag = 'PowerAmplifier'
-    __model: Model
     __saturation_amplitude: float
-    input_backoff_pa_db: float
-    __rapp_smoothness_factor: float
-    __saleh_alpha_a: float
-    __saleh_alpha_phi: float
-    __saleh_beta_a: float
-    __saleh_beta_phi: float
-    __custom_pa_input: np.array
-    __custom_pa_output: np.array
-    __custom_pa_gain: np.array
-    __custom_pa_phase: np.array
-    adjust_power_after_pa: bool
 
     def __init__(self,
-                 model: Model = Model.NONE,
-                 tx_power: float = 1.0,
-                 saturation_amplitude: float = 0.0,
-                 input_backoff_pa_db: float = 0.0,
-                 rapp_smoothness_factor: float = 1.0,
-                 saleh_alpha_a: float = 2.0,
-                 saleh_alpha_phi: float = 1.0,
-                 saleh_beta_a: float = 2.0,
-                 saleh_beta_phi: float = 1.0,
-                 custom_pa_input: np.array = None,
-                 custom_pa_output: np.array = None,
-                 custom_pa_gain: np.array = None,
-                 custom_pa_phase: np.array = None,
-                 adjust_power_after_pa: bool = False) -> None:
-        """Creates a power amplifier object
+                 saturation_amplitude: float = float('inf'),
+                 adjust_power: bool = False) -> None:
+        """
+        Args:
 
-        TODO: ARGUMENTS
+            saturation_amplitude (float, optional):
+                Cut-off point for the linear behaviour of the amplification in Volt.
+
+            adjust_power (bool, optional):
+                Power adjustment flag.
         """
 
-        self.__model = model
-        self.__tx_power = tx_power
-        self.__saturation_amplitude = saturation_amplitude
-        self.input_backoff_pa_db = input_backoff_pa_db
-        self.__rapp_smoothness_factor = rapp_smoothness_factor
-        self.__power_backoff = 10**(input_backoff_pa_db/10)
-        self.__saleh_alpha_a = saleh_alpha_a
-        self.__saleh_alpha_phi = saleh_alpha_phi
-        self.__saleh_beta_a = saleh_beta_a
-        self.__saleh_beta_phi = saleh_beta_phi
-        self.__custom_pa_input = np.empty(0, dtype=float) if custom_pa_input is None else custom_pa_input
-        self.__custom_pa_output = np.empty(0, dtype=float) if custom_pa_output is None else custom_pa_output
-        self.__custom_pa_gain = np.empty(0, dtype=float) if custom_pa_gain is None else custom_pa_gain
-        self.__custom_pa_phase = np.empty(0, dtype=float) if custom_pa_phase is None else custom_pa_phase
-        self.adjust_power_after_pa = adjust_power_after_pa
+        self.saturation_amplitude = saturation_amplitude
+        self.adjust_power = adjust_power
 
-        saturation_power = tx_power * self.__power_backoff
-        self.__saturation_amplitude = np.sqrt(saturation_power)
+    @property
+    def saturation_amplitude(self) -> float:
+        """Cut-off point for the linear behaviour of the amplification.
+        
+        Referred to as :math:`s_\\mathrm{sat} \\ \\mathbb{R}_{+}` in equations.
+
+        Returns:
+            float: Saturation amplitude in Volt.
+
+        Raises:
+            ValueError:
+                If amplitude is smaller than zero.
+        """
+
+        return self.__saturation_amplitude
+
+    @saturation_amplitude.setter
+    def saturation_amplitude(self, value: float) -> None:
+        """Set the cut-off point for the linear behaviour of the amplification."""
+
+        if value < 0.:
+            raise ValueError("Power-Amplifier model saturation amplitude must be greater or equal to zero")
+
+        self.__saturation_amplitude = value
+
+    def send(self, input_signal: np.ndarray) -> np.ndarray:
+        """Model signal amplification characteristics.
+
+        Internally calls the model subroutine of power-amplifier models implementing this prototype-class.
+
+        Args:
+            input_signal(np.ndarray):
+                Sample vector of the signal feeding into the power amplifier.
+
+        Returns:
+            np.ndarray:
+                Distorted signal after amplification modeling.
+        """
+
+        distorted_signal = self.model(input_signal)
+
+        # Adjust distorted signal if the respective flag is enabled
+        if self.adjust_power:
+            loss = np.linalg.norm(distorted_signal) / np.linalg.norm(input_signal)
+            distorted_signal /= loss
+
+        return distorted_signal
+
+    @abstractmethod
+    def model(self, input_signal: np.ndarray) -> np.ndarray:
+        """Model signal amplification characteristics.
+
+        Args:
+            input_signal(np.ndarray):
+                Sample vector of the signal feeding into the power amplifier.
+
+        Returns:
+            np.ndarray:
+                Distorted signal after amplification modeling.
+        """
+
+        # No modeling in the prototype, just return the non-distorted input signal
+        return input_signal
+
+    def plot(self, samples: Optional[np.ndarray] = None) -> None:
+        """Plot the power amplifier distortion characteristics.
+
+        Generates a matplotlib plot depicting the phase/amplitude.
+
+        Args:
+            samples (np.ndarray, optional):
+                Sample points at which to evaluate the characteristics.
+                In other words, the x-axis of the resulting characteristics plot.
+        """
+
+        if samples is None:
+            samples = np.arange(0, 2, 0.01) * self.saturation_amplitude
+
+        model = self.model(samples)
+        amplitude = abs(model)
+        phase = np.angle(model)
+
+        figure, amplitude_axes = plt.subplots()
+        figure.suptitle("Power Amplifier Characteristics")
+
+        amplitude_axes.set_xlabel("Input Amplitude")
+
+        amplitude_axes.plot(samples, amplitude)
+        amplitude_axes.set_ylabel("Output Amplitude")
+
+        phase_axes = amplitude_axes.twinx()
+        phase_axes.plot(samples, phase)
+        phase_axes.set_ylabel("Output Phase")
+
+        figure.tight_layout()
+    
+    @classmethod
+    def from_yaml(cls: Type[PowerAmplifier],
+                  constructor: SafeConstructor,
+                  node: Union[ScalarNode, MappingNode]) -> PowerAmplifier:
+        """Recall a new `PowerAmplifier` instance from YAML.
+
+        Args:
+            constructor (RoundTripConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Union[ScalarNode, MappingNode]):
+                YAML node representing the `PowerAmplifier` serialization.
+
+        Returns:
+            PowerAmplifier:
+                Newly created `PowerAmplifier` instance.
+            """
+
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        state = SafeConstructor.construct_mapping(constructor, node, deep=False)
+
+        # Compute saturation amplitude from different parameter combinations
+        saturation_amplitude = state.pop('saturation_amplitude', None)
+        tx_power = state.pop('tx_power', None)
+        power_backoff = state.pop('power_backoff', None)
+
+        if tx_power is not None or power_backoff is not None:
+
+            if saturation_amplitude is not None:
+                raise ConstructorError("Saturation_amplitude and (tx_power, power_backoff) are mutually exclusive "
+                                       "power amplifier model parameters")
+
+            if tx_power is None or power_backoff is None:
+                raise ConstructorError("Defining the saturation amplitude requires both tx_power and "
+                                       "power_backoff parameters")
+
+            saturation_amplitude = sqrt(tx_power * 10 ** (power_backoff / 10))
+
+        return cls(**state, saturation_amplitude=saturation_amplitude)
 
     @classmethod
-    def to_yaml(cls: Type[PowerAmplifier], representer: RoundTripRepresenter, node: PowerAmplifier) -> Node:
+    def to_yaml(cls: Type[PowerAmplifier], representer: SafeRepresenter, node: PowerAmplifier) -> MappingNode:
         """Serialize a `PowerAmplifier` object to YAML.
 
         Args:
@@ -116,150 +232,356 @@ class PowerAmplifier:
         """
 
         state = {
-            'model': node.__model.name,
-            'tx_power': node.__tx_power,
             'saturation_amplitude':  node.__saturation_amplitude,
-            'input_backoff_pa_db': node.input_backoff_pa_db,
-            'rapp_smoothness_factor': node.__rapp_smoothness_factor,
-            'saleh_alpha_a': node.__saleh_alpha_a,
-            'saleh_alpha_phi': node.__saleh_alpha_phi,
-            'saleh_beta_a': node.__saleh_beta_a,
-            'saleh_beta_phi': node.__saleh_beta_phi,
-            # 'custom_pa_input': node.__custom_pa_input,
-            # 'custom_pa_output': node.__custom_pa_output,
-            # 'custom_pa_gain': node.__custom_pa_gain,
-            # 'custom_pa_phase': node.__custom_pa_phase,
-            'adjust_power_after_pa': node.adjust_power_after_pa
+            'adjust_power': node.adjust_power,
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
-    @classmethod
-    def from_yaml(cls: Type[PowerAmplifier], constructor: SafeConstructor, node: Node) -> PowerAmplifier:
-        """Recall a new `PowerAmplifier` instance from YAML.
 
+class ClippingPowerAmplifier(PowerAmplifier):
+    """Model of a clipping power amplifier.
+
+    Complex signal samples with amplitudes above :math:`s_\\mathrm{sat} \\in \\mathbb{R}` will be clipped
+    to the maximum amplitude value.
+    In case of clipping, the respective sample angles will be preserved, so that
+
+    .. math::
+
+       s'(t) = \\frac{s(t)}{|s(t)|} \\cdot \\min{(|s(t)|, s_\\mathrm{sat})} \\text{.}
+    """
+
+    yaml_tag = u'Clipping'
+    """YAML serialization tag."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """
         Args:
-            constructor (RoundTripConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `PowerAmplifier` serialization.
-
-        Returns:
-            PowerAmplifier:
-                Newly created `PowerAmplifier` instance.
-            """
-
-        state = SafeConstructor.construct_mapping(constructor, node, deep=False)
-
-        if 'model' in state.keys():
-
-            if isinstance(state['model'], str):
-                state['model'] = PowerAmplifier.Model[state['model']]
-
-            elif isinstance(state['model'], int):
-                state['model'] = PowerAmplifier.Model(state['model'])
-
-        return PowerAmplifier(**state)
-
-    def send(self, input_signal: np.ndarray) -> np.ndarray:
-        """Returns the distorted version of the input signal according to the desired model
-
-        Args:
-            input_signal(np.ndarray): vector with input signal
-
-        Returns:
-            numpy.ndarray: Distorted signal of same size as `input_signal`.
+            kwargs (Any):
+                PowerAmplifier base class initialization arguments.
         """
 
-        output_signal = np.ndarray([])
-        if self.__model == PowerAmplifier.Model.NONE:
-            output_signal = input_signal
+        # Initialize base class
+        PowerAmplifier.__init__(self, **kwargs)
 
-        elif self.__model == self.Model.CLIP:
-            # clipping
-            clip_idx = np.nonzero(np.abs(input_signal) > self.__saturation_amplitude)
-            output_signal = np.copy(input_signal)
-            output_signal[clip_idx] = self.__saturation_amplitude * np.exp(1j * np.angle(input_signal[clip_idx]))
+    def model(self, input_signal: np.ndarray) -> np.ndarray:
 
-        elif self.__model == PowerAmplifier.Model.RAPP:
-            p = self.__rapp_smoothness_factor
-            gain = (1 + (np.abs(input_signal) / self.__saturation_amplitude)**(2 * p))**(-1/2/p)
-            output_signal = input_signal * gain
+        output_signal = input_signal.copy()
 
-        elif self.__model == PowerAmplifier.Model.SALEH:
-            amp = np.abs(input_signal) / self.__saturation_amplitude
-            gain = self.__saleh_alpha_a / (1 + self.__saleh_beta_a * amp**2)
-            phase_shift = self.__saleh_alpha_phi * amp**2 / (1 + self.__saleh_beta_phi * amp**2)
-            output_signal = input_signal * gain * np.exp(1j * phase_shift)
-
-        elif self.__model == PowerAmplifier.Model.CUSTOM:
-            amp = np.abs(input_signal) / self.__saturation_amplitude
-            gain = np.interp(amp, self.__custom_pa_input, self.__custom_pa_gain)
-            phase_shift = np.interp(amp, self.__custom_pa_input, self.__custom_pa_phase)
-            output_signal = input_signal * gain * np.exp(1j * phase_shift)
-
-        else:
-            ValueError(f"Power amplifier model {self.__model.name} not supported")
-
-        if self.adjust_power_after_pa:
-            loss = np.linalg.norm(output_signal) / np.linalg.norm(input_signal)
-            output_signal = output_signal / loss
+        clip_idx = np.nonzero(np.abs(input_signal) > self.saturation_amplitude)
+        output_signal[clip_idx] = self.saturation_amplitude * np.exp(1j * np.angle(input_signal[clip_idx]))
 
         return output_signal
 
-    @property
-    def model(self) -> PowerAmplifier.Model:
-        """Access the configured model.
 
-        Returns (PowerAmplifier.Model):
-            The configured model."""
+class RappPowerAmplifier(PowerAmplifier):
+    """Model of a power amplifier according to Rapp's model.
 
-        return self.__model
+    Implements a saturation characteristic according to
 
-    @model.setter
-    def model(self, model: Model) -> None:
-        """Modify the configured model.
+    .. math::
 
-        Args:
-            model (Model):
-                The new model.
+       s'(t) = s(t) \\cdot \\left( 1 + \\left( \\frac{|s(t)|}{s_\\mathrm{sat}} \\right)^{2p_\\mathrm{Rapp}} \\right)^{-\\frac{1}{2p_\\mathrm{Rapp}}}
+       \\text{,}
 
-        Raises:
-            ValueError:
-                If he model is not supported.
-        """
+    where :math:`p_\\mathrm{Rapp} \\in \\lbrace x \\in \\mathbb{R} | x \\geq 1 \\rbrace`
+    denotes the smoothness factor of the saturation curve.
 
-        if model not in PowerAmplifier.Model:
-            raise ValueError("Model not supported")
+    See :footcite:t:`1991:rapp` for further details.
+    """
 
-        self.__model = model
+    yaml_tag = u'Rapp'
+    """YAML serialization tag."""
 
-    @property
-    def rapp_smoothness_factor(self) -> float:
-        """Access the configured smoothness factor for Rapp's model.
-
-        Returns (float):
-            The smoothness factor.
-
-        """
-
-        return self.__rapp_smoothness_factor
-
-    @rapp_smoothness_factor.setter
-    def rapp_smoothness_factor(self, factor: float) -> None:
-        """Modify the configured smoothness factor for Rapp's model.
+    def __init__(self,
+                 smoothness_factor: float = 1.,
+                 **kwargs: Any) -> None:
+        """Clipping Power Amplifier object initialization.
 
         Args:
-            factor (float):
-                The new factor. Must be greater than zero.
 
-        Raises:
-            ValueError:
-                Should the `factor` be smaller or equal to zero.
+            smoothness_factor(float, optional):
+                Smoothness factor of the amplification saturation characteristics.
+
+            kwargs (Any):
+                PowerAmplifier base class initialization arguments.
         """
 
-        if factor <= 0.0:
-            raise ValueError("Smoothness factor ({}) in Rapp's model must be greater than zero".format(factor))
+        self.__smoothness_factor = smoothness_factor
 
-        self.__rapp_smoothness_factor = factor
+        # Initialize base class
+        PowerAmplifier.__init__(self, **kwargs)
+
+    @property
+    def smoothness_factor(self) -> float:
+        """Smoothness factor of the amplification saturation characteristics.
+
+        Also referred to as Rapp-factor :math:`p_\\mathrm{Rapp}`.
+
+        Returns:
+            float: Smoothness factor.
+
+        Raises:
+            ValueError: If smoothness factor is smaller than one.
+        """
+
+        return self.__smoothness_factor
+
+    @smoothness_factor.setter
+    def smoothness_factor(self, value: float) -> None:
+        """Set smoothness factor of the amplification saturation characteristics."""
+
+        if value < 1.:
+            raise ValueError("Smoothness factor must be greater or equal to one.")
+
+        self.__smoothness_factor = value
+
+    def model(self, input_signal: np.ndarray) -> np.ndarray:
+
+        p = self.smoothness_factor
+        gain = (1 + (np.abs(input_signal) / self.saturation_amplitude) ** (2 * p)) ** (-1 / 2 / p)
+
+        return input_signal * gain
+
+    @classmethod
+    def to_yaml(cls: Type[RappPowerAmplifier], representer: SafeRepresenter, node: RappPowerAmplifier) -> MappingNode:
+        """Serialize a `RappPowerAmplifier` object to YAML.
+
+        Args:
+            representer (BaseRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (RappPowerAmplifier):
+                The amplifier instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'smoothness_factor': node.__smoothness_factor,
+        }
+
+        representation = representer.represent_mapping(cls.yaml_tag, state)
+        representation.value.extend(PowerAmplifier.to_yaml(representer, node).value)
+        
+        return representation
+
+
+class SalehPowerAmplifier(PowerAmplifier):
+    """Model of a power amplifier according to Saleh.
+
+    Implements a saturation characteristic according to
+
+    .. math::
+
+       s'(t) = s(t) \\cdot A\\lbrace s(t) \\rbrace e^{\\mathrm{j} \\Phi\\lbrace s(t) \\rbrace}
+
+    where
+
+    .. math::
+
+       A\\lbrace s \\rbrace =
+       \\frac{ \\alpha_\\mathrm{a} \\frac{|s|}{s_\\mathrm{sat}} }
+             { 1 + \\beta_\\mathrm{a} \\frac{|s|^2}{s_\\mathrm{sat}^2} }
+
+    describes the amplitude model depending on two parameters
+    :math:`\\alpha_\\mathrm{a}, \\beta_\\mathrm{a} \\in \\mathbb{R}_{+}`
+    and
+
+    .. math::
+
+       \\Phi\\lbrace s \\rbrace =
+       \\frac{ \\alpha_\\Phi \\frac{|s|}{s_\\mathrm{sat}} }
+             { 1 + \\beta_\\Phi \\frac{|s|^2}{s_\\mathrm{sat}^2} }
+
+    describes the phase model depending on
+    :math:`\\alpha_\\Phi, \\beta_\\Phi \\in \\mathbb{R}`, respectively.
+
+
+    See :footcite:t:`1981:saleh` for further details.
+    """
+
+    yaml_tag = u'Saleh'
+    """YAML serialization tag."""
+
+    phase_alpha: float
+    """Phase model factor :math:`\\alpha_\\Phi`."""
+
+    phase_beta: float
+    """Phase model factor :math:`\\beta_\\Phi`."""
+
+    __amplitude_alpha: float            # Amplitude model factor alpha.
+    __amplitude_beta: float             # Amplitude model factor beta.
+
+    def __init__(self,
+                 amplitude_alpha: float,
+                 amplitude_beta: float,
+                 phase_alpha: float,
+                 phase_beta: float,
+                 **kwargs: Any) -> None:
+        """
+        Args:
+
+            amplitude_alpha (float):
+                Amplitude model factor alpha.
+
+            amplitude_beta (float):
+                Amplitude model factor beta.
+
+            phase_alpha (float)
+                Phase model factor alpha.
+
+            phase_beta (float):
+                Phase model factor beta.
+
+            kwargs (Any):
+                PowerAmplifier base class initialization arguments.
+        """
+
+        self.amplitude_alpha = amplitude_alpha
+        self.amplitude_beta = amplitude_beta
+        self.phase_alpha = phase_alpha
+        self.phase_beta = phase_beta
+
+        # Initialize base class
+        PowerAmplifier.__init__(self, **kwargs)
+
+    @property
+    def amplitude_alpha(self) -> float:
+        """Amplitude model factor :math:`\\alpha_\\mathrm{a}`.
+
+        Returns:
+            float: Amplitude factor.
+
+        Raises:
+            ValueError: If the factor is smaller than zero.
+        """
+
+        return self.__amplitude_alpha
+
+    @amplitude_alpha.setter
+    def amplitude_alpha(self, value: float) -> None:
+        """Set the amplitude model factor alpha."""
+
+        if value < 0.:
+            raise ValueError("Amplitude model factor alpha must be greater or equal to zero")
+
+        self.__amplitude_alpha = value
+
+    @property
+    def amplitude_beta(self) -> float:
+        """Amplitude model factor :math:`\\beta_\\mathrm{a}`.
+
+        Returns:
+            float: Amplitude factor.
+
+        Raises:
+            ValueError: If the factor is smaller than zero.
+        """
+
+        return self.__amplitude_beta
+
+    @amplitude_beta.setter
+    def amplitude_beta(self, value: float) -> None:
+        """Set the amplitude model factor beta."""
+
+        if value < 0.:
+            raise ValueError("Amplitude model factor beta must be greater or equal to zero")
+
+        self.__amplitude_beta = value
+
+    def model(self, input_signal: np.ndarray) -> np.ndarray:
+
+        amp = np.abs(input_signal) / self.saturation_amplitude
+        gain = self.__amplitude_alpha / (1 + self.__amplitude_beta * amp ** 2)
+        phase_shift = self.phase_alpha * amp ** 2 / (1 + self.phase_beta * amp ** 2)
+
+        return input_signal * gain * np.exp(1j * phase_shift)
+
+    @classmethod
+    def to_yaml(cls: Type[SalehPowerAmplifier], representer: SafeRepresenter, node: SalehPowerAmplifier) -> MappingNode:
+        """Serialize a `SalehPowerAmplifier` object to YAML.
+
+        Args:
+            representer (BaseRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (SalehPowerAmplifier):
+                The amplifier instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        state = {
+            'amplitude_alpha': node.__amplitude_alpha,
+            'amplitude_beta': node.__amplitude_beta,
+            'phase_alpha': node.phase_alpha,
+            'phase_beta': node.phase_beta,
+        }
+
+        representation = representer.represent_mapping(cls.yaml_tag, state)
+        representation.value.extend(PowerAmplifier.to_yaml(representer, node).value)
+
+        return representation
+
+
+class CustomPowerAmplifier(PowerAmplifier):
+    """Model of a customized power amplifier."""
+
+    yaml_tag = u'Custom'
+    """YAML serialization tag."""
+
+    __input: np.ndarray
+    __gain: np.ndarray
+    __phase: np.ndarray
+
+    def __init__(self,
+                 input: np.ndarray,
+                 gain: np.ndarray,
+                 phase: np.ndarray,
+                 **kwargs: Any) -> None:
+        """
+        Args:
+
+            input (np.ndarray):
+            gain (np.ndarray):
+            phase (np.ndarray):
+
+            kwargs (Any):
+                PowerAmplifier base class initialization arguments.
+
+        Raises:
+            ValueError: If `input`, `gain`, and `phase` are not vectors of identical length.
+        """
+
+        if input.ndim != 1:
+            raise ValueError("Custom power amplifier input must be a vector")
+
+        if gain.ndim != 1:
+            raise ValueError("Custom power amplifier gain must be a vector")
+
+        if phase.ndim != 1:
+            raise ValueError("Custom power amplifier phase must be a vector")
+
+        if len(input) != len(gain) != len(phase):
+            raise ValueError("Custom power amplifier input, gain and phase vectors must be of identical length")
+
+        self.__input = input
+        self.__gain = gain
+        self.__phase = phase
+
+        PowerAmplifier.__init__(self, **kwargs)
+
+    def model(self, input_signal: np.ndarray) -> np.ndarray:
+
+        amp = np.abs(input_signal) / self.saturation_amplitude
+        gain = np.interp(amp, self.__input, self.__gain)
+        phase_shift = np.interp(amp, self.__input, self.__phase)
+
+        return input_signal * gain * np.exp(1j * phase_shift)
