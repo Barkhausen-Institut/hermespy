@@ -11,7 +11,7 @@ The current releases encompasses the following (new features in __bold__):
   * chirp FSK 
   * generic OFDM with arbitrary allocation of data and reference symbols in each resource element
   * DFT-spread supported
-  * __unified multicarrier framework using a GFDM precoder__
+  * __extented GFDM framework__
   * repetition and LDPC codes
   * __faster LDPC decoder__
   * __3GPP-like scrambler__
