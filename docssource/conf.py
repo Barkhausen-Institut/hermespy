@@ -92,3 +92,10 @@ default_dark_mode = True
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['static']
+
+
+def setup(app):
+    """Setup."""
+
+    # Custom css tweaks
+    app.add_css_file('tweaks.css')
