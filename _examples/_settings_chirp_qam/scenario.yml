@@ -64,9 +64,8 @@ Modems:
     # Power amplifier modeling
     RfChain:
 
-      PowerAmplifier:
+      PowerAmplifier: !<Rapp>
 
-        model: RAPP
-        input_backoff_pa_db: 10
-        adjust_power_after_pa: False
-        rapp_smoothness_factor: 50
+        tx_power: 1.0
+        power_backoff: 10       # dB
+        smoothness_factor: 50
