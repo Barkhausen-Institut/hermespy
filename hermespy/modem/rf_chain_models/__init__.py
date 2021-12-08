@@ -1,4 +1,5 @@
-from .power_amplifier import PowerAmplifier
+from .power_amplifier import PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier,\
+    CustomPowerAmplifier
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -10,4 +11,5 @@ __email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['PowerAmplifier']
+__all__ = ['PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier',
+           'CustomPowerAmplifier']
