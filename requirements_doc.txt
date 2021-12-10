@@ -8,4 +8,3 @@ sphinxcontrib-bibtex
 sphinx-rtd-theme
 sphinx-rtd-dark-mode
 sphinx-tabs
-m2r2
