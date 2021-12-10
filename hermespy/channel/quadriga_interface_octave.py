@@ -60,7 +60,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
 
         # Launch octave
         try:
-            self.__octave.eval("launch_quadriga_script")
+            self.__octave.eval("hermespy/resources/matlab/launch_quadriga_script")
 
         except Oct2PyError as error:
             raise RuntimeError(error)
