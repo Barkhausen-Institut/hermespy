@@ -2,12 +2,16 @@
 """HermesPy base for executable configurations."""
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import List, Optional, Union
-from os import getcwd, mkdir
-from enum import Enum
 import os.path as path
 import datetime
+from abc import ABC, abstractmethod
+from contextlib import contextmanager
+from enum import Enum
+from glob import glob
+from os import getcwd, mkdir
+from typing import ContextManager, List, Optional, Union
+
+import matplotlib.pyplot as plt
 
 from hermespy.scenario import Scenario
 
@@ -32,31 +36,32 @@ class Verbosity(Enum):
 
 
 class Executable(ABC):
-    """Abstract base class for executable configurations.
-
-    Attributes:
-        plot_drop (bool): Plot each drop during execution of scenarios.
-        calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
-        calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
-        calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
-        calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
-        __spectrum_fft_size (int): Number of FFT bins considered during computation.
-        __max_num_drops (int): Number of maximum executions per scenario.
-        __results_dir (Optional[str]): Directory in which all execution artifacts will be dropped.
-        __verbosity (Verbosity): Information output behaviour during execution.
-    """
+    """Abstract base class for executable configurations."""
 
     yaml_tag = u'Executable'
-    __scenarios: List[Scenario]
+    """YAML serialization tag."""
+
     plot_drop: bool
+    """Plot each drop during execution of scenarios."""
+
     calc_transmit_spectrum: bool
+    """Compute the transmitted signals frequency domain spectra."""
+
     calc_receive_spectrum: bool
+    """Compute the received signals frequency domain spectra."""
+
     calc_transmit_stft: bool
+    """Compute the short time Fourier transform of transmitted signals."""
+
     calc_receive_stft: bool
-    __spectrum_fft_size: int
-    __max_num_drops: int
-    __results_dir: Optional[str]
-    __verbosity: Verbosity
+    """Compute the short time Fourier transform of received signals."""
+
+    __scenarios: List[Scenario]     # List of registered scenarios to be executed
+    __spectrum_fft_size: int        # Number of FFT bins considered during computation.
+    __max_num_drops: int            # Number of maximum executions per scenario.
+    __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
+    __verbosity: Verbosity          # Information output behaviour during execution.
+    __style: str                    # Color scheme
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -67,19 +72,41 @@ class Executable(ABC):
                  spectrum_fft_size: int = 0,
                  max_num_drops: int = 1,
                  results_dir: Optional[str] = None,
-                 verbosity: Union[Verbosity, str] = Verbosity.INFO) -> None:
+                 verbosity: Union[Verbosity, str] = Verbosity.INFO,
+                 style: str = 'dark') -> None:
         """Object initialization.
 
         Args:
-            plot_drop (bool): Plot each drop during execution of scenarios.
-            calc_transmit_spectrum (bool): Compute the transmitted signals frequency domain spectra.
-            calc_receive_spectrum (bool): Compute the received signals frequency domain spectra.
-            calc_transmit_stft (bool): Compute the short time Fourier transform of transmitted signals.
-            calc_receive_stft (bool): Compute the short time Fourier transform of received signals.
-            spectrum_fft_size (int): Number of discrete frequency bins computed within the Fast Fourier Transforms.
-            max_num_drops (int): Maximum Number of drops per executed scenario.
-            results_dir(str, optional): Directory in which all execution artifacts will be dropped.
-            verbosity: (Union[str, Verbosity], optional): Information output behaviour during execution.
+
+            plot_drop (bool):
+                Plot each drop during execution of scenarios.
+
+            calc_transmit_spectrum (bool):
+                Compute the transmitted signals frequency domain spectra.
+
+            calc_receive_spectrum (bool):
+                Compute the received signals frequency domain spectra.
+
+            calc_transmit_stft (bool):
+                Compute the short time Fourier transform of transmitted signals.
+
+            calc_receive_stft (bool):
+                Compute the short time Fourier transform of received signals.
+
+            spectrum_fft_size (int):
+                Number of discrete frequency bins computed within the Fast Fourier Transforms.
+
+            max_num_drops (int):
+                Maximum Number of drops per executed scenario.
+
+            results_dir(str, optional):
+                Directory in which all execution artifacts will be dropped.
+
+            verbosity (Union[str, Verbosity], optional):
+                Information output behaviour during execution.
+
+            style (str. optional):
+                Color scheme. Dark by default.
         """
 
         # Default parameters
@@ -93,6 +120,13 @@ class Executable(ABC):
         self.max_num_drops = max_num_drops
         self.results_dir = results_dir
         self.verbosity = verbosity
+        self.style = style
+
+    def execute(self) -> None:
+        """Execute the executable."""
+
+        with self.style_context():
+            self.run()
 
     @abstractmethod
     def run(self) -> None:
@@ -248,3 +282,69 @@ class Executable(ABC):
 
         mkdir(results_dir)
         return results_dir
+
+    @property
+    def style(self) -> str:
+        """Matplotlib color scheme.
+
+        Returns:
+            str: Color scheme.
+
+        Raises:
+            ValueError: If the `style` is not available.
+        """
+
+        return self.__style
+
+    @style.setter
+    def style(self, value: str) -> None:
+        """Set the Matplotlib color scheme."""
+
+        hermes_styles = self.__hermes_styles()
+        if value in hermes_styles:
+
+            self.__style = value
+            return
+
+        matplotlib_styles = plt.style.available
+        if value in matplotlib_styles:
+
+            self.__style = value
+            return
+
+        raise ValueError("Requested style identifier not available")
+
+    @staticmethod
+    def __hermes_styles() -> List[str]:
+        """Styles available in Hermes only.
+
+        Returns:
+            List[str]: List of style identifiers.
+        """
+
+        return [path.splitext(path.basename(x))[0] for x in
+                glob(path.join(Executable.__hermes_root_dir(), 'resources', 'styles', '*.mplstyle'))]
+
+    @contextmanager
+    def style_context(self) -> ContextManager:
+        """Context for the configured style.
+
+        Returns:
+            ContextManager: Style context manager.
+        """
+
+        if self.__style in self.__hermes_styles():
+            yield plt.style.use(path.join(self.__hermes_root_dir(), 'resources', 'styles', self.__style + '.mplstyle'))
+
+        else:
+            yield plt.style.use(self.__style)
+
+    @staticmethod
+    def __hermes_root_dir() -> str:
+        """HermesPy package root directory.
+
+        Returns:
+            str: Path to the package root.
+        """
+
+        return path.dirname(path.dirname(path.abspath(__file__)))

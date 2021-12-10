@@ -14,7 +14,7 @@ __status__ = "Prototype"
 
 os.environ["MPLBACKEND"] = "agg"
 loader = unittest.TestLoader()
-unit_tests = loader.discover('./tests/unit_tests', top_level_dir='.')
+unit_tests = loader.discover('./tests/unit_tests', top_level_dir='..')
 unit_test_runner = unittest.runner.TextTestRunner()
 unit_test_results = unit_test_runner.run(unit_tests)
 

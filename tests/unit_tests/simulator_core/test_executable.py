@@ -3,7 +3,8 @@
 
 import unittest
 import tempfile
-from unittest.mock import Mock
+from contextlib import _GeneratorContextManager
+from unittest.mock import Mock, patch
 
 from hermespy.simulator_core import Executable, Verbosity
 
@@ -57,6 +58,14 @@ class TestExecutable(unittest.TestCase):
         self.assertEqual(self.spectrum_fft_size, self.executable.spectrum_fft_size)
         self.assertEqual(self.max_num_drops, self.executable.max_num_drops)
         self.assertEqual(self.verbosity, self.executable.verbosity)
+
+    def test_execute(self) -> None:
+        """Executing the executable should call the run routine."""
+
+        with patch.object(self.executable, 'run') as run:
+
+            self.executable.execute()
+            self.assertTrue(run.called)
 
     def test_add_scenario(self) -> None:
         """Scenario property should return scenarios added by the add_scenario function."""
@@ -138,3 +147,22 @@ class TestExecutable(unittest.TestCase):
 
             self.executable.verbosity = verbosity_option.name
             self.assertEqual(verbosity_option, self.executable.verbosity)
+
+    def test_style_setget(self) -> None:
+        """Style property getter should return setter argument."""
+
+        style = 'light'
+        self.executable.style = style
+
+        self.assertEqual(style, self.executable.style)
+
+    def test_style_validation(self) -> None:
+        """Style property setter should raise ValueError on invalid styles."""
+
+        with self.assertRaises(ValueError):
+            self.executable.style = "131241251"
+
+    def test_style_context(self) -> None:
+        """Style context should return PyPlot style context."""
+
+        self.assertTrue(isinstance(self.executable.style_context(), _GeneratorContextManager))

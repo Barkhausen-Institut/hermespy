@@ -61,11 +61,13 @@ def hermes(args: Optional[List[str]] = None) -> None:
                                      prog='hermes')
     parser.add_argument("-p", help="settings directory from which to read the configuration", type=str)
     parser.add_argument("-o", help="output directory to which results will be dumped", type=str)
+    parser.add_argument("-s", help="style of result plots", type=str)
     parser.add_argument('-t', '--test', action='store_true', help='run in test-mode, does not dump results')
 
     arguments = parser.parse_args(args)
     input_parameters_dir = arguments.p
     results_dir = arguments.o
+    style = arguments.s
 
     # validate commandline parameters
     if not input_parameters_dir:
@@ -101,6 +103,10 @@ def hermes(args: Optional[List[str]] = None) -> None:
                                                                                           file=sys.stderr))
         exit(-1)
 
+    # Configure style
+    if style is not None:
+        executable.style = style
+
     # Inform about the results directory
     print("Results will be saved in '{}'".format(executable.results_dir))
 
@@ -110,7 +116,7 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
     ##################
     # run simulation
-    executable.run()
+    executable.execute()
 
     ###########
     # Goodbye :)
