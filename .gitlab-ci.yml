@@ -13,7 +13,7 @@ test:
     - pip install -r requirements.txt
     - pip install -e .
   script:
-    - python scripts/run_unit_tests.py
+    - python -m unittest discover tests/unit_tests
 
 wheel-linux:
   stage: build

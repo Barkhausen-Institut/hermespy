@@ -32,7 +32,7 @@ jobs:
         pip install -e .
 
     - name: Run unit tests
-      run: python scripts/run_unit_tests.py
+      run: python -m unittest discover tests/unit_tests
       
 
   Documentation:
