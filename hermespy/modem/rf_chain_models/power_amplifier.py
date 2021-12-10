@@ -7,6 +7,10 @@ Power Amplifier Modeling
 Power amplification modeling represents a single processing step within the radio-frequency hardware model of
 transmitting modems.
 
+.. autoclasstree:: hermespy.modem.rf_chain_models.power_amplifier
+   :strict:
+   :full:
+
 Each power amplifier model instance implements an equation
 
 .. math::

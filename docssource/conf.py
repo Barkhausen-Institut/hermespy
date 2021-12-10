@@ -34,19 +34,11 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    'sphinx.ext.inheritance_diagram',
     'sphinx_autodoc_typehints',
     'sphinx.ext.autosummary',
-    'm2r2',
     'sphinx_rtd_dark_mode',
     'sphinx_tabs.tabs',
 ]
-
-# APIdoc
-apidoc_module_dir = '../hermespy'
-apidoc_output_dir = 'api'
-apidoc_excluded_paths = []
-apidoc_separate_modules = True
 
 autoclass_content = "both"
 add_module_names = False
@@ -58,8 +50,7 @@ bibtex_bibfiles = ['references.bib']
 templates_path = ['_templates']
 
 source_suffic = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown'
+    '.rst': 'restructuredtext'
 }
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
