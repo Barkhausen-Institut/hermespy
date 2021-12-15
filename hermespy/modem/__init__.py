@@ -2,7 +2,7 @@ from .modem import TransmissionMode, Modem
 from .transmitter import Transmitter
 from .receiver import Receiver
 from .rf_chain import RfChain
-from .waveform_generator import WaveformGenerator
+from .waveform_generator import WaveformGenerator, Synchronization
 from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
 from .waveform_generator_psk_qam import WaveformGeneratorPskQam
 from .waveform_generator_ofdm import WaveformGeneratorOfdm, FrameGuardSection, FrameSymbolSection, FrameResource
@@ -20,4 +20,4 @@ __status__ = "Prototype"
 
 __all__ = ['Modem', 'Transmitter', 'Receiver', 'RfChain', 'WaveformGenerator', 'WaveformGeneratorChirpFsk',
            'WaveformGeneratorPskQam', 'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection',
-           'FrameSymbolSection', 'FrameResource']
+           'FrameSymbolSection', 'FrameResource', 'Synchronization']
