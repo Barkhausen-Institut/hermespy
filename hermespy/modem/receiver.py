@@ -165,7 +165,7 @@ class Receiver(Modem):
         for stream_idx, (rx_signal, stream_transform) in enumerate(zip(baseband_signal.samples,
                                                                        channel_state.received_streams())):
 
-            frame = self.waveform_generator.synchronize(rx_signal, stream_transform)
+            frame = self.waveform_generator.synchronization.synchronize(rx_signal, stream_transform)
             frames.append(frame)
 
         frames = np.array(frames, dtype=object)
