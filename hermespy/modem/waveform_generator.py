@@ -25,6 +25,95 @@ __email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class Synchronization(ABC):
+    """Abstract base class for synchronization routines of waveform generators."""
+
+    __waveform_generator: Optional[WaveformGenerator]       # Waveform generator this routine is attached to
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGenerator] = None) -> None:
+        """
+        Args:
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this synchronization routine is attached to.
+        """
+
+        self.__waveform_generator = waveform_generator
+
+    @property
+    def waveform_generator(self) -> Optional[WaveformGenerator]:
+        """Waveform generator this synchronization routine is attached to.
+
+        Returns:
+            Optional[WaveformGenerator]:
+                Handle to the waveform generator. None if the synchronization routine is floating.
+        """
+
+        return self.__waveform_generator
+
+    @waveform_generator.setter
+    def waveform_generator(self, value: Optional[WaveformGenerator]) -> None:
+        """Set waveform generator this synchronization routine is attached to."""
+
+        if self.__waveform_generator is not None:
+            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
+
+        self.__waveform_generator = value
+
+    def synchronize(self,
+                    signal: np.ndarray,
+                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
+        """Simulates time-synchronization at the receiver-side.
+
+        Sorts base-band signal-sections into frames in time-domain.
+
+        Args:
+
+            signal (np.ndarray):
+                Vector of complex base-band samples of a single input stream with `num_samples` entries.
+
+            channel_state (ChannelStateInformation):
+                State of the wireless transmission channel over which `signal` has been propagated.
+
+        Returns:
+            List[Tuple[np.ndarray, ChannelStateInformation]]:
+                Tuple of `signal` samples and channel transformations sorted into frames
+
+        Raises:
+
+            ValueError:
+                If the number of received streams in `channel_state` does not equal one.
+                If the length of `signal` and the number of samples in `channel_state` are not identical.
+
+            RuntimeError:
+                If the synchronization routine is floating
+        """
+
+        if self.__waveform_generator is None:
+            raise RuntimeError("Trying to synchronize with a floating synchronization routine")
+
+        if len(signal) != channel_state.num_samples + channel_state.num_delay_taps - 1:
+            raise ValueError("Base-band signal and channel state contain a different amount of samples")
+
+        if channel_state.num_receive_streams != 1:
+            raise ValueError("Channel state during synchronization may only contain a single receive stream")
+
+        samples_per_frame = self.__waveform_generator.samples_in_frame
+        num_frames = int(floor(len(signal) / samples_per_frame))
+
+        # Slice signals and channel state information into frame-sized portions
+        # Default synchronization does NOT account for possible delays,
+        # i.e. assume the the first base-band signal's sample to also be the first frame's initial sample
+        synchronized_frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
+        for frame_idx in range(num_frames):
+
+            frame_samples = signal[frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
+            frame_channel_state = channel_state[:, :,  frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame, :]
+            synchronized_frames.append((frame_samples, frame_channel_state))
+
+        return synchronized_frames
+
+
 class WaveformGenerator(ABC):
     """Implements an abstract waveform generator.
 
@@ -32,10 +121,17 @@ class WaveformGenerator(ABC):
     """
 
     yaml_tag: str = "Waveform"
+    """YAML serialization tag."""
+
+    synchronization: Synchronization
+    """Synchronization routine."""
+
     symbol_type: np.dtype = complex
-    __modem: Optional[Modem]
-    __oversampling_factor: int
-    __modulation_order: int
+    """Symbol type."""
+
+    __modem: Optional[Modem]            # Modem this waveform generator is attached to
+    __oversampling_factor: int          # Oversampling factor
+    __modulation_order: int             # Cardinality of the set of communication symbols
 
     def __init__(self,
                  modem: Optional[Modem] = None,
@@ -60,6 +156,7 @@ class WaveformGenerator(ABC):
         self.__modem = None
         self.oversampling_factor = oversampling_factor
         self.modulation_order = modulation_order
+        self.synchronization = Synchronization(self)
 
         if modem is not None:
             self.modem = modem
@@ -69,49 +166,6 @@ class WaveformGenerator(ABC):
 
         if modulation_order is not None:
             self.modulation_order = modulation_order
-
-    @classmethod
-    def to_yaml(cls: Type[WaveformGenerator], representer: SafeRepresenter, node: WaveformGenerator) -> Node:
-        """Serialize an `WaveformGenerator` object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (WaveformGenerator):
-                The `WaveformGenerator` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node
-        """
-
-        state = {
-            "oversampling_factor": node.__oversampling_factor,
-            "modulation_order": node.__modulation_order,
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[WaveformGenerator], constructor: SafeConstructor, node: Node) -> WaveformGenerator:
-        """Recall a new `WaveformGenerator` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `WaveformGenerator` serialization.
-
-        Returns:
-            WaveformGenerator:
-                Newly created `WaveformGenerator` instance.
-        """
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)
 
     @property
     @abstractmethod
@@ -303,52 +357,6 @@ class WaveformGenerator(ABC):
 
     # Hint: Channel propagation occurs here
 
-    def synchronize(self,
-                    signal: np.ndarray,
-                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
-        """Simulates time-synchronization at the receiver-side.
-
-        Sorts base-band signal-sections into frames in time-domain.
-
-        Args:
-
-            signal (np.ndarray):
-                Vector of complex base-band samples of a single input stream with `num_samples` entries.
-
-            channel_state (ChannelStateInformation):
-                State of the wireless transmission channel over which `signal` has been propagated.
-
-        Returns:
-            List[Tuple[np.ndarray, ChannelStateInformation]]:
-                Tuple of `signal` samples and channel transformations sorted into frames
-
-        Raises:
-            ValueError:
-                If the number of received streams in `channel_state` does not equal one.
-                If the length of `signal` and the number of samples in `channel_state` are not identical.
-        """
-
-        if len(signal) != channel_state.num_samples + channel_state.num_delay_taps - 1:
-            raise ValueError("Base-band signal and channel state contain a different amount of samples")
-
-        if channel_state.num_receive_streams != 1:
-            raise ValueError("Channel state during synchronization may only contain a single receive stream")
-
-        samples_per_frame = self.samples_in_frame
-        num_frames = int(floor(len(signal) / samples_per_frame))
-
-        # Slice signals and channel state information into frame-sized portions
-        # Default synchronization does NOT account for possible delays,
-        # i.e. assume the the first base-band signal's sample to also be the first frame's initial sample
-        synchronized_frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
-        for frame_idx in range(num_frames):
-
-            frame_samples = signal[frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
-            frame_channel_state = channel_state[:, :,  frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame, :]
-            synchronized_frames.append((frame_samples, frame_channel_state))
-
-        return synchronized_frames
-
     @abstractmethod
     def demodulate(self,
                    signal: np.ndarray,
@@ -431,3 +439,46 @@ class WaveformGenerator(ABC):
             float: Sampling rate in Hz.
         """
         ...
+
+    @classmethod
+    def to_yaml(cls: Type[WaveformGenerator], representer: SafeRepresenter, node: WaveformGenerator) -> Node:
+        """Serialize an `WaveformGenerator` object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (WaveformGenerator):
+                The `WaveformGenerator` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node
+        """
+
+        state = {
+            "oversampling_factor": node.__oversampling_factor,
+            "modulation_order": node.__modulation_order,
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[WaveformGenerator], constructor: SafeConstructor, node: Node) -> WaveformGenerator:
+        """Recall a new `WaveformGenerator` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `WaveformGenerator` serialization.
+
+        Returns:
+            WaveformGenerator:
+                Newly created `WaveformGenerator` instance.
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)

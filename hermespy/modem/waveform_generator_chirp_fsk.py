@@ -2,7 +2,7 @@
 """Chirp Frequency Shift Keying Waveform Generator."""
 
 from __future__ import annotations
-from typing import Tuple, Type
+from typing import Any, Tuple, Type
 from math import ceil
 from functools import lru_cache
 
@@ -11,7 +11,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from scipy import integrate
 
 from hermespy.channel import ChannelStateInformation
-from hermespy.modem.waveform_generator import WaveformGenerator
+from hermespy.modem.waveform_generator import WaveformGenerator, Synchronization
 from hermespy.signal import Signal
 
 __author__ = "Tobias Kronauer"
@@ -24,6 +24,20 @@ __email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class ChirpFskSynchronization(Synchronization):
+    """Synchronization for chirp-based frequency shift keying communication waveforms."""
+
+    def __init__(self,
+                 *args: Any) -> None:
+        """
+        Args:
+            *args:
+                Synchronization base class initialization parameters.
+        """
+
+        Synchronization.__init__(self, *args)
+
+
 class WaveformGeneratorChirpFsk(WaveformGenerator):
     """ Implements a chirp FSK waveform generator."""
 
@@ -32,6 +46,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
     # Modulation parameters
     symbol_type: np.dtype = int
+    synchronization: ChirpFskSynchronization
     __chirp_duration: float
     __chirp_bandwidth: float
     __freq_difference: float
@@ -63,7 +78,11 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
                 Base waveform generator initialization arguments.
         """
 
+        # Init base class
+        WaveformGenerator.__init__(self, **kwargs)
+
         # Default parameters
+        self.synchronization = ChirpFskSynchronization(self)
         self.__chirp_duration = 512e-6
         self.__chirp_bandwidth = 500e3
         self.__freq_difference = 1953.125
@@ -88,9 +107,6 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
 
         if guard_interval is not None:
             self.guard_interval = guard_interval
-
-        # Init base class
-        WaveformGenerator.__init__(self, **kwargs)
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorChirpFsk],
