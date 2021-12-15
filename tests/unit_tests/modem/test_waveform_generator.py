@@ -79,10 +79,6 @@ class WaveformGeneratorDummy(WaveformGenerator):
     def sampling_rate(self) -> float:
         return self.bandwidth * self.oversampling_factor
 
-    @property
-    def sampling_rate(self) -> float:
-        return 1e3
-
 
 class TestWaveformGenerator(unittest.TestCase):
     """Test the communication waveform generator unit."""
@@ -137,7 +133,7 @@ class TestWaveformGenerator(unittest.TestCase):
             signal = np.exp(2j * self.rnd.uniform(0, pi, num_samples))
             channel_state = ChannelStateInformation.Ideal(num_samples=num_samples)
 
-            synchronized_frames = self.waveform_generator.synchronize(signal, channel_state)
+            synchronized_frames = self.waveform_generator.synchronization.synchronize(signal, channel_state)
 
             # Number of frames is the number of frames that fit into the samples
             num_frames = len(synchronized_frames)
@@ -154,14 +150,14 @@ class TestWaveformGenerator(unittest.TestCase):
         """Synchronization should raise a ValueError if the signal shape does match the stream response shape."""
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronize(np.zeros(10),
-                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                                            np.zeros((10, 2))))
+            _ = self.waveform_generator.synchronization.synchronize(np.zeros(10),
+                                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                                    np.zeros((10, 2))))
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronize(np.zeros((10, 2)),
-                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                                            np.zeros((10, 2))))
+            _ = self.waveform_generator.synchronization.synchronize(np.zeros((10, 2)),
+                                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                                    np.zeros((10, 2))))
 
     def test_modem_setget(self) -> None:
         """Modem property getter should return setter argument."""
