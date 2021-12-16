@@ -80,6 +80,35 @@ class WaveformGeneratorDummy(WaveformGenerator):
         return self.bandwidth * self.oversampling_factor
 
 
+class TestSynchronization(unittest.TestCase):
+    """Test waveform generator synchronization base class."""
+
+    def setUp(self) -> None:
+
+        self.rng = np.random.default_rng(42)
+        self.waveform_generator = WaveformGeneratorDummy()
+
+        self.synchronization = self.waveform_generator.synchronization
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as object attributes."""
+
+        self.assertIs(self.waveform_generator, self.synchronization.waveform_generator)
+
+    def test_synchronize(self) -> None:
+        """Default synchronization should properly split signals into frame-sections."""
+
+        num_frames = 5
+        num_offset_samples = 2
+        num_samples = num_frames * self.waveform_generator.samples_in_frame + num_offset_samples
+
+        signal = np.exp(2j * self.rng.uniform(0, pi, num_samples))
+        csi = ChannelStateInformation.Ideal(num_samples)
+
+        frames = self.synchronization.synchronize(signal, csi)
+        self.assertEqual(num_frames, len(frames))
+
+
 class TestWaveformGenerator(unittest.TestCase):
     """Test the communication waveform generator unit."""
 

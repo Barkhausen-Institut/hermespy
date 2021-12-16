@@ -3,12 +3,15 @@
 
 import unittest
 import os
-from unittest.mock import Mock
-import numpy as np
 from math import ceil
+from unittest.mock import Mock
+
+import numpy as np
+from numpy.testing import assert_array_equal
 
 from hermespy.channel import ChannelStateInformation
-from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
+from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSynchronization,\
+    ChirpFskCorrelationSynchronization
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -348,3 +351,129 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
                 f"{file_name} must be in same folder as this file.")
 
         return np.load(os.path.join(self.parent_dir, file_name))
+
+
+class TestChirpFskSynchronization(unittest.TestCase):
+    """Test chirp FSK synchronization base class."""
+
+    def setUp(self) -> None:
+
+        self.rng = np.random.default_rng(42)
+        self.waveform_generator = WaveformGeneratorChirpFsk()
+
+        self.synchronization = self.waveform_generator.synchronization
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as object attributes."""
+
+        self.assertIs(self.waveform_generator, self.synchronization.waveform_generator)
+        self.assertIsInstance(self.waveform_generator.synchronization, ChirpFskSynchronization)
+
+
+class TestChirpFskCorrelationSynchronization(unittest.TestCase):
+    """Test correlation-based clock synchronization for the chirp FSK waveform."""
+
+    def setUp(self) -> None:
+
+        self.rng = np.random.default_rng(42)
+        self.num_frames = 3
+        self.max_offset = 200                   # Maximum synchronization offset in samples
+        self.threshold = 0.94
+        self.guard_ratio = 0.5
+
+        self.modem = Mock()
+        self.modem.carrier_frequency = 1e5
+        self.waveform = WaveformGeneratorChirpFsk(modem=self.modem)
+        self.waveform.num_pilot_chirps = 5
+        self.waveform.num_data_chirps = 20
+        self.waveform.oversampling_factor = 2
+
+        self.synchronization = ChirpFskCorrelationSynchronization(threshold=self.threshold,
+                                                                  guard_ratio=self.guard_ratio,
+                                                                  waveform_generator=self.waveform)
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as class attributes."""
+
+        self.assertEqual(self.threshold, self.synchronization.threshold)
+        self.assertEqual(self.guard_ratio, self.synchronization.guard_ratio)
+
+    def test_threshold_setget(self) -> None:
+        """Threshold property getter should return setter argument."""
+
+        threshold = 0.25
+        self.synchronization.threshold = threshold
+
+        self.assertEqual(threshold, self.synchronization.threshold)
+
+    def test_threshold_validation(self) -> None:
+        """Threshold property setter should raise ValueError on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            self.synchronization.threshold = -1.
+
+        with self.assertRaises(ValueError):
+            self.synchronization.threshold = 2.
+
+        try:
+            self.synchronization.threshold = 0.
+            self.synchronization.threshold = 1.
+
+        except ValueError:
+            self.fail()
+            
+    def test_guard_ratio_setget(self) -> None:
+        """Guard ratio property getter should return setter argument."""
+
+        guard_ratio = 0.25
+        self.synchronization.guard_ratio = guard_ratio
+
+        self.assertEqual(guard_ratio, self.synchronization.guard_ratio)
+
+    def test_guard_ratio_validation(self) -> None:
+        """Guard ratio property setter should raise ValueError on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            self.synchronization.guard_ratio = -1.
+
+        with self.assertRaises(ValueError):
+            self.synchronization.guard_ratio = 2.
+
+        try:
+            self.synchronization.guard_ratio = 0.
+            self.synchronization.guard_ratio = 1.
+
+        except ValueError:
+            self.fail()
+
+    def test_synchronization(self) -> None:
+        """Synchronization should properly partition signal samples into frame sections."""
+
+        # Generate frame signal models
+        num_samples = 2 * self.max_offset + self.num_frames * self.waveform.samples_in_frame
+        csi = ChannelStateInformation.Ideal(num_samples)
+        samples = np.zeros(num_samples, dtype=complex)
+        expected_frames = []
+        for f in range(self.num_frames):
+
+            data_symbols = self.rng.integers(0, self.waveform.modulation_order, self.waveform.symbols_per_frame)
+            signal_samples = self.waveform.modulate(data_symbols).samples[0, :]
+
+            frame_offset = self.rng.integers(0, self.max_offset) + f * self.waveform.samples_in_frame
+            samples[frame_offset:frame_offset+self.waveform.samples_in_frame] += signal_samples
+            expected_frames.append(samples[frame_offset:frame_offset+self.waveform.samples_in_frame])
+
+        synchronized_frames = self.synchronization.synchronize(samples, csi)
+
+        if len(synchronized_frames) != len(expected_frames):
+            self.fail()
+
+        for expected_frame, (synchronized_frame, _) in zip(expected_frames, synchronized_frames):
+            assert_array_equal(expected_frame, synchronized_frame)
+
+    def test_synchronization_validation(self) -> None:
+        """Synchronization should raise RuntimeError if no pilot signal is available."""
+
+        self.waveform.num_pilot_chirps = 0
+        with self.assertRaises(RuntimeError):
+            _ = self.synchronization.synchronize(Mock(), Mock())
