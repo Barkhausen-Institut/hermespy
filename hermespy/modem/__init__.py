@@ -1,3 +1,4 @@
+from .device import Device, FloatingError, PhysicalDevice, SimulatedDevice
 from .modem import TransmissionMode, Modem
 from .transmitter import Transmitter
 from .receiver import Receiver
@@ -19,6 +20,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['Modem', 'Transmitter', 'Receiver', 'RfChain', 'WaveformGenerator', 'WaveformGeneratorChirpFsk',
-           'WaveformGeneratorPskQam', 'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection',
-           'FrameSymbolSection', 'FrameResource', 'Synchronization']
+__all__ = ['Device', 'FloatingError', 'HardwareDevice', 'SimulatedDevice', 'Modem', 'Transmitter', 'Receiver',
+           'RfChain', 'WaveformGenerator', 'WaveformGeneratorChirpFsk', 'WaveformGeneratorPskQam',
+           'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection', 'FrameSymbolSection',
+           'FrameResource', 'Synchronization']
