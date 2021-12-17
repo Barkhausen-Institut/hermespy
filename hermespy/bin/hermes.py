@@ -34,7 +34,7 @@ from typing import List, Optional
 
 from ruamel.yaml.constructor import ConstructorError
 
-from hermespy.simulator_core import Factory, Executable
+from hermespy.core import Factory, Executable
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

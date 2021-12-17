@@ -7,8 +7,8 @@ from typing import List
 
 import numpy as np
 
-from hermespy.simulator_core.statistics import Statistics, ConfidenceMetric
-from hermespy.simulator_core.drop import Drop
+from hermespy.core.statistics import Statistics, ConfidenceMetric
+from hermespy.core.drop import Drop
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
