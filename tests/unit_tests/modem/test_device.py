@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from hermespy.modem.device import Device, PhysicalDevice, SimulatedDevice, Operator, OperatorSlot
+from hermespy.core.device import Device, PhysicalDevice, SimulatedDevice, Operator, OperatorSlot
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
