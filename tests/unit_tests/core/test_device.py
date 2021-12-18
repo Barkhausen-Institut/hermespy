@@ -265,7 +265,7 @@ class TestDevice(TestCase):
 
         with self.assertRaises(ValueError):
             self.device.topology = np.array([[1, 2, 3, 4]])
-            
+
     def test_carrier_frequency_setget(self) -> None:
         """Carrier frequency property setter should return getter argument."""
 
