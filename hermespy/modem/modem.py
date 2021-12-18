@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
 from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
-from scipy.constants import speed_of_light
 import numpy as np
 import numpy.random as rnd
 
@@ -22,7 +21,6 @@ __status__ = "Prototype"
 from hermespy.precoding import SymbolPrecoding
 from hermespy.coding import EncoderManager
 from hermespy.modem.waveform_generator import WaveformGenerator
-from hermespy.modem.rf_chain import RfChain
 from hermespy.core.device import Transmitter, Receiver
 
 if TYPE_CHECKING:
@@ -424,28 +422,6 @@ class Modem(Transmitter, Receiver):
 
         self.__waveform_generator = waveform_generator
         self.__waveform_generator.modem = self
-
-    @property
-    def rf_chain(self) -> RfChain:
-        """Access the modem's configured RF chain.
-
-        Returns:
-            RfChain:
-                Handle to the modem's `RfChain` instance.
-        """
-
-        return self.__rf_chain
-
-    @rf_chain.setter
-    def rf_chain(self, rf_chain: RfChain) -> None:
-        """Configure the modem's RF chain
-
-        Args:
-            rf_chain (RfChain):
-                The new waveform `RfChain` instance.
-        """
-
-        self.__rf_chain = rf_chain
 
     @property
     def precoding(self) -> SymbolPrecoding:

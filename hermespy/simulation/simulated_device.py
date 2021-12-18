@@ -6,7 +6,6 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from abc import abstractmethod
 from typing import Optional
 
 import numpy as np
@@ -32,7 +31,10 @@ class SimulatedDevice(Device):
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
     """
 
-    __slots__ = ['__scenario', '__rf_chain']
+    __slots__ = ['__scenario', 'rf_chain']
+
+    rf_chain: RfChain
+    """Model of the device's radio-frequency chain."""
 
     __scenario: Optional[Scenario]          # Scenario this device is attached to
 
@@ -68,6 +70,7 @@ class SimulatedDevice(Device):
         Device.__init__(self, *args, **kwargs)
 
         self.scenario = scenario
+        self.rf_chain = RfChain() if rf_chain is None else rf_chain
 
         # If num_antennas is configured initialize the modem as a Uniform Linear Array
         # with half wavelength element spacing
