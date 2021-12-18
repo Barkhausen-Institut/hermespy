@@ -413,6 +413,7 @@ class Device(ABC):
     __position: Optional[np.ndarray]        # Position of the device within its scenario in cartesian coordinates
     __orientation: Optional[np.ndarray]     # Orientation of the device within its scenario as a quaternion
     __topology: np.ndarray                  # Antenna array topology of the device
+    __carrier_frequency: float              # Central frequency of the device's emissions in the RF-band
 
     def __init__(self,
                  position: Optional[np.array] = None,
@@ -578,6 +579,30 @@ class Device(ABC):
             max_duration = max(max_duration, operator.frame_duration)
 
         return max_duration
+
+    @property
+    def carrier_frequency(self) -> float:
+        """Central frequency of the device's emissions in the RF-band.
+
+        Returns:
+
+            frequency (float):
+                Carrier frequency in Hz.
+
+        Raises:
+            ValueError: On negative carrier frequencies.
+        """
+
+        return self.__carrier_frequency
+
+    @carrier_frequency.setter
+    def carrier_frequency(self, value: float) -> None:
+        """Set the central frequency of the device's emissions in the RF-band."""
+
+        if value < 0.0:
+            raise ValueError("Carrier frequency must be greater or equal to zero")
+
+        self.__carrier_frequency = value
 
 
 DeviceType = TypeVar('DeviceType', bound=Device)

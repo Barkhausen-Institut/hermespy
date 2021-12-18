@@ -34,6 +34,8 @@ if TYPE_CHECKING:
 class Modem(Transmitter, Receiver):
     """HermesPy representation of a wireless communication modem.
 
+    Modems may transmit or receive information in form of bit streams.
+
     In HermesPy, a modem is the basis of every simulation entity which may transmit or receive
     electromagnetic waveforms.
 
@@ -55,11 +57,6 @@ class Modem(Transmitter, Receiver):
     __random_generator: Optional[rnd.Generator]
 
     def __init__(self,
-                 scenario: Optional[Scenario] = None,
-                 position: Optional[np.array] = None,
-                 orientation: Optional[np.array] = None,
-                 topology: Optional[np.ndarray] = None,
-                 num_antennas: Optional[int] = None,
                  carrier_frequency: Optional[float] = None,
                  encoding: Optional[EncoderManager] = None,
                  precoding: Optional[SymbolPrecoding] = None,
@@ -75,27 +72,13 @@ class Modem(Transmitter, Receiver):
             topology (np.ndarray, optional)
         """
 
-        self.__scenario = None
-        self.__position = None
-        self.__orientation = None
-        self.__topology = np.zeros((1, 3), dtype=np.float64)
         self.__carrier_frequency = 800e6
-        self.__linear_topology = False
         self.__encoder_manager = EncoderManager()
         self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
         self.__power = 1.0
         self.__rf_chain = RfChain()
         self.__random_generator = random_generator
-
-        if scenario is not None:
-            self.scenario = scenario
-
-        if position is not None:
-            self.position = position
-
-        if orientation is not None:
-            self.orientation = orientation
 
         if carrier_frequency is not None:
             self.carrier_frequency = carrier_frequency
@@ -385,35 +368,6 @@ class Modem(Transmitter, Receiver):
         # are oriented along the local x-axis.
         axis_sums = np.sum(self.__topology, axis=0)
         self.__linear_topology = ((axis_sums[1] + axis_sums[2]) < 1e-10)
-
-    @property
-    def carrier_frequency(self) -> float:
-        """Access the configured carrier frequency of the RF signal.
-
-        Returns:
-            float:
-                Carrier frequency in Hz.
-        """
-
-        return self.__carrier_frequency
-
-    @carrier_frequency.setter
-    def carrier_frequency(self, carrier_frequency: float) -> None:
-        """Modify the configured center frequency of the steered RF-signal.
-
-        Args:
-            carrier_frequency (float):
-                Carrier frequency in Hz.
-
-        Raises:
-            ValueError:
-                If center frequency is less than zero.
-        """
-
-        if carrier_frequency < 0.0:
-            raise ValueError("Carrier frequency must be greater or equal to zero")
-
-        self.__carrier_frequency = carrier_frequency
 
     @property
     def linear_topology(self) -> bool:

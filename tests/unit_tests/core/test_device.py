@@ -265,6 +265,26 @@ class TestDevice(TestCase):
 
         with self.assertRaises(ValueError):
             self.device.topology = np.array([[1, 2, 3, 4]])
+            
+    def test_carrier_frequency_setget(self) -> None:
+        """Carrier frequency property setter should return getter argument."""
+
+        carrier_frequency = 20
+        self.device.carrier_frequency = carrier_frequency
+
+        self.assertEqual(carrier_frequency, self.device.carrier_frequency)
+
+    def test_carrier_frequency_validation(self) -> None:
+        """Carrier frequency property should return ValueError on negative arguments."""
+
+        with self.assertRaises(ValueError):
+            self.device.carrier_frequency = -1.0
+
+        try:
+            self.device.carrier_frequency = 0.0
+
+        except ValueError:
+            self.fail()
 
 
 class TestPhysicalDevice(TestCase):

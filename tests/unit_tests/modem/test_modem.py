@@ -193,25 +193,6 @@ class TestModem(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.modem.topology = np.array([[1, 2, 3, 4]])
 
-    def test_carrier_frequency_setget(self) -> None:
-        """Carrier frequency property setter should return getter argument."""
-
-        carrier_frequency = 20
-        self.modem.carrier_frequency = carrier_frequency
-
-        self.assertEqual(carrier_frequency, self.modem.carrier_frequency)
-
-    def test_carrier_frequency_validation(self) -> None:
-        """Carrier frequency property should return ValueError on negative arguments."""
-
-        with self.assertRaises(ValueError):
-            self.modem.carrier_frequency = -1.0
-
-        try:
-            self.modem.carrier_frequency = 0.0
-
-        except ValueError:
-            self.fail()
 
     def test_linear_topology(self) -> None:
         """Linear topology property flag should return proper topology status."""
