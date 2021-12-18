@@ -1,3 +1,5 @@
+from .scenario import Scenario
+from .device import Transmitter, Receiver
 from .factory import SerializableClasses, Factory
 from .executable import Executable, Verbosity
 from .simulation import Simulation, SNRType
@@ -13,11 +15,12 @@ __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['Executable', 'Verbosity', 'Simulation', 'HardwareLoop', 'SNRType', 'Factory', 'SerializableClasses']
+__all__ = ['Executable', 'Verbosity', 'Simulation', 'HardwareLoop', 'SNRType', 'Factory', 'SerializableClasses',
+           'Scenario', 'Transmitter', 'Receiver']
 
 import sys
 from inspect import getmembers
-modules = ['channel', 'modem', 'scenario', 'simulator_core', 'source', 'coding', 'precoding', 'modem.tools',
+modules = ['channel', 'modem', 'core', 'source', 'coding', 'precoding', 'modem.tools',
            'noise', 'modem.rf_chain_models']
 for module in modules:
     for _, member in getmembers(sys.modules['hermespy.' + module]):

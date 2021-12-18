@@ -4,7 +4,6 @@
 from __future__ import annotations
 from typing import List, Type, TYPE_CHECKING, Optional
 from abc import abstractmethod
-from enum import Enum
 from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
 from scipy.constants import speed_of_light
 import numpy as np
@@ -24,22 +23,16 @@ from hermespy.precoding import SymbolPrecoding
 from hermespy.coding import EncoderManager
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.rf_chain import RfChain
+from hermespy.core.device import Transmitter, Receiver
 
 if TYPE_CHECKING:
+
     from hermespy.scenario import Scenario
     from hermespy.channel import Channel
 
 
-class TransmissionMode(Enum):
-    """Direction of transmission.
-    """
-
-    Rx = 1  # Receive mode
-    Tx = 2  # Transmit mode
-
-
-class Modem:
-    """Implements the base class of a wireless a modem.
+class Modem(Transmitter, Receiver):
+    """HermesPy representation of a wireless communication modem.
 
     In HermesPy, a modem is the basis of every simulation entity which may transmit or receive
     electromagnetic waveforms.

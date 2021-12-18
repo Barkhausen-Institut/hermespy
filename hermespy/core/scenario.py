@@ -4,11 +4,11 @@
 from __future__ import annotations
 import numpy as np
 import numpy.random as rnd
-from typing import List, Type, Optional
+from typing import Generic, List, Type, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 
-from hermespy.modem import Modem, Transmitter, Receiver
+from .device import DeviceType, Transmitter, Receiver, Operator
 from hermespy.channel import Channel
 from hermespy.source.bits_source import BitsSource
 from hermespy.noise.noise import Noise
@@ -24,7 +24,151 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Scenario:
+class Scenario(Generic[DeviceType]):
+    """A simulation scenario.
+
+    Scenarios consist of several devices transmitting and receiving electromagnetic signals.
+    Each device can be operated by multiple operators simultaneously.
+    """
+
+    __slots__ = ['rng', '__devices', '__drop_duration']
+
+    rng: np.random.Generator
+    """Generator object used to create pseudo-random number sequences."""
+
+    __devices: List[DeviceType]         # Registered devices within this scenario.
+    __drop_duration: float              # Drop duration in seconds. Zero for dynamic duration.
+
+    def __init__(self,
+                 drop_duration: float = 0.,
+                 rng: Optional[rnd.Generator] = None) -> None:
+        """
+        Args:
+
+            drop_duration (float, optional):
+                Default drop duration in seconds.
+
+            rng (rnd.Generator, optional):
+                Generator object used to create pseudo-random number sequences.
+        """
+
+        self.rng = rnd.default_rng(rng) if rng is None else rng
+        self.__devices = []
+        self.drop_duration = drop_duration
+
+    @property
+    def drop_duration(self) -> float:
+        """The scenario's default drop duration in seconds.
+
+        If the drop duration is set to zero, the property will return the maximum frame duration
+        over all registered transmitting modems as drop duration!
+
+        Returns:
+            float: The default drop duration in seconds.
+
+        Raises:
+            ValueError: For durations smaller than zero.
+        """
+
+        # Return the largest frame length as default drop duration
+        if self.__drop_duration == 0.0:
+
+            duration = 0.
+
+            for device in self.__devices:
+                duration = max(duration, device.max_frame_duration)
+
+            return duration
+
+        else:
+            return self.__drop_duration
+
+    @drop_duration.setter
+    def drop_duration(self, value: float) -> None:
+        """Set the scenario's default drop duration."""
+
+        if value < 0.0:
+            raise ValueError("Drop duration must be greater or equal to zero")
+
+        self.__drop_duration = value
+
+    def add_device(self, device: DeviceType) -> None:
+        """Add new device to scenario.
+
+        Args:
+
+            device (DeviceType):
+                New device to be added to the scenario.
+
+        Raises `ValueError` if the device already exists.
+        """
+
+        if self.device_registered(device):
+            raise ValueError("Error trying to add an already registered device to a scenario")
+
+        self.__devices.append(device)
+
+    def device_registered(self, device: DeviceType) -> bool:
+        """Check if an device is registered in this scenario.
+
+        Args:
+            device (DeviceType): The device to be checked.
+
+        Returns:
+            bool: The device's registration status.
+        """
+
+        return device in self.__devices
+
+    @property
+    def transmitters(self) -> List[Transmitter]:
+        """All transmitting operators within this scenario.
+
+        Returns:
+            List[Transmitter]: List of all transmitting operators.
+        """
+
+        transmitters: List[Transmitter] = []
+
+        for device in self.__devices:
+            transmitters.extend(device.transmitters)
+
+        return transmitters
+    
+    @property
+    def receivers(self) -> List[Receiver]:
+        """All receiving operators within this scenario.
+
+        Returns:
+            List[Receiver]: List of all transmitting operators.
+        """
+
+        receivers: List[Receiver] = []
+
+        for device in self.__devices:
+            receivers.extend(device.receivers)
+
+        return receivers
+
+    @property
+    def operators(self) -> List[Operator]:
+        """All operators within this scenario.
+        
+        Returns:
+            List[Operator]: List of all operators.
+        """
+
+        operators: List[Receiver] = []
+
+        for device in self.__devices:
+
+            operators.extend(device.receivers)
+            operators.extend(device.transmitters)
+
+        return operators
+
+
+class ScenarioOld:
     """Implements the simulation scenario.
 
     The scenario contains objects for all the different elements in a given simulation,
@@ -50,8 +194,7 @@ class Scenario:
     """
 
     yaml_tag = u'Scenario'
-    __transmitters: List[Transmitter]
-    __receivers: List[Receiver]
+
     __channels: np.ndarray
     __drop_duration: float
     __sampling_rate: float
@@ -70,8 +213,7 @@ class Scenario:
                 The generator object used to create pseudo-random number sequences.
         """
 
-        self.__transmitters = []
-        self.__receivers = []
+        self.__devices = []
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.drop_duration = drop_duration
         self.random_generator = rnd.default_rng(random_generator)
@@ -348,47 +490,6 @@ class Scenario:
         if not modem_deleted:
             raise ValueError("The provided modem handle was not registered with this scenario")
 
-    @property
-    def drop_duration(self) -> float:
-        """The scenario's default drop duration in seconds.
-
-        If the drop duration is set to zero, the property will return the maximum frame duration
-        over all registered transmitting modems as drop duration!
-
-        Returns:
-            float: The default drop duration.
-        """
-
-        # Return the largest frame length as default drop duration
-        if self.__drop_duration == 0.0:
-
-            min_drop_duration = 0.0
-            for transmitter in self.__transmitters:
-
-                max_frame_duration = transmitter.waveform_generator.frame_duration
-                if max_frame_duration > min_drop_duration:
-                    min_drop_duration = max_frame_duration
-
-            return min_drop_duration
-
-        else:
-            return self.__drop_duration
-
-    @drop_duration.setter
-    def drop_duration(self, duration: float) -> None:
-        """Modify the scenario's default drop duration.
-
-        Args:
-            duration (float): New drop duration in seconds.
-
-        Raises:
-            ValueError: If `duration` is less than zero.
-        """
-
-        if duration < 0.0:
-            raise ValueError("Drop duration must be greater or equal to zero")
-
-        self.__drop_duration = duration
 
     def generate_data_bits(self) -> List[np.ndarray]:
         """Generate a set of data bits required to generate a single drop within this scenario.

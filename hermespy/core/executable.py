@@ -13,7 +13,7 @@ from typing import ContextManager, List, Optional, Union
 
 import matplotlib.pyplot as plt
 
-from hermespy.scenario import Scenario
+from hermespy.core import Scenario
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

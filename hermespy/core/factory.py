@@ -29,7 +29,7 @@ import os
 
 from .executable import Executable
 from .simulation import Simulation
-from hermespy.scenario import Scenario
+from .scenario import Scenario
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

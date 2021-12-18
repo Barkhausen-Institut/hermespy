@@ -6,13 +6,14 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List, Optional, TYPE_CHECKING, Union
+from itertools import chain
+from typing import Generic, List, Optional, TYPE_CHECKING, TypeVar
 
 import numpy as np
 
 if TYPE_CHECKING:
 
-    from hermespy.scenario import Scenario
+    from scenario import Scenario
 
 from hermespy.signal import Signal
 
@@ -31,7 +32,14 @@ class FloatingError(RuntimeError):
     pass
 
 
-class Operator(ABC):
+SlotType = TypeVar('SlotType', bound='OperatorSlot')
+"""Type of slot."""
+
+OperatorType = TypeVar('OperatorType', bound='Operator')
+"""Type of operator."""
+
+
+class Operator(Generic[SlotType]):
     """Base class for operators of devices.
 
     In HermesPy, operators may configure devices, broadcast signals over them or capture signals from them.
@@ -39,10 +47,10 @@ class Operator(ABC):
     """
 
     __slots__ = ['__slot']
-    __slot: Optional[OperatorSlot]          # Slot within a device this operator 'operates'
+    __slot: Optional[SlotType]          # Slot within a device this operator 'operates'
 
     def __init__(self,
-                 slot: Optional[OperatorSlot] = None) -> None:
+                 slot: Optional[SlotType] = None) -> None:
         """
         Args:
             slot (OperatorSlot, optional):
@@ -84,7 +92,9 @@ class Operator(ABC):
         elif not hasattr(self, '_Operator__slot'):
 
             self.__slot = value
-            self.__slot.add(self)
+
+            if not self.__slot.registered(self):
+                self.__slot.add(self)
 
         elif self.__slot is not value:
 
@@ -92,7 +102,9 @@ class Operator(ABC):
                 self.__slot.remove(self)
 
             self.__slot = value
-            self.__slot.add(self)
+
+            if not self.__slot.registered(self):
+                self.__slot.add(self)
 
     @property
     def slot_index(self) -> Optional[int]:
@@ -124,8 +136,48 @@ class Operator(ABC):
 
         return self.__slot.device
 
+    @property
+    def attached(self) -> bool:
+        """Attachment state of the operator.
 
-class OperatorSlot(ABC):
+        Returns:
+            bool: Boolean attachment indicator
+        """
+
+        return self.__slot is not None
+
+    @property
+    @abstractmethod
+    def frame_duration(self) -> float:
+        """Duration of a single sample frame.
+
+        Returns:
+            duration (float): Frame duration in seconds.
+        """
+        ...
+
+
+class Receiver(Operator):
+    """Operator receiving from a device."""
+
+    def __init__(self,
+                 *args,
+                 **kwargs) -> None:
+        """
+        Args:
+
+            *args:
+                Operator base class initialization parameters.
+
+            **kwargs:
+                Operator base class initialization parameters.
+        """
+
+        # Initialize operator base class
+        Operator.__init__(*args, **kwargs)
+
+
+class OperatorSlot(Generic[OperatorType]):
     """Slot list for operators of a single device."""
 
     __slots__ = ['device', '__operators']
@@ -133,7 +185,7 @@ class OperatorSlot(ABC):
     device: Device
     """Device this operator belongs to."""
 
-    __operators: List[Operator]     # List of operators registered at this slot
+    __operators: List[OperatorType]     # List of operators registered at this slot
 
     def __init__(self,
                  device: Device) -> None:
@@ -146,7 +198,7 @@ class OperatorSlot(ABC):
         self.device = device
         self.__operators = []
 
-    def operator_index(self, operator: Operator) -> int:
+    def operator_index(self, operator: OperatorType) -> int:
         """Index of an operator within this slot.
 
         Returns:
@@ -159,11 +211,11 @@ class OperatorSlot(ABC):
         return self.__operators.index(operator)
 
     def add(self,
-            operator: Operator) -> None:
+            operator: OperatorType) -> None:
         """Add a new operator to this slot.
 
         Args:
-            operator (Operator):
+            operator (OperatorType):
                 Operator to be added to this slot.
 
         Raises:
@@ -176,11 +228,11 @@ class OperatorSlot(ABC):
         self.__operators.append(operator)
         operator.slot = self
 
-    def remove(self, operator: Operator) -> None:
+    def remove(self, operator: OperatorType) -> None:
         """Remove an operator from this slot.
 
         Args:
-            operator (Operator):
+            operator (OperatorType):
                 Handle to the operator to be removed.
 
         Raises:
@@ -190,7 +242,7 @@ class OperatorSlot(ABC):
         self.__operators.remove(operator)
         operator.slot = None
 
-    def registered(self, operator: Operator) -> bool:
+    def registered(self, operator: OperatorType) -> bool:
         """Check if an operator is registered at this slot.
 
         Returns:
@@ -199,24 +251,90 @@ class OperatorSlot(ABC):
 
         return operator in self.__operators
 
+    @property
+    def num_operators(self) -> int:
+        """Number of operators on this slot.
+
+        Returns:
+            int: Number of oeprators.
+        """
+
+        return len(self.__operators)
+
     def __getitem__(self, item):
         return self.__operators[item]
 
+    def __iter__(self):
+        """Iterating over operator slots returns the iterator over the slots."""
 
-class Transmitter(Operator):
-    pass
+        return self.__operators.__iter__()
+
+    def __contains__(self, operator: Operator) -> bool:
+        """Contains is just a convenient mask for registered.
+
+        Returns:
+            bool: Registration indicator.
+        """
+
+        return self.registered(operator)
+
+
+class Transmitter(Operator[SlotType]):
+    """Operator transmitting over a device."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Args:
+
+            *args:
+                Operator base class initialization parameters.
+
+            **kwargs:
+                Operator base class initialization parameters.
+        """
+
+        # Initialize operator base class
+        Operator[TransmitterSlot].__init__(self, *args, **kwargs)
+
+    def transmit(self, signal: Signal) -> None:
+        """Transmit a signal.
+
+        Registers the signal samples to be transmitted by the underlying device.
+
+        Args:
+
+
+        Raises:
+            FloatingError:
+                If the transmitter is currently considered floating.
+        """
+
+        if not self.attached:
+            raise FloatingError("Error trying to transmit via a floating transmitter")
+
+        self.slot.transmit(self, signal)
 
 
 class TransmitterSlot(OperatorSlot):
     """Slot for transmitting operators within devices."""
 
+    __slots__ = ['__signals']
     __signals: List[Optional[Signal]]       # Next signals to be transmitted
 
-    def add(self,
-            operator: Transmitter) -> None:
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Args:
+            *args:
+                OperatorSlot base class initialization parameters.
 
-        self.__signals.append(None)
-        OperatorSlot.add(self, operator)
+            **kwargs:
+                OperatorSlot base class initialization parameters.
+        """
+
+        self.__signals = []
+
+        # Init base class
+        OperatorSlot.__init__(self, *args, **kwargs)
 
     def add_transmission(self,
                          transmitter: Transmitter,
@@ -240,20 +358,33 @@ class TransmitterSlot(OperatorSlot):
 
         self.__signals[transmitter.slot_index] = signal
 
-class Receiver(Operator):
-    pass
 
-
-class ReceiverSlot(OperatorSlot):
+class ReceiverSlot(OperatorSlot[Receiver]):
     """Slot for receiving operators within devices."""
 
+    __slots__ = ['__signals']
     __signals: List[Optional[Signal]]  # Recently received signals
+
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Args:
+            *args:
+                OperatorSlot base class initialization parameters.
+
+            **kwargs:
+                OperatorSlot base class initialization parameters.
+        """
+
+        self.__signals = []
+
+        # Init base class
+        OperatorSlot.__init__(self, *args, **kwargs)
 
     def add(self,
             operator: Receiver) -> None:
 
         self.__signals.append(None)
-        OperatorSlot.add(self, operator)
+        OperatorSlot[Receiver].add(self, operator)
 
 
 class UnsupportedSlot(OperatorSlot):
@@ -420,8 +551,8 @@ class Device(ABC):
 
         # Automatically detect linearity in default configurations, where all sensor elements
         # are oriented along the local x-axis.
-        #axis_sums = np.sum(self.__topology, axis=0)
-        #self.__linear_topology = ((axis_sums[1] + axis_sums[2]) < 1e-10)
+        # axis_sums = np.sum(self.__topology, axis=0)
+        # self.__linear_topology = ((axis_sums[1] + axis_sums[2]) < 1e-10)
 
     @property
     def num_antennas(self) -> int:
@@ -433,13 +564,30 @@ class Device(ABC):
 
         return self.__topology.shape[0]
 
+    @property
+    def max_frame_duration(self) -> float:
+        """Maximum frame duration transmitted by this device.
+
+        Returns:
+            max_duration (float): Maximum duration in seconds.
+        """
+
+        max_duration = 0.
+
+        for operator in chain(self.transmitters.__iter__(), self.receivers.__iter__()):
+            max_duration = max(max_duration, operator.frame_duration)
+
+        return max_duration
+
+
+DeviceType = TypeVar('DeviceType', bound=Device)
+"""Type of device."""
+
 
 class PhysicalDevice(Device):
     """Base representing any device controlling real hardware."""
 
-    def __init__(self,
-                 *args,
-                 **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """
         Args:
             *args:

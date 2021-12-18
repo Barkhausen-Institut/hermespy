@@ -12,8 +12,9 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 from .executable import Executable, Verbosity
 from .drop import Drop
 from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
-from hermespy.modem import Receiver
-from hermespy.scenario import Scenario
+
+from .device import Receiver, SimulatedDevice
+from .scenario import Scenario
 from hermespy.signal import Signal
 from .statistics import SNRType, Statistics, ConfidenceMetric
 
@@ -37,7 +38,7 @@ class SimulationDrop(Drop):
         Drop.__init__(self, *args)
 
 
-class Simulation(Executable):
+class Simulation(Executable, Scenario[SimulatedDevice]):
     """HermesPy simulation configuration.
 
     Attributes:
@@ -81,6 +82,7 @@ class Simulation(Executable):
     plot_drop_receive_spectrum: bool
 
     def __init__(self,
+                 drop_duration: float = 0.,
                  plot_drop: bool = True,
                  calc_transmit_spectrum: bool = False,
                  calc_receive_spectrum: bool = False,
@@ -103,6 +105,10 @@ class Simulation(Executable):
         """Simulation object initialization.
 
         Args:
+
+            drop_duration(float, optional):
+                Duration of simulation drops in seconds.
+
             plot_drop (bool, optional):
                 Plot each drop during execution of scenarios.
 
@@ -165,6 +171,8 @@ class Simulation(Executable):
                             calc_transmit_stft, calc_receive_stft, spectrum_fft_size, max_num_drops,
                             results_dir, verbosity)
 
+        Scenario[SimulatedDevice].__init__(self, drop_duration=drop_duration)
+
         self.plot_drop_transmitted_bits = False
         self.plot_drop_transmitted_signals = False
         self.plot_drop_received_signals = False
@@ -209,153 +217,148 @@ class Simulation(Executable):
             Statistics: Statistics of the simulation.
         """
 
-        # Iterate over scenarios
-        for s, scenario in enumerate(self.scenarios):
+        # Plot scenario information
+        if self.verbosity.value <= Verbosity.INFO.value:
 
-            # Plot scenario information +
-            if self.verbosity.value <= Verbosity.INFO.value:
+            print(f"\nExecuting scenario simulation")
+            print(f"{'SNR':<10}{'Drop':<10}{'Link':<15}{'BER':<15}{'BLER':<15}")
+            print("="*65)
 
-                print(f"\nScenario Simulation #{s}")
-                print(f"{'SNR':<10}{'Drop':<10}{'Link':<15}{'BER':<15}{'BLER':<15}")
-                print("="*65)
+        # Initialize plot statistics with current scenario state
+        statistics = Statistics(scenario=self,
+                                snr_loop=self.noise_loop,
+                                calc_transmit_spectrum=self.calc_transmit_spectrum,
+                                calc_receive_spectrum=self.calc_receive_spectrum,
+                                calc_transmit_stft=self.calc_transmit_stft,
+                                calc_receive_stft=self.calc_receive_stft,
+                                spectrum_fft_size=self.spectrum_fft_size,
+                                confidence_margin=self.confidence_margin,
+                                confidence_level=self.confidence_level,
+                                confidence_metric=self.confidence_metric,
+                                min_num_drops=self.min_num_drops,
+                                max_num_drops=self.max_num_drops)
 
-            # Initialize plot statistics with current scenario state
-            statistics = Statistics(scenario=scenario,
-                                    snr_loop=self.noise_loop,
-                                    calc_transmit_spectrum=self.calc_transmit_spectrum,
-                                    calc_receive_spectrum=self.calc_receive_spectrum,
-                                    calc_transmit_stft=self.calc_transmit_stft,
-                                    calc_receive_stft=self.calc_receive_stft,
-                                    spectrum_fft_size=self.spectrum_fft_size,
-                                    confidence_margin=self.confidence_margin,
-                                    confidence_level=self.confidence_level,
-                                    confidence_metric=self.confidence_metric,
-                                    min_num_drops=self.min_num_drops,
-                                    max_num_drops=self.max_num_drops)
+        # Save most recent drop
+        drop: Optional[SimulationDrop] = None
 
-            # Save most recent drop
-            drop: Optional[SimulationDrop] = None
+        for noise_index, snr in enumerate(self.noise_loop):
 
-            for noise_index, snr in enumerate(self.noise_loop):
+            for d in range(self.max_num_drops):
 
-                for d in range(self.max_num_drops):
+                drop_run_flag = statistics.run_flag_matrix[:, :, noise_index]
 
-                    drop_run_flag = statistics.run_flag_matrix[:, :, noise_index]
+                # Prematurely abort the drop loop if all stopping criteria have been met
+                if np.sum(drop_run_flag.flatten()) == 0:
 
-                    # Prematurely abort the drop loop if all stopping criteria have been met
-                    if np.sum(drop_run_flag.flatten()) == 0:
-
-                        if self.verbosity.value <= Verbosity.INFO.value:
-
-                            info_str = f" Stopping criteria for SNR tap #{noise_index} met "
-                            padding = .5 * max(65 - len(info_str), 0)
-                            print('-' * floor(padding) + info_str + '-' * ceil(padding))
-
-                        break
-
-                    drop = self.drop(snr, s, drop_run_flag)
-
-                    # Print drop statistics if verbosity flag is set
                     if self.verbosity.value <= Verbosity.INFO.value:
 
-                        bers = drop.bit_error_rates
-                        blers = drop.block_error_rates
+                        info_str = f" Stopping criteria for SNR tap #{noise_index} met "
+                        padding = .5 * max(65 - len(info_str), 0)
+                        print('-' * floor(padding) + info_str + '-' * ceil(padding))
 
-                        for tx_id, (tx_bers, tx_blers) in enumerate(zip(bers, blers)):
-                            for rx_id, (ber, bler) in enumerate(zip(tx_bers, tx_blers)):
+                    break
 
-                                link_str = f"{tx_id}x{rx_id}"
-                                ber_str = "-" if ber is None else f"{ber:.4f}"
-                                bler_str = "-" if bler is None else f"{bler:.4f}"
+                drop = self.drop(snr, drop_run_flag)
 
-                                if tx_id == 0 and rx_id == 0:
+                # Print drop statistics if verbosity flag is set
+                if self.verbosity.value <= Verbosity.INFO.value:
 
-                                    snr_str = f"{10 * np.log10(snr):.1f}"
-                                    print(f"{snr_str:<10}{d:<10}{link_str:<15}{ber_str:<15}{bler_str:<15}")
+                    bers = drop.bit_error_rates
+                    blers = drop.block_error_rates
 
-                                else:
-                                    print(" " * 20 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
+                    for tx_id, (tx_bers, tx_blers) in enumerate(zip(bers, blers)):
+                        for rx_id, (ber, bler) in enumerate(zip(tx_bers, tx_blers)):
 
-                    # Visualize plot if requested
-                    if self.plot_drop:
+                            link_str = f"{tx_id}x{rx_id}"
+                            ber_str = "-" if ber is None else f"{ber:.4f}"
+                            bler_str = "-" if bler is None else f"{bler:.4f}"
 
-                        if self.plot_drop_transmitted_bits:
-                            drop.plot_transmitted_bits()
+                            if tx_id == 0 and rx_id == 0:
 
-                        if self.plot_drop_transmitted_signals:
-                            drop.plot_transmitted_signals()
+                                snr_str = f"{10 * np.log10(snr):.1f}"
+                                print(f"{snr_str:<10}{d:<10}{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
-                        if self.plot_drop_received_signals:
-                            drop.plot_received_signals()
+                            else:
+                                print(" " * 20 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
 
-                        if self.plot_drop_received_bits:
-                            drop.plot_received_bits()
+                # Visualize plot if requested
+                if self.plot_drop:
 
-                        if self.plot_drop_bit_errors:
-                            drop.plot_bit_errors()
+                    if self.plot_drop_transmitted_bits:
+                        drop.plot_transmitted_bits()
 
-                        if self.plot_drop_transmitted_symbols:
-                            drop.plot_transmitted_symbols()
+                    if self.plot_drop_transmitted_signals:
+                        drop.plot_transmitted_signals()
 
-                        if self.plot_drop_received_symbols:
-                            drop.plot_received_symbols()
+                    if self.plot_drop_received_signals:
+                        drop.plot_received_signals()
 
-                        if self.plot_drop_block_errors:
-                            drop.plot_block_errors()
+                    if self.plot_drop_received_bits:
+                        drop.plot_received_bits()
 
-                        if self.plot_drop_transmit_stft:
-                            drop.plot_transmit_stft()
+                    if self.plot_drop_bit_errors:
+                        drop.plot_bit_errors()
 
-                        if self.plot_drop_receive_stft:
-                            drop.plot_receive_stft()
+                    if self.plot_drop_transmitted_symbols:
+                        drop.plot_transmitted_symbols()
 
-                        if self.plot_drop_transmit_spectrum:
-                            drop.plot_transmit_spectrum()
+                    if self.plot_drop_received_symbols:
+                        drop.plot_received_symbols()
 
-                        if self.plot_drop_receive_spectrum:
-                            drop.plot_receive_spectrum()
+                    if self.plot_drop_block_errors:
+                        drop.plot_block_errors()
 
-                        plt.show()
+                    if self.plot_drop_transmit_stft:
+                        drop.plot_transmit_stft()
 
-                    # Add drop to the statistics
-                    statistics.add_drop(drop, noise_index)
+                    if self.plot_drop_receive_stft:
+                        drop.plot_receive_stft()
 
-                    # Check confidence if the routine is enabled and
-                    # the minimum number of configured drops has been reached
-                    # if self.confidence_metric is not ConfidenceMetric.DISABLED and d >= self.min_num_drops:
+                    if self.plot_drop_transmit_spectrum:
+                        drop.plot_transmit_spectrum()
 
-            # Dump statistics results
-            # statistics.save(self.results_dir)
+                    if self.plot_drop_receive_spectrum:
+                        drop.plot_receive_spectrum()
 
-            # Plot statistics results, if flags apply
-            if self.calc_transmit_spectrum:
-                statistics.plot_transmit_spectrum()
+                    plt.show()
 
-            if self.calc_receive_spectrum:
-                statistics.plot_receive_spectrum()
+                # Add drop to the statistics
+                statistics.add_drop(drop, noise_index)
 
-            if self.plot_bit_error:
-                statistics.plot_bit_error_rates()
+                # Check confidence if the routine is enabled and
+                # the minimum number of configured drops has been reached
+                # if self.confidence_metric is not ConfidenceMetric.DISABLED and d >= self.min_num_drops:
 
-            if self.plot_block_error:
-                statistics.plot_block_error_rates()
+        # Dump statistics results
+        # statistics.save(self.results_dir)
 
-            # Plot the last drop to visualize stfts, if available
-            if drop is not None:
+        # Plot statistics results, if flags apply
+        if self.calc_transmit_spectrum:
+            statistics.plot_transmit_spectrum()
 
-                if self.calc_transmit_stft:
-                    drop.plot_transmit_stft()
+        if self.calc_receive_spectrum:
+            statistics.plot_receive_spectrum()
 
-                if self.calc_receive_stft:
-                    drop.plot_receive_stft()
+        if self.plot_bit_error:
+            statistics.plot_bit_error_rates()
 
-            plt.show()
+        if self.plot_block_error:
+            statistics.plot_block_error_rates()
 
-            return statistics
+        # Plot the last drop to visualize stfts, if available
+        if drop is not None:
+
+            if self.calc_transmit_stft:
+                drop.plot_transmit_stft()
+
+            if self.calc_receive_stft:
+                drop.plot_receive_stft()
+
+        plt.show()
+        return statistics
 
     def drop(self,
              snr: float,
-             scenario_index: int = 0,
              drop_run_flag: Optional[np.ndarray] = None) -> SimulationDrop:
         """Generate a single simulation drop.
 
@@ -363,9 +366,6 @@ class Simulation(Executable):
 
             snr (float):
                 The signal-to-noise-ratio at the receiver-side.
-
-            scenario_index (int, optional):
-                Index of the scenario for which to generate a drop.
 
             drop_run_flag (np.ndarray, optional):
                 Drop run flags.
@@ -377,27 +377,19 @@ class Simulation(Executable):
             RuntimeError: If no scenario has been added to the simulation yet.
         """
 
-        if len(self.scenarios) < 1:
-            raise RuntimeError("Error trying to generate a drop for a simulation without a scenario")
-
-        scenario = self.scenarios[scenario_index]
-
         # Generate data bits to be transmitted
-        data_bits = scenario.generate_data_bits()
+        data_bits = self.generate_data_bits()
 
         # Generate radio-frequency band signal emitted from each transmitter
-        transmitted_signals, transmitted_symbols = Simulation.transmit(scenario=scenario,
-                                                                       drop_run_flag=drop_run_flag,
+        transmitted_signals, transmitted_symbols = self.transmit(drop_run_flag=drop_run_flag,
                                                                        data_bits=data_bits)
 
         # Simulate propagation over channel model
-        propagation_matrix = Simulation.propagate(scenario,
-                                                  transmitted_signals,
-                                                  drop_run_flag)
+        propagation_matrix = self.propagate(transmitted_signals,
+                                            drop_run_flag)
 
         # Simulate signal reception and mixing at the receiver-side
-        received_signals = Simulation.receive(scenario,
-                                              propagation_matrix,
+        received_signals = self.receive(propagation_matrix,
                                               drop_run_flag,
                                               self.snr_type,
                                               snr)
@@ -556,15 +548,13 @@ class Simulation(Executable):
 
         self.__confidence_margin = margin
 
-    @staticmethod
-    def transmit(scenario: Scenario,
+    def transmit(self,
                  drop_run_flag: Optional[np.ndarray] = None,
                  drop_duration: Optional[float] = None,
                  data_bits: Optional[np.array] = None) -> Tuple[List[Signal], List[Optional[np.ndarray]]]:
         """Simulate signals emitted by all transmitters registered with a scenario.
 
         Args:
-            scenario (Scenario): The scenario for which to simulate signals.
             drop_run_flag (np.ndarray, optional): Mask that says if signals are to be created for specific snr.
             drop_duration (float, optional): Length of simulated transmission in seconds.
             data_bits (List[np.array], optional): The data bits to be sent by each transmitting modem.
@@ -578,7 +568,7 @@ class Simulation(Executable):
         """
 
         if drop_duration is None:
-            drop_duration = scenario.drop_duration
+            drop_duration = self.drop_duration
 
         if drop_duration <= 0.0:
             raise ValueError("Drop duration must be greater or equal to zero")
@@ -586,14 +576,14 @@ class Simulation(Executable):
         if drop_run_flag is not None:
             sending_tx_idx = np.flatnonzero(np.sum(drop_run_flag, axis=1))
         else:
-            sending_tx_idx = np.arange(len(scenario.transmitters))
+            sending_tx_idx = np.arange(len(self.transmitters))
 
         transmitted_signals: List[Optional[Signal]] = []
         transmitted_symbols: List[Optional[np.ndarray]] = []
 
         if data_bits is None:
 
-            for transmitter_idx, transmitter in enumerate(scenario.transmitters):
+            for transmitter_idx, transmitter in enumerate(self.transmitters):
 
                 if transmitter_idx in sending_tx_idx:
 
