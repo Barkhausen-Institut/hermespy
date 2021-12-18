@@ -13,8 +13,8 @@ from hermespy.core.executable import Executable, Verbosity
 from hermespy.core.drop import Drop
 from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
 
-from hermespy.core.device import Receiver, SimulatedDevice
 from .scenario import Scenario
+from .simulated_device import SimulatedDevice
 from hermespy.signal import Signal
 from hermespy.core.statistics import SNRType, Statistics, ConfidenceMetric
 
