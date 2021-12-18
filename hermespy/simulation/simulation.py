@@ -9,14 +9,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from .executable import Executable, Verbosity
-from .drop import Drop
+from hermespy.core.executable import Executable, Verbosity
+from hermespy.core.drop import Drop
 from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
 
-from .device import Receiver, SimulatedDevice
+from hermespy.core.device import Receiver, SimulatedDevice
 from .scenario import Scenario
 from hermespy.signal import Signal
-from .statistics import SNRType, Statistics, ConfidenceMetric
+from hermespy.core.statistics import SNRType, Statistics, ConfidenceMetric
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

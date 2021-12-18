@@ -9,7 +9,7 @@ from unittest.mock import Mock
 from itertools import product
 from numpy.testing import assert_array_equal
 
-from hermespy.core.scenario import Scenario
+from hermespy.simulation.scenario import Scenario
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

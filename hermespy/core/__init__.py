@@ -2,7 +2,7 @@ from .scenario import Scenario
 from .device import Transmitter, Receiver
 from .factory import SerializableClasses, Factory
 from .executable import Executable, Verbosity
-from .simulation import Simulation, SNRType
+from .device import Device, FloatingError
 from .hardware_loop import HardwareLoop
 
 __author__ = "André Noll Barreto"
@@ -15,8 +15,8 @@ __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['Executable', 'Verbosity', 'Simulation', 'HardwareLoop', 'SNRType', 'Factory', 'SerializableClasses',
-           'Scenario', 'Transmitter', 'Receiver']
+__all__ = ['Executable', 'Verbosity', 'Device', 'FloatingError', 'HardwareLoop', 'Factory', 'SerializableClasses',
+           'Transmitter', 'Receiver']
 
 import sys
 from inspect import getmembers
