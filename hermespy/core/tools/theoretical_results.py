@@ -10,8 +10,8 @@ from numpy import exp
 from scipy import stats
 from scipy.special import comb
 
-from hermespy.scenario import Scenario
-from hermespy.modem import Transmitter, Receiver, WaveformGenerator, WaveformGeneratorChirpFsk, WaveformGeneratorPskQam
+from hermespy.core import Scenario, Transmitter, Receiver
+from hermespy.modem import WaveformGenerator, WaveformGeneratorChirpFsk, WaveformGeneratorPskQam
 from hermespy.channel import Channel, MultipathFadingChannel
 
 __author__ = "Tobias Kronauer"

@@ -1,8 +1,7 @@
 from .channel import Channel
-from .modem import Transmitter, Receiver, WaveformGeneratorOfdm, WaveformGeneratorPskQam, WaveformGeneratorChirpFsk
-from .scenario import Scenario
+from .modem import WaveformGeneratorOfdm, WaveformGeneratorPskQam, WaveformGeneratorChirpFsk
 from .signal import Signal
-from .simulator_core import Simulation, HardwareLoop
+from .core import Scenario, Simulation, HardwareLoop, Transmitter, Receiver
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

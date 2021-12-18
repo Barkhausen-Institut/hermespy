@@ -56,6 +56,7 @@ class TestOperator(TestCase):
 
         self.operator.slot = None
         self.assertEqual(None, self.operator.slot_index)
+        self.assertEqual(0, self.slot.num_operators)
 
         self.slot.add(Operator())
         self.operator.slot = self.slot
@@ -69,6 +70,14 @@ class TestOperator(TestCase):
 
         self.operator.slot = None
         self.assertEqual(None, self.operator.device)
+
+    def test_attached(self) -> None:
+        """Attached property should return correct attachment status."""
+
+        self.assertTrue(self.operator.attached)
+
+        self.operator.slot = None
+        self.assertFalse(self.operator.attached)
 
 
 class TestOperatorSlot(TestCase):
@@ -120,6 +129,46 @@ class TestOperatorSlot(TestCase):
 
         self.assertFalse(self.slot.registered(self.operator))
         self.assertEqual(None, self.operator.slot)
+
+    def test_registered(self) -> None:
+        """Registered check should return the proper registration state for slots."""
+
+        registered_slot = Mock()
+        unregistered_slot = Mock()
+        self.slot.add(registered_slot)
+
+        self.assertTrue(self.slot.registered(registered_slot))
+        self.assertFalse(self.slot.registered(unregistered_slot))
+
+    def test_num_operators(self):
+        """Number of operators property should compute the correct number of registered operators."""
+
+        self.slot.add(Mock())
+        self.assertEqual(2, self.slot.num_operators)
+
+        self.slot.add(Mock())
+        self.assertEqual(3, self.slot.num_operators)
+
+    def test_iteration(self) -> None:
+        """Iteration should yield the proper order of operators."""
+
+        operator = Mock()
+        self.slot.add(operator)
+
+        expected_iterator_elements = [self.operator, operator]
+
+        for element, expected_element in zip(self.slot.__iter__(), expected_iterator_elements):
+            self.assertIs(expected_element, element)
+
+    def test_contains(self) -> None:
+        """Contains should return the proper registration state for operators."""
+
+        registered_operator = Mock()
+        unregistered_operator = Mock()
+        self.slot.add(registered_operator)
+
+        self.assertTrue(registered_operator in self.slot)
+        self.assertFalse(unregistered_operator in self.slot)
 
 
 class TestDevice(TestCase):
@@ -266,3 +315,16 @@ class TestSimulatedDevice(TestCase):
 
         self.assertTrue(self.device.attached)
         self.assertFalse(SimulatedDevice().attached)
+
+    def test_max_frame_duration(self) -> None:
+        """Maximum frame duration property should compute the correct duration."""
+
+        transmitter = Mock()
+        transmitter.frame_duration = 10
+        self.device.transmitters.add(transmitter)
+
+        receiver = Mock()
+        receiver.frame_duration = 4
+        self.device.receivers.add(receiver)
+
+        self.assertEqual(10, self.device.max_frame_duration)

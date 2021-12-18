@@ -2,6 +2,7 @@
 """HermesPy transmitting modem."""
 
 from __future__ import annotations
+from abc import abstractmethod
 from typing import Type, List, Any, Optional, Tuple
 
 import numpy as np
@@ -25,7 +26,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Transmitter(Modem):
+
+class TransmitterOld(Modem):
     """Transmitting modem within a scenario configuration.
 
     Attributes:
