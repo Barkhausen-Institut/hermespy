@@ -1,3 +1,4 @@
+from .rf_chain import RfChain
 from .power_amplifier import PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier,\
     CustomPowerAmplifier
 
@@ -11,5 +12,5 @@ __email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier',
+__all__ = ['RfChain', 'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier',
            'CustomPowerAmplifier']

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_array_less
 
-from hermespy.modem.rf_chain_models.power_amplifier import \
+from hermespy.simulation.rf_chain_models import \
     PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier
 
 __author__ = "Tobias Kronauer"

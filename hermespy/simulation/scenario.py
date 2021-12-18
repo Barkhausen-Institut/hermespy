@@ -8,7 +8,7 @@ from typing import Generic, List, Type, Optional
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from collections.abc import Iterable
 
-from .device import DeviceType, Transmitter, Receiver, Operator
+from hermespy.core.device import DeviceType, Transmitter, Receiver, Operator
 from hermespy.channel import Channel
 from hermespy.source.bits_source import BitsSource
 from hermespy.noise.noise import Noise
