@@ -44,11 +44,6 @@ class Modem(Transmitter, Receiver):
     """
 
     yaml_tag = 'Modem'
-    __scenario: Optional[Scenario]
-    __position: Optional[np.ndarray]
-    __orientation: Optional[np.ndarray]
-    __topology: np.ndarray
-    __carrier_frequency: float
     __linear_topology: bool
     __encoder_manager: EncoderManager
     __precoding: SymbolPrecoding
@@ -57,7 +52,6 @@ class Modem(Transmitter, Receiver):
     __random_generator: Optional[rnd.Generator]
 
     def __init__(self,
-                 carrier_frequency: Optional[float] = None,
                  encoding: Optional[EncoderManager] = None,
                  precoding: Optional[SymbolPrecoding] = None,
                  waveform: Optional[WaveformGenerator] = None,
@@ -80,34 +74,9 @@ class Modem(Transmitter, Receiver):
         self.__rf_chain = RfChain()
         self.__random_generator = random_generator
 
-        if carrier_frequency is not None:
-            self.carrier_frequency = carrier_frequency
-
-        # If num_antennas is configured initialize the modem as a Uniform Linear Array
-        # with half wavelength element spacing
-        if num_antennas is not None:
-
-            if topology is not None:
-                raise ValueError("The num_antennas and topology parameters are mutually exclusive")
-
-            # For a carrier frequency of 0.0 we will initialize all antennas at the same position.
-            half_wavelength = 0.0
-            if self.__carrier_frequency > 0.0:
-                half_wavelength = .5 * speed_of_light / self.__carrier_frequency
-
-            self.topology = half_wavelength * np.outer(np.arange(num_antennas), np.array([1., 0., 0.]))
-
-        elif topology is not None:
-            self.topology = topology
-
-        if encoding is not None:
-            self.__encoder_manager = encoding
-
-        if precoding is not None:
-            self.__precoding = precoding
-
-        if waveform is not None:
-            self.waveform_generator = waveform
+        self.encoder_manager = EncoderManager() if encoding is None else encoding
+        self.precoding = SymbolPrecoding(modem=self) if precoding is None else precoding
+        self.waveform_generator = waveform
 
         if rfchain is not None:
             self.rf_chain = rfchain

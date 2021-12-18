@@ -10,6 +10,7 @@ from itertools import chain
 from typing import Generic, List, Optional, TYPE_CHECKING, TypeVar
 
 import numpy as np
+from scipy.constants import speed_of_light
 
 if TYPE_CHECKING:
 
@@ -402,7 +403,7 @@ class Device(ABC):
     It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.
     """
 
-    __slots__ = ['transmitters', 'receivers', '__position', '__orientation', '__topology']
+    __slots__ = ['transmitters', 'receivers', '__position', '__orientation', '__topology', '__carrier_frequency']
 
     transmitters: TransmitterSlot
     """"Transmitters broadcasting signals over this device."""
@@ -418,7 +419,8 @@ class Device(ABC):
     def __init__(self,
                  position: Optional[np.array] = None,
                  orientation: Optional[np.array] = None,
-                 topology: Optional[np.ndarray] = None) -> None:
+                 topology: Optional[np.ndarray] = None,
+                 carrier_frequency: float = 0.) -> None:
         """
         Args:
 
@@ -433,6 +435,10 @@ class Device(ABC):
             topology (np.ndarray, optional):
                 Antenna array topology of the device.
                 By default, a single ideal omnidirectional antenna is assumed.
+
+            carrier_frequency (float, optional):
+                Central frequency of the device's emissions in the RF-band.
+                By default, 0Hz is assumed, meaning the device transmits in the base-band.
         """
 
         self.transmitters = TransmitterSlot(self)
@@ -637,12 +643,14 @@ class SimulatedDevice(Device):
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
     """
 
-    __slots__ = ['__scenario']
+    __slots__ = ['__scenario', '__rf_chain']
 
     __scenario: Optional[Scenario]          # Scenario this device is attached to
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
+                 num_antennas: Optional[int] = None,
+                 rf_chain: Optional[RfChain] = None,
                  *args,
                  **kwargs) -> None:
         """
@@ -651,6 +659,14 @@ class SimulatedDevice(Device):
             scenario (Scenario, optional):
                 Scenario this device is attached to.
                 By default, the device is considered floating.
+
+            num_antennas (int, optional):
+                Number of antennas.
+                The information is used to initialize the simulated device as a Uniform Linear Array with
+                half-wavelength antenna spacing.
+
+            rf_chain (RfChain, optional):
+                Model of the device's radio frequency amplification chain.
 
             *args:
                 Device base class initialization parameters.
@@ -663,6 +679,20 @@ class SimulatedDevice(Device):
         Device.__init__(self, *args, **kwargs)
 
         self.scenario = scenario
+
+        # If num_antennas is configured initialize the modem as a Uniform Linear Array
+        # with half wavelength element spacing
+        if num_antennas is not None:
+
+            if not np.array_equal(self.topology, np.zeros((1, 3))):
+                raise ValueError("The num_antennas and topology parameters are mutually exclusive")
+
+            # For a carrier frequency of 0.0 we will initialize all antennas at the same position.
+            half_wavelength = 0.0
+            if self.__carrier_frequency > 0.0:
+                half_wavelength = .5 * speed_of_light / self.__carrier_frequency
+
+            self.topology = half_wavelength * np.outer(np.arange(num_antennas), np.array([1., 0., 0.]))
 
     @property
     def scenario(self) -> Scenario:
