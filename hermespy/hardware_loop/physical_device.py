@@ -10,6 +10,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 from hermespy.core import Device
+from hermespy.signal import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -41,3 +42,14 @@ class PhysicalDevice(Device):
     def trigger(self) -> None:
         """Trigger the device."""
         ...
+
+    def receive(self, signal: Signal) -> None:
+        """Receive a new signal at this physical device.
+
+        Args:
+            signal (Signal):
+                Signal model to be received.
+        """
+
+        for receiver in self.receivers:
+            receiver.cache_reception(signal)
