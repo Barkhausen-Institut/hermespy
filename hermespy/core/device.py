@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-
-
+===============
+Device Modeling
+===============
 """
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from itertools import chain
-from typing import Generic, List, Optional, TYPE_CHECKING, TypeVar
+from typing import Any, Generic, List, Optional, Tuple, TypeVar
 
 import numpy as np
 
-if TYPE_CHECKING:
-    pass
-
 from hermespy.signal import Signal
+from hermespy.core.random_node import RandomNode
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -45,7 +44,6 @@ class Operator(Generic[SlotType]):
     Each operator is attached to a single device instance it operates on.
     """
 
-    __slots__ = ['__slot']
     __slot: Optional[SlotType]          # Slot within a device this operator 'operates'
 
     def __init__(self,
@@ -156,14 +154,22 @@ class Operator(Generic[SlotType]):
         ...
 
 
-class Receiver(Operator):
+SecondSlotType = TypeVar('SecondSlotType', bound='OperatorSlot')
+"""Type of slot."""
+
+
+class Receiver(RandomNode, Operator['ReceiverSlot']):
     """Operator receiving from a device."""
 
     def __init__(self,
+                 seed: Optional[int] = None,
                  *args,
                  **kwargs) -> None:
         """
         Args:
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
 
             *args:
                 Operator base class initialization parameters.
@@ -172,8 +178,21 @@ class Receiver(Operator):
                 Operator base class initialization parameters.
         """
 
-        # Initialize operator base class
-        Operator.__init__(*args, **kwargs)
+        # Initialize base classes
+        RandomNode.__init__(self, seed=seed)
+        Operator[ReceiverSlot].__init__(self, params=args)
+
+    @property
+    @abstractmethod
+    def sampling_rate(self) -> float:
+        """Sampling rate at which this transmitter operates."""
+        ...
+
+    @Operator.slot.setter
+    def slot(self, value: Optional[ReceiverSlot]) -> None:
+
+        Operator.slot.fset(self, value)
+        self.random_mother = None if value is None else value.device
 
 
 class OperatorSlot(Generic[OperatorType]):
@@ -278,12 +297,17 @@ class OperatorSlot(Generic[OperatorType]):
         return self.registered(operator)
 
 
-class Transmitter(Operator[SlotType]):
+class Transmitter(RandomNode, Operator['TransmitterSlot']):
     """Operator transmitting over a device."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self,
+                 seed: Optional[int] = None,
+                 *args, **kwargs) -> None:
         """
         Args:
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
 
             *args:
                 Operator base class initialization parameters.
@@ -293,28 +317,44 @@ class Transmitter(Operator[SlotType]):
         """
 
         # Initialize operator base class
-        Operator[TransmitterSlot].__init__(self, *args, **kwargs)
+        RandomNode.__init__(self, seed=seed)
+        Operator[TransmitterSlot].__init__(self, args)
 
-    def transmit(self, signal: Signal) -> None:
+    @abstractmethod
+    def transmit(self,
+                 duration: float = 0.) -> Tuple[Any, ...]:
         """Transmit a signal.
 
         Registers the signal samples to be transmitted by the underlying device.
 
         Args:
+            duration (float, optional):
+                Duration of the transmitted signal.
+                If not specified, the duration will be inferred by the transmitter.
 
+        Returns:
+            Tuple[Signal, Any, ...]: Tuple of transmitted signal as well as additional information.
 
         Raises:
             FloatingError:
                 If the transmitter is currently considered floating.
         """
+        ...
 
-        if not self.attached:
-            raise FloatingError("Error trying to transmit via a floating transmitter")
+    @property
+    @abstractmethod
+    def sampling_rate(self) -> float:
+        """Sampling rate at which this transmitter operates."""
+        ...
 
-        self.slot.transmit(self, signal)
+    @Operator.slot.setter
+    def slot(self, value: Optional[ReceiverSlot]) -> None:
+
+        Operator.slot.fset(self, value)
+        self.random_mother = None if value is None else value.device
 
 
-class TransmitterSlot(OperatorSlot):
+class TransmitterSlot(OperatorSlot[Transmitter]):
     """Slot for transmitting operators within devices."""
 
     __slots__ = ['__signals']
@@ -334,6 +374,12 @@ class TransmitterSlot(OperatorSlot):
 
         # Init base class
         OperatorSlot.__init__(self, *args, **kwargs)
+
+    def add(self,
+            operator: Receiver) -> None:
+
+        self.__signals.append(None)
+        OperatorSlot[Transmitter].add(self, operator)
 
     def add_transmission(self,
                          transmitter: Transmitter,
@@ -356,6 +402,21 @@ class TransmitterSlot(OperatorSlot):
             raise ValueError("Transmitter not registered at this slot")
 
         self.__signals[transmitter.slot_index] = signal
+
+    def get_transmissions(self,
+                          clear_cache: bool = True) -> List[Signal]:
+        """Get recent transmissions."""
+
+        signals: List[Signal] = []
+
+        for signal in self.__signals:
+            if signal is not None:
+                signals.append(signal)
+
+        if clear_cache:
+            self.__signals = [None for _ in self.__operators]
+
+        return signals
 
 
 class ReceiverSlot(OperatorSlot[Receiver]):
@@ -395,13 +456,14 @@ class UnsupportedSlot(OperatorSlot):
         raise RuntimeError("Slot not supported by this device")
 
 
-class Device(ABC):
+class Device(ABC, RandomNode):
     """Physical device representation within HermesPy.
 
     It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.
     """
 
-    __slots__ = ['transmitters', 'receivers', '__position', '__orientation', '__topology', '__carrier_frequency']
+    __slots__ = ['transmitters', 'receivers', '__position', '__orientation', '__topology', '__carrier_frequency',
+                 '__sampling_rate']
 
     transmitters: TransmitterSlot
     """"Transmitters broadcasting signals over this device."""
@@ -418,7 +480,8 @@ class Device(ABC):
                  position: Optional[np.array] = None,
                  orientation: Optional[np.array] = None,
                  topology: Optional[np.ndarray] = None,
-                 carrier_frequency: float = 0.) -> None:
+                 carrier_frequency: float = 0.,
+                 seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -437,13 +500,20 @@ class Device(ABC):
             carrier_frequency (float, optional):
                 Central frequency of the device's emissions in the RF-band.
                 By default, 0Hz is assumed, meaning the device transmits in the base-band.
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
         """
+
+        RandomNode.__init__(self, seed=seed)
 
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
+
         self.position = position
         self.orientation = orientation
         self.topology = topology
+        self.carrier_frequency = carrier_frequency
 
     @property
     def position(self) -> Optional[np.ndarray]:
@@ -608,6 +678,160 @@ class Device(ABC):
 
         self.__carrier_frequency = value
 
+    @property
+    @abstractmethod
+    def sampling_rate(self) -> float:
+        """Sampling rate at which the device's analog-to-digital converters operate.
+
+        Returns:
+            sampling_rate (float): Sampling rate in Hz.
+
+        Raises:
+            ValueError: If the sampling rate is not greater than zero.
+        """
+        ...
+
+    def transmit(self,
+                 clear_cache: bool = True) -> Signal:
+        """Transmit signal over this device.
+
+        Args:
+
+            clear_cache (bool, optional):
+                Clear the cache of operator signals to be transmitted.
+                Enabled by default.
+
+        Returns:
+            Signal: Signal emitted by this device.
+        """
+
+        # Mix transmit signal
+        signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
+                              num_samples=0, carrier_frequency=self.carrier_frequency)
+
+        for transmitted_signal in self.transmitters.get_transmissions(clear_cache):
+            signal.superimpose(transmitted_signal)
+
+        # Trigger actual hardware transmission here.
+
+        return signal
+
 
 DeviceType = TypeVar('DeviceType', bound=Device)
 """Type of device."""
+
+
+class DuplexTransmitter(Transmitter):
+    """Transmitter within a duplex operator."""
+
+    __duplex_operator: DuplexOperator
+
+    def __init__(self,
+                 duplex_operator: DuplexOperator) -> None:
+        """
+        Args:
+
+            duplex_operator (DuplexOperator):
+                Duplex operator this transmitter is bound to.
+        """
+
+        self.__duplex_operator = duplex_operator
+        Transmitter.__init__(self)
+
+    def transmit(self, duration: float = 0.) -> Tuple[Any, ...]:
+
+        return self.__duplex_operator.transmit(duration)
+
+    @property
+    def sampling_rate(self) -> float:
+
+        return self.__duplex_operator.sampling_rate
+
+    @property
+    def frame_duration(self) -> float:
+
+        return self.__duplex_operator.frame_duration
+
+
+class DuplexReceiver(Receiver):
+    """Receiver within a duplex operator."""
+
+    __duplex_operator: DuplexOperator
+
+    def __init__(self,
+                 duplex_operator: DuplexOperator) -> None:
+        """
+        Args:
+
+            duplex_operator (DuplexOperator):
+                Duplex operator this receiver is bound to.
+        """
+
+        self.__duplex_operator = duplex_operator
+        Receiver.__init__(self)
+
+    @property
+    def sampling_rate(self) -> float:
+
+        return self.__duplex_operator.sampling_rate
+
+    @property
+    def frame_duration(self) -> float:
+
+        return self.__duplex_operator.frame_duration
+
+
+class DuplexOperator(object):
+    """Operator binding to both transmit and receive slots of any device."""
+
+    _transmitter: DuplexTransmitter
+    _receiver: DuplexReceiver
+    __device: Optional[Device]
+
+    def __init__(self):
+
+        self.__device = None
+        self._transmitter = DuplexTransmitter(self)
+        self._receiver = DuplexReceiver(self)
+
+    @property
+    def device(self) -> Optional[Device]:
+        """Device this operator is operating.
+
+        Returns:
+            device (Optional[device]):
+                Handle to the operated device.
+                `None` if the operator is currently operating no device.
+        """
+
+        return self.__device
+
+    @device.setter
+    def device(self, value: Optional[Device]) -> None:
+        """Set the device this operator is operating."""
+
+        self.__device = value
+
+        if value is None:
+
+            self._transmitter.slot = None
+            self._receiver.slot = None
+
+        else:
+
+            self._transmitter.slot = value.transmitters
+            self._receiver.slot = value.receivers
+
+    @abstractmethod
+    def transmit(self, duration: float = 0.) -> Tuple[Any, ...]:
+        ...
+
+    @property
+    @abstractmethod
+    def sampling_rate(self) -> float:
+        ...
+
+    @property
+    @abstractmethod
+    def frame_duration(self) -> float:
+        ...

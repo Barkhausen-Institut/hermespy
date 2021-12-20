@@ -1,7 +1,8 @@
 from .channel import Channel
 from .modem import WaveformGeneratorOfdm, WaveformGeneratorPskQam, WaveformGeneratorChirpFsk
 from .signal import Signal
-from .core import Scenario, Simulation, HardwareLoop, Transmitter, Receiver
+from .core import Device, RandomNode, Transmitter, Receiver
+from .simulation import Simulation, SimulatedDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

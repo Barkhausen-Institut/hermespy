@@ -1,8 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+=======================================
+Hardware Radio Frequency Chain Modeling
+=======================================
+"""
+
+
 from __future__ import annotations
+from typing import Type, Optional
+
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
-from typing import Type, Optional
-from hermespy.modem.rf_chain_models.power_amplifier import PowerAmplifier
+
+from hermespy.signal import Signal
+from .power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -20,7 +31,7 @@ class RfChain:
     Only PA is modelled.
     """
 
-    yaml_tag = 'RfChain'
+    yaml_tag = u'RfChain'
     __tx_power: float
     __phase_offset: float
     __amplitude_imbalance: float
@@ -122,16 +133,22 @@ class RfChain:
 
         return rf_chain
 
-    def send(self, input_signal: np.ndarray) -> np.ndarray:
+    def transmit(self, input_signal: Signal) -> Signal:
         """Returns the distorted version of signal in "input_signal".
 
         According to transmission impairments.
         """
-        input_signal = self.add_iq_imbalance(input_signal)
-        if self.power_amplifier is not None:
-            return self.power_amplifier.send(input_signal)
 
-        return input_signal
+        transmitted_signal = input_signal.copy()
+
+        # Simulate IQ imbalance
+        transmitted_signal.samples = self.add_iq_imbalance(transmitted_signal.samples)
+
+        # Simulate power amplifier
+        if self.power_amplifier is not None:
+            transmitted_signal.samples = self.power_amplifier.send(transmitted_signal.samples)
+
+        return transmitted_signal
 
     def add_iq_imbalance(self, input_signal: np.ndarray) -> np.ndarray:
         """Adds Phase offset and amplitude error to input signal.

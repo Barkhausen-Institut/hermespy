@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from . import Executable
+from hermespy.core import Executable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
