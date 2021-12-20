@@ -78,7 +78,7 @@ class NiMmWaveDevice(PhysicalDevice):
         return self.__sampling_rate
 
     @sampling_rate.setter
-    def sampling_rate(self, value: float) -> None
+    def sampling_rate(self, value: float) -> None:
 
         if value <= 0.:
             raise ValueError("Sampling rate must be greater than zero")
