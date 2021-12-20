@@ -4,7 +4,8 @@
 
 from __future__ import annotations
 
-from hermespy.core import Executable
+from hermespy.core import Executable, Scenario
+from .physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -16,19 +17,19 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class HardwareLoop(Executable):
+class HardwareLoop(Executable, Scenario[PhysicalDevice]):
     """Hermespy hardware loop configuration.
     """
 
     yaml_tag = u'Loop'
 
     def __init__(self) -> None:
-        """Object initialization.
-        """
 
         Executable.__init__(self)
+        Scenario[PhysicalDevice].__init__(self)
 
     def run(self) -> None:
-        """Run the full loop configuration.
-        """
-        pass
+
+        # Trigger devices
+        for device in self.devices:
+            device.trigger()
