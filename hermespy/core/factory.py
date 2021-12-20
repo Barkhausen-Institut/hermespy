@@ -28,8 +28,6 @@ from functools import partial
 import os
 
 from .executable import Executable
-from .simulation import Simulation
-from .scenario import Scenario
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

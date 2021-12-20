@@ -13,8 +13,6 @@ from typing import ContextManager, List, Optional, Union
 
 import matplotlib.pyplot as plt
 
-from hermespy.core import Scenario
-
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -132,25 +130,6 @@ class Executable(ABC):
     def run(self) -> None:
         """Execute the configuration."""
         ...
-
-    def add_scenario(self, scenario: Scenario) -> None:
-        """Add a new scenario description to this executable.
-
-        Args:
-            scenario (Scenario): The scenario description to be added.
-        """
-
-        self.__scenarios.append(scenario)
-
-    @property
-    def scenarios(self) -> List[Scenario]:
-        """Access scenarios within this executable.
-
-        Returns:
-            List[Scenario]: Scenarios within this executable.
-        """
-
-        return self.__scenarios
 
     @property
     def spectrum_fft_size(self) -> int:

@@ -1,5 +1,4 @@
 from .modem import Modem
-from .rf_chain import RfChain
 from .waveform_generator import WaveformGenerator, Synchronization
 from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSynchronization,\
     ChirpFskCorrelationSynchronization
@@ -17,6 +16,6 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['Modem', 'RfChain', 'WaveformGenerator', 'WaveformGeneratorChirpFsk', 'WaveformGeneratorPskQam',
+__all__ = ['Modem', 'WaveformGenerator', 'WaveformGeneratorChirpFsk', 'WaveformGeneratorPskQam',
            'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection', 'FrameSymbolSection',
            'FrameResource', 'Synchronization']

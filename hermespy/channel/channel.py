@@ -2,31 +2,29 @@
 """Channel model for wireless transmission links."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Tuple, Type
+from typing import Optional, Tuple, Type
 from itertools import product
 
 import numpy as np
 import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
-from .channel_state_information import ChannelStateFormat, ChannelStateInformation
+from hermespy.core import Device, RandomNode
 from hermespy.signal import Signal
+from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 
-if TYPE_CHECKING:
-    from hermespy.scenario import Scenario
-    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.3"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel:
+class Channel(RandomNode):
     """Implements an ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
@@ -38,71 +36,36 @@ class Channel:
     a random number generator, given by `rnd` may be needed. The sampling rate is
     the same at both input and output of the channel, and is given by `sampling_rate`
     samples/second.
-
-    Attributes:
-
-        __active (bool):
-            Flag enabling signal propagation over this specific channel.
-            Enabled by default, may be disabled to easily debug scenarios.
-
-        __transmitter (Optional[Transmitter]):
-            Handle to the wireless modem transmitting into this channel.
-            If set to `None`, this channel instance is considered floating.
-
-        __receiver (Optional[Receiver]):
-            Handle to the wireless modem receiving from this channel.
-            If set to `None`, this channel instance is considered floating.
-
-        __gain (float):
-            Linear factor by which signals propagated over this channel will be scaled.
-            1.0 by default, i.e. no free-space propagation losses are considered in the default channel.
-
-        __random_generator (Optional[numpy.random.Generator]):
-            Random generator object used to generate pseudo-random number sequences for this channel instance.
-            If set to `None`, the channel will instead access the random generator of `scenario`.
-
-        __scenario (Optional[Scenario]):
-            HermesPy scenario description this channel belongs to.
-            If set to `None`, this channel instance is considered floating.
-
-        impulse_response_interpolation (bool):
-            Allow for the impulse response to be resampled and interpolated.
     """
 
     yaml_tag = u'Channel'
     yaml_matrix = True
     __active: bool
-    __transmitter: Optional[Transmitter]
-    __receiver: Optional[Receiver]
+    __transmitter: Optional[Device]
+    __receiver: Optional[Device]
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
-    __random_generator: Optional[rnd.Generator]
-    __scenario: Optional[Scenario]
     impulse_response_interpolation: bool
 
     def __init__(self,
-                 transmitter: Optional[Transmitter] = None,
-                 receiver: Optional[Receiver] = None,
-                 scenario: Optional[Scenario] = None,
+                 transmitter: Optional[Device] = None,
+                 receiver: Optional[Device] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: float = 0.,
                  sync_offset_high: float = 0.,
-                 random_generator: Optional[rnd.Generator] = None,
-                 impulse_response_interpolation: bool = True
-                 ) -> None:
+                 impulse_response_interpolation: bool = True,
+                 seed: Optional[int] = None) -> None:
         """Channel model initialization.
 
         Args:
+
             transmitter (Transmitter, optional):
                 The modem transmitting into this channel.
 
             receiver (Receiver, optional):
                 The modem receiving from this channel.
-
-            scenario (Scenario, optional):
-                Scenario this channel is attached to.
 
             active (bool, optional):
                 Channel activity flag.
@@ -118,12 +81,16 @@ class Channel:
             sync_offset_high (float, optional):
                 Maximum synchronization error in seconds.
 
-            random_generator (rnd.Generator, optional):
-                Generator object for random number sequences.
-
             impulse_response_interpolation (bool, optional):
                 Allow the impulse response to be interpolated during sampling.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
+
+        # Initialize base class
+        RandomNode.__init__(self, seed=seed)
+
         # Default parameters
         self.__active = True
         self.__transmitter = None
@@ -134,9 +101,6 @@ class Channel:
         self.sync_offset_high = sync_offset_high
         self.recent_response = None
         self.impulse_response_interpolation = impulse_response_interpolation
-
-        self.random_generator = random_generator
-        self.scenario = scenario
 
         if transmitter is not None:
             self.transmitter = transmitter
@@ -149,12 +113,6 @@ class Channel:
 
         if gain is not None:
             self.gain = gain
-
-        self._verify_sync_offsets()
-
-    def _verify_sync_offsets(self):
-        if not (self.sync_offset_low <= self.sync_offset_high):
-            raise ValueError("Lower bound of uniform distribution must be smaller than higher bound.")
 
     @property
     def active(self) -> bool:
@@ -179,56 +137,48 @@ class Channel:
         self.__active = active
 
     @property
-    def transmitter(self) -> Transmitter:
-        """Access the modem transmitting into this channel.
+    def transmitter(self) -> Device:
+        """Device transmitting into this channel.
 
         Returns:
             Transmitter: A handle to the modem transmitting into this channel.
-        """
-
-        return self.__transmitter
-
-    @transmitter.setter
-    def transmitter(self, new_transmitter: Transmitter) -> None:
-        """Configure the modem transmitting into this channel.
-
-        Args:
-            new_transmitter (Transmitter): The transmitter to be configured.
 
         Raises:
             RuntimeError: If a transmitter is already configured.
         """
 
+        return self.__transmitter
+
+    @transmitter.setter
+    def transmitter(self, value: Device) -> None:
+        """Set the device transmitting into this channel."""
+
         if self.__transmitter is not None:
             raise RuntimeError("Overwriting a transmitter configuration is not supported")
 
-        self.__transmitter = new_transmitter
+        self.__transmitter = value
 
     @property
-    def receiver(self) -> Receiver:
-        """Access the modem receiving from this channel.
+    def receiver(self) -> Device:
+        """Device receiving from this channel.
 
         Returns:
-            Receiver: A handle to the modem receiving from this channel.
-        """
-
-        return self.__receiver
-
-    @receiver.setter
-    def receiver(self, new_receiver: Receiver) -> None:
-        """Configure the modem receiving from this channel.
-
-        Args:
-            new_receiver (Receiver): The receiver to be configured.
+            Receiver: A handle to the device receiving from this channel.
 
         Raises:
             RuntimeError: If a receiver is already configured.
         """
 
+        return self.__receiver
+
+    @receiver.setter
+    def receiver(self, value: Device) -> None:
+        """Set the device receiving from this channel."""
+
         if self.__receiver is not None:
             raise RuntimeError("Overwriting a receiver configuration is not supported")
 
-        self.__receiver = new_receiver
+        self.__receiver = value
 
     @property
     def sync_offset_low(self) -> float:
@@ -312,72 +262,6 @@ class Channel:
             raise ValueError("Channel gain must be greater or equal to zero")
 
         self.__gain = value
-        
-    @property
-    def random_generator(self) -> rnd.Generator:
-        """Access the random number generator assigned to this channel.
-
-        This property will return the scenarios random generator if no random generator has been specifically set.
-
-        Returns:
-            numpy.random.Generator: The random generator.
-
-        Raises:
-            RuntimeError: If trying to access the random generator of a floating channel.
-        """
-
-        if self.__random_generator is not None:
-            return self.__random_generator
-
-        if self.__scenario is None:
-            raise RuntimeError("Trying to access the random generator of a floating channel")
-
-        return self.scenario.random_generator
-
-    @random_generator.setter
-    def random_generator(self, generator: Optional[rnd.Generator]) -> None:
-        """Modify the configured random number generator assigned to this channel.
-
-        Args:
-            generator (Optional[numpy.random.generator]): The random generator. None if not specified.
-        """
-
-        self.__random_generator = generator
-        
-    @property
-    def scenario(self) -> Scenario:
-        """Access the scenario this channel is attached to.
-
-        Returns:
-            Scenario:
-                The referenced scenario.
-
-        Raises:
-            RuntimeError: If the channel is currently floating.
-        """
-
-        if self.__scenario is None:
-            raise RuntimeError("Error trying to access the scenario of a floating channel")
-
-        return self.__scenario
-
-    @scenario.setter
-    def scenario(self, scenario: Scenario) -> None:
-        """Attach the channel to a specific scenario.
-
-        This can only be done once to a floating channel.
-
-        Args:
-            scenario (Scenario): The scenario this channel should be attached to.
-
-        Raises:
-            RuntimeError: If the channel is already attached to a scenario.
-        """
-
-        if self.__scenario is not None:
-            raise RuntimeError("Error trying to modify the scenario of an already attached channel")
-
-        self.__scenario = scenario
 
     @property
     def num_inputs(self) -> int:
@@ -416,19 +300,6 @@ class Channel:
             raise RuntimeError("Error trying to access the number outputs of a floating channel")
 
         return self.__receiver.num_antennas
-
-    @property
-    def indices(self) -> Tuple[int, int]:
-        """The indices of this channel within the scenarios channel matrix.
-
-        Returns:
-            int:
-                Transmitter index.
-            int:
-                Receiver index.
-        """
-
-        return self.__transmitter.index, self.__receiver.index
 
     def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
         """Modifies the input signal and returns it after channel propagation.
@@ -473,7 +344,7 @@ class Channel:
         impulse_response = self.impulse_response(transmitted_signal.timestamps, transmitted_signal.sampling_rate)
 
         # Consider the a random synchronization offset between transmitter and receiver
-        sync_offset: float = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
+        sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
         # The maximum delay in samples is modeled by the last impulse response dimension
         num_delay_samples = impulse_response.shape[3] - 1

@@ -261,7 +261,7 @@ class WaveformGeneratorPskQam(WaveformGenerator):
 
         # Generate waveforms by treating the frame as a comb and convolving with the impulse response
         output_signal = self.tx_filter.filter(frame)
-        return Signal(output_signal, self.sampling_rate, self.modem.carrier_frequency)
+        return Signal(output_signal, self.sampling_rate, self.modem.device.carrier_frequency)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,

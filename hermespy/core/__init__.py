@@ -1,9 +1,10 @@
-from .scenario import Scenario
-from .device import Transmitter, Receiver
+from .device import DuplexOperator, Transmitter, Receiver
 from .factory import SerializableClasses, Factory
 from .executable import Executable, Verbosity
+from .scenario import Scenario
 from .device import Device, FloatingError
 from .hardware_loop import HardwareLoop
+from .random_node import RandomNode
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -16,14 +17,13 @@ __status__ = "Prototype"
 
 
 __all__ = ['Executable', 'Verbosity', 'Device', 'FloatingError', 'HardwareLoop', 'Factory', 'SerializableClasses',
-           'Transmitter', 'Receiver']
+           'Transmitter', 'Receiver', 'RandomNode', 'DuplexOperator']
 
-import sys
-from inspect import getmembers
-modules = ['channel', 'modem', 'core', 'source', 'coding', 'precoding', 'modem.tools',
-           'noise', 'modem.rf_chain_models']
-for module in modules:
-    for _, member in getmembers(sys.modules['hermespy.' + module]):
-
-        if hasattr(member, 'yaml_tag'):
-            SerializableClasses.add(member)
+#import sys
+#from inspect import getmembers
+#modules = ['channel', 'core', 'coding']
+#for module in modules:
+#    for _, member in getmembers(sys.modules['hermespy.' + module]):
+#
+#        if hasattr(member, 'yaml_tag'):
+#            SerializableClasses.add(member)

@@ -13,10 +13,10 @@ from hermespy.core.executable import Executable, Verbosity
 from hermespy.core.drop import Drop
 from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
 
-from .scenario import Scenario
-from .simulated_device import SimulatedDevice
+from hermespy.core.scenario import Scenario
 from hermespy.signal import Signal
 from hermespy.core.statistics import SNRType, Statistics, ConfidenceMetric
+from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -41,25 +41,11 @@ class SimulationDrop(Drop):
 class Simulation(Executable, Scenario[SimulatedDevice]):
     """HermesPy simulation configuration.
 
-    Attributes:
-
-        plot_bit_error (bool):
-            Plot resulting bit error rate after simulation.
-
-        plot_block_error (bool):
-            Plot resulting block error rate after simulation.
-
-        __min_num_drops (int):
-            Minimum number of drops before confidence check may prematurely abort execution.
-
-        __confidence_level (float):
-            Confidence at which execution should be terminated.
-
-        __confidence_margin (float):
-            Margin for the confidence check
     """
 
     yaml_tag = u'Simulation'
+
+    __channels: np.ndarray
     snr_type: SNRType
     noise_loop: List[float]
     confidence_metric: ConfidenceMetric
@@ -171,8 +157,10 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
                             calc_transmit_stft, calc_receive_stft, spectrum_fft_size, max_num_drops,
                             results_dir, verbosity)
 
-        Scenario[SimulatedDevice].__init__(self, drop_duration=drop_duration)
+        Scenario.__init__(self)
 
+        self.__channels = np.ndarray((0, 0), dtype=object)
+        self.drop_duration = drop_duration
         self.plot_drop_transmitted_bits = False
         self.plot_drop_transmitted_signals = False
         self.plot_drop_received_signals = False
@@ -209,6 +197,177 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
 
         if self.max_num_drops < self.min_num_drops:
             raise ValueError("Minimum number of drops must be smaller than maximum number of drops.")
+
+    def new_device(self) -> SimulatedDevice:
+        """Add a new device to the simulation scenario.
+
+        Returns:
+            SimulatedDevice: Newly added simulated device.
+        """
+
+        device = SimulatedDevice()
+        self.add_device(device)
+
+        return device
+
+    def add_device(self, device: SimulatedDevice) -> None:
+
+        # Add the device to the scenario
+        Scenario.add_device(self, device)
+
+        if self.num_devices == 1:
+
+            self.__channels = np.array([[Channel(device, device)]], dtype=object)
+
+        else:
+
+            self.__channels = np.append(self.__channels,
+                                        np.array([Channel(tx, device) for tx in self.devices]), axis=1)
+            self.__channels = np.append(self.__channels,
+                                        np.array([Channel(device, rx) for rx in self.devices[:-1]]), axis=0)
+
+    @property
+    def channels(self) -> np.ndarray:
+        """Channel matrix between devices.
+
+        Returns:
+            np.ndarray:
+                An `MxM` matrix of channels between devices.
+        """
+
+        return self.__channels
+
+    def channel(self,
+                transmitter: SimulatedDevice,
+                receiver: SimulatedDevice) -> Channel:
+        """Access a specific channel between two devices.
+
+        Args:
+
+            transmitter (SimulatedDevice):
+                The device transmitting into the channel.
+
+            receiver (SimulatedDevice):
+                the device receiving from the channel
+
+        Returns:
+            Channel:
+                Channel between `transmitter` and `receiver`.
+
+        Raises:
+            ValueError:
+                Should `transmitter` or `receiver` not be registered with this scenario.
+        """
+
+        devices = self.devices
+
+        if transmitter not in devices:
+            raise ValueError("Provided transmitter is not registered with this scenario")
+
+        if receiver not in devices:
+            raise ValueError("Provided receiver is not registered with this scenario")
+
+        index_transmitter = devices.index(transmitter)
+        index_receiver = devices.index(receiver)
+
+        return self.__channels[index_transmitter, index_receiver]
+
+    def departing_channels(self, transmitter: SimulatedDevice, active_only: bool = False) -> List[Channel]:
+        """Collect all channels departing from a transmitting device.
+
+        Args:
+
+            transmitter (SimulatedDevice):
+                The transmitting device.
+
+            active_only (bool, optional):
+                Consider only active channels.
+
+        Returns:
+            List[Channel]:
+                A list of departing channels.
+
+        Raises:
+            ValueError:
+                Should `transmitter` not be registered with this scenario.
+        """
+
+        devices = self.devices
+
+        if transmitter not in devices:
+            raise ValueError("The provided transmitter is not registered with this scenario.")
+
+        transmitter_index = devices.index(transmitter)
+        channels: List[Channel] = self.__channels[transmitter_index, :].tolist()
+
+        if active_only:
+            channels = [channel for channel in channels if channel.active]
+
+        return channels
+
+    def arriving_channels(self, receiver: SimulatedDevice, active_only: bool = False) -> List[Channel]:
+        """Collect all channels arriving at a device.
+
+        Args:
+            receiver (Receiver):
+                The receiving modem.
+
+            active_only (bool, optional):
+                Consider only active channels.
+
+        Returns:
+            List[Channel]:
+                A list of arriving channels.
+
+        Raises:
+            ValueError:
+                Should `receiver` not be registered with this scenario.
+        """
+
+        devices = self.devices
+
+        if receiver not in devices:
+            raise ValueError("The provided transmitter is not registered with this scenario.")
+
+        receiver_index = devices.index(receiver)
+        channels: List[Channel] = self.__channels[:, receiver_index].tolist()
+
+        if active_only:
+            channels = [channel for channel in channels if channel.active]
+
+        return channels
+
+    def set_channel(self, transmitter_index: int, receiver_index: int, channel: Channel) -> None:
+        """Specify a channel within the channel matrix.
+
+        Args:
+            transmitter_index (int):
+                Index of the transmitter within the channel matrix.
+
+            receiver_index (int):
+                Index of the receiver within the channel matrix.
+
+            channel (Channel):
+                The channel instance to be set at position (`transmitter_index`, `receiver_index`).
+
+        Raises:
+            ValueError:
+                If `transmitter_index` or `receiver_index` are greater than the channel matrix dimensions.
+        """
+
+        if self.__channels.shape[0] <= transmitter_index or 0 > transmitter_index:
+            raise ValueError("Transmitter index greater than channel matrix dimension")
+
+        if self.__channels.shape[1] <= receiver_index or 0 > receiver_index:
+            raise ValueError("Receiver index greater than channel matrix dimension")
+
+        # Update channel field within the matrix
+        self.__channels[transmitter_index, receiver_index] = channel
+
+        # Set proper receiver and transmitter fields
+        channel.transmitter = self.transmitters[transmitter_index]
+        channel.receiver = self.receivers[receiver_index]
+        channel.scenario = self
 
     def run(self) -> Statistics:
         """Run the full simulation configuration.
@@ -377,27 +536,17 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
             RuntimeError: If no scenario has been added to the simulation yet.
         """
 
-        # Generate data bits to be transmitted
-        data_bits = self.generate_data_bits()
-
         # Generate radio-frequency band signal emitted from each transmitter
-        transmitted_signals, transmitted_symbols = self.transmit(drop_run_flag=drop_run_flag,
-                                                                       data_bits=data_bits)
+        transmitted_signals, transmitted_symbols, transmitted_bits = self.transmit(drop_run_flag=drop_run_flag)
 
         # Simulate propagation over channel model
-        propagation_matrix = self.propagate(transmitted_signals,
-                                            drop_run_flag)
+        propagation_matrix = self.propagate(transmitted_signals, drop_run_flag)
 
         # Simulate signal reception and mixing at the receiver-side
-        received_signals = self.receive(propagation_matrix,
-                                              drop_run_flag,
-                                              self.snr_type,
-                                              snr)
+        received_signals = self.receive(propagation_matrix, drop_run_flag, self.snr_type, snr)
 
         # Receive and demodulate signal
-        detected_bits, received_symbols = Simulation.detect(scenario,
-                                                            received_signals,
-                                                            drop_run_flag)
+        detected_bits, received_symbols = self.detect(received_signals, drop_run_flag)
 
         # Collect block sizes
         transmit_block_sizes = scenario.transmit_block_sizes
@@ -407,7 +556,7 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
         received_samples = [received_signal[0] for received_signal in received_signals]
 
         # Save generated signals
-        drop = SimulationDrop(data_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
+        drop = SimulationDrop(transmitted_bits, transmitted_symbols, transmitted_signals, transmit_block_sizes,
                               received_samples, received_symbols, detected_bits, receive_block_sizes,
                               True, self.spectrum_fft_size)
         return drop
@@ -548,19 +697,59 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
 
         self.__confidence_margin = margin
 
+    @property
+    def drop_duration(self) -> float:
+        """The scenario's default drop duration in seconds.
+
+        If the drop duration is set to zero, the property will return the maximum frame duration
+        over all registered transmitting modems as drop duration!
+
+        Returns:
+            float: The default drop duration in seconds.
+
+        Raises:
+            ValueError: For durations smaller than zero.
+        """
+
+        # Return the largest frame length as default drop duration
+        if self.__drop_duration == 0.0:
+
+            duration = 0.
+
+            for device in self.devices:
+                duration = max(duration, device.max_frame_duration)
+
+            return duration
+
+        else:
+            return self.__drop_duration
+
+    @drop_duration.setter
+    def drop_duration(self, value: float) -> None:
+        """Set the scenario's default drop duration."""
+
+        if value < 0.0:
+            raise ValueError("Drop duration must be greater or equal to zero")
+
+        self.__drop_duration = value
+
     def transmit(self,
                  drop_run_flag: Optional[np.ndarray] = None,
-                 drop_duration: Optional[float] = None,
-                 data_bits: Optional[np.array] = None) -> Tuple[List[Signal], List[Optional[np.ndarray]]]:
+                 drop_duration: Optional[float] = None) -> \
+            Tuple[List[Signal], List[Optional[np.ndarray]], List[Optional[np.ndarray]]]:
         """Simulate signals emitted by all transmitters registered with a scenario.
 
         Args:
             drop_run_flag (np.ndarray, optional): Mask that says if signals are to be created for specific snr.
             drop_duration (float, optional): Length of simulated transmission in seconds.
-            data_bits (List[np.array], optional): The data bits to be sent by each transmitting modem.
 
         Returns:
-            List[Signal]: A list containing the the signals emitted by each transmitting modem.
+            Tuple:
+                - Signals (List[Signal]):
+                    List of signals emitted by each transmitting modem.
+                - Symbols (List[Optional[np.ndarary]]):
+                    List of symbols emitted by each transmitting modem.
+                - xxxx
 
         Raises:
             ValueError: On invalid `drop_duration`s.
@@ -580,44 +769,27 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
 
         transmitted_signals: List[Optional[Signal]] = []
         transmitted_symbols: List[Optional[np.ndarray]] = []
+        transmitted_bits: List[Optional[np.ndarray]] = []
 
-        if data_bits is None:
+        for transmitter_idx, transmitter in enumerate(self.transmitters):
 
-            for transmitter_idx, transmitter in enumerate(self.transmitters):
+            if transmitter_idx in sending_tx_idx:
 
-                if transmitter_idx in sending_tx_idx:
+                signal, symbols, bits = transmitter.transmit(drop_duration)
+                transmitted_signals.append(signal)
+                transmitted_symbols.append(symbols)
+                transmitted_bits.append(bits)
 
-                    signal, symbols = transmitter.send(drop_duration)
-                    transmitted_signals.append(signal)
-                    transmitted_symbols.append(symbols)
+            else:
 
-                else:
+                transmitted_signals.append(None)
+                transmitted_symbols.append(None)
+                transmitted_bits.append(None)
 
-                    transmitted_signals.append(None)
-                    transmitted_symbols.append(None)
+        return transmitted_signals, transmitted_symbols, transmitted_bits
 
-        else:
-
-            if len(data_bits) != len(scenario.transmitters):
-                raise ValueError("Data bits to be transmitted contain insufficient streams")
-            
-            for transmitter_idx, (transmitter, data) in enumerate(zip(scenario.transmitters, data_bits)):
-                if transmitter_idx in sending_tx_idx:
-
-                    signal, symbols = transmitter.send(drop_duration, data)
-                    transmitted_signals.append(signal)
-                    transmitted_symbols.append(symbols)
-
-                else:
-
-                    transmitted_signals.append(None)
-                    transmitted_symbols.append(None)
-
-        return transmitted_signals, transmitted_symbols
-
-    @staticmethod
-    def propagate(scenario: Scenario,
-                  transmitted_signals: List[Signal],
+    def propagate(self,
+                  transmitted_signals: Optional[List[Optional[Signal]]],
                   drop_run_flag: Optional[np.ndarray] = None) -> List[List[Tuple[Signal, ChannelStateInformation]]]:
         """Propagate the signals generated by registered transmitters over the channel model.
 
@@ -628,9 +800,10 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
         signal samples on the second dimension
 
         Args:
-            scenario (Scenario): The scenario for which to simulate the channel propagation.
-            transmitted_signals (List[np.ndarray]):
-                List of signal streams emerging from each registered transmit modem.
+
+            transmitted_signals (List[Optional[np.ndarray]]):
+                Signal models transmitted by each  registered device.
+
             drop_run_flag (np.ndarray, optional): Mask that says if signals are to be created for specific snr.
 
         Returns:
@@ -640,29 +813,29 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
                 the N-th transmitter and M-th receiver.
 
         Raises:
-            ValueError: If the number of `transmitted_signals` does not equal the number of registered transmit modems.
+            ValueError: If the number of `transmitted_signals` does not equal the number of devices.
         """
 
-        if len(transmitted_signals) != len(scenario.transmitters):
-            raise ValueError("Number of transmit signals {} does not match the number of registered transmit "
-                             "modems {}".format(len(transmitted_signals), len(scenario.transmitters)))
+        if transmitted_signals is None:
+            transmitted_signals = [device.transmit() for device in self.devices]
 
-        # Access the channel models
-        channels = scenario.channels
+        if len(transmitted_signals) != self.num_devices:
+            raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match "
+                             f"the number of registered devices ({self.num_devices})")
 
         # Initialize the propagated signals
         propagation_matrix: List[List[Tuple[Signal, ChannelStateInformation]]] = []
 
         # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
-        for receiver_id, receiver in enumerate(scenario.receivers):
+        for receiver_id, receiver in enumerate(self.devices):
 
             propagation_row: List[Tuple[Signal, ChannelStateInformation]] = []
-            for transmitter_id, (transmitter, transmitted_signal) in enumerate(zip(scenario.transmitters,
+            for transmitter_id, (transmitter, transmitted_signal) in enumerate(zip(self.devices,
                                                                                    transmitted_signals)):
                 propagation_tuple = tuple((None, None))
 
                 # Select responsible channel between respective transmitter and receiver
-                channel: Channel = channels[transmitter_id, receiver_id]
+                channel: Channel = self.__channels[transmitter_id, receiver_id]
 
                 if drop_run_flag is None:
                     propagate_signal = True
@@ -682,8 +855,7 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
 
         return propagation_matrix
 
-    @staticmethod
-    def receive(scenario: Scenario,
+    def receive(self,
                 propagation_matrix: List[List[Tuple[Signal, ChannelStateInformation]]],
                 drop_run_flag: Optional[np.ndarray] = None,
                 snr_type: SNRType = SNRType.EBN0,
@@ -694,8 +866,6 @@ class Simulation(Executable, Scenario[SimulatedDevice]):
         introduces additive thermal noise and mixes according to carrier frequency configurations.
 
         Args:
-            scenario (Scenario):
-                The scenario for which to simulate the received signals.
 
             propagation_matrix (List[List[Tuple[Signal, ChannelStateInformation]]]):
                 MxN Matrix of pairs of received signals and impulse responses.

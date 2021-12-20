@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
-"""HermesPy Modem base class."""
+"""
+=====
+Modem
+=====
+"""
 
 from __future__ import annotations
-from typing import List, Type, TYPE_CHECKING, Optional
-from abc import abstractmethod
-from ruamel.yaml import SafeRepresenter, MappingNode, ScalarNode
+from typing import Any, Tuple, Type, Optional
+
 import numpy as np
-import numpy.random as rnd
+from ruamel.yaml import SafeRepresenter, MappingNode
+
+from hermespy.coding import EncoderManager
+from hermespy.core import Device, DuplexOperator, RandomNode
+from hermespy.precoding import SymbolPrecoding
+from hermespy.signal import Signal
+from .bits_source import BitsSource, RandomBitsSource
+from .waveform_generator import WaveformGenerator
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -18,18 +28,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-from hermespy.precoding import SymbolPrecoding
-from hermespy.coding import EncoderManager
-from hermespy.modem.waveform_generator import WaveformGenerator
-from hermespy.core.device import Transmitter, Receiver
-
-if TYPE_CHECKING:
-
-    from hermespy.scenario import Scenario
-    from hermespy.channel import Channel
-
-
-class Modem(Transmitter, Receiver):
+class Modem(RandomNode, DuplexOperator):
     """HermesPy representation of a wireless communication modem.
 
     Modems may transmit or receive information in form of bit streams.
@@ -41,325 +40,200 @@ class Modem(Transmitter, Receiver):
     either for transmission or reception of a given technology.
     """
 
-    yaml_tag = 'Modem'
-    __linear_topology: bool
+    __slots__ = ['__encoder_manager', '__waveform_generator', '__bits_source']
+
+    yaml_tag = u'Modem'
+    """YAML serialization tag."""
+
     __encoder_manager: EncoderManager
     __precoding: SymbolPrecoding
     __waveform_generator: Optional[WaveformGenerator]
-    __rf_chain: RfChain
-    __random_generator: Optional[rnd.Generator]
+    __bits_source: BitsSource
 
     def __init__(self,
                  encoding: Optional[EncoderManager] = None,
                  precoding: Optional[SymbolPrecoding] = None,
                  waveform: Optional[WaveformGenerator] = None,
-                 rfchain: Optional[RfChain] = None,
-                 random_generator: Optional[rnd.Generator] = None) -> None:
-        """Object initialization.
-
-        Args:
-            scenario (Scenario):
-                The scenario this modem is attached to.
-
-            topology (np.ndarray, optional)
+                 seed: Optional[int] = None,
+                 *args: Any,
+                 **kwargs: Any) -> None:
         """
+        Args:
+
+            encoding (EncoderManager, optional):
+                Bit coding configuration.
+                Encodes communication bit frames during transmission and decodes them during reception.
+
+            precoding (SymbolPrecoding, optional):
+                Modulation symbol coding configuration.
+
+            waveform (WaveformGenerator, optional):
+                The waveform to be transmitted by this modem.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
+
+            *args (Any):
+                Operator base class initialization parameters.
+
+            **kwargs (Any):
+                Operator base class initialization parameters.
+        """
+
+        # Base class initialization
+        RandomNode.__init__(self, seed=seed)
+        DuplexOperator.__init__(self)
 
         self.__carrier_frequency = 800e6
         self.__encoder_manager = EncoderManager()
         self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
         self.__power = 1.0
-        self.__rf_chain = RfChain()
-        self.__random_generator = random_generator
 
+        self.bits_source = RandomBitsSource()
         self.encoder_manager = EncoderManager() if encoding is None else encoding
         self.precoding = SymbolPrecoding(modem=self) if precoding is None else precoding
         self.waveform_generator = waveform
 
-        if rfchain is not None:
-            self.rf_chain = rfchain
+    def transmit(self,
+                 duration: float = 0.) -> Tuple[Signal, np.ndarray, np.ndarray]:
+        """Returns an array with the complex base-band samples of a waveform generator.
 
-    @classmethod
-    def to_yaml(cls: Type[Modem], representer: SafeRepresenter, node: Modem) -> MappingNode:
-        """Serialize a modem object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Modem):
-                The modem instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        serialization = {
-            "carrier_frequency": node.__carrier_frequency,
-            "tx_power": node.__power,
-            EncoderManager.yaml_tag: node.__encoder_manager,
-            SymbolPrecoding.yaml_tag: node.__precoding,
-            RfChain.yaml_tag: node.__rf_chain,
-        }
-
-        if node.waveform_generator is not None:
-            serialization[node.waveform_generator.yaml_tag] = node.waveform_generator
-
-        mapping: MappingNode = representer.represent_mapping(cls.yaml_tag, serialization)
-
-        if node.__position is not None:
-
-            sequence = representer.represent_list(node.__position.tolist())
-            sequence.flow_style = True
-            mapping.value.append((ScalarNode('tag:yaml.org,2002:str', 'position'), sequence))
-
-        if node.__orientation is not None:
-
-            sequence = representer.represent_list(node.__orientation.tolist())
-            sequence.flow_style = True
-            mapping.value.append((ScalarNode('tag:yaml.org,2002:str', 'orientation'), sequence))
-
-        return mapping
-
-    @property
-    def scenario(self) -> Scenario:
-        """Access the scenario this modem is attached to.
-
-        Returns:
-            Scenario:
-                The referenced scenario.
-
-        Raises:
-            RuntimeError: If the modem is currently floating.
-        """
-
-        if self.__scenario is None:
-            raise RuntimeError("Error trying to access the scenario of a floating modem")
-
-        return self.__scenario
-
-    @scenario.setter
-    def scenario(self, scenario: Scenario) -> None:
-        """Attach the modem to a specific scenario.
-
-        This can only be done once to a floating modem.
+        The signal may be distorted by RF impairments.
 
         Args:
-            scenario (Scenario): The scenario this modem should be attached to.
-
-        Raises:
-            RuntimeError: If the modem is already attached to a scenario.
-        """
-
-        if self.__scenario is not None:
-            raise RuntimeError("Error trying to modify the scenario of an already attached modem")
-
-        self.__scenario = scenario
-
-    @property
-    def is_attached(self) -> bool:
-        """Is the modem currently attached to a scenario?
+            duration (float, optional): Length of signal in seconds.
 
         Returns:
-            bool: Attachment state.
+            transmissions (tuple):
+
+                signal (Signal):
+                    Signal model carrying the `data_bits` in multiple streams, each stream encoding multiple
+                    radio frequency band communication frames.
+
+                data_symbols (np.ndarray):
+                    Vector of symbols to which `data_bits` were mapped, used to modulate `signal`.
+
+                data_bits (np.ndarray):
+                    Vector of bits mapped to `data_symbols`.
         """
 
-        return self.__scenario is not None
+        # By default, the drop duration will be exactly one frame
+        if duration <= 0.:
+            duration = self.frame_duration
 
-    @property
-    @abstractmethod
-    def index(self) -> int:
-        """The index of this modem in the scenario.
+        # Number of data symbols per transmitted frame
+        symbols_per_frame = self.waveform_generator.symbols_per_frame
 
-        Returns:
-            int:
-                The index.
-        """
+        # Number of frames fitting into the selected drop duration
+        frames_per_stream = int(duration / self.waveform_generator.frame_duration)
 
-        pass
+        # Generate data bits
+        data_bits = self.generate_data_bits()
 
-    @property
-    @abstractmethod
-    def paired_modems(self) -> List[Modem]:
-        """The modems connected to this modem over an active channel.
+        # Number of code bits required to generate all frames for all streams
+        num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream / self.precoding.rate)
 
-        Returns:
-            List[Modem]:
-                A list of paired modems.
-        """
+        # Encode the data bits
+        code_bits = self.encoder_manager.encode(data_bits, num_code_bits)
 
-        pass
+        # Map data bits to symbols
+        symbols = self.waveform_generator.map(code_bits)
 
-    @property
-    def random_generator(self) -> rnd.Generator:
-        """Access the random number generator assigned to this modem.
+        # Apply symbol precoding
+        symbol_streams = self.precoding.encode(symbols)
 
-        This property will return the scenarios random generator if no random generator has been specifically set.
+        # Check that the number of symbol streams matches the number of required symbol streams
+        if symbol_streams.shape[0] != self.num_streams:
+            raise RuntimeError("Invalid precoding configuration, the number of resulting streams does not "
+                               "match the number of transmit antennas")
 
-        Returns:
-            numpy.random.Generator: The random generator.
+        # Generate a dedicated base-band signal for each symbol stream
+        signal = Signal(np.empty((0, 0), dtype=complex),
+                        self.waveform_generator.sampling_rate,
+                        self.device.carrier_frequency)
 
-        Raises:
-            RuntimeError: If trying to access the random generator of a floating modem.
-        """
+        for stream_idx, stream_symbols in enumerate(symbol_streams):
 
-        if self.__random_generator is not None:
-            return self.__random_generator
+            stream_signal = Signal(np.empty((0, 0), dtype=complex),
+                                   self.waveform_generator.sampling_rate,
+                                   self.device.carrier_frequency)
 
-        if self.__scenario is None:
-            raise RuntimeError("Trying to access the random generator of a floating modem")
+            for frame_idx in range(frames_per_stream):
 
-        return self.__scenario.random_generator
+                data_symbols = stream_symbols[frame_idx*symbols_per_frame:(1+frame_idx)*symbols_per_frame]
 
-    @random_generator.setter
-    def random_generator(self, generator: Optional[rnd.Generator]) -> None:
-        """Modify the configured random number generator assigned to this modem.
+                frame_signal = self.waveform_generator.modulate(data_symbols)
+                stream_signal.append_samples(frame_signal)
 
-        Args:
-            generator (Optional[numpy.random.generator]): The random generator. None if not specified.
-        """
+            signal.append_streams(stream_signal)
 
-        self.__random_generator = generator
+        # Apply stream coding, for instance beam-forming
+        # TODO: Not yet supported.
 
-    @property
-    def position(self) -> np.ndarray:
-        """Access the modem's position.
+        # Transmit signal over the occupied device slot (if the modem is attached to a device)
+        if self._transmitter.attached:
+            self._transmitter.slot.add_transmission(self._transmitter, signal)
 
-        Returns:
-            np.array:
-                The modem position in xyz-coordinates.
-        """
+        # Simulate the radio-frequency chain
+        # signal.samples = self.rf_chain.send(signal.samples)
 
-        return self.__position
+        # Scale resulting signal by configured power factor
+        # signal.samples *= np.sqrt(self.power)
 
-    @position.setter
-    def position(self, position: np.ndarray) -> None:
-        """Update the modem's position.
+        # We're finally done, blow the fanfares, throw confetti, etc.
+        return signal, symbols, data_bits
 
-        Args:
-            position (np.array):
-                The modem's new position.
-
-        Raises:
-            ValueError: If `position` is not a vector with at most three entries.
-        """
-        
-        if position.ndim != 1:
-            raise ValueError("Modem position must be a vector")
-
-        if len(position) > 3:
-            raise ValueError("Modem position may have at most three dimensions")
-
-        # Make vector 3D if less dimensions have been supplied
-        if len(position) < 3:
-            position = np.append(position, np.zeros(3 - len(position), dtype=float))
-
-        self.__position = position
-
-    @property
-    def orientation(self) -> np.ndarray:
-        """Access the modem's orientation.
-
-        Returns:
-            np.array:
-                The modem orientation as a normalized quaternion.
-        """
-
-        return self.__orientation
-
-    @orientation.setter
-    def orientation(self, orientation: np.ndarray) -> None:
-        """Update the modem's orientation.
-
-        Args:
-            orientation(np.array):
-                The new modem orientation.
-
-        Raises:
-            ValueError: If `orientation` is not a vector with 3 entries.
-        """
-
-        if orientation.ndim != 1 or len(orientation) != 3:
-            raise ValueError("Modem orientation must be a three-dimensional vector")
-
-        self.__orientation = orientation
-
-    @property
-    def topology(self) -> np.ndarray:
-        """Access the configured sensor array topology.
-
-        Returns:
-            np.ndarray:
-                A matrix of m x 3 entries describing the sensor array topology.
-                Each row represents the xyz-location of a single antenna within an array of m antennas.
-        """
-
-        return self.__topology
-
-    @topology.setter
-    def topology(self, topology: np.ndarray) -> None:
-        """Update the configured sensor array topology.
-
-        Args:
-            topology (np.ndarray):
-                A matrix of m x 3 entries describing the sensor array topology.
-                Each row represents the xyz-location of a single antenna within an array of m antennas.
-
-        Raises:
-            ValueError:
-                If the first dimension `topology` is smaller than 1 or its second dimension is larger than 3.
-        """
-
-        if topology.ndim > 2:
-            raise ValueError("The topology array must be of dimension 2")
-
-        # If the topology is one-dimensional, we assume a ULA and therefore simply expand the second dimension
-        if topology.ndim == 1:
-            topology = topology.T[:, np.newaxis]
-
-        if topology.shape[0] < 1:
-            raise ValueError("The topology must contain at least one sensor")
-
-        if topology.shape[1] > 3:
-            raise ValueError("Second topology dimension may contain at most 3 fields (xyz)")
-
-        # The second dimension may have less than 3 entries, in this case we expand by zeros
-        if topology.shape[1] < 3:
-            topology = np.append(topology, np.zeros((topology.shape[0], 3-topology.shape[1]), dtype=float), axis=1)
-
-        self.__topology = topology
-
-        # Automatically detect linearity in default configurations, where all sensor elements
-        # are oriented along the local x-axis.
-        axis_sums = np.sum(self.__topology, axis=0)
-        self.__linear_topology = ((axis_sums[1] + axis_sums[2]) < 1e-10)
-
-    @property
-    def linear_topology(self) -> bool:
-        """Access the configured linearity flag.
-
-        Returns:
-            bool:
-                A boolean flag indicating whether this array is considered to be one-dimensional.
-        """
-
-        return self.__linear_topology
-
-    @property
-    def num_antennas(self) -> int:
-        """The number of physical antennas available to the modem.
-
-        For a transmitter this represents the number of transmitting antennas,
-        or a receiver the respective receiving ones
-
-        Returns:
-            int:
-                The number of physical antennas available to the modem.
-        """
-
-        return self.__topology.shape[0]
+#    def receive(self, rf_signals: Union[List[Signal], Signal],
+#                noise_variance: float = 0.0) -> Signal:
+#        """Receive and down-mix radio-frequency-band signals to base-band signals over the receiver's hardware chain.
+#
+#        Args:
+#
+#            rf_signals (Union[List[Signal], Signal]):
+#                List containing radio-frequency band signal models impinging onto the receiver
+#
+#            noise_variance (float, optional):
+#                Variance (i.e. power) of the thermal noise added to the signals during reception.
+#
+#        Returns:
+#
+#            Signal:
+#                A superposition of all `rf_signals` mixed to the base-band, distorted by noise and
+#                hardware-effects.
+#
+#        Raises:
+#
+#            ValueError:
+#                If the first dimension of each rf signal does not match the number of receive antennas.
+#                If `noise_variance` is smaller than zero.
+#        """
+#
+#        baseband_signal = Signal.empty(self.waveform_generator.sampling_rate,
+#                                       carrier_frequency=self.carrier_frequency,
+#                                       num_streams=self.num_antennas)
+#
+#        # Down-mix each rf-band signal to base-band and superimpose them at the receiver-side
+#        if isinstance(rf_signals, Signal):
+#            baseband_signal.superimpose(rf_signals)
+#
+#        else:
+#            for rf_signal in rf_signals:
+#                baseband_signal.superimpose(rf_signal)
+#
+#        # Scale resulting signal to unit power (relative to the configured transmitter reference)
+#        baseband_signal.samples /= np.sqrt(self.received_power)
+#
+#        # Add receive noise
+#        noisy_signal = baseband_signal.copy()
+#        noisy_signal.samples = self.__noise.add_noise(baseband_signal.samples, noise_variance)
+#
+#        # Simulate the radio-frequency chain
+#        received_signal = noisy_signal.copy()
+#        received_signal.samples = self.rf_chain.receive(received_signal.samples)
+#
+#        # Return resulting base-band superposition
+#        return received_signal
 
     @property
     def num_streams(self) -> int:
@@ -373,7 +247,24 @@ class Modem(Transmitter, Receiver):
         """
 
         # For now, stream compression will not be supported
-        return self.num_antennas
+        return self.device.num_antennas
+
+    @property
+    def bits_source(self) -> BitsSource:
+        """Source of bits transmitted over the modem.
+
+        Returns:
+            bits_source (BitsSource): Handle to the bits source.
+        """
+
+        return self.__bits_source
+
+    @bits_source.setter
+    def bits_source(self, value: BitsSource) -> None:
+        """Set the source of bits transmitted over the modem"""
+
+        self.__bits_source = value
+        self.__bits_source.random_mother = self
 
     @property
     def encoder_manager(self) -> EncoderManager:
@@ -400,7 +291,7 @@ class Modem(Transmitter, Receiver):
 
     @property
     def waveform_generator(self) -> WaveformGenerator:
-        """Access the modem's configured waveform generator.
+        """Communication waveform emitted by this modem.
 
         Returns:
             WaveformGenerator:
@@ -410,18 +301,13 @@ class Modem(Transmitter, Receiver):
         return self.__waveform_generator
 
     @waveform_generator.setter
-    def waveform_generator(self, waveform_generator: WaveformGenerator) -> None:
-        """Configure the modem's waveform generator.
+    def waveform_generator(self, value: Optional[WaveformGenerator]) -> None:
+        """Set the communication waveform emitted by this modem."""
 
-        This modifies the referenced modem within the `waveform_generator` to this modem!
+        self.__waveform_generator = value
 
-        Args:
-            waveform_generator (WaveformGenerator):
-                The new waveform generator instance.
-        """
-
-        self.__waveform_generator = waveform_generator
-        self.__waveform_generator.modem = self
+        if value is not None:
+            value.modem = self
 
     @property
     def precoding(self) -> SymbolPrecoding:
@@ -456,13 +342,51 @@ class Modem(Transmitter, Receiver):
         return self.encoder_manager.required_num_data_bits(num_code_bits)
 
     @property
-    @abstractmethod
-    def reference_channel(self) -> Channel:
-        """Reference channel from the scenario channel matrix.
+    def frame_duration(self) -> float:
 
-        By default the first channel within the matrix.
+        return self.waveform_generator.frame_duration
+
+    @property
+    def sampling_rate(self) -> float:
+
+        return self.waveform_generator.sampling_rate
+
+    def generate_data_bits(self) -> np.ndarray:
+        """Generate data bits required to build a single transmit data frame for this modem.
 
         Returns:
-            Channel: The reference channel.
+            numpy.ndarray: A vector of hard data bits in 0/1 format.
         """
-        ...
+
+        num_bits = int(self.num_data_bits_per_frame / self.precoding.rate)
+        bits = self.bits_source.generate_bits(num_bits)
+        return bits
+
+    @classmethod
+    def to_yaml(cls: Type[Modem], representer: SafeRepresenter, node: Modem) -> MappingNode:
+        """Serialize a modem object to YAML.
+
+        Args:
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Modem):
+                The modem instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node.
+        """
+
+        serialization = {
+            "carrier_frequency": node.__carrier_frequency,
+            "tx_power": node.__power,
+            EncoderManager.yaml_tag: node.__encoder_manager,
+            SymbolPrecoding.yaml_tag: node.__precoding,
+        }
+
+        if node.waveform_generator is not None:
+            serialization[node.waveform_generator.yaml_tag] = node.waveform_generator
+
+        return representer.represent_mapping(cls.yaml_tag, serialization)

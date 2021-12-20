@@ -12,8 +12,9 @@ import numpy as np
 from scipy.constants import speed_of_light
 
 from hermespy.core import Device, FloatingError
-from .scenario import Scenario
-from .rf_chain import RfChain
+from hermespy.core.scenario import Scenario
+from hermespy.signal import Signal
+from .rf_chain.rf_chain import RfChain
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -31,17 +32,19 @@ class SimulatedDevice(Device):
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
     """
 
-    __slots__ = ['__scenario', 'rf_chain']
+    __slots__ = ['__scenario', 'rf_chain', '__sampling_rate']
 
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
     __scenario: Optional[Scenario]          # Scenario this device is attached to
+    __sampling_rate: Optional[float]        # Sampling rate at which this device operate
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
                  num_antennas: Optional[int] = None,
                  rf_chain: Optional[RfChain] = None,
+                 sampling_rate: Optional[float] = None,
                  *args,
                  **kwargs) -> None:
         """
@@ -59,6 +62,10 @@ class SimulatedDevice(Device):
             rf_chain (RfChain, optional):
                 Model of the device's radio frequency amplification chain.
 
+            sampling_rate (float, optional):
+                Sampling rate at which this device operates.
+                By default, the sampling rate of the first operator is assumed.
+
             *args:
                 Device base class initialization parameters.
 
@@ -71,6 +78,7 @@ class SimulatedDevice(Device):
 
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
+        self.sampling_rate = sampling_rate
 
         # If num_antennas is configured initialize the modem as a Uniform Linear Array
         # with half wavelength element spacing
@@ -122,3 +130,51 @@ class SimulatedDevice(Device):
         """
 
         return self.__scenario is not None
+
+    @property
+    def sampling_rate(self) -> float:
+        """Sampling rate at which the device's analog-to-digital converters operate.
+
+        Returns:
+            sampling_rate (float): Sampling rate in Hz.
+
+        Raises:
+            ValueError: If the sampling rate is not greater than zero.
+            RuntimeError: If the sampling rate could not be inferred.
+        """
+
+        if self.__sampling_rate is not None:
+            return self.__sampling_rate
+
+        if self.transmitters.num_operators > 0:
+            return self.transmitters[0].sampling_rate
+
+        if self.receivers.num_operators > 0:
+            return self.receivers[0].sampling_rate
+
+        raise RuntimeError("Simulated device's sampling rate is not defined")
+
+    @sampling_rate.setter
+    def sampling_rate(self, value: Optional[float]) -> None:
+        """Set the sampling rate at which the device's analog-to-digital converters operate."""
+
+        if value is None:
+            self.__sampling_rate = None
+            return
+
+        if value <= 0.:
+            raise ValueError("Sampling rate must be greater than zero")
+
+        self.__sampling_rate = value
+
+    def transmit(self,
+                 clear_cache: bool = True) -> Signal:
+
+        # Capture transmitted signal
+        transmitted_signal = Device.transmit(self, clear_cache)
+
+        # Simulate rf-chain
+        rf_signal = self.rf_chain.transmit(transmitted_signal)
+
+        # Return result
+        return rf_signal
