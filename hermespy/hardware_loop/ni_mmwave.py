@@ -10,6 +10,7 @@ import mmw.mmw as mmw
 from hermespy.signal import Signal
 from .physical_device import PhysicalDevice
 
+
 class NiMmWaveDevice(PhysicalDevice):
 
     __driver: mmw.ni_mmw
