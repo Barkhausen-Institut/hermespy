@@ -12,6 +12,7 @@ from typing import Any, Generic, List, Optional, Tuple, TypeVar
 
 import numpy as np
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.signal import Signal
 from hermespy.core.random_node import RandomNode
 
@@ -161,6 +162,10 @@ SecondSlotType = TypeVar('SecondSlotType', bound='OperatorSlot')
 class Receiver(RandomNode, Operator['ReceiverSlot']):
     """Operator receiving from a device."""
 
+    __reference_transmitter: Optional[Transmitter]
+    __signal: Optional[Signal]
+    __csi: Optional[ChannelStateInformation]
+
     def __init__(self,
                  seed: Optional[int] = None,
                  *args,
@@ -182,6 +187,10 @@ class Receiver(RandomNode, Operator['ReceiverSlot']):
         RandomNode.__init__(self, seed=seed)
         Operator[ReceiverSlot].__init__(self, params=args)
 
+        self.__reference_transmitter = None
+        self.__signal = None
+        self.__csi = None
+
     @property
     @abstractmethod
     def sampling_rate(self) -> float:
@@ -193,6 +202,81 @@ class Receiver(RandomNode, Operator['ReceiverSlot']):
 
         Operator.slot.fset(self, value)
         self.random_mother = None if value is None else value.device
+
+    @property
+    def reference_transmitter(self) -> Optional[Transmitter]:
+        """Reference transmitter for this receiver.
+
+        Returns:
+
+            transmitter (Optional[Transmitter]):
+                Handle to this receiver's reference transmitter.
+                `None`, if no reference transmitter is specified.
+        """
+
+        return self.__reference_transmitter
+
+    @reference_transmitter.setter
+    def reference_transmitter(self, value: Optional[Transmitter]) -> None:
+        """Set reference transmitter for this receiver."""
+
+        self.__reference_transmitter = value
+
+    @abstractmethod
+    def receive(self) -> Tuple[Signal, Any, ...]:
+        """Receive a signal.
+
+        Pulls the required signal model and channel state information from the underlying device.
+
+        Returns:
+            Tuple[Signal, Any, ...]: Tuple of received signal as well as additional information.
+
+        Raises:
+            FloatingError:
+                If the transmitter is currently considered floating.
+        """
+        ...
+
+    @property
+    def signal(self) -> Optional[Signal]:
+        """Cached recently received signal model.
+
+        Returns:
+            signal (Optional[Signal]):
+                Signal model.
+                `None` if no signal model is cached.
+        """
+
+        return self.__signal
+
+    @property
+    def csi(self) -> Optional[ChannelStateInformation]:
+        """Cached recently received channel state information
+
+        Returns:
+            csi (Optional[ChannelStateInformation]):
+                Channel state information.
+                `None` if no state information is cached.
+        """
+
+        return self.__csi
+
+    def cache_reception(self,
+                        signal: Optional[Signal],
+                        csi: Optional[ChannelStateInformation]) -> None:
+        """Cache recent reception at this receiver.
+
+        Args:
+
+            signal (Optional[Signal]):
+                Recently received signal.
+
+            csi (Optional[ChannelStateInformation]):
+                Recently received channel state.
+        """
+
+        self.__signal = signal
+        self.__csi = csi
 
 
 class OperatorSlot(Generic[OperatorType]):
@@ -274,7 +358,7 @@ class OperatorSlot(Generic[OperatorType]):
         """Number of operators on this slot.
 
         Returns:
-            int: Number of oeprators.
+            int: Number of operators.
         """
 
         return len(self.__operators)
@@ -414,16 +498,13 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
                 signals.append(signal)
 
         if clear_cache:
-            self.__signals = [None for _ in self.__operators]
+            self.__signals = [None for _ in self.__iter__()]
 
         return signals
 
 
 class ReceiverSlot(OperatorSlot[Receiver]):
     """Slot for receiving operators within devices."""
-
-    __slots__ = ['__signals']
-    __signals: List[Optional[Signal]]  # Recently received signals
 
     def __init__(self, *args, **kwargs) -> None:
         """
@@ -435,16 +516,22 @@ class ReceiverSlot(OperatorSlot[Receiver]):
                 OperatorSlot base class initialization parameters.
         """
 
-        self.__signals = []
-
         # Init base class
         OperatorSlot.__init__(self, *args, **kwargs)
 
-    def add(self,
-            operator: Receiver) -> None:
+    def get_receptions(self,
+                       clear_cache: bool = True) -> List[Tuple[Signal, ChannelStateInformation]]:
+        """Get recent receptions."""
 
-        self.__signals.append(None)
-        OperatorSlot[Receiver].add(self, operator)
+        receptions: List[Tuple[Signal, ChannelStateInformation]] = []
+        for receiver in self.__operators:
+
+            receptions.append((receiver.signal, receiver.csi))
+
+            if clear_cache:
+                receiver.cache_reception(None, None)
+
+        return receptions
 
 
 class UnsupportedSlot(OperatorSlot):
@@ -780,6 +867,15 @@ class DuplexReceiver(Receiver):
 
         return self.__duplex_operator.frame_duration
 
+    @property
+    def reference_transmitter(self) -> Optional[Transmitter]:
+
+        return self.__duplex_operator.reference_transmitter
+
+    def receive(self) -> Tuple[Any, ...]:
+
+        return self.__duplex_operator.receive()
+
 
 class DuplexOperator(object):
     """Operator binding to both transmit and receive slots of any device."""
@@ -787,12 +883,14 @@ class DuplexOperator(object):
     _transmitter: DuplexTransmitter
     _receiver: DuplexReceiver
     __device: Optional[Device]
+    __reference_transmitter: Optional[Transmitter]
 
     def __init__(self):
 
         self.__device = None
         self._transmitter = DuplexTransmitter(self)
         self._receiver = DuplexReceiver(self)
+        self.reference_transmitter = None
 
     @property
     def device(self) -> Optional[Device]:
@@ -822,8 +920,34 @@ class DuplexOperator(object):
             self._transmitter.slot = value.transmitters
             self._receiver.slot = value.receivers
 
+    @property
+    def reference_transmitter(self) -> Transmitter:
+        """Reference transmitter for this duplex operator.
+
+        Returns:
+
+            transmitter (Transmitter]):
+                Handle to this receiver's reference transmitter.
+                By default, returns the duplex's transmit operator.
+        """
+
+        if self.__reference_transmitter is None:
+            return self._transmitter
+
+        return self.__reference_transmitter
+
+    @reference_transmitter.setter
+    def reference_transmitter(self, value: Optional[Transmitter]) -> None:
+        """Set reference transmitter for this duplex operator."""
+
+        self.__reference_transmitter = value
+
     @abstractmethod
     def transmit(self, duration: float = 0.) -> Tuple[Any, ...]:
+        ...
+
+    @abstractmethod
+    def receive(self) -> Tuple[Any, ...]:
         ...
 
     @property
