@@ -173,12 +173,17 @@ class RfChain:
 
         return eta_alpha * x + eta_beta * np.conj(x)
 
-    def receive(self, input_signal: np.ndarray) -> np.ndarray:
+    def receive(self, input_signal: Signal) -> Signal:
         """Returns the distorted version of signal in "input_signal".
 
         According to reception impairments.
         """
-        input_signal = self.add_iq_imbalance(input_signal)
+
+        input_signal = input_signal.copy()
+
+        # Simulate IQ imbalance
+        input_signal.samples = self.add_iq_imbalance(input_signal.samples)
+
         return input_signal
 
     @property

@@ -6,11 +6,12 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 from scipy.constants import speed_of_light
 
+from hermespy.channel import ChannelStateInformation
 from hermespy.core import Device, FloatingError
 from hermespy.core.scenario import Scenario
 from hermespy.signal import Signal
@@ -178,3 +179,43 @@ class SimulatedDevice(Device):
 
         # Return result
         return rf_signal
+
+    def receive(self, signals: List[Tuple[Signal, ChannelStateInformation]]) -> Signal:
+        """Receive signals at this device.
+
+        Args:
+            signals (List[Tuple[Signal, ChannelStateInformation]]):
+                List of signal models arriving at the device.
+
+        Returns:
+            baseband_signal (Signal):
+                Baseband signal sampled after hardware-modeling.
+        """
+
+        # Mix arriving signals
+        mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
+                                    num_samples=0, carrier_frequency=self.carrier_frequency)
+
+        for signal, _ in signals:
+            mixed_signal.superimpose(signal)
+
+        # Model radio-frequency chain during transmission
+        baseband_signal = self.rf_chain.receive(mixed_signal)
+
+        # Cache received signal at receiver slots
+        for receiver in self.receivers:
+
+            # Collect the reference channel if a reference transmitter has been specified
+            if receiver.reference_transmitter is not None:
+
+                reference_device = receiver.reference_transmitter.device
+                reference_idx = self.scenario.devices.index(reference_device)
+                reference_csi = signals[reference_idx][1]
+
+            else:
+                reference_csi = None
+
+            # Cache reception
+            receiver.cache_reception(baseband_signal, reference_csi)
+
+        return baseband_signal

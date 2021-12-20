@@ -6,13 +6,15 @@ Modem
 """
 
 from __future__ import annotations
-from typing import Any, Tuple, Type, Optional
+from typing import Any, List, Tuple, Type, Optional
+from math import floor
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 
+from hermespy.channel import ChannelStateDimension, ChannelStateInformation
 from hermespy.coding import EncoderManager
-from hermespy.core import Device, DuplexOperator, RandomNode
+from hermespy.core import DuplexOperator, RandomNode
 from hermespy.precoding import SymbolPrecoding
 from hermespy.signal import Signal
 from .bits_source import BitsSource, RandomBitsSource
@@ -184,56 +186,78 @@ class Modem(RandomNode, DuplexOperator):
         # We're finally done, blow the fanfares, throw confetti, etc.
         return signal, symbols, data_bits
 
-#    def receive(self, rf_signals: Union[List[Signal], Signal],
-#                noise_variance: float = 0.0) -> Signal:
-#        """Receive and down-mix radio-frequency-band signals to base-band signals over the receiver's hardware chain.
-#
-#        Args:
-#
-#            rf_signals (Union[List[Signal], Signal]):
-#                List containing radio-frequency band signal models impinging onto the receiver
-#
-#            noise_variance (float, optional):
-#                Variance (i.e. power) of the thermal noise added to the signals during reception.
-#
-#        Returns:
-#
-#            Signal:
-#                A superposition of all `rf_signals` mixed to the base-band, distorted by noise and
-#                hardware-effects.
-#
-#        Raises:
-#
-#            ValueError:
-#                If the first dimension of each rf signal does not match the number of receive antennas.
-#                If `noise_variance` is smaller than zero.
-#        """
-#
-#        baseband_signal = Signal.empty(self.waveform_generator.sampling_rate,
-#                                       carrier_frequency=self.carrier_frequency,
-#                                       num_streams=self.num_antennas)
-#
-#        # Down-mix each rf-band signal to base-band and superimpose them at the receiver-side
-#        if isinstance(rf_signals, Signal):
-#            baseband_signal.superimpose(rf_signals)
-#
-#        else:
-#            for rf_signal in rf_signals:
-#                baseband_signal.superimpose(rf_signal)
-#
-#        # Scale resulting signal to unit power (relative to the configured transmitter reference)
-#        baseband_signal.samples /= np.sqrt(self.received_power)
-#
-#        # Add receive noise
-#        noisy_signal = baseband_signal.copy()
-#        noisy_signal.samples = self.__noise.add_noise(baseband_signal.samples, noise_variance)
-#
-#        # Simulate the radio-frequency chain
-#        received_signal = noisy_signal.copy()
-#        received_signal.samples = self.rf_chain.receive(received_signal.samples)
-#
-#        # Return resulting base-band superposition
-#        return received_signal
+    def receive(self) -> Tuple[Any, ...]:
+
+        signal = self._receiver.signal
+        csi = self._receiver.csi
+
+        if csi is None:
+            csi = ChannelStateInformation.Ideal(signal.num_samples)
+
+        # Pull signal and channel state from the registered device slot
+        noise = 0.  # ToDo: Re-implement noise
+
+        num_samples = signal.num_samples
+
+        # Number of frames within the received samples
+        frames_per_stream = int(floor(num_samples / self.waveform_generator.samples_in_frame))
+
+        # Number of code bits required to generate all frames for all streams
+        num_code_bits = int(self.waveform_generator.bits_per_frame * frames_per_stream / self.precoding.rate)
+
+        # Data bits required by the bit encoder to generate the input bits for the waveform generator
+        num_data_bits = self.encoder_manager.required_num_data_bits(num_code_bits)
+
+        # Apply stream decoding, for instance beam-forming
+        # TODO: Not yet supported.
+
+        # Synchronize all streams into frames
+        frames: List[List[Tuple[np.ndarray, ChannelStateInformation]]] = []
+        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(signal.samples,
+                                                                       csi.received_streams())):
+
+            frame = self.waveform_generator.synchronization.synchronize(rx_signal, stream_transform)
+            frames.append(frame)
+
+        frames = np.array(frames, dtype=object)
+
+        # Demodulate the parallel frames arriving at each stream,
+        # then decode the (inverse) precoding over all stream frames
+        decoded_symbols = np.empty(0, dtype=complex)
+        for frame_streams in frames.transpose(1, 0, 2):
+
+            # Demodulate each frame separately
+            symbols: List[np.ndarray] = []
+            channel_states: List[ChannelStateInformation] = []
+            noises: List[np.ndarray] = []
+
+            for stream in frame_streams:
+
+                # Demodulate the frame into data symbols
+                s_symbols, s_channel_state, s_noise = self.waveform_generator.demodulate(*stream, noise)
+
+                symbols.append(s_symbols)
+                channel_states.append(s_channel_state)
+                noises.append(s_noise)
+
+            frame_symbols = np.array(symbols, dtype=complex)
+            frame_channel_states = ChannelStateInformation.concatenate(channel_states,
+                                                                       ChannelStateDimension.RECEIVE_STREAMS)
+            frame_noises = np.array(noises, dtype=float)
+
+            decoded_frame_symbols = self.precoding.decode(frame_symbols,
+                                                          frame_channel_states,
+                                                          frame_noises)
+            decoded_symbols = np.append(decoded_symbols, decoded_frame_symbols)
+
+        # Map the symbols to code bits
+        code_bits = self.waveform_generator.unmap(decoded_symbols)
+
+        # Decode the coded bit stream to plain data bits
+        data_bits = self.encoder_manager.decode(code_bits, num_data_bits)
+
+        # We're finally done, blow the fanfares, throw confetti, etc.
+        return signal, decoded_symbols, data_bits
 
     @property
     def num_streams(self) -> int:
