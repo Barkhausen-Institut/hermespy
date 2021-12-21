@@ -59,7 +59,6 @@ class NiMmWaveDevice(PhysicalDevice):
 
         # Configure default parameters
         self.sampling_rate = 500000
-        self.carrier_frequency = 75e9
 
     @property
     def carrier_frequency(self) -> float:
