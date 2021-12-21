@@ -26,7 +26,7 @@ class HardwareLoop(Executable, Scenario[PhysicalDevice]):
     def __init__(self) -> None:
 
         Executable.__init__(self)
-        Scenario[PhysicalDevice].__init__(self)
+        Scenario.__init__(self)
 
     def run(self) -> None:
 

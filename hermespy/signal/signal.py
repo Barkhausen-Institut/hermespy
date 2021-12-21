@@ -436,3 +436,13 @@ class Signal:
             raise NotImplementedError("Resampling not yet implemented")
 
         self.__samples = np.append(self.__samples, signal.samples, axis=0)
+
+    @property
+    def duration(self) -> float:
+        """Signal model duration in time-domain.
+
+        Returns:
+            float: Duration in seconds.
+        """
+
+        return self.num_samples / self.sampling_rate
