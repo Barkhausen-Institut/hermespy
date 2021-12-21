@@ -3,7 +3,6 @@ from .factory import SerializableClasses, Factory
 from .executable import Executable, Verbosity
 from .scenario import Scenario
 from .device import Device, FloatingError
-from .hardware_loop import HardwareLoop
 from .random_node import RandomNode
 
 __author__ = "André Noll Barreto"

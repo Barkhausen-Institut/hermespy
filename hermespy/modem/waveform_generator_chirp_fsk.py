@@ -455,7 +455,7 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
             samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
             sample_idx += samples_in_chirp
 
-        return Signal(samples, self.sampling_rate, carrier_frequency=self.modem.carrier_frequency)
+        return Signal(samples, self.sampling_rate, carrier_frequency=self.modem.device.carrier_frequency)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
