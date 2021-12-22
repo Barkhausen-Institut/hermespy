@@ -4,7 +4,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import floor, sqrt
-from typing import Tuple, TYPE_CHECKING, Optional, Type, List
+from typing import Generic, Tuple, TYPE_CHECKING, Optional, Type, TypeVar, List
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
@@ -25,13 +25,16 @@ __email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Synchronization(ABC):
+WaveformType = TypeVar('WaveformType', bound='WaveformGenerator')
+
+
+class Synchronization(Generic[WaveformType], ABC):
     """Abstract base class for synchronization routines of waveform generators."""
 
-    __waveform_generator: Optional[WaveformGenerator]       # Waveform generator this routine is attached to
+    __waveform_generator: Optional[WaveformType]       # Waveform generator this routine is attached to
 
     def __init__(self,
-                 waveform_generator: Optional[WaveformGenerator] = None) -> None:
+                 waveform_generator: Optional[WaveformType] = None) -> None:
         """
         Args:
             waveform_generator (WaveformGenerator, optional):
@@ -41,18 +44,18 @@ class Synchronization(ABC):
         self.__waveform_generator = waveform_generator
 
     @property
-    def waveform_generator(self) -> Optional[WaveformGenerator]:
+    def waveform_generator(self) -> Optional[WaveformType]:
         """Waveform generator this synchronization routine is attached to.
 
         Returns:
-            Optional[WaveformGenerator]:
+            Optional[WaveformType]:
                 Handle to the waveform generator. None if the synchronization routine is floating.
         """
 
         return self.__waveform_generator
 
     @waveform_generator.setter
-    def waveform_generator(self, value: Optional[WaveformGenerator]) -> None:
+    def waveform_generator(self, value: Optional[WaveformType]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
         if self.__waveform_generator is not None:
