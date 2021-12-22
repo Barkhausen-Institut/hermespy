@@ -221,6 +221,11 @@ class Modem(RandomNode, DuplexOperator):
 
         frames = np.array(frames, dtype=object)
 
+        # Abort at this point if no frames have been detected
+        if frames.size < 1:
+            return signal, np.empty(0, dtype=complex), np.empty(0, dtype=complex)
+
+
         # Demodulate the parallel frames arriving at each stream,
         # then decode the (inverse) precoding over all stream frames
         decoded_symbols = np.empty(0, dtype=complex)

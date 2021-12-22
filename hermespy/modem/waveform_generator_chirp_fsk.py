@@ -20,8 +20,8 @@ __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.3"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -586,39 +586,20 @@ class WaveformGeneratorChirpFsk(WaveformGenerator):
         #    del self._pilot_samples
 
 
-class ChirpFskSynchronization(Synchronization):
+class ChirpFskSynchronization(Synchronization[WaveformGeneratorChirpFsk]):
     """Synchronization for chirp-based frequency shift keying communication waveforms."""
 
-    __waveform_generator: Optional[WaveformGeneratorChirpFsk]
-
     def __init__(self,
-                 waveform_generator: Optional[WaveformGenerator] = None,
+                 waveform_generator: Optional[WaveformGeneratorChirpFsk] = None,
                  *args: Any) -> None:
         """
         Args:
 
             waveform_generator (WaveformGenerator, optional):
                 The waveform generator this synchronization routine is attached to.
-
-            *args:
-                Synchronization base class initialization parameters.
         """
 
-        self.__waveform_generator = waveform_generator
-        Synchronization.__init__(self, *args)
-
-    @property
-    def waveform_generator(self) -> Optional[WaveformGeneratorChirpFsk]:
-
-        return self.__waveform_generator
-
-    @waveform_generator.setter
-    def waveform_generator(self, value: Optional[WaveformGeneratorChirpFsk]) -> None:
-
-        if self.__waveform_generator is not None:
-            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
-
-        self.__waveform_generator = value
+        Synchronization.__init__(self, waveform_generator)
 
 
 class ChirpFskCorrelationSynchronization(ChirpFskSynchronization):
