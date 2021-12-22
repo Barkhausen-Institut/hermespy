@@ -4,6 +4,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from math import ceil
+from typing import Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -446,3 +447,49 @@ class Signal:
         """
 
         return self.num_samples / self.sampling_rate
+
+    def to_interleaved(self,
+                       data_type: Type = np.int16,
+                       scale: bool = True) -> np.ndarray:
+        """Convert the complex-valued floating-point model samples to interleaved integers.
+
+        Args:
+
+            data_type (optional):
+                Numpy resulting data type.
+
+            scale (bool, optional):
+                Scale the floating point values to stretch over the whole range of integers.
+
+        Returns:
+            samples (np.ndarray):
+                Numpy array of interleaved samples.
+                Will contain double the samples in time-domain.
+        """
+
+        samples = self.__samples.copy()
+
+        # Scale samples if required
+        if scale and (samples.max() > 1.0 or samples.min() < 1.0):
+            samples /= max(abs(samples))
+
+        samples *= np.iinfo(data_type).max
+        return samples.view(np.float64).astype(data_type)
+
+    @classmethod
+    def from_interleaved(cls,
+                         interleaved_samples: np.ndarray,
+                         **kwargs) -> Signal:
+        """Initialize a signal model from interleaved samples.
+
+        Args:
+
+            interleaved_samples (np.ndarray):
+                Numpy array of interleaved samples.
+
+            **kwargs:
+                Additional class initialization arguments.
+        """
+
+        complex_samples = interleaved_samples.astype(np.float64).view(np.complex128)
+        return cls(samples=complex_samples, **kwargs)
