@@ -1,7 +1,0 @@
-hermespy.modem.tools.psk\_qam\_mapping module
-=============================================
-
-.. automodule:: hermespy.modem.tools.psk_qam_mapping
-   :members:
-   :undoc-members:
-   :show-inheritance:

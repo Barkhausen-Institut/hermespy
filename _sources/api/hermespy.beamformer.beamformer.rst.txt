@@ -1,7 +1,0 @@
-hermespy.beamformer.beamformer module
-=====================================
-
-.. automodule:: hermespy.beamformer.beamformer
-   :members:
-   :undoc-members:
-   :show-inheritance:

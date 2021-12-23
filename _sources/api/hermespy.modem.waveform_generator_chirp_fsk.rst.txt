@@ -1,7 +1,0 @@
-hermespy.modem.waveform\_generator\_chirp\_fsk module
-=====================================================
-
-.. automodule:: hermespy.modem.waveform_generator_chirp_fsk
-   :members:
-   :undoc-members:
-   :show-inheritance:

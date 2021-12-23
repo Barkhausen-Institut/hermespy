@@ -1,7 +1,0 @@
-hermespy.channel.multipath\_fading\_templates module
-====================================================
-
-.. automodule:: hermespy.channel.multipath_fading_templates
-   :members:
-   :undoc-members:
-   :show-inheritance:

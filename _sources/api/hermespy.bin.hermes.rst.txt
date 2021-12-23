@@ -1,7 +1,0 @@
-hermespy.bin.hermes module
-==========================
-
-.. automodule:: hermespy.bin.hermes
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="_static/dark_mode_js/default_dark.js"></script>
+        <script src="_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="HermesPy" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#modulation-and-coding">Modulation and Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#channel-and-interference-model">Channel and Interference Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rf-chain">RF Chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#statistics">Statistics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#known-limitations">Known Limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-plan">Release Plan</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>About</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="about">
+<h1>About<a class="headerlink" href="#about" title="Permalink to this headline"></a></h1>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline"></a></h2>
+<p>The current feature-set of HermesPy is steadily expanding and includes
+(new features in <strong>bold</strong>)</p>
+<div class="section" id="modulation-and-coding">
+<h3>Modulation and Coding<a class="headerlink" href="#modulation-and-coding" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Generic PSK/QAM/PAM modem with square pulses, (root)-raised-cosine filters or FMCW</p></li>
+<li><p>Linear equalizers for non-orthogonal FMCW pulses in AWGN</p></li>
+<li><p>LLR calculation for BPSK/QAM/16-/64-/256-QAM</p></li>
+<li><p>Chirp FSK</p></li>
+<li><p>Generic OFDM with arbitrary allocation of data and reference symbols in each resource element</p></li>
+<li><p>DFT-spread supported</p></li>
+<li><p><strong>Extended GFDM framework</strong></p></li>
+<li><p>Repetition and LDPC codes</p></li>
+<li><p><strong>Faster LDPC decoder</strong></p></li>
+<li><p><strong>3GPP-like scrambler</strong></p></li>
+<li><p><strong>Block interleaver</strong></p></li>
+<li><p><strong>CRC overhead</strong></p></li>
+<li><p>Transmit diversity (Alamouti) with 2 or 4 tx antennas</p></li>
+<li><p>Open-loop spatial multiplexing with linear receivers</p></li>
+<li><p>Receive diversity (SC or MRC)</p></li>
+<li><p><strong>Radar detection for FMCW</strong></p></li>
+<li><p><strong>Channel estimation for OFDM</strong></p></li>
+</ul>
+</div>
+<div class="section" id="channel-and-interference-model">
+<h3>Channel and Interference Model<a class="headerlink" href="#channel-and-interference-model" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading</p></li>
+<li><p>COST-259 macrocell model</p></li>
+<li><p>5G TDL model</p></li>
+<li><p>MIMO support with antenna correlation, following Kronecker model</p></li>
+<li><p>Interface to Quadriga channel model (requires Matlab or Octave)</p></li>
+<li><p>Interference among different modems, with arbitrary transmit powers for different transmitters</p></li>
+<li><p>Support for transmitters using different carrier frequencies and bandwidths</p></li>
+<li><p><strong>Single-target</strong> radar channel model</p></li>
+</ul>
+</div>
+<div class="section" id="rf-chain">
+<h3>RF Chain<a class="headerlink" href="#rf-chain" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Memoryless non linear power amplifier following an ideal clipper, Rapp’s, Saleh’s or any arbitrary AM/AM AM/PM responses</p></li>
+<li><p><strong>Random time offset</strong></p></li>
+<li><p><strong>I/Q imbalance</strong></p></li>
+</ul>
+</div>
+<div class="section" id="simulation">
+<h3>Simulation<a class="headerlink" href="#simulation" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p><strong>Installation as a Python library</strong></p></li>
+<li><p><strong>Greater modularity and standalone usage of simulator classes</strong></p></li>
+<li><p>Full configuration using <strong>YAML</strong> settings files</p></li>
+<li><p>Script for plotting different simulations in one graph</p></li>
+<li><p>Drops containing several frames</p></li>
+<li><p>Support for multiple transmitter and receivers</p></li>
+<li><p>User manual provided</p></li>
+</ul>
+</div>
+<div class="section" id="statistics">
+<h3>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>BER/FER statistics</p></li>
+<li><p>Confidence interval is calculated and may be considered as a stopping criterion</p></li>
+<li><p>Theoretical results available (depending on simulation scenario)</p></li>
+<li><p>Power spectral density and time-frequency analysis</p></li>
+<li><p><strong>Time-domain waveform plots</strong></p></li>
+<li><p><strong>Constellation plots</strong></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="known-limitations">
+<h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline"></a></h2>
+<p>The known limitations currently include</p>
+<ul class="simple">
+<li><p>No native simulation parallelization</p></li>
+</ul>
+</div>
+<div class="section" id="release-plan">
+<h2>Release Plan<a class="headerlink" href="#release-plan" title="Permalink to this headline"></a></h2>
+<p>Full releases with a new set of features will be provided on a half-yearly basis, with software patches in between.
+For the next release, the current plan is</p>
+<ul>
+<li><p><strong>Modulation and coding</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Radar Detection for FMCW and OFDM</p></li>
+<li><p>Beamforming</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>Channel and interference model</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Hardware in the Loop</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>RF chain</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Phase Noise</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="HermesPy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

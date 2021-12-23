@@ -1,7 +1,0 @@
-hermespy.noise.noise module
-===========================
-
-.. automodule:: hermespy.noise.noise
-   :members:
-   :undoc-members:
-   :show-inheritance:

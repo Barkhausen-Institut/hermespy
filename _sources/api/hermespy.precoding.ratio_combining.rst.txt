@@ -1,7 +1,0 @@
-hermespy.precoding.ratio\_combining module
-==========================================
-
-.. automodule:: hermespy.precoding.ratio_combining
-   :members:
-   :undoc-members:
-   :show-inheritance:

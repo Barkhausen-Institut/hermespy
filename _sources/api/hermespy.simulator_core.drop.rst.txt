@@ -1,7 +1,0 @@
-hermespy.simulator\_core.drop module
-====================================
-
-.. automodule:: hermespy.simulator_core.drop
-   :members:
-   :undoc-members:
-   :show-inheritance:

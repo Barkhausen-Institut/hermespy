@@ -1,7 +1,0 @@
-hermespy.coding.repetition\_encoder module
-==========================================
-
-.. automodule:: hermespy.coding.repetition_encoder
-   :members:
-   :undoc-members:
-   :show-inheritance:

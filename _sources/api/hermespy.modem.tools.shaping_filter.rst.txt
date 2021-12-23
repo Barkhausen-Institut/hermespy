@@ -1,7 +1,0 @@
-hermespy.modem.tools.shaping\_filter module
-===========================================
-
-.. automodule:: hermespy.modem.tools.shaping_filter
-   :members:
-   :undoc-members:
-   :show-inheritance:

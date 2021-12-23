@@ -1,7 +1,0 @@
-hermespy.channel.channel\_state\_information module
-===================================================
-
-.. automodule:: hermespy.channel.channel_state_information
-   :members:
-   :undoc-members:
-   :show-inheritance:

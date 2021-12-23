@@ -1,7 +1,0 @@
-hermespy.precoding.precoder\_dft module
-=======================================
-
-.. automodule:: hermespy.precoding.precoder_dft
-   :members:
-   :undoc-members:
-   :show-inheritance:

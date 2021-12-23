@@ -1,7 +1,0 @@
-hermespy.modem.waveform\_generator\_psk\_qam module
-===================================================
-
-.. automodule:: hermespy.modem.waveform_generator_psk_qam
-   :members:
-   :undoc-members:
-   :show-inheritance:

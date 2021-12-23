@@ -1,7 +1,0 @@
-hermespy.channel.quadriga\_interface module
-===========================================
-
-.. automodule:: hermespy.channel.quadriga_interface
-   :members:
-   :undoc-members:
-   :show-inheritance:

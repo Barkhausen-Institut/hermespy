@@ -1,7 +1,0 @@
-hermespy.modem.modem module
-===========================
-
-.. automodule:: hermespy.modem.modem
-   :members:
-   :undoc-members:
-   :show-inheritance:

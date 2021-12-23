@@ -1,7 +1,0 @@
-hermespy.modem.transmitter module
-=================================
-
-.. automodule:: hermespy.modem.transmitter
-   :members:
-   :undoc-members:
-   :show-inheritance:

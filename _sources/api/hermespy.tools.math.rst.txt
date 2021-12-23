@@ -1,7 +1,0 @@
-hermespy.tools.math module
-==========================
-
-.. automodule:: hermespy.tools.math
-   :members:
-   :undoc-members:
-   :show-inheritance:

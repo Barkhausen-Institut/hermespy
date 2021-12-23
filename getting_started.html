@@ -6,7 +6,7 @@
   <title>Getting Started &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/dark.css" type="text/css" />
@@ -25,7 +25,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="hermespy" href="api/modules.html" />
+    <link rel="next" title="References" href="references.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -37,7 +37,7 @@
             <a href="index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.3
+                0.2.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -48,7 +48,8 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#hermespy-architecture">HermesPy Architecture</a></li>
@@ -60,7 +61,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#command-line-tool">Command Line Tool</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">hermespy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
 
         </div>
@@ -134,22 +136,22 @@ flowchart TD
          MAPRX --&gt; BCRX(Bit-Decoding)
 
    end
-        </div><p>Each HermesPy <a class="reference internal" href="api/hermespy.scenario.scenario.html"><span class="doc">Scenario</span></a> consists of multiple links
-between <a class="reference internal" href="api/hermespy.modem.transmitter.html"><span class="doc">Transmitters</span></a>
-and <a class="reference internal" href="api/hermespy.modem.receiver.html"><span class="doc">Receivers</span></a>, which are both <a class="reference internal" href="api/hermespy.modem.modem.html"><span class="doc">Modems</span></a>.
-Transmitters feed <a class="reference internal" href="api/hermespy.signal.signal.html"><span class="doc">Signal</span></a> models of electromagnetic waves
-into a wireless transmission <a class="reference internal" href="api/hermespy.channel.channel.html"><span class="doc">Channel</span></a>.
+        </div><p>Each HermesPy <span class="xref std std-doc">Scenario</span> consists of multiple links
+between <span class="xref std std-doc">Transmitters</span>
+and <span class="xref std std-doc">Receivers</span>, which are both <span class="xref std std-doc">Modems</span>.
+Transmitters feed <span class="xref std std-doc">Signal</span> models of electromagnetic waves
+into a wireless transmission <span class="xref std std-doc">Channel</span>.
 After propagation over said channel, receivers subsequently pick up the distorted signals.</p>
 <p>Both transmitters and receivers perform a sequence of processing steps in order to
 exchange information represented by binary bit-streams:</p>
 <ol class="arabic simple">
-<li><p><a class="reference internal" href="api/hermespy.source.bits_source.html"><span class="doc">BitsSource</span></a> <em>(transmitters only)</em> <br>
+<li><p><span class="xref std std-doc">BitsSource</span> <em>(transmitters only)</em> <br>
 Generate a sequence of bits to be transmitted.</p></li>
-<li><p><a class="reference internal" href="api/hermespy.coding.encoder_manager.html"><span class="doc">Bit-Encoding</span></a> <br>
+<li><p><span class="xref std std-doc">Bit-Encoding</span> <br>
 Perform operations on the bit-sequence to add redundancy and correct errors.</p></li>
-<li><p><a class="reference internal" href="api/hermespy.modem.waveform_generator.html"><span class="doc">Waveform-Generation</span></a> <br>
+<li><p><span class="xref std std-doc">Waveform-Generation</span> <br>
 Map bits to communication symbols, modulate the symbols to electromagnetic baseband-signals.</p></li>
-<li><p><a class="reference internal" href="api/hermespy.modem.rf_chain.html"><span class="doc">Radio-Frequency Chain</span></a> <br>
+<li><p><span class="xref std std-doc">Radio-Frequency Chain</span> <br>
 Mix and amplify the baseband-signals to radio-frequency-band signals.</p></li>
 </ol>
 <p>Note that receivers perform the inverse processing steps in reverse order.</p>
@@ -181,9 +183,9 @@ transmitted by a PSK/QAM modem:</p>
 <li><p>Initially, the required Python modules are imported <em>(lines 1-3)</em>.</p></li>
 <li><p>A new transmitter modem handle is created <em>(line 5)</em>.</p></li>
 <li><p>The waveform to be generated by the transmitter is configured by assigning a specific
-<a class="reference internal" href="api/hermespy.modem.waveform_generator.html"><span class="doc">Waveform Generator</span></a> instance to the transmitter’s
+<span class="xref std std-doc">Waveform Generator</span> instance to the transmitter’s
 waveform_generator property <em>(line 6)</em>. <br>
-In our case, this is an instance of a <a class="reference internal" href="api/hermespy.modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a>
+In our case, this is an instance of a <span class="xref std std-doc">PKS/QAM</span>
 waveform generator.</p></li>
 <li><p>The transmitter is inserted into an empty simulation scenario <em>(lines 8-9)</em></p></li>
 <li><p>An electromagnetic waveform, encoding a single communication frame, emitted by the transmitter
@@ -199,10 +201,10 @@ Instances of those classes are assigned to property slots, where they will be ex
 during signal simulation.
 Changing the waveform generated by the transmitter defined in the previous snippet
 is therefore as simple as assigning a different type of
-<a class="reference internal" href="api/hermespy.modem.waveform_generator.html"><span class="doc">Waveform Generator</span></a>
+<span class="xref std std-doc">Waveform Generator</span>
 to its waveform_generator property slot.</p>
 <p>Of course, a multitude of parameters can be configured to customize the behaviour of each processing step.
-For instance, the frame generated by a <a class="reference internal" href="api/hermespy.modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a> waveform
+For instance, the frame generated by a <span class="xref std std-doc">PKS/QAM</span> waveform
 generator features a preamble of multiple reference symbols at the beginning of the communication frame.
 They may be removed by specifying the respective property</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span><span class="o">.</span><span class="n">num_preamble_symbols</span> <span class="o">=</span> <span class="mi">0</span>
@@ -244,7 +246,7 @@ into symbols, and subsequently mapped to bits.</p>
 <div class="section" id="simulations">
 <h3>Simulations<a class="headerlink" href="#simulations" title="Permalink to this headline"></a></h3>
 <p>Evaluating multiple transmissions in scenarios featuring several modems can become quite tedious,
-which is why HermesPy offers the <a class="reference internal" href="api/hermespy.simulator_core.simulation.html"><span class="doc">Simulation</span></a> helper class.
+which is why HermesPy offers the <span class="xref std std-doc">Simulation</span> helper class.
 Considering the same scenario as before, the following snippet demonstrates how
 a single communication drop at 40dB signal-to-noise ratio can be generated:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -272,10 +274,10 @@ a single communication drop at 40dB signal-to-noise ratio can be generated:</p>
 </pre></div>
 </div>
 <p>Note that lines <em>5-16</em> are identical to the previous snippet, defining a scenario with a single receiver
-and transmitter modem emitting <a class="reference internal" href="api/hermespy.modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a> waveforms.
-However, the scenario is now being managed by the <a class="reference internal" href="api/hermespy.simulator_core.simulation.html"><span class="doc">Simulation</span></a> helper.
+and transmitter modem emitting <span class="xref std std-doc">PKS/QAM</span> waveforms.
+However, the scenario is now being managed by the <span class="xref std std-doc">Simulation</span> helper.
 It generates and visualizes a single information exchange between all scenario modems <em>(lines 18)</em>.
-In HermesPy, this is referred to as a <a class="reference internal" href="api/hermespy.simulator_core.drop.html"><span class="doc">Drop</span></a>.
+In HermesPy, this is referred to as a <span class="xref std std-doc">Drop</span>.
 Visualizing the received symbols <em>(line 19)</em> and bit errors <em>(line 20)</em> during transmission
 results in the following constellation and bit error plots:</p>
 <table class="docutils align-default">
@@ -331,7 +333,7 @@ and provides some reference examples to get new users accustomed with the proces
 <p>Once HermesPy is installed within any python environment,
 users may call the command line interface by executing the command <code class="docutils literal notranslate"><span class="pre">hermes</span></code>
 in both Linux and Windows command line terminals.
-Consult <a class="reference internal" href="api/hermespy.bin.hermes.html"><span class="doc">hermespy.bin.hermes module</span></a> for a detailed description of all available command line options.</p>
+Consult <span class="xref std std-doc">/api/hermespy.bin.hermes</span> for a detailed description of all available command line options.</p>
 <p>In short, entering</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes -p /path/to/settings -o /path/to/output
 </pre></div>
@@ -396,7 +398,7 @@ at both the transmitter and receiver should be plotted:</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api/modules.html" class="btn btn-neutral float-right" title="hermespy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="references.html" class="btn btn-neutral float-right" title="References" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

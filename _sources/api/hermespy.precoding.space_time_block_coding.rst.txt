@@ -1,7 +1,0 @@
-hermespy.precoding.space\_time\_block\_coding module
-====================================================
-
-.. automodule:: hermespy.precoding.space_time_block_coding
-   :members:
-   :undoc-members:
-   :show-inheritance:

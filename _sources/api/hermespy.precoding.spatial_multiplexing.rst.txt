@@ -1,7 +1,0 @@
-hermespy.precoding.spatial\_multiplexing module
-===============================================
-
-.. automodule:: hermespy.precoding.spatial_multiplexing
-   :members:
-   :undoc-members:
-   :show-inheritance:

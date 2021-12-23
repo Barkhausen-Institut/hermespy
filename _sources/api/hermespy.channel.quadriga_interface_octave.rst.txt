@@ -1,7 +1,0 @@
-hermespy.channel.quadriga\_interface\_octave module
-===================================================
-
-.. automodule:: hermespy.channel.quadriga_interface_octave
-   :members:
-   :undoc-members:
-   :show-inheritance:

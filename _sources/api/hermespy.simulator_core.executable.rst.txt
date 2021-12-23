@@ -1,7 +1,0 @@
-hermespy.simulator\_core.executable module
-==========================================
-
-.. automodule:: hermespy.simulator_core.executable
-   :members:
-   :undoc-members:
-   :show-inheritance:

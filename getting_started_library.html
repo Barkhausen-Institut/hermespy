@@ -6,7 +6,7 @@
   <title>Library &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/dark.css" type="text/css" />
@@ -35,7 +35,7 @@
             <a href="index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.3
+                0.2.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -46,10 +46,12 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">hermespy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
 
         </div>
@@ -119,22 +121,22 @@ flowchart TD
          MAPRX --&gt; BCRX(Bit-Decoding)
 
    end
-        </div><p>Each HermesPy <a class="reference internal" href="api/hermespy.scenario.scenario.html"><span class="doc">Scenario</span></a> consists of multiple links
-between <a class="reference internal" href="api/hermespy.modem.transmitter.html"><span class="doc">Transmitters</span></a>
-and <a class="reference internal" href="api/hermespy.modem.receiver.html"><span class="doc">Receivers</span></a>, which are both <a class="reference internal" href="api/hermespy.modem.modem.html"><span class="doc">Modems</span></a>.
-Transmitters feed <a class="reference internal" href="api/hermespy.signal.signal.html"><span class="doc">Signal</span></a> models of electromagnetic waves
-into a wireless transmission <a class="reference internal" href="api/hermespy.channel.channel.html"><span class="doc">Channel</span></a>.
+        </div><p>Each HermesPy <span class="xref std std-doc">Scenario</span> consists of multiple links
+between <span class="xref std std-doc">Transmitters</span>
+and <span class="xref std std-doc">Receivers</span>, which are both <span class="xref std std-doc">Modems</span>.
+Transmitters feed <span class="xref std std-doc">Signal</span> models of electromagnetic waves
+into a wireless transmission <span class="xref std std-doc">Channel</span>.
 After propagation over said channel, receivers subsequently pick up the distorted signals.</p>
 <p>Both transmitters and receivers perform a sequence of processing steps in order to
 exchange information represented by binary bit-streams:</p>
 <ol class="arabic simple">
-<li><p><a class="reference internal" href="api/hermespy.source.bits_source.html"><span class="doc">BitsSource</span></a> <em>(transmitters only)</em> <br>
+<li><p><span class="xref std std-doc">BitsSource</span> <em>(transmitters only)</em> <br>
 Generate a sequence of bits to be transmitted.</p></li>
-<li><p><a class="reference internal" href="api/hermespy.coding.encoder_manager.html"><span class="doc">Bit-Encoding</span></a> <br>
+<li><p><span class="xref std std-doc">Bit-Encoding</span> <br>
 Perform operations on the bit-sequence to add redundancy and correct errors.</p></li>
-<li><p><a class="reference internal" href="api/hermespy.modem.waveform_generator.html"><span class="doc">Waveform-Generation</span></a> <br>
+<li><p><span class="xref std std-doc">Waveform-Generation</span> <br>
 Map bits to communication symbols, modulate the symbols to electromagnetic baseband-signals.</p></li>
-<li><p><a class="reference internal" href="api/hermespy.modem.rf_chain.html"><span class="doc">Radio-Frequency Chain</span></a> <br>
+<li><p><span class="xref std std-doc">Radio-Frequency Chain</span> <br>
 Mix and amplify the baseband-signals to radio-frequency-band signals.</p></li>
 </ol>
 <p>Note that receivers perform the inverse processing steps in reverse order.</p>
@@ -148,8 +150,8 @@ users may define custom scenarios to be investigated.</p>
 <p>The following code generates the samples of a single communication frame
 transmitted by a PSK/QAM modem:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy</span> <span class="kn">import</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">Transmitter</span>
-<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span>
 <span class="linenos"> 4</span>
 <span class="linenos"> 5</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
 <span class="linenos"> 6</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
@@ -167,9 +169,9 @@ transmitted by a PSK/QAM modem:</p>
 <li><p>Initially, the required Python modules are imported <em>(lines 1-3)</em>.</p></li>
 <li><p>A new transmitter modem handle is created <em>(line 5)</em>.</p></li>
 <li><p>The waveform to be generated by the transmitter is configured by assigning a specific
-<a class="reference internal" href="api/hermespy.modem.waveform_generator.html"><span class="doc">Waveform Generator</span></a> instance to the transmitter’s
+<span class="xref std std-doc">Waveform Generator</span> instance to the transmitter’s
 waveform_generator property <em>(line 6)</em>. <br>
-In our case, this is an instance of a <a class="reference internal" href="api/hermespy.modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a>
+In our case, this is an instance of a <span class="xref std std-doc">PKS/QAM</span>
 waveform generator.</p></li>
 <li><p>The transmitter is inserted into an empty simulation scenario <em>(lines 8-9)</em></p></li>
 <li><p>An electromagnetic waveform, encoding a single communication frame, emitted by the transmitter
@@ -185,10 +187,10 @@ Instances of those classes are assigned to property slots, where they will be ex
 during signal simulation.
 Changing the waveform generated by the transmitter defined in the previous snippet
 is therefore as simple as assigning a different type of
-<a class="reference internal" href="api/hermespy.modem.waveform_generator.html"><span class="doc">Waveform Generator</span></a>
+<span class="xref std std-doc">Waveform Generator</span>
 to its waveform_generator property slot.</p>
 <p>Of course, a multitude of parameters can be configured to customize the behaviour of each processing step.
-For instance, the frame generated by a <a class="reference internal" href="api/hermespy.modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a> waveform
+For instance, the frame generated by a <span class="xref std std-doc">PKS/QAM</span> waveform
 generator features a preamble of multiple reference symbols at the beginning of the communication frame.
 They may be removed by specifying the respective property</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span><span class="o">.</span><span class="n">num_preamble_symbols</span> <span class="o">=</span> <span class="mi">0</span>
@@ -201,8 +203,8 @@ Describing all configurable parameters is beyond the scope of this introduction,
 the API documentation of each processing step should be consulted for detailed descriptions.</p>
 <p>A full communication link over an ideal channel between a single transmitter and receiver modem is established
 by adding receiver to the scenario:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">hermespy</span> <span class="kn">import</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">hermespy.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span>
 <span class="linenos"> 3</span>
 <span class="linenos"> 4</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
 <span class="linenos"> 5</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
@@ -230,38 +232,39 @@ into symbols, and subsequently mapped to bits.</p>
 <div class="section" id="simulations">
 <h3>Simulations<a class="headerlink" href="#simulations" title="Permalink to this headline"></a></h3>
 <p>Evaluating multiple transmissions in scenarios featuring several modems can become quite tedious,
-which is why HermesPy offers the <a class="reference internal" href="api/hermespy.simulator_core.simulation.html"><span class="doc">Simulation</span></a> helper class.
+which is why HermesPy offers the <span class="xref std std-doc">Simulation</span> helper class.
 Considering the same scenario as before, the following snippet demonstrates how
 a single communication drop at 40dB signal-to-noise ratio can be generated:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy</span> <span class="kn">import</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span> <span class="n">Simulation</span>
-<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
-<span class="linenos"> 4</span>
-<span class="linenos"> 5</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
-<span class="linenos"> 6</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
-<span class="linenos"> 7</span>
-<span class="linenos"> 8</span><span class="n">receiver</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">()</span>
-<span class="linenos"> 9</span><span class="n">receiver</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
-<span class="linenos">10</span>
-<span class="linenos">11</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">()</span>
-<span class="linenos">12</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_transmitter</span><span class="p">(</span><span class="n">transmitter</span><span class="p">)</span>
-<span class="linenos">13</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_receiver</span><span class="p">(</span><span class="n">receiver</span><span class="p">)</span>
-<span class="linenos">14</span>
-<span class="linenos">15</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
-<span class="linenos">16</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_scenario</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span>
-<span class="linenos">17</span>
-<span class="linenos">18</span><span class="n">drop</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mf">40.</span><span class="p">)</span>
-<span class="linenos">19</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_received_symbols</span><span class="p">()</span>
-<span class="linenos">20</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_bit_errors</span><span class="p">()</span>
-<span class="linenos">21</span>
-<span class="linenos">22</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.simulator_core</span> <span class="kn">import</span> <span class="n">Simulation</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span><span class="n">WaveformGeneratorPskQam</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
+<span class="linenos"> 7</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="n">receiver</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">()</span>
+<span class="linenos">10</span><span class="n">receiver</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">()</span>
+<span class="linenos">13</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_transmitter</span><span class="p">(</span><span class="n">transmitter</span><span class="p">)</span>
+<span class="linenos">14</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_receiver</span><span class="p">(</span><span class="n">receiver</span><span class="p">)</span>
+<span class="linenos">15</span>
+<span class="linenos">16</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
+<span class="linenos">17</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_scenario</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="n">drop</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mf">40.</span><span class="p">)</span>
+<span class="linenos">20</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_received_symbols</span><span class="p">()</span>
+<span class="linenos">21</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_bit_errors</span><span class="p">()</span>
+<span class="linenos">22</span>
+<span class="linenos">23</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Note that lines <em>5-16</em> are identical to the previous snippet, defining a scenario with a single receiver
-and transmitter modem emitting <a class="reference internal" href="api/hermespy.modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a> waveforms.
-However, the scenario is now being managed by the <a class="reference internal" href="api/hermespy.simulator_core.simulation.html"><span class="doc">Simulation</span></a> helper.
+and transmitter modem emitting <span class="xref std std-doc">PKS/QAM</span> waveforms.
+However, the scenario is now being managed by the <span class="xref std std-doc">Simulation</span> helper.
 It generates and visualizes a single information exchange between all scenario modems <em>(lines 18)</em>.
-In HermesPy, this is referred to as a <a class="reference internal" href="api/hermespy.simulator_core.drop.html"><span class="doc">Drop</span></a>.
+In HermesPy, this is referred to as a <span class="xref std std-doc">Drop</span>.
 Visualizing the received symbols <em>(line 19)</em> and bit errors <em>(line 20)</em> during transmission
 results in the following constellation and bit error plots:</p>
 <table class="docutils align-default">

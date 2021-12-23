@@ -1,7 +1,0 @@
-hermespy.simulator\_core.simulation module
-==========================================
-
-.. automodule:: hermespy.simulator_core.simulation
-   :members:
-   :undoc-members:
-   :show-inheritance:

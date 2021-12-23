@@ -1,7 +1,0 @@
-hermespy.source.bits\_source module
-===================================
-
-.. automodule:: hermespy.source.bits_source
-   :members:
-   :undoc-members:
-   :show-inheritance:

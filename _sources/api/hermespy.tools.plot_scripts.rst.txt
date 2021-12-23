@@ -1,7 +1,0 @@
-hermespy.tools.plot\_scripts module
-===================================
-
-.. automodule:: hermespy.tools.plot_scripts
-   :members:
-   :undoc-members:
-   :show-inheritance:

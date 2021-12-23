@@ -1,7 +1,0 @@
-hermespy.coding.encoder module
-==============================
-
-.. automodule:: hermespy.coding.encoder
-   :members:
-   :undoc-members:
-   :show-inheritance:

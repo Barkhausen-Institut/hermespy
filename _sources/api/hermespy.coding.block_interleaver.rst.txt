@@ -1,7 +1,0 @@
-hermespy.coding.block\_interleaver module
-=========================================
-
-.. automodule:: hermespy.coding.block_interleaver
-   :members:
-   :undoc-members:
-   :show-inheritance:

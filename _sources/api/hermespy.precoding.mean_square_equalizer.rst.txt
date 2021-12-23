@@ -1,7 +1,0 @@
-hermespy.precoding.mean\_square\_equalizer module
-=================================================
-
-.. automodule:: hermespy.precoding.mean_square_equalizer
-   :members:
-   :undoc-members:
-   :show-inheritance:

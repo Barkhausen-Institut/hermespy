@@ -1,7 +1,0 @@
-hermespy
-========
-
-.. toctree::
-   :maxdepth: 4
-
-   hermespy

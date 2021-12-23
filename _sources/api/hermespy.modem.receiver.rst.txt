@@ -1,7 +1,0 @@
-hermespy.modem.receiver module
-==============================
-
-.. automodule:: hermespy.modem.receiver
-   :members:
-   :undoc-members:
-   :show-inheritance:

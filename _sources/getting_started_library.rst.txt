@@ -94,8 +94,8 @@ transmitted by a PSK/QAM modem:
    :linenos:
 
    import matplotlib.pyplot as plt
-   from hermespy import Scenario, Transmitter
-   from hermespy.modem import WaveformGeneratorPskQam
+   from hermespy.scenario import Scenario
+   from hermespy.modem import Transmitter, WaveformGeneratorPskQam
 
    transmitter = Transmitter()
    transmitter.waveform_generator = WaveformGeneratorPskQam()
@@ -161,8 +161,8 @@ by adding receiver to the scenario:
 .. code-block:: python
    :linenos:
 
-   from hermespy import Scenario, Transmitter, Receiver
-   from hermespy.modem import WaveformGeneratorPskQam
+   from hermespy.scenario import Scenario
+   from hermespy.modem import Transmitter, Receiver, WaveformGeneratorPskQam
 
    transmitter = Transmitter()
    transmitter.waveform_generator = WaveformGeneratorPskQam()
@@ -198,8 +198,9 @@ a single communication drop at 40dB signal-to-noise ratio can be generated:
    :linenos:
 
    import matplotlib.pyplot as plt
-   from hermespy import Scenario, Transmitter, Receiver, Simulation
-   from hermespy.modem import WaveformGeneratorPskQam
+   from hermespy.scenario import Scenario
+   from hermespy.simulator_core import Simulation
+   from hermespy.modem import Transmitter, Receiver,WaveformGeneratorPskQam
 
    transmitter = Transmitter()
    transmitter.waveform_generator = WaveformGeneratorPskQam()
