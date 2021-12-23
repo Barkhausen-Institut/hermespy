@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from itertools import product
-from typing import TYPE_CHECKING, Optional, Type, Union, List, Tuple
+from typing import Any, Optional, Type, Union, List, Tuple
 
 import numpy as np
 from numpy import cos, exp
@@ -13,11 +13,7 @@ from scipy.constants import pi
 
 from hermespy.channel.channel import Channel, ChannelStateInformation
 from hermespy.helpers.resampling import delay_resampling_matrix
-from hermespy.signal import Signal
-
-if TYPE_CHECKING:
-    from hermespy.scenario import Scenario
-    from hermespy.modem import Transmitter, Receiver
+from hermespy.core.signal_model import Signal
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -113,11 +109,6 @@ class MultipathFadingChannel(Channel):
                  delays: Union[np.ndarray, List[float]],
                  power_profile: Union[np.ndarray, List[float]],
                  rice_factors: Union[np.ndarray, List[float]],
-                 transmitter: Optional[Transmitter] = None,
-                 receiver: Optional[Receiver] = None,
-                 scenario: Optional[Scenario] = None,
-                 active: Optional[bool] = None,
-                 gain: Optional[float] = None,
                  random_generator: Optional[rnd.Generator] = None,
                  num_sinusoids: Optional[float] = None,
                  los_angle: Optional[float] = None,
@@ -126,9 +117,7 @@ class MultipathFadingChannel(Channel):
                  transmit_precoding: Optional[np.ndarray] = None,
                  receive_postcoding: Optional[np.ndarray] = None,
                  interpolate_signals: bool = None,
-                 sync_offset_low: float = 0.,
-                 sync_offset_high: float = 0.,
-                 impulse_response_interpolation: bool = True) -> None:
+                 **kwargs: Any) -> None:
         """Object initialization.
 
         Args:
@@ -168,11 +157,14 @@ class MultipathFadingChannel(Channel):
             doppler_frequency (float, optional):
                 Doppler frequency shift of the statistical distribution.
 
-            transmit_precoding (np.ndarray):
+            transmit_precoding (np.ndarray, optional):
                 Transmit precoding matrix.
 
-            receive_postcoding (np.ndarray):
+            receive_postcoding (np.ndarray, optional):
                 Receive postcoding matrix.
+
+            **kwargs (Any, optional):
+                Channel base class initialization parameters.
 
         Raises:
             ValueError:
@@ -206,16 +198,7 @@ class MultipathFadingChannel(Channel):
             raise ValueError("Rice factors must be greater or equal to zero")
 
         # Init base class
-        Channel.__init__(self,
-                         transmitter=transmitter,
-                         receiver=receiver,
-                         scenario=scenario,
-                         active=active,
-                         gain=gain,
-                         sync_offset_low=sync_offset_low,
-                         sync_offset_high=sync_offset_high,
-                         random_generator=random_generator,
-                         impulse_response_interpolation=impulse_response_interpolation)
+        Channel.__init__(self, **kwargs)
 
         # Sort delays
         sorting = np.argsort(delays)
@@ -540,8 +523,8 @@ class MultipathFadingChannel(Channel):
         """
 
         nlos_doppler = self.doppler_frequency
-        nlos_angles = self.random_generator.uniform(0, 2*pi, self.num_sinusoids)
-        nlos_phases = self.random_generator.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_angles = self._rng.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_phases = self._rng.uniform(0, 2*pi, self.num_sinusoids)
 
         nlos_component = np.zeros(len(timestamps), dtype=complex)
         for s in range(self.num_sinusoids):
@@ -555,10 +538,10 @@ class MultipathFadingChannel(Channel):
             los_angle = self.los_angle
 
         else:
-            los_angle = self.random_generator.uniform(0, 2*pi)
+            los_angle = self._rng.uniform(0, 2*pi)
 
         los_doppler = self.los_doppler_frequency
-        los_phase = self.random_generator.uniform(0, 2*pi)
+        los_phase = self._rng.uniform(0, 2*pi)
         los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
         return los_component + nlos_component
 
@@ -655,7 +638,8 @@ class MultipathFadingChannel(Channel):
 
         Returns:
             MultipathFadingChannel:
-                Newly created `MultipathFadingChannel` instance. The internal references to modems will be `None` and need to be
+                Newly created `MultipathFadingChannel` instance.
+                The internal references to modems will be `None` and need to be
                 initialized by the `scenario` YAML constructor.
 
         """

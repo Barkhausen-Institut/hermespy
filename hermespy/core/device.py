@@ -12,8 +12,8 @@ from typing import Any, Generic, List, Optional, Tuple, TypeVar
 
 import numpy as np
 
-from hermespy.channel import ChannelStateInformation
-from hermespy.signal import Signal
+from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.core.signal_model import Signal
 from hermespy.core.random_node import RandomNode
 
 __author__ = "Jan Adler"

@@ -44,10 +44,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.num_sinusoids = 40
         self.doppler_frequency = 0.0
 
-        self.scenario = Mock()
         self.transmitter = Mock()
         self.receiver = Mock()
-        self.scenario.sampling_rate = self.sampling_rate
         self.transmitter.sampling_rate = self.sampling_rate
         self.receiver.sampling_rate = self.sampling_rate
         self.transmitter.num_antennas = 1
@@ -61,7 +59,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
             'rice_factors': self.rice_factors,
             'transmitter': self.transmitter,
             'receiver': self.receiver,
-            'scenario': self.scenario,
             'active': self.active,
             'gain': self.gain,
             'num_sinusoids': self.num_sinusoids,
@@ -69,7 +66,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             'doppler_frequency': self.doppler_frequency,
             'sync_offset_low': self.sync_offset_low,
             'sync_offset_high': self.sync_offset_high,
-            'random_generator': np.random.default_rng(0)
+            'seed': 42,
         }
 
         self.num_samples = 100
@@ -284,10 +281,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel = MultipathFadingChannel(**self.channel_params)
         timestamps = np.arange(self.num_samples) / self.sampling_rate
 
-        channel.random_generator = np.random.default_rng(100)
+        channel.set_seed(100)
         first_draw = channel.impulse_response(timestamps, self.sampling_rate)
 
-        channel.random_generator = np.random.default_rng(100)
+        channel.set_seed(100)
         second_draw = channel.impulse_response(timestamps, self.sampling_rate)
 
         assert_array_almost_equal(first_draw, second_draw)
@@ -369,10 +366,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
             delayed_params['delays'] = reference_params['delays'] + delay
             delayed_channel = MultipathFadingChannel(**delayed_params)
 
-            reference_channel.random_generator = np.random.default_rng(d)
+            reference_channel.set_seed(d)
             reference_propagation, _ = reference_channel.propagate(transmit_signal)
 
-            delayed_channel.random_generator = np.random.default_rng(d)
+            delayed_channel.set_seed(d)
             delayed_propagation, _ = delayed_channel.propagate(transmit_signal)
 
             zero_pads = int(self.sampling_rate * float(delay))

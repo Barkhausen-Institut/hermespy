@@ -18,16 +18,21 @@ This module implements the main interface for loading and dumping HermesPy confi
 """
 
 from __future__ import annotations
+from abc import ABCMeta
+from collections.abc import Iterable
+from inspect import getmembers
+from importlib import import_module
+from io import TextIOBase, StringIO
+import os
+from pkgutil import iter_modules
+from re import compile, Pattern, Match
+from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple
+
 from ruamel.yaml import YAML, SafeConstructor, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
-from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple
-from io import TextIOBase, StringIO
-from re import compile, Pattern, Match
-from collections.abc import Iterable
-from functools import partial
-import os
 
-from .executable import Executable
+import hermespy as hermes
+from hermespy.core.executable import Executable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -39,7 +44,10 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-SerializableClasses: Set = set()
+class Serializable(metaclass=ABCMeta):
+
+    yaml_tag: Optional[str] = None
+    """YAML serialization tag."""
 
 
 class Factory:
@@ -70,19 +78,25 @@ class Factory:
         self.__clean = True
         self.__registered_tags = set()
 
-        # Register serializable classes for safe recall / dumping
-        for serializable_class in SerializableClasses:
+        # Browse the current environment for packages within the 'hermespy' namespace
+        for finder, name, ispkg in iter_modules(hermes.__path__, "hermespy."):
 
-            self.__yaml.register_class(serializable_class)
+            module = import_module(name)
 
-            if hasattr(serializable_class, 'yaml_tag'):    # Dirty. Very dirty.
+            for _, serializable_class in getmembers(module):
 
-                self.__registered_tags.add(serializable_class.yaml_tag)
+                if not issubclass(serializable_class, Serializable):
+                    continue
 
-                if hasattr(serializable_class, 'yaml_matrix') and serializable_class.yaml_matrix is True:
+                self.__yaml.register_class(serializable_class)
 
-                    matrix_constructor = partial(Factory.__construct_matrix, serializable_class)
-                    self.__yaml.constructor.add_multi_constructor(serializable_class.yaml_tag, matrix_constructor)
+                if serializable_class.yaml_tag is not None:
+                    self.__registered_tags.add(serializable_class.yaml_tag)
+
+#                if hasattr(serializable_class, 'yaml_matrix') and serializable_class.yaml_matrix is True:
+#
+#                    matrix_constructor = partial(Factory.__construct_matrix, serializable_class)
+#                    self.__yaml.constructor.add_multi_constructor(serializable_class.yaml_tag, matrix_constructor)
 
         # Add constructors for untagged classes
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
@@ -124,14 +138,15 @@ class Factory:
 
         return self.__registered_tags
 
-    def load(self, path: str) -> Executable:
+    def load(self, path: str) -> List[Executable]:
         """Load a serialized executable configuration from a filesystem location.
 
         Args:
             path (str): Path to a file or a folder featuring serialization files.
 
         Returns:
-            Executable: An executable HermesPy object.
+            executables (List[Executable]):
+                Executable HermesPy entry points.
 
         Raises:
             RuntimeError: If `path` does not contain an executable object.
@@ -141,35 +156,15 @@ class Factory:
         # Recover serialized objects
         hermes_objects: List[Any] = self.from_path(path)
 
-        executable: Optional[Executable] = None
-        scenarios: List[Scenario] = []
+        executables: List[Executable] = []
 
         for hermes_object in hermes_objects:
 
             if isinstance(hermes_object, Executable):
-
-                if executable is None:
-                    executable = hermes_object
-
-                else:
-                    raise RuntimeError("Ambiguous configuration containing more than one executable")
-
-            elif isinstance(hermes_object, Scenario):
-                scenarios.append(hermes_object)
-
-            else:
-                raise RuntimeError("Unsupported class type in configuration")
-
-        # Default executable is a simulation
-        if executable is None:
-            executable = Simulation()
-
-        # Register scenarios with executable
-        for scenario in scenarios:
-            executable.add_scenario(scenario)
+                executables.append(hermes_object)
 
         # Return fully configured executable
-        return executable
+        return executables
 
     @staticmethod
     def __construct_matrix(cls: Any, constructor: SafeConstructor, tag_suffix: str, node: Any)\
