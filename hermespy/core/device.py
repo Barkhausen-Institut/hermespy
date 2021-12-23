@@ -263,7 +263,7 @@ class Receiver(RandomNode, Operator['ReceiverSlot']):
 
     def cache_reception(self,
                         signal: Optional[Signal],
-                        csi: Optional[ChannelStateInformation]) -> None:
+                        csi: Optional[ChannelStateInformation] = None) -> None:
         """Cache recent reception at this receiver.
 
         Args:

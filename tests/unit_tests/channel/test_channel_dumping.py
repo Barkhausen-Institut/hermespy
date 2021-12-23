@@ -1,6 +1,6 @@
 import unittest
 
-from hermespy.simulator_core.factory import Factory
+from hermespy.core.factory import Factory
 
 def create_scenario_stream_header() -> str:
     return """
