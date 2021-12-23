@@ -16,10 +16,10 @@ setup(
     description="The Heterogeneous Mobile Radio Simulator",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/barkhauseninstitut/wicon/hermespy",
+    url="https://github.com/Barkhausen-Institut/hermespy",
     project_urls={
         "Barkhausen Institute": "https://www.barkhauseninstitut.org",
-        "Bug Tracker": "https://gitlab.com/barkhauseninstitut/wicon/hermespy/issues",
+        "Bug Tracker": "https://github.com/Barkhausen-Institut/hermespy/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3.9",
@@ -30,6 +30,7 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     packages=find_packages(exclude=['tests']),
+    namespace_packages=['hermespy'],
     package_dir={"hermespy": "hermespy"},
     include_package_data=True,
     exclude_package_data={
