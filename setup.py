@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="hermespy",
-    version="0.2.3",
+    version="0.2.4",
     author="Jan Adler",
     author_email="jan.adler@barkhauseninstitut.org",
     description="The Heterogeneous Mobile Radio Simulator",
@@ -45,7 +45,7 @@ setup(
     command_options={
         'build_sphinx': {
             'project': ('setup.py', 'HermesPy'),
-            'version': ('setup.py', '0.2.3'),
+            'version': ('setup.py', '0.2.4'),
             # 'release': ('setup.py', release),
             'source_dir': ('setup.py', 'docssource'),
             'build_dir': ('setup.py', 'documentation'),
