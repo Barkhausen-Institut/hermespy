@@ -8,7 +8,6 @@ import numpy as np
 import numpy.random as rnd
 from ruamel.yaml import SafeConstructor, Node, MappingNode, ScalarNode
 
-from hermespy import Channel
 from hermespy.modem import Modem
 from hermespy.signal import Signal
 from hermespy.source import BitsSource
