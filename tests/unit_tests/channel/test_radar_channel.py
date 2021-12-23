@@ -27,7 +27,9 @@ class TestRadarChannel(unittest.TestCase):
         self.range = 100
         self.radar_cross_section = 1
 
-        self.random_number_gen = default_rng(42)
+        self.random_generator = default_rng(42)
+        self.random_node = Mock()
+        self.random_node._rng = self.random_generator
 
         self.transmitter = Mock()
         self.transmitter.carrier_frequency = 60e9
@@ -35,7 +37,6 @@ class TestRadarChannel(unittest.TestCase):
         self.transmitter.sampling_rate = 1e9
         self.transmitter.num_antennas = 1
         self.receiver.num_antennas = 1
-        self.scenario = Mock()
 
         self.target_exists = True
         self.tx_rx_isolation_db = float("inf")
@@ -46,10 +47,8 @@ class TestRadarChannel(unittest.TestCase):
         self.filter_response_in_samples = 21
 
         self.channel = RadarChannel(self.range, self.radar_cross_section,
-                                    random_generator=self.random_number_gen,
                                     transmitter=self.transmitter,
                                     receiver=self.receiver,
-                                    scenario=self.scenario,
                                     target_exists=self.target_exists,
                                     tx_rx_isolation_db=self.tx_rx_isolation_db,
                                     tx_antenna_gain_db=self.tx_antenna_gain_db,
@@ -57,35 +56,24 @@ class TestRadarChannel(unittest.TestCase):
                                     losses_db=self.losses_db,
                                     velocity=self.velocity,
                                     filter_response_in_samples=self.filter_response_in_samples)
+        self.channel.random_mother = self.random_node
 
         self.expected_delay = 2 * self.range / constants.speed_of_light
 
     def test_init(self) -> None:
         """The object initialization should properly store all parameters."""
 
-        channel = RadarChannel(self.range, self.radar_cross_section,
-                               random_generator=self.random_number_gen,
-                               transmitter=self.transmitter,
-                               receiver=self.receiver,
-                               target_exists=self.target_exists,
-                               tx_rx_isolation_db=self.tx_rx_isolation_db,
-                               tx_antenna_gain_db=self.tx_antenna_gain_db,
-                               rx_antenna_gain_db=self.rx_antenna_gain_db,
-                               losses_db=self.losses_db,
-                               velocity=self.velocity,
-                               filter_response_in_samples=self.filter_response_in_samples)
-
-        self.assertIs(self.range, channel.target_range)
-        self.assertIs(self.radar_cross_section, channel.radar_cross_section)
-        self.assertIs(self.transmitter, channel.transmitter)
-        self.assertIs(self.receiver, channel.receiver)
-        self.assertIs(self.target_exists, channel.target_exists)
-        self.assertIs(self.tx_rx_isolation_db, channel.tx_rx_isolation_db)
-        self.assertIs(self.tx_antenna_gain_db, channel.tx_antenna_gain_db)
-        self.assertIs(self.rx_antenna_gain_db, channel.rx_antenna_gain_db)
-        self.assertIs(self.losses_db, channel.losses_db)
-        self.assertIs(self.velocity, channel.velocity)
-        self.assertIs(self.filter_response_in_samples, channel.filter_response_in_samples)
+        self.assertIs(self.range, self.channel.target_range)
+        self.assertIs(self.radar_cross_section, self.channel.radar_cross_section)
+        self.assertIs(self.transmitter, self.channel.transmitter)
+        self.assertIs(self.receiver, self.channel.receiver)
+        self.assertIs(self.target_exists, self.channel.target_exists)
+        self.assertIs(self.tx_rx_isolation_db, self.channel.tx_rx_isolation_db)
+        self.assertIs(self.tx_antenna_gain_db, self.channel.tx_antenna_gain_db)
+        self.assertIs(self.rx_antenna_gain_db, self.channel.rx_antenna_gain_db)
+        self.assertIs(self.losses_db, self.channel.losses_db)
+        self.assertIs(self.velocity, self.channel.velocity)
+        self.assertIs(self.filter_response_in_samples, self.channel.filter_response_in_samples)
 
     def test_target_range_setget(self) -> None:
         """Target range property getter should return setter argument."""

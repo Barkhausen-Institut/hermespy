@@ -11,9 +11,9 @@ import scipy.fft as fft
 from scipy import stats
 import numpy as np
 
-from .scenario import Scenario
-from .drop import Drop
-from .tools.theoretical_results import TheoreticalResults
+from hermespy.core.scenario import Scenario
+from hermespy.core.drop import Drop
+from hermespy.core.tools.theoretical_results import TheoreticalResults
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

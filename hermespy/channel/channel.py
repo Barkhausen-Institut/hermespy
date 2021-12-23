@@ -6,12 +6,11 @@ from typing import Optional, Tuple, Type
 from itertools import product
 
 import numpy as np
-import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 from hermespy.core import Device, RandomNode
-from hermespy.signal import Signal
-from .channel_state_information import ChannelStateFormat, ChannelStateInformation
+from hermespy.core.signal_model import Signal
+from hermespy.core.channel_state_information import ChannelStateFormat, ChannelStateInformation
 
 
 __author__ = "Tobias Kronauer"
@@ -481,10 +480,4 @@ class Channel(RandomNode):
         if isinstance(node, ScalarNode):
             return cls()
 
-        state = constructor.construct_mapping(node)
-
-        seed = state.pop('seed', None)
-        if seed is not None:
-            state['random_generator'] = rnd.default_rng(seed)
-
-        return cls(**state)
+        return constructor.construct_mapping(node)

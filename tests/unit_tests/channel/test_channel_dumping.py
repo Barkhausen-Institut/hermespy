@@ -42,6 +42,7 @@ def create_sync_offset_yaml_str(low: float, high: float) -> str:
     sync_offset_high: {high}
 """
 
+
 class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
     def setUp(self) -> None:
         self.scenario_str = create_scenario_stream_header()
@@ -67,30 +68,6 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
 
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, 0)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, 0)
-
-    def test_exception_raised_if_high_smaller_than_low(self) -> None:
-        LOW = 2
-        HIGH = 1
-
-        self.scenario_str += create_sync_offset_yaml_str(LOW, HIGH)
-        with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(self.scenario_str)
-
-    def test_exception_raised_if_low_smaller_than_zero(self) -> None:
-        LOW = -1
-        HIGH = 0
-
-        self.scenario_str += create_sync_offset_yaml_str(LOW, HIGH)
-        with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(self.scenario_str)
-
-    def test_exception_raised_if_high_smaller_than_zero(self) -> None:
-        LOW = -1
-        HIGH = -5
-
-        self.scenario_str += create_sync_offset_yaml_str(LOW, HIGH)
-        with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(self.scenario_str)
 
     def test_multiple_channels_creation_all_sync_offsets_defined(self) -> None:
         sync_offsets = {

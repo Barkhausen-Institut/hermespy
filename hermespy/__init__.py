@@ -1,8 +1,4 @@
-from .channel import Channel
-from .modem import WaveformGeneratorOfdm, WaveformGeneratorPskQam, WaveformGeneratorChirpFsk
-from .signal import Signal
-from .core import Device, RandomNode, Transmitter, Receiver
-from .simulation import Simulation, SimulatedDevice
+__import__('pkg_resources').declare_namespace(__name__)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -12,6 +8,3 @@ __version__ = "0.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-__all__ = ['Channel', 'Transmitter', 'Receiver', 'WaveformGeneratorPskQam', 'WaveformGeneratorOfdm',
-           'Scenario', 'Simulation',  'HardwareLoop',  'WaveformGeneratorOfdm', 'Signal']

@@ -30,7 +30,8 @@ class TestChannel(unittest.TestCase):
         self.receiver = Mock()
         self.active = True
         self.gain = 1.0
-        self.generator = default_rng(0)
+        self.random_node = Mock()
+        self.random_node._rng = default_rng(42)
         self.scenario = Mock()
         self.sampling_rate = 1e3
         self.sync_offset_low = 0.
@@ -40,10 +41,9 @@ class TestChannel(unittest.TestCase):
             receiver=self.receiver,
             active=self.active,
             gain=self.gain,
-            random_generator=self.generator,
-            scenario=self.scenario,
             sync_offset_low=self.sync_offset_low,
             sync_offset_high=self.sync_offset_high)
+        self.channel.random_mother = self.random_node
 
         # Number of discrete-time samples generated for baseband_signal propagation testing
         self.propagate_signal_lengths = [1, 10, 100, 1000]
@@ -61,8 +61,6 @@ class TestChannel(unittest.TestCase):
         self.assertIs(self.receiver, self.channel.receiver, "Unexpected receiver parameter initialization")
         self.assertEqual(self.active, self.channel.active, "Unexpected active parameter initialization")
         self.assertEqual(self.gain, self.channel.gain, "Unexpected gain parameter initialization")
-        self.assertEqual(self.generator, self.channel.random_generator)
-        self.assertEqual(self.scenario, self.channel.scenario)
         self.assertEqual(self.sync_offset_low, self.channel.sync_offset_low)
         self.assertEqual(self.sync_offset_high, self.channel.sync_offset_high)
 
@@ -162,44 +160,6 @@ class TestChannel(unittest.TestCase):
         except ValueError:
             self.fail("Gain property set to zero raised unexpected exception")
 
-    def test_random_generator_setget(self) -> None:
-        """Random rng property getter should return setter argument."""
-
-        generator = Mock()
-        self.channel.random_generator = generator
-
-        self.assertIs(generator, self.channel.random_generator)
-
-    def test_random_generator_get_default(self) -> None:
-        """Random rng property getter should return scenario rng if not specified."""
-
-        self.scenario.random_generator = Mock()
-        self.channel.random_generator = None
-
-        self.assertIs(self.scenario.random_generator, self.channel.random_generator)
-
-    def test_scenario_setget(self) -> None:
-        """Scenario property getter should return setter argument."""
-
-        scenario = Mock()
-        self.channel = Channel()
-        self.channel.scenario = scenario
-
-        self.assertIs(scenario, self.channel.scenario)
-
-    def test_scenario_get_validation(self) -> None:
-        """Scenario property getter should raise RuntimeError if scenario is not set."""
-
-        self.channel = Channel()
-        with self.assertRaises(RuntimeError):
-            _ = self.channel.scenario
-
-    def test_scenario_set_validation(self) -> None:
-        """Scenario property setter should raise RuntimeError if scenario is already set."""
-
-        with self.assertRaises(RuntimeError):
-            self.channel.scenario = Mock()
-
     def test_num_inputs_get(self) -> None:
         """Number of inputs property must return number of transmitting antennas."""
 
@@ -229,15 +189,6 @@ class TestChannel(unittest.TestCase):
         floating_channel = Channel()
         with self.assertRaises(RuntimeError):
             _ = floating_channel.num_outputs
-
-    def test_indices(self) -> None:
-        """Indices property must return respective transmitter and receiver indices."""
-
-        expected_indices = (6, 7)
-        self.transmitter.index = expected_indices[0]
-        self.receiver.index = expected_indices[1]
-
-        self.assertEqual(expected_indices, self.channel.indices, "Channel indices property returned unexpected result")
 
     def test_propagate_SISO(self) -> None:
         """Test valid propagation for the Single-Input-Single-Output channel."""
@@ -437,7 +388,7 @@ class TestChannel(unittest.TestCase):
         self.receiver.num_antennas = 1
 
         mock_generator = Mock()
-        self.channel.random_generator = mock_generator
+        self.random_node._rng = mock_generator
 
         for num_samples in self.propagate_signal_lengths:
             for offset in [0, 1., -10., 100.]:

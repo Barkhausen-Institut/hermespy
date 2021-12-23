@@ -10,7 +10,7 @@ from numpy.testing import assert_array_equal  # , assert_array_almost_equal
 from numpy.linalg import norm
 from scipy.constants import pi
 
-from hermespy.channel import ChannelStateInformation, ChannelStateFormat
+from hermespy.core.channel_state_information import ChannelStateInformation, ChannelStateFormat
 
 
 class TestChannelStateInformation(TestCase):
