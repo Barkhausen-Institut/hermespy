@@ -479,6 +479,7 @@ class Signal:
     @classmethod
     def from_interleaved(cls,
                          interleaved_samples: np.ndarray,
+                         scale: bool = True,
                          **kwargs) -> Signal:
         """Initialize a signal model from interleaved samples.
 
@@ -487,9 +488,16 @@ class Signal:
             interleaved_samples (np.ndarray):
                 Numpy array of interleaved samples.
 
+            scale (bool, optional):
+                Scale the samples after interleaving
+
             **kwargs:
                 Additional class initialization arguments.
         """
 
         complex_samples = interleaved_samples.astype(np.float64).view(np.complex128)
+
+        if scale:
+            complex_samples /= np.iinfo(interleaved_samples.dtype).max
+
         return cls(samples=complex_samples, **kwargs)
