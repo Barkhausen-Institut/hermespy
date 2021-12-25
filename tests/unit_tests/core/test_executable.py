@@ -6,7 +6,7 @@ import tempfile
 from contextlib import _GeneratorContextManager
 from unittest.mock import Mock, patch
 
-from hermespy.simulator_core import Executable, Verbosity
+from hermespy.core import Executable, Verbosity
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

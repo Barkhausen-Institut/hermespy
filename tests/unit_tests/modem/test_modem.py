@@ -54,10 +54,10 @@ class TestModem(unittest.TestCase):
     def test_num_streams(self) -> None:
         """Number of streams property should return proper number of streams."""
 
-        self.modem.topology = np.arange(3)
+        self.device.num_antennas = 3
         self.assertEqual(3, self.modem.num_streams)
 
-        self.modem.topology = np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 1.0]])
+        self.device.num_antennas = 2
         self.assertEqual(2, self.modem.num_streams)
 
     def test_bits_source_setget(self) -> None:

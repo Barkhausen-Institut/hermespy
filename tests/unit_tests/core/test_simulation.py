@@ -8,8 +8,8 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from hermespy.channel import ChannelStateInformation
-from hermespy.scenario.scenario import Scenario
-from hermespy.simulator_core import Simulation, SNRType
+from hermespy.core.scenario import Scenario
+from hermespy.simulation.simulation import Simulation, SNRType
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

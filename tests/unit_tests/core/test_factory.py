@@ -46,14 +46,8 @@ class TestFactory(unittest.TestCase):
     def test_registered_tags(self) -> None:
         """Test the serializable classes registration / discovery mechanism."""
 
+        expected_tags = [u'Channel', u'MultipathFading']
+        registered_tags = self.factory.registered_tags
 
-
-        MockClass = Mock()
-        MockClass.yaml_tag = "MockTag"
-        MockClass.__name__ = "MockClass"
-
-        SerializableClasses.add(MockClass)
-        self.factory.__init__()     # Re-run init to discover new class
-
-        self.assertTrue(MockClass.yaml_tag in self.factory.registered_tags,
-                        "Mock class tag not registered as expected for serialization")
+        for expected_tag in expected_tags:
+            self.assertTrue(expected_tag in registered_tags)

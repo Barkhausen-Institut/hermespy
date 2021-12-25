@@ -1022,3 +1022,14 @@ class DuplexOperator(object):
     @abstractmethod
     def frame_duration(self) -> float:
         ...
+
+    @property
+    def carrier_frequency(self) -> float:
+
+        return self._transmitter.carrier_frequency
+
+    @carrier_frequency.setter
+    def carrier_frequency(self, value: Optional[float]) -> None:
+
+        self._transmitter.carrier_frequency = value
+        self._receiver.carrier_frequency = value
