@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.simulator_core.drop import Drop
+from hermespy.core.drop import Drop
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

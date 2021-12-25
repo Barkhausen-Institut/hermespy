@@ -9,7 +9,7 @@ from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 
 from hermespy.channel import Channel
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

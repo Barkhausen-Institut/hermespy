@@ -10,7 +10,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 from hermespy.core import Device
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
