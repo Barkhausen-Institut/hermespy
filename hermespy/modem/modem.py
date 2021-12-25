@@ -42,8 +42,6 @@ class Modem(RandomNode, DuplexOperator):
     either for transmission or reception of a given technology.
     """
 
-    __slots__ = ['__encoder_manager', '__waveform_generator', '__bits_source']
-
     yaml_tag = u'Modem'
     """YAML serialization tag."""
 
@@ -56,9 +54,7 @@ class Modem(RandomNode, DuplexOperator):
                  encoding: Optional[EncoderManager] = None,
                  precoding: Optional[SymbolPrecoding] = None,
                  waveform: Optional[WaveformGenerator] = None,
-                 seed: Optional[int] = None,
-                 *args: Any,
-                 **kwargs: Any) -> None:
+                 seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -74,19 +70,12 @@ class Modem(RandomNode, DuplexOperator):
 
             seed (int, optional):
                 Seed used to initialize the pseudo-random number generator.
-
-            *args (Any):
-                Operator base class initialization parameters.
-
-            **kwargs (Any):
-                Operator base class initialization parameters.
         """
 
         # Base class initialization
         RandomNode.__init__(self, seed=seed)
         DuplexOperator.__init__(self)
 
-        self.__carrier_frequency = 800e6
         self.__encoder_manager = EncoderManager()
         self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
