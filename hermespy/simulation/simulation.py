@@ -13,8 +13,9 @@ from hermespy.core.executable import Executable, Verbosity
 from hermespy.core.drop import Drop
 from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
 
+from hermespy.core.factory import Serializable
 from hermespy.core.scenario import Scenario
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 from hermespy.core.statistics import SNRType, Statistics, ConfidenceMetric
 from .simulated_device import SimulatedDevice
 
@@ -38,7 +39,7 @@ class SimulationDrop(Drop):
         Drop.__init__(self, *args)
 
 
-class Simulation(Executable, Scenario[SimulatedDevice]):
+class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
     """HermesPy simulation configuration.
 
     """

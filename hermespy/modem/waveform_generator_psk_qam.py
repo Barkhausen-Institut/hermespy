@@ -12,7 +12,7 @@ from hermespy.channel import ChannelStateInformation
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

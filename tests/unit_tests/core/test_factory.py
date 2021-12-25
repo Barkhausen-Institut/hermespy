@@ -4,7 +4,9 @@
 import unittest
 from unittest.mock import Mock
 
+from hermespy.channel import Channel, MultipathFadingChannel
 from hermespy.core.factory import Factory
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -32,8 +34,19 @@ class TestFactory(unittest.TestCase):
         self.factory.clean = False
         self.assertEqual(self.factory.clean, False, "Clean set/get produced unexpected result")
 
+    def test_registered_classes(self) -> None:
+        """Registered classes should contain all serializable classes."""
+
+        expected_classes = [Channel, MultipathFadingChannel]
+        registered_classes = self.factory.registered_classes
+
+        for expected_class in expected_classes:
+            self.assertTrue(expected_class in registered_classes)
+
     def test_registered_tags(self) -> None:
         """Test the serializable classes registration / discovery mechanism."""
+
+
 
         MockClass = Mock()
         MockClass.yaml_tag = "MockTag"

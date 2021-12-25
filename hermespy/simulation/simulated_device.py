@@ -14,7 +14,7 @@ from scipy.constants import speed_of_light
 from hermespy.channel import ChannelStateInformation
 from hermespy.core import Device, FloatingError
 from hermespy.core.scenario import Scenario
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 from .rf_chain.rf_chain import RfChain
 
 __author__ = "Jan Adler"

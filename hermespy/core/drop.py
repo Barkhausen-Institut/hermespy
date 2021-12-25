@@ -12,7 +12,7 @@ from numpy import real, imag
 from scipy.fft import fftshift
 from scipy.signal import stft, welch
 
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

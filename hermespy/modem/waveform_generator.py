@@ -10,7 +10,7 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 from hermespy.channel import ChannelStateInformation
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem

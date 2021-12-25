@@ -7,7 +7,8 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from hermespy.core.device import Device, PhysicalDevice, SimulatedDevice, Operator, OperatorSlot
+from hermespy.core.device import Device, MixingOperator,  Operator, OperatorSlot, Receiver, ReceiverSlot, Transmitter,\
+    TransmitterSlot
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -19,12 +20,20 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class DeviceMock(Device):
+    """Mock of the device base class."""
+
+    @property
+    def sampling_rate(self) -> float:
+        return 1.0
+
+
 class TestOperator(TestCase):
     """Test device slot operators."""
 
     def setUp(self) -> None:
 
-        self.device = Device()
+        self.device = DeviceMock()
         self.slot = OperatorSlot(device=self.device)
         self.operator = Operator(slot=self.slot)
 
@@ -80,12 +89,127 @@ class TestOperator(TestCase):
         self.assertFalse(self.operator.attached)
 
 
+class MixingOperatorMock(MixingOperator):
+    """Mock of the mixing operator base class."""
+
+    def __init__(self, *args, **kwargs) -> None:
+
+        MixingOperator.__init__(self, *args, **kwargs)
+
+    @property
+    def frame_duration(self) -> float:
+
+        return 1.0
+
+    @property
+    def sampling_rate(self) -> float:
+
+        return 1.0
+
+
+class TestMixingOperator(TestCase):
+    """Test the base class for mixing operators."""
+
+    def setUp(self) -> None:
+
+        self.slot = Mock()
+        self.slot.device = Mock()
+        self.mixing_operator = MixingOperatorMock(slot=self.slot)
+
+    def test_carrier_frequency_setget(self) -> None:
+        """Carrier frequency property getter should return setter argument."""
+
+        carrier_frequency = 2
+        self.mixing_operator.carrier_frequency = carrier_frequency
+
+        self.assertEqual(carrier_frequency, self.mixing_operator.carrier_frequency)
+
+    def test_carrier_frequency_device_get(self) -> None:
+        """Carrier frequency property should return the device's carrier frequency by default."""
+
+        carrier_frequency = 10
+        self.slot.device.carrier_frequency = carrier_frequency
+        self.mixing_operator.carrier_frequency = None
+
+        self.assertEqual(carrier_frequency, self.mixing_operator.carrier_frequency)
+
+    def test_carrier_frequency_validation(self) -> None:
+        """Carrier frequency property setter should raise ValueError on negative arguments."""
+
+        with self.assertRaises(ValueError):
+            self.mixing_operator.carrier_frequency = -1.
+
+        try:
+            self.mixing_operator.carrier_frequency = 0.
+
+        except ValueError:
+            self.fail()
+
+        self.mixing_operator.slot = None
+        self.mixing_operator.carrier_frequency = None
+        with self.assertRaises(RuntimeError):
+            _ = self.mixing_operator.carrier_frequency
+
+
+class ReceiverMock(Receiver):
+    """Mock of the receiving device operator base class."""
+
+    def __init__(self, *args, **kwargs):
+
+        Receiver.__init__(self, *args, **kwargs)
+
+    def receive(self) -> None:
+
+        pass
+
+    @property
+    def sampling_rate(self) -> float:
+
+        return 1.0
+
+
+class TestReceiver(TestCase):
+    """Test the base class for receiving operators."""
+
+    def setUp(self) -> None:
+
+        self.device = Mock()
+        self.slot = ReceiverSlot(device=self.device)
+        self.receiver = ReceiverMock(slot=self.slot)
+
+    def test_slot_setget(self) -> None:
+        """Operator slot getter should return setter argument."""
+
+        slot = Mock()
+        self.receiver.slot = slot
+
+        self.assertIs(slot, self.receiver.slot)
+
+    def test_reference_transmitter_setget(self) -> None:
+        """Reference transmitter property getter should return setter argument."""
+
+        reference = Mock()
+        self.receiver.reference_transmitter = reference
+
+        self.assertIs(reference, self.receiver.reference_transmitter)
+
+    def test_cache_reception(self) -> None:
+        """Cached receptions should be returned by the signal and csi properties."""
+
+        signal = Mock()
+        csi = Mock()
+        self.receiver.cache_reception(signal, csi)
+
+        self.assertIs(signal, self.receiver.signal)
+        self.assertIs(csi, self.receiver.csi)
+
+
 class TestOperatorSlot(TestCase):
     """Test device operator slots."""
 
     def setUp(self) -> None:
 
-        self.device = Device()
+        self.device = DeviceMock()
         self.slot = OperatorSlot(device=self.device)
         self.operator = Operator(slot=self.slot)
 
@@ -171,6 +295,56 @@ class TestOperatorSlot(TestCase):
         self.assertFalse(unregistered_operator in self.slot)
 
 
+class TransmitterMock(Transmitter):
+    """Mock of the base class for transmitting operators."""
+
+    def __init__(self, *args, **kwargs) -> None:
+
+        Transmitter.__init__(self, *args, **kwargs)
+
+    def transmit(self) -> None:
+        pass
+
+    @property
+    def sampling_rate(self) -> float:
+        return 1.0
+
+
+class TestTransmitter(TestCase):
+    """Test transmitting operator base class."""
+
+    def setUp(self) -> None:
+
+        self.slot = Mock()
+        self.transmitter = TransmitterMock(slot=self.slot)
+
+    def test_slot_setget(self) -> None:
+        """Slot property getter should return setter argument."""
+
+        slot = Mock()
+        self.transmitter.slot = slot
+
+        self.assertIs(slot, self.transmitter.slot)
+
+
+class TestTransmitterSlot(TestCase):
+    """Test transmitting operator device slot."""
+
+    def setUp(self) -> None:
+
+        self.device = Mock()
+        self.slot = TransmitterSlot(device=self.device)
+
+
+class TestReceiverSlot(TestCase):
+    """Test transmitting operator device slot."""
+
+    def setUp(self) -> None:
+
+        self.device = Mock()
+        self.slot = TransmitterSlot(device=self.device)
+
+
 class TestDevice(TestCase):
     """Test device base class."""
 
@@ -180,8 +354,8 @@ class TestDevice(TestCase):
         self.orientation = np.zeros(3)
         self.topology = np.array([[1., 2., 3.], [4., 5., 6.]], dtype=float)
 
-        self.device = Device(position=self.position, orientation=self.orientation,
-                             topology=self.topology)
+        self.device = DeviceMock(position=self.position, orientation=self.orientation,
+                                 topology=self.topology)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
@@ -285,66 +459,3 @@ class TestDevice(TestCase):
 
         except ValueError:
             self.fail()
-
-
-class TestPhysicalDevice(TestCase):
-    """Test the physical device base class."""
-
-    def setUp(self) -> None:
-
-        self.device = PhysicalDevice()
-
-
-class TestSimulatedDevice(TestCase):
-    """Test the simulated device base class."""
-
-    def setUp(self) -> None:
-
-        self.scenario = Mock()
-        self.position = np.zeros(3)
-        self.orientation = np.zeros(3)
-        self.topology = np.array([[1., 2., 3.], [4., 5., 6.]], dtype=float)
-
-        self.device = SimulatedDevice(scenario=self.scenario, position=self.position, orientation=self.orientation,
-                                      topology=self.topology)
-
-    def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes."""
-
-        self.assertIs(self.scenario, self.device.scenario)
-        assert_array_equal(self.position, self.device.position)
-        assert_array_equal(self.orientation, self.device.orientation)
-        assert_array_equal(self.topology, self.device.topology)
-
-    def test_scenario_setget(self) -> None:
-        """Scenario property setter should return getter argument."""
-
-        self.device = SimulatedDevice()
-        self.device.scenario = self.scenario
-
-        self.assertIs(self.scenario, self.device.scenario)
-
-    def test_scenario_set_validation(self) -> None:
-        """Overwriting a scenario property should raise a RuntimeError."""
-
-        with self.assertRaises(RuntimeError):
-            self.device.scenario = Mock()
-
-    def test_attached(self) -> None:
-        """The attached property should return the proper device attachment state."""
-
-        self.assertTrue(self.device.attached)
-        self.assertFalse(SimulatedDevice().attached)
-
-    def test_max_frame_duration(self) -> None:
-        """Maximum frame duration property should compute the correct duration."""
-
-        transmitter = Mock()
-        transmitter.frame_duration = 10
-        self.device.transmitters.add(transmitter)
-
-        receiver = Mock()
-        receiver.frame_duration = 4
-        self.device.receivers.add(receiver)
-
-        self.assertEqual(10, self.device.max_frame_duration)

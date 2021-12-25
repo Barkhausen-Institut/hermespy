@@ -12,7 +12,7 @@ from typing import Type, Optional
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 from .power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"

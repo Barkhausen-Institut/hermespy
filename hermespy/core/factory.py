@@ -12,27 +12,24 @@ This module implements the main interface for loading and dumping HermesPy confi
 
         factory = Factory()
         simulation = factory.from_file("config.yml")
-
-    Attributes:
-        SerializableClasses (List): List of classes permitted to be dumped to / loaded from YAML config files.
 """
 
 from __future__ import annotations
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
-from inspect import getmembers
+from functools import partial
+from inspect import getmembers, isclass
 from importlib import import_module
 from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
 from re import compile, Pattern, Match
-from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple
+from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
 
-from ruamel.yaml import YAML, SafeConstructor, MappingNode, SequenceNode
+from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, Node, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
 
 import hermespy as hermes
-from hermespy.core.executable import Executable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -45,29 +42,121 @@ __status__ = "Prototype"
 
 
 class Serializable(metaclass=ABCMeta):
+    """Base class for serializable classes.
+
+    Only classes inheriting from `Serializable` will be serialized by the factory.
+    """
 
     yaml_tag: Optional[str] = None
     """YAML serialization tag."""
 
+    @classmethod
+    @abstractmethod
+    def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
+        """Serialize a serializable object to YAML.
 
-class Factory:
-    """Helper class to load HermesPy simulation scenarios from YAML configuration files.
+        Args:
 
-    Attributes:
-        extensions (Set[str]): List of recognized filename extensions for serialization files.
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Serializable):
+                The channel instance to be serialized.
+
+        Returns:
+
+            Node:
+                The serialized YAML node.
+        """
+        ...
+
+    @classmethod
+    @abstractmethod
+    def from_yaml(cls: Type[Serializable], constructor: SafeConstructor, node: Node) -> Serializable:
+        """Recall a new serializable class instance from YAML.
+
+        Args:
+
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Channel` serialization.
+
+        Returns:
+
+            Serializable:
+                Newly created serializable instance.
+        """
+        ...
+
+
+class SerializableArray(Serializable, metaclass=ABCMeta):
+    """Base class for serializable classes within an array-like structure.
+
+    Only classes inheriting from `Serializable` will be serialized by the factory.
+    Additionally, `SerializableArray` nodes may be annotated with a tuple of non-negative
+    integers indicating their location within the array grid.
     """
 
+    @classmethod
+    @abstractmethod
+    def to_yaml(cls: Type[SerializableArray], representer: SafeRepresenter, node: Serializable) -> Tuple[Node, int, ...]:
+        """Serialize a serializable object to YAML.
+
+        Args:
+
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (SerializableArray):
+                The channel instance to be serialized.
+
+        Returns:
+
+            Node:
+                The serialized YAML node.
+        """
+        ...
+
+    @classmethod
+    @abstractmethod
+    def from_yaml(cls: Type[SerializableArray], constructor: SafeConstructor, node: Node) -> SerializableArray:
+        """Recall a new serializable class instance from YAML.
+
+        Args:
+
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Channel` serialization.
+
+        Returns:
+
+            SerializableArray:
+                Newly created serializable instance.
+        """
+        ...
+
+
+class Factory:
+    """Helper class to load HermesPy simulation scenarios from YAML configuration files."""
+
     extensions: Set[str] = ['.yml', '.yaml', '.cfg']
+    """List of recognized filename extensions for serialization files."""
+
     __yaml: YAML
     __clean: bool
     __purge_regex_alpha: Pattern
     __purge_regex_beta: Pattern
     __restore_regex_alpha: Pattern
+    __registered_classes: Set[Type[Serializable]]
     __registered_tags: Set[str]
 
     def __init__(self) -> None:
-        """Object initialization.
-        """
 
         # YAML dumper configuration
         self.__yaml = YAML(typ='safe', pure=True)
@@ -76,6 +165,7 @@ class Factory:
         self.__yaml.encoding = None
         self.__yaml.indent(mapping=4, sequence=4, offset=2)
         self.__clean = True
+        self.__registered_classes = set()
         self.__registered_tags = set()
 
         # Browse the current environment for packages within the 'hermespy' namespace
@@ -85,18 +175,20 @@ class Factory:
 
             for _, serializable_class in getmembers(module):
 
-                if not issubclass(serializable_class, Serializable):
+                if not isclass(serializable_class) or not issubclass(serializable_class, Serializable):
                     continue
 
+                self.__registered_classes.add(serializable_class)
                 self.__yaml.register_class(serializable_class)
 
                 if serializable_class.yaml_tag is not None:
+
                     self.__registered_tags.add(serializable_class.yaml_tag)
 
-#                if hasattr(serializable_class, 'yaml_matrix') and serializable_class.yaml_matrix is True:
-#
-#                    matrix_constructor = partial(Factory.__construct_matrix, serializable_class)
-#                    self.__yaml.constructor.add_multi_constructor(serializable_class.yaml_tag, matrix_constructor)
+                    if issubclass(serializable_class, SerializableArray):
+
+                        array_constructor = partial(Factory.__construct_matrix, serializable_class)
+                        self.__yaml.constructor.add_multi_constructor(serializable_class.yaml_tag, array_constructor)
 
         # Add constructors for untagged classes
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
@@ -129,6 +221,12 @@ class Factory:
         self.__clean = flag
 
     @property
+    def registered_classes(self) -> Set[Type[Serializable]]:
+        """Classes registered for serialization within the factory."""
+
+        return self.__registered_classes.copy()
+
+    @property
     def registered_tags(self) -> Set[str]:
         """Read registered YAML tags.
 
@@ -138,15 +236,15 @@ class Factory:
 
         return self.__registered_tags
 
-    def load(self, path: str) -> List[Executable]:
+    def load(self, path: str) -> List[Serializable]:
         """Load a serialized executable configuration from a filesystem location.
 
         Args:
             path (str): Path to a file or a folder featuring serialization files.
 
         Returns:
-            executables (List[Executable]):
-                Executable HermesPy entry points.
+            executables (List[Serializable]):
+                Serializable HermesPy objects.
 
         Raises:
             RuntimeError: If `path` does not contain an executable object.
@@ -156,11 +254,11 @@ class Factory:
         # Recover serialized objects
         hermes_objects: List[Any] = self.from_path(path)
 
-        executables: List[Executable] = []
+        executables: List[Serializable] = []
 
         for hermes_object in hermes_objects:
 
-            if isinstance(hermes_object, Executable):
+            if isinstance(hermes_object, Serializable):
                 executables.append(hermes_object)
 
         # Return fully configured executable
