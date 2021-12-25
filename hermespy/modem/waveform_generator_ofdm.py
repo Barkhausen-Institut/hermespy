@@ -12,9 +12,9 @@ from scipy.fft import fft, ifft
 from scipy.interpolate import griddata
 
 from hermespy.channel import ChannelStateInformation, ChannelStateDimension
+from hermespy.core.signal_model import Signal
 from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
-from hermespy.signal import Signal
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

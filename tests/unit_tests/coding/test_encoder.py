@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Encoder testing."""
 
-import unittest
-import numpy as np
+from typing import Type
+from unittest import TestCase
 from unittest.mock import Mock
 
+import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+
+from hermespy.core.factory import Serializable
 from hermespy.coding import Encoder
 
 
@@ -42,8 +46,16 @@ class StubEncoder(Encoder):
     def code_block_size(self) -> int:
         return 2 * self.__block_size
 
+    @classmethod
+    def from_yaml(cls: Type[Serializable], constructor: SafeConstructor, node: Node) -> Serializable:
+        pass
 
-class TestEncoder(unittest.TestCase):
+    @classmethod
+    def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
+        pass
+
+
+class TestEncoder(TestCase):
     """Test the abstract Encoder base class."""
 
     def setUp(self) -> None:

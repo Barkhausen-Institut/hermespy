@@ -15,7 +15,7 @@ from scipy import stats
 from scipy.constants import pi
 
 from hermespy.channel import MultipathFadingChannel
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

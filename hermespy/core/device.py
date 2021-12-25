@@ -6,7 +6,7 @@ Device Modeling
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from itertools import chain
 from typing import Any, Generic, List, Optional, Tuple, TypeVar
 
@@ -159,7 +159,76 @@ SecondSlotType = TypeVar('SecondSlotType', bound='OperatorSlot')
 """Type of slot."""
 
 
-class Receiver(RandomNode, Operator['ReceiverSlot']):
+class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
+    """Base class for operators performing mixing operations."""
+
+    __carrier_frequency: Optional[float]    # Carrier frequency
+
+    def __init__(self,
+                 carrier_frequency: Optional[float] = None,
+                 slot: Optional[SlotType] = None) -> None:
+        """
+        Args:
+
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+
+            slot (SlotType, optional):
+                Device slot this operator operators.
+        """
+
+        self.carrier_frequency = carrier_frequency
+        Operator.__init__(self, slot)
+
+    @property
+    def carrier_frequency(self) -> float:
+        """Central frequency of the mixed signal in radio-frequency transmission band.
+
+        By default, the carrier frequency of the operated device is returned.
+
+        Returns:
+            float: Carrier frequency in Hz.
+
+        Raises:
+            ValueError: If the carrier frequency is smaller than zero.
+            RuntimeError: If the operator is considered floating.
+        """
+
+        if self.__carrier_frequency is None:
+
+            if self.device is None:
+                raise RuntimeError("Error trying to get the carrier frequency of a floating operator")
+
+            return self.device.carrier_frequency
+
+        return self.__carrier_frequency
+
+    @carrier_frequency.setter
+    def carrier_frequency(self, value: Optional[float]) -> None:
+        """Set the central frequency of the mixed signal in radio-frequency transmission band."""
+
+        if value is None:
+
+            self.__carrier_frequency = None
+            return
+
+        if value < 0.:
+            raise ValueError("Carrier frequency must be greater or equal to zero")
+
+        self.__carrier_frequency = value
+
+    @property
+    @abstractmethod
+    def sampling_rate(self) -> float:
+        """Rate which this operator continuous signals into discrete samples.
+
+        Returns:
+            rate (float): Sampling rate in Hz.
+        """
+        ...
+
+
+class Receiver(RandomNode, MixingOperator['ReceiverSlot']):
     """Operator receiving from a device."""
 
     __reference_transmitter: Optional[Transmitter]
@@ -185,17 +254,11 @@ class Receiver(RandomNode, Operator['ReceiverSlot']):
 
         # Initialize base classes
         RandomNode.__init__(self, seed=seed)
-        Operator[ReceiverSlot].__init__(self, params=args)
+        MixingOperator[ReceiverSlot].__init__(self, params=args)
 
         self.__reference_transmitter = None
         self.__signal = None
         self.__csi = None
-
-    @property
-    @abstractmethod
-    def sampling_rate(self) -> float:
-        """Sampling rate at which this transmitter operates."""
-        ...
 
     @Operator.slot.setter
     def slot(self, value: Optional[ReceiverSlot]) -> None:
@@ -282,11 +345,7 @@ class Receiver(RandomNode, Operator['ReceiverSlot']):
 class OperatorSlot(Generic[OperatorType]):
     """Slot list for operators of a single device."""
 
-    __slots__ = ['device', '__operators']
-
-    device: Device
-    """Device this operator belongs to."""
-
+    __device: Device                   # Device this operator belongs to.
     __operators: List[OperatorType]     # List of operators registered at this slot
 
     def __init__(self,
@@ -297,8 +356,18 @@ class OperatorSlot(Generic[OperatorType]):
                 Device this slot belongs to.
         """
 
-        self.device = device
+        self.__device = device
         self.__operators = []
+
+    @property
+    def device(self) -> Device:
+        """Device this operator slot belongs to.
+
+        Returns:
+            Device: Handle to the device.
+        """
+
+        return self.__device
 
     def operator_index(self, operator: OperatorType) -> int:
         """Index of an operator within this slot.
@@ -381,7 +450,7 @@ class OperatorSlot(Generic[OperatorType]):
         return self.registered(operator)
 
 
-class Transmitter(RandomNode, Operator['TransmitterSlot']):
+class Transmitter(RandomNode, MixingOperator['TransmitterSlot']):
     """Operator transmitting over a device."""
 
     def __init__(self,
@@ -402,7 +471,7 @@ class Transmitter(RandomNode, Operator['TransmitterSlot']):
 
         # Initialize operator base class
         RandomNode.__init__(self, seed=seed)
-        Operator[TransmitterSlot].__init__(self, args)
+        MixingOperator.__init__(self, *args, **kwargs)
 
     @abstractmethod
     def transmit(self,
@@ -423,12 +492,6 @@ class Transmitter(RandomNode, Operator['TransmitterSlot']):
             FloatingError:
                 If the transmitter is currently considered floating.
         """
-        ...
-
-    @property
-    @abstractmethod
-    def sampling_rate(self) -> float:
-        """Sampling rate at which this transmitter operates."""
         ...
 
     @Operator.slot.setter

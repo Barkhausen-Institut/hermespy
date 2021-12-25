@@ -15,8 +15,8 @@ from ruamel.yaml import SafeRepresenter, MappingNode
 from hermespy.channel import ChannelStateDimension, ChannelStateInformation
 from hermespy.coding import EncoderManager
 from hermespy.core import DuplexOperator, RandomNode
+from hermespy.core.signal_model import Signal
 from hermespy.precoding import SymbolPrecoding
-from hermespy.signal import Signal
 from .bits_source import BitsSource, RandomBitsSource
 from .waveform_generator import WaveformGenerator
 
@@ -224,7 +224,6 @@ class Modem(RandomNode, DuplexOperator):
         # Abort at this point if no frames have been detected
         if frames.size < 1:
             return signal, np.empty(0, dtype=complex), np.empty(0, dtype=complex)
-
 
         # Demodulate the parallel frames arriving at each stream,
         # then decode the (inverse) precoding over all stream frames

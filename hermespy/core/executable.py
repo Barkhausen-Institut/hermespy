@@ -13,6 +13,8 @@ from typing import ContextManager, List, Optional, Union
 
 import matplotlib.pyplot as plt
 
+from hermespy.core.factory import Serializable
+
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -33,7 +35,7 @@ class Verbosity(Enum):
     NONE = 4     # Print absolutely nothing
 
 
-class Executable(ABC):
+class Executable(ABC, Serializable):
     """Abstract base class for executable configurations."""
 
     yaml_tag = u'Executable'

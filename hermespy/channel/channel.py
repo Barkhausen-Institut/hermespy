@@ -9,6 +9,7 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 from hermespy.core import Device, RandomNode
+from hermespy.core.factory import SerializableArray
 from hermespy.core.signal_model import Signal
 from hermespy.core.channel_state_information import ChannelStateFormat, ChannelStateInformation
 
@@ -23,7 +24,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel(RandomNode):
+class Channel(RandomNode, SerializableArray):
     """Implements an ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
@@ -37,7 +38,7 @@ class Channel(RandomNode):
     samples/second.
     """
 
-    yaml_tag = u'Channel'
+    yaml_tag: str = u'Channel'
     yaml_matrix = True
     __active: bool
     __transmitter: Optional[Device]
