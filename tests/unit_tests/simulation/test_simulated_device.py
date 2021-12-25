@@ -24,6 +24,10 @@ class TestSimulatedDevice(TestCase):
 
     def setUp(self) -> None:
 
+        self.random_generator = np.random.default_rng(42)
+        self.random_node = Mock()
+        self.random_node._rng = self.random_generator
+
         self.scenario = Mock()
         self.position = np.zeros(3)
         self.orientation = np.zeros(3)
