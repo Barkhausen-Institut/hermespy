@@ -341,3 +341,8 @@ class SymbolPrecoding:
             self.__symbol_precoders[index] = precoder
 
         precoder.precoding = self
+
+    def __len__(self):
+        """Length of the precoding is the number of precoding steps."""
+
+        return len(self.__symbol_precoders)

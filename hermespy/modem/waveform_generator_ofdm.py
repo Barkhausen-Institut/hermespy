@@ -11,7 +11,8 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNod
 from scipy.fft import fft, ifft
 from scipy.interpolate import griddata
 
-from hermespy.channel import ChannelStateInformation, ChannelStateDimension
+from hermespy.core.factory import Serializable
+from hermespy.core.channel_state_information import ChannelStateInformation, ChannelStateDimension
 from hermespy.core.signal_model import Signal
 from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
@@ -323,7 +324,7 @@ class FrameSection:
         ...
 
 
-class FrameSymbolSection(FrameSection):
+class FrameSymbolSection(FrameSection, Serializable):
 
     yaml_tag: str = u'Symbol'
     pattern: List[int]
@@ -483,7 +484,7 @@ class FrameSymbolSection(FrameSection):
         return cls(**constructor.construct_mapping(node))
 
 
-class FrameGuardSection(FrameSection):
+class FrameGuardSection(FrameSection, Serializable):
 
     yaml_tag: str = u'Guard'
     __duration: float
@@ -549,7 +550,7 @@ class FrameGuardSection(FrameSection):
         return cls(**constructor.construct_mapping(node))
 
 
-class WaveformGeneratorOfdm(WaveformGenerator):
+class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
     """Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.
 
     The following features are supported:
@@ -585,7 +586,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             Time-domain frame configuration.
     """
 
-    yaml_tag: str = WaveformGenerator.yaml_tag + u'OFDM'
+    yaml_tag: str = u'OFDM'
 
     __channel_estimation_algorithm: ChannelEstimation
     __subcarrier_spacing: float

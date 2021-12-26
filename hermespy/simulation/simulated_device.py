@@ -6,13 +6,15 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 import numpy as np
+from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
 from scipy.constants import speed_of_light
 
 from hermespy.channel import ChannelStateInformation
 from hermespy.core import Device, FloatingError
+from hermespy.core.factory import Serializable
 from hermespy.core.scenario import Scenario
 from hermespy.core.signal_model import Signal
 from .rf_chain.rf_chain import RfChain
@@ -27,25 +29,28 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SimulatedDevice(Device):
+class SimulatedDevice(Device, Serializable):
     """Representation of a device simulating hardware.
 
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
     """
 
-    __slots__ = ['__scenario', 'rf_chain', '__sampling_rate']
+    yaml_tag = u'SimulatedDevice'
+    """YAML serialization tag."""
 
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
     __scenario: Optional[Scenario]          # Scenario this device is attached to
     __sampling_rate: Optional[float]        # Sampling rate at which this device operate
+    __carrier_frequency: float              # Center frequency of the mixed signal in rf-band
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
                  num_antennas: Optional[int] = None,
                  rf_chain: Optional[RfChain] = None,
                  sampling_rate: Optional[float] = None,
+                 carrier_frequency: float = 0.,
                  *args,
                  **kwargs) -> None:
         """
@@ -67,6 +72,10 @@ class SimulatedDevice(Device):
                 Sampling rate at which this device operates.
                 By default, the sampling rate of the first operator is assumed.
 
+            carrier_frequency (float, optional):
+                Center frequency of the mixed signal in rf-band in Hz.
+                Zero by default.
+
             *args:
                 Device base class initialization parameters.
 
@@ -80,6 +89,7 @@ class SimulatedDevice(Device):
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.sampling_rate = sampling_rate
+        self.carrier_frequency = carrier_frequency
 
         # If num_antennas is configured initialize the modem as a Uniform Linear Array
         # with half wavelength element spacing
@@ -168,6 +178,19 @@ class SimulatedDevice(Device):
 
         self.__sampling_rate = value
 
+    @property
+    def carrier_frequency(self) -> float:
+
+        return self.__carrier_frequency
+
+    @carrier_frequency.setter
+    def carrier_frequency(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Carrier frequency must be greater or equal to zero")
+
+        self.__carrier_frequency = value
+
     def transmit(self,
                  clear_cache: bool = True) -> Signal:
 
@@ -219,3 +242,51 @@ class SimulatedDevice(Device):
             receiver.cache_reception(baseband_signal, reference_csi)
 
         return baseband_signal
+
+    @classmethod
+    def to_yaml(cls: Type[SimulatedDevice], representer: SafeRepresenter, node: SimulatedDevice) -> MappingNode:
+        """Serialize a `SimulatedDevice` object to YAML.
+
+        Args:
+
+            representer (SimulatedDevice):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (SimulatedDevice):
+                The `Device` instance to be serialized.
+
+        Returns:
+
+            MappingNode:
+                The serialized YAML node.
+        """
+
+        state = {
+            'num_antennas': node.num_antennas,
+            'sampling_rate': node.__sampling_rate,
+            'carrier_frequency': node.__carrier_frequency,
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[SimulatedDevice], constructor: SafeConstructor, node: MappingNode) -> SimulatedDevice:
+        """Recall a new `SimulatedDevice` class instance from YAML.
+
+        Args:
+
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (MappingNode):
+                YAML node representing the `SimulatedDevice` serialization.
+
+        Returns:
+
+            SimulatedDevice:
+                Newly created serializable instance.
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls(**state)

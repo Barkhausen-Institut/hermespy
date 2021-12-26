@@ -11,6 +11,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from scipy import integrate
 from scipy.signal import correlate
 
+from hermespy.core.factory import Serializable
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.waveform_generator import WaveformGenerator, Synchronization
 from hermespy.core.signal_model import Signal
@@ -25,11 +26,11 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class WaveformGeneratorChirpFsk(WaveformGenerator):
+class WaveformGeneratorChirpFsk(WaveformGenerator, Serializable):
     """ Implements a chirp FSK waveform generator."""
 
     # YAML tag
-    yaml_tag = WaveformGenerator.yaml_tag + "ChirpFsk"
+    yaml_tag = u'ChirpFsk'
 
     # Modulation parameters
     symbol_type: np.dtype = int

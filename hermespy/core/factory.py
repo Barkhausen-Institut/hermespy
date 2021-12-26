@@ -266,7 +266,7 @@ class Factory:
 
     @staticmethod
     def __construct_matrix(cls: Any, constructor: SafeConstructor, tag_suffix: str, node: Any)\
-            -> Tuple[Any, int, int]:
+            -> Tuple[Any, int, ...]:
         """Construct a matrix node from YAML.
 
         Args:
@@ -299,7 +299,9 @@ class Factory:
         if indices[0] == '':
             indices.pop(0)
 
-        return cls.from_yaml(constructor, node), int(indices[0]), int(indices[1])
+        indices: List[int] = [int(idx) for idx in indices]
+
+        return cls.from_yaml(constructor, node), *indices
 
     @staticmethod
     def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:
