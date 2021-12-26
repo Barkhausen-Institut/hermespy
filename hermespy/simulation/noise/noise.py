@@ -7,11 +7,15 @@ Noise Modeling
 
 from __future__ import annotations
 from abc import abstractmethod
+from typing import Optional
 
 import numpy as np
 from numpy.random import default_rng
 
-from hermespy.signal import Signal
+from hermespy.core.factory import Factory
+from hermespy.core.random_node import RandomNode
+from hermespy.core.signal_model import Signal
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -23,42 +27,40 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Noise(object):
+class Noise(RandomNode):
     """Noise modeling base class."""
 
-    def __init__(self) -> None:
-        pass
-
-    @abstractmethod
-    def add(self, signal: Signal) -> None:
-        """Add noise to a signal model.
-
-        Args:
-
-            signal (Signal):
-                The signal to which the noise should be added.
-        """
-        ...
-
-
-class AWGN(Noise):
-    """Additive White Gaussian Noise."""
-
-    __slots__ = ['__power']
-
-    __power: float       # Variance of the added noise
+    __power: float       # Power of the added noise
 
     def __init__(self,
-                 power: float = 0.) -> None:
+                 power: float = 0.,
+                 seed: Optional[int] = None) -> None:
         """
         Args:
 
             power (float, optional):
                 Power of the added noise.
         """
-        
+
         self.power = power
-        
+        RandomNode.__init__(self, seed=seed)
+
+    @abstractmethod
+    def add(self,
+            signal: Signal,
+            power: Optional[float] = None) -> None:
+        """Add noise to a signal model.
+
+        Args:
+
+            signal (Signal):
+                The signal to which the noise should be added.
+
+            power (float, optional)
+                Power of the added noise.
+        """
+        ...
+
     @property
     def power(self) -> float:
         """Power of the added noise.
@@ -83,3 +85,25 @@ class AWGN(Noise):
             raise ValueError("Additive white Gaussian noise power must be greater or equal to zero")
 
         self.__power = value
+
+
+class AWGN(Noise):
+    """Additive White Gaussian Noise."""
+
+    def __init__(self,
+                 power: float = 0.,
+                 seed: Optional[int] = None) -> None:
+        """
+        Args:
+
+            power (float, optional):
+                Power of the added noise.
+        """
+
+        Noise.__init__(self, power=power, seed=seed)
+
+    def add(self, signal: Signal, power: Optional[float] = None) -> None:
+
+        power = self.power if power is None else power
+        signal.samples += (self._rng.normal(0, .5 * power ** .5, signal.samples.size) +
+                           1j * self._rng.normal(0, .5 * power ** .5, signal.samples.size))

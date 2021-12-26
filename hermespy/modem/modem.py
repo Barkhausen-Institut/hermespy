@@ -369,6 +369,14 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
         return self.waveform_generator.sampling_rate
 
+    @property
+    def energy(self) -> float:
+
+        if self.waveform_generator is None:
+            return 0.
+
+        return self.waveform_generator.bit_energy
+
     def generate_data_bits(self) -> np.ndarray:
         """Generate data bits required to build a single transmit data frame for this modem.
 
