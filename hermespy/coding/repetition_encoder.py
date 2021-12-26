@@ -7,7 +7,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import numpy as np
 
 from hermespy.coding.encoder import Encoder
-
+from hermespy.core.factory import Serializable
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -19,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RepetitionEncoder(Encoder):
+class RepetitionEncoder(Encoder, Serializable):
     """Exemplary implementation of a repetition channel encoder."""
 
     yaml_tag = 'Repetition'

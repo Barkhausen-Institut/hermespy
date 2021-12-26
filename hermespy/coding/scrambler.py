@@ -8,6 +8,7 @@ from typing import Optional, Type
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
 
+from hermespy.core.factory import Serializable
 from .encoder import Encoder
 
 __author__ = "Jan Adler"
@@ -120,7 +121,7 @@ class PseudoRandomGenerator:
         return x2
 
 
-class Scrambler3GPP(Encoder):
+class Scrambler3GPP(Encoder, Serializable):
     """This class represents a scrambler in the physical up- and down-link channel of the 3GPP.
 
     See section 7.3.1.1 of the respective technical standard TS 138 211 for details.
@@ -215,7 +216,7 @@ class Scrambler3GPP(Encoder):
         return cls()
 
 
-class Scrambler80211a(Encoder):
+class Scrambler80211a(Encoder, Serializable):
     """This class represents a scrambler in the `802.11a`_ standard.
 
     See section 17.3.5.4 of IEEE Standard `802.11a`_-1999 for details.

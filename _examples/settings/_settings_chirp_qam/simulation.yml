@@ -20,11 +20,11 @@
 
     - Modem 0
 
-#      Encoding:
-#
-#        - Repetition
-#          bit_block_size: 1000
-#          repetitions: 4
+      Encoding:
+
+        - Repetition
+          bit_block_size: 1000
+          repetitions: 4
 
       # Waveform configuration
       Waveform: !<PskQam>

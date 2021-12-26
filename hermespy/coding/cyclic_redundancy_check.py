@@ -7,6 +7,7 @@ from typing import Type
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
+from hermespy.core.factory import Serializable
 from .encoder import Encoder
 
 __author__ = "Tobias Kronauer"
@@ -19,7 +20,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class CyclicRedundancyCheck(Encoder):
+class CyclicRedundancyCheck(Encoder, Serializable):
     """Cyclic Redundancy Check Bit Encoding.
     
     Note that redundancy checking does NOT correct errors!
