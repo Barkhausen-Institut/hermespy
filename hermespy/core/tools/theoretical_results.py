@@ -85,10 +85,14 @@ class TheoreticalResults:
 
         return theoretical_results
 
-    def theoretical_results(self, transmitter: Transmitter,
+    def theoretical_results(self,
+                            transmitter: Transmitter,
                             receiver: Receiver,
                             channel: Channel,
                             snrs: np.ndarray) -> Optional[Dict[str, Any]]:
+
+        # ToDo: Fix
+        return None
 
         # Currently, only identical waveform generators are theoretically supported
         if type(transmitter.waveform_generator) != type(receiver.waveform_generator):

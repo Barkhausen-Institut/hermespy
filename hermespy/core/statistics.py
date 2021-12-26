@@ -35,10 +35,14 @@ class ConfidenceMetric(Enum):
 
 
 class SNRType(Enum):
-    """Supported signal-to-noise ratio types."""
+    """Supported types of signal-to-noise ratios."""
 
     EBN0 = 0
+    """Bit energy to noise power ratio."""
+
     ESN0 = 1
+    """Symbol energy to noise power ratio."""
+
     CUSTOM = 2
 
 

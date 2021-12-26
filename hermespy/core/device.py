@@ -341,6 +341,16 @@ class Receiver(RandomNode, MixingOperator['ReceiverSlot']):
         self.__signal = signal
         self.__csi = csi
 
+    @property
+    @abstractmethod
+    def energy(self) -> float:
+        """Average energy of the received signal.
+
+        Returns:
+            float: Energy.
+        """
+        ...
+
 
 class OperatorSlot(Generic[OperatorType]):
     """Slot list for operators of a single device."""
@@ -920,6 +930,11 @@ class DuplexReceiver(Receiver):
 
         return self.__duplex_operator.receive()
 
+    @property
+    def energy(self) -> float:
+
+        return self.__duplex_operator.energy
+
 
 class DuplexOperator(object):
     """Operator binding to both transmit and receive slots of any device."""
@@ -1014,3 +1029,13 @@ class DuplexOperator(object):
 
         self._transmitter.carrier_frequency = value
         self._receiver.carrier_frequency = value
+
+    @property
+    @abstractmethod
+    def energy(self) -> float:
+        """Average energy of the transmitted and received signal.
+
+        Returns:
+            flot: Energy.
+        """
+        ...

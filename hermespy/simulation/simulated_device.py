@@ -6,6 +6,7 @@ Simulated Devices
 """
 
 from __future__ import annotations
+from enum import Enum
 from typing import List, Optional, Tuple, Type
 
 import numpy as np
@@ -17,7 +18,9 @@ from hermespy.core import Device, FloatingError
 from hermespy.core.factory import Serializable
 from hermespy.core.scenario import Scenario
 from hermespy.core.signal_model import Signal
+from hermespy.core.statistics import SNRType
 from .rf_chain.rf_chain import RfChain
+from .noise.noise import Noise, AWGN
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -41,6 +44,7 @@ class SimulatedDevice(Device, Serializable):
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
+    __noise: Noise                          # Model of the hardware noise
     __scenario: Optional[Scenario]          # Scenario this device is attached to
     __sampling_rate: Optional[float]        # Sampling rate at which this device operate
     __carrier_frequency: float              # Center frequency of the mixed signal in rf-band
@@ -88,6 +92,7 @@ class SimulatedDevice(Device, Serializable):
 
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
+        self.noise = AWGN()
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
 
@@ -131,6 +136,23 @@ class SimulatedDevice(Device, Serializable):
             raise RuntimeError("Error trying to modify the scenario of an already attached modem")
 
         self.__scenario = scenario
+
+    @property
+    def noise(self) -> Noise:
+        """Model of the hardware noise.
+
+        Returns:
+            Noise: Handle to the noise model.
+        """
+
+        return self.__noise
+
+    @noise.setter
+    def noise(self, value: Noise) -> None:
+        """Set the model of the hardware noise."""
+
+        self.__noise = value
+        self.__noise.random_mother = self
 
     @property
     def attached(self) -> bool:
@@ -203,14 +225,26 @@ class SimulatedDevice(Device, Serializable):
         # Return result
         return rf_signal
 
-    def receive(self, signals: List[Tuple[Signal, ChannelStateInformation]]) -> Signal:
+    def receive(self,
+                signals: List[Tuple[Signal, ChannelStateInformation]],
+                snr: float = float('inf'),
+                snr_type: SNRType = SNRType.EBN0) -> Signal:
         """Receive signals at this device.
 
         Args:
+
             signals (List[Tuple[Signal, ChannelStateInformation]]):
                 List of signal models arriving at the device.
 
+            snr (float, optional):
+                Signal to noise power ratio.
+                Infinite by default, meaning no noise will be added to the received signals.
+
+            snr_type (SNRType, optional):
+                Type of signal to noise ratio.
+
         Returns:
+
             baseband_signal (Signal):
                 Baseband signal sampled after hardware-modeling.
         """
@@ -236,10 +270,16 @@ class SimulatedDevice(Device, Serializable):
                 reference_csi = signals[reference_idx][1]
 
             else:
+
                 reference_csi = None
 
+            # Add noise to the received signal according to the selected ratio
+            noise_power = receiver.energy / snr
+            noisy_signal = baseband_signal.copy()
+            self.__noise.add(noisy_signal, noise_power)
+
             # Cache reception
-            receiver.cache_reception(baseband_signal, reference_csi)
+            receiver.cache_reception(noisy_signal, reference_csi)
 
         return baseband_signal
 
