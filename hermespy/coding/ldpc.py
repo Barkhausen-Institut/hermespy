@@ -9,6 +9,7 @@ from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
 import os
 import numpy as np
 
+from hermespy.core.factory import Serializable
 from hermespy.coding import Encoder
 
 __author__ = "Tobias Kronauer"
@@ -21,7 +22,7 @@ __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class LDPC(Encoder):
+class LDPC(Encoder, Serializable):
     """Implementation of an LDPC Encoder.
 
     LDPC decoder using a serial C (check node) schedule and  message-passing as introduced in
