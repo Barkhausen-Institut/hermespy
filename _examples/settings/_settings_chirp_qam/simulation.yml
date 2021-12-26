@@ -9,3 +9,39 @@
   confidence_margin: .1
   confidence_metric: BER
   plot_bit_error: true
+
+  Devices:
+
+    - SimulatedDevice
+
+      num_antennas: 1
+
+  Operators:
+
+    - Modem 0
+
+#      Encoding:
+#
+#        - Repetition
+#          bit_block_size: 1000
+#          repetitions: 4
+
+      # Waveform configuration
+      Waveform: !<PskQam>
+
+        # Symbol settings
+        symbol_rate: 100e6
+        modulation_order: 16
+        chirp_bandwidth: 100e6
+        chirp_duration: 1e-6
+        oversampling_factor: 4
+
+        # Filter settings
+        filter:
+          filter_type: ROOT_RAISED_COSINE
+
+        # Frame settings
+        num_preamble_symbols: 10
+        num_data_symbols: 1000
+        pilot_rate: 1e6
+        guard_interval: 1e-6

@@ -34,7 +34,8 @@ from typing import List, Optional
 
 from ruamel.yaml.constructor import ConstructorError
 
-from hermespy.core import Factory, Executable
+from hermespy.core.executable import Executable
+from hermespy.core.factory import Serializable, Factory
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -85,8 +86,20 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
     try:
 
-        # Create executable
-        executable: Executable = factory.load(input_parameters_dir)
+        # Load serializable objects from configuration files
+        serializables: List[Serializable] = factory.load(input_parameters_dir)
+
+        # Filter out non-executables from the serialization list
+        executables: List[Executable] = [s for s in serializables if isinstance(s, Executable)]
+
+        # Abort execution if no executable was found
+        if len(executables) < 1:
+
+            print("No executable routine was detected")
+            exit(-1)
+
+        # For now, only single executables are supported
+        executable = executables[0]
 
         # Configure executable
         if results_dir is None:

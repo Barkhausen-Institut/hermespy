@@ -8,7 +8,8 @@ from enum import Enum
 import numpy as np
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
 
-from hermespy.channel import ChannelStateInformation
+from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.core.factory import Serializable
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
@@ -24,7 +25,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class WaveformGeneratorPskQam(WaveformGenerator):
+class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
     """This method provides a class for a generic PSK/QAM modem.
 
     The modem has the following characteristics:
@@ -46,8 +47,8 @@ class WaveformGeneratorPskQam(WaveformGenerator):
         ZF = 1      # Zero Forcing
         MMSE = 2    # Minimum Mean Squared Error
 
-    # YAML tag
-    yaml_tag = WaveformGenerator.yaml_tag + "PskQam"
+    yaml_tag = u'PskQam'
+    """YAML serialization tag."""
 
     tx_filter: ShapingFilter
     rx_filter: ShapingFilter

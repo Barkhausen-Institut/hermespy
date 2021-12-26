@@ -7,6 +7,7 @@ from typing import Optional
 
 import numpy as np
 
+from hermespy.core.factory import Serializable
 from hermespy.core.random_node import RandomNode
 
 __author__ = "Tobias Kronauer"
@@ -44,7 +45,7 @@ class BitsSource(ABC, RandomNode):
         ...
 
 
-class RandomBitsSource(BitsSource):
+class RandomBitsSource(BitsSource, Serializable):
     """Bit stream generator for pseudo-random sequences of bits."""
 
     yaml_tag = u'RandomBits'

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from math import ceil, floor
-from typing import List, Type, Optional, Union, Tuple
+from typing import Any, List, Type, Optional, Union, Tuple
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1104,6 +1104,8 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
         plot_drop_receive_stft = state.pop('plot_drop_receive_stft', False)
         plot_drop_transmit_spectrum = state.pop('plot_drop_transmit_spectrum', False)
         plot_drop_receive_spectrum = state.pop('plot_drop_receive_spectrum', False)
+        devices: Optional[List[SimulatedDevice]] = state.pop('Devices', [])
+        operators: Optional[Tuple[Any, int, ...]] = state.pop('Operators', [])
 
         # Convert noise loop dB to linear
         noise_loop = state.pop('noise_loop', None)
@@ -1122,5 +1124,17 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
         simulation.plot_drop_receive_stft = plot_drop_receive_stft
         simulation.plot_drop_transmit_spectrum = plot_drop_transmit_spectrum
         simulation.plot_drop_receive_spectrum = plot_drop_receive_spectrum
+
+        # Add devices to the simulation
+        for device in devices:
+            simulation.add_device(device)
+
+        # Assign operators their respective devices
+        for operator_tuple in operators:
+
+            operator = operator_tuple[0]
+            device_index = operator_tuple[1]
+
+            operator.device = simulation.devices[device_index]
 
         return simulation

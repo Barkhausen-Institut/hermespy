@@ -10,11 +10,12 @@ from typing import Any, List, Tuple, Type, Optional
 from math import floor
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, MappingNode
+from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
 
 from hermespy.channel import ChannelStateDimension, ChannelStateInformation
 from hermespy.coding import EncoderManager
 from hermespy.core import DuplexOperator, RandomNode
+from hermespy.core.factory import SerializableArray
 from hermespy.core.signal_model import Signal
 from hermespy.precoding import SymbolPrecoding
 from .bits_source import BitsSource, RandomBitsSource
@@ -30,7 +31,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Modem(RandomNode, DuplexOperator):
+class Modem(RandomNode, DuplexOperator, SerializableArray):
     """HermesPy representation of a wireless communication modem.
 
     Modems may transmit or receive information in form of bit streams.
@@ -381,29 +382,69 @@ class Modem(RandomNode, DuplexOperator):
 
     @classmethod
     def to_yaml(cls: Type[Modem], representer: SafeRepresenter, node: Modem) -> MappingNode:
-        """Serialize a modem object to YAML.
+        """Serialize a `Modem` object to YAML.
 
         Args:
-            representer (SafeRepresenter):
+
+            representer (Modem):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
 
             node (Modem):
-                The modem instance to be serialized.
+                The `Device` instance to be serialized.
 
         Returns:
-            Node:
+
+            MappingNode:
                 The serialized YAML node.
         """
 
-        serialization = {
-            "carrier_frequency": node.__carrier_frequency,
-            "tx_power": node.__power,
-            EncoderManager.yaml_tag: node.__encoder_manager,
-            SymbolPrecoding.yaml_tag: node.__precoding,
-        }
+        state = {}
 
-        if node.waveform_generator is not None:
-            serialization[node.waveform_generator.yaml_tag] = node.waveform_generator
+        if len(node.__encoder_manager.encoders) > 0:
+            state['Encoding'] = node.__encoder_manager
 
-        return representer.represent_mapping(cls.yaml_tag, serialization)
+        if len(node.__precoding) > 0:
+            state['Precoding'] = node.__precoding
+
+        if node.__waveform_generator is not None:
+            state['Waveform'] = node.__waveform_generator
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+    @classmethod
+    def from_yaml(cls: Type[Modem], constructor: SafeConstructor, node: MappingNode) -> Modem:
+        """Recall a new `Modem` class instance from YAML.
+
+        Args:
+
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (MappingNode):
+                YAML node representing the `Modem` serialization.
+
+        Returns:
+
+            Modem:
+                Newly created serializable instance.
+        """
+
+        state = constructor.construct_mapping(node)
+
+        encoding: Optional[EncoderManager] = state.pop('Encoding', None)
+        precoding: Optional[SymbolPrecoding] = state.pop('Precoding', None)
+        waveform: Optional[WaveformGenerator] = state.pop('Waveform', None)
+
+        modem = cls(**state)
+
+        if encoding is not None:
+            modem.encoder_manager = encoding
+
+        if precoding is not None:
+            modem.precoding = precoding
+
+        if waveform is not None:
+            modem.waveform_generator = waveform
+
+        return modem

@@ -6,7 +6,7 @@ Device Modeling
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod, ABCMeta
+from abc import ABC, abstractmethod
 from itertools import chain
 from typing import Any, Generic, List, Optional, Tuple, TypeVar
 
@@ -612,11 +612,8 @@ class Device(ABC, RandomNode):
     It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.
     """
 
-    __slots__ = ['transmitters', 'receivers', '__position', '__orientation', '__topology', '__carrier_frequency',
-                 '__sampling_rate']
-
     transmitters: TransmitterSlot
-    """"Transmitters broadcasting signals over this device."""
+    """Transmitters broadcasting signals over this device."""
 
     receivers: ReceiverSlot
     """Receivers capturing signals from this device"""
@@ -624,13 +621,11 @@ class Device(ABC, RandomNode):
     __position: Optional[np.ndarray]        # Position of the device within its scenario in cartesian coordinates
     __orientation: Optional[np.ndarray]     # Orientation of the device within its scenario as a quaternion
     __topology: np.ndarray                  # Antenna array topology of the device
-    __carrier_frequency: float              # Central frequency of the device's emissions in the RF-band
 
     def __init__(self,
                  position: Optional[np.array] = None,
                  orientation: Optional[np.array] = None,
                  topology: Optional[np.ndarray] = None,
-                 carrier_frequency: float = 0.,
                  seed: Optional[int] = None) -> None:
         """
         Args:
@@ -647,10 +642,6 @@ class Device(ABC, RandomNode):
                 Antenna array topology of the device.
                 By default, a single ideal omnidirectional antenna is assumed.
 
-            carrier_frequency (float, optional):
-                Central frequency of the device's emissions in the RF-band.
-                By default, 0Hz is assumed, meaning the device transmits in the base-band.
-
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
         """
@@ -663,7 +654,6 @@ class Device(ABC, RandomNode):
         self.position = position
         self.orientation = orientation
         self.topology = topology
-        self.carrier_frequency = carrier_frequency
 
     @property
     def position(self) -> Optional[np.ndarray]:
@@ -805,6 +795,7 @@ class Device(ABC, RandomNode):
         return max_duration
 
     @property
+    @abstractmethod
     def carrier_frequency(self) -> float:
         """Central frequency of the device's emissions in the RF-band.
 
@@ -816,17 +807,7 @@ class Device(ABC, RandomNode):
         Raises:
             ValueError: On negative carrier frequencies.
         """
-
-        return self.__carrier_frequency
-
-    @carrier_frequency.setter
-    def carrier_frequency(self, value: float) -> None:
-        """Set the central frequency of the device's emissions in the RF-band."""
-
-        if value < 0.0:
-            raise ValueError("Carrier frequency must be greater or equal to zero")
-
-        self.__carrier_frequency = value
+        ...
 
     @property
     @abstractmethod
