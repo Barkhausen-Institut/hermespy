@@ -339,15 +339,16 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
 
         return channels
 
-    def set_channel(self, transmitter_index: int, receiver_index: int, channel: Channel) -> None:
+    def set_channel(self, receiver_index: int, transmitter_index: int, channel: Channel) -> None:
         """Specify a channel within the channel matrix.
 
         Args:
-            transmitter_index (int):
-                Index of the transmitter within the channel matrix.
 
             receiver_index (int):
                 Index of the receiver within the channel matrix.
+
+            transmitter_index (int):
+                Index of the transmitter within the channel matrix.
 
             channel (Channel):
                 The channel instance to be set at position (`transmitter_index`, `receiver_index`).
@@ -367,8 +368,8 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
         self.__channels[transmitter_index, receiver_index] = channel
 
         # Set proper receiver and transmitter fields
-        channel.transmitter = self.transmitters[transmitter_index]
-        channel.receiver = self.receivers[receiver_index]
+        channel.transmitter = self.devices[transmitter_index]
+        channel.receiver = self.devices[receiver_index]
         channel.scenario = self
 
     def run(self) -> Statistics:
@@ -1101,8 +1102,9 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
         plot_drop_receive_stft = state.pop('plot_drop_receive_stft', False)
         plot_drop_transmit_spectrum = state.pop('plot_drop_transmit_spectrum', False)
         plot_drop_receive_spectrum = state.pop('plot_drop_receive_spectrum', False)
-        devices: Optional[List[SimulatedDevice]] = state.pop('Devices', [])
-        operators: Optional[Tuple[Any, int, ...]] = state.pop('Operators', [])
+        devices: List[SimulatedDevice] = state.pop('Devices', [])
+        operators: List[Tuple[Any, int, ...]] = state.pop('Operators', [])
+        channels: List[Tuple[Channel, int, ...]] = state.pop('Channels', [])
 
         # Convert noise loop dB to linear
         noise_loop = state.pop('noise_loop', None)
@@ -1134,4 +1136,14 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
 
             operator.device = simulation.devices[device_index]
 
+        # Assign channel models
+        for channel_tuple in channels:
+
+            channel = channel_tuple[0]
+            output_device_idx = channel_tuple[1]
+            input_device_idx = channel_tuple[2]
+
+            simulation.set_channel(output_device_idx, input_device_idx, channel)
+
+        # Return simulation instance recovered from the serialization
         return simulation
