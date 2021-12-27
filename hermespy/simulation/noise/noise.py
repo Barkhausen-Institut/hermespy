@@ -105,5 +105,5 @@ class AWGN(Noise):
     def add(self, signal: Signal, power: Optional[float] = None) -> None:
 
         power = self.power if power is None else power
-        signal.samples += (self._rng.normal(0, .5 * power ** .5, signal.samples.size) +
-                           1j * self._rng.normal(0, .5 * power ** .5, signal.samples.size))
+        signal.samples += (self._rng.normal(0, power ** .5, signal.samples.size) +
+                           1j * self._rng.normal(0, power ** .5, signal.samples.size)) / 2 ** .5
