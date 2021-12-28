@@ -27,6 +27,10 @@ class DeviceMock(Device):
     def sampling_rate(self) -> float:
         return 1.0
 
+    @property
+    def carrier_frequency(self) -> float:
+        return 0.
+
 
 class TestOperator(TestCase):
     """Test device slot operators."""
@@ -350,19 +354,41 @@ class TestDevice(TestCase):
 
     def setUp(self) -> None:
 
+        self.power = 1.5
         self.position = np.zeros(3)
         self.orientation = np.zeros(3)
         self.topology = np.array([[1., 2., 3.], [4., 5., 6.]], dtype=float)
 
-        self.device = DeviceMock(position=self.position, orientation=self.orientation,
+        self.device = DeviceMock(power=self.power, position=self.position, orientation=self.orientation,
                                  topology=self.topology)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
 
+        self.assertEqual(self.power, self.device.power)
         assert_array_equal(self.position, self.device.position)
         assert_array_equal(self.orientation, self.device.orientation)
         assert_array_equal(self.topology, self.device.topology)
+
+    def test_power_setget(self) -> None:
+        """Power property getter should return setter argument."""
+
+        power = 1.23
+        self.device.power = power
+
+        self.assertEqual(power, self.device.power)
+
+    def test_power_validation(self) -> None:
+        """Power property setter should raise ValueError on negative arguments."""
+
+        with self.assertRaises(ValueError):
+            self.device.power = -1.
+
+        try:
+            self.device.power = 0.
+
+        except ValueError:
+            self.fail()
 
     def test_position_setget(self) -> None:
         """Position property getter should return setter argument."""
@@ -440,22 +466,3 @@ class TestDevice(TestCase):
         with self.assertRaises(ValueError):
             self.device.topology = np.array([[1, 2, 3, 4]])
 
-    def test_carrier_frequency_setget(self) -> None:
-        """Carrier frequency property setter should return getter argument."""
-
-        carrier_frequency = 20
-        self.device.carrier_frequency = carrier_frequency
-
-        self.assertEqual(carrier_frequency, self.device.carrier_frequency)
-
-    def test_carrier_frequency_validation(self) -> None:
-        """Carrier frequency property should return ValueError on negative arguments."""
-
-        with self.assertRaises(ValueError):
-            self.device.carrier_frequency = -1.0
-
-        try:
-            self.device.carrier_frequency = 0.0
-
-        except ValueError:
-            self.fail()
