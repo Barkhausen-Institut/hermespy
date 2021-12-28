@@ -34,7 +34,9 @@ class MMSETimeEqualizer(SymbolPrecoder, Serializable):
         SymbolPrecoder.__init__(self)
 
     def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
-        raise NotImplementedError("Equalization can only applied to receiver stream coding configurations")
+
+        # This is a stub, there is no equalization during encoding
+        return symbol_stream
 
     def decode(self,
                symbol_stream: np.ndarray,
@@ -131,7 +133,9 @@ class MMSESpaceEqualizer(SymbolPrecoder, Serializable):
         SymbolPrecoder.__init__(self)
 
     def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
-        raise NotImplementedError("Equalization can only applied to receiver stream coding configurations")
+
+        # This is a stub, there is no equalization during encoding
+        return symbol_stream
 
     def decode(self,
                symbol_stream: np.ndarray,

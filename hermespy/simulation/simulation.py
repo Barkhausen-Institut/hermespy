@@ -88,7 +88,8 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
                  confidence_level: float = 1.0,
                  confidence_margin: float = 0.0,
                  results_dir: Optional[str] = None,
-                 verbosity: Union[str, Verbosity] = Verbosity.INFO) -> None:
+                 verbosity: Union[str, Verbosity] = Verbosity.INFO,
+                 seed: Optional[int] = None) -> None:
         """Simulation object initialization.
 
         Args:
@@ -152,13 +153,16 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
 
             verbosity (Union[str, Verbosity], optional):
                 Information output behaviour during execution.
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
         """
 
         Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
                             calc_transmit_stft, calc_receive_stft, spectrum_fft_size, max_num_drops,
                             results_dir, verbosity)
 
-        Scenario.__init__(self)
+        Scenario.__init__(self, seed=seed)
 
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.drop_duration = drop_duration

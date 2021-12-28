@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from hermespy.modem.rf_chain_models import PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier,\
-    CustomPowerAmplifier
+from hermespy.simulation.rf_chain.power_amplifier import PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, \
+    ClippingPowerAmplifier
 
 saturation_amplitude = 1.0
 
