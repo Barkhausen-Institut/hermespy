@@ -483,6 +483,16 @@ class FrameSymbolSection(FrameSection, Serializable):
 
         return cls(**constructor.construct_mapping(node))
 
+    @classmethod
+    def to_yaml(cls: Type[FrameSymbolSection], representer: SafeRepresenter, node: FrameSymbolSection) -> MappingNode:
+
+        state = {
+            'num_repetitions': node.num_repetitions,
+            'pattern': node.pattern,
+        }
+
+        return representer.represent_mapping(node.yaml_tag, state)
+
 
 class FrameGuardSection(FrameSection, Serializable):
 
@@ -548,6 +558,16 @@ class FrameGuardSection(FrameSection, Serializable):
                   node: MappingNode) -> FrameGuardSection:
 
         return cls(**constructor.construct_mapping(node))
+
+    @classmethod
+    def to_yaml(cls: Type[FrameGuardSection], representer: SafeRepresenter, node: FrameGuardSection) -> MappingNode:
+
+        state = {
+            'num_repetitions': node.num_repetitions,
+            'duration': node.duration,
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
 
 
 class WaveformGeneratorOfdm(WaveformGenerator, Serializable):

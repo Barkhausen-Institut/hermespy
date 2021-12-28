@@ -370,6 +370,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable):
         # Set proper receiver and transmitter fields
         channel.transmitter = self.devices[transmitter_index]
         channel.receiver = self.devices[receiver_index]
+        channel.random_mother = self
         channel.scenario = self
 
     def run(self) -> Statistics:
