@@ -628,17 +628,23 @@ class Device(ABC, RandomNode):
     receivers: ReceiverSlot
     """Receivers capturing signals from this device"""
 
+    __power: float                          # Average power of the transmitted signals
     __position: Optional[np.ndarray]        # Position of the device within its scenario in cartesian coordinates
     __orientation: Optional[np.ndarray]     # Orientation of the device within its scenario as a quaternion
     __topology: np.ndarray                  # Antenna array topology of the device
 
     def __init__(self,
+                 power: float = 1.0,
                  position: Optional[np.array] = None,
                  orientation: Optional[np.array] = None,
                  topology: Optional[np.ndarray] = None,
                  seed: Optional[int] = None) -> None:
         """
         Args:
+
+            power (float, optional):
+                Average power of the transmitted signals in Watts.
+                1.0 Watt by default.
 
             position (np.ndarray, optional):
                 Position of the device within its scenario in cartesian coordinates.
@@ -661,9 +667,32 @@ class Device(ABC, RandomNode):
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
 
+        self.power = power
         self.position = position
         self.orientation = orientation
         self.topology = topology
+
+    @property
+    def power(self) -> float:
+        """Average power of the transmitted signal signal.
+
+        Returns:
+            power (float): Power in Watt.
+
+        Raises:
+            ValueError: If `value` is smaller than zero.
+        """
+
+        return self.__power
+
+    @power.setter
+    def power(self, value: float) -> None:
+        """Set the average power of the transmitted signal."""
+
+        if value < 0.:
+            raise ValueError("Average signal power must be greater or equal to zero")
+
+        self.__power = value
 
     @property
     def position(self) -> Optional[np.ndarray]:
