@@ -10,8 +10,10 @@ from numpy import tensordot
 from sparse import tensordot
 from scipy.linalg.decomp_svd import svd
 
-from .symbol_precoder import SymbolPrecoder
 from hermespy.channel import ChannelStateInformation
+from hermespy.core.factory import Serializable
+from .symbol_precoder import SymbolPrecoder
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -23,7 +25,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ZFTimeEqualizer(SymbolPrecoder):
+class ZFTimeEqualizer(SymbolPrecoder, Serializable):
     """Zero-Forcing channel equalization in time domain."""
 
     yaml_tag: str = u'ZF-Time'
@@ -118,7 +120,7 @@ class ZFTimeEqualizer(SymbolPrecoder):
         return cls()
 
 
-class ZFSpaceEqualizer(SymbolPrecoder):
+class ZFSpaceEqualizer(SymbolPrecoder, Serializable):
     """Zero-Forcing channel equalization in space domain."""
 
     yaml_tag: str = u'ZF-Space'

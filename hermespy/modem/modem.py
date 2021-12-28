@@ -440,15 +440,14 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
         state = constructor.construct_mapping(node)
 
-        encoding: Optional[List[Encoder]] = state.pop('Encoding', None)
+        encoding: Optional[EncoderManager] = state.pop('Encoding', None)
         precoding: Optional[SymbolPrecoding] = state.pop('Precoding', None)
         waveform: Optional[WaveformGenerator] = state.pop('Waveform', None)
 
         modem = cls(**state)
 
         if encoding is not None:
-            for encoder in encoding:
-                modem.encoder_manager.add_encoder(encoder)
+            modem.encoder_manager = encoding
 
         if precoding is not None:
             modem.precoding = precoding

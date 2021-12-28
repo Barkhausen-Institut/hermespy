@@ -9,8 +9,9 @@ from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode
 from sparse import tensordot
 from scipy.linalg.decomp_svd import svd
 
+from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.core.factory import Serializable
 from .symbol_precoder import SymbolPrecoder
-from hermespy.channel import ChannelStateInformation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -22,7 +23,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MMSETimeEqualizer(SymbolPrecoder):
+class MMSETimeEqualizer(SymbolPrecoder, Serializable):
     """Minimum-Mean-Square channel equalization in time domain."""
 
     yaml_tag: str = u'MMSE-Time'
@@ -119,7 +120,7 @@ class MMSETimeEqualizer(SymbolPrecoder):
         return cls()
 
 
-class MMSESpaceEqualizer(SymbolPrecoder):
+class MMSESpaceEqualizer(SymbolPrecoder, Serializable):
     """Minimum-Mean-Square channel equalization in space domain."""
 
     yaml_tag: str = u'MMSE-Space'
