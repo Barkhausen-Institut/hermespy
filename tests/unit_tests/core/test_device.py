@@ -465,4 +465,3 @@ class TestDevice(TestCase):
 
         with self.assertRaises(ValueError):
             self.device.topology = np.array([[1, 2, 3, 4]])
-

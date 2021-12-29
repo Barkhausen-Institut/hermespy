@@ -25,14 +25,15 @@ Devices:                          # Physical device models within the simulated 
 Operators:
 
   # A single modem operating the device #0
-  - Modem 0
+  - Modem 0 0
 
-    Encoding:                   # Bit encoding before mapping to modulation symbols
+#    Encoding:                   # Bit encoding before mapping to modulation symbols
 
       # Repetition encoding, repeating bit sections for redundancy
-      - Repetition
-        bit_block_size: 16        # Block size
-        repetitions: 3            # Number of times the bits within the block get repeated
+#      - Repetition
+
+#        bit_block_size: 16        # Block size
+#        repetitions: 3            # Number of times the bits within the block get repeated
 
 
     Waveform: !<ChirpFsk>         # Configuration of the waveform emitted by this transmitter

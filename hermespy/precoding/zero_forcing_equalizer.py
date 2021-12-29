@@ -36,7 +36,9 @@ class ZFTimeEqualizer(SymbolPrecoder, Serializable):
         SymbolPrecoder.__init__(self)
 
     def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
-        raise NotImplementedError("Equalization can only applied to receiver stream coding configurations")
+
+        # Stub
+        return symbol_stream
 
     def decode(self,
                symbol_stream: np.ndarray,

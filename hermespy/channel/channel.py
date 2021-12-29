@@ -2,8 +2,8 @@
 """Channel model for wireless transmission links."""
 
 from __future__ import annotations
-from typing import Optional, Tuple, Type
-from itertools import product
+from typing import List, Optional, Tuple, Type, Union
+from itertools import chain, product
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
@@ -301,25 +301,44 @@ class Channel(RandomNode, SerializableArray):
 
         return self.__receiver.num_antennas
 
-    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
-        """Modifies the input signal and returns it after channel propagation.
+    def propagate(self,
+                  forwards: Union[Signal, List[Signal], None] = None,
+                  backwards: Union[Signal, List[Signal], None] = None) -> \
+            Tuple[List[Signal], List[Signal], ChannelStateInformation]:
+        """Propagate radio-frequency band signals over a channel instance.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of ones.
         The routine samples a new impulse response, which will be converted to ChannelStateInformation.
 
         Args:
 
-            transmitted_signal (Signal):
-                Radio-Frequency band antenna signals to be propagated of this channel instance.
+            forwards (Union[Signal, List[Signal]], optional):
+                Signal models emitted by `device_alpha` associated with this wireless channel model.
+
+            backwards (Union[Signal, List[Signal]], optional):
+                Signal models emitted by `device_beta` associated with this wireless channel model.
 
         Returns:
-            (Signal, ChannelStateInformation):
-                Tuple of the distorted signal after propagation and the respective channel state.
-                Note that the channel may append samples to the propagated signal.
+
+            Tuple[List[Signal], List[Signal], ChannelStateInformation]:
+
+                forwards_receptions (List[Signal]):
+                    Signal models impinging onto `device_beta` after channel propagation.
+
+                backwards_receptions (List[Signal]):
+                    Signal models impinging onto `device_alpha` after channel propagation.
+
+                csi (ChannelStateInformation):
+                    State of the channel during signal propagation.
+
         Raises:
 
             ValueError:
-                If the number of streams in `transmitted_signal` is not one or the number of transmitting antennas.
+                If the number of streams in `forwards` is not one
+                or the number of antennas in `device_alpha`.
+                If the number of streams in `backwards` is not one
+                or the number of antennas in `device_beta`.
+
 
             RuntimeError:
                 If the scenario configuration is not supported by the default channel model.
@@ -328,49 +347,99 @@ class Channel(RandomNode, SerializableArray):
                 If the channel is currently floating.
         """
 
+        # Convert forwards and backwards transmissions to lists if required
+        forwards = [] if forwards is None else forwards
+        backwards = [] if backwards is None else backwards
+        forwards = [forwards] if isinstance(forwards, Signal) else forwards
+        backwards = [backwards] if isinstance(backwards, Signal) else backwards
+
+        # Abort if the channel is considered floating, since physical device properties are required for
+        # channel modeling
         if self.transmitter is None or self.receiver is None:
             raise RuntimeError("Channel is floating, making propagation simulation impossible")
 
-        if transmitted_signal.num_streams != self.transmitter.num_antennas:
-            raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+        # Validate that the signal models contain the correct number of streams
+        for signal in forwards:
+            if signal.num_streams != self.transmitter.num_antennas:
+                raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+
+        for signal in backwards:
+            if signal.num_streams != self.receiver.num_antennas:
+                raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+
+        # Determine the sampling rate and sample count of the CSI samples
+        # For now, the sampling rate and sample count is the maximum over all provided signal models
+        csi_sampling_rate = 0.
+        csi_num_samples = 0
+        for signal in chain(forwards, backwards):
+
+            csi_sampling_rate = max(csi_sampling_rate, signal.sampling_rate)
+            csi_num_samples = max(csi_num_samples, signal.num_samples)
 
         # If the channel is inactive, propagation will result in signal loss
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
-            return (Signal.empty(transmitted_signal.sampling_rate),
-                    ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0))
+            return [], [], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
 
         # Generate the channel's impulse response
-        impulse_response = self.impulse_response(transmitted_signal.timestamps, transmitted_signal.sampling_rate)
+        impulse_response = self.impulse_response(csi_num_samples, csi_sampling_rate)
 
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
+
+        forwards_receptions = [self.__propagate_scalar(signal.resample(csi_sampling_rate), impulse_response,
+                                                       sync_offset)
+                               for signal in forwards]
+        backwards_receptions = [self.__propagate_scalar(signal.resample(csi_sampling_rate),
+                                                        impulse_response.transpose((0, 2, 1, 3)), sync_offset)
+                                for signal in backwards]
+
+        channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                impulse_response.transpose((1, 2, 0, 3)))
+
+        return forwards_receptions, backwards_receptions, channel_state
+
+    def __propagate_scalar(self,
+                           signal: Signal,
+                           impulse_response: np.ndarray,
+                           delay: float) -> Signal:
+        """Propagate a single signal model given a specific channel impulse response.
+
+        Args:
+
+            signal (Signal):
+                Signal model to be propagated.
+
+            impulse_response (np.ndarray):
+                The impulse response by which to propagate the signal model.
+
+            delay (float):
+                Additional delays, for example synchronization offsets.
+
+        Returns:
+
+            propagated_signal (Signal):
+                Propagated signal model.
+        """
 
         # The maximum delay in samples is modeled by the last impulse response dimension
         num_delay_samples = impulse_response.shape[3] - 1
 
         # Propagate the signal
-        received_samples = np.zeros((self.receiver.num_antennas,
-                                    transmitted_signal.num_samples + num_delay_samples), dtype=complex)
+        propagated_samples = np.zeros((impulse_response.shape[1],
+                                       signal.num_samples + num_delay_samples), dtype=complex)
 
         for delay_index in range(num_delay_samples+1):
             for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
 
-                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] *\
-                                 transmitted_signal.samples[tx_idx, :]
-                received_samples[rx_idx, delay_index:delay_index+transmitted_signal.num_samples] += delayed_signal
+                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
+                propagated_samples[rx_idx, delay_index:delay_index+signal.num_samples] += delayed_signal
 
-        propagated_signal = Signal(received_samples,
-                                   transmitted_signal.sampling_rate,
-                                   carrier_frequency=transmitted_signal.carrier_frequency,
-                                   delay=transmitted_signal.delay+sync_offset)
-        channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                impulse_response.transpose((1, 2, 0, 3)))
-
-        return propagated_signal, channel_state
+        return Signal(propagated_samples, sampling_rate=signal.sampling_rate,
+                      carrier_frequency=signal.carrier_frequency, delay=signal.delay+delay)
 
     def impulse_response(self,
-                         timestamps: np.ndarray,
+                         num_samples: int,
                          sampling_rate: float) -> np.ndarray:
         """Sample a new channel impulse response.
 
@@ -378,8 +447,8 @@ class Channel(RandomNode, SerializableArray):
 
         Args:
 
-            timestamps (np.ndarray):
-                Time instants with length `T` to calculate the response for.
+            num_samples (int):
+                Number of samples within the impulse response.
 
             sampling_rate (float):
                 The rate at which the delay taps will be sampled, i.e. the delay resolution.
@@ -398,17 +467,17 @@ class Channel(RandomNode, SerializableArray):
         # MISO case
         if self.receiver.num_antennas == 1:
             impulse_responses = np.tile(np.ones((1, self.transmitter.num_antennas), dtype=complex),
-                                        (timestamps.size, 1, 1))
+                                        (num_samples, 1, 1))
 
         # SIMO case
         elif self.transmitter.num_antennas == 1:
             impulse_responses = np.tile(np.ones((self.receiver.num_antennas, 1), dtype=complex),
-                                        (timestamps.size, 1, 1))
+                                        (num_samples, 1, 1))
 
         # MIMO case
         else:
             impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas,
-                                               dtype=complex), (timestamps.size, 1, 1))
+                                               dtype=complex), (num_samples, 1, 1))
 
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)

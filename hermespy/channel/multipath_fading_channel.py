@@ -109,7 +109,6 @@ class MultipathFadingChannel(Channel):
                  delays: Union[np.ndarray, List[float]],
                  power_profile: Union[np.ndarray, List[float]],
                  rice_factors: Union[np.ndarray, List[float]],
-                 random_generator: Optional[rnd.Generator] = None,
                  num_sinusoids: Optional[float] = None,
                  los_angle: Optional[float] = None,
                  doppler_frequency: Optional[float] = None,
@@ -460,30 +459,32 @@ class MultipathFadingChannel(Channel):
 
         self.__los_angle = angle
 
-    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
+#    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
 
-        propagated_signal = transmitted_signal.copy()
+#        propagated_signal = transmitted_signal.copy()
 
-        # Introduce transmit precoding
-        if self.__transmit_precoding is not None:
-            propagated_signal.samples = self.__transmit_precoding @ propagated_signal.samples
+#        # Introduce transmit precoding
+#        if self.__transmit_precoding is not None:
+#            propagated_signal.samples = self.__transmit_precoding @ propagated_signal.samples
 
-        # Propagate over channel impulse response
-        propagated_signal, impulse_response = Channel.propagate(self, propagated_signal)
+#        # Propagate over channel impulse response
+#        propagated_signal, impulse_response = Channel.propagate(self, propagated_signal)
 
-        # ToDo: Should we consider the pre-and postcoding matrices in the impulse response?
-        # Currently, pre- and postcoding is not considered and will probably degrade channel equalization
+#        # ToDo: Should we consider the pre-and postcoding matrices in the impulse response?
+#        # Currently, pre- and postcoding is not considered and will probably degrade channel equalization
 
-        # Introduce receive postcoding
-        if self.__receive_postcoding is not None:
-            propagated_signal.samples = self.__receive_postcoding @ propagated_signal.samples
+#        # Introduce receive postcoding
+#        if self.__receive_postcoding is not None:
+#            propagated_signal.samples = self.__receive_postcoding @ propagated_signal.samples
 
-        return propagated_signal, impulse_response
+#        return propagated_signal, impulse_response
 
-    def impulse_response(self, timestamps: np.ndarray, sampling_rate: float) -> np.ndarray:
+    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
 
         max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
-        impulse_response = np.zeros((len(timestamps),
+        timestamps = np.arange(num_samples) / sampling_rate
+
+        impulse_response = np.zeros((num_samples,
                                      self.receiver.num_antennas,
                                      self.transmitter.num_antennas,
                                      max_delay_in_samples + 1), dtype=complex)
@@ -515,11 +516,20 @@ class MultipathFadingChannel(Channel):
         Implements equation (18) of the underlying paper.
 
         Args:
-            timestamps (np.ndarray): Time instances at which the channel should be sampled.
-            los_gain (complex): Gain of the line-of-sight (specular) model component.
-            nlos_gain (complex): Gain of the non-line-of-sight model components.
+
+            timestamps (np.ndarray):
+                Time instances at which the channel should be sampled.
+
+            los_gain (complex):
+                Gain of the line-of-sight (specular) model component.
+
+            nlos_gain (complex):
+                Gain of the non-line-of-sight model components.
+
         Returns:
-            np.ndarray: Channel gains at requested timestamps.
+
+            np.ndarray:
+                Channel gains at requested timestamps.
         """
 
         nlos_doppler = self.doppler_frequency
@@ -630,6 +640,7 @@ class MultipathFadingChannel(Channel):
         """Recall a new `MultipathFadingChannel` instance from YAML.
 
         Args:
+
             constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
@@ -637,6 +648,7 @@ class MultipathFadingChannel(Channel):
                 YAML node representing the `MultipathFadingChannel` serialization.
 
         Returns:
+
             MultipathFadingChannel:
                 Newly created `MultipathFadingChannel` instance.
                 The internal references to modems will be `None` and need to be
@@ -646,13 +658,8 @@ class MultipathFadingChannel(Channel):
 
         state = constructor.construct_mapping(node)
 
-        seed = state.pop('seed', None)
-        power_profile = state.pop('power_profile', None)
-
-        if seed is not None:
-            state['random_generator'] = rnd.default_rng(seed)
-
         # Convert power profile from dB to linear
+        power_profile = state.pop('power_profile', None)
         if power_profile is not None:
             state['power_profile'] = 10 ** (np.array(power_profile) / 10)
 
