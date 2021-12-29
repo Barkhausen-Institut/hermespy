@@ -44,6 +44,9 @@ class SimulatedDevice(Device, Serializable):
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
+    operator_separation: bool
+    """Separate operators during signal modeling."""
+
     __noise: Noise                          # Model of the hardware noise
     __scenario: Optional[Scenario]          # Scenario this device is attached to
     __sampling_rate: Optional[float]        # Sampling rate at which this device operate
@@ -93,6 +96,7 @@ class SimulatedDevice(Device, Serializable):
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.noise = AWGN()
+        self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
 
@@ -214,26 +218,27 @@ class SimulatedDevice(Device, Serializable):
         self.__carrier_frequency = value
 
     def transmit(self,
-                 clear_cache: bool = True) -> Signal:
+                 clear_cache: bool = True) -> List[Signal]:
 
-        # Capture transmitted signal
-        transmitted_signal = Device.transmit(self, clear_cache)
+        # Collect transmissions
+        signals = self.transmitters.get_transmissions(clear_cache) if self.operator_separation else \
+            [Device.transmit(self, clear_cache)]
 
         # Simulate rf-chain
-        rf_signal = self.rf_chain.transmit(transmitted_signal)
+        transmissions = [self.rf_chain.transmit(signal) for signal in signals]
 
         # Return result
-        return rf_signal
+        return transmissions
 
     def receive(self,
-                signals: List[Tuple[Signal, ChannelStateInformation]],
+                device_signals: np.ndarray,
                 snr: float = float('inf'),
                 snr_type: SNRType = SNRType.EBN0) -> Signal:
         """Receive signals at this device.
 
         Args:
 
-            signals (List[Tuple[Signal, ChannelStateInformation]]):
+            device_signals (np.ndarray):
                 List of signal models arriving at the device.
 
             snr (float, optional):
@@ -253,8 +258,9 @@ class SimulatedDevice(Device, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
-        for signal, _ in signals:
-            mixed_signal.superimpose(signal)
+        for signals, _ in device_signals:
+            for signal in signals:
+                mixed_signal.superimpose(signal)
 
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(mixed_signal)
@@ -266,20 +272,29 @@ class SimulatedDevice(Device, Serializable):
             if receiver.reference_transmitter is not None:
 
                 reference_device = receiver.reference_transmitter.device
-                reference_idx = self.scenario.devices.index(reference_device)
-                reference_csi = signals[reference_idx][1]
+                reference_device_idx = self.scenario.devices.index(reference_device)
+
+                reference_csi = device_signals[reference_device_idx][1]
+
+                if self.operator_separation:
+
+                    reference_transmitter_idx = receiver.slot_index
+                    receiver_signal = device_signals[reference_device_idx][0][reference_transmitter_idx].copy()
+
+                else:
+                    receiver_signal = baseband_signal.copy()
 
             else:
 
                 reference_csi = None
+                receiver_signal = baseband_signal.copy()
 
             # Add noise to the received signal according to the selected ratio
             noise_power = receiver.energy / snr
-            noisy_signal = baseband_signal.copy()
-            self.__noise.add(noisy_signal, noise_power)
+            self.__noise.add(receiver_signal, noise_power)
 
             # Cache reception
-            receiver.cache_reception(noisy_signal, reference_csi)
+            receiver.cache_reception(receiver_signal, reference_csi)
 
         return baseband_signal
 
