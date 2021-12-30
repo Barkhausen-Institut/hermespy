@@ -456,3 +456,4 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             modem.waveform_generator = waveform
 
         return modem
+2

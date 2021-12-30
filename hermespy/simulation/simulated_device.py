@@ -344,4 +344,10 @@ class SimulatedDevice(Device, Serializable):
         """
 
         state = constructor.construct_mapping(node)
-        return cls(**state)
+
+        operator_separation = state.pop('operator_separation', None)
+
+        device = cls(**state)
+
+        if operator_separation is not None:
+            device.operator_separation = operator_separation
