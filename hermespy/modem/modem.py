@@ -13,7 +13,7 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
 
 from hermespy.channel import ChannelStateDimension, ChannelStateInformation
-from hermespy.coding import EncoderManager, Encoder
+from hermespy.coding import EncoderManager
 from hermespy.core import DuplexOperator, RandomNode
 from hermespy.core.factory import SerializableArray
 from hermespy.core.signal_model import Signal
@@ -50,6 +50,10 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
     __precoding: SymbolPrecoding
     __waveform_generator: Optional[WaveformGenerator]
     __bits_source: BitsSource
+    __transmitted_bits: np.ndarray                      # Cache of recently transmitted bits
+    __transmitted_symbols: np.ndarray                   # Cache of recently transmitted symbols
+    __received_bits: np.ndarray                         # Cache of recently received bits
+    __received_symbols: np.ndarray                      # Cache of recently received symbols
 
     def __init__(self,
                  encoding: Optional[EncoderManager] = None,
@@ -81,6 +85,10 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         self.__precoding = SymbolPrecoding(modem=self)
         self.__waveform_generator = None
         self.__power = 1.0
+        self.__transmitted_bits = np.empty(0, dtype=int)
+        self.__transmitted_symbols = np.empty(0, dtype=complex)
+        self.__received_bits = np.empty(0, dtype=int)
+        self.__received_symbols = np.empty(0, dtype=complex)
 
         self.bits_source = RandomBitsSource()
         self.encoder_manager = EncoderManager() if encoding is None else encoding
@@ -173,14 +181,41 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         # Scale resulting signal by configured power factor
         # signal.samples *= np.sqrt(self.power)
 
+        # Cache transmissions
+        self.__transmitted_bits = data_bits
+        self.__transmitted_symbols = symbols
+
         # We're finally done, blow the fanfares, throw confetti, etc.
         return signal, symbols, data_bits
+    
+    @property
+    def transmitted_bits(self) -> np.ndarray:
+        """Recently transmitted data bits.
+        
+        Returns:
+            np.ndarray: Numpy array of recently transmitted data bits.
+        """
+        
+        return self.__transmitted_bits.copy()
+    
+    @property
+    def transmitted_symbols(self) -> np.ndarray:
+        """Recently transmitted modulation symbols.
+        
+        Returns:
+            np.ndarray: Numpy array of recently transmitted symbols.
+        """
+        
+        return self.__transmitted_symbols.copy()
 
     def receive(self) -> Tuple[Any, ...]:
 
         signal = self._receiver.signal
-        csi = self._receiver.csi
+        if signal is None:
+            raise RuntimeError("No signal received by modem")
+            # signal = Signal.empty(sampling_rate=self.device.sampling_rate)
 
+        csi = self._receiver.csi
         if csi is None:
             csi = ChannelStateInformation.Ideal(signal.num_samples)
 
@@ -250,8 +285,32 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         # Decode the coded bit stream to plain data bits
         data_bits = self.encoder_manager.decode(code_bits, num_data_bits)
 
+        # Cache receptions
+        self.__received_bits = data_bits
+        self.__received_symbols = decoded_symbols
+
         # We're finally done, blow the fanfares, throw confetti, etc.
         return signal, decoded_symbols, data_bits
+
+    @property
+    def received_bits(self) -> np.ndarray:
+        """Recently received data bits.
+
+        Returns:
+            np.ndarray: Numpy array of recently received data bits.
+        """
+
+        return self.__received_bits.copy()
+
+    @property
+    def received_symbols(self) -> np.ndarray:
+        """Recently received modulation symbols.
+
+        Returns:
+            np.ndarray: Numpy array of recently received symbols.
+        """
+
+        return self.__received_symbols.copy()
 
     @property
     def num_streams(self) -> int:
@@ -456,4 +515,3 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             modem.waveform_generator = waveform
 
         return modem
-2
