@@ -64,6 +64,7 @@ class CommunicationEvaluator(Evaluator[Scenario], ABC):
 
 
 class BitErrorArtifact(ArtifactTemplate[np.ndarray]):
+    """Artifact of a block error evaluation between two modems exchanging information."""
 
     def to_scalar(self) -> float:
 
@@ -108,3 +109,115 @@ class BitErrorEvaluator(CommunicationEvaluator):
     def __str__(self) -> str:
 
         return "BER"
+
+
+class BlockErrorArtifact(ArtifactTemplate[np.ndarray]):
+    """Artifact of a block error evaluation between two modems exchanging information."""
+
+    def to_scalar(self) -> float:
+
+        return np.sum(self.artifact) / len(self.artifact)
+
+
+class BlockErrorEvaluator(CommunicationEvaluator):
+    """Evaluate block errors between two modems exchanging information."""
+
+    def __init__(self,
+                 transmitting_modem: Modem,
+                 receiving_modem: Modem) -> None:
+        """
+        Args:
+
+            transmitting_modem (Modem):
+                Modem transmitting information.
+
+            receiving_modem (Modem):
+                Modem receiving information.
+        """
+
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+
+    def evaluate(self, investigated_object: Scenario) -> BlockErrorArtifact:
+
+        # Retrieve transmitted and received bits
+        transmitted_bits = self.transmitting_modem.transmitted_bits
+        received_bits = self.receiving_modem.received_bits
+        block_size = self.receiving_modem.encoder_manager.bit_block_size
+
+        # Pad bit sequences (if required)
+        received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % block_size))
+
+        if transmitted_bits.shape[0] >= received_bits.shape[0]:
+
+            transmitted_bits = transmitted_bits[:received_bits.shape[0]]
+
+        else:
+
+            transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
+
+        # Compute bit errors as the positions where both sequences differ.
+        # Note that this requires the sequences to be in 0/1 format!
+        bit_errors = np.abs(transmitted_bits - received_bits)
+        block_errors = (bit_errors.reshape((-1, block_size)).sum(axis=0) > 0)
+
+        return BlockErrorArtifact(block_errors)
+
+    def __str__(self) -> str:
+
+        return "BLER"
+
+
+class FrameErrorArtifact(ArtifactTemplate[np.ndarray]):
+    """Artifact of a frame error evaluation between two modems exchanging information."""
+
+    def to_scalar(self) -> float:
+
+        return np.sum(self.artifact) / len(self.artifact)
+
+
+class FrameErrorEvaluator(CommunicationEvaluator):
+    """Evaluate frame errors between two modems exchanging information."""
+
+    def __init__(self,
+                 transmitting_modem: Modem,
+                 receiving_modem: Modem) -> None:
+        """
+        Args:
+
+            transmitting_modem (Modem):
+                Modem transmitting information.
+
+            receiving_modem (Modem):
+                Modem receiving information.
+        """
+
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+
+    def evaluate(self, investigated_object: Scenario) -> FrameErrorArtifact:
+
+        # Retrieve transmitted and received bits
+        transmitted_bits = self.transmitting_modem.transmitted_bits
+        received_bits = self.receiving_modem.received_bits
+        frame_size = self.receiving_modem.num_data_bits_per_frame
+
+        # Pad bit sequences (if required)
+        received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % frame_size))
+
+        if transmitted_bits.shape[0] >= received_bits.shape[0]:
+
+            transmitted_bits = transmitted_bits[:received_bits.shape[0]]
+
+        else:
+
+            transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
+
+        # Compute bit errors as the positions where both sequences differ.
+        # Note that this requires the sequences to be in 0/1 format!
+        bit_errors = np.abs(transmitted_bits - received_bits)
+        frame_errors = (bit_errors.reshape((-1, frame_size)).sum(axis=0) > 0)
+
+        return FrameErrorArtifact(frame_errors)
+
+    def __str__(self) -> str:
+
+        return "FER"
