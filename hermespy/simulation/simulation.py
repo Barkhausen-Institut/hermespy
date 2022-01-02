@@ -69,6 +69,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
     plot_drop_receive_stft: bool
     plot_drop_transmit_spectrum: bool
     plot_drop_receive_spectrum: bool
+    __snr: Optional[float]
 
     def __init__(self,
                  drop_duration: float = 0.,
@@ -83,7 +84,6 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                  plot_drop_transmitted_symbols: bool = False,
                  plot_drop_received_symbols: bool = False,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
-                 noise_loop: Union[List[float], np.ndarray] = np.array([0.0]),
                  confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
                  min_num_drops: int = 0,
                  max_num_drops: int = 1,
@@ -131,9 +131,6 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
 
             snr_type (Union[str, SNRType]):
                 The signal to noise ratio metric to be used.
-
-            noise_loop (Union[List[float], np.ndarray]):
-                Loop over different noise levels.
 
             confidence_metric (Union[ConfidenceMetric, str], optional):
                 Metric for premature simulation stopping criterion
@@ -188,13 +185,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         self.max_num_drops = max_num_drops
         self.confidence_level = confidence_level
         self.confidence_margin = confidence_margin
-
-        # Convert noise loop from array to list if the provided argument is a numpy array
-        if isinstance(noise_loop, np.ndarray):
-            self.noise_loop = noise_loop.tolist()
-
-        else:
-            self.noise_loop = noise_loop
+        self.snr = None
 
         # Recover confidence metric enumeration from string value if the provided argument is a string
         if isinstance(confidence_metric, str):
@@ -607,38 +598,34 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         self.__snr_type = snr_type
 
     @property
-    def noise_loop(self) -> List[float]:
-        """Access the configured signal to noise ratios over which the simulation iterates.
+    def snr(self) -> Optional[float]:
+        """Ratio of signal energy to noise power at the receiver-side.
 
         Returns:
-            np.ndarray: The signal to noise ratios.
-        """
-
-        return self.__noise_loop
-
-    @noise_loop.setter
-    def noise_loop(self, loop: Union[List[float], np.ndarray]) -> None:
-        """Modify the configured signal to noise ratios over which the simulation iterates.
-        
-        Args:
-            loop (Union[List[float], np.ndarray]): The new noise loop.
+            Optional[float]:
+                Linear signal energy to noise power ratio.
+                `None` if not specified.
 
         Raises:
-            ValueError: If `loop` does not represent a vector with at least one entry.
+            ValueError: On ratios smaller or equal to zero.
         """
 
-        # Convert arrays to list
-        if isinstance(loop, np.ndarray):
+        return self.__snr
 
-            if loop.ndim != 1:
-                raise ValueError("The noise loop must be a vector")
+    @snr.setter
+    def snr(self, value: Optional[float]) -> None:
+        """Set ratio of signal energy to noise power at the receiver-side"""
 
-            loop = loop.tolist()
+        if value is None:
 
-        if len(loop) < 1:
-            raise ValueError("The noise loop must contain at least one SNR entry")
+            self.__snr = None
 
-        self.__noise_loop = loop
+        else:
+
+            if value <= 0.:
+                raise ValueError("Signal to noise ratio must be greater than zero")
+
+            self.__snr = value
 
     @property
     def min_num_drops(self) -> int:
@@ -887,17 +874,13 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         return propagation_matrix
 
     def receive_devices(self,
-                        propagation_matrix: np.ndarray,
-                        snr: float = float('inf')) -> List[Signal]:
+                        propagation_matrix: np.ndarray) -> List[Signal]:
         """Generate base-band signal models received by devices.
 
         Args:
 
             propagation_matrix (np.ndarray):
                 Matrix of signals and channel states impinging onto devices.
-
-            snr (float, optional):
-                Signal to noise ratio at the receiver side.
 
         Returns:
             received_signals(List[Signal]):
@@ -916,7 +899,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         received_signals: List[Signal] = []
         for device, impinging_signals in zip(self.devices, propagation_matrix):
 
-            baseband_signal = device.receive(device_signals=impinging_signals, snr=snr)
+            baseband_signal = device.receive(device_signals=impinging_signals, snr=self.snr)
             received_signals.append(baseband_signal)
 
         return received_signals
