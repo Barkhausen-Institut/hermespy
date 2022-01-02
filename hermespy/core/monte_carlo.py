@@ -354,6 +354,33 @@ class MonteCarlo(Generic[MO]):
                 The actor from which to generate the simulation samples.
         """
 
+        # Print meta-information and greeting
+        print(f"Launched simulation campaign with {self.__num_actors} dedicated actors")
+
+        num_samples = self.num_samples
+        dimension_str = f"{num_samples}"
+        for dimension in self.__dimensions:
+
+            num_sections = len(dimension)
+            num_samples *= num_sections
+            dimension_str += f" x {num_sections}"
+
+        print(f"Generating a maximum of {num_samples} = " + dimension_str +
+              f" samples inspected by {len(self.__evaluators)} evaluators\n")
+
+        # Print grid information
+        if len(self.__dimensions) > 0:
+
+            print("Simulation Grid\nDimension    Sections")
+            for dimension, sections in self.__dimensions.items():
+
+                line = f"{dimension:<10}   "
+                for section in sections:
+                    line += f"{section:<6}  "
+                print(line)
+
+            print("\r")
+
         # Print axis information
         header = ""
 
