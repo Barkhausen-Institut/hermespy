@@ -32,6 +32,9 @@ setup(
     packages=find_packages(exclude=['tests']),
     namespace_packages=['hermespy'],
     package_dir={"hermespy": "hermespy"},
+    package_data={
+      'hermespy': ['resources/styles/*.mplstyle', 'resources/matlab/*.m']
+    },
     include_package_data=True,
     exclude_package_data={
         '': ['3rdparty', 'tests'],
