@@ -8,7 +8,7 @@ adjacent-channel interference among different communication systems.
 
 ## Features
 
-The current release version 0.2.4 serves as a platform for joint development.
+The current release version 0.2.5 serves as a platform for joint development.
 Its main focus is to provide a software architecture that can be easily extended.
 Detailed core features as well as a release plan can be found in the
 [features](https://barkhausen-institut.github.io/hermespy/features.html) list.
