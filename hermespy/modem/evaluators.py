@@ -158,7 +158,7 @@ class BlockErrorEvaluator(CommunicationEvaluator):
         # Compute bit errors as the positions where both sequences differ.
         # Note that this requires the sequences to be in 0/1 format!
         bit_errors = np.abs(transmitted_bits - received_bits)
-        block_errors = (bit_errors.reshape((-1, block_size)).sum(axis=0) > 0)
+        block_errors = (bit_errors.reshape((-1, block_size)).sum(axis=1) > 0)
 
         return BlockErrorArtifact(block_errors)
 
@@ -214,7 +214,7 @@ class FrameErrorEvaluator(CommunicationEvaluator):
         # Compute bit errors as the positions where both sequences differ.
         # Note that this requires the sequences to be in 0/1 format!
         bit_errors = np.abs(transmitted_bits - received_bits)
-        frame_errors = (bit_errors.reshape((-1, frame_size)).sum(axis=0) > 0)
+        frame_errors = (bit_errors.reshape((-1, frame_size)).sum(axis=1) > 0)
 
         return FrameErrorArtifact(frame_errors)
 
