@@ -3,8 +3,13 @@
 """
 
 from __future__ import annotations
+from typing import Type
 
-from hermespy.core import Executable, Scenario
+from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
+
+from hermespy.core import Executable
+from hermespy.core.factory import Serializable
+from hermespy.core.scenario import Scenario
 from .physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
@@ -33,3 +38,9 @@ class HardwareLoop(Executable, Scenario[PhysicalDevice]):
         # Trigger devices
         for device in self.devices:
             device.trigger()
+
+    def from_yaml(cls: Type[Serializable], constructor: SafeConstructor, node: Node) -> Serializable:
+        pass
+
+    def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
+        pass

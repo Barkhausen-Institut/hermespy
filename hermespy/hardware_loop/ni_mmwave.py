@@ -9,7 +9,7 @@ import numpy as np
 
 import mmw.mmw as mmw
 
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 from .physical_device import PhysicalDevice
 
 
@@ -153,33 +153,38 @@ class NiMmWaveDualDevice(PhysicalDevice):
     __carrier_frequency: float
 
     def __init__(self,
-                 host_A: str,
-                 host_B: str,
-                 port_A: int = 5555,
-                 port_B: int = 5555,
+                 host_a: str,
+                 host_b: str,
+                 port_a: int = 5555,
+                 port_b: int = 5555,
                  timeout=10000,
+                 carrier_frequency: float = 75e9,
                  *args, **kwargs) -> None:
         """
         Args:
 
-            host_A (str):
+            host_a (str):
                 Host of address the USRP.
                 For example '127.0.0.1' or 'device.tld'.
 
 
-            host_B (str):
+            host_b (str):
                 Host of address the USRP.
                 For example '127.0.0.1' or 'device.tld'.
 
-            port_A (int, optional):
+            port_a (int, optional):
                 Listening port of `host_A`.
 
 
-            port_B (int, optional):
+            port_b (int, optional):
                 Listening port of `host_B`.
 
             timeout (int, optional):
                 Network connection timeout.
+
+            carrier_frequency (float, optional):
+                Center frequency of the radio-frequency band signal.
+                75 GHz by default.
 
             *args:
                 Device base class initialization parameters.
@@ -194,8 +199,8 @@ class NiMmWaveDualDevice(PhysicalDevice):
         """
 
         # Initialize MmWave driver
-        self.__driver_A = mmw.ni_mmw(host=host_A, port=port_A)
-        self.__driver_B = mmw.ni_mmw(host=host_B, port=port_B)
+        self.__driver_A = mmw.ni_mmw(host=host_a, port=port_a)
+        self.__driver_B = mmw.ni_mmw(host=host_b, port=port_b)
 
         # Initialize hardware
         self.__assert_cmd(self.__driver_A.initialize_hw(mmw.const.opmodes.RF, timeout=timeout))
@@ -206,9 +211,10 @@ class NiMmWaveDualDevice(PhysicalDevice):
         self.__assert_cmd(self.__driver_B.trigger_sync_enable(True))
 
         # Initialize base class
-        PhysicalDevice.__init__(self, *args, carrier_frequency=75e9, **kwargs)
+        PhysicalDevice.__init__(self, *args, **kwargs)
 
         # Configure default parameters
+        self.carrier_frequency = carrier_frequency
         self.sampling_rate = 500000
 
     def __del__(self):
@@ -262,27 +268,24 @@ class NiMmWaveDualDevice(PhysicalDevice):
         transmitted_samples = transmitted_signal.to_interleaved(np.int16)
 
         # Upload transmit samples to instrument memory
-        #self.__assert_cmd(self.__driver.write_tx("waveform", transmitted_signal.samples))
         self.__assert_cmd(self.__driver_A.write_tx("waveform", transmitted_samples))
         self.__assert_cmd(self.__driver_B.write_tx("waveform", transmitted_samples))
-
 
         # Configure acquisition parameters
         acquisition_length = transmitted_signal.duration    # ToDo: Find a better way to handle this
         self.__assert_cmd(self.__driver_A.start(["waveform"], acquisition_length, 20000))# , acquisition_length, 60000))
         self.__assert_cmd(self.__driver_B.start(["waveform"], acquisition_length, 20000))# , acquisition_length, 60000))
 
-
         # Trigger hardware
         self.__assert_cmd(self.__driver_A.send_trigger(burstmode=mmw.const.burst_mode.burst))
 
         # Download received samples
-        response, interleaved_samples_A = self.__driver_A.fetch()
+        response, interleaved_samples_a = self.__driver_A.fetch()
         self.__assert_cmd(response)
-        response, interleaved_samples_B = self.__driver_B.fetch()
+        response, interleaved_samples_b = self.__driver_B.fetch()
         self.__assert_cmd(response)
 
-        self.receive(Signal.from_interleaved(interleaved_samples_B, sampling_rate=self.__sampling_rate))
+        self.receive(Signal.from_interleaved(interleaved_samples_b, sampling_rate=self.__sampling_rate))
 
     @staticmethod
     def __assert_cmd(result: dict) -> None:
