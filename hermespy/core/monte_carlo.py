@@ -198,7 +198,7 @@ class MonteCarloActor(Generic[MO]):
     __investigated_object: MO                       # Copy of the object to be investigated
     __dimension_parameters: List[List[Any]]         # Parameter samples along each simulation grid dimension
     __configuration_lambdas: List[Callable]         # Configuration lambdas to configure grid parameters
-    __evaluators: Set[Evaluator[MO]]      # Evaluators used to process the investigated object sample state
+    __evaluators: List[Evaluator[MO]]               # Evaluators used to process the investigated object sample state
 
     def __init__(self,
                  x) -> None:
@@ -307,12 +307,12 @@ class MonteCarlo(Generic[MO]):
     __num_actors: int                           # Number of dedicated actors spawned during simulation
     __investigated_object: MO                   # The object to be investigated
     __dimensions: dict[str, List[Any]]          # Simulation dimensions which make up the grid
-    __evaluators: Set[Evaluator[MO]]  # Evaluators used to process the investigated object sample state
+    __evaluators: List[Evaluator[MO]]  # Evaluators used to process the investigated object sample state
 
     def __init__(self,
                  investigated_object: MO,
                  num_samples: int,
-                 evaluators: Optional[Set[Evaluator[MO]]] = None,
+                 evaluators: Optional[List[Evaluator[MO]]] = None,
                  min_num_samples: int = 0,
                  num_actors: int = 0) -> None:
         """
@@ -340,7 +340,7 @@ class MonteCarlo(Generic[MO]):
 
         self.__dimensions = {}
         self.__investigated_object = investigated_object
-        self.__evaluators = set() if evaluators is None else evaluators
+        self.__evaluators = [] if evaluators is None else evaluators
         self.num_samples = num_samples
         self.min_num_samples = min_num_samples
         self.num_actors = int(ray.available_resources()['CPU']) if num_actors <= 0 else num_actors
@@ -522,7 +522,7 @@ class MonteCarlo(Generic[MO]):
                 The evaluator to be added.
         """
 
-        self.__evaluators.add(evaluator)
+        self.__evaluators.append(evaluator)
 
     @property
     def num_samples(self) -> int:
