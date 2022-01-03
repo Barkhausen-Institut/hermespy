@@ -37,7 +37,7 @@
             <a href="index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.4
+                0.2.5
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -164,8 +164,8 @@ Mix and amplify the baseband-signals to radio-frequency-band signals.</p></li>
 <p>The following code generates the samples of a single communication frame
 transmitted by a PSK/QAM modem:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy</span> <span class="kn">import</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">Transmitter</span>
-<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span>
 <span class="linenos"> 4</span>
 <span class="linenos"> 5</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
 <span class="linenos"> 6</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
@@ -217,8 +217,8 @@ Describing all configurable parameters is beyond the scope of this introduction,
 the API documentation of each processing step should be consulted for detailed descriptions.</p>
 <p>A full communication link over an ideal channel between a single transmitter and receiver modem is established
 by adding receiver to the scenario:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">hermespy</span> <span class="kn">import</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">hermespy.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span>
 <span class="linenos"> 3</span>
 <span class="linenos"> 4</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
 <span class="linenos"> 5</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
@@ -250,27 +250,28 @@ which is why HermesPy offers the <span class="xref std std-doc">Simulation</span
 Considering the same scenario as before, the following snippet demonstrates how
 a single communication drop at 40dB signal-to-noise ratio can be generated:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy</span> <span class="kn">import</span> <span class="n">Scenario</span><span class="p">,</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span> <span class="n">Simulation</span>
-<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
-<span class="linenos"> 4</span>
-<span class="linenos"> 5</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
-<span class="linenos"> 6</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
-<span class="linenos"> 7</span>
-<span class="linenos"> 8</span><span class="n">receiver</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">()</span>
-<span class="linenos"> 9</span><span class="n">receiver</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
-<span class="linenos">10</span>
-<span class="linenos">11</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">()</span>
-<span class="linenos">12</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_transmitter</span><span class="p">(</span><span class="n">transmitter</span><span class="p">)</span>
-<span class="linenos">13</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_receiver</span><span class="p">(</span><span class="n">receiver</span><span class="p">)</span>
-<span class="linenos">14</span>
-<span class="linenos">15</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
-<span class="linenos">16</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_scenario</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span>
-<span class="linenos">17</span>
-<span class="linenos">18</span><span class="n">drop</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mf">40.</span><span class="p">)</span>
-<span class="linenos">19</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_received_symbols</span><span class="p">()</span>
-<span class="linenos">20</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_bit_errors</span><span class="p">()</span>
-<span class="linenos">21</span>
-<span class="linenos">22</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">hermespy.scenario</span> <span class="kn">import</span> <span class="n">Scenario</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Transmitter</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.simulator_core</span> <span class="kn">import</span> <span class="n">Simulation</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">Transmitter</span><span class="p">()</span>
+<span class="linenos"> 7</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="n">receiver</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">()</span>
+<span class="linenos">10</span><span class="n">receiver</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="n">scenario</span> <span class="o">=</span> <span class="n">Scenario</span><span class="p">()</span>
+<span class="linenos">13</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_transmitter</span><span class="p">(</span><span class="n">transmitter</span><span class="p">)</span>
+<span class="linenos">14</span><span class="n">scenario</span><span class="o">.</span><span class="n">add_receiver</span><span class="p">(</span><span class="n">receiver</span><span class="p">)</span>
+<span class="linenos">15</span>
+<span class="linenos">16</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
+<span class="linenos">17</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_scenario</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="n">drop</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mf">40.</span><span class="p">)</span>
+<span class="linenos">20</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_received_symbols</span><span class="p">()</span>
+<span class="linenos">21</span><span class="n">drop</span><span class="o">.</span><span class="n">plot_bit_errors</span><span class="p">()</span>
+<span class="linenos">22</span>
+<span class="linenos">23</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Note that lines <em>5-16</em> are identical to the previous snippet, defining a scenario with a single receiver
@@ -352,37 +353,37 @@ It should consist of:</p>
 <li><p>An ideal channel between both transmitting and receiving modem</p></li>
 </ol>
 <p>This scenario is represented by the following <em>scenario.yml</em> file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kt">!&lt;Scenario&gt;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kt">!&lt;Scenario&gt;</span><span class="w"></span>
 <span class="linenos"> 2</span>
-<span class="linenos"> 3</span><span class="nt">Modems</span><span class="p">:</span>
+<span class="linenos"> 3</span><span class="nt">Modems</span><span class="p">:</span><span class="w"></span>
 <span class="linenos"> 4</span>
-<span class="linenos"> 5</span>   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Transmitter</span>
+<span class="linenos"> 5</span><span class="w">   </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Transmitter</span><span class="w"></span>
 <span class="linenos"> 6</span>
-<span class="linenos"> 7</span>     <span class="l l-Scalar l-Scalar-Plain">carrier_frequency</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1e9</span>
+<span class="linenos"> 7</span><span class="w">     </span><span class="l l-Scalar l-Scalar-Plain">carrier_frequency</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e9</span><span class="w"></span>
 <span class="linenos"> 8</span>
-<span class="linenos"> 9</span>     <span class="nt">WaveformPskQam</span><span class="p">:</span>
-<span class="linenos">10</span>         <span class="nt">num_data_symbols</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="linenos"> 9</span><span class="w">     </span><span class="nt">WaveformPskQam</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">10</span><span class="w">         </span><span class="nt">num_data_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
 <span class="linenos">11</span>
-<span class="linenos">12</span>   <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">Receiver</span>
+<span class="linenos">12</span><span class="w">   </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Receiver</span><span class="w"></span>
 <span class="linenos">13</span>
-<span class="linenos">14</span>     <span class="l l-Scalar l-Scalar-Plain">carrier_frequency</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1e9</span>
+<span class="linenos">14</span><span class="w">     </span><span class="l l-Scalar l-Scalar-Plain">carrier_frequency</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e9</span><span class="w"></span>
 <span class="linenos">15</span>
-<span class="linenos">16</span>     <span class="nt">WaveformPskQam</span><span class="p">:</span>
-<span class="linenos">17</span>         <span class="nt">num_data_symbols</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="linenos">16</span><span class="w">     </span><span class="nt">WaveformPskQam</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">17</span><span class="w">         </span><span class="nt">num_data_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
 </pre></div>
 </div>
 <p>A second <em>simulation.yml</em> file determines the execution behaviour of the scenario.
 For now, the baseband-waveforms as well as the mapped symbol constellations
 at both the transmitter and receiver should be plotted:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span> <span class="kt">!&lt;Simulation&gt;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="kt">!&lt;Simulation&gt;</span><span class="w"></span>
 <span class="linenos">2</span>
-<span class="linenos">3</span> <span class="nt">snr</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">20</span><span class="p p-Indicator">]</span>
+<span class="linenos">3</span><span class="w"> </span><span class="nt">snr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"></span>
 <span class="linenos">4</span>
-<span class="linenos">5</span> <span class="nt">plot_drop</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="linenos">6</span> <span class="nt">plot_drop_transmitted_signals</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="linenos">7</span> <span class="nt">plot_drop_received_signals</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="linenos">8</span> <span class="nt">plot_drop_transmitted_symbols</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="linenos">9</span> <span class="nt">plot_drop_received_symbols</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="linenos">5</span><span class="w"> </span><span class="nt">plot_drop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="linenos">6</span><span class="w"> </span><span class="nt">plot_drop_transmitted_signals</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="linenos">7</span><span class="w"> </span><span class="nt">plot_drop_received_signals</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="linenos">8</span><span class="w"> </span><span class="nt">plot_drop_transmitted_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="linenos">9</span><span class="w"> </span><span class="nt">plot_drop_received_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Assuming both <em>scenario.yaml</em> and  <em>simulation.yml</em> are located within <em>/path/to/settings</em>, calling</p>
