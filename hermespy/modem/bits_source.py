@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from math import ceil
 from typing import BinaryIO, Optional
 
 import numpy as np
@@ -88,4 +89,13 @@ class StreamBitsSource(BitsSource, Serializable):
 
     def generate_bits(self, num_bits: int) -> np.ndarray:
 
-        bits = self.__stream.read(num_bits)
+        num_bytes = int(ceil(num_bits / 8))
+        bit_overflow = num_bytes * 8 - num_bits
+
+        if bit_overflow > 0:
+            raise RuntimeError("Bit caching not yet supported")
+
+        byte_string = self.__stream.read(num_bytes)
+        array = np.unpackbits(np.frombuffer(byte_string, dtype=np.uint8))
+
+        return array
