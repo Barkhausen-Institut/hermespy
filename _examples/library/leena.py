@@ -36,8 +36,6 @@ modem.device = device
 modem.bits_source = source
 modem.waveform_generator = waveform
 
-image = plt.imshow(image_buffer)
-
 for f in range(num_frames):
 
     signal, _, _ = modem.transmit()
@@ -45,7 +43,6 @@ for f in range(num_frames):
     _, _, data_bits = modem.receive()
 
     image_buffer.flat[f*byte_per_frame:(f+1)*byte_per_frame] = np.packbits(data_bits)
-    image.set_data(image_buffer)
 
 plt.imshow(image_buffer)
 plt.show()
