@@ -465,3 +465,16 @@ class TestDevice(TestCase):
 
         with self.assertRaises(ValueError):
             self.device.topology = np.array([[1, 2, 3, 4]])
+
+    def test_max_frame_duration(self) -> None:
+        """Maximum frame duration property should compute the correct duration."""
+
+        transmitter = Mock()
+        transmitter.frame_duration = 10
+        self.device.transmitters.add(transmitter)
+
+        receiver = Mock()
+        receiver.frame_duration = 4
+        self.device.receivers.add(receiver)
+
+        self.assertEqual(10, self.device.max_frame_duration)
