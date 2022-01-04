@@ -40,7 +40,7 @@ class LDPCBinding(LDPC):
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
 
-        codes = encoded_bits.copy()
+        codes = encoded_bits.copy().astype(int)
         codes[codes < .5] = -1.
 
         return ldpc_binding.decode(
