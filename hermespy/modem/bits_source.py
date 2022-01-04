@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import BinaryIO, Optional
 
 import numpy as np
 
@@ -63,3 +63,29 @@ class RandomBitsSource(BitsSource, Serializable):
     def generate_bits(self, num_bits: int) -> np.ndarray:
 
         return self._rng.integers(0, 2, size=num_bits, dtype=int)
+
+
+class StreamBitsSource(BitsSource, Serializable):
+    """Bit generator mapping input streams to bit sources."""
+
+    __stream: BinaryIO
+
+    def __init__(self,
+                 path: str) -> None:
+        """
+        Args:
+
+        path (str):
+            Path to stream bits source.
+        """
+
+        BitsSource.__init__(self)
+        self.__stream = open(path, mode='rb')
+
+    def __del__(self) -> None:
+
+        self.__stream.close()
+
+    def generate_bits(self, num_bits: int) -> np.ndarray:
+
+        bits = self.__stream.read(num_bits)
