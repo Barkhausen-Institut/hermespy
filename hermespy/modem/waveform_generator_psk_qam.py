@@ -117,6 +117,21 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
                 Waveform generator base class initialization parameters.
         """
 
+        self.symbol_rate = symbol_rate
+        self.chirp_duration = chirp_duration
+        self.chirp_bandwidth = chirp_bandwidth
+        self.num_preamble_symbols = num_preamble_symbols
+        self.num_data_symbols = num_data_symbols
+        self.num_postamble_symbols = num_postamble_symbols
+        self.pilot_rate = pilot_rate
+        self.guard_interval = guard_interval
+        self.complex_modulation = complex_modulation
+        self.equalization = equalization
+
+        self._data_symbol_idx = None
+        self._symbol_idx = None
+        self._pulse_correlation_matrix = None
+
         # Initialize base class
         WaveformGenerator.__init__(self, **kwargs)
 
@@ -131,22 +146,6 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
 
         else:
             self.rx_filter = rx_filter
-
-        self.symbol_rate = symbol_rate
-        self.chirp_duration = chirp_duration
-        self.chirp_bandwidth = chirp_bandwidth
-        self.num_preamble_symbols = num_preamble_symbols
-        self.num_data_symbols = num_data_symbols
-        self.num_postamble_symbols = num_postamble_symbols
-        self.pilot_rate = pilot_rate
-        self.guard_interval = guard_interval
-        self.complex_modulation = complex_modulation
-        self.equalization = equalization
-
-        self.__mapping = PskQamMapping(self.modulation_order, is_complex=self.complex_modulation, soft_output=False)
-        self._data_symbol_idx = None
-        self._symbol_idx = None
-        self._pulse_correlation_matrix = None
 
     @property
     def chirp_duration(self) -> float:
@@ -233,6 +232,12 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
             raise ValueError("Chirp bandwidth must be greater than zero")
 
         self.__chirp_bandwidth = bandwidth
+
+    @WaveformGenerator.modulation_order.setter
+    def modulation_order(self, value: int) -> None:
+
+        self.__mapping = PskQamMapping(value, is_complex=self.complex_modulation, soft_output=False)
+        WaveformGenerator.modulation_order.fset(self, value)
 
     def map(self, data_bits: np.ndarray) -> np.ndarray:
         return self.__mapping.get_symbols(data_bits)

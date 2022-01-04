@@ -249,7 +249,7 @@ class WaveformGenerator(ABC):
             int: Number of bits per symbol
         """
 
-        return int(sqrt(self.__modulation_order))
+        return int(np.log2(self.__modulation_order))
 
     @property
     @abstractmethod
