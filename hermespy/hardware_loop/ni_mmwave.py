@@ -22,7 +22,7 @@ class NiMmWaveDevice(PhysicalDevice):
     def __init__(self,
                  host: str,
                  port: int = 5555,
-                 timeout=10000,
+                 timeout=20000,
                  *args, **kwargs) -> None:
         """
         Args:
