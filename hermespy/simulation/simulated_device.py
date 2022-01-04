@@ -142,6 +142,16 @@ class SimulatedDevice(Device, Serializable):
         self.__scenario = scenario
 
     @property
+    def attached(self) -> bool:
+        """Attachment state of this device.
+
+        Returns:
+            bool: `True` if the device is currently attached, `False` otherwise.
+        """
+
+        return self.__scenario is not None
+
+    @property
     def noise(self) -> Noise:
         """Model of the hardware noise.
 
@@ -157,16 +167,6 @@ class SimulatedDevice(Device, Serializable):
 
         self.__noise = value
         self.__noise.random_mother = self
-
-    @property
-    def attached(self) -> bool:
-        """Attachment state of this device.
-
-        Returns:
-            bool: `True` if the device is currently attached, `False` otherwise.
-        """
-
-        return self.__scenario is not None
 
     @property
     def sampling_rate(self) -> float:
