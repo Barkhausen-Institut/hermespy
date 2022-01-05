@@ -7,7 +7,7 @@ from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFs
 
 hardware_loop = HardwareLoop()
 
-device = NiMmWaveDualDevice('192.168.189.120', '192.168.189.121')
+device = NiMmWaveDualDevice('192.168.189.120', '192.168.189.121', timeout=20000)
 hardware_loop.add_device(device)
 
 modem = Modem()

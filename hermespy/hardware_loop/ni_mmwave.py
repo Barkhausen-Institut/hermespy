@@ -151,13 +151,14 @@ class NiMmWaveDualDevice(PhysicalDevice):
     __driver_B: mmw.ni_mmw
     __sampling_rate: float
     __carrier_frequency: float
+    __waveform_counter: int
 
     def __init__(self,
                  host_a: str,
                  host_b: str,
                  port_a: int = 5555,
                  port_b: int = 5555,
-                 timeout=10000,
+                 timeout=40000,
                  carrier_frequency: float = 75e9,
                  *args, **kwargs) -> None:
         """
@@ -198,9 +199,16 @@ class NiMmWaveDualDevice(PhysicalDevice):
                 If device initialization fails.
         """
 
+        # Initialize counter
+        self.__waveform_counter = 0
+
         # Initialize MmWave driver
         self.__driver_A = mmw.ni_mmw(host=host_a, port=port_a)
         self.__driver_B = mmw.ni_mmw(host=host_b, port=port_b)
+
+        # Sending the command a reading response
+#        _ = self.__driver_A._send_instr_command("reset_hw", {"no_param": ""})
+#        _ = self.__driver_B._send_instr_command("reset_hw", {"no_param": ""})
 
         # Initialize hardware
         self.__assert_cmd(self.__driver_A.initialize_hw(mmw.const.opmodes.RF, timeout=timeout))
@@ -231,10 +239,10 @@ class NiMmWaveDualDevice(PhysicalDevice):
     @carrier_frequency.setter
     def carrier_frequency(self, value: float) -> None:
 
-        self.__assert_cmd(self.__driver_A.configure_rf(value, -10., mmw.const.ports.tx))
-        self.__assert_cmd(self.__driver_A.configure_rf(value, 10., mmw.const.ports.rx))
-        self.__assert_cmd(self.__driver_B.configure_rf(value, -10., mmw.const.ports.tx))
-        self.__assert_cmd(self.__driver_B.configure_rf(value, 10., mmw.const.ports.rx))
+        self.__assert_cmd(self.__driver_A.configure_rf(value, 0., mmw.const.ports.tx))
+        self.__assert_cmd(self.__driver_A.configure_rf(value, 0., mmw.const.ports.rx))
+        self.__assert_cmd(self.__driver_B.configure_rf(value, 0., mmw.const.ports.tx))
+        self.__assert_cmd(self.__driver_B.configure_rf(value, 0., mmw.const.ports.rx))
 
         self.__carrier_frequency = value
 
@@ -265,19 +273,24 @@ class NiMmWaveDualDevice(PhysicalDevice):
 
         # Compute signal to be transmitted
         transmitted_signal = self.transmit()
+
         transmitted_samples = transmitted_signal.to_interleaved(np.int16)
+        burst_uid = f"burst_{self.__waveform_counter}"
 
         # Upload transmit samples to instrument memory
-        self.__assert_cmd(self.__driver_A.write_tx("waveform", transmitted_samples))
-        self.__assert_cmd(self.__driver_B.write_tx("waveform", transmitted_samples))
+        self.__assert_cmd(self.__driver_A.write_tx(burst_uid, transmitted_samples))
+        self.__assert_cmd(self.__driver_B.write_tx(burst_uid, transmitted_samples))
 
         # Configure acquisition parameters
         acquisition_length = transmitted_signal.duration    # ToDo: Find a better way to handle this
-        self.__assert_cmd(self.__driver_A.start(["waveform"], acquisition_length, 20000))# , acquisition_length, 60000))
-        self.__assert_cmd(self.__driver_B.start(["waveform"], acquisition_length, 20000))# , acquisition_length, 60000))
+        self.__assert_cmd(self.__driver_A.start([burst_uid], acquisition_length, 20000))# , acquisition_length, 60000))
+        self.__assert_cmd(self.__driver_B.start([burst_uid], acquisition_length, 20000))# , acquisition_length, 60000))
 
         # Trigger hardware
         self.__assert_cmd(self.__driver_A.send_trigger(burstmode=mmw.const.burst_mode.burst))
+
+        # Update burst counter
+        self.__waveform_counter += 1
 
         # Download received samples
         response, interleaved_samples_a = self.__driver_A.fetch()
