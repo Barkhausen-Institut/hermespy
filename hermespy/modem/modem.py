@@ -210,7 +210,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
     def receive(self) -> Tuple[Any, ...]:
 
-        signal = self._receiver.signal
+        signal = self._receiver.signal.resample(self.waveform_generator.sampling_rate)
         if signal is None:
             raise RuntimeError("No signal received by modem")
             # signal = Signal.empty(sampling_rate=self.device.sampling_rate)
