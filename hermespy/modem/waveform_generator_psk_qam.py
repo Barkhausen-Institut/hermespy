@@ -2,15 +2,16 @@
 """Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation."""
 
 from __future__ import annotations
-from typing import Any, Tuple, Optional, Type, Union
+from typing import Any, Tuple, List, Optional, Type, Union
 from enum import Enum
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
+from scipy.signal import correlate
 
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.core.factory import Serializable
-from hermespy.modem.waveform_generator import WaveformGenerator
+from hermespy.modem.waveform_generator import WaveformGenerator, Synchronization
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from hermespy.core.signal_model import Signal
@@ -136,13 +137,20 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
         WaveformGenerator.__init__(self, **kwargs)
 
         if tx_filter is None:
-            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
+
+            self.tx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
+                                           self.oversampling_factor,
+                                           is_matched=False)
 
         else:
+
             self.tx_filter = tx_filter
             
         if rx_filter is None:
-            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
+
+            self.rx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
+                                           self.oversampling_factor,
+                                           is_matched=True)
 
         else:
             self.rx_filter = rx_filter
@@ -684,3 +692,155 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
             generator.rx_filter = rx_filter
 
         return generator
+
+
+class PskQamSynchronization(Synchronization[WaveformGeneratorPskQam]):
+    """Synchronization for chirp-based frequency shift keying communication waveforms."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorPskQam] = None,
+                 *args: Any) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this synchronization routine is attached to.
+        """
+
+        Synchronization.__init__(self, waveform_generator)
+
+
+class PskQamCorrelationSynchronization(PskQamSynchronization):
+    """Correlation-based clock synchronization for chirp frequency shift keying waveforms."""
+
+    __threshold: float  # Correlation threshold at which a pilot signal is detected
+    __guard_ratio: float  # Guard ratio of frame duration
+
+    def __init__(self,
+                 threshold: float = 0.9,
+                 guard_ratio: float = 0.8,
+                 *args: Any,
+                 **kwargs: Any) -> None:
+        """
+        Args:
+
+            threshold (float, optional):
+                Correlation threshold at which a pilot signal is detected.
+
+            guard_ratio (float, optional):
+                Guard ratio of frame duration.
+
+            *args:
+                Synchronization base class initialization parameters.
+        """
+
+        self.threshold = threshold
+        self.guard_ratio = guard_ratio
+
+        PskQamSynchronization.__init__(self, *args, **kwargs)
+
+    @property
+    def threshold(self) -> float:
+        """Correlation threshold at which a pilot signal is detected.
+
+        Returns:
+            float: Threshold between zero and one.
+
+        Raises:
+            ValueError: If threshold is smaller than zero or greater than one.
+        """
+
+        return self.__threshold
+
+    @threshold.setter
+    def threshold(self, value: float):
+        """Set correlation threshold at which a pilot signal is detected."""
+
+        if value < 0. or value > 1.:
+            raise ValueError("Synchronization threshold must be between zero and one.")
+
+        self.__threshold = value
+
+    @property
+    def guard_ratio(self) -> float:
+        """Correlation guard ratio at which a pilot signal is detected.
+
+        After the detection of a pilot section, `guard_ratio` prevents the detection of another pilot in
+        the following samples for a span relative to the configured frame duration.
+
+        Returns:
+            float: Guard Ratio between zero and one.
+
+        Raises:
+            ValueError: If guard ratio is smaller than zero or greater than one.
+        """
+
+        return self.__guard_ratio
+
+    @guard_ratio.setter
+    def guard_ratio(self, value: float):
+        """Set correlation guard ratio at which a pilot signal is detected."""
+
+        if value < 0. or value > 1.:
+            raise ValueError("Synchronization guard ratio must be between zero and one.")
+
+        self.__guard_ratio = value
+
+    def synchronize(self,
+                    signal: np.ndarray,
+                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
+
+        # Query the pilot signal from the waveform generator
+        pilot = np.zeros(self.waveform_generator.oversampling_factor * self.waveform_generator.num_preamble_symbols,
+                         dtype=complex)
+        pilot[::self.waveform_generator.oversampling_factor] = 1.
+
+        # If no pilot signal is generated, no correlation can be done
+        if pilot.shape[0] < 1:
+            raise RuntimeError(
+                "Waveform generator does not generate a pilot signal, correlation synchronization failed")
+
+        correlation = correlate(signal, pilot, mode='valid', method='fft')
+        correlation /= (np.linalg.norm(pilot) ** 2)  # Normalize correlation
+
+        pilot_indices = np.argwhere(correlation >= self.__threshold * np.max(abs(correlation))).flatten()
+        pilot_indices -= int(len(pilot))
+
+        # Filter out infeasible pilot section indices
+        pilot_indices = pilot_indices[pilot_indices >= 0]
+
+        # Abort if no pilot section has been detected
+        if len(pilot_indices) < 1:
+            return []
+
+        frame_length = self.waveform_generator.samples_in_frame
+
+        # Remove pilot candidates too close to the previous pilot candidate
+        min_pilot_distance = int(0.95 * frame_length)
+        valid_pilot_mask = np.ones(len(pilot_indices), dtype=bool)
+
+        last_valid_pilot = pilot_indices[0]
+        for pilot_index in range(1, len(pilot_indices)):
+
+            if (pilot_indices[pilot_index] - last_valid_pilot) < min_pilot_distance:
+
+                valid_pilot_mask[pilot_index] = False
+
+            else:
+
+                last_valid_pilot = pilot_indices[pilot_index]
+
+        valid_pilot_indices = pilot_indices[valid_pilot_mask]
+
+        frames = []
+        for pilot_index in valid_pilot_indices:
+
+            if pilot_index + frame_length < len(signal):
+
+                # Todo: This is technically an equalization
+                signal_frame = signal[pilot_index:pilot_index + frame_length] / correlation[pilot_index]
+                csi_frame = channel_state[pilot_index:pilot_index + frame_length]
+
+                frames.append((signal_frame, csi_frame))
+
+        return frames

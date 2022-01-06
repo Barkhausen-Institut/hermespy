@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 from abc import ABC
+from typing import List, Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from hermespy.core.scenario import Scenario
@@ -70,6 +72,17 @@ class BitErrorArtifact(ArtifactTemplate[np.ndarray]):
 
         return np.sum(self.artifact) / len(self.artifact)
 
+    def plot(self) -> List[plt.Figure]:
+
+        figure, axes = plt.subplots()
+        figure.suptitle("Bit Error Evaluation")
+
+        axes.stem(self.artifact)
+        axes.set_xlabel("Bit Index")
+        axes.set_ylabel("Bit Error Indicator")
+
+        return [figure]
+
 
 class BitErrorEvaluator(CommunicationEvaluator):
     """Evaluate bit errors between two modems exchanging information."""
@@ -89,7 +102,7 @@ class BitErrorEvaluator(CommunicationEvaluator):
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
 
-    def evaluate(self, investigated_object: Scenario) -> BitErrorArtifact:
+    def evaluate(self, investigated_object: Optional[Scenario] = None) -> BitErrorArtifact:
 
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmitted_bits

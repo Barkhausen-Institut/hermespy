@@ -6,6 +6,7 @@ National Instruments MmWave Device Binding
 """
 
 import numpy as np
+from datetime import datetime
 
 import mmw.mmw as mmw
 
@@ -15,14 +16,22 @@ from .physical_device import PhysicalDevice
 
 class NiMmWaveDevice(PhysicalDevice):
 
+    scale_reception: bool
+    """Scale received signal power."""
+
     __driver: mmw.ni_mmw
     __sampling_rate: float
     __carrier_frequency: float
+    __waveform_counter: int
+    __burst_prefix: str
+    __tx_gain_db: float
+    __rx_gain_db: float
+    __time_buffer: float
 
     def __init__(self,
                  host: str,
                  port: int = 5555,
-                 timeout=20000,
+                 timeout=40000,
                  *args, **kwargs) -> None:
         """
         Args:
@@ -49,6 +58,10 @@ class NiMmWaveDevice(PhysicalDevice):
                 If device initialization fails.
         """
 
+        # Initialize waveform counter
+        self.__waveform_counter = 0
+        self.__burst_prefix = datetime.now().strftime("%Y%m%d%H%M%S_")
+
         # Initialize MmWave driver
         self.__driver = mmw.ni_mmw(host=host, port=port)
 
@@ -58,10 +71,17 @@ class NiMmWaveDevice(PhysicalDevice):
         self.__assert_cmd(self.__driver.trigger_sync_enable(True))
 
         # Initialize base class
-        PhysicalDevice.__init__(self, *args, carrier_frequency=75e9, **kwargs)
+        PhysicalDevice.__init__(self, *args, **kwargs)
+
+        self.__tx_gain_db = 0.
+        self.__rx_gain_db = 0.
+        self.__carrier_frequency = 0.
+        self.__scale_reception = True
+        self.time_buffer = 0.
 
         # Configure default parameters
         self.sampling_rate = 500000
+        self.carrier_frequency = 75e9
 
     @property
     def carrier_frequency(self) -> float:
@@ -71,10 +91,44 @@ class NiMmWaveDevice(PhysicalDevice):
     @carrier_frequency.setter
     def carrier_frequency(self, value: float) -> None:
 
-        self.__assert_cmd(self.__driver.configure_rf(value, -10, mmw.const.ports.tx))
-        self.__assert_cmd(self.__driver.configure_rf(value, 10, mmw.const.ports.rx))
+        self.__assert_cmd(self.__driver.configure_rf(value, self.__tx_gain_db, mmw.const.ports.tx))
+        self.__assert_cmd(self.__driver.configure_rf(value, self.__rx_gain_db, mmw.const.ports.rx))
 
         self.__carrier_frequency = value
+
+    @property
+    def tx_gain_db(self) -> float:
+        """Transmit power gain.
+
+        Returns:
+            gain (float):
+                Gain in dB.
+        """
+
+        return self.__tx_gain_db
+
+    @tx_gain_db.setter
+    def tx_gain_db(self, value: float) -> None:
+        
+        self.__assert_cmd(self.__driver.configure_rf(self.__carrier_frequency, value, mmw.const.ports.tx))
+        self.__tx_gain_db = value
+
+    @property
+    def rx_gain_db(self) -> float:
+        """Receive power gain.
+
+        Returns:
+            gain (float):
+                Gain in dB.
+        """
+
+        return self.__rx_gain_db
+
+    @rx_gain_db.setter
+    def rx_gain_db(self, value: float) -> None:
+
+        self.__assert_cmd(self.__driver.configure_rf(self.__carrier_frequency, value, mmw.const.ports.rx))
+        self.__rx_gain_db = value
 
     @property
     def sampling_rate(self) -> float:
@@ -93,6 +147,25 @@ class NiMmWaveDevice(PhysicalDevice):
         self.__sampling_rate = value
 
     @property
+    def time_buffer(self) -> float:
+        """Signal sample offset buffer.
+
+        Returns:
+            buffer (float):
+                Offset buffer in seconds.
+        """
+
+        return self.__time_buffer
+
+    @time_buffer.setter
+    def time_buffer(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Time buffer must be greater or equal to zero")
+
+        self.__time_buffer = value
+
+    @property
     def num_antennas(self) -> int:
 
         return 1
@@ -103,13 +176,21 @@ class NiMmWaveDevice(PhysicalDevice):
         transmitted_signal = self.transmit()
         transmitted_samples = transmitted_signal.to_interleaved(np.int16)
 
+        if self.time_buffer > 0.:
+
+            num_buffer_samples = int(self.time_buffer * self.sampling_rate)
+            transmitted_samples = np.append(np.zeros(2 * num_buffer_samples, dtype=np.int16), transmitted_samples)
+
+        # Burst unique identifier generation
+        burst_uid = self.__burst_prefix + str(self.__waveform_counter)
+        self.__waveform_counter += 1
+
         # Upload transmit samples to instrument memory
-        #self.__assert_cmd(self.__driver.write_tx("waveform", transmitted_signal.samples))
-        self.__assert_cmd(self.__driver.write_tx("waveform", transmitted_samples))
+        self.__assert_cmd(self.__driver.write_tx(burst_uid, transmitted_samples))
 
         # Configure acquisition parameters
-        acquisition_length = transmitted_signal.duration    # ToDo: Find a better way to handle this
-        self.__assert_cmd(self.__driver.start(["waveform"], acquisition_length, 20000))# , acquisition_length, 60000))
+        acquisition_length = transmitted_signal.duration + 2 * self.time_buffer
+        self.__assert_cmd(self.__driver.start([burst_uid], acquisition_length, 20000))# , acquisition_length, 60000))
 
         # Trigger hardware
         self.__assert_cmd(self.__driver.send_trigger(burstmode=mmw.const.burst_mode.burst))
@@ -118,7 +199,19 @@ class NiMmWaveDevice(PhysicalDevice):
         response, interleaved_samples = self.__driver.fetch()
         self.__assert_cmd(response)
 
-        self.receive(Signal.from_interleaved(interleaved_samples, sampling_rate=self.__sampling_rate))
+        # Recover signal model from interleaved complex samples
+        received_signal = Signal.from_interleaved(interleaved_samples, sampling_rate=self.__sampling_rate)
+
+        # Scale the signal to unit max amplitude
+        if self.__scale_reception:
+
+            max_amplitude = np.max(abs(received_signal.samples))
+
+            if max_amplitude > 0.:
+                received_signal.samples = received_signal.samples / max_amplitude
+
+        # Cache the received signal
+        self.receive(received_signal)
 
     @staticmethod
     def __assert_cmd(result: dict) -> None:
