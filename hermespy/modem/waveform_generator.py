@@ -126,13 +126,11 @@ class WaveformGenerator(ABC):
     yaml_tag: str = "Waveform"
     """YAML serialization tag."""
 
-    synchronization: Synchronization
-    """Synchronization routine."""
-
     symbol_type: np.dtype = complex
     """Symbol type."""
 
     __modem: Optional[Modem]            # Modem this waveform generator is attached to
+    __synchronization: Synchronization  # Synchronization routine
     __oversampling_factor: int          # Oversampling factor
     __modulation_order: int             # Cardinality of the set of communication symbols
 
@@ -432,6 +430,24 @@ class WaveformGenerator(ABC):
             handle.waveform_generator = self
 
         self.__modem = handle
+
+    @property
+    def synchronization(self) -> Synchronization:
+        """Synchronization routine.
+
+        Returns:
+            Synchronization: Handle to the synchronization routine.
+        """
+
+        return self.__synchronization
+
+    @synchronization.setter
+    def synchronization(self, value: Synchronization) -> None:
+
+        self.__synchronization = value
+
+        if value.waveform_generator is not self:
+            value.waveform_generator = self
 
     @property
     @abstractmethod

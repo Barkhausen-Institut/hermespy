@@ -471,7 +471,7 @@ class Signal:
 
         # Scale samples if required
         if scale and (samples.max() > 1.0 or samples.min() < 1.0):
-            samples /= max(abs(samples))
+            samples /= np.max(abs(samples))
 
         samples *= np.iinfo(data_type).max
         return samples.view(np.float64).astype(data_type)
