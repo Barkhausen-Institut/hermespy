@@ -4,7 +4,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from math import ceil
-from typing import Type
+from typing import Optional, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -326,19 +326,46 @@ class Signal:
 
         return np.arange(self.num_samples) / self.__sampling_rate - self.delay
 
-    def plot(self) -> None:
-        """Plot the current signal in time- and frequency-domain."""
+    def plot(self,
+             title: Optional[str] = None,
+             angle: bool = False) -> None:
+        """Plot the current signal in time- and frequency-domain.
+
+        Args:
+
+            title (str, optional):
+                Figure title.
+
+            angle (bool, optional):
+                Plot the angle of complex frequency bins.
+        """
+
+        title = "Signal Model" if title is None else title
 
         fig, axes = plt.subplots(self.num_streams, 2, squeeze=False)
+        fig.suptitle(title)
+
         timestamps = self.timestamps
 
         for stream_idx, stream_samples in enumerate(self.__samples):
 
-            axes[stream_idx, 0].plot(timestamps, stream_samples.real)
-            axes[stream_idx, 1].plot(fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate)),
-                                     abs(fftshift(fft(stream_samples))))
+            real = axes[stream_idx, 0].plot(timestamps, stream_samples.real, label='Real')
+            imag = axes[stream_idx, 0].plot(timestamps, stream_samples.imag, label='Imag')
+            axes[stream_idx, 0].set_xlabel('Time-Domain [s]')
+            axes[stream_idx, 0].legend(fancybox=True, shadow=True)
 
-        fig.suptitle("Signal Model")
+            frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
+            bins = fftshift(fft(stream_samples))
+
+            axes[stream_idx, 1].plot(frequencies, np.abs(bins))
+            axes[stream_idx, 1].set_ylabel('Abs')
+            axes[stream_idx, 1].set_xlabel('Frequency-Domain [Hz]')
+
+            if angle:
+
+                phase = axes[stream_idx, 1].twinx()
+                phase.plot(frequencies, np.angle(bins))
+                phase.set_ylabel('Angle [Rad]')
 
     @staticmethod
     @jit(nopython=True)
