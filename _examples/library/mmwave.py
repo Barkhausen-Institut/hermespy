@@ -1,3 +1,5 @@
+import os.path as path
+
 import matplotlib.pyplot as plt
 
 from hermespy.hardware_loop.ni_mmwave import NiMmWaveDevice
@@ -33,6 +35,7 @@ rx_signal, rx_symbols, rx_bits = modem.receive()
 bit_error = BitErrorEvaluator(modem, modem)
 
 # Visualize results
+plt.style.use(path.join(path.dirname(__file__), '..', '..', 'hermespy', 'resources', 'styles', 'dark.mplstyle'))
 bit_error.evaluate().plot()
 tx_signal.plot(title="Tx Signal")
 rx_signal.plot(title="Rx Signal")
