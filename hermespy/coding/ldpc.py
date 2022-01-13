@@ -25,15 +25,11 @@ __status__ = "Prototype"
 class LDPC(Encoder, Serializable):
     """Implementation of an LDPC Encoder.
 
-    LDPC decoder using a serial C (check node) schedule and  message-passing as introduced in
-    [E. Sharon, S. Litsyn and J. Goldberger, "An efficient message-passing schedule for LDPC
-    decoding," 2004 23rd IEEE Convention of Electrical and Electronics Engineers in Israel,
-    2004, pp. 223-226].
-
-    Attributes:
-        CODE_RATES (Set[Fraction]): The supported code rates.
-        BLOCK_SIZES (Set[int]): The supported input block sizes.
+    Refer to :footcite:t:`2004:sharon` for further information on the algorithm implemented.
     """
+
+    yaml_tag = u'LDPC'
+    """YAML serialization tag."""
 
     CODE_RATES: Set[Fraction] = {
         Fraction(1, 3),
@@ -43,9 +39,11 @@ class LDPC(Encoder, Serializable):
         Fraction(4, 5),
         Fraction(5, 6)
     }
-    BLOCK_SIZES: Set[int] = {256, 512, 1024, 2048, 4096, 8192}
+    """Natively supported code rates."""
 
-    yaml_tag = u'LDPC'
+    BLOCK_SIZES: Set[int] = {256, 512, 1024, 2048, 4096, 8192}
+    """Natively supported block sizes."""
+
     __rate: Fraction
     __block_size: int
     _G: np.ndarray
@@ -58,8 +56,7 @@ class LDPC(Encoder, Serializable):
                  rate: Fraction = Fraction(2, 3),
                  iterations: int = 20,
                  custom_codes: Set[str] = None) -> None:
-        """Object initialization.
-
+        """
         Args:
             block_size (int, optional): LDPC coding matrix block size.
             rate: (Fraction, optional): Coding rate.
