@@ -7,7 +7,7 @@ from enum import Enum
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
-from scipy.signal import correlate
+from scipy.signal import correlate, find_peaks
 
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.core.factory import Serializable
@@ -275,7 +275,7 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
 
         # Generate waveforms by treating the frame as a comb and convolving with the impulse response
         output_signal = self.tx_filter.filter(frame)
-        return Signal(output_signal, self.sampling_rate, self.modem.carrier_frequency)
+        return Signal(output_signal, self.sampling_rate)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
@@ -794,6 +794,7 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
         pilot = np.zeros(self.waveform_generator.oversampling_factor * self.waveform_generator.num_preamble_symbols,
                          dtype=complex)
         pilot[::self.waveform_generator.oversampling_factor] = 1.
+        pilot = self.waveform_generator.tx_filter.filter(pilot)
 
         # If no pilot signal is generated, no correlation can be done
         if pilot.shape[0] < 1:
@@ -803,37 +804,18 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
         correlation = correlate(signal, pilot, mode='valid', method='fft')
         correlation /= (np.linalg.norm(pilot) ** 2)  # Normalize correlation
 
-        pilot_indices = np.argwhere(abs(correlation) >= self.__threshold * np.max(abs(correlation))).flatten()
-        pilot_indices -= int(len(pilot))
-
-        # Filter out infeasible pilot section indices
-        pilot_indices = pilot_indices[pilot_indices >= 0]
+        # Determine the pilot sequence locations by performing a peak search over the correlation profile
+        frame_length = self.waveform_generator.samples_in_frame
+        min_pilot_distance = int(0.95 * frame_length)
+        pilot_indices, _ = find_peaks(abs(correlation), distance=min_pilot_distance)
+        pilot_indices -= 2      # Correct for sample offset ToDo: Find explanation to the offset origin
 
         # Abort if no pilot section has been detected
         if len(pilot_indices) < 1:
             return []
 
-        frame_length = self.waveform_generator.samples_in_frame
-
-        # Remove pilot candidates too close to the previous pilot candidate
-        min_pilot_distance = int(0.95 * frame_length)
-        valid_pilot_mask = np.ones(len(pilot_indices), dtype=bool)
-
-        last_valid_pilot = pilot_indices[0]
-        for pilot_index in range(1, len(pilot_indices)):
-
-            if (pilot_indices[pilot_index] - last_valid_pilot) < min_pilot_distance:
-
-                valid_pilot_mask[pilot_index] = False
-
-            else:
-
-                last_valid_pilot = pilot_indices[pilot_index]
-
-        valid_pilot_indices = pilot_indices[valid_pilot_mask]
-
         frames = []
-        for pilot_index in valid_pilot_indices:
+        for pilot_index in pilot_indices:
 
             if pilot_index + frame_length <= int(1.05 * len(signal)):
 
@@ -845,8 +827,5 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
                     signal_frame = np.append(signal_frame, np.zeros(frame_length - len(signal_frame), dtype=complex))
 
                 frames.append((signal_frame, csi_frame))
-
-        if len(frames) < 1:
-            print(pilot_indices)
 
         return frames
