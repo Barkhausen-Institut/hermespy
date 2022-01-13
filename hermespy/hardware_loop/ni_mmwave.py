@@ -170,6 +170,58 @@ class NiMmWaveDevice(PhysicalDevice):
 
         return 1
 
+    def trigger_direct(self, signal: Signal) -> Signal:
+
+        # Compute signal to be transmitted
+        transmitted_samples = signal.resample(self.sampling_rate).to_interleaved(np.int16)
+
+        if self.time_buffer > 0.:
+
+            num_buffer_samples = int(self.time_buffer * self.sampling_rate)
+            transmitted_samples = np.append(np.zeros(2 * num_buffer_samples, dtype=np.int16), transmitted_samples)
+
+        # Burst unique identifier generation
+        burst_uid = self.__burst_prefix + str(self.__waveform_counter)
+        self.__waveform_counter += 1
+
+        # Upload transmit samples to instrument memory
+        self.__assert_cmd(self.__driver.write_tx(burst_uid, transmitted_samples))
+
+        # Configure acquisition parameters
+        acquisition_length = signal.duration + 2 * self.time_buffer
+        self.__assert_cmd(self.__driver.start([burst_uid], acquisition_length, 20000))# , acquisition_length, 60000))
+
+        # Trigger hardware
+        self.__assert_cmd(self.__driver.send_trigger(burstmode=mmw.const.burst_mode.burst))
+
+        # Download received samples
+        response, interleaved_samples = self.__driver.fetch()
+        self.__assert_cmd(response)
+
+        # Recover signal model from interleaved complex samples
+        received_signal = Signal.from_interleaved(interleaved_samples, sampling_rate=self.__sampling_rate)
+
+        # Hack for the API bug: Exchange real and imaginary parts within the signal model
+        real = received_signal.samples.real.copy()
+        imag = received_signal.samples.imag.copy()
+        received_signal.samples.real = imag
+        received_signal.samples.imag = real
+
+        # Scale the signal to unit max amplitude
+        if self.__scale_reception:
+
+            max_amplitude = np.max(abs(received_signal.samples))
+
+            if max_amplitude > 0.:
+                received_signal.samples = received_signal.samples / max_amplitude
+
+        # Cache the received signal
+        self.receive(received_signal)
+
+        # Return received signal
+        return received_signal
+
+
     def trigger(self) -> None:
 
         # Compute signal to be transmitted
@@ -201,6 +253,12 @@ class NiMmWaveDevice(PhysicalDevice):
 
         # Recover signal model from interleaved complex samples
         received_signal = Signal.from_interleaved(interleaved_samples, sampling_rate=self.__sampling_rate)
+
+        # Hack for the API bug: Exchange real and imaginary parts within the signal model
+        real = received_signal.samples.real
+        imag = received_signal.samples.imag
+        received_signal.samples.real = imag
+        received_signal.samples.imag = real
 
         # Scale the signal to unit max amplitude
         if self.__scale_reception:
