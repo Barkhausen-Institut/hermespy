@@ -3,6 +3,174 @@
 =====
 Modem
 =====
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   flowchart LR
+
+       subgraph Modem
+           direction LR
+
+           subgraph BitSource
+
+               direction TB
+               Bits
+
+           end
+
+           subgraph BitCoding
+
+               direction TB
+               BitEncoding[Encoding]
+               BitDecoding[Decoding]
+
+           end
+
+           subgraph Waveform
+
+               Mapping --> Modulation
+               ChannelEstimation[Channel Estimation]
+               Synchronization
+               Unmapping --- Demodulation
+           end
+
+           subgraph StreamCoding
+
+               StreamEncoding[Encoding]
+               StreamDecoding[Decoding]
+           end
+
+           subgraph BeamForming
+
+               TxBeamform[Tx Beamforming]
+               RxBeamform[Rx Beamforming]
+           end
+
+           Bits --> BitEncoding
+           BitEncoding --> Mapping
+           Modulation --> StreamEncoding
+           StreamEncoding --> TxBeamform
+           StreamDecoding --> RxBeamform
+           Demodulation --- StreamDecoding
+           Synchronization --- StreamDecoding
+           ChannelEstimation --- StreamEncoding
+           ChannelEstimation --- StreamDecoding
+           BitDecoding --- Unmapping
+       end
+
+       subgraph Device
+
+           direction TB
+           txslot>Tx Slot]
+           rxslot>Rx Slot]
+       end
+
+   txsignal{{Tx Signal Model}}
+   txbits{{Tx Bits}}
+   txsymbols{{Tx Symbols}}
+   rxsignal{{Rx Signal Model}}
+   rxbits{{Rx Bits}}
+   rxsymbols{{Rx Symbols}}
+
+   TxBeamform --> txsignal
+   RxBeamform --> rxsignal
+   txsignal --> txslot
+   rxsignal --> rxslot
+
+   Bits --> txbits
+   Mapping --> txsymbols
+   BitDecoding --> rxbits
+   Unmapping --> rxsymbols
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   flowchart LR
+
+       subgraph Modem
+
+           direction LR
+
+           subgraph BitSource
+
+               direction TB
+
+               Random([RandomSource]) === Stream([StreamSource])
+
+
+           end
+
+           subgraph BitCoding
+
+                direction TB
+                LDPC[/LDPC/]
+                Interleaving[/Block-Interleaving/]
+                CRC[/CRC/]
+                Repetition[/Repetition/]
+                Scrambler3G[/3GPP Scrambling/]
+                Scrambler80211a[/802.11a Scrambling/]
+
+                LDPC === Interleaving
+                Interleaving === CRC
+                CRC === Repetition
+                Repetition === Scrambler3G
+                Scrambler3G === Scrambler80211a
+
+           end
+
+           subgraph Waveform
+
+                direction TB
+                FSK([FSK])
+                OFDM([OFDM])
+                GFDM([GFDM])
+                QAM([QAM])
+
+                FSK === OFDM
+                OFDM === GFDM
+                GFDM === QAM
+           end
+
+           subgraph StreamCoding
+
+              direction TB
+              SC[/Single Carrier/]
+              SM[/Spatial Multiplexing/]
+              DFT[/DFT/]
+              STBC[/STBC/]
+              MRC[/Maximum Ratio Combining/]
+
+              SC === SM === DFT === STBC === MRC
+
+           end
+
+           subgraph BeamForming
+
+               direction TB
+               Conventional[/Conventional/]
+           end
+
+            BitSource ===> BitCoding
+            BitCoding <===> Waveform
+            Waveform <===> StreamCoding
+            StreamCoding <===> BeamForming
+       end
+
+    linkStyle 0 display: None
+    linkStyle 1 display: None
+    linkStyle 2 display: None
+    linkStyle 3 display: None
+    linkStyle 4 display: None
+    linkStyle 5 display: None
+    linkStyle 6 display: None
+    linkStyle 7 display: None
+    linkStyle 8 display: None
+    linkStyle 9 display: None
+    linkStyle 10 display: None
+    linkStyle 11 display: None
+    linkStyle 12 display: None
+    linkStyle 11 display: None
 """
 
 from __future__ import annotations

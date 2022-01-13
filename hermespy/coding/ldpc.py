@@ -124,8 +124,9 @@ class LDPC(Encoder, Serializable):
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
 
         # Transform bits from {0, 1} format to {-1, 1}
-        codes = -encoded_bits.astype(int)
-        codes[codes > -.5] = 1.
+        codes = encoded_bits.astype(int)
+        codes[codes < .5] = -1.
+
         eps = 2.22045e-16
 
         Rcv = np.zeros(self._H.shape)
@@ -152,8 +153,10 @@ class LDPC(Encoder, Serializable):
                     S_sign = +1
                 else:
                     S_sign = -1
+
                 # Loop over the variable nodes
                 for var_ind in range(len(nb_var_nodes[0])):
+
                     var_pos = nb_var_nodes[0][var_ind]
                     Q_temp = Qv[var_pos] - Rcv[check_ind, var_pos]
                     Q_temp_mag = -np.log(eps + np.tanh(np.abs(Q_temp) / 2))
