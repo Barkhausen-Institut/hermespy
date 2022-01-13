@@ -3,6 +3,115 @@
 ===============
 Device Modeling
 ===============
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   classDiagram-v2
+
+   direction RL
+
+   class Device {
+
+       topology
+       carrier_frequency
+       transmit()
+       receive()
+   }
+
+   class SimulatedDevice {
+
+       position
+       orientation
+       velocity
+       acceleration
+   }
+
+   class HardwareDevice {
+
+       trigger()
+   }
+
+   class Operator {
+
+       transmit()
+       receive()
+   }
+
+   class Modem {
+
+       tx_bits
+       rx_bits
+       ...
+       waveform
+       transmit()
+       receive()
+   }
+
+   class Radar {
+
+       waveform
+       ...
+       target_estimates
+       transmit()
+       receive()
+   }
+
+   Operator <|-- Modem
+   Operator <|-- Radar
+   Device *-- Operator
+   SimulatedDevice <|-- Device
+   HardwareDevice <|-- Device
+
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   flowchart LR
+
+   channel{Real World}
+
+   subgraph devicea[HardwareDevice]
+
+       direction TB
+       deviceatx>Tx Slot] --> deviceabinding[Hardware Binding] --> devicearx>Rx Slot]
+
+   end
+
+   subgraph deviceb[HardwareDevice]
+
+       direction TB
+       devicebtx>Tx Slot] --> devicebbinding[Hardware Binding] --> devicebrx>Rx Slot]
+   end
+
+   deviceabinding <--> channel
+   devicebbinding <--> channel
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   flowchart LR
+
+   channel{Channel Modeling}
+
+   subgraph devicea[SimulatedDevice]
+
+       direction TB
+       deviceatx>Tx Slot]
+       devicearx>Rx Slot]
+
+   end
+
+   subgraph deviceb[SimulatedDevice]
+
+       direction TB
+       devicebtx>Tx Slot]
+       devicebrx>Rx Slot]
+   end
+
+   deviceatx --> channel --> devicearx
+   devicebtx --> channel --> devicebrx
+
 """
 
 from __future__ import annotations

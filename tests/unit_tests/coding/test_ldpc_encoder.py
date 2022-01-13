@@ -1,7 +1,9 @@
 import unittest
 from fractions import Fraction
 import os
+
 from numpy.testing import assert_array_equal
+from numpy.random import default_rng
 from scipy.io import loadmat
 
 from hermespy.coding.ldpc import LDPC
@@ -16,6 +18,7 @@ class TestLDPC(unittest.TestCase):
         self.block_size = 256
         self.rate = Fraction(2, 3)
         self.iterations = 20
+        self.rng = default_rng(42)
 
         self.encoder = LDPC(self.block_size, self.rate, self.iterations)
 
@@ -139,6 +142,28 @@ class TestLDPC(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.encoder.set_rate(1, Fraction(1, 1))
 
+    def test_encode_decode(self) -> None:
+        """Test circular encoding and subsequent decoding."""
+
+        data = self.rng.integers(0, 2, self.encoder.bit_block_size)
+
+        coded_data = self.encoder.encode(data)
+        decoded_data = self.encoder.decode(coded_data)
+
+        assert_array_equal(data, decoded_data)
+
+    def test_error_correction(self) -> None:
+        """Decoding should be able to decode a single bit-flip reliably."""
+
+        data = self.rng.integers(0, 2, self.encoder.bit_block_size)
+
+        coded_data = self.encoder.encode(data)
+        faulty_coded_data = coded_data.copy()
+        faulty_coded_data[0] = 0
+
+        decoded_data = self.encoder.decode(faulty_coded_data)
+        assert_array_equal(data, decoded_data)
+
 
 class TestLDPCBinding(unittest.TestCase):
     """Test Cpp bindings of the LDPC encoder."""
@@ -148,6 +173,7 @@ class TestLDPCBinding(unittest.TestCase):
         self.block_size = 256
         self.rate = Fraction(2, 3)
         self.iterations = 20
+        self.rng = default_rng(42)
 
         self.encoder = LDPCBinding(self.block_size, self.rate, self.iterations)
 
@@ -196,3 +222,25 @@ class TestLDPCBinding(unittest.TestCase):
             bit_block = self.encoder.decode(code)
 
             assert_array_equal(bit_block, expected_bit_block)
+
+    def test_encode_decode(self) -> None:
+        """Test circular encoding and subsequent decoding."""
+
+        data = self.rng.integers(0, 2, self.encoder.bit_block_size)
+
+        coded_data = self.encoder.encode(data)
+        decoded_data = self.encoder.decode(coded_data)
+
+        assert_array_equal(data, decoded_data)
+
+    def test_error_correction(self) -> None:
+        """Decoding should be able to decode a single bit-flip reliably."""
+
+        data = self.rng.integers(0, 2, self.encoder.bit_block_size)
+
+        coded_data = self.encoder.encode(data)
+        faulty_coded_data = coded_data.copy()
+        faulty_coded_data[0] = 0
+
+        decoded_data = self.encoder.decode(faulty_coded_data)
+        assert_array_equal(data, decoded_data)
