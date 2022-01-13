@@ -803,7 +803,7 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
         correlation = correlate(signal, pilot, mode='valid', method='fft')
         correlation /= (np.linalg.norm(pilot) ** 2)  # Normalize correlation
 
-        pilot_indices = np.argwhere(correlation >= self.__threshold * np.max(abs(correlation))).flatten()
+        pilot_indices = np.argwhere(abs(correlation) >= self.__threshold * np.max(abs(correlation))).flatten()
         pilot_indices -= int(len(pilot))
 
         # Filter out infeasible pilot section indices
@@ -835,12 +835,18 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
         frames = []
         for pilot_index in valid_pilot_indices:
 
-            if pilot_index + frame_length < len(signal):
+            if pilot_index + frame_length <= int(1.05 * len(signal)):
 
-                # Todo: This is technically an equalization
-                signal_frame = signal[pilot_index:pilot_index + frame_length] / correlation[pilot_index]
+                signal_frame = signal[pilot_index:pilot_index + frame_length]
                 csi_frame = channel_state[pilot_index:pilot_index + frame_length]
 
+                if len(signal_frame) < frame_length:
+
+                    signal_frame = np.append(signal_frame, np.zeros(frame_length - len(signal_frame), dtype=complex))
+
                 frames.append((signal_frame, csi_frame))
+
+        if len(frames) < 1:
+            print(pilot_indices)
 
         return frames
