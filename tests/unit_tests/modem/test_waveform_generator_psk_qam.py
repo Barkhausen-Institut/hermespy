@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation Testing."""
 
-import unittest
+from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
+from numpy.random import default_rng
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
 
-from hermespy.channel import ChannelStateInformation
-from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
+from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamCorrelationSynchronization
 from hermespy.modem.tools import ShapingFilter
 
 __author__ = "Tobias Kronauer"
@@ -22,7 +23,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestWaveformGeneratorPskQam(unittest.TestCase):
+class TestWaveformGeneratorPskQam(TestCase):
     """Test the Phase-Shift-Keying / Quadrature Amplitude Modulation Waveform Generator."""
 
     def setUp(self) -> None:
@@ -306,3 +307,49 @@ class TestWaveformGeneratorPskQam(unittest.TestCase):
     def test_from_yaml(self) -> None:
         """Serialization from YAML."""
         pass
+
+
+class TestPskQamCorrelationSynchronization(TestCase):
+    """Test the correlation-based synchronization routine."""
+
+    def setUp(self) -> None:
+
+        self.rng = default_rng(42)
+        self.synchronization = PskQamCorrelationSynchronization()
+        self.waveform = WaveformGeneratorPskQam(oversampling_factor=4)
+        self.waveform.synchronization = self.synchronization
+        self.waveform.num_preamble_symbols = 10
+        self.waveform.num_postamble_symbols = 0
+        self.waveform.num_data_symbols = 50
+        self.waveform.guard_interval = 0.
+
+    def test_delay_synchronization(self) -> None:
+        """Test synchronization with arbitrary sample offset."""
+
+        bits = self.rng.integers(0, 2, self.waveform.bits_per_frame)
+        symbols = self.waveform.map(bits)
+
+        signal = self.waveform.modulate(symbols)
+
+        for offset in [0, 1, 10, 15, 20]:
+
+            samples = np.append(np.zeros(offset, dtype=complex), signal.samples[0, :])
+
+            frames = self.synchronization.synchronize(samples, ChannelStateInformation.Ideal(signal.num_samples))
+
+            self.assertEqual(len(frames), 1)
+            assert_array_equal(frames[0][0], signal.samples[0, :])
+
+    def test_phase_shift_synchronization(self) -> None:
+        """Test synchronization with arbitrary sample offset and phase shift."""
+
+        bits = self.rng.integers(0, 2, self.waveform.bits_per_frame)
+        symbols = self.waveform.map(bits)
+
+        samples = self.waveform.modulate(symbols).samples[0, :] * np.exp(0.24567j * pi)
+        padded_samples = np.append(np.zeros(15, dtype=complex), samples)
+
+        frames = self.synchronization.synchronize(padded_samples, ChannelStateInformation.Ideal(len(padded_samples)))
+
+        self.assertEqual(len(frames), 1)
+        assert_array_almost_equal(frames[0][0], samples)
