@@ -25,15 +25,11 @@ __status__ = "Prototype"
 class LDPC(Encoder, Serializable):
     """Implementation of an LDPC Encoder.
 
-    LDPC decoder using a serial C (check node) schedule and  message-passing as introduced in
-    [E. Sharon, S. Litsyn and J. Goldberger, "An efficient message-passing schedule for LDPC
-    decoding," 2004 23rd IEEE Convention of Electrical and Electronics Engineers in Israel,
-    2004, pp. 223-226].
-
-    Attributes:
-        CODE_RATES (Set[Fraction]): The supported code rates.
-        BLOCK_SIZES (Set[int]): The supported input block sizes.
+    Refer to :footcite:t:`2004:sharon` for further information on the algorithm implemented.
     """
+
+    yaml_tag = u'LDPC'
+    """YAML serialization tag."""
 
     CODE_RATES: Set[Fraction] = {
         Fraction(1, 3),
@@ -43,9 +39,11 @@ class LDPC(Encoder, Serializable):
         Fraction(4, 5),
         Fraction(5, 6)
     }
-    BLOCK_SIZES: Set[int] = {256, 512, 1024, 2048, 4096, 8192}
+    """Natively supported code rates."""
 
-    yaml_tag = u'LDPC'
+    BLOCK_SIZES: Set[int] = {256, 512, 1024, 2048, 4096, 8192}
+    """Natively supported block sizes."""
+
     __rate: Fraction
     __block_size: int
     _G: np.ndarray
@@ -58,8 +56,7 @@ class LDPC(Encoder, Serializable):
                  rate: Fraction = Fraction(2, 3),
                  iterations: int = 20,
                  custom_codes: Set[str] = None) -> None:
-        """Object initialization.
-
+        """
         Args:
             block_size (int, optional): LDPC coding matrix block size.
             rate: (Fraction, optional): Coding rate.
@@ -124,8 +121,9 @@ class LDPC(Encoder, Serializable):
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
 
         # Transform bits from {0, 1} format to {-1, 1}
-        codes = -encoded_bits.astype(int)
-        codes[codes > -.5] = 1.
+        codes = encoded_bits.astype(int)
+        codes[codes < .5] = -1.
+
         eps = 2.22045e-16
 
         Rcv = np.zeros(self._H.shape)
@@ -152,8 +150,10 @@ class LDPC(Encoder, Serializable):
                     S_sign = +1
                 else:
                     S_sign = -1
+
                 # Loop over the variable nodes
                 for var_ind in range(len(nb_var_nodes[0])):
+
                     var_pos = nb_var_nodes[0][var_ind]
                     Q_temp = Qv[var_pos] - Rcv[check_ind, var_pos]
                     Q_temp_mag = -np.log(eps + np.tanh(np.abs(Q_temp) / 2))

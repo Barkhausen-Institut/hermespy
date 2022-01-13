@@ -298,6 +298,23 @@ class SimulatedDevice(Device, Serializable):
 
         return baseband_signal
 
+    def receive_signal(self,
+                       signal: Signal,
+                       channel_state: Optional[ChannelStateInformation] = None,
+                       snr: float = float('inf')) -> Signal:
+
+        baseband_signal = self.rf_chain.receive(signal)
+
+        # Cache received signal at receiver slots
+        for receiver in self.receivers:
+
+            noise_power = receiver.energy / snr
+            self.__noise.add(baseband_signal, noise_power)
+
+            receiver.cache_reception(baseband_signal, channel_state)
+
+        return baseband_signal
+
     @classmethod
     def to_yaml(cls: Type[SimulatedDevice], representer: SafeRepresenter, node: SimulatedDevice) -> MappingNode:
         """Serialize a `SimulatedDevice` object to YAML.

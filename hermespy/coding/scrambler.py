@@ -219,9 +219,7 @@ class Scrambler3GPP(Encoder, Serializable):
 class Scrambler80211a(Encoder, Serializable):
     """This class represents a scrambler in the `802.11a`_ standard.
 
-    See section 17.3.5.4 of IEEE Standard `802.11a`_-1999 for details.
-
-    .. _802.11a: https://ieeexplore.ieee.org/document/815305
+    Refer to section 17.3.5.4 of :cite:p:`80211a:1999` for further details.
     """
 
     factory_tag: str = "SCRAMBLER_80211A"
