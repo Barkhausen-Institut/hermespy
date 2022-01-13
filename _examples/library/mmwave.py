@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 
 from hermespy.hardware_loop.ni_mmwave import NiMmWaveDevice
 from hermespy.modem.modem import Modem
-from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk
-from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamCorrelationSynchronization
+from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
 from hermespy.modem.evaluators import BitErrorEvaluator
 
 # Initialize device binding
@@ -17,13 +16,11 @@ device.time_buffer = 1e-7
 
 # Configure communication operator and waveform
 modem = Modem()
-waveform_generator = WaveformGeneratorChirpFsk()
+waveform_generator = WaveformGeneratorPskQam(oversampling_factor=4)
 modem.waveform_generator = waveform_generator
-#waveform_generator.num_preamble_symbols = 10
-#waveform_generator.num_data_symbols = 50
-#waveform_generator.modulation_order = 64
-waveform_generator.num_pilot_chirps = 0
-waveform_generator.num_data_chirps = 10
+waveform_generator.num_preamble_symbols = 10
+waveform_generator.num_data_symbols = 50
+waveform_generator.modulation_order = 64
 # waveform_generator.synchronization = PskQamCorrelationSynchronization()
 device.sampling_rate = waveform_generator.sampling_rate
 
