@@ -250,7 +250,8 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
 
         # Set preamble symbols
         num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
-        frame[:num_preamble_samples:self.oversampling_factor] = 1.
+        frame[:num_preamble_samples:2 * self.oversampling_factor] = 1.
+        frame[self.oversampling_factor:num_preamble_samples:2 * self.oversampling_factor] = -1.
 
         # Set data symbols
         num_data_samples = self.oversampling_factor * self.__num_data_symbols
@@ -768,7 +769,8 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
         signal = np.append(np.zeros(corr_overhead, dtype=complex), signal)
         pilot = np.zeros(self.waveform_generator.oversampling_factor * self.waveform_generator.num_preamble_symbols,
                          dtype=complex)
-        pilot[::self.waveform_generator.oversampling_factor] = 1.
+        pilot[::2*self.waveform_generator.oversampling_factor] = 1.
+        pilot[self.waveform_generator.oversampling_factor::2 * self.waveform_generator.oversampling_factor] = -1.
         pilot = self.waveform_generator.tx_filter.filter(pilot)
 
         # If no pilot signal is generated, no correlation can be done
@@ -781,9 +783,8 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
         frame_length = self.waveform_generator.samples_in_frame
-        min_pilot_distance = int(0.95 * frame_length)
-        pilot_indices, _ = find_peaks(abs(correlation), distance=min_pilot_distance)
-        pilot_indices -= 2      # Correct for sample offset ToDo: Find explanation to the offset origin
+        pilot_indices, _ = find_peaks(abs(correlation), height=.9, distance=int(.95 * frame_length))
+        #pilot_indices -= 2    # Correct for sample offset ToDo: Find explanation to the offset origin
 
         # Abort if no pilot section has been detected
         if len(pilot_indices) < 1:
@@ -854,11 +855,16 @@ class PskQamLeastSquaresChannelEstimation(PskQamChannelEstimation):
         preamble_start_idx = filter_delay
         preamble_stop_idx = preamble_start_idx + num_preamble_samples
 
-        preamble_symbols = signal.samples[:, preamble_start_idx:preamble_stop_idx:symbol_distance]
+        num_preamble_symbols = self.waveform_generator.num_preamble_symbols
+        preamble_symbols = signal.samples[0, preamble_start_idx:preamble_stop_idx:symbol_distance]
+
+        # Reference preamble
+        reference = np.empty(num_preamble_symbols, dtype=complex)
+        reference[::2] = 1.
+        reference[1::2] = -1.
 
         # Compute channel weight.
-        # Since all preamble symbols are by default 1+0j, the Least-Squares solution is the mean of symbols
-        channel_weight = np.mean(preamble_symbols)
+        channel_weight = np.mean(preamble_symbols / reference)
 
         # Re-construct csi
         csi = ChannelStateInformation.Ideal(signal.num_samples, signal.num_streams)

@@ -20,16 +20,17 @@ device = SimulatedDevice()
 scenario.add_device(device)
 
 waveform = WaveformGeneratorPskQam(oversampling_factor=4)
-waveform.modulation_order = 64
-waveform.num_data_symbols = 512
-waveform.num_preamble_symbols = 8
+waveform.modulation_order = 16
+waveform.num_data_symbols = 1024
+waveform.num_preamble_symbols = 100
+waveform.guard_interval = 0.
 waveform.synchronization = PskQamCorrelationSynchronization()
 waveform.channel_estimation = PskQamLeastSquaresChannelEstimation()
 waveform.channel_equalization = PskQamZeroForcingChannelEqualization()
 
 source = StreamBitsSource(os.path.join(os.path.dirname(__file__), '../resources/leena.raw'))
 leena_num_bits = 512 * 512 * 8
-image_buffer = np.ones((512, 512), dtype=np.uint8)
+image_buffer = np.zeros((512, 512), dtype=np.uint8)
 image_buffer[0, 0] = 255
 
 # Add a modem at the simulated device
@@ -37,7 +38,6 @@ modem = Modem()
 modem.device = device
 modem.bits_source = source
 modem.waveform_generator = waveform
-
 
 # Compute number of required frames
 bits_per_frame = modem.num_data_bits_per_frame
@@ -60,4 +60,5 @@ for f in range(num_frames):
     image.set_data(image_buffer)
     fig.canvas.flush_events()
 
-plt.show()
+input("Press Enter to continue...")
+plt.close()
