@@ -2,16 +2,17 @@
 """Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation."""
 
 from __future__ import annotations
-from typing import Any, Tuple, List, Optional, Type, Union
-from enum import Enum
+from abc import ABC
+from typing import Any, Tuple, List, Optional, Type
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
 from scipy.signal import correlate, find_peaks
 
 from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.core.device import FloatingError
 from hermespy.core.factory import Serializable
-from hermespy.modem.waveform_generator import WaveformGenerator, Synchronization
+from hermespy.modem.waveform_generator import WaveformGenerator, Synchronization, ChannelEstimation, ChannelEqualization
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from hermespy.core.signal_model import Signal
@@ -41,13 +42,6 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
     - no equalization (only amplitude and phase of first propagation path is compensated)
     """
 
-    class Equalization(Enum):
-        """Equalization method applied at receiver."""
-
-        NONE = 0
-        ZF = 1      # Zero Forcing
-        MMSE = 2    # Minimum Mean Squared Error
-
     yaml_tag = u'PskQam'
     """YAML serialization tag."""
 
@@ -56,7 +50,6 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
     __chirp_duration: float
     __chirp_bandwidth: float
     __pulse_width: float  # ToDO: Check where pulse-width has to be used for initialization
-    __equalization: Equalization
     __num_preamble_symbols: int
     __num_data_symbols: int
     __num_postamble_symbols: int
@@ -75,7 +68,6 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
                  rx_filter: Optional[ShapingFilter] = None,
                  chirp_duration: float = 1e-6,
                  chirp_bandwidth: float = 100e6,
-                 equalization: Union[str, WaveformGeneratorPskQam.Equalization] = 'NONE',
                  num_preamble_symbols: int = 2,
                  num_data_symbols: int = 100,
                  num_postamble_symbols: int = 0,
@@ -127,7 +119,6 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
         self.pilot_rate = pilot_rate
         self.guard_interval = guard_interval
         self.complex_modulation = complex_modulation
-        self.equalization = equalization
 
         self._data_symbol_idx = None
         self._symbol_idx = None
@@ -290,18 +281,23 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
         num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
         preamble_start_idx = filter_delay
         preamble_stop_idx = preamble_start_idx + num_preamble_samples
-        preamble = filtered_signal[preamble_start_idx:preamble_stop_idx:self.oversampling_factor]
+        # preamble = filtered_signal[preamble_start_idx:preamble_stop_idx:self.oversampling_factor]
 
-        channel_factor = np.mean(preamble)
-        #channel_state.state *= channel_factor
-        filtered_signal /= channel_factor
+        # Re-build signal model
+        signal = Signal(filtered_signal, sampling_rate=self.sampling_rate)
+
+        # Estimate the channel
+        csi = self.channel_estimation.estimate_channel(signal, channel_state)
+
+        # Equalize the signal
+        equalized_signal = self.channel_equalization.equalize_channel(signal, csi)
 
         # Extract data symbols
         num_data_samples = self.oversampling_factor * self.__num_data_symbols
         data_start_idx = preamble_stop_idx
         data_stop_idx = data_start_idx + num_data_samples
-        data = filtered_signal[data_start_idx:data_stop_idx:self.oversampling_factor]
-        channel_state = channel_state[:, :, data_start_idx:data_stop_idx:self.oversampling_factor, :]
+        data = equalized_signal.samples[0, data_start_idx:data_stop_idx:self.oversampling_factor]
+        data_state = csi[:, :, data_start_idx:data_stop_idx:self.oversampling_factor, :]
 
         # Extract postamble symbols
         # num_postamble_samples = self.oversampling_factor * self.num_postamble_symbols
@@ -309,42 +305,15 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
         # postamble_stop_idx = postamble_start_idx + num_postamble_samples
         # postamble = filtered_signal[postamble_start_idx:postamble_stop_idx:self.oversampling_factor]
 
-        equalized_data = data #self._equalizer(data,
-                              #           channel_state.state[0, 0, :, 0],
-                              #           noise_variance)
-        noise = np.repeat(noise_variance, len(equalized_data))
+        noise = np.repeat(noise_variance, len(data))
 
-        return equalized_data, channel_state, noise
+        return data, data_state, noise
 
     @property
     def bandwidth(self) -> float:
 
         # The bandwidth is assumed to be identical to the QAM chirp bandwidth
         return self.__chirp_bandwidth
-
-    @property
-    def equalization(self) -> WaveformGeneratorPskQam.Equalization:
-        """Equalization method.
-
-        Returns:
-            WaveformGeneratorPskQam.Equalization: Equalization method.
-        """
-
-        return self.__equalization
-
-    @equalization.setter
-    def equalization(self, method: Union[str, WaveformGeneratorPskQam.Equalization]) -> None:
-        """Modify equalization method.
-
-        Args:
-            method: Equalization method.
-        """
-
-        if isinstance(method, str):
-            self.__equalization = WaveformGeneratorPskQam.Equalization[method]
-
-        else:
-            self.__equalization = method
 
     def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
         """Equalize the received data symbols
@@ -833,3 +802,105 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
                 frames.append((signal_frame, csi_frame))
 
         return frames
+
+
+class PskQamChannelEstimation(ChannelEstimation[WaveformGeneratorPskQam], ABC):
+    """Channel estimation for Psk Qam waveforms."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorPskQam] = None,
+                 *args: Any) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this synchronization routine is attached to.
+        """
+
+        ChannelEstimation.__init__(self, waveform_generator)
+
+
+class PksQamLeastSquaresChannelEstimation(PskQamChannelEstimation):
+    """Least-Squares channel estimation for Psk Qam waveforms."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorPskQam] = None,
+                 *args: Any) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this synchronization routine is attached to.
+        """
+
+        ChannelEstimation.__init__(self, waveform_generator)
+
+    def estimate_channel(self,
+                         signal: Signal,
+                         csi: Optional[ChannelStateInformation] = None) -> ChannelStateInformation:
+
+        if self.waveform_generator is None:
+            raise FloatingError("Error trying to fetch the pilot section of a floating channel estimator")
+
+        # Extract preamble symbols
+        filter_delay = (self.waveform_generator.tx_filter.delay_in_samples +
+                        self.waveform_generator.rx_filter.delay_in_samples)
+
+        # Extract preamble symbols
+        symbol_distance = self.waveform_generator.oversampling_factor
+        num_preamble_samples = symbol_distance * self.waveform_generator.num_preamble_symbols
+        preamble_start_idx = filter_delay
+        preamble_stop_idx = preamble_start_idx + num_preamble_samples
+
+        preamble_symbols = signal.samples[:, preamble_start_idx:preamble_stop_idx:symbol_distance]
+
+        # Compute channel weight.
+        # Since all preamble symbols are by default 1+0j, the Least-Squares solution is the mean of symbols
+        channel_weight = np.mean(preamble_symbols)
+
+        # Re-construct csi
+        csi = ChannelStateInformation.Ideal(signal.num_samples, signal.num_streams)
+        csi.state *= channel_weight
+
+        return csi
+
+
+class PskQamChannelEqualization(ChannelEqualization[WaveformGeneratorPskQam], ABC):
+    """Channel estimation for Psk Qam waveforms."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorPskQam] = None) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this equalization routine is attached to.
+        """
+
+        ChannelEqualization.__init__(self, waveform_generator)
+
+
+class PskQamZeroForcingChannelEqualization(PskQamChannelEqualization, ABC):
+    """Zero-Forcing Channel estimation for Psk Qam waveforms."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorPskQam] = None) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this equalization routine is attached to.
+        """
+
+        PskQamChannelEqualization.__init__(self, waveform_generator)
+
+    def equalize_channel(self,
+                         signal: Signal,
+                         csi: ChannelStateInformation) -> Signal:
+
+        signal = signal.copy()
+
+        for stream in signal.samples:
+            stream /= csi.state[0, :]
+
+        return signal
