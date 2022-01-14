@@ -4,7 +4,8 @@ import numpy as np
 from fractions import Fraction
 
 from hermespy.modem import Modem, WaveformGeneratorPskQam
-from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchronization
+from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchronization, \
+    PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization
 from hermespy.core.scenario import Scenario
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem.bits_source import StreamBitsSource
@@ -18,11 +19,13 @@ scenario = Scenario[SimulatedDevice]()
 device = SimulatedDevice()
 scenario.add_device(device)
 
-waveform = WaveformGeneratorPskQam()
+waveform = WaveformGeneratorPskQam(oversampling_factor=4)
 waveform.modulation_order = 64
 waveform.num_data_symbols = 512
 waveform.num_preamble_symbols = 8
-# waveform.synchronization = PskQamCorrelationSynchronization()
+waveform.synchronization = PskQamCorrelationSynchronization()
+waveform.channel_estimation = PskQamLeastSquaresChannelEstimation()
+waveform.channel_equalization = PskQamZeroForcingChannelEqualization()
 
 source = StreamBitsSource(os.path.join(os.path.dirname(__file__), '../resources/leena.raw'))
 leena_num_bits = 512 * 512 * 8
@@ -49,7 +52,7 @@ for f in range(num_frames):
 
     signal, _, tx_bits = modem.transmit()
     device_transmissions = device.transmit(clear_cache=True)
-    device.receive_signal(device_transmissions[0], snr=4.)
+    device.receive_signal(device_transmissions[0])  # , snr=4.)
     _, _, data_bits = modem.receive()
 
     if len(data_bits) > 0:
