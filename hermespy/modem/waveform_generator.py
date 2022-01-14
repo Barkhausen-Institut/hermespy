@@ -9,7 +9,8 @@ from typing import Generic, Tuple, TYPE_CHECKING, Optional, Type, TypeVar, List
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
-from hermespy.channel import ChannelStateInformation
+from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.core.device import FloatingError
 from hermespy.core.signal_model import Signal
 
 if TYPE_CHECKING:
@@ -117,6 +118,119 @@ class Synchronization(Generic[WaveformType], ABC):
         return synchronized_frames
 
 
+class ChannelEstimation(Generic[WaveformType], ABC):
+    """Abstract base class for channel estimation routines of waveform generators."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformType] = None) -> None:
+        """
+        Args:
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this estimation routine is attached to.
+        """
+
+        self.__waveform_generator = waveform_generator
+
+    @property
+    def waveform_generator(self) -> Optional[WaveformType]:
+        """Waveform generator this synchronization routine is attached to.
+
+        Returns:
+            Optional[WaveformType]:
+                Handle to the waveform generator. None if the synchronization routine is floating.
+        """
+
+        return self.__waveform_generator
+
+    @waveform_generator.setter
+    def waveform_generator(self, value: Optional[WaveformType]) -> None:
+        """Set waveform generator this synchronization routine is attached to."""
+
+        if self.__waveform_generator is not None:
+            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
+
+        self.__waveform_generator = value
+
+    def estimate_channel(self,
+                         signal: Signal,
+                         csi: Optional[ChannelStateInformation] = None) -> ChannelStateInformation:
+        """Estimate the wireless channel of a received communication frame.
+
+        Args:
+
+            signal (Signal):
+                Signal model of the communication frame waveform.
+
+            csi (ChannelStateInformation, optional):
+                Ideal channel state information.
+                May be required for some routines.
+
+        Raises:
+            ValueError:
+                If `csi` is required but not provided.
+        """
+
+        if csi is None:
+            raise ValueError("Ideal channel estimation requires prior channel state information")
+
+        return csi
+    
+
+class ChannelEqualization(Generic[WaveformType], ABC):
+    """Abstract base class for channel equalization routines of waveform generators."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformType] = None) -> None:
+        """
+        Args:
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this equalization routine is attached to.
+        """
+
+        self.__waveform_generator = waveform_generator
+
+    @property
+    def waveform_generator(self) -> Optional[WaveformType]:
+        """Waveform generator this equalization routine is attached to.
+
+        Returns:
+            Optional[WaveformType]:
+                Handle to the waveform generator. None if the equalization routine is floating.
+        """
+
+        return self.__waveform_generator
+
+    @waveform_generator.setter
+    def waveform_generator(self, value: Optional[WaveformType]) -> None:
+        """Set waveform generator this equalization routine is attached to."""
+
+        if self.__waveform_generator is not None:
+            raise RuntimeError("Error trying to re-attach already attached equalization routine.")
+
+        self.__waveform_generator = value
+
+    def equalize_channel(self,
+                         signal: Signal,
+                         csi: ChannelStateInformation) -> Signal:
+        """Equalize the wireless channel of a received communication frame.
+
+        Args:
+
+            signal (Signal):
+                Signal model of the communication frame waveform.
+
+            csi (ChannelStateInformation):
+                Channel state estimation
+
+        Returns:
+            Signal:
+                The equalized signal model.
+        """
+        
+        # The default routine performs no equalization
+        return signal
+
+
 class WaveformGenerator(ABC):
     """Implements an abstract waveform generator.
 
@@ -129,10 +243,12 @@ class WaveformGenerator(ABC):
     symbol_type: np.dtype = complex
     """Symbol type."""
 
-    __modem: Optional[Modem]            # Modem this waveform generator is attached to
-    __synchronization: Synchronization  # Synchronization routine
-    __oversampling_factor: int          # Oversampling factor
-    __modulation_order: int             # Cardinality of the set of communication symbols
+    __modem: Optional[Modem]                        # Modem this waveform generator is attached to
+    __synchronization: Synchronization              # Synchronization routine
+    __channel_estimation: ChannelEstimation         # Channel estimation routine
+    __channel_equalization: ChannelEqualization     # Channel equalization routine
+    __oversampling_factor: int                      # Oversampling factor
+    __modulation_order: int                         # Cardinality of the set of communication symbols
 
     def __init__(self,
                  modem: Optional[Modem] = None,
@@ -158,6 +274,8 @@ class WaveformGenerator(ABC):
         self.oversampling_factor = oversampling_factor
         self.modulation_order = modulation_order
         self.synchronization = Synchronization(self)
+        self.channel_estimation = ChannelEstimation(self)
+        self.channel_equalization = ChannelEqualization(self)
 
         if modem is not None:
             self.modem = modem
@@ -430,7 +548,7 @@ class WaveformGenerator(ABC):
             handle.waveform_generator = self
 
         self.__modem = handle
-
+        
     @property
     def synchronization(self) -> Synchronization:
         """Synchronization routine.
@@ -445,6 +563,42 @@ class WaveformGenerator(ABC):
     def synchronization(self, value: Synchronization) -> None:
 
         self.__synchronization = value
+
+        if value.waveform_generator is not self:
+            value.waveform_generator = self
+
+    @property
+    def channel_estimation(self) -> ChannelEstimation:
+        """Channel estimation routine.
+
+        Returns:
+            ChannelEstimation: Handle to the synchronization routine.
+        """
+
+        return self.__channel_estimation
+
+    @channel_estimation.setter
+    def channel_estimation(self, value: ChannelEstimation) -> None:
+
+        self.__channel_estimation = value
+
+        if value.waveform_generator is not self:
+            value.waveform_generator = self
+            
+    @property
+    def channel_equalization(self) -> ChannelEqualization:
+        """Channel estimation routine.
+
+        Returns:
+            ChannelEqualization: Handle to the equalization routine.
+        """
+
+        return self.__channel_equalization
+
+    @channel_equalization.setter
+    def channel_equalization(self, value: ChannelEqualization) -> None:
+
+        self.__channel_equalization = value
 
         if value.waveform_generator is not self:
             value.waveform_generator = self
