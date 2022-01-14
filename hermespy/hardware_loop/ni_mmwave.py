@@ -262,7 +262,9 @@ class NiMmWaveDevice(PhysicalDevice):
         self.__assert_cmd(response)
 
         # Recover signal model from interleaved complex samples
-        received_signal = Signal.from_interleaved(interleaved_samples, sampling_rate=self.__sampling_rate)
+        received_signal = Signal.from_interleaved(interleaved_samples,
+                                                  sampling_rate=self.__sampling_rate,
+                                                  carrier_frequency=self.__carrier_frequency)
 
         # Scale the signal to unit max amplitude
         if self.__scale_reception:
