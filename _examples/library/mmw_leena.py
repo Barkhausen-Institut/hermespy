@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from hermespy.modem import Modem
-from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamCorrelationSynchronization
+from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamCorrelationSynchronization, \
+    PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization
 from hermespy.hardware_loop.ni_mmwave import NiMmWaveDevice
 from hermespy.modem.bits_source import StreamBitsSource
 
@@ -11,11 +12,14 @@ from hermespy.modem.bits_source import StreamBitsSource
 # Create a new simulated device
 device = NiMmWaveDevice('192.168.189.120')
 
-waveform = WaveformGeneratorPskQam()
+waveform = WaveformGeneratorPskQam(oversampling_factor=4)
 waveform.modulation_order = 16
-waveform.num_data_symbols = 2 ** 14
-waveform.num_preamble_symbols = 8
+waveform.num_data_symbols = 1024
+waveform.num_preamble_symbols = 100
+waveform.guard_interval = 0.
 waveform.synchronization = PskQamCorrelationSynchronization()
+waveform.channel_estimation = PskQamLeastSquaresChannelEstimation()
+waveform.channel_equalization = PskQamZeroForcingChannelEqualization()
 device.sampling_rate = waveform.sampling_rate
 
 source = StreamBitsSource(os.path.join(os.path.dirname(__file__), '../resources/leena.raw'))
