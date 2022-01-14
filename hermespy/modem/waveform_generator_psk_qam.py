@@ -290,7 +290,11 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
         num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
         preamble_start_idx = filter_delay
         preamble_stop_idx = preamble_start_idx + num_preamble_samples
-        # preamble = filtered_signal[preamble_start_idx:preamble_stop_idx:self.oversampling_factor]
+        preamble = filtered_signal[preamble_start_idx:preamble_stop_idx:self.oversampling_factor]
+
+        channel_factor = np.mean(preamble)
+        #channel_state.state *= channel_factor
+        filtered_signal /= channel_factor
 
         # Extract data symbols
         num_data_samples = self.oversampling_factor * self.__num_data_symbols
@@ -305,9 +309,9 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
         # postamble_stop_idx = postamble_start_idx + num_postamble_samples
         # postamble = filtered_signal[postamble_start_idx:postamble_stop_idx:self.oversampling_factor]
 
-        equalized_data = self._equalizer(data,
-                                         channel_state.state[0, 0, :, 0],
-                                         noise_variance)
+        equalized_data = data #self._equalizer(data,
+                              #           channel_state.state[0, 0, :, 0],
+                              #           noise_variance)
         noise = np.repeat(noise_variance, len(equalized_data))
 
         return equalized_data, channel_state, noise
@@ -820,7 +824,7 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
             if pilot_index + frame_length <= int(1.05 * len(signal)):
 
                 signal_frame = signal[pilot_index:pilot_index + frame_length]
-                csi_frame = channel_state[pilot_index:pilot_index + frame_length]
+                csi_frame = channel_state[:, :, pilot_index:pilot_index + frame_length, :]
 
                 if len(signal_frame) < frame_length:
 

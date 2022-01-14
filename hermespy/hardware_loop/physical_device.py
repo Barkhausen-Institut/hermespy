@@ -51,5 +51,9 @@ class PhysicalDevice(Device):
                 Signal model to be received.
         """
 
+        # Signal is now a baseband-signal
+        signal.carrier_frequency = 0.
+
         for receiver in self.receivers:
+
             receiver.cache_reception(signal)

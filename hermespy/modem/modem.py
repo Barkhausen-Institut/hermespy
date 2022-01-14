@@ -318,14 +318,12 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
         # Generate a dedicated base-band signal for each symbol stream
         signal = Signal(np.empty((0, 0), dtype=complex),
-                        self.waveform_generator.sampling_rate,
-                        self.device.carrier_frequency)
+                        self.waveform_generator.sampling_rate)
 
         for stream_idx, stream_symbols in enumerate(symbol_streams):
 
             stream_signal = Signal(np.empty((0, 0), dtype=complex),
-                                   self.waveform_generator.sampling_rate,
-                                   self.device.carrier_frequency)
+                                   self.waveform_generator.sampling_rate)
 
             for frame_idx in range(frames_per_stream):
 
@@ -338,6 +336,9 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
         # Apply stream coding, for instance beam-forming
         # TODO: Not yet supported.
+
+        # Change the signal carrier
+        signal.carrier_frequency = self.carrier_frequency
 
         # Transmit signal over the occupied device slot (if the modem is attached to a device)
         if self._transmitter.attached:

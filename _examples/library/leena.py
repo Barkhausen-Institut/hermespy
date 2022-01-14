@@ -34,8 +34,7 @@ modem = Modem()
 modem.device = device
 modem.bits_source = source
 modem.waveform_generator = waveform
-#modem.encoder_manager.add_encoder(BlockInterleaver(128, 16))
-# modem.encoder_manager.add_encoder(LDPCBinding(rate=Fraction(1, 2)))
+
 
 # Compute number of required frames
 bits_per_frame = modem.num_data_bits_per_frame
