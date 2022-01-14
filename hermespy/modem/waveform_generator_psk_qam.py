@@ -764,6 +764,8 @@ class PskQamCorrelationSynchronization(PskQamSynchronization):
                     channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
 
         # Query the pilot signal from the waveform generator
+        corr_overhead = 20
+        signal = np.append(np.zeros(corr_overhead, dtype=complex), signal)
         pilot = np.zeros(self.waveform_generator.oversampling_factor * self.waveform_generator.num_preamble_symbols,
                          dtype=complex)
         pilot[::self.waveform_generator.oversampling_factor] = 1.
@@ -820,7 +822,7 @@ class PskQamChannelEstimation(ChannelEstimation[WaveformGeneratorPskQam], ABC):
         ChannelEstimation.__init__(self, waveform_generator)
 
 
-class PksQamLeastSquaresChannelEstimation(PskQamChannelEstimation):
+class PskQamLeastSquaresChannelEstimation(PskQamChannelEstimation):
     """Least-Squares channel estimation for Psk Qam waveforms."""
 
     def __init__(self,
@@ -900,7 +902,7 @@ class PskQamZeroForcingChannelEqualization(PskQamChannelEqualization, ABC):
 
         signal = signal.copy()
 
-        for stream in signal.samples:
-            stream /= csi.state[0, :]
+        for stream_idx, stream in enumerate(signal.samples):
+            stream /= csi.state[stream_idx, 0, :, 0]
 
         return signal
