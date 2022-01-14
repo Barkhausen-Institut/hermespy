@@ -1,7 +1,6 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from fractions import Fraction
 
 from hermespy.modem import Modem, WaveformGeneratorPskQam
 from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchronization, \
@@ -9,8 +8,7 @@ from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchroni
 from hermespy.core.scenario import Scenario
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem.bits_source import StreamBitsSource
-from hermespy.coding.block_interleaver import BlockInterleaver
-from hermespy.coding.ldpc_binding.ldpc import LDPCBinding
+
 
 # Create a new HermesPy simulation scenario
 scenario = Scenario[SimulatedDevice]()
@@ -19,14 +17,15 @@ scenario = Scenario[SimulatedDevice]()
 device = SimulatedDevice()
 scenario.add_device(device)
 
-waveform = WaveformGeneratorPskQam(oversampling_factor=4)
-waveform.modulation_order = 16
-waveform.num_data_symbols = 1024
-waveform.num_preamble_symbols = 100
-waveform.guard_interval = 0.
-waveform.synchronization = PskQamCorrelationSynchronization()
-waveform.channel_estimation = PskQamLeastSquaresChannelEstimation()
-waveform.channel_equalization = PskQamZeroForcingChannelEqualization()
+waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+waveform_generator.num_preamble_symbols = 16
+waveform_generator.num_data_symbols = 128
+waveform_generator.modulation_order = 16
+waveform_generator.guard_interval = 0.
+waveform_generator.synchronization = PskQamCorrelationSynchronization()
+waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
+waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
+device.sampling_rate = waveform_generator.sampling_rate
 
 source = StreamBitsSource(os.path.join(os.path.dirname(__file__), '../resources/leena.raw'))
 leena_num_bits = 512 * 512 * 8
@@ -37,7 +36,7 @@ image_buffer[0, 0] = 255
 modem = Modem()
 modem.device = device
 modem.bits_source = source
-modem.waveform_generator = waveform
+modem.waveform_generator = waveform_generator
 
 # Compute number of required frames
 bits_per_frame = modem.num_data_bits_per_frame

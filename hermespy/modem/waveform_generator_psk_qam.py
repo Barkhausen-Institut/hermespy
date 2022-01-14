@@ -72,7 +72,7 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
                  num_data_symbols: int = 100,
                  num_postamble_symbols: int = 0,
                  pilot_rate: float = 1e6,
-                 guard_interval: float = 1e-6,
+                 guard_interval: float = 0.,
                  complex_modulation: bool = True,
                  **kwargs: Any) -> None:
         """Waveform Generator PSK-QAM initialization.
