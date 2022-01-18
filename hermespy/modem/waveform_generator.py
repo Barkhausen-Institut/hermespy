@@ -3,15 +3,15 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from math import floor, sqrt
+from math import floor
 from typing import Generic, Tuple, TYPE_CHECKING, Optional, Type, TypeVar, List
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 from hermespy.core.channel_state_information import ChannelStateInformation
-from hermespy.core.device import FloatingError
 from hermespy.core.signal_model import Signal
+from .symbols import Symbols
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -431,7 +431,7 @@ class WaveformGenerator(ABC):
         ...
 
     @abstractmethod
-    def map(self, data_bits: np.ndarray) -> np.ndarray:
+    def map(self, data_bits: np.ndarray) -> Symbols:
         """Map a stream of bits to data symbols.
 
         Args:
@@ -439,19 +439,17 @@ class WaveformGenerator(ABC):
                 Vector containing a sequence of L hard data bits to be mapped onto data symbols.
 
         Returns:
-            np.ndarray:
-                Vector containing the resulting sequence of K data symbols.
-                In general, K is less or equal to L.
+            Symbols: Mapped data symbols.
         """
         ...
 
     @abstractmethod
-    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
+    def unmap(self, symbols: Symbols) -> np.ndarray:
         """Map a stream of data symbols to data bits.
 
         Args:
-            data_symbols (np.ndarray):
-                Vector containing a sequence of K data symbols to be mapped onto bit sequences.
+            symbols (Symbols):
+                Sequence of K data symbols to be mapped onto bit sequences.
 
         Returns:
             np.ndarray:
@@ -655,3 +653,17 @@ class WaveformGenerator(ABC):
 
         state = constructor.construct_mapping(node)
         return cls(**state)
+
+
+class PilotWaveformGenerator(WaveformGenerator, ABC):
+    """Abstract base class of communication waveform generators generating a pilot sequence."""
+
+    @property
+    @abstractmethod
+    def pilot(self) -> Signal:
+        """Model of the pilot sequence within this communication waveform.
+
+        Returns:
+            Signal: The pilot sequence.
+        """
+        ...

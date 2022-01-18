@@ -12,10 +12,13 @@ from scipy.signal import correlate, find_peaks
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.core.device import FloatingError
 from hermespy.core.factory import Serializable
-from hermespy.modem.waveform_generator import WaveformGenerator, Synchronization, ChannelEstimation, ChannelEqualization
+from .waveform_generator import PilotWaveformGenerator, WaveformGenerator, Synchronization, \
+    ChannelEstimation, ChannelEqualization
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from hermespy.core.signal_model import Signal
+from .symbols import Symbols
+from .waveform_correlation_synchronization import CorrelationSynchronization
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -27,7 +30,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
+class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
     """This method provides a class for a generic PSK/QAM modem.
 
     The modem has the following characteristics:
@@ -237,14 +240,24 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
 
         self.__mapping = PskQamMapping(value, is_complex=self.complex_modulation, soft_output=False)
         WaveformGenerator.modulation_order.fset(self, value)
+        
+    @property
+    def pilot(self) -> Signal:
+        
+        pilot = np.zeros(self.oversampling_factor * self.num_preamble_symbols, dtype=complex)
+        pilot[::2*self.oversampling_factor] = 1.
+        pilot[self.oversampling_factor::2 * self.oversampling_factor] = -1.
+        pilot = self.tx_filter.filter(pilot)
 
-    def map(self, data_bits: np.ndarray) -> np.ndarray:
-        return self.__mapping.get_symbols(data_bits)
+        return Signal(pilot, sampling_rate=self.sampling_rate)
 
-    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
-        return self.__mapping.detect_bits(data_symbols)
+    def map(self, data_bits: np.ndarray) -> Symbols:
+        return Symbols(self.__mapping.get_symbols(data_bits))
 
-    def modulate(self, data_symbols: np.ndarray) -> Signal:
+    def unmap(self, data_symbols: Symbols) -> np.ndarray:
+        return self.__mapping.detect_bits(data_symbols.raw)
+
+    def modulate(self, data_symbols: Symbols) -> Signal:
 
         frame = np.zeros(self.symbol_samples_in_frame, dtype=complex)
 
@@ -257,7 +270,7 @@ class WaveformGeneratorPskQam(WaveformGenerator, Serializable):
         num_data_samples = self.oversampling_factor * self.__num_data_symbols
         data_start_idx = num_preamble_samples
         data_stop_idx = data_start_idx + num_data_samples
-        frame[data_start_idx:data_stop_idx:self.oversampling_factor] = data_symbols
+        frame[data_start_idx:data_stop_idx:self.oversampling_factor] = data_symbols.raw
 
         # Set postamble symbols
         num_postamble_samples = self.oversampling_factor * self.num_postamble_symbols
@@ -684,127 +697,9 @@ class PskQamSynchronization(Synchronization[WaveformGeneratorPskQam]):
         Synchronization.__init__(self, waveform_generator)
 
 
-class PskQamCorrelationSynchronization(PskQamSynchronization):
-    """Correlation-based clock synchronization for chirp frequency shift keying waveforms."""
-
-    __threshold: float  # Correlation threshold at which a pilot signal is detected
-    __guard_ratio: float  # Guard ratio of frame duration
-
-    def __init__(self,
-                 threshold: float = 0.9,
-                 guard_ratio: float = 0.8,
-                 *args: Any,
-                 **kwargs: Any) -> None:
-        """
-        Args:
-
-            threshold (float, optional):
-                Correlation threshold at which a pilot signal is detected.
-
-            guard_ratio (float, optional):
-                Guard ratio of frame duration.
-
-            *args:
-                Synchronization base class initialization parameters.
-        """
-
-        self.threshold = threshold
-        self.guard_ratio = guard_ratio
-
-        PskQamSynchronization.__init__(self, *args, **kwargs)
-
-    @property
-    def threshold(self) -> float:
-        """Correlation threshold at which a pilot signal is detected.
-
-        Returns:
-            float: Threshold between zero and one.
-
-        Raises:
-            ValueError: If threshold is smaller than zero or greater than one.
-        """
-
-        return self.__threshold
-
-    @threshold.setter
-    def threshold(self, value: float):
-        """Set correlation threshold at which a pilot signal is detected."""
-
-        if value < 0. or value > 1.:
-            raise ValueError("Synchronization threshold must be between zero and one.")
-
-        self.__threshold = value
-
-    @property
-    def guard_ratio(self) -> float:
-        """Correlation guard ratio at which a pilot signal is detected.
-
-        After the detection of a pilot section, `guard_ratio` prevents the detection of another pilot in
-        the following samples for a span relative to the configured frame duration.
-
-        Returns:
-            float: Guard Ratio between zero and one.
-
-        Raises:
-            ValueError: If guard ratio is smaller than zero or greater than one.
-        """
-
-        return self.__guard_ratio
-
-    @guard_ratio.setter
-    def guard_ratio(self, value: float):
-        """Set correlation guard ratio at which a pilot signal is detected."""
-
-        if value < 0. or value > 1.:
-            raise ValueError("Synchronization guard ratio must be between zero and one.")
-
-        self.__guard_ratio = value
-
-    def synchronize(self,
-                    signal: np.ndarray,
-                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
-
-        # Query the pilot signal from the waveform generator
-        corr_overhead = 20
-        signal = np.append(np.zeros(corr_overhead, dtype=complex), signal)
-        pilot = np.zeros(self.waveform_generator.oversampling_factor * self.waveform_generator.num_preamble_symbols,
-                         dtype=complex)
-        pilot[::2*self.waveform_generator.oversampling_factor] = 1.
-        pilot[self.waveform_generator.oversampling_factor::2 * self.waveform_generator.oversampling_factor] = -1.
-        pilot = self.waveform_generator.tx_filter.filter(pilot)
-
-        # If no pilot signal is generated, no correlation can be done
-        if pilot.shape[0] < 1:
-            raise RuntimeError(
-                "Waveform generator does not generate a pilot signal, correlation synchronization failed")
-
-        correlation = correlate(signal, pilot, mode='valid', method='fft')
-        correlation /= (np.linalg.norm(pilot) ** 2)  # Normalize correlation
-
-        # Determine the pilot sequence locations by performing a peak search over the correlation profile
-        frame_length = self.waveform_generator.samples_in_frame
-        pilot_indices, _ = find_peaks(abs(correlation), height=.9, distance=int(.95 * frame_length))
-        #pilot_indices -= 2    # Correct for sample offset ToDo: Find explanation to the offset origin
-
-        # Abort if no pilot section has been detected
-        if len(pilot_indices) < 1:
-            return []
-
-        frames = []
-        for pilot_index in pilot_indices:
-
-            if pilot_index + frame_length <= int(1.05 * len(signal)):
-
-                signal_frame = signal[pilot_index:pilot_index + frame_length]
-                csi_frame = channel_state[:, :, pilot_index:pilot_index + frame_length, :]
-
-                if len(signal_frame) < frame_length:
-
-                    signal_frame = np.append(signal_frame, np.zeros(frame_length - len(signal_frame), dtype=complex))
-
-                frames.append((signal_frame, csi_frame))
-
-        return frames
+class PskQamCorrelationSynchronization(CorrelationSynchronization[WaveformGeneratorPskQam]):
+    """Correlation-based clock-synchronization for PSK-QAM waveforms."""
+    ...
 
 
 class PskQamChannelEstimation(ChannelEstimation[WaveformGeneratorPskQam], ABC):

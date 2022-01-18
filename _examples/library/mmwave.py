@@ -12,7 +12,6 @@ from hermespy.modem.evaluators import BitErrorEvaluator
 device = NiMmWaveDevice('192.168.189.120')
 device.tx_gain_db = 0
 device.rx_gain_db = 50
-device.carrier_frequency = 75e9
 device.time_buffer = 1e-7
 
 # Configure communication operator and waveform
@@ -22,7 +21,6 @@ modem.waveform_generator = waveform_generator
 waveform_generator.num_preamble_symbols = 16
 waveform_generator.num_data_symbols = 64
 waveform_generator.modulation_order = 16
-waveform_generator.guard_interval = 0.
 waveform_generator.synchronization = PskQamCorrelationSynchronization()
 waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
 waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
