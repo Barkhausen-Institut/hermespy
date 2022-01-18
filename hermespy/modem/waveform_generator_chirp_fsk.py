@@ -2,19 +2,20 @@
 """Chirp Frequency Shift Keying Waveform Generator."""
 
 from __future__ import annotations
-from typing import Any, List, Optional, Tuple, Type
+from typing import Optional, Tuple, Type
 from math import ceil
 from functools import lru_cache
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from scipy import integrate
-from scipy.signal import correlate
 
 from hermespy.core.factory import Serializable
 from hermespy.channel import ChannelStateInformation
-from hermespy.modem.waveform_generator import WaveformGenerator, Synchronization
+from hermespy.modem.waveform_generator import PilotWaveformGenerator, WaveformGenerator, Synchronization
 from hermespy.core.signal_model import Signal
+from .symbols import Symbols
+from .waveform_correlation_synchronization import CorrelationSynchronization
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -26,7 +27,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class WaveformGeneratorChirpFsk(WaveformGenerator, Serializable):
+class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
     """ Implements a chirp FSK waveform generator."""
 
     # YAML tag
@@ -433,12 +434,12 @@ class WaveformGeneratorChirpFsk(WaveformGenerator, Serializable):
         bit_energy = symbol_energy / self.bits_per_symbol
         return bit_energy
 
-    def map(self, data_bits: np.ndarray) -> np.ndarray:
+    def map(self, data_bits: np.ndarray) -> Symbols:
 
         offset = self._calculate_frequency_offsets(data_bits)
-        return offset
+        return Symbols(offset)
 
-    def modulate(self, data_symbols: np.ndarray) -> Signal:
+    def modulate(self, data_symbols: Symbols) -> Signal:
 
         prototypes, _ = self._prototypes()
         samples = np.empty(self.samples_in_frame, dtype=complex)
@@ -447,11 +448,13 @@ class WaveformGeneratorChirpFsk(WaveformGenerator, Serializable):
         samples_in_chirp = self.samples_in_chirp
 
         # Add pilot samples
-        samples[:self.pilot_samples.shape[0]] = self.pilot_samples
-        sample_idx += self.pilot_samples.shape[0]
+        pilot_samples = self.pilot.samples.flatten()
+        num_pilot_samples = len(pilot_samples)
+        samples[:num_pilot_samples] = pilot_samples
+        sample_idx += num_pilot_samples
 
         # Modulate data symbols
-        for symbol in data_symbols:
+        for symbol in data_symbols.raw[0, :]:
 
             samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
             sample_idx += samples_in_chirp
@@ -482,12 +485,12 @@ class WaveformGeneratorChirpFsk(WaveformGenerator, Serializable):
 
         return symbols, channel_state, noises
 
-    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
+    def unmap(self, data_symbols: Symbols) -> np.ndarray:
 
         bits_per_symbol = self.bits_per_symbol
-        bits = np.empty(data_symbols.shape[0] * self.bits_per_symbol)
+        bits = np.empty(data_symbols.num_symbols * self.bits_per_symbol)
 
-        for s, symbol in enumerate(data_symbols):
+        for s, symbol in enumerate(data_symbols.raw[0, :]):
 
             symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
             bits[s*bits_per_symbol:(s+1)*bits_per_symbol] = symbol_bits
@@ -564,9 +567,8 @@ class WaveformGeneratorChirpFsk(WaveformGenerator, Serializable):
         # Sampling rate scales with the chirp bandwidth
         return self.oversampling_factor * self.__chirp_bandwidth
 
-   # @cached_property
     @property
-    def pilot_samples(self) -> np.ndarray:
+    def pilot(self) -> Signal:
         """Samples of the frame's pilot section.
 
         Returns:
@@ -582,21 +584,18 @@ class WaveformGeneratorChirpFsk(WaveformGenerator, Serializable):
             pilot_samples[pilot_idx*self.samples_in_chirp:(1+pilot_idx)*self.samples_in_chirp] = \
                 prototypes[pilot_idx % len(prototypes)]
 
-        return pilot_samples
+        return Signal(pilot_samples, self.sampling_rate)
 
     def _clear_cache(self) -> None:
         """Clear cached properties because a parameter has changed."""
-
-        #if self._pilot_samples:
-        #    del self._pilot_samples
+        pass
 
 
 class ChirpFskSynchronization(Synchronization[WaveformGeneratorChirpFsk]):
     """Synchronization for chirp-based frequency shift keying communication waveforms."""
 
     def __init__(self,
-                 waveform_generator: Optional[WaveformGeneratorChirpFsk] = None,
-                 *args: Any) -> None:
+                 waveform_generator: Optional[WaveformGeneratorChirpFsk] = None) -> None:
         """
         Args:
 
@@ -607,133 +606,6 @@ class ChirpFskSynchronization(Synchronization[WaveformGeneratorChirpFsk]):
         Synchronization.__init__(self, waveform_generator)
 
 
-class ChirpFskCorrelationSynchronization(ChirpFskSynchronization):
-    """Correlation-based clock synchronization for chirp frequency shift keying waveforms."""
-
-    __threshold: float      # Correlation threshold at which a pilot signal is detected
-    __guard_ratio: float    # Guard ratio of frame duration
-
-    def __init__(self,
-                 threshold: float = 0.9,
-                 guard_ratio: float = 0.8,
-                 *args: Any,
-                 **kwargs: Any) -> None:
-        """
-        Args:
-            
-            threshold (float, optional):
-                Correlation threshold at which a pilot signal is detected.
-                
-            guard_ratio (float, optional):
-                Guard ratio of frame duration.
-            
-            *args:
-                Synchronization base class initialization parameters.
-        """
-
-        self.threshold = threshold
-        self.guard_ratio = guard_ratio
-
-        ChirpFskSynchronization.__init__(self, *args, **kwargs)
-
-    @property
-    def threshold(self) -> float:
-        """Correlation threshold at which a pilot signal is detected.
-        
-        Returns:
-            float: Threshold between zero and one.
-            
-        Raises:
-            ValueError: If threshold is smaller than zero or greater than one.
-        """
-        
-        return self.__threshold
-    
-    @threshold.setter
-    def threshold(self, value: float):
-        """Set correlation threshold at which a pilot signal is detected."""
-        
-        if value < 0. or value > 1.:
-            raise ValueError("Synchronization threshold must be between zero and one.")
-        
-        self.__threshold = value
-
-    @property
-    def guard_ratio(self) -> float:
-        """Correlation guard ratio at which a pilot signal is detected.
-
-        After the detection of a pilot section, `guard_ratio` prevents the detection of another pilot in
-        the following samples for a span relative to the configured frame duration.
-
-        Returns:
-            float: Guard Ratio between zero and one.
-
-        Raises:
-            ValueError: If guard ratio is smaller than zero or greater than one.
-        """
-
-        return self.__guard_ratio
-
-    @guard_ratio.setter
-    def guard_ratio(self, value: float):
-        """Set correlation guard ratio at which a pilot signal is detected."""
-
-        if value < 0. or value > 1.:
-            raise ValueError("Synchronization guard ratio must be between zero and one.")
-
-        self.__guard_ratio = value
-
-    def synchronize(self,
-                    signal: np.ndarray,
-                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
-
-        # Query the pilot signal from the waveform generator
-        pilot = self.waveform_generator.pilot_samples
-
-        # If no pilot signal is generated, no correlation can be done
-        if pilot.shape[0] < 1:
-            raise RuntimeError("Waveform generator does not generate a pilot signal, correlation synchronization failed")
-
-        correlation = abs(correlate(signal, pilot, mode='valid', method='fft'))
-        correlation /= (np.linalg.norm(self.waveform_generator.pilot_samples) ** 2)  # Normalize correlation
-
-        pilot_indices = np.argwhere(correlation >= self.__threshold * np.max(correlation)).flatten()
-        pilot_indices -= int(.5 * len(pilot))
-
-        # Filter out infeasible pilot section indices
-        pilot_indices = pilot_indices[pilot_indices >= 0]
-
-        # Abort if no pilot section has been detected
-        if len(pilot_indices) < 1:
-            return []
-
-        frame_length = self.waveform_generator.samples_in_frame
-
-        # Remove pilot candidates too close to the previous pilot candidate
-        min_pilot_distance = int(0.95 * frame_length)
-        valid_pilot_mask = np.ones(len(pilot_indices), dtype=bool)
-
-        last_valid_pilot = pilot_indices[0]
-        for pilot_index in range(1, len(pilot_indices)):
-
-            if (pilot_indices[pilot_index] - last_valid_pilot) < min_pilot_distance:
-
-                valid_pilot_mask[pilot_index] = False
-
-            else:
-
-                last_valid_pilot = pilot_indices[pilot_index]
-
-        valid_pilot_indices = pilot_indices[valid_pilot_mask]
-
-        frames = []
-        for pilot_index in valid_pilot_indices:
-
-            if pilot_index+frame_length < len(signal):
-
-                signal_frame = signal[pilot_index:pilot_index+frame_length]
-                csi_frame = channel_state[pilot_index:pilot_index+frame_length]
-
-                frames.append((signal_frame, csi_frame))
-
-        return frames
+class ChirpFskCorrelationSynchronization(CorrelationSynchronization[WaveformGeneratorChirpFsk]):
+    """Correlation-based clock-synchronization for Chirp-FSK waveforms."""
+    ...

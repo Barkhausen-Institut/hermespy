@@ -187,6 +187,7 @@ from hermespy.core.factory import SerializableArray
 from hermespy.core.signal_model import Signal
 from hermespy.precoding import SymbolPrecoding
 from .bits_source import BitsSource, RandomBitsSource
+from .symbols import Symbols
 from .waveform_generator import WaveformGenerator
 
 __author__ = "Jan Adler"
@@ -219,9 +220,9 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
     __waveform_generator: Optional[WaveformGenerator]
     __bits_source: BitsSource
     __transmitted_bits: np.ndarray                      # Cache of recently transmitted bits
-    __transmitted_symbols: np.ndarray                   # Cache of recently transmitted symbols
+    __transmitted_symbols: Symbols                      # Cache of recently transmitted symbols
     __received_bits: np.ndarray                         # Cache of recently received bits
-    __received_symbols: np.ndarray                      # Cache of recently received symbols
+    __received_symbols: Symbols                         # Cache of recently received symbols
 
     def __init__(self,
                  encoding: Optional[EncoderManager] = None,
@@ -254,9 +255,9 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         self.__waveform_generator = None
         self.__power = 1.0
         self.__transmitted_bits = np.empty(0, dtype=int)
-        self.__transmitted_symbols = np.empty(0, dtype=complex)
+        self.__transmitted_symbols = Symbols()
         self.__received_bits = np.empty(0, dtype=int)
-        self.__received_symbols = np.empty(0, dtype=complex)
+        self.__received_symbols = Symbols()
 
         self.bits_source = RandomBitsSource()
         self.encoder_manager = EncoderManager() if encoding is None else encoding
@@ -264,7 +265,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         self.waveform_generator = waveform
 
     def transmit(self,
-                 duration: float = 0.) -> Tuple[Signal, np.ndarray, np.ndarray]:
+                 duration: float = 0.) -> Tuple[Signal, Symbols, np.ndarray]:
         """Returns an array with the complex base-band samples of a waveform generator.
 
         The signal may be distorted by RF impairments.
@@ -279,8 +280,8 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
                     Signal model carrying the `data_bits` in multiple streams, each stream encoding multiple
                     radio frequency band communication frames.
 
-                data_symbols (np.ndarray):
-                    Vector of symbols to which `data_bits` were mapped, used to modulate `signal`.
+                symbols (Symbols):
+                    Symbols to which `data_bits` were mapped, used to modulate `signal`.
 
                 data_bits (np.ndarray):
                     Vector of bits mapped to `data_symbols`.
@@ -309,10 +310,10 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         symbols = self.waveform_generator.map(code_bits)
 
         # Apply symbol precoding
-        symbol_streams = self.precoding.encode(symbols)
+        symbol_streams = Symbols(self.precoding.encode(symbols.raw))
 
         # Check that the number of symbol streams matches the number of required symbol streams
-        if symbol_streams.shape[0] != self.num_streams:
+        if symbol_streams.num_streams != self.num_streams:
             raise RuntimeError("Invalid precoding configuration, the number of resulting streams does not "
                                "match the number of transmit antennas")
 
@@ -344,12 +345,6 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         if self._transmitter.attached:
             self._transmitter.slot.add_transmission(self._transmitter, signal)
 
-        # Simulate the radio-frequency chain
-        # signal.samples = self.rf_chain.send(signal.samples)
-
-        # Scale resulting signal by configured power factor
-        # signal.samples *= np.sqrt(self.power)
-
         # Cache transmissions
         self.__transmitted_bits = data_bits
         self.__transmitted_symbols = symbols
@@ -368,16 +363,16 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         return self.__transmitted_bits.copy()
     
     @property
-    def transmitted_symbols(self) -> np.ndarray:
+    def transmitted_symbols(self) -> Symbols:
         """Recently transmitted modulation symbols.
         
         Returns:
-            np.ndarray: Numpy array of recently transmitted symbols.
+            Symbols: Recently transmitted symbol series.
         """
         
         return self.__transmitted_symbols.copy()
 
-    def receive(self) -> Tuple[Any, ...]:
+    def receive(self) -> Tuple[Signal, Symbols, np.ndarray]:
 
         signal = self._receiver.signal.resample(self.waveform_generator.sampling_rate)
         if signal is None:
@@ -448,6 +443,9 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
                                                           frame_noises)
             decoded_symbols = np.append(decoded_symbols, decoded_frame_symbols)
 
+        # Convert decoded symbols to from array to symbols
+        decoded_symbols = Symbols(decoded_symbols)
+
         # Map the symbols to code bits
         code_bits = self.waveform_generator.unmap(decoded_symbols)
 
@@ -472,11 +470,11 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         return self.__received_bits.copy()
 
     @property
-    def received_symbols(self) -> np.ndarray:
+    def received_symbols(self) -> Symbols:
         """Recently received modulation symbols.
 
         Returns:
-            np.ndarray: Numpy array of recently received symbols.
+            Symbols: Recently received symbol series.
         """
 
         return self.__received_symbols.copy()
