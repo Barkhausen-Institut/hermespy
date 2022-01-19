@@ -221,14 +221,6 @@ class SimulatedDevice(Device, Serializable):
 
     @property
     def velocity(self) -> np.ndarray:
-        """Cartesian device velocity vector.
-
-        Returns:
-            np.ndarray: Velocity vector.
-
-        Raises:
-            ValueError: If `velocity` is not three-dimensional.
-        """
 
         return self.__velocity
 
