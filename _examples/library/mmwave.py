@@ -6,6 +6,7 @@ from hermespy.hardware_loop.ni_mmwave import NiMmWaveDevice
 from hermespy.modem.modem import Modem
 from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamCorrelationSynchronization, \
     PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization
+from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskCorrelationSynchronization
 from hermespy.modem.evaluators import BitErrorEvaluator
 
 # Initialize device binding
@@ -16,16 +17,20 @@ device.time_buffer = 1e-7
 
 # Configure communication operator and waveform
 modem = Modem()
-waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
-modem.waveform_generator = waveform_generator
-waveform_generator.num_preamble_symbols = 16
-waveform_generator.num_data_symbols = 64
+# waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+waveform_generator = WaveformGeneratorChirpFsk(oversampling_factor=8)
+waveform_generator.num_pilot_chirps = 10
+waveform_generator.num_data_chirps = 1000
 waveform_generator.modulation_order = 16
-waveform_generator.synchronization = PskQamCorrelationSynchronization()
-waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
-waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
+waveform_generator.synchronization = ChirpFskCorrelationSynchronization()
+modem.waveform_generator = waveform_generator
+# waveform_generator.num_preamble_symbols = 128
+# waveform_generator.num_data_symbols = 1024
+# waveform_generator.modulation_order = 4
+# waveform_generator.synchronization = PskQamCorrelationSynchronization()
+# waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
+# waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
 device.sampling_rate = waveform_generator.sampling_rate
-
 modem.device = device
 
 # Transmit and receive waveforms over device
@@ -41,4 +46,5 @@ plt.style.use(path.join(path.dirname(__file__), '..', '..', 'hermespy', 'resourc
 bit_error.evaluate().plot()
 tx_signal.plot(title="Tx Signal")
 rx_signal.plot(title="Rx Signal")
+rx_symbols.plot_constellation()
 plt.show()

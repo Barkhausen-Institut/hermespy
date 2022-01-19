@@ -72,9 +72,9 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
 
         # Default parameters
         self.synchronization = ChirpFskSynchronization()
-        self.__chirp_duration = 512e-6
-        self.__chirp_bandwidth = 500e3
-        self.__freq_difference = 1953.125
+        self.__chirp_duration = 1e-6
+        self.__chirp_bandwidth = 10e6
+        self.__freq_difference = self.__chirp_bandwidth / self.modulation_order
         self.__num_pilot_chirps = 0
         self.__num_data_chirps = 20
         self.__guard_interval = 0.0
@@ -459,12 +459,12 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
             samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
             sample_idx += samples_in_chirp
 
-        return Signal(samples, self.sampling_rate, carrier_frequency=self.modem.carrier_frequency)
+        return Signal(samples, self.sampling_rate)
 
     def demodulate(self,
                    baseband_signal: np.ndarray,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+                   noise_variance: float) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
 
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
@@ -483,7 +483,7 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
                                                       channel_state.num_receive_streams)
         noises = np.repeat(noise_variance, self.num_data_chirps)
 
-        return symbols, channel_state, noises
+        return Symbols(symbols), channel_state, noises
 
     def unmap(self, data_symbols: Symbols) -> np.ndarray:
 

@@ -252,7 +252,7 @@ class NiMmWaveDevice(PhysicalDevice):
 
         # Configure acquisition parameters
         acquisition_length = transmitted_signal.duration + 2 * self.time_buffer
-        self.__assert_cmd(self.__driver.start([burst_uid], acquisition_length, 20000))# , acquisition_length, 60000))
+        self.__assert_cmd(self.__driver.start([burst_uid], acquisition_length, 100000))# , acquisition_length, 60000))
 
         # Trigger hardware
         self.__assert_cmd(self.__driver.send_trigger(burstmode=mmw.const.burst_mode.burst))
