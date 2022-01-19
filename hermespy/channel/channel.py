@@ -424,13 +424,15 @@ class Channel(RandomNode, SerializableArray):
 
         # The maximum delay in samples is modeled by the last impulse response dimension
         num_delay_samples = impulse_response.shape[3] - 1
+        num_tx_streams = impulse_response.shape[2]
+        num_rx_streams = impulse_response.shape[1]
 
         # Propagate the signal
         propagated_samples = np.zeros((impulse_response.shape[1],
                                        signal.num_samples + num_delay_samples), dtype=complex)
 
         for delay_index in range(num_delay_samples+1):
-            for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
+            for tx_idx, rx_idx in product(range(num_tx_streams), range(num_rx_streams)):
 
                 delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
                 propagated_samples[rx_idx, delay_index:delay_index+signal.num_samples] += delayed_signal
