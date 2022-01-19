@@ -5,10 +5,11 @@ from typing import Type
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
-from scipy import constants
+from scipy.constants import pi, speed_of_light
 
-from hermespy.channel import Channel
-from hermespy.tools import db2lin, lin2db, DbConversionType
+from ..core.device import FloatingError
+from ..tools import db2lin, lin2db, DbConversionType
+from .channel import Channel
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -21,7 +22,7 @@ __status__ = "Prototype"
 
 
 class RadarChannel(Channel):
-    """Implements a monostatic radar channel in base-band.
+    """Model of a monostatic radar channel in base-band.
 
     The radar channel is currently implemented as a single-point reflector.
     The model also considers the presence of self-interference due to leakage from transmitter to receiver.
@@ -37,6 +38,8 @@ class RadarChannel(Channel):
     Obs.:
     Currently only one transmit and receive antennas is supported.
     Only a radial velocity is considered.
+
+    ToDo: Add literature references for this channel model.
     """
 
     yaml_tag = u'RadarChannel'
@@ -65,19 +68,35 @@ class RadarChannel(Channel):
                  filter_response_in_samples: int = 21,
                  **kwargs
                  ) -> None:
-        """Object initialization.
-
+        """
         Args:
-            target_range(float): distance from transmitter to target object
-            radar_cross_section(float): in m**2
-            target_exists(bool, optional): True if there is a target, False if there is only noise/clutter
-            tx_rx_isolation_db(float, optional): isolation between transmitter and receiver (leakage) in dB
-                                                 (default = inf)
-            tx_antenna_gain_db(float, optional):
-            rx_antenna_gain_db(float, optional): antenna gains in dBi (default = 0)
-            losses_db(float, optional): any additional atmospheric and/or cable losses, in dB (default = 0)
-            velocity(float, optional): radial velocity, in m/s (default = 0)
-            filter_response_in_samples(int, optional): length of interpolation filter in samples (default = 7)
+
+            target_range (float):
+                Distance from transmitter to target object
+
+            radar_cross_section (float):
+                Radar cross section (RCS) of the assumed single-point reflector in m**2
+
+            target_exists (bool, optional):
+                True if a target exists, False if there is only noise/clutter
+
+            tx_rx_isolation_db (float, optional):
+                Isolation between transmitter and receiver (leakage) in dB (default = inf)
+
+            tx_antenna_gain_db (float, optional):
+                Gain of transmit antennas in dBi (default = 0.)
+
+            rx_antenna_gain_db (float, optional):
+                Gain of receive antennas in dBi (default = 0.)
+
+            losses_db (float, optional):
+                Any additional atmospheric and/or cable losses, in dB (default = 0)
+
+            velocity (float, optional):
+                Radial velocity, in m/s (default = 0)
+
+            filter_response_in_samples (int, optional):
+                Length of interpolation filter in samples (default = 7)
 
         Raises:
             ValueError:
@@ -203,24 +222,6 @@ class RadarChannel(Channel):
         return self.__losses_db
 
     @property
-    def velocity(self) -> float:
-        """Access configured velocity
-
-        Returns:
-            float: velocity [m/s]
-        """
-        return self.__velocity
-
-    @velocity.setter
-    def velocity(self, value: float) -> None:
-        """Modify the configured velocity
-
-        Args:
-            value (float): The new velocity
-        """
-        self.__velocity = value
-
-    @property
     def filter_response_in_samples(self) -> int:
         """Access configured interpolation filter response length
 
@@ -236,7 +237,7 @@ class RadarChannel(Channel):
         Returns:
             float: propagation delay [s]
         """
-        return 2 * self.__target_range / constants.speed_of_light
+        return 2 * self.__target_range / speed_of_light
 
     @property
     def attenuation(self) -> float:
@@ -245,7 +246,7 @@ class RadarChannel(Channel):
         Returns:
             float: power attenuation in linear scale
         """
-        wavelength = constants.speed_of_light / self.transmitter.carrier_frequency
+        wavelength = speed_of_light / self.transmitter.carrier_frequency
         attenuation = (db2lin(self.__tx_antenna_gain_db + self.__rx_antenna_gain_db - self.__losses_db)
                        * wavelength ** 2 * self.__radar_cross_section / (4 * np.pi)**3 / self.__target_range**4)
 
@@ -260,109 +261,58 @@ class RadarChannel(Channel):
         self._phase_self_interference = self._rng.random() * 2 * np.pi - np.pi
         self._phase_echo = self._rng.random() * 2 * np.pi - np.pi
 
-    def propagate(self, tx_signal: np.ndarray) -> np.ndarray:
-        """Modifies the input signal and returns it after channel propagation.
+    def impulse_response(self,
+                         num_samples: int,
+                         sampling_rate: float) -> np.ndarray:
 
-        Currently only a single antenna is supported
+        # For the radar channel, only channels linking the same device are currently feasible
+        if self.transmitter is not self.receiver:
+            raise RuntimeError("Radar channels may only link the same devices")
 
-        Args:
-            tx_signal (np.ndarray):
-                Input signal to channel with shape of `N_tx_antennas x n_samples`.
+        if self.transmitter is None:
+            raise FloatingError("Radar channel must be anchored to a transmitting device")
 
-        Returns:
-            np.ndarray:
-                Signal after channel propagation, containing echo and self interference.
-                If input is an array of size 'number_tx_antennas' X 'number_of_samples', then the output is of size
-                'number_rx_antennas' X 'number_of_samples' + L, with L accounting for the propagation delay and filter
-                overhead.
-        """
-        doppler_frequency = 2 * self.transmitter.carrier_frequency * self.__velocity / constants.speed_of_light
+        # Impulse response sample timestamps
+        timestamps = np.arange(num_samples) / sampling_rate
 
-        samples_in_frame = tx_signal.shape[1]
-        frame_length = samples_in_frame / self.transmitter.sampling_rate
+        # The assumed velocity is the magnitude of the transmitter's velocity vector
+        velocity = np.linalg.norm(self.transmitter.velocity)
 
-        # minimum and maximum delay during whole drop
-        max_delay = np.maximum(self.delay, self.delay + 2 * self.velocity * frame_length / constants.speed_of_light)
-        min_delay = np.minimum(self.delay, self.delay + 2 * self.velocity * frame_length / constants.speed_of_light)
-
-        # delay in samples considering filter overheads
+        # Infer relevant parameters
+        wavelength = speed_of_light / self.transmitter.carrier_frequency
+        doppler_frequency = 2 * velocity / wavelength
+        max_delay = self.delay + 2 * velocity * timestamps[-1] / speed_of_light
         filter_overhead = int(self.__filter_response_in_samples / 2)
-        min_delay_in_samples = int(np.max(np.floor(min_delay * self.transmitter.sampling_rate) - filter_overhead, 0))
-        max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate) + filter_overhead)
-
-        delayed_signal = np.zeros((1, samples_in_frame + max_delay_in_samples), dtype=complex)
-
-        if self.target_exists:
-
-            time = np.arange(samples_in_frame + max_delay_in_samples) / self.transmitter.sampling_rate
-
-            # variable echo delay during drop
-            echo_delay = self.delay + 2 * self.velocity * time[:samples_in_frame] / constants.speed_of_light
-
-            # time-variant convolution
-            for idx, delay_in_samples in enumerate(range(min_delay_in_samples, max_delay_in_samples + 1)):
-                delay = delay_in_samples / self.transmitter.sampling_rate
-                delay_gain = np.sinc(self.transmitter.sampling_rate * (delay - echo_delay))
-                delayed_signal[0, delay_in_samples: delay_in_samples+samples_in_frame] += \
-                    tx_signal.flatten() * delay_gain
-
-            # random phase and Doppler shift
-            delayed_signal = delayed_signal * np.exp(-1j * (2 * np.pi * doppler_frequency * time
-                                                            + self._phase_echo))
-
-        # add self interference
-        self_interference = (np.hstack((tx_signal, np.zeros((1, max_delay_in_samples))))
-                             / np.sqrt(self.attenuation) * np.exp(1j * self._phase_self_interference)
-                             / db2lin(self.tx_rx_isolation_db, conversion_type=DbConversionType.AMPLITUDE))
-        rx_signal = delayed_signal + self_interference
-
-        return rx_signal
-
-    def get_impulse_response(self, timestamps: np.array) -> np.ndarray:
-        """Calculates the channel impulse response.
-
-        This method can be used for instance by the transceivers to obtain the
-        channel state information.
-
-        Args:
-            timestamps (np.array): Time instants with length T to calculate the
-                response for.
-
-        Returns:
-            np.ndarray:
-                Impulse response in all 'number_rx_antennas' x 'number_tx_antennas' channels
-                at the time instants given in vector 'timestamps'.
-                `impulse_response` is a 4D-array, with the following dimensions:
-                1- sampling instants, 2 - Rx antennas, 3 - Tx antennas, 4 - delays
-                (in samples)
-                The shape is T x number_rx_antennas x number_tx_antennas x (L+1)
-        """
-        doppler_frequency = 2 * self.transmitter.carrier_frequency * self.__velocity / constants.speed_of_light
-
-        max_delay = np.maximum(self.delay,
-                               self.delay + 2 * self.velocity * np.max(timestamps) / constants.speed_of_light)
-        filter_overhead = int(self.__filter_response_in_samples / 2)
-
         max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate)) + filter_overhead
 
-        impulse_response = np.zeros((timestamps.size, self.num_outputs, self.num_inputs,
-                                     max_delay_in_samples), dtype=complex)
+        impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples),
+                                    dtype=complex)
+
+        # If no target is present we may abort already
+        if not self.target_exists:
+            return impulse_response
+
+        # The radar target's channel weight is essentially a mix of
+        # 1. The phase shift during reflection (uniformly distributed)
+        # 2. The power loss during reflection (semi-deterministic, depends on rcs, wavelength and target distance)
+        reflection_phase = self._rng.uniform(0, 1)
+        power_factor = wavelength ** 2 * self.__radar_cross_section / (4 * pi) ** 3 / self.__target_range ** 4
+
+        delay_taps = np.arange(max_delay_in_samples) / sampling_rate
+        tx_indices = np.arange(self.num_inputs)
+        rx_indices = np.arange(self.num_outputs)
 
         for idx, timestamp in enumerate(timestamps):
-            delay = np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
 
-            if self.target_exists:
-                echo_delay = self.delay + 2 * self.velocity * timestamp / constants.speed_of_light
-                time = timestamp + np.arange(max_delay_in_samples) / self.transmitter.sampling_rate
-                echo_phase = np.exp(-1j * (2 * np.pi * doppler_frequency * time + self._phase_echo))
+            echo_delay = self.delay + 2 * self.velocity * timestamp / speed_of_light
+            time = timestamp + np.arange(max_delay_in_samples) / sampling_rate
+            echo_weights = power_factor * np.exp(-2j * pi * (doppler_frequency * time + reflection_phase))
 
-                impulse_response[idx, 0, 0, :] = (np.sinc(self.transmitter.sampling_rate * (delay - echo_delay))
-                                                  * echo_phase)
+            interpolated_impulse_tap = np.sinc(sampling_rate * (delay_taps - echo_delay)) * echo_weights
 
-            impulse_response[idx, 0, 0, 0] += (np.exp(1j * self._phase_self_interference)
-                                               / np.sqrt(self.attenuation)
-                                               / db2lin(self.tx_rx_isolation_db,
-                                                        conversion_type=DbConversionType.AMPLITUDE))
+            # Note that this impulse response selection is technically incorrect,
+            # since it is only feasible for planar arrays
+            impulse_response[idx, tx_indices, rx_indices, :] = interpolated_impulse_tap
 
         return impulse_response
 
