@@ -387,11 +387,10 @@ class Channel(RandomNode, SerializableArray):
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
-        forwards_receptions = [self.__propagate_scalar(signal.resample(csi_sampling_rate), impulse_response,
-                                                       sync_offset)
+        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), impulse_response, sync_offset)
                                for signal in forwards]
-        backwards_receptions = [self.__propagate_scalar(signal.resample(csi_sampling_rate),
-                                                        impulse_response.transpose((0, 2, 1, 3)), sync_offset)
+        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate),
+                                               impulse_response.transpose((0, 2, 1, 3)), sync_offset)
                                 for signal in backwards]
 
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
@@ -399,10 +398,10 @@ class Channel(RandomNode, SerializableArray):
 
         return forwards_receptions, backwards_receptions, channel_state
 
-    def __propagate_scalar(self,
-                           signal: Signal,
-                           impulse_response: np.ndarray,
-                           delay: float) -> Signal:
+    @staticmethod
+    def Propagate(signal: Signal,
+                  impulse_response: np.ndarray,
+                  delay: float) -> Signal:
         """Propagate a single signal model given a specific channel impulse response.
 
         Args:
@@ -525,10 +524,7 @@ class Channel(RandomNode, SerializableArray):
             'sync_offset_high': node.__sync_offset_high
         }
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[Channel], constructor: SafeConstructor,  node: MappingNode) -> Channel:
