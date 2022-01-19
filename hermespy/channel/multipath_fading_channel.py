@@ -99,8 +99,6 @@ class MultipathFadingChannel(Channel):
     __num_sinusoids: int
     __los_angle: Optional[float]
     los_gains: np.ndarray
-    __transmit_precoding: Optional[np.ndarray]
-    __receive_postcoding: Optional[np.ndarray]
     __doppler_frequency: float
     __los_doppler_frequency: Optional[float]
     interpolate_signals: bool
@@ -113,8 +111,6 @@ class MultipathFadingChannel(Channel):
                  los_angle: Optional[float] = None,
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
-                 transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None,
                  interpolate_signals: bool = None,
                  **kwargs: Any) -> None:
         """Object initialization.
@@ -155,12 +151,6 @@ class MultipathFadingChannel(Channel):
 
             doppler_frequency (float, optional):
                 Doppler frequency shift of the statistical distribution.
-
-            transmit_precoding (np.ndarray, optional):
-                Transmit precoding matrix.
-
-            receive_postcoding (np.ndarray, optional):
-                Receive postcoding matrix.
 
             **kwargs (Any, optional):
                 Channel base class initialization parameters.
@@ -205,28 +195,14 @@ class MultipathFadingChannel(Channel):
         self.__delays = self.__delays[sorting]
         self.__power_profile = self.__power_profile[sorting]
         self.__rice_factors = self.__rice_factors[sorting]
-        self.__num_sinusoids = 20
+        self.__num_sinusoids = 20 if num_sinusoids is None else num_sinusoids
         self.los_angle = los_angle
-        self.__transmit_precoding = None
-        self.__receive_postcoding = None
-        self.__doppler_frequency = 0.0
+        self.doppler_frequency = 0.0 if doppler_frequency is None else doppler_frequency
         self.__los_doppler_frequency = None
         self.interpolate_signals = interpolate_signals
 
-        if num_sinusoids is not None:
-            self.num_sinusoids = num_sinusoids
-
-        if doppler_frequency is not None:
-            self.doppler_frequency = doppler_frequency
-
         if los_doppler_frequency is not None:
             self.los_doppler_frequency = los_doppler_frequency
-
-        if transmit_precoding is not None:
-            self.transmit_precoding = transmit_precoding
-
-        if receive_postcoding is not None:
-            self.receive_postcoding = receive_postcoding
 
         # Infer additional parameters
         self.__max_delay = max(self.__delays)
@@ -458,26 +434,6 @@ class MultipathFadingChannel(Channel):
         """
 
         self.__los_angle = angle
-
-#    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
-
-#        propagated_signal = transmitted_signal.copy()
-
-#        # Introduce transmit precoding
-#        if self.__transmit_precoding is not None:
-#            propagated_signal.samples = self.__transmit_precoding @ propagated_signal.samples
-
-#        # Propagate over channel impulse response
-#        propagated_signal, impulse_response = Channel.propagate(self, propagated_signal)
-
-#        # ToDo: Should we consider the pre-and postcoding matrices in the impulse response?
-#        # Currently, pre- and postcoding is not considered and will probably degrade channel equalization
-
-#        # Introduce receive postcoding
-#        if self.__receive_postcoding is not None:
-#            propagated_signal.samples = self.__receive_postcoding @ propagated_signal.samples
-
-#        return propagated_signal, impulse_response
 
     def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
 
