@@ -7,6 +7,7 @@ Physical Devices
 
 from __future__ import annotations
 
+import numpy as np
 from abc import abstractmethod
 
 from hermespy.core import Device
@@ -57,3 +58,8 @@ class PhysicalDevice(Device):
         for receiver in self.receivers:
 
             receiver.cache_reception(signal)
+
+    @property
+    def velocity(self) -> np.ndarray:
+
+        raise NotImplementedError("The velocity of physical devices is undefined by default")

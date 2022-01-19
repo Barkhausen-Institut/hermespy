@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Channel model for wireless transmission links."""
+"""
+================
+Channel Modeling
+================
+"""
 
 from __future__ import annotations
 from typing import List, Optional, Tuple, Type, Union
@@ -9,11 +13,10 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 from ..core import RandomNode
+from ..core.device import Device
 from ..core.factory import SerializableArray
 from ..core.signal_model import Signal
 from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation
-from ..simulation import SimulatedDevice
-
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -26,7 +29,7 @@ __status__ = "Prototype"
 
 
 class Channel(RandomNode, SerializableArray):
-    """Implements an ideal distortion-less channel.
+    """An ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
 
@@ -42,24 +45,23 @@ class Channel(RandomNode, SerializableArray):
     yaml_tag: str = u'Channel'
     yaml_matrix = True
     __active: bool
-    __transmitter: Optional[SimulatedDevice]
-    __receiver: Optional[SimulatedDevice]
+    __transmitter: Optional[Device]
+    __receiver: Optional[Device]
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
     impulse_response_interpolation: bool
 
     def __init__(self,
-                 transmitter: Optional[SimulatedDevice] = None,
-                 receiver: Optional[SimulatedDevice] = None,
+                 transmitter: Optional[Device] = None,
+                 receiver: Optional[Device] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: float = 0.,
                  sync_offset_high: float = 0.,
                  impulse_response_interpolation: bool = True,
                  seed: Optional[int] = None) -> None:
-        """Channel model initialization.
-
+        """
         Args:
 
             transmitter (Transmitter, optional):
@@ -138,8 +140,8 @@ class Channel(RandomNode, SerializableArray):
         self.__active = active
 
     @property
-    def transmitter(self) -> SimulatedDevice:
-        """SimulatedDevice transmitting into this channel.
+    def transmitter(self) -> Device:
+        """Device transmitting into this channel.
 
         Returns:
             Transmitter: A handle to the modem transmitting into this channel.
@@ -151,7 +153,7 @@ class Channel(RandomNode, SerializableArray):
         return self.__transmitter
 
     @transmitter.setter
-    def transmitter(self, value: SimulatedDevice) -> None:
+    def transmitter(self, value: Device) -> None:
         """Set the device transmitting into this channel."""
 
         if self.__transmitter is not None:
@@ -160,8 +162,8 @@ class Channel(RandomNode, SerializableArray):
         self.__transmitter = value
 
     @property
-    def receiver(self) -> SimulatedDevice:
-        """SimulatedDevice receiving from this channel.
+    def receiver(self) -> Device:
+        """Device receiving from this channel.
 
         Returns:
             Receiver: A handle to the device receiving from this channel.
@@ -173,7 +175,7 @@ class Channel(RandomNode, SerializableArray):
         return self.__receiver
 
     @receiver.setter
-    def receiver(self, value: SimulatedDevice) -> None:
+    def receiver(self, value: Device) -> None:
         """Set the device receiving from this channel."""
 
         if self.__receiver is not None:

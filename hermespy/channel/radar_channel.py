@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Radar Channel Model."""
+"""
+====================================
+Single-Target Radar Channel Modeling
+====================================
+"""
+
 from __future__ import annotations
 from typing import Type
 
@@ -8,7 +13,7 @@ from ruamel.yaml import SafeRepresenter, MappingNode
 from scipy.constants import pi, speed_of_light
 
 from ..core.device import FloatingError
-from ..tools import db2lin, lin2db, DbConversionType
+from ..tools import db2lin
 from .channel import Channel
 
 __author__ = "Andre Noll Barreto"
@@ -49,9 +54,6 @@ class RadarChannel(Channel):
     __radar_cross_section: float
     __carrier_frequency: float
     target_exists: bool
-    __tx_rx_isolation_db: float
-    __tx_antenna_gain_db: float
-    __rx_antenna_gain_db: float
     __losses_db: float
     __velocity: float
     __filter_response_in_samples: int
@@ -60,9 +62,6 @@ class RadarChannel(Channel):
                  target_range: float,
                  radar_cross_section: float,
                  target_exists: bool = True,
-                 tx_rx_isolation_db: float = float("inf"),
-                 tx_antenna_gain_db: float = 0,
-                 rx_antenna_gain_db: float = 0,
                  losses_db: float = 0,
                  velocity: float = 0,
                  filter_response_in_samples: int = 21,
@@ -79,15 +78,6 @@ class RadarChannel(Channel):
 
             target_exists (bool, optional):
                 True if a target exists, False if there is only noise/clutter
-
-            tx_rx_isolation_db (float, optional):
-                Isolation between transmitter and receiver (leakage) in dB (default = inf)
-
-            tx_antenna_gain_db (float, optional):
-                Gain of transmit antennas in dBi (default = 0.)
-
-            rx_antenna_gain_db (float, optional):
-                Gain of receive antennas in dBi (default = 0.)
 
             losses_db (float, optional):
                 Any additional atmospheric and/or cable losses, in dB (default = 0)
@@ -115,9 +105,6 @@ class RadarChannel(Channel):
         self.target_range = target_range
         self.radar_cross_section = radar_cross_section
         self.target_exists = target_exists
-        self.tx_rx_isolation_db = tx_rx_isolation_db
-        self.__tx_antenna_gain_db = tx_antenna_gain_db
-        self.__rx_antenna_gain_db = rx_antenna_gain_db
         self.__losses_db = losses_db
         self.velocity = velocity
         self.__filter_response_in_samples = filter_response_in_samples
@@ -177,42 +164,6 @@ class RadarChannel(Channel):
         self.__radar_cross_section = value
 
     @property
-    def tx_rx_isolation_db(self) -> float:
-        """Access configured TX/RX isolation
-
-        Returns:
-            float: TX/RX isolation [dB]
-        """
-        return self.__tx_rx_isolation_db
-
-    @tx_rx_isolation_db.setter
-    def tx_rx_isolation_db(self, value: bool) -> None:
-        """Modify the configured tx/rx isolation
-
-        Args:
-            value (bool): The new tx/rx isolation
-        """
-        self.__tx_rx_isolation_db = value
-
-    @property
-    def tx_antenna_gain_db(self) -> float:
-        """Access configured TX antenna gain
-
-        Returns:
-            float: TX antenna gain [dBi]
-        """
-        return self.__tx_antenna_gain_db
-
-    @property
-    def rx_antenna_gain_db(self) -> float:
-        """Access configured RX antenna gain
-
-        Returns:
-            float: RX antenna gain [dBi]
-        """
-        return self.__rx_antenna_gain_db
-
-    @property
     def losses_db(self) -> float:
         """Access configured (atmospheric and cable) losses
 
@@ -238,28 +189,6 @@ class RadarChannel(Channel):
             float: propagation delay [s]
         """
         return 2 * self.__target_range / speed_of_light
-
-    @property
-    def attenuation(self) -> float:
-        """Get attenuation of returned echo
-
-        Returns:
-            float: power attenuation in linear scale
-        """
-        wavelength = speed_of_light / self.transmitter.carrier_frequency
-        attenuation = (db2lin(self.__tx_antenna_gain_db + self.__rx_antenna_gain_db - self.__losses_db)
-                       * wavelength ** 2 * self.__radar_cross_section / (4 * np.pi)**3 / self.__target_range**4)
-
-        return attenuation
-
-    @property
-    def attenuation_db(self) -> float:
-        return lin2db(self.attenuation)
-
-    def init_drop(self) -> None:
-        """Initializes random channel parameters for each drop, by selecting random phases"""
-        self._phase_self_interference = self._rng.random() * 2 * np.pi - np.pi
-        self._phase_echo = self._rng.random() * 2 * np.pi - np.pi
 
     def impulse_response(self,
                          num_samples: int,
@@ -296,7 +225,8 @@ class RadarChannel(Channel):
         # 1. The phase shift during reflection (uniformly distributed)
         # 2. The power loss during reflection (semi-deterministic, depends on rcs, wavelength and target distance)
         reflection_phase = self._rng.uniform(0, 1)
-        power_factor = wavelength ** 2 * self.__radar_cross_section / (4 * pi) ** 3 / self.__target_range ** 4
+        power_factor = (wavelength ** 2 * self.__radar_cross_section / (4 * pi) ** 3 / self.__target_range ** 4
+                        * db2lin(self.__losses_db))
 
         delay_taps = np.arange(max_delay_in_samples) / sampling_rate
         tx_indices = np.arange(self.num_inputs)
@@ -306,7 +236,7 @@ class RadarChannel(Channel):
 
             echo_delay = self.delay + 2 * self.velocity * timestamp / speed_of_light
             time = timestamp + np.arange(max_delay_in_samples) / sampling_rate
-            echo_weights = power_factor * np.exp(-2j * pi * (doppler_frequency * time + reflection_phase))
+            echo_weights = power_factor * np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
 
             interpolated_impulse_tap = np.sinc(sampling_rate * (delay_taps - echo_delay)) * echo_weights
 
@@ -338,15 +268,9 @@ class RadarChannel(Channel):
             'target_range': node.target_range,
             'radar_cross_section': node.radar_cross_section,
             'gain': node.gain,
-            'tx_rx_isolation_db': node.tx_rx_isolation_db,
-            'tx_antenna_gain_db': node.tx_antenna_gain_db,
-            'rx_antenna_gain_db': node.rx_antenna_gain_db,
             'losses_db': node.losses_db,
             'velocity': node.velocity,
             'filter_response_in_samples': node.filter_response_in_samples,
         }
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
+        return representer.represent_mapping(cls.yaml_tag, state)
