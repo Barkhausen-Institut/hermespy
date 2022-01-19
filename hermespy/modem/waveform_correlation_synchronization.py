@@ -111,10 +111,6 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         # Query the pilot signal from the waveform generator
         pilot_sequence = self.waveform_generator.pilot.samples.flatten()
 
-        # Append a prefix of zeros to detect peaks at the first sample with "findpeaks" (after correlation)
-        #corr_overhead = len(pilot_sequence)
-        #pilot_sequence = np.append(np.zeros(corr_overhead, dtype=complex), pilot_sequence)
-
         correlation = correlate(signal, pilot_sequence, mode='full', method='fft')
         correlation /= (np.linalg.norm(pilot_sequence) ** 2)  # Normalize correlation
 
@@ -122,8 +118,6 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         frame_length = self.waveform_generator.samples_in_frame
         pilot_indices, _ = find_peaks(abs(correlation), height=.9, distance=int(.95 * frame_length))
         pilot_indices -= len(pilot_sequence) - 1
-
-        #pilot_indices -= 2    # Correct for sample offset ToDo: Find explanation to the offset origin
 
         # Abort if no pilot section has been detected
         if len(pilot_indices) < 1:

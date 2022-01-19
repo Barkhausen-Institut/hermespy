@@ -21,8 +21,8 @@ __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.3"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -30,7 +30,10 @@ WaveformType = TypeVar('WaveformType', bound='WaveformGenerator')
 
 
 class Synchronization(Generic[WaveformType], ABC):
-    """Abstract base class for synchronization routines of waveform generators."""
+    """Abstract base class for synchronization routines of waveform generators.
+
+    Refer to :footcite:t:`2016:nasir` for an overview of the current state of the art.
+    """
 
     __waveform_generator: Optional[WaveformType]       # Waveform generator this routine is attached to
 
