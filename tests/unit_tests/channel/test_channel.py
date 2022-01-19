@@ -309,7 +309,6 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = gain * np.ones((response_length, 1, 1, 1), dtype=float)
 
                 impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
@@ -325,7 +324,6 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = np.zeros((response_length, 3, 1, 1), dtype=complex)
                 expected_impulse_response[:, :, 0, :] = gain
 
@@ -342,7 +340,6 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = np.zeros((response_length, 1, 3, 1), dtype=complex)
                 expected_impulse_response[:, 0, :, :] = gain
 
@@ -360,7 +357,6 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = gain * np.tile(np.eye(num_antennas, num_antennas, dtype=complex),
                                                            (response_length, 1, 1))
                 expected_impulse_response = np.expand_dims(expected_impulse_response, axis=-1)

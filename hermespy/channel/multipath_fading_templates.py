@@ -365,7 +365,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         if node.model_type is MultipathFading5GTDL.TYPE.C or MultipathFading5GTDL.TYPE.E:
             state.pop('los_doppler_frequency')
 
-        transmitter_index, receiver_index = node.indices
+        transmitter_index, receiver_index = node
 
         yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
         return yaml
