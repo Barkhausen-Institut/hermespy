@@ -12,8 +12,8 @@ from hermespy.modem.bits_source import StreamBitsSource
 # Create a new simulated device
 device = NiMmWaveDevice('192.168.189.120')
 
-waveform = WaveformGeneratorPskQam(oversampling_factor=4)
-waveform.modulation_order = 16
+waveform = WaveformGeneratorPskQam(oversampling_factor=8)
+waveform.modulation_order = 4
 waveform.num_data_symbols = 1024
 waveform.num_preamble_symbols = 100
 waveform.guard_interval = 0.
