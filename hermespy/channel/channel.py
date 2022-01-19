@@ -8,10 +8,11 @@ from itertools import chain, product
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
-from hermespy.core import Device, RandomNode
-from hermespy.core.factory import SerializableArray
-from hermespy.core.signal_model import Signal
-from hermespy.core.channel_state_information import ChannelStateFormat, ChannelStateInformation
+from ..core import RandomNode
+from ..core.factory import SerializableArray
+from ..core.signal_model import Signal
+from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation
+from ..simulation import SimulatedDevice
 
 
 __author__ = "Tobias Kronauer"
@@ -41,16 +42,16 @@ class Channel(RandomNode, SerializableArray):
     yaml_tag: str = u'Channel'
     yaml_matrix = True
     __active: bool
-    __transmitter: Optional[Device]
-    __receiver: Optional[Device]
+    __transmitter: Optional[SimulatedDevice]
+    __receiver: Optional[SimulatedDevice]
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
     impulse_response_interpolation: bool
 
     def __init__(self,
-                 transmitter: Optional[Device] = None,
-                 receiver: Optional[Device] = None,
+                 transmitter: Optional[SimulatedDevice] = None,
+                 receiver: Optional[SimulatedDevice] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: float = 0.,
@@ -137,8 +138,8 @@ class Channel(RandomNode, SerializableArray):
         self.__active = active
 
     @property
-    def transmitter(self) -> Device:
-        """Device transmitting into this channel.
+    def transmitter(self) -> SimulatedDevice:
+        """SimulatedDevice transmitting into this channel.
 
         Returns:
             Transmitter: A handle to the modem transmitting into this channel.
@@ -150,7 +151,7 @@ class Channel(RandomNode, SerializableArray):
         return self.__transmitter
 
     @transmitter.setter
-    def transmitter(self, value: Device) -> None:
+    def transmitter(self, value: SimulatedDevice) -> None:
         """Set the device transmitting into this channel."""
 
         if self.__transmitter is not None:
@@ -159,8 +160,8 @@ class Channel(RandomNode, SerializableArray):
         self.__transmitter = value
 
     @property
-    def receiver(self) -> Device:
-        """Device receiving from this channel.
+    def receiver(self) -> SimulatedDevice:
+        """SimulatedDevice receiving from this channel.
 
         Returns:
             Receiver: A handle to the device receiving from this channel.
@@ -172,7 +173,7 @@ class Channel(RandomNode, SerializableArray):
         return self.__receiver
 
     @receiver.setter
-    def receiver(self, value: Device) -> None:
+    def receiver(self, value: SimulatedDevice) -> None:
         """Set the device receiving from this channel."""
 
         if self.__receiver is not None:
