@@ -8,6 +8,7 @@ from fractions import Fraction
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 
+from hermespy.core.factory import Serializable
 from . import SymbolPrecoder
 from hermespy.channel import ChannelStateInformation
 
@@ -21,7 +22,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SpatialMultiplexing(SymbolPrecoder):
+class SpatialMultiplexing(SymbolPrecoder, Serializable):
     """Spatial Multiplexing data symbol precoding step.
 
     Takes a on-dimensional input stream and distributes the symbols to multiple output streams.

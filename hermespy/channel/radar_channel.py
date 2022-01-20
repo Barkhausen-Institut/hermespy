@@ -257,8 +257,8 @@ class RadarChannel(Channel):
 
     def init_drop(self) -> None:
         """Initializes random channel parameters for each drop, by selecting random phases"""
-        self._phase_self_interference = self.random_generator.random() * 2 * np.pi - np.pi
-        self._phase_echo = self.random_generator.random() * 2 * np.pi - np.pi
+        self._phase_self_interference = self._rng.random() * 2 * np.pi - np.pi
+        self._phase_echo = self._rng.random() * 2 * np.pi - np.pi
 
     def propagate(self, tx_signal: np.ndarray) -> np.ndarray:
         """Modifies the input signal and returns it after channel propagation.

@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 
+from hermespy.core.factory import Serializable
 from hermespy.channel import ChannelStateInformation
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SymbolPrecoding:
+class SymbolPrecoding(Serializable):
     """Channel SymbolPrecoding configuration for wireless transmission of modulated data symbols.
 
     Symbol precoding may occur as an intermediate step between bit-mapping and base-band symbol modulations.
@@ -264,7 +265,7 @@ class SymbolPrecoding:
         precoder_index = self.__symbol_precoders.index(precoder)
 
         if precoder_index >= len(self.__symbol_precoders) - 1:
-            return self.__modem.num_antennas
+             return self.__modem.device.num_antennas
 
         return self.__symbol_precoders[precoder_index + 1].num_input_streams
 
@@ -341,3 +342,8 @@ class SymbolPrecoding:
             self.__symbol_precoders[index] = precoder
 
         precoder.precoding = self
+
+    def __len__(self):
+        """Length of the precoding is the number of precoding steps."""
+
+        return len(self.__symbol_precoders)

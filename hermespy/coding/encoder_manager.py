@@ -2,10 +2,13 @@
 """Encoder Manager."""
 
 from __future__ import annotations
+from math import ceil
 from typing import Type, List, Optional, TYPE_CHECKING
+
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
-from math import ceil
+
+from hermespy.core.factory import Serializable
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -22,7 +25,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class EncoderManager:
+class EncoderManager(Serializable):
     """Serves as a wrapper class for multiple encoders."""
 
     yaml_tag = 'Encoding'

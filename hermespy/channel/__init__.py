@@ -1,4 +1,4 @@
-from .channel_state_information import ChannelStateDimension, ChannelStateFormat, ChannelStateInformation
+from hermespy.core.channel_state_information import ChannelStateDimension, ChannelStateFormat, ChannelStateInformation
 from .channel import Channel
 from .multipath_fading_channel import MultipathFadingChannel
 from .multipath_fading_templates import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
