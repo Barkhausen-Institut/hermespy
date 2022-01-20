@@ -30,10 +30,10 @@ HermesPy may be used in one of two modes of operation:
 
 #. As a command line tool for Monte-Carlo simulations of wireless transmission scenarios.
    This allows one to define complex simulation scenarios by means of YML configuration files.
-   See :doc:`/getting_started_command_line` for further information.
+   See :ref:`Getting Started -> Command Line Tool<GettingStarted_CommandLineTool>` for further information.
 #. As a plug-in library for the simulation of realistic wireless transmissions within your own python projects.
    Only specific HermesPy modules can be thus picked up needed, or more complex simulation scenarios can be built using Python code.
-   See :doc:`/getting_started_library` for further information.
+   See :ref:`Getting Started -> Library<GettingStarted_Library>` for further information.
 
 .. toctree::
    :hidden:
