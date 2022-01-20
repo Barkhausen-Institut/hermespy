@@ -5,36 +5,40 @@ About
 Features
 ========
 
-The current feature-set of HermesPy is steadily expanding and includes
-(new features in **bold**)
+The feature set of HermesPy is steadily expanding and currently includes
+(features in latest release are in **bold**)
 
 Modulation and Coding
 ---------------------
 
-* Generic PSK/QAM/PAM modem with square pulses, (root)-raised-cosine filters or FMCW
-* Linear equalizers for non-orthogonal FMCW pulses in AWGN
-* LLR calculation for BPSK/QAM/16-/64-/256-QAM
-* Chirp FSK 
-* Generic OFDM with arbitrary allocation of data and reference symbols in each resource element
-* DFT-spread supported
-* **Extended GFDM framework**
-* Repetition and LDPC codes
-* **Faster LDPC decoder**
-* **3GPP-like scrambler**
-* **Block interleaver**
-* **CRC overhead**
-* Transmit diversity (Alamouti) with 2 or 4 tx antennas
-* Open-loop spatial multiplexing with linear receivers
-* Receive diversity (SC or MRC)
-* **Radar detection for FMCW**
-* **Channel estimation for OFDM**
+* Coding
+    * Repetition Codes
+    * 3GPP-like LDPC codes (**faster implementation with C++**)
+    * **3GPP-like scrambler**
+    * **Block interleaver**
+    * **CRC overhead**
+* Modulation and Waveforms
+    * Generic PSK/QAM/PAM modem with square pulses, (root)-raised-cosine filters or FMCW
+    * Chirp FSK (a.k.a. chirp spread spectrum)
+    * OFDM frame with arbitrary allocation of data and reference symbols in each resource element
+* multiple antennas and precoding
+    * Transmit diversity (Alamouti) with 2 or 4 tx antennas
+    * Open-loop spatial multiplexing with linear receivers
+    * DFT-spread for OFDM
+    * **Extended GFDM framework** [:cite:s:`2018:nimr`]
+* Receiver algorithms
+    * LLR calculation for BPSK/QAM/16-/64-/256-QAM
+    * Linear equalizers for non-orthogonal FMCW pulses in AWGN
+    * **Channel estimation for OFDM**
+    * Receiver diversity (SC or MRC)
+    * **Radar detection for FMCW**
 
 Channel and Interference Model
 ------------------------------
 
 * Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading
-* COST-259 macrocell model
-* 5G TDL model
+* COST-259 macrocell model [:cite:t:`3gpp_tr25_943`]
+* 5G TDL model [:cite:t:`3gpp_tr38_901`]
 * MIMO support with antenna correlation, following Kronecker model
 * Interface to Quadriga channel model (requires Matlab or Octave)
 * Interference among different modems, with arbitrary transmit powers for different transmitters
@@ -44,7 +48,11 @@ Channel and Interference Model
 RF Chain
 --------
 
-* Memoryless non linear power amplifier following an ideal clipper, Rapp's, Saleh's or any arbitrary AM/AM AM/PM responses
+* Memoryless non linear power amplifier
+    * ideal clipper,
+    * Rapp's model [:cite:t:`1991:rapp`],
+    * Saleh's model [:cite:t:`1981:saleh`],
+    * arbitrary AM/AM AM/PM responses
 * **Random time offset**
 * **I/Q imbalance**
 
@@ -54,7 +62,6 @@ Simulation
 * **Installation as a Python library**
 * **Greater modularity and standalone usage of simulator classes**
 * Full configuration using **YAML** settings files
-* Script for plotting different simulations in one graph
 * Drops containing several frames
 * Support for multiple transmitter and receivers
 * User manual provided
@@ -81,7 +88,7 @@ Release Plan
 ============
 
 Full releases with a new set of features will be provided on a half-yearly basis, with software patches in between.
-For the next release, the current plan is
+For the next release in April 2022, the current plan is
 
 * **Modulation and coding**
 
@@ -91,6 +98,7 @@ For the next release, the current plan is
 * **Channel and interference model**
 
    * Hardware in the Loop
+   * 3GPP clustered delay line
 
 * **RF chain**
 
