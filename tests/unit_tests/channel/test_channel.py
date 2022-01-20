@@ -9,7 +9,7 @@ from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 
 from hermespy.channel import Channel
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -30,7 +30,8 @@ class TestChannel(unittest.TestCase):
         self.receiver = Mock()
         self.active = True
         self.gain = 1.0
-        self.generator = default_rng(0)
+        self.random_node = Mock()
+        self.random_node._rng = default_rng(42)
         self.scenario = Mock()
         self.sampling_rate = 1e3
         self.sync_offset_low = 0.
@@ -40,10 +41,9 @@ class TestChannel(unittest.TestCase):
             receiver=self.receiver,
             active=self.active,
             gain=self.gain,
-            random_generator=self.generator,
-            scenario=self.scenario,
             sync_offset_low=self.sync_offset_low,
             sync_offset_high=self.sync_offset_high)
+        self.channel.random_mother = self.random_node
 
         # Number of discrete-time samples generated for baseband_signal propagation testing
         self.propagate_signal_lengths = [1, 10, 100, 1000]
@@ -61,8 +61,6 @@ class TestChannel(unittest.TestCase):
         self.assertIs(self.receiver, self.channel.receiver, "Unexpected receiver parameter initialization")
         self.assertEqual(self.active, self.channel.active, "Unexpected active parameter initialization")
         self.assertEqual(self.gain, self.channel.gain, "Unexpected gain parameter initialization")
-        self.assertEqual(self.generator, self.channel.random_generator)
-        self.assertEqual(self.scenario, self.channel.scenario)
         self.assertEqual(self.sync_offset_low, self.channel.sync_offset_low)
         self.assertEqual(self.sync_offset_high, self.channel.sync_offset_high)
 
@@ -162,44 +160,6 @@ class TestChannel(unittest.TestCase):
         except ValueError:
             self.fail("Gain property set to zero raised unexpected exception")
 
-    def test_random_generator_setget(self) -> None:
-        """Random rng property getter should return setter argument."""
-
-        generator = Mock()
-        self.channel.random_generator = generator
-
-        self.assertIs(generator, self.channel.random_generator)
-
-    def test_random_generator_get_default(self) -> None:
-        """Random rng property getter should return scenario rng if not specified."""
-
-        self.scenario.random_generator = Mock()
-        self.channel.random_generator = None
-
-        self.assertIs(self.scenario.random_generator, self.channel.random_generator)
-
-    def test_scenario_setget(self) -> None:
-        """Scenario property getter should return setter argument."""
-
-        scenario = Mock()
-        self.channel = Channel()
-        self.channel.scenario = scenario
-
-        self.assertIs(scenario, self.channel.scenario)
-
-    def test_scenario_get_validation(self) -> None:
-        """Scenario property getter should raise RuntimeError if scenario is not set."""
-
-        self.channel = Channel()
-        with self.assertRaises(RuntimeError):
-            _ = self.channel.scenario
-
-    def test_scenario_set_validation(self) -> None:
-        """Scenario property setter should raise RuntimeError if scenario is already set."""
-
-        with self.assertRaises(RuntimeError):
-            self.channel.scenario = Mock()
-
     def test_num_inputs_get(self) -> None:
         """Number of inputs property must return number of transmitting antennas."""
 
@@ -230,15 +190,6 @@ class TestChannel(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             _ = floating_channel.num_outputs
 
-    def test_indices(self) -> None:
-        """Indices property must return respective transmitter and receiver indices."""
-
-        expected_indices = (6, 7)
-        self.transmitter.index = expected_indices[0]
-        self.receiver.index = expected_indices[1]
-
-        self.assertEqual(expected_indices, self.channel.indices, "Channel indices property returned unexpected result")
-
     def test_propagate_SISO(self) -> None:
         """Test valid propagation for the Single-Input-Single-Output channel."""
 
@@ -254,9 +205,10 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_samples = gain * samples
-                propagated_signal, _ = self.channel.propagate(signal)
+                forwards_signal, backwards_signal, _ = self.channel.propagate(signal, signal)
 
-                assert_array_equal(expected_propagated_samples, propagated_signal.samples)
+                assert_array_equal(expected_propagated_samples, forwards_signal[0].samples)
+                assert_array_equal(expected_propagated_samples, backwards_signal[0].samples)
 
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel."""
@@ -267,15 +219,21 @@ class TestChannel(unittest.TestCase):
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
 
-                samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
-                signal = Signal(samples, self.sampling_rate)
+                forwards_samples = (np.random.rand(1, num_samples)
+                                    + 1j * np.random.rand(1, num_samples))
+                backwards_samples = np.random.rand(3, num_samples) + 1j * np.random.rand(3, num_samples)
+                forwards_input = Signal(forwards_samples, self.sampling_rate)
+                backwards_input = Signal(backwards_samples, self.sampling_rate)
 
                 self.channel.gain = gain
 
-                expected_propagated_samples = np.repeat(gain * samples, self.receiver.num_antennas, axis=0)
-                propagated_signal, _ = self.channel.propagate(signal)
+                expected_forwards_samples = gain * np.repeat(forwards_samples, 3, axis=0)
+                expected_backwards_samples = gain * np.sum(backwards_samples, axis=0, keepdims=True)
 
-                assert_array_equal(expected_propagated_samples, propagated_signal.samples)
+                forwards_signal, backwards_signal,  _ = self.channel.propagate(forwards_input, backwards_input)
+
+                assert_array_equal(expected_forwards_samples, forwards_signal[0].samples)
+                assert_array_equal(expected_backwards_samples, backwards_signal[0].samples)
 
     def test_propagate_MISO(self) -> None:
         """Test valid propagation for the Multiple-Input-Single-Output channel."""
@@ -287,16 +245,21 @@ class TestChannel(unittest.TestCase):
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
 
-                samples = np.random.rand(num_transmit_antennas, num_samples)\
-                          + 1j * np.random.rand(num_transmit_antennas, num_samples)
-                signal = Signal(samples, self.sampling_rate)
+                forwards_samples = (np.random.rand(num_transmit_antennas, num_samples)
+                                    + 1j * np.random.rand(num_transmit_antennas, num_samples))
+                backwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
+                forwards_input = Signal(forwards_samples, self.sampling_rate)
+                backwards_input = Signal(backwards_samples, self.sampling_rate)
 
                 self.channel.gain = gain
 
-                expected_propagated_samples = gain * np.sum(samples, axis=0, keepdims=True)
-                propagated_signal, _ = self.channel.propagate(signal)
+                expected_forwards_samples = gain * np.sum(forwards_samples, axis=0, keepdims=True)
+                expected_backwards_samples = gain * np.repeat(backwards_samples, num_transmit_antennas, axis=0)
 
-                assert_array_equal(expected_propagated_samples, propagated_signal.samples)
+                forwards_signal, backwards_signal,  _ = self.channel.propagate(forwards_input, backwards_input)
+
+                assert_array_equal(expected_forwards_samples, forwards_signal[0].samples)
+                assert_array_equal(expected_backwards_samples, backwards_signal[0].samples)
 
     def test_propagate_MIMO(self) -> None:
         """Test valid propagation for the Multiple-Input-Multiple-Output channel."""
@@ -315,9 +278,10 @@ class TestChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_propagated_samples = gain * samples
-                propagated_signal, _ = self.channel.propagate(signal)
+                forwards_signal, backwards_signal,  _ = self.channel.propagate(signal, signal)
 
-                assert_array_equal(expected_propagated_samples, propagated_signal.samples)
+                assert_array_equal(expected_propagated_samples, forwards_signal[0].samples)
+                assert_array_equal(expected_propagated_samples, backwards_signal[0].samples)
 
     def test_propagate_validation(self) -> None:
         """Propagation routine must raise errors in case of unsupported scenarios."""
@@ -345,10 +309,9 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = gain * np.ones((response_length, 1, 1, 1), dtype=float)
 
-                impulse_response = self.channel.impulse_response(timestamps, self.impulse_response_sampling_rate)
+                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
 
     def test_impulse_response_SIMO(self) -> None:
@@ -361,11 +324,10 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = np.zeros((response_length, 3, 1, 1), dtype=complex)
                 expected_impulse_response[:, :, 0, :] = gain
 
-                impulse_response = self.channel.impulse_response(timestamps, self.impulse_response_sampling_rate)
+                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
 
     def test_impulse_response_MISO(self) -> None:
@@ -378,11 +340,10 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = np.zeros((response_length, 1, 3, 1), dtype=complex)
                 expected_impulse_response[:, 0, :, :] = gain
 
-                impulse_response = self.channel.impulse_response(timestamps, self.impulse_response_sampling_rate)
+                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
 
     def test_impulse_response_MIMO(self) -> None:
@@ -396,12 +357,11 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                timestamps = np.arange(response_length) / self.impulse_response_sampling_rate
                 expected_impulse_response = gain * np.tile(np.eye(num_antennas, num_antennas, dtype=complex),
                                                            (response_length, 1, 1))
                 expected_impulse_response = np.expand_dims(expected_impulse_response, axis=-1)
 
-                impulse_response = self.channel.impulse_response(timestamps, self.impulse_response_sampling_rate)
+                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
 
     def test_impulse_response_validation(self) -> None:
@@ -425,10 +385,11 @@ class TestChannel(unittest.TestCase):
                 signal = Signal(samples, self.sampling_rate)
                 self.channel.gain = gain
 
-                propagated_signal, channel_state_information = self.channel.propagate(signal)
-                expected_csi_signal = channel_state_information.linear[0, 0, ::].todense() @ samples.T
+                forwards, backwards, csi = self.channel.propagate(signal, signal)
+                expected_csi_signal = csi.linear[0, 0, ::].todense() @ samples.T
 
-                assert_array_equal(propagated_signal.samples, expected_csi_signal.T)
+                assert_array_equal(forwards[0].samples, expected_csi_signal.T)
+                assert_array_equal(backwards[0].samples, expected_csi_signal.T)
 
     def test_synchronization_offset(self) -> None:
         """The synchronization offset should be applied properly by adding a delay to the propgated signal."""
@@ -437,7 +398,7 @@ class TestChannel(unittest.TestCase):
         self.receiver.num_antennas = 1
 
         mock_generator = Mock()
-        self.channel.random_generator = mock_generator
+        self.random_node._rng = mock_generator
 
         for num_samples in self.propagate_signal_lengths:
             for offset in [0, 1., -10., 100.]:
@@ -447,15 +408,15 @@ class TestChannel(unittest.TestCase):
                 signal = Signal(samples, self.sampling_rate, delay=signal_delay)
 
                 mock_generator.uniform.return_value = 0.
-                instant_signal, instant_channel = self.channel.propagate(signal)
+                instant_signal, _, instant_channel = self.channel.propagate(signal)
 
                 mock_generator.uniform.return_value = offset
-                offset_signal, offset_channel = self.channel.propagate(signal)
+                offset_signal, _, offset_channel = self.channel.propagate(signal)
 
                 # The propagated signal should be delayed by the offset, while the CSI does not change
-                assert_array_equal(instant_signal.samples, offset_signal.samples)
+                assert_array_equal(instant_signal[0].samples, offset_signal[0].samples)
                 assert_array_equal(instant_channel.state, offset_channel.state)
-                self.assertEqual(signal_delay + offset, offset_signal.delay)
+                self.assertEqual(signal_delay + offset, offset_signal[0].delay)
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""

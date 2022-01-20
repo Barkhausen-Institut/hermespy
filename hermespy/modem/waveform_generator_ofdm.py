@@ -11,10 +11,11 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNod
 from scipy.fft import fft, ifft
 from scipy.interpolate import griddata
 
-from hermespy.channel import ChannelStateInformation, ChannelStateDimension
+from hermespy.core.factory import Serializable
+from hermespy.core.channel_state_information import ChannelStateInformation, ChannelStateDimension
+from hermespy.core.signal_model import Signal
 from hermespy.modem import WaveformGenerator
 from hermespy.modem.tools import PskQamMapping
-from hermespy.signal import Signal
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -323,7 +324,7 @@ class FrameSection:
         ...
 
 
-class FrameSymbolSection(FrameSection):
+class FrameSymbolSection(FrameSection, Serializable):
 
     yaml_tag: str = u'Symbol'
     pattern: List[int]
@@ -482,8 +483,18 @@ class FrameSymbolSection(FrameSection):
 
         return cls(**constructor.construct_mapping(node))
 
+    @classmethod
+    def to_yaml(cls: Type[FrameSymbolSection], representer: SafeRepresenter, node: FrameSymbolSection) -> MappingNode:
 
-class FrameGuardSection(FrameSection):
+        state = {
+            'num_repetitions': node.num_repetitions,
+            'pattern': node.pattern,
+        }
+
+        return representer.represent_mapping(node.yaml_tag, state)
+
+
+class FrameGuardSection(FrameSection, Serializable):
 
     yaml_tag: str = u'Guard'
     __duration: float
@@ -548,8 +559,18 @@ class FrameGuardSection(FrameSection):
 
         return cls(**constructor.construct_mapping(node))
 
+    @classmethod
+    def to_yaml(cls: Type[FrameGuardSection], representer: SafeRepresenter, node: FrameGuardSection) -> MappingNode:
 
-class WaveformGeneratorOfdm(WaveformGenerator):
+        state = {
+            'num_repetitions': node.num_repetitions,
+            'duration': node.duration,
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
+
+
+class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
     """Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.
 
     The following features are supported:
@@ -585,7 +606,7 @@ class WaveformGeneratorOfdm(WaveformGenerator):
             Time-domain frame configuration.
     """
 
-    yaml_tag: str = WaveformGenerator.yaml_tag + u'OFDM'
+    yaml_tag: str = u'OFDM'
 
     __channel_estimation_algorithm: ChannelEstimation
     __subcarrier_spacing: float

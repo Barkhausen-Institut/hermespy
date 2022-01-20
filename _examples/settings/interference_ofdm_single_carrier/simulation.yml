@@ -1,0 +1,111 @@
+!<Simulation>
+
+max_num_drops: 10               # Maximum number of simulation runs
+min_num_drops: 5                # Minimum number of simulation runs
+confidence_level: .9
+confidence_margin: .1
+confidence_metric: BER
+
+noise_loop: [36, 32, 28, 24, 20, 16, 12, 8, 4, 0]  # dB
+snr_type: EBN0                  # SNR is defined as the ratio between bit energy and noise power
+
+calc_transmit_spectrum: true    # Calculate the average transmit spectrum over all drops
+calc_receive_spectrum: true     # Calculate the average receive spectrum over all drops
+spectrum_fft_size: 512          # Spectrum calculations should contain 512 frequency bins
+
+Devices:
+
+  # First device
+  - SimulatedDevice
+
+    carrier_frequency: 3.1e9
+    power: 10
+
+  # Second device
+  - SimulatedDevice
+
+    carrier_frequency: 3e9
+    power: 1
+
+Operators:
+
+  # First device operator
+  - Modem 0 0
+
+    # Waveform configuration
+    Waveform: !<PskQam>
+
+      # Symbol settings
+      symbol_rate: 1e6            # Rate of symbol repetition in Hz
+      modulation_order: 64        # Modulation order, in other words 8 bit per data chirp
+      chirp_bandwidth: 1e7        # Bandwidth of each dedicated chirp in Hz
+      chirp_duration: 1e-6        # Duration each dedicated chirp in s
+
+      # Filter settings
+      filter:
+        filter_type: ROOT_RAISED_COSINE
+        bandwidth_factor: .5
+        roll_off: .5
+
+      # Frame settings
+      num_preamble_symbols: 50    # Number of preamble chirps before data
+      num_data_symbols: 50        # Number of data chirps
+      pilot_rate: 1e6             # Rate of pilot chirp repetition in Hz
+      guard_interval: 1e-6        # Pause between frame transmissions in seconds
+
+  # Second device operator
+  - Modem 1 1
+
+    # Spatial precoding with zero-forcing channel equalization
+    Precoding:
+      - ZF-Time
+
+    Waveform: !<OFDM>
+
+      # Symbol modulation settings
+      modulation_order: 16
+      subcarrier_spacing: 15e3
+      dc_suppression: False
+      num_subcarriers: 1200
+
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
+      Resources:
+
+        - repetitions: 200
+          cp_ratio: 0.078125
+          elements:
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+
+        - repetitions: 1200
+          cp_ratio: 0.0703125
+          elements:
+            - type: REFERENCE
+              repetitions: 1
+
+        - repetitions: 100
+          cp_ratio: 0.0703125
+          elements:
+            - type: DATA
+              repetitions: 3
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 5
+            - type: REFERENCE
+              repetitions: 1
+            - type: DATA
+              repetitions: 2
+
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      Structure:
+
+        - Symbol
+          num_repetitions: 16
+          pattern: [0, 1, 1, 1, 2, 1, 1]
+
+        - Guard
+          num_repetitions: 1
+          duration: 2e-3

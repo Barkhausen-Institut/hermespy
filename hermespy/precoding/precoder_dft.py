@@ -7,8 +7,9 @@ from typing import Type, Tuple
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
-from . import SymbolPrecoder
 from hermespy.channel import ChannelStateInformation
+from hermespy.core.factory import Serializable
+from . import SymbolPrecoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -20,7 +21,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class DFT(SymbolPrecoder):
+class DFT(SymbolPrecoder, Serializable):
     """A precoder applying the Discrete Fourier Transform to each data stream.
     """
 

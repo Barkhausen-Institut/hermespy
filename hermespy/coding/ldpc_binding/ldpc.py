@@ -21,7 +21,7 @@ __status__ = "Prototype"
 class LDPCBinding(LDPC):
     """Cpp binding of the LDPC encoder."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, **kwargs) -> None:
         """Object initialization.
 
         Shadows the base constructor.
@@ -29,7 +29,7 @@ class LDPCBinding(LDPC):
         Args:
             **args (Any): All arguments get passed to the base constructor.
         """
-        LDPC.__init__(self, *args)
+        LDPC.__init__(self, *args, **kwargs)
 
     def encode(self, bits: np.ndarray) -> np.ndarray:
 
@@ -40,10 +40,11 @@ class LDPCBinding(LDPC):
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
 
-        codes = encoded_bits.copy()
-        codes[codes < .5] = -1.
+        codes = encoded_bits.copy().astype(int)
+        codes[codes < .5] = -1
 
-        return ldpc_binding.decode(
+        test = ldpc_binding.decode(
             [codes], self.code_block_size, 1, self.num_parity_bits,
             self.code_block_size, int(.5 * (self._H.shape[1] - self._G.shape[1])), self.iterations,
             self._H, self.bit_block_size)[0]
+        return test

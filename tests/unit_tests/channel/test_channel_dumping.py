@@ -1,13 +1,15 @@
 import unittest
 
-from hermespy.simulator_core.factory import Factory
+from hermespy.core.factory import Factory
 
-def create_scenario_stream_header() -> str:
+
+def create_simulation_stream_header() -> str:
     return """
-!<Scenario>
+!<Simulation>
 
-sampling_rate: 2e6
+
 """
+
 
 def create_random_modem_yaml_str(modem_type: str) -> str:
     if modem_type.upper() not in ["TRANSMITTER", "RECEIVER"]:
@@ -25,9 +27,11 @@ def create_random_modem_yaml_str(modem_type: str) -> str:
         modulation_order: 32
 """
 
+
 def create_section_yaml_str(section: str) -> str:
     return f"""
 {section}:"""
+
 
 def create_channel_yaml_str(tx: int, rx: int) -> str:
     return f"""
@@ -35,6 +39,8 @@ def create_channel_yaml_str(tx: int, rx: int) -> str:
     active: true
 
 """
+
+
 def create_sync_offset_yaml_str(low: float, high: float) -> str:
 
     return f"""
@@ -42,9 +48,12 @@ def create_sync_offset_yaml_str(low: float, high: float) -> str:
     sync_offset_high: {high}
 """
 
-class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
+
+class TestChannelTimeOffsetScenarioCreation(unittest.TestCase):
+
     def setUp(self) -> None:
-        self.scenario_str = create_scenario_stream_header()
+
+        self.scenario_str = create_simulation_stream_header()
         self.scenario_str += create_section_yaml_str("Modems")
         self.scenario_str += create_random_modem_yaml_str("Transmitter")
         self.scenario_str += create_random_modem_yaml_str("Receiver")
@@ -68,30 +77,6 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_low, 0)
         self.assertEqual(scenario[0].channels[0, 0].sync_offset_high, 0)
 
-    def test_exception_raised_if_high_smaller_than_low(self) -> None:
-        LOW = 2
-        HIGH = 1
-
-        self.scenario_str += create_sync_offset_yaml_str(LOW, HIGH)
-        with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(self.scenario_str)
-
-    def test_exception_raised_if_low_smaller_than_zero(self) -> None:
-        LOW = -1
-        HIGH = 0
-
-        self.scenario_str += create_sync_offset_yaml_str(LOW, HIGH)
-        with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(self.scenario_str)
-
-    def test_exception_raised_if_high_smaller_than_zero(self) -> None:
-        LOW = -1
-        HIGH = -5
-
-        self.scenario_str += create_sync_offset_yaml_str(LOW, HIGH)
-        with self.assertRaises(ValueError):
-            scenario = self.factory.from_str(self.scenario_str)
-
     def test_multiple_channels_creation_all_sync_offsets_defined(self) -> None:
         sync_offsets = {
             'ch0_0': {'LOW': 0, 'HIGH': 3},
@@ -99,7 +84,8 @@ class TestChannelTimeoffsetScenarioCreation(unittest.TestCase):
             'ch0_1': {'LOW': 1, 'HIGH': 4},
             'ch1_1': {'LOW': 5, 'HIGH': 10}
         }
-        s = create_scenario_stream_header()
+
+        s = create_simulation_stream_header()
         s += create_section_yaml_str("Modems")
         s += create_random_modem_yaml_str("Transmitter")
         s += create_random_modem_yaml_str("Transmitter")
