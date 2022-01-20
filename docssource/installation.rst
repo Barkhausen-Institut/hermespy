@@ -3,7 +3,7 @@ Installation
 
 There are two supported ways to install HermesPy on your system.
 Users may either pull pre-built wheels from the official python package index `PyPi`_ or
-or clone the source code from the `GitHub`_ and build the package from scratch.
+or clone the source code from `GitHub`_ and build the package from scratch.
 
 Both methods will be described in the following sections.
 
@@ -51,6 +51,7 @@ for developers who plan on extending the HermesPy source code.
 Additionally, it can also be applied by users who, for any reason, are unable to install HermesPy from
 the index.
 
+Before cloning, Make sure to have the `LFS`_ extension to `Git`_ installed.
 Using the `Git`_ command line interface,
 the HermesPy source code can be copied to any system by executing
 
@@ -60,7 +61,7 @@ the HermesPy source code can be copied to any system by executing
    cd hermespy/
 
 within a terminal.
-Make sure to have the `LFS`_ extension to `Git`_ installed.
+
 
 Install the package by executing the following commands within a terminal:
 
