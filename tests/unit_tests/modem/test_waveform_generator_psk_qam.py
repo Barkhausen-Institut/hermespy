@@ -13,9 +13,9 @@ from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamCorrelationSynchronization
 from hermespy.modem.tools import ShapingFilter
 
-__author__ = "Tobias Kronauer"
+__author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.0"
 __maintainer__ = "Jan Adler"
