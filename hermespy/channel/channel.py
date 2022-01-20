@@ -14,9 +14,9 @@ from hermespy.core.signal_model import Signal
 from hermespy.core.channel_state_information import ChannelStateFormat, ChannelStateInformation
 
 
-__author__ = "Tobias Kronauer"
+__author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.3"
 __maintainer__ = "Jan Adler"

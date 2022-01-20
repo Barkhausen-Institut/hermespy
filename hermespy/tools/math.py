@@ -4,13 +4,21 @@ from enum import Enum
 from typing import Optional
 from numba import jit
 
+__author__ = "Andre Noll Barreto"
+__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__credits__ = ["Andre Noll Barreto"]
+__license__ = "AGPLv3"
+__version__ = "0.2.5"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class DbConversionType(Enum):
     """Supported db conversion types."""
     POWER = 0
     AMPLITUDE = 1
     HILLY = 2
-
 
 @jit
 def db2lin(db_val: float,
