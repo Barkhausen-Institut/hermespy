@@ -19,7 +19,7 @@ from hermespy.modem.tools import PskQamMapping
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["André Barreto", "Jan Adler"]
+__credits__ = ["André Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
