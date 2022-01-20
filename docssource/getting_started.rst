@@ -16,7 +16,7 @@ basic reference examples to get new users accustomed to the API.
 HermesPy Architecture
 =====================
 
-In its core, the HermesPy API aims to abstract the process of wireless communication signal processing
+In its core, the HermesPy API aims to abstract the process of wireless communication  and sensing signal processing
 within a strictly object-oriented class structure.
 Each processing step is represented by a dedicated class and can be adapted and customized
 by the library user.
@@ -58,11 +58,14 @@ the software architecture is outlined in the following flowchart:
 
       end
 
-Each HermesPy :doc:`Scenario </api/hermespy.scenario.scenario>` consists of multiple links
+Each HermesPy :doc:`Scenario </api/hermespy.scenario.scenario>` may consist of multiple links
 between :doc:`Transmitters </api/hermespy.modem.transmitter>`
 and :doc:`Receivers </api/hermespy.modem.receiver>`, which are both :doc:`Modems </api/hermespy.modem.modem>`.
+Modems may have different waveforms, carrier frequencies and bandwidths.
 Transmitters feed :doc:`Signal</api/hermespy.signal.signal>` models of electromagnetic waves
 into a wireless transmission :doc:`Channel </api/hermespy.channel.channel>`.
+
+All signals are modeled using their complex baseband representation.
 After propagation over said channel, receivers subsequently pick up the distorted signals.
 
 Both transmitters and receivers perform a sequence of processing steps in order to
@@ -79,8 +82,11 @@ exchange information represented by binary bit-streams:
 
 #. :doc:`Radio-Frequency Chain </api/hermespy.modem.rf_chain>` |br|
    Mix and amplify the baseband-signals to radio-frequency-band signals.
+   Note that this is modeled in baseband, no actual RF up/down mixing is performed.
 
 Note that receivers perform the inverse processing steps in reverse order.
+
+.. _GettingStarted_Library:
 
 ========
 Library
@@ -262,6 +268,8 @@ leads to several bit-errors during data transmission:
 
            Bit Errors, High Noise
 
+.. _GettingStarted_CommandLineTool:
+
 =================
 Command Line Tool
 =================
@@ -269,7 +277,7 @@ Command Line Tool
 This section outlines how to use HermesPy as a command line tool
 and provides some reference examples to get new users accustomed with the process of configuring scenarios.
 
-Once HermesPy is installed within any python environment,
+Once HermesPy is installed within any Python environment,
 users may call the command line interface by executing the command ``hermes``
 in both Linux and Windows command line terminals.
 Consult :doc:`/api/hermespy.bin.hermes` for a detailed description of all available command line options.
@@ -285,6 +293,10 @@ All configuration files located under */path/to/settings* are parsed and interpr
 an executable scenario configuration.
 The configuration is subsequently being executed.
 All data resulting from this execution will be stored within */path/to/output*.
+
+If the command-line parameter ``-p`` is left out, then the default path */_settings* will be considered.
+If the ``-o`` is left out, then the results will be stored in a unique sub-folder of */results/*.
+
 
 -----------
 First Steps
@@ -346,3 +358,12 @@ Assuming both *scenario.yaml* and  *simulation.yml* are located within */path/to
    hermes -p /path/to/settings
 
 will result in the rendering of four plots displaying the respective information.
+
+A series of configuration files for different waveforms and scenarios is given in ``/_examples/settings``.
+For instance, calling
+
+.. code-block:: bash
+
+   hermes -p /settings/chirp_qam
+
+will result in a simulation of a communication system employing QAM-modulated chirps.

@@ -25,7 +25,7 @@ Modulation and Coding
     * Transmit diversity (Alamouti) with 2 or 4 tx antennas
     * Open-loop spatial multiplexing with linear receivers
     * DFT-spread for OFDM
-    * **Extended GFDM framework** [:cite:s:`2018:nimr`]
+    * **Extended GFDM framework** :cite:p:`2018:nimr`
 * Receiver algorithms
     * LLR calculation for BPSK/QAM/16-/64-/256-QAM
     * Linear equalizers for non-orthogonal FMCW pulses in AWGN
@@ -37,10 +37,10 @@ Channel and Interference Model
 ------------------------------
 
 * Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading
-* COST-259 macrocell model [:cite:t:`3gpp_tr25_943`]
-* 5G TDL model [:cite:t:`3gpp_tr38_901`]
+* COST-259 macrocell model :cite:p:`3gpp_tr25_943`
+* 5G TDL model :cite:p:`3gpp_tr38_901`
 * MIMO support with antenna correlation, following Kronecker model
-* Interface to Quadriga channel model (requires Matlab or Octave)
+* Interface to `Quadriga <https://quadriga-channel-model.de/>`_ channel model (requires Matlab or Octave)
 * Interference among different modems, with arbitrary transmit powers for different transmitters
 * Support for transmitters using different carrier frequencies and bandwidths
 * **Single-target** radar channel model
@@ -50,8 +50,8 @@ RF Chain
 
 * Memoryless non linear power amplifier
     * ideal clipper,
-    * Rapp's model [:cite:t:`1991:rapp`],
-    * Saleh's model [:cite:t:`1981:saleh`],
+    * Rapp's model :cite:p:`1991:rapp`,
+    * Saleh's model :cite:p:`1981:saleh`,
     * arbitrary AM/AM AM/PM responses
 * **Random time offset**
 * **I/Q imbalance**
@@ -82,7 +82,7 @@ Known Limitations
 The known limitations currently include
 
 * No native simulation parallelization
-
+* Radar KPIs missing (only delay-Doppler map is generated)
 
 Release Plan
 ============
