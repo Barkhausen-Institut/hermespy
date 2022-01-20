@@ -3,6 +3,8 @@
 =======================================
 Hardware Radio Frequency Chain Modeling
 =======================================
+
+Isolation model (to be implemented): :footcite:t:`2018:kiayni`
 """
 
 
