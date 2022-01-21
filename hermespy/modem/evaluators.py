@@ -119,9 +119,15 @@ class BitErrorEvaluator(CommunicationEvaluator):
 
         return BitErrorArtifact(bit_errors)
 
-    def __str__(self) -> str:
+    @property
+    def abbreviation(self) -> str:
 
         return "BER"
+
+    @property
+    def title(self) -> str:
+
+        return "Bit Error Rate Evaluation"
 
 
 class BlockErrorArtifact(ArtifactTemplate[np.ndarray]):
