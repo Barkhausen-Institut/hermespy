@@ -2,11 +2,9 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
-from math import ceil, floor
 from typing import Any, List, Type, Optional, Union, Tuple
 
 import numpy as np
-import matplotlib.pyplot as plt
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
@@ -15,10 +13,10 @@ from hermespy.core.drop import Drop
 from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
 
 from hermespy.core.factory import Serializable
-from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MO
+from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor
 from hermespy.core.scenario import Scenario
 from hermespy.core.signal_model import Signal
-from hermespy.core.statistics import SNRType, Statistics, ConfidenceMetric
+from hermespy.core.statistics import SNRType, ConfidenceMetric
 from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -337,15 +335,18 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
 
         return channels
 
-    def set_channel(self, receiver_index: int, transmitter_index: int, channel: Channel) -> None:
+    def set_channel(self,
+                    receiver: Union[int, SimulatedDevice],
+                    transmitter: Union[int, SimulatedDevice],
+                    channel: Channel) -> None:
         """Specify a channel within the channel matrix.
 
         Args:
 
-            receiver_index (int):
+            receiver (int):
                 Index of the receiver within the channel matrix.
 
-            transmitter_index (int):
+            transmitter (int):
                 Index of the transmitter within the channel matrix.
 
             channel (Channel):
@@ -356,18 +357,24 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 If `transmitter_index` or `receiver_index` are greater than the channel matrix dimensions.
         """
 
-        if self.__channels.shape[0] <= transmitter_index or 0 > transmitter_index:
+        if isinstance(receiver, SimulatedDevice):
+            receiver = self.devices.index(receiver)
+
+        if isinstance(transmitter, SimulatedDevice):
+            transmitter = self.devices.index(transmitter)
+
+        if self.__channels.shape[0] <= transmitter or 0 > transmitter:
             raise ValueError("Transmitter index greater than channel matrix dimension")
 
-        if self.__channels.shape[1] <= receiver_index or 0 > receiver_index:
+        if self.__channels.shape[1] <= receiver or 0 > receiver:
             raise ValueError("Receiver index greater than channel matrix dimension")
 
         # Update channel field within the matrix
-        self.__channels[transmitter_index, receiver_index] = channel
+        self.__channels[transmitter, receiver] = channel
 
         # Set proper receiver and transmitter fields
-        channel.transmitter = self.devices[transmitter_index]
-        channel.receiver = self.devices[receiver_index]
+        channel.transmitter = self.devices[transmitter]
+        channel.receiver = self.devices[receiver]
         channel.random_mother = self
         channel.scenario = self
 

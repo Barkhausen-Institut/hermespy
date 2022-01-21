@@ -99,9 +99,6 @@ class RadarChannel(Channel):
         # Init base class
         Channel.__init__(self, **kwargs)
 
-        if self.num_inputs > 1 or self.num_outputs > 1:
-            raise ValueError("Multiple antennas are not supported")
-
         self.target_range = target_range
         self.radar_cross_section = radar_cross_section
         self.target_exists = target_exists
@@ -200,6 +197,12 @@ class RadarChannel(Channel):
 
         if self.transmitter is None:
             raise FloatingError("Radar channel must be anchored to a transmitting device")
+
+        if self.num_inputs > 1 or self.num_outputs > 1:
+            raise RuntimeError("Multiple antennas are not supported")
+
+        if self.transmitter.carrier_frequency <= 0.:
+            raise RuntimeError("Radar channel does not support base-band transmissions")
 
         # Impulse response sample timestamps
         timestamps = np.arange(num_samples) / sampling_rate

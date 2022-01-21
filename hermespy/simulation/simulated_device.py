@@ -227,7 +227,9 @@ class SimulatedDevice(Device, Serializable):
     @velocity.setter
     def velocity(self, value: np.ndarray) -> None:
 
-        if value.ndim != 3:
+        value = value.flatten()
+
+        if len(value) != 3:
             raise ValueError("Velocity vector must be three-dimensional")
 
         self.__velocity = value

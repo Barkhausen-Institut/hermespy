@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 from functools import reduce
 from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple
+from warnings import catch_warnings, simplefilter
 
 import numpy as np
 import ray
@@ -336,7 +337,11 @@ class MonteCarlo(Generic[MO]):
 
         # Initialize ray if it hasn't been initialized yet. Required to query ideal number of actors
         if not ray.is_initialized():
-            ray.init()
+
+            with catch_warnings():
+
+                simplefilter("ignore")
+                ray.init()
 
         self.__dimensions = {}
         self.__investigated_object = investigated_object
