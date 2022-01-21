@@ -2,11 +2,15 @@
 """Monte Carlo Simulation on Python Ray."""
 
 from __future__ import annotations
-from abc import abstractmethod, ABC
+
+from abc import abstractmethod
+from math import ceil
 from functools import reduce
+from shutil import get_terminal_size
 from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple
 from warnings import catch_warnings, simplefilter
 
+import matplotlib.pyplot as plt
 import numpy as np
 import ray
 from ray.util import ActorPool
@@ -117,14 +121,27 @@ class Evaluator(Generic[MO]):
         """
         ...
 
+    @property
     @abstractmethod
-    def __str__(self) -> None:
-        """String representation of this evaluator.
+    def abbreviation(self) -> str:
+        """Short string representation of this evaluator.
 
-        Used as a label for the console output.
+        Used as a label for console output and plot axes annotations.
 
         Returns:
-            str: String representation.
+            str: String representation
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def title(self) -> str:
+        """Long string representation of this evaluator.
+
+        Used as plot title.
+
+        Returns:
+            str: String representation
         """
         ...
 
@@ -300,6 +317,64 @@ class MonteCarloActor(Generic[MO]):
         return lambda args: setattr(object_reference, stages[-1], args)
 
 
+class MonteCarloResult(Generic[MO]):
+
+    __dimensions: dict[str, List[Any]]
+    __evaluators: List[Evaluator[MO]]
+    __samples: np.ndarray
+
+    def __init__(self,
+                 dimensions: dict[str, List[Any]],
+                 evaluators: List[Evaluator],
+                 samples: np.ndarray) -> None:
+        """
+        Args:
+
+            dimensions (dict[str, List[Any]]):
+                Dimensions over which the simulation has swept.
+
+            evaluators (List[Evaluator]):
+                Evaluators used to evaluated the simulation artifacts.
+
+            samples (np.ndarray):
+                Evaluation results.
+
+        Raises:
+            ValueError:
+                If the dimensions of `samples` do not match the supplied sweeping dimensions and evaluators.
+        """
+
+        self.__dimensions = dimensions
+        self.__evaluators = evaluators
+        self.__samples = samples
+
+    def plot(self) -> List[plt.Figure]:
+
+        dimension_strs = list(self.__dimensions.keys())
+        dimension_values = list(self.__dimensions.values())
+
+        visualized_slice = 0
+
+        figures: List[plt.Figure] = []
+
+        for evaluator_idx, evaluator in enumerate(self.__evaluators):
+
+            # Collect artifacts
+
+            graph_artifacts = np.array([sample.artifacts[evaluator_idx] for sample in self.__samples.flatten()])
+            scalar_representation = np.array([artifact.to_scalar() for artifact in graph_artifacts])
+
+            figure, axes = plt.subplots()
+            figure.suptitle(evaluator.title)
+            axes.plot(dimension_values[visualized_slice], scalar_representation)
+            axes.set_xlabel(dimension_strs[visualized_slice])
+            axes.set_ylabel(evaluator.abbreviation)
+
+            figures.append(figure)
+
+        return figures
+
+
 class MonteCarlo(Generic[MO]):
     """Grid of parameters over which to iterate the simulation."""
 
@@ -350,13 +425,16 @@ class MonteCarlo(Generic[MO]):
         self.min_num_samples = min_num_samples
         self.num_actors = int(ray.available_resources()['CPU']) if num_actors <= 0 else num_actors
 
-    def simulate(self, actor: Type[MonteCarloActor]) -> None:
+    def simulate(self, actor: Type[MonteCarloActor]) -> MonteCarloResult[MO]:
         """Launch the Monte Carlo simulation.
 
         Args:
 
             actor (Type[MonteCarloActor]):
                 The actor from which to generate the simulation samples.
+
+        Returns:
+            np.ndarray: Generated samples.
         """
 
         # Print meta-information and greeting
@@ -386,6 +464,12 @@ class MonteCarlo(Generic[MO]):
 
             print("\r")
 
+        # Query terminal dimensions
+        terminal_size = get_terminal_size()
+        progress_percent_size = 5
+        progress_bar_size = terminal_size.columns - progress_percent_size - 10
+        progress_bar_elements = progress_bar_size - 2
+
         # Print axis information
         header = ""
 
@@ -395,7 +479,7 @@ class MonteCarlo(Generic[MO]):
         header += f"{'Sample':<13}"
 
         for evaluator in self.__evaluators:
-            header += f"{str(evaluator):<13}"
+            header += f"{evaluator.abbreviation:<13}"
 
         num_header_sections = 1 + len(self.__dimensions) + len(self.__evaluators)
         num_separator_elements = 13 * num_header_sections
@@ -420,6 +504,8 @@ class MonteCarlo(Generic[MO]):
                               self.__section(num_samples))
             num_samples += 1
 
+        sample_info_queue = ['' for _ in range(8)]
+
         # Keep executing until all samples are computed
         while actor_pool.has_next():
 
@@ -427,16 +513,27 @@ class MonteCarlo(Generic[MO]):
             sample: MonteCarloSample = actor_pool.get_next_unordered(timeout=None)
 
             # Print sample information
-            info = ''
+            sample_info = ''
             for dimension, section_idx in zip(self.__dimensions.values(), sample.grid_section):
-                info += f"{dimension[section_idx]:<13}"
+                sample_info += f"{dimension[section_idx]:<13}"
 
-            info += f"{sample.sample_index:<13}"
+            sample_info += f"{sample.sample_index:<13}"
 
             for artifact in sample.artifacts:
-                info += f"{str(artifact):<13}"
+                sample_info += f"{str(artifact):<13}"
 
-            print(info)
+            progress = num_samples / max_num_samples
+            progress_percent = int(100 * progress)
+            progress_num_elements = int(ceil(progress_bar_elements * progress))
+            progress_elements = '█' * progress_num_elements + '░' * (progress_bar_elements - progress_num_elements)
+
+            sample_info_queue.pop(0)
+            sample_info_queue.append(sample_info)
+
+            for sample_info in reversed(sample_info_queue):
+                print(sample_info, flush=False)
+
+            print(f"Progress: [{progress_elements}]{progress_percent:>4}%", flush=True)
 
             # Save result
             samples[sample.grid_section] = sample
@@ -452,7 +549,7 @@ class MonteCarlo(Generic[MO]):
             if sample.sample_index >= self.min_num_samples:
                 pass
 
-        return samples
+        return MonteCarloResult[MO](self.__dimensions, self.__evaluators, samples)
 
     def __section(self, index: int) -> Tuple[Tuple[int, ...], int]:
         """Calculate grid section and sample indices given a global sample index.

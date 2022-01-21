@@ -13,7 +13,7 @@ from hermespy.core.drop import Drop
 from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
 
 from hermespy.core.factory import Serializable
-from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor
+from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MonteCarloResult
 from hermespy.core.scenario import Scenario
 from hermespy.core.signal_model import Signal
 from hermespy.core.statistics import SNRType, ConfidenceMetric
@@ -378,10 +378,9 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         channel.random_mother = self
         channel.scenario = self
 
-    def run(self) -> None:
+    def run(self) -> MonteCarloResult[Simulation]:
 
-        self.simulate(SimulationActor)
-
+        return self.simulate(SimulationActor)
 #    def run(self) -> Statistics:
 #        """Run the full simulation configuration.
 #
