@@ -167,64 +167,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel.los_doppler_frequency = None
         self.assertEqual(doppler_frequency, channel.los_doppler_frequency)
 
-    def test_transmit_precoding_setget(self) -> None:
-        """Transmit precoding property getter should return setter argument."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        precoding = np.identity(5)
-        channel.transmit_precoding = precoding
-        npt.assert_array_equal(precoding, channel.transmit_precoding)
-
-        channel.transmit_precoding = None
-        self.assertEqual(None, channel.transmit_precoding)
-
-    def test_transmit_precoding_validation(self) -> None:
-        """Doppler frequency setter should raise ValueError on invalid arguments."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        with self.assertRaises(ValueError):
-            precoding = np.array([1])
-            channel.transmit_precoding = precoding
-
-        with self.assertRaises(ValueError):
-            precoding = np.array([[1, 0], [1, 1]])
-            channel.transmit_precoding = precoding
-
-        with self.assertRaises(ValueError):
-            precoding = np.ones((2, 2))
-            channel.transmit_precoding = precoding
-            
-    def test_receive_postcoding_setget(self) -> None:
-        """Transmit postcoding property getter should return setter argument."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        postcoding = np.identity(5)
-        channel.receive_postcoding = postcoding
-        npt.assert_array_equal(postcoding, channel.receive_postcoding)
-
-        channel.receive_postcoding = None
-        self.assertEqual(None, channel.receive_postcoding)
-
-    def test_receive_postcoding_validation(self) -> None:
-        """Doppler frequency setter should raise ValueError on invalid arguments."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        with self.assertRaises(ValueError):
-            postcoding = np.array([1])
-            channel.receive_postcoding = postcoding
-
-        with self.assertRaises(ValueError):
-            postcoding = np.array([[1, 0], [1, 1]])
-            channel.receive_postcoding = postcoding
-
-        with self.assertRaises(ValueError):
-            postcoding = np.ones((2, 2))
-            channel.receive_postcoding = postcoding
-
     def test_max_delay_get(self) -> None:
         """Max delay property should return maximum of delays."""
 
