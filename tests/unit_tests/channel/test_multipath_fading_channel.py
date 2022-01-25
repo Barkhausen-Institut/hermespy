@@ -8,7 +8,6 @@ from unittest.mock import Mock
 import numpy as np
 import numpy.random as rand
 import numpy.testing as npt
-import scipy
 from numpy import exp
 from numpy.testing import assert_array_almost_equal
 from scipy import stats
