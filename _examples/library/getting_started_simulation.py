@@ -29,8 +29,8 @@ modem.device = device
 
 # Monte-Carlo simulation
 simulation.add_evaluator(BitErrorEvaluator(modem, modem))
-simulation.add_dimension('snr', [10, 4, 2, 1])
-simulation.num_samples = 100
+simulation.add_dimension('snr', [10, 4, 2, 1, 0.5])
+simulation.num_samples = 1000
 #simulation.add_dimension()
 
 result = simulation.run()
