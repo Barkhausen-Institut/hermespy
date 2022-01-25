@@ -111,12 +111,16 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         # Query the pilot signal from the waveform generator
         pilot_sequence = self.waveform_generator.pilot.samples.flatten()
 
+        # Raise a runtime error if pilot sequence is empty
+        if len(pilot_sequence) < 1:
+            raise RuntimeError("No pilot sequence configured, time-domain correlation synchronization impossible")
+
         correlation = correlate(signal, pilot_sequence, mode='full', method='fft')
         correlation /= (np.linalg.norm(pilot_sequence) ** 2)  # Normalize correlation
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
         frame_length = self.waveform_generator.samples_in_frame
-        pilot_indices, _ = find_peaks(abs(correlation), height=.9, distance=int(.95 * frame_length))
+        pilot_indices, _ = find_peaks(abs(correlation), height=.9, distance=int(.8 * frame_length))
         pilot_indices -= len(pilot_sequence) - 1
 
         # Abort if no pilot section has been detected
