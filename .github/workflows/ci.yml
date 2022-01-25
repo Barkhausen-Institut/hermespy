@@ -44,7 +44,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        lfs: false
+        lfs: true
 
     - name: Setup python 3.9
       uses: actions/setup-python@v2
@@ -65,4 +65,3 @@ jobs:
       with:
         branch: gh-pages
         folder: documentation/html
-        lfs: true
