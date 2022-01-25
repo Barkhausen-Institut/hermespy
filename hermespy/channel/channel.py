@@ -28,7 +28,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel(RandomNode, SerializableArray):
+class Channel(SerializableArray, RandomNode):
     """An ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
@@ -91,7 +91,8 @@ class Channel(RandomNode, SerializableArray):
                 Seed used to initialize the pseudo-random number generator.
         """
 
-        # Initialize base class
+        # Initialize base classes
+        SerializableArray.__init__(self)        # Must be first in order for correct diamond resolve
         RandomNode.__init__(self, seed=seed)
 
         # Default parameters
@@ -528,27 +529,3 @@ class Channel(RandomNode, SerializableArray):
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[Channel], constructor: SafeConstructor,  node: MappingNode) -> Channel:
-        """Recall a new `Channel` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Channel` serialization.
-
-        Returns:
-            Channel:
-                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
-                initialized by the `scenario` YAML constructor.
-
-        """
-
-        # Handle empty yaml nodes
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        return constructor.construct_mapping(node)
