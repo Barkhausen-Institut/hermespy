@@ -15,6 +15,7 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 from hermespy.core.signal_model import Signal
+from hermespy.core.factory import Serializable
 from .power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"
@@ -22,12 +23,12 @@ __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.3"
-__maintainer__ = "André Noll Barreto"
-__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RfChain:
+class RfChain(Serializable):
     """Implements an RF chain model.
 
     Only PA is modelled.

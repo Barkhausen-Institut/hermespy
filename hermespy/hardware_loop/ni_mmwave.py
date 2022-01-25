@@ -32,6 +32,8 @@ class NiMmWaveDevice(PhysicalDevice):
                  host: str,
                  port: int = 5555,
                  timeout=40000,
+                 carrier_frequency: float = 75e9,
+                 opmode=mmw.const.opmodes.RF,
                  *args, **kwargs) -> None:
         """
         Args:
@@ -66,7 +68,7 @@ class NiMmWaveDevice(PhysicalDevice):
         self.__driver = mmw.ni_mmw(host=host, port=port)
 
         # Initialize hardware
-        self.__assert_cmd(self.__driver.initialize_hw(mmw.const.opmodes.RF, timeout=timeout))
+        self.__assert_cmd(self.__driver.initialize_hw(mmw.const.opmodes.IF, timeout=timeout))
         self.__assert_cmd(self.__driver.enable_LO_sync(True))
         self.__assert_cmd(self.__driver.trigger_sync_enable(True))
 
@@ -81,7 +83,7 @@ class NiMmWaveDevice(PhysicalDevice):
 
         # Configure default parameters
         self.sampling_rate = 500000
-        self.carrier_frequency = 75e9
+        self.carrier_frequency = carrier_frequency
 
     @property
     def carrier_frequency(self) -> float:
@@ -187,7 +189,7 @@ class NiMmWaveDevice(PhysicalDevice):
         if self.time_buffer > 0.:
 
             num_buffer_samples = int(self.time_buffer * self.sampling_rate)
-            transmitted_samples = np.append(np.zeros(2 * num_buffer_samples, dtype=np.int16), transmitted_samples)
+            transmitted_samples = np.append(transmitted_samples, np.zeros(2 * num_buffer_samples, dtype=np.int16))
 
         # Burst unique identifier generation
         burst_uid = self.__burst_prefix + str(self.__waveform_counter)

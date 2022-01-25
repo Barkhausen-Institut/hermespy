@@ -91,7 +91,7 @@ class RSC(Encoder):
 
                     distance = np.sum(abs())
 
-                trellis_errors[m, b] =
+                #trellis_errors[m, b] =
 
 
 
