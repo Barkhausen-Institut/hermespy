@@ -79,8 +79,6 @@ class MultipathFadingChannel(Channel):
         __los_angle (Optional[float]): Line of sight angle of arrival.
         los_gains (np.array): Path gains for line of sight component in sample sequence, derived from rice factor
         non_los_gains (np.array): Path gains for non-line of sight in sample sequence, derived from rice factor
-        __transmit_precoding (np.ndarray): Precoding matrix for antenna streams before propagation.
-        __receive_postcoding (np.ndarray): Postcoding matrix for antenna streams after propagation.
         __doppler_frequency (float): Doppler frequency in Hz.
         __los_doppler_frequency (Optional[float]): Optional doppler frequency for the line of sight component.
         interpolate_signals (bool): Interpolate signals during time-delay modeling. Disabled by default.
