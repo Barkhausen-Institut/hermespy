@@ -160,4 +160,3 @@ class RandomNode(object):
 
         # Just mask the seed state if provided
         state['random_generator'] = state.pop('seed', None)
-        return cls(**state)

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from hermespy.core.scenario import Scenario
-from hermespy.core.monte_carlo import Evaluator, Artifact, ArtifactTemplate, MO
+from hermespy.core.monte_carlo import Evaluator, ArtifactTemplate
 from .modem import Modem
 
 __author__ = "Jan Adler"
@@ -185,6 +185,16 @@ class BlockErrorEvaluator(CommunicationEvaluator):
 
         return "BLER"
 
+    @property
+    def title(self) -> str:
+
+        return "Block Error Rate"
+
+    @property
+    def abbreviation(self) -> str:
+
+        return "BLER"
+
 
 class FrameErrorArtifact(ArtifactTemplate[np.ndarray]):
     """Artifact of a frame error evaluation between two modems exchanging information."""
@@ -238,5 +248,15 @@ class FrameErrorEvaluator(CommunicationEvaluator):
         return FrameErrorArtifact(frame_errors)
 
     def __str__(self) -> str:
+
+        return "FER"
+
+    @property
+    def title(self) -> str:
+
+        return "Frame Error Rate"
+
+    @property
+    def abbreviation(self) -> str:
 
         return "FER"

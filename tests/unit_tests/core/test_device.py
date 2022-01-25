@@ -24,6 +24,10 @@ class DeviceMock(Device):
     """Mock of the device base class."""
 
     @property
+    def velocity(self) -> np.ndarray:
+        return np.zeros(3, dtype=float)
+
+    @property
     def sampling_rate(self) -> float:
         return 1.0
 
@@ -168,6 +172,11 @@ class ReceiverMock(Receiver):
 
     @property
     def sampling_rate(self) -> float:
+
+        return 1.0
+
+    @property
+    def energy(self) -> float:
 
         return 1.0
 
