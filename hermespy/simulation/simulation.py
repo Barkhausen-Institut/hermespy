@@ -1074,23 +1074,13 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 Newly created `Simulation` instance.
         """
 
-        state = constructor.construct_mapping(node)
+        state = constructor.construct_mapping(node, deep=True)
 
         # Launch a global quadriga instance
         quadriga_interface: Optional[QuadrigaInterface] = state.pop(QuadrigaInterface.yaml_tag, None)
         if quadriga_interface is not None:
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
 
-        plot_drop_transmitted_bits = state.pop('plot_drop_transmitted_bits', False)
-        plot_drop_transmitted_signals = state.pop('plot_drop_transmitted_signals', False)
-        plot_drop_received_signals = state.pop('plot_drop_received_signals', False)
-        plot_drop_received_bits = state.pop('plot_drop_received_bits', False)
-        plot_drop_bit_errors = state.pop('plot_drop_bit_errors', False)
-        plot_drop_block_errors = state.pop('plot_drop_block_errors', False)
-        plot_drop_transmit_stft = state.pop('plot_drop_transmit_stft', False)
-        plot_drop_receive_stft = state.pop('plot_drop_receive_stft', False)
-        plot_drop_transmit_spectrum = state.pop('plot_drop_transmit_spectrum', False)
-        plot_drop_receive_spectrum = state.pop('plot_drop_receive_spectrum', False)
         devices: List[SimulatedDevice] = state.pop('Devices', [])
         operators: List[Tuple[Any, int, ...]] = state.pop('Operators', [])
         channels: List[Tuple[Channel, int, ...]] = state.pop('Channels', [])
@@ -1100,18 +1090,8 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         if noise_loop is not None:
             state['noise_loop'] = 10 ** (np.array(noise_loop) / 10)
 
+        # Initialize simulation
         simulation = cls(**state)
-
-        simulation.plot_drop_transmitted_bits = plot_drop_transmitted_bits
-        simulation.plot_drop_transmitted_signals = plot_drop_transmitted_signals
-        simulation.plot_drop_received_signals = plot_drop_received_signals
-        simulation.plot_drop_received_bits = plot_drop_received_bits
-        simulation.plot_drop_bit_errors = plot_drop_bit_errors
-        simulation.plot_drop_block_errors = plot_drop_block_errors
-        simulation.plot_drop_transmit_stft = plot_drop_transmit_stft
-        simulation.plot_drop_receive_stft = plot_drop_receive_stft
-        simulation.plot_drop_transmit_spectrum = plot_drop_transmit_spectrum
-        simulation.plot_drop_receive_spectrum = plot_drop_receive_spectrum
 
         # Add devices to the simulation
         for device in devices:
@@ -1126,11 +1106,10 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
             operator.device = simulation.devices[device_index]
 
         # Assign channel models
-        for channel_tuple in channels:
+        for channel, channel_position in channels:
 
-            channel = channel_tuple[0]
-            output_device_idx = channel_tuple[1]
-            input_device_idx = channel_tuple[2]
+            output_device_idx = channel_position[0]
+            input_device_idx = channel_position[1]
 
             simulation.set_channel(output_device_idx, input_device_idx, channel)
 

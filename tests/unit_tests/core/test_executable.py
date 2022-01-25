@@ -4,9 +4,13 @@
 import unittest
 import tempfile
 from contextlib import _GeneratorContextManager
+from typing import Type
 from unittest.mock import Mock, patch
 
+from ruamel.yaml import SafeRepresenter, Node, ScalarNode
+
 from hermespy.core import Executable, Verbosity
+from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -26,6 +30,13 @@ class ExecutableStub(Executable):
 
     def run(self) -> None:
         pass
+
+    @classmethod
+    def to_yaml(cls: Type[Serializable],
+                representer: SafeRepresenter,
+                node: Serializable) -> Node:
+
+        return ScalarNode('ExecutableStub', None)
 
 
 class TestExecutable(unittest.TestCase):

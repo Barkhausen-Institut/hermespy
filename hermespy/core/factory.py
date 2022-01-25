@@ -26,7 +26,7 @@ from pkgutil import iter_modules
 from re import compile, Pattern, Match
 from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
 
-from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, Node, MappingNode, SequenceNode
+from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
 
 import hermespy as hermes
@@ -72,8 +72,9 @@ class Serializable(metaclass=ABCMeta):
         ...
 
     @classmethod
-    @abstractmethod
-    def from_yaml(cls: Type[Serializable], constructor: SafeConstructor, node: Node) -> Serializable:
+    def from_yaml(cls: Type[Serializable],
+                  constructor: SafeConstructor,
+                  node: Node) -> Serializable:
         """Recall a new serializable class instance from YAML.
 
         Args:
@@ -87,9 +88,14 @@ class Serializable(metaclass=ABCMeta):
         Returns:
 
             Serializable:
-                Newly created serializable instance.
+                The de-serialized object.
         """
-        ...
+
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        return cls(**constructor.construct_mapping(node))
 
 
 class SerializableArray(Serializable, metaclass=ABCMeta):
@@ -100,46 +106,25 @@ class SerializableArray(Serializable, metaclass=ABCMeta):
     integers indicating their location within the array grid.
     """
 
-    @classmethod
-    @abstractmethod
-    def to_yaml(cls: Type[SerializableArray], representer: SafeRepresenter, node: Serializable) -> Tuple[Node, int, ...]:
-        """Serialize a serializable object to YAML.
+    @staticmethod
+    def Set_Array(matrix: Union[Mapping, Sequence],
+                  deserialized_data: List[Tuple[SerializableArray, Tuple[int, ...]]]) -> None:
+        """Set matrix fields from deserialized array data.
 
         Args:
 
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
+            matrix (Union[Mapping, Sequence]):
+                The matrix to be set.
 
-            node (SerializableArray):
-                The channel instance to be serialized.
-
-        Returns:
-
-            Node:
-                The serialized YAML node.
+            deserialized_data (
         """
-        ...
 
-    @classmethod
-    @abstractmethod
-    def from_yaml(cls: Type[SerializableArray], constructor: SafeConstructor, node: Node) -> SerializableArray:
-        """Recall a new serializable class instance from YAML.
+        # Skip if no data was provided
+        if not deserialized_data or len(deserialized_data) < 1:
+            return
 
-        Args:
-
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Channel` serialization.
-
-        Returns:
-
-            SerializableArray:
-                Newly created serializable instance.
-        """
-        ...
+        for deserialized_object, position in deserialized_data:
+            matrix[position] = deserialized_object
 
 
 class Factory:
@@ -266,7 +251,7 @@ class Factory:
 
     @staticmethod
     def __construct_matrix(cls: Any, constructor: SafeConstructor, tag_suffix: str, node: Any)\
-            -> Tuple[Any, int, ...]:
+            -> Tuple[Any, Tuple[int, ...]]:
         """Construct a matrix node from YAML.
 
         Args:
@@ -299,9 +284,9 @@ class Factory:
         if indices[0] == '':
             indices.pop(0)
 
-        indices: List[int] = [int(idx) for idx in indices]
+        indices: Tuple[int] = tuple([int(idx) for idx in indices])
 
-        return cls.from_yaml(constructor, node), *indices
+        return cls.from_yaml(constructor, node), indices
 
     @staticmethod
     def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:
