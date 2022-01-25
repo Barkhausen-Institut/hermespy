@@ -6,8 +6,7 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from enum import Enum
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Type
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
@@ -385,3 +384,5 @@ class SimulatedDevice(Device, Serializable):
 
         if operator_separation is not None:
             device.operator_separation = operator_separation
+
+        return device
