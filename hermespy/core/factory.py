@@ -15,7 +15,9 @@ This module implements the main interface for loading and dumping HermesPy confi
 """
 
 from __future__ import annotations
-from abc import ABCMeta, abstractmethod
+
+import re
+from abc import ABCMeta
 from collections.abc import Iterable
 from functools import partial
 from inspect import getmembers, isclass, signature
@@ -30,6 +32,7 @@ from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node
 from ruamel.yaml.constructor import ConstructorError
 
 import hermespy as hermes
+from ..tools import db2lin
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -191,6 +194,7 @@ class Factory:
     __clean: bool
     __purge_regex_alpha: Pattern
     __purge_regex_beta: Pattern
+    __db_regex: Pattern
     __restore_regex_alpha: Pattern
     __registered_classes: Set[Type[Serializable]]
     __registered_tags: Set[str]
@@ -238,6 +242,7 @@ class Factory:
         self.__purge_regex_beta = compile(r"- !<([^']+)>")
         self.__restore_regex_alpha = compile(r"([ ]*)([a-zA-Z]+):\n$")
         self.__restore_regex_beta = compile(r"([ ]*)- ([^\s]+)([^']*)\n$")
+        self.__db_regex = compile(r"\[([ 0-9.,-]*)\][ ]*dB")
 
     @property
     def clean(self) -> bool:
@@ -413,6 +418,26 @@ class Factory:
     def refurbish_tags(self, serialization: str) -> str:
         """Callback to restore explicit YAML tags to serialization streams."""
         pass
+
+    @staticmethod
+    def __decibel_conversion(match: re.Match) -> str:
+        """Convert linear series to decibel series.
+
+        Args:
+            match (re.Match): The serialization sequence to be converted.
+
+        Returns:
+            str: The purged sequence.
+        """
+
+        linear_values = [db2lin(float(str_rep)) for str_rep in match[1].replace(' ', '').split(',')]
+
+        string_replacement = "["
+        for linear_value in linear_values:
+            string_replacement += str(linear_value) + ', '
+
+        string_replacement += "]"
+        return string_replacement
 
     def from_path(self, paths: Union[str, Set[str]]) -> List[Any]:
         """Load a configuration from an arbitrary file system path.
@@ -610,6 +635,7 @@ class Factory:
         for line in stream.readlines():
             clean_line = self.__restore_regex_alpha.sub(self.__restore_callback_alpha, line)
             clean_line = self.__restore_regex_beta.sub(self.__restore_callback_beta, clean_line)
+            clean_line = self.__db_regex.sub(self.__decibel_conversion, clean_line)
             clean_stream += clean_line
 
         hermes_objects = self.__yaml.load(StringIO(clean_stream))
