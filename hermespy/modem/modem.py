@@ -174,7 +174,7 @@ Modem
 """
 
 from __future__ import annotations
-from typing import Any, List, Tuple, Type, Optional
+from typing import List, Tuple, Type, Optional
 from math import floor
 
 import numpy as np
@@ -429,7 +429,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
                 # Demodulate the frame into data symbols
                 s_symbols, s_channel_state, s_noise = self.waveform_generator.demodulate(*stream, noise)
 
-                symbols.append(s_symbols)
+                symbols.append(s_symbols.raw)
                 channel_states.append(s_channel_state)
                 noises.append(s_noise)
 
@@ -670,7 +670,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         precoding: Optional[SymbolPrecoding] = state.pop('Precoding', None)
         waveform: Optional[WaveformGenerator] = state.pop('Waveform', None)
 
-        modem = cls(**state)
+        modem = cls.InitializationWrapper(state)
 
         if encoding is not None:
             modem.encoder_manager = encoding

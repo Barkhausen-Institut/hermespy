@@ -481,7 +481,7 @@ class WaveformGenerator(ABC):
     def demodulate(self,
                    signal: np.ndarray,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+                   noise_variance: float) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
         """Demodulate a base-band signal stream to data symbols.
 
         Args:

@@ -8,15 +8,15 @@ import numpy as np
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core.executable import Executable, Verbosity
-from hermespy.core.drop import Drop
-from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
-
-from hermespy.core.factory import Serializable
-from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MonteCarloResult
-from hermespy.core.scenario import Scenario
-from hermespy.core.signal_model import Signal
-from hermespy.core.statistics import SNRType, ConfidenceMetric
+from ..core.executable import Executable, Verbosity
+from ..core.device import Operator
+from ..core.drop import Drop
+from ..channel import QuadrigaInterface, Channel, ChannelStateInformation
+from ..core.factory import Serializable
+from ..core.monte_carlo import Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
+from ..core.scenario import Scenario
+from ..core.signal_model import Signal
+from ..core.statistics import SNRType, ConfidenceMetric
 from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -47,6 +47,8 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
     yaml_tag = u'Simulation'
 
     __channels: np.ndarray
+    __operators: List[Operator]
+
     snr_type: SNRType
     noise_loop: List[float]
     confidence_metric: ConfidenceMetric
@@ -184,6 +186,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         self.confidence_level = confidence_level
         self.confidence_margin = confidence_margin
         self.snr = None
+        self.__operators: List[Operator] = []
 
         # Recover confidence metric enumeration from string value if the provided argument is a string
         if isinstance(confidence_metric, str):
@@ -1081,10 +1084,12 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         if quadriga_interface is not None:
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
 
-        dimensions: Dict[str, Any] = state.pop('Dimensions', {})
+        # Pop configuration sections for "special" treatment
         devices: List[SimulatedDevice] = state.pop('Devices', [])
-        operators: List[Tuple[Any, int, ...]] = state.pop('Operators', [])
         channels: List[Tuple[Channel, int, ...]] = state.pop('Channels', [])
+        operators: List[Operator] = state.pop('Operators', [])
+        evaluators: List[Evaluator] = state.pop('Evaluators', [])
+        dimensions: Dict[str, Any] = state.pop('Dimensions', {})
 
         # Initialize simulation
         simulation = cls.InitializationWrapper(state)
@@ -1093,15 +1098,6 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         for device in devices:
             simulation.add_device(device)
 
-        # Assign operators their respective devices
-        for operator_tuple in operators:
-
-            operator = operator_tuple[0]
-            device_index = operator_tuple[1]
-
-            # ToDo: Support multiple devices
-            operator.device = simulation.devices[device_index[0]]
-
         # Assign channel models
         for channel, channel_position in channels:
 
@@ -1109,6 +1105,14 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
             input_device_idx = channel_position[1]
 
             simulation.set_channel(output_device_idx, input_device_idx, channel)
+
+        # Register operators
+        for operator in operators:
+            simulation.__operators.append(operator)
+
+        # Register evaluators
+        for evaluator in evaluators:
+            simulation.add_evaluator(evaluator)
 
         # Add simulation dimensions
         for dimension_key, dimension_values in dimensions.items():

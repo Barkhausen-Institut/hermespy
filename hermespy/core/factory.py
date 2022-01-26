@@ -51,7 +51,6 @@ class Serializable(metaclass=ABCMeta):
     """YAML serialization tag."""
 
     @classmethod
-    @abstractmethod
     def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
         """Serialize a serializable object to YAML.
 
@@ -69,7 +68,8 @@ class Serializable(metaclass=ABCMeta):
             Node:
                 The serialized YAML node.
         """
-        ...
+
+        return ScalarNode(cls.yaml_tag, None)
 
     @classmethod
     def from_yaml(cls: Type[Serializable],
@@ -95,7 +95,7 @@ class Serializable(metaclass=ABCMeta):
         if isinstance(node, ScalarNode):
             return cls()
 
-        return cls(**constructor.construct_mapping(node))
+        return cls.InitializationWrapper(constructor.construct_mapping(node))
 
     @classmethod
     def InitializationWrapper(cls,
@@ -231,7 +231,7 @@ class Factory:
 
         # Add constructors for untagged classes
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
-        self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
+        # self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
 
         # Construct regular expressions for purging
         self.__purge_regex_alpha = compile(r': !<.*')
