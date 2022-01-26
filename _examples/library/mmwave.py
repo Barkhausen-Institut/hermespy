@@ -17,19 +17,14 @@ device.time_buffer = 1e-7
 
 # Configure communication operator and waveform
 modem = Modem()
-# waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
-waveform_generator = WaveformGeneratorChirpFsk(oversampling_factor=8)
-waveform_generator.num_pilot_chirps = 10
-waveform_generator.num_data_chirps = 1000
-waveform_generator.modulation_order = 16
-waveform_generator.synchronization = ChirpFskCorrelationSynchronization()
+waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
 modem.waveform_generator = waveform_generator
-# waveform_generator.num_preamble_symbols = 128
-# waveform_generator.num_data_symbols = 1024
-# waveform_generator.modulation_order = 4
-# waveform_generator.synchronization = PskQamCorrelationSynchronization()
-# waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
-# waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
+waveform_generator.num_preamble_symbols = 128
+waveform_generator.num_data_symbols = 1024
+waveform_generator.modulation_order = 2
+waveform_generator.synchronization = PskQamCorrelationSynchronization()
+waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
+waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
 device.sampling_rate = waveform_generator.sampling_rate
 modem.device = device
 
