@@ -1,19 +1,10 @@
 !<Simulation>
 
-max_num_drops: 200                # Maximum number of simulation runs
-min_num_drops: 50                 # Minimum number of simulation runs
-confidence_level: .9
-confidence_margin: .1
-confidence_metric: BER
-
-#noise_loop:   # dB
-snr_type: EBN0                    # SNR is defined as the ratio between bit energy and noise power
-
 # Physical device models within the simulated scenario
 Devices:
 
    # Representation of a single (virtual) device
-  - SimulatedDevice
+  - &device_alpha !<SimulatedDevice>
 
     carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
     num_antennas: 1               # Device features a single physical antenna
@@ -33,8 +24,9 @@ Channels:
 Operators:
 
   # A single modem operating the device #0
-  - Modem 0
+  - &modem_alpha !<Modem>
 
+    device: *device_alpha          # Device the modem is operating on
 #    Encoding:                   # Bit encoding before mapping to modulation symbols
 
       # Repetition encoding, repeating bit sections for redundancy
@@ -55,8 +47,19 @@ Operators:
       guard_interval: 0.          # Pause between frame transmissions in seconds
 
 
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_alpha
+    receiving_modem: *modem_alpha
+
+
 # Simulation parameters
 num_samples: 1000
+snr_type: EBN0                    # SNR is defined as the ratio between bit energy and noise power
 
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps

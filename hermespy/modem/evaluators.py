@@ -7,9 +7,11 @@ from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from ruamel.yaml import SafeRepresenter, Node
 
-from hermespy.core.scenario import Scenario
-from hermespy.core.monte_carlo import Evaluator, ArtifactTemplate
+from ..core.factory import Serializable
+from ..core.scenario import Scenario
+from ..core.monte_carlo import Evaluator, ArtifactTemplate
 from .modem import Modem
 
 __author__ = "Jan Adler"
@@ -84,8 +86,11 @@ class BitErrorArtifact(ArtifactTemplate[np.ndarray]):
         return [figure]
 
 
-class BitErrorEvaluator(CommunicationEvaluator):
+class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate bit errors between two modems exchanging information."""
+
+    yaml_tag = u'BitErrorEvaluator'
+    """YAML serialization tag"""
 
     def __init__(self,
                  transmitting_modem: Modem,
