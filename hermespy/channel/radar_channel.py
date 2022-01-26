@@ -56,7 +56,6 @@ class RadarChannel(Channel):
     target_exists: bool
     __losses_db: float
     __velocity: float
-    __filter_response_in_samples: int
 
     def __init__(self,
                  target_range: float,
@@ -64,9 +63,7 @@ class RadarChannel(Channel):
                  target_exists: bool = True,
                  losses_db: float = 0,
                  velocity: float = 0,
-                 filter_response_in_samples: int = 21,
-                 **kwargs
-                 ) -> None:
+                 **kwargs) -> None:
         """
         Args:
 
@@ -85,9 +82,6 @@ class RadarChannel(Channel):
             velocity (float, optional):
                 Radial velocity, in m/s (default = 0)
 
-            filter_response_in_samples (int, optional):
-                Length of interpolation filter in samples (default = 7)
-
         Raises:
             ValueError:
                 If target_range < 0.
@@ -104,11 +98,6 @@ class RadarChannel(Channel):
         self.target_exists = target_exists
         self.__losses_db = losses_db
         self.velocity = velocity
-        self.__filter_response_in_samples = filter_response_in_samples
-
-        # random phases
-        self._phase_self_interference = 0
-        self._phase_echo = 0
 
     @property
     def target_range(self) -> float:
@@ -170,15 +159,6 @@ class RadarChannel(Channel):
         return self.__losses_db
 
     @property
-    def filter_response_in_samples(self) -> int:
-        """Access configured interpolation filter response length
-
-        Returns:
-            int: length of interpolation filter in samples
-        """
-        return self.__filter_response_in_samples
-
-    @property
     def delay(self) -> float:
         """Get delay from target
 
@@ -214,8 +194,7 @@ class RadarChannel(Channel):
         wavelength = speed_of_light / self.transmitter.carrier_frequency
         doppler_frequency = 2 * velocity / wavelength
         max_delay = self.delay + 2 * velocity * timestamps[-1] / speed_of_light
-        filter_overhead = int(self.__filter_response_in_samples / 2)
-        max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate)) + filter_overhead
+        max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate))
 
         impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples),
                                     dtype=complex)
@@ -273,7 +252,6 @@ class RadarChannel(Channel):
             'gain': node.gain,
             'losses_db': node.losses_db,
             'velocity': node.velocity,
-            'filter_response_in_samples': node.filter_response_in_samples,
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
