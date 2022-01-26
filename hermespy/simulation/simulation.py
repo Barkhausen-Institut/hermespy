@@ -2,7 +2,7 @@
 """HermesPy simulation configuration."""
 
 from __future__ import annotations
-from typing import Any, List, Type, Optional, Union, Tuple
+from typing import Any, Dict, List, Type, Optional, Union, Tuple
 
 import numpy as np
 from ray import remote
@@ -1081,17 +1081,13 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         if quadriga_interface is not None:
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
 
+        dimensions: Dict[str, Any] = state.pop('Dimensions', {})
         devices: List[SimulatedDevice] = state.pop('Devices', [])
         operators: List[Tuple[Any, int, ...]] = state.pop('Operators', [])
         channels: List[Tuple[Channel, int, ...]] = state.pop('Channels', [])
 
-        # Convert noise loop dB to linear
-        noise_loop = state.pop('noise_loop', None)
-        if noise_loop is not None:
-            state['noise_loop'] = 10 ** (np.array(noise_loop) / 10)
-
         # Initialize simulation
-        simulation = cls(**state)
+        simulation = cls.InitializationWrapper(state)
 
         # Add devices to the simulation
         for device in devices:
@@ -1103,7 +1099,8 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
             operator = operator_tuple[0]
             device_index = operator_tuple[1]
 
-            operator.device = simulation.devices[device_index]
+            # ToDo: Support multiple devices
+            operator.device = simulation.devices[device_index[0]]
 
         # Assign channel models
         for channel, channel_position in channels:
@@ -1112,6 +1109,10 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
             input_device_idx = channel_position[1]
 
             simulation.set_channel(output_device_idx, input_device_idx, channel)
+
+        # Add simulation dimensions
+        for dimension_key, dimension_values in dimensions.items():
+            simulation.add_dimension(dimension_key, dimension_values)
 
         # Return simulation instance recovered from the serialization
         return simulation

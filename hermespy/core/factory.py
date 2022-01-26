@@ -18,13 +18,13 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from functools import partial
-from inspect import getmembers, isclass
+from inspect import getmembers, isclass, signature
 from importlib import import_module
 from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
 from re import compile, Pattern, Match
-from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
+from typing import Any, Dict, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
 
 from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
@@ -96,6 +96,60 @@ class Serializable(metaclass=ABCMeta):
             return cls()
 
         return cls(**constructor.construct_mapping(node))
+
+    @classmethod
+    def InitializationWrapper(cls,
+                              configuration: Dict[str, Any]) -> Serializable:
+        """Conveniently initializes serializable classes.
+
+        Args:
+
+            configuration (Dict[str, Any]):
+                Configuration parameter dictionary.
+
+        Returns:
+            SerializableArray: Initialized class instance.
+        """
+
+        # Extract initialization signature
+        init_signature = list(signature(cls.__init__).parameters.keys())
+        init_signature.remove('self')
+
+        # Extract settable class properties
+        properties: List[str] = []
+        for attribute_key, attribute_type in getmembers(cls):
+
+            # Prevent the access to protected or private attributes
+            if attribute_key.startswith('_'):
+                continue
+
+            # Make sure the attribute is a property and settable
+            if isinstance(attribute_type, property) and attribute_type.setter:
+                properties.append(attribute_key)
+
+        init_parameters: Dict[str, Any] = {}
+        init_properties: Dict[str, Any] = {}
+
+        for configuration_key in list(configuration.keys()):
+
+            if configuration_key in init_signature:
+
+                init_parameters[configuration_key] = configuration.pop(configuration_key)
+                continue
+
+            if configuration_key in properties:
+                init_properties[configuration_key] = configuration.pop(configuration_key)
+
+        # Initialize class
+        init_parameters.update(configuration)       # Remaining configuration fields get treated as kwargs
+        instance = cls(**init_parameters)
+
+        # Configure properties
+        for property_name, property_value in init_properties.items():
+            setattr(instance, property_name, property_value)
+
+        # Return configured class instance
+        return instance
 
 
 class SerializableArray(Serializable, metaclass=ABCMeta):
