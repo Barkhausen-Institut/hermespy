@@ -43,14 +43,12 @@ class TestRadarChannel(unittest.TestCase):
         self.target_exists = True
 
         self.losses_db = 0
-        self.filter_response_in_samples = 21
 
         self.channel = RadarChannel(self.range, self.radar_cross_section,
                                     transmitter=self.transmitter,
                                     receiver=self.receiver,
                                     target_exists=self.target_exists,
-                                    losses_db=self.losses_db,
-                                    filter_response_in_samples=self.filter_response_in_samples)
+                                    losses_db=self.losses_db)
         self.channel.random_mother = self.random_node
 
         self.expected_delay = 2 * self.range / speed_of_light
@@ -64,7 +62,6 @@ class TestRadarChannel(unittest.TestCase):
         self.assertIs(self.receiver, self.channel.receiver)
         self.assertIs(self.target_exists, self.channel.target_exists)
         self.assertIs(self.losses_db, self.channel.losses_db)
-        self.assertIs(self.filter_response_in_samples, self.channel.filter_response_in_samples)
 
     def test_target_range_setget(self) -> None:
         """Target range property getter should return setter argument."""
@@ -93,10 +90,6 @@ class TestRadarChannel(unittest.TestCase):
 
         self.channel.velocity = new_velocity
         self.assertEqual(new_velocity, self.channel.velocity)
-
-    def test_filter_response_in_samples_get(self) -> None:
-        """losses getter should return init param."""
-        self.assertEqual(self.filter_response_in_samples, self.channel.filter_response_in_samples)
 
     def _create_impulse_train(self, interval_in_samples: int, number_of_pulses: int):
 
