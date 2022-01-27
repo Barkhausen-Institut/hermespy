@@ -56,7 +56,6 @@ class Executable(ABC, Serializable):
     calc_receive_stft: bool
     """Compute the short time Fourier transform of received signals."""
 
-    __scenarios: List[Scenario]     # List of registered scenarios to be executed
     __spectrum_fft_size: int        # Number of FFT bins considered during computation.
     __max_num_drops: int            # Number of maximum executions per scenario.
     __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
