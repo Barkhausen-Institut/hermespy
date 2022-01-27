@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Monte Carlo Simulation on Python Ray."""
-import contextlib
 import unittest
 import warnings
 from contextlib import redirect_stdout
@@ -307,5 +306,5 @@ class TestMonteCarlo(unittest.TestCase):
         for dimension, parameters in dimensions.items():
             self.monte_carlo.add_dimension(dimension, parameters)
 
-        with contextlib.redirect_stdout(None):
+        with redirect_stdout(None):
             self.monte_carlo.simulate(MonteCarloActorMock)

@@ -181,7 +181,7 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
 
 from hermespy.channel import ChannelStateDimension, ChannelStateInformation
-from hermespy.coding import EncoderManager
+from hermespy.coding import EncoderManager, Encoder
 from hermespy.core import DuplexOperator, RandomNode
 from hermespy.core.factory import SerializableArray
 from hermespy.core.signal_model import Signal
@@ -664,16 +664,16 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
                 Newly created serializable instance.
         """
 
-        state = constructor.construct_mapping(node)
+        state = constructor.construct_mapping(node, deep=True)
 
-        encoding: Optional[EncoderManager] = state.pop('Encoding', None)
+        encoding: List[Encoder] = state.pop('Encoding', [])
         precoding: Optional[SymbolPrecoding] = state.pop('Precoding', None)
         waveform: Optional[WaveformGenerator] = state.pop('Waveform', None)
 
         modem = cls.InitializationWrapper(state)
 
-        if encoding is not None:
-            modem.encoder_manager = encoding
+        for encoder in encoding:
+            modem.encoder_manager.add_encoder(encoder)
 
         if precoding is not None:
             modem.precoding = precoding
