@@ -54,6 +54,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
     __snr: Optional[float]
 
     def __init__(self,
+                 num_samples: int = 100,
                  drop_duration: float = 0.,
                  plot_results: bool = False,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
@@ -81,7 +82,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         # Initialize base classes
         Executable.__init__(self, results_dir, verbosity)
         Scenario.__init__(self, seed=seed)
-        MonteCarlo.__init__(self, investigated_object=self, num_samples=1)
+        MonteCarlo.__init__(self, investigated_object=self, num_samples=num_samples)
 
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.plot_results = plot_results

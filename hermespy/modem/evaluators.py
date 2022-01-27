@@ -7,7 +7,6 @@ from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from ruamel.yaml import SafeRepresenter, Node
 
 from ..core.executable import Executable
 from ..core.factory import Serializable
@@ -46,6 +45,9 @@ class CommunicationEvaluator(Evaluator[Scenario], ABC):
 
         self.__transmitting_modem = transmitting_modem
         self.__receiving_modem = receiving_modem
+
+        # Initialize base class
+        Evaluator.__init__(self)
 
     @property
     def transmitting_modem(self) -> Modem:
