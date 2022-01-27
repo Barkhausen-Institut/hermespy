@@ -78,16 +78,6 @@ class TestExecutable(unittest.TestCase):
             self.executable.execute()
             self.assertTrue(run.called)
 
-    def test_add_scenario(self) -> None:
-        """Scenario property should return scenarios added by the add_scenario function."""
-
-        scenarios = [Mock() for _ in range(10)]
-
-        for scenario in scenarios:
-            self.executable.add_scenario(scenario)
-
-        self.assertCountEqual(scenarios, self.executable.scenarios)
-
     def test_spectrum_fft_size_setget(self) -> None:
         """Spectrum FFT size property getter should return setter argument."""
 
