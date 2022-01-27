@@ -60,7 +60,7 @@ class Executable(ABC, Serializable):
     __max_num_drops: int            # Number of maximum executions per scenario.
     __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
     __verbosity: Verbosity          # Information output behaviour during execution.
-    __style: str                    # Color scheme
+    __style: str = 'dark'           # Color scheme
 
     def __init__(self,
                  plot_drop: bool = False,
@@ -119,7 +119,6 @@ class Executable(ABC, Serializable):
         self.max_num_drops = max_num_drops
         self.results_dir = results_dir
         self.verbosity = verbosity
-        self.style = style
 
     def execute(self) -> None:
         """Execute the executable."""
@@ -305,19 +304,21 @@ class Executable(ABC, Serializable):
         return [path.splitext(path.basename(x))[0] for x in
                 glob(path.join(Executable.__hermes_root_dir(), 'resources', 'styles', '*.mplstyle'))]
 
+    @staticmethod
     @contextmanager
-    def style_context(self) -> ContextManager:
+    def style_context() -> ContextManager:
         """Context for the configured style.
 
         Returns:
             ContextManager: Style context manager.
         """
 
-        if self.__style in self.__hermes_styles():
-            yield plt.style.use(path.join(self.__hermes_root_dir(), 'resources', 'styles', self.__style + '.mplstyle'))
+        if Executable.__style in Executable.__hermes_styles():
+            yield plt.style.use(path.join(Executable.__hermes_root_dir(), 'resources', 'styles',
+                                          Executable.__style + '.mplstyle'))
 
         else:
-            yield plt.style.use(self.__style)
+            yield plt.style.use(Executable.__style)
 
     @staticmethod
     def __hermes_root_dir() -> str:

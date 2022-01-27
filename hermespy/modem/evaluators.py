@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ruamel.yaml import SafeRepresenter, Node
 
+from ..core.executable import Executable
 from ..core.factory import Serializable
 from ..core.scenario import Scenario
 from ..core.monte_carlo import Evaluator, ArtifactTemplate
@@ -76,14 +77,16 @@ class BitErrorArtifact(ArtifactTemplate[np.ndarray]):
 
     def plot(self) -> List[plt.Figure]:
 
-        figure, axes = plt.subplots()
-        figure.suptitle("Bit Error Evaluation")
+        with Executable.style_context():
 
-        axes.stem(self.artifact)
-        axes.set_xlabel("Bit Index")
-        axes.set_ylabel("Bit Error Indicator")
+            figure, axes = plt.subplots()
+            figure.suptitle("Bit Error Evaluation")
 
-        return [figure]
+            axes.stem(self.artifact)
+            axes.set_xlabel("Bit Index")
+            axes.set_ylabel("Bit Error Indicator")
+
+            return [figure]
 
 
 class BitErrorEvaluator(CommunicationEvaluator, Serializable):
