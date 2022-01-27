@@ -17,7 +17,7 @@ from ..core.factory import Serializable
 from ..core.monte_carlo import Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
 from ..core.scenario import Scenario
 from ..core.signal_model import Signal
-from ..core.statistics import SNRType, ConfidenceMetric
+from ..core.statistics import SNRType
 from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -41,113 +41,32 @@ class SimulationDrop(Drop):
 
 
 class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo[Scenario[SimulatedDevice]]):
-    """HermesPy simulation configuration.
-
-    """
+    """HermesPy simulation configuration."""
 
     yaml_tag = u'Simulation'
+    """YAML serialization tag."""
+
+    snr_type: SNRType
+    """Global type of signal to noise ratio."""
 
     __channels: np.ndarray
     __operators: List[Operator]
-
-    snr_type: SNRType
-    noise_loop: List[float]
-    confidence_metric: ConfidenceMetric
-    plot_bit_error: bool
-    plot_block_error: bool
-    __min_num_drops: int
-    __confidence_level: float
-    __confidence_margin: float
-    plot_drop_transmitted_bits: bool
-    plot_drop_transmitted_signals: bool
-    plot_drop_received_signals: bool
-    plot_drop_received_bits: bool
-    plot_drop_bit_errors: bool
-    plot_drop_block_errors: bool
-    plot_drop_transmitted_symbols: bool
-    plot_drop_received_symbols: bool
-    plot_drop_transmit_stft: bool
-    plot_drop_receive_stft: bool
-    plot_drop_transmit_spectrum: bool
-    plot_drop_receive_spectrum: bool
     __snr: Optional[float]
 
     def __init__(self,
                  drop_duration: float = 0.,
                  plot_results: bool = False,
-                 plot_drop: bool = True,
-                 calc_transmit_spectrum: bool = False,
-                 calc_receive_spectrum: bool = False,
-                 calc_transmit_stft: bool = False,
-                 calc_receive_stft: bool = False,
-                 spectrum_fft_size: int = 0,
-                 plot_bit_error: bool = False,
-                 plot_block_error: bool = False,
-                 plot_drop_transmitted_symbols: bool = False,
-                 plot_drop_received_symbols: bool = False,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
-                 confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
-                 min_num_drops: int = 0,
-                 max_num_drops: int = 1,
-                 confidence_level: float = 1.0,
-                 confidence_margin: float = 0.0,
                  results_dir: Optional[str] = None,
                  verbosity: Union[str, Verbosity] = Verbosity.INFO,
                  seed: Optional[int] = None) -> None:
-        """Simulation object initialization.
-
-        Args:
+        """Args:
 
             drop_duration(float, optional):
                 Duration of simulation drops in seconds.
 
-            plot_drop (bool, optional):
-                Plot each drop during execution of scenarios.
-
-            calc_transmit_spectrum (bool):
-                Compute the transmitted signals frequency domain spectra.
-
-            calc_receive_spectrum (bool):
-                Compute the received signals frequency domain spectra.
-
-            calc_transmit_stft (bool):
-                Compute the short time Fourier transform of transmitted signals.
-
-            calc_receive_stft (bool):
-                Compute the short time Fourier transform of received signals.
-
-            spectrum_fft_size (int):
-                Number of discrete frequency bins computed within the Fast Fourier Transforms.
-
-            plot_bit_error (bool, optional):
-                Plot resulting bit error rate after simulation.
-
-            plot_block_error (bool, optional):
-                Plot resulting block error rate after simulation.
-
-            plot_drop_transmitted_symbols (bool, optional):
-                Plot the constellation of transmitted symbols
-
-            plot_drop_received_symbols (bool, optional);
-                Plot the constellation of received symbols.
-
             snr_type (Union[str, SNRType]):
                 The signal to noise ratio metric to be used.
-
-            confidence_metric (Union[ConfidenceMetric, str], optional):
-                Metric for premature simulation stopping criterion
-
-            min_num_drops (int, optional):
-                Minimum number of drops before confidence check may prematurely terminate execution.
-
-            max_num_drops (int, optional):
-                Maximum number of drops before confidence check may prematurely terminate execution.
-
-            confidence_level (float, optional):
-                Confidence at which execution should be terminated.
-
-            confidence_margin (float, optional):
-                Margin for the confidence check
 
             results_dir (str, optional):
                 Directory in which all simulation artifacts will be dropped.
@@ -159,47 +78,17 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 Random seed used to initialize the pseudo-random number generator.
         """
 
-        Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
-                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, max_num_drops,
-                            results_dir, verbosity)
-
+        # Initialize base classes
+        Executable.__init__(self, results_dir, verbosity)
         Scenario.__init__(self, seed=seed)
-        MonteCarlo.__init__(self, investigated_object=self, num_samples=max_num_drops)
+        MonteCarlo.__init__(self, investigated_object=self, num_samples=1)
 
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.plot_results = plot_results
         self.drop_duration = drop_duration
-        self.plot_drop_transmitted_bits = False
-        self.plot_drop_transmitted_signals = False
-        self.plot_drop_received_signals = False
-        self.plot_drop_received_bits = False
-        self.plot_drop_bit_errors = False
-        self.plot_drop_block_errors = False
-        self.plot_drop_transmitted_symbols = plot_drop_transmitted_symbols
-        self.plot_drop_received_symbols = plot_drop_received_symbols
-        self.plot_drop_transmit_stft = False
-        self.plot_drop_receive_stft = False
-        self.plot_drop_transmit_spectrum = False
-        self.plot_drop_receive_spectrum = False
         self.snr_type = snr_type
-        self.plot_bit_error = plot_bit_error
-        self.plot_block_error = plot_block_error
-        self.min_num_drops = min_num_drops
-        self.max_num_drops = max_num_drops
-        self.confidence_level = confidence_level
-        self.confidence_margin = confidence_margin
         self.snr = None
         self.__operators: List[Operator] = []
-
-        # Recover confidence metric enumeration from string value if the provided argument is a string
-        if isinstance(confidence_metric, str):
-            self.confidence_metric = ConfidenceMetric[confidence_metric]
-
-        else:
-            self.confidence_metric = confidence_metric
-
-        if self.max_num_drops < self.min_num_drops:
-            raise ValueError("Minimum number of drops must be smaller than maximum number of drops.")
 
     def new_device(self) -> SimulatedDevice:
         """Add a new device to the simulation scenario.

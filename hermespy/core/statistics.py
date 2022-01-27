@@ -60,7 +60,7 @@ class Statistics:
         __num_drops (np.array): SNR-Specific Number of drops already added to the statistics.
         __confidence_margin (float): Margin for the stopping criteria check.
         __confidence_level (float): Probability to find interval for that metric is within.
-        __confidence_metric (ConfidenceMetric): Metric that the stopping crtieria is to be calculated for.
+        __confidence_metric (ConfidenceMetric): Metric that the stopping criteria is to be calculated for.
         snr_loop (List[float]): List of (linear) signal to noise ratios.
         __num_snr_loops (int): Different number of snrs to perform simulation for.
         snr_type (SNRType): Type of SNR to be used for noise calculation.
