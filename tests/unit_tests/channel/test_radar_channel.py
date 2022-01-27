@@ -156,11 +156,11 @@ class TestRadarChannel(unittest.TestCase):
         expected Doppler shift
         """
 
-        samples_per_symbol = 5000
+        samples_per_symbol = 50
         num_pulses = 100
         initial_delay_in_samples = 1000
         expected_range = speed_of_light * initial_delay_in_samples / self.transmitter.sampling_rate / 2
-        velocity = 500
+        velocity = 10
         expected_amplitude = ((speed_of_light / self.transmitter.carrier_frequency) ** 2 *
                               self.radar_cross_section / (4 * pi) ** 3 / expected_range ** 4)
 
