@@ -189,10 +189,6 @@ class BlockErrorEvaluator(CommunicationEvaluator):
 
         return BlockErrorArtifact(block_errors)
 
-    def __str__(self) -> str:
-
-        return "BLER"
-
     @property
     def title(self) -> str:
 
@@ -254,10 +250,6 @@ class FrameErrorEvaluator(CommunicationEvaluator):
         frame_errors = (bit_errors.reshape((-1, frame_size)).sum(axis=1) > 0)
 
         return FrameErrorArtifact(frame_errors)
-
-    def __str__(self) -> str:
-
-        return "FER"
 
     @property
     def title(self) -> str:

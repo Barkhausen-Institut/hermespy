@@ -41,21 +41,6 @@ class Executable(ABC, Serializable):
     yaml_tag = u'Executable'
     """YAML serialization tag."""
 
-    plot_drop: bool
-    """Plot each drop during execution of scenarios."""
-
-    calc_transmit_spectrum: bool
-    """Compute the transmitted signals frequency domain spectra."""
-
-    calc_receive_spectrum: bool
-    """Compute the received signals frequency domain spectra."""
-
-    calc_transmit_stft: bool
-    """Compute the short time Fourier transform of transmitted signals."""
-
-    calc_receive_stft: bool
-    """Compute the short time Fourier transform of received signals."""
-
     __spectrum_fft_size: int        # Number of FFT bins considered during computation.
     __max_num_drops: int            # Number of maximum executions per scenario.
     __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
@@ -63,60 +48,20 @@ class Executable(ABC, Serializable):
     __style: str = 'dark'           # Color scheme
 
     def __init__(self,
-                 plot_drop: bool = False,
-                 calc_transmit_spectrum: bool = False,
-                 calc_receive_spectrum: bool = False,
-                 calc_transmit_stft: bool = False,
-                 calc_receive_stft: bool = False,
-                 spectrum_fft_size: int = 0,
-                 max_num_drops: int = 1,
                  results_dir: Optional[str] = None,
-                 verbosity: Union[Verbosity, str] = Verbosity.INFO,
-                 style: str = 'dark') -> None:
-        """Object initialization.
-
+                 verbosity: Union[Verbosity, str] = Verbosity.INFO) -> None:
+        """
         Args:
-
-            plot_drop (bool):
-                Plot each drop during execution of scenarios.
-
-            calc_transmit_spectrum (bool):
-                Compute the transmitted signals frequency domain spectra.
-
-            calc_receive_spectrum (bool):
-                Compute the received signals frequency domain spectra.
-
-            calc_transmit_stft (bool):
-                Compute the short time Fourier transform of transmitted signals.
-
-            calc_receive_stft (bool):
-                Compute the short time Fourier transform of received signals.
-
-            spectrum_fft_size (int):
-                Number of discrete frequency bins computed within the Fast Fourier Transforms.
-
-            max_num_drops (int):
-                Maximum Number of drops per executed scenario.
 
             results_dir(str, optional):
                 Directory in which all execution artifacts will be dropped.
 
             verbosity (Union[str, Verbosity], optional):
                 Information output behaviour during execution.
-
-            style (str. optional):
-                Color scheme. Dark by default.
         """
 
         # Default parameters
         self.__scenarios = []
-        self.plot_drop = plot_drop
-        self.calc_transmit_spectrum = calc_transmit_spectrum
-        self.calc_receive_spectrum = calc_receive_spectrum
-        self.calc_transmit_stft = calc_transmit_stft
-        self.calc_receive_stft = calc_receive_stft
-        self.spectrum_fft_size = spectrum_fft_size
-        self.max_num_drops = max_num_drops
         self.results_dir = results_dir
         self.verbosity = verbosity
 
@@ -156,32 +101,6 @@ class Executable(ABC, Serializable):
             raise ValueError("Number of bins must be greater or equal to zero")
 
         self.__spectrum_fft_size = bins
-
-    @property
-    def max_num_drops(self) -> int:
-        """Access number of drops per executed scenario.
-
-        Returns:
-            int: Number of drops.
-        """
-
-        return self.__max_num_drops
-
-    @max_num_drops.setter
-    def max_num_drops(self, num: int) -> None:
-        """Modify maximum number of drops per executed scenario.
-
-        Args:
-            num (int): New number of drops.
-
-        Raises:
-            ValueError: If `num` is smaller than one.
-        """
-
-        if num < 1:
-            raise ValueError("Number of drops must be greater than zero")
-
-        self .__max_num_drops = num
 
     @property
     def results_dir(self) -> str:

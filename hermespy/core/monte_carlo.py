@@ -105,6 +105,14 @@ class Evaluator(Generic[MO]):
     This is done by evaluators.
     """
 
+    __confidence_level: float
+    __confidence_margin: float
+
+    def __init__(self) -> None:
+
+        self.confidence_level = 1.
+        self.confidence_margin = 0.
+
     @abstractmethod
     def evaluate(self, investigated_object: MO) -> Artifact:
         """Evaluate a sampled state of the investigated object.
@@ -144,6 +152,57 @@ class Evaluator(Generic[MO]):
             str: String representation
         """
         ...
+
+    @property
+    def confidence_level(self) -> float:
+        """Confidence required for premature simulation abortion.
+
+        Returns:
+            float: Confidence between zero and one.
+
+        Raises:
+            ValueError: If confidence is lower than zero or greater than one.
+        """
+
+        return self.__confidence_level
+
+    @confidence_level.setter
+    def confidence_level(self, value: float) -> None:
+
+        if value < 0. or value > 1.:
+            raise ValueError("Confidence level must be in the interval between zero and one")
+
+        self.__confidence_level = value
+
+    @property
+    def confidence_margin(self) -> float:
+        """Confidence margin required for premature simulation abortion.
+
+        Returns:
+            float: Non-negative confidence margin
+
+        Raises:
+            ValueError: If margin is negative.
+        """
+
+        return self.__confidence_margin
+
+    @confidence_margin.setter
+    def confidence_margin(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Confidence margin must be greater than zero")
+
+        self.__confidence_margin = value
+
+    def __str__(self) -> str:
+        """String object representation.
+
+        Returns:
+            str: String representation.
+        """
+
+        return self.abbreviation
 
 
 class MonteCarloSample(object):

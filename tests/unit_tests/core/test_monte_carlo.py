@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Monte Carlo Simulation on Python Ray."""
-
+import contextlib
 import unittest
 import warnings
+from contextlib import redirect_stdout
+
+import ray
 
 from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MonteCarloSample,\
     Evaluator, ArtifactTemplate
@@ -59,12 +62,16 @@ class SumEvaluator(Evaluator[TestObjectMock]):
 
     def evaluate(self, investigated_object: TestObjectMock) -> ArtifactTemplate[float]:
 
-        sum = investigated_object.property_a + investigated_object.property_b + investigated_object.property_c
-        return ArtifactTemplate[float](sum)
+        summed = investigated_object.property_a + investigated_object.property_b + investigated_object.property_c
+        return ArtifactTemplate[float](summed)
 
-    def __str__(self) -> str:
+    @property
+    def abbreviation(self) -> str:
+        return "SUM"
 
-        return "Sum"
+    @property
+    def title(self) -> str:
+        return "Sum Evaluator"
 
 
 class ProductEvaluator(Evaluator[TestObjectMock]):
@@ -75,17 +82,22 @@ class ProductEvaluator(Evaluator[TestObjectMock]):
         product = investigated_object.property_a * investigated_object.property_b * investigated_object.property_c
         return ArtifactTemplate[float](product)
 
-    def __str__(self) -> str:
-
+    @property
+    def abbreviation(self) -> str:
         return "Product"
 
+    @property
+    def title(self) -> str:
+        return "Product Evaluator"
 
+
+@ray.remote(num_cpus=1)
 class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
     """Mock of a Monte Carlo Actor."""
 
-    @staticmethod
-    def sample(investigated_object: TestObjectMock):
-        return investigated_object.some_operation()
+    def sample(self, investigated_object: TestObjectMock) -> TestObjectMock:
+
+        return investigated_object
 
 
 class TestMonteCarloSample(unittest.TestCase):
@@ -116,8 +128,7 @@ class TestMonteCarloActor(unittest.TestCase):
         self.dimensions = {'property_a': [1, 2, 6, 7, 8]}
         self.evaluators = set()
 
-        self.actor = MonteCarloActorMock(investigated_object=self.investigated_object,
-                                         dimensions=self.dimensions, evaluators=self.evaluators)
+        self.actor = MonteCarloActorMock.remote([self.investigated_object, self.dimensions, self.evaluators])
 
     def test_run(self) -> None:
         """Running the actor should produce the expected result."""
@@ -127,7 +138,7 @@ class TestMonteCarloActor(unittest.TestCase):
             expected_grid_section = [sample_idx]
             expected_sample = 2 * sample_value
 
-            sample = self.actor.run([sample_idx], sample_idx)
+            sample = ray.get(self.actor.run.remote([sample_idx], sample_idx))
             self.assertCountEqual(expected_grid_section, sample.grid_section)
             #self.assertEqual(expected_sample, sample)
 
@@ -220,4 +231,5 @@ class TestMonteCarlo(unittest.TestCase):
         for dimension, parameters in dimensions.items():
             self.monte_carlo.add_dimension(dimension, parameters)
 
-        self.monte_carlo.simulate(MonteCarloActorMock)
+        with contextlib.redirect_stdout(None):
+            self.monte_carlo.simulate(MonteCarloActorMock)
