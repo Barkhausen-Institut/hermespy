@@ -4,11 +4,12 @@ import contextlib
 import unittest
 import warnings
 from contextlib import redirect_stdout
+from unittest.mock import Mock
 
 import ray
 
-from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MonteCarloSample,\
-    Evaluator, ArtifactTemplate
+from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MonteCarloSample, \
+    Evaluator, ArtifactTemplate, MO, Artifact
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -18,6 +19,81 @@ __version__ = "0.2.3"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class EvaluatorMock(Evaluator[Mock]):
+
+    def evaluate(self, investigated_object: MO) -> Artifact:
+        return Mock()
+
+    @property
+    def abbreviation(self) -> str:
+        return "?"
+
+    @property
+    def title(self) -> str:
+        return "??"
+
+
+class TestEvaluator(unittest.TestCase):
+    """Test base class for all evaluators."""
+
+    def setUp(self) -> None:
+
+        self.evaluator = EvaluatorMock()
+
+    def test_init(self) -> None:
+        """Initialization should set the proper default attributes."""
+
+        self.assertEqual(1., self.evaluator.confidence_level)
+        self.assertEqual(0., self.evaluator.confidence_margin)
+
+    def test_confidence_level_setget(self) -> None:
+        """Confidence level property getter should return setter argument."""
+
+        confidence = .5
+        self.evaluator.confidence_level = confidence
+
+        self.assertEqual(confidence, self.evaluator.confidence_level)
+
+    def test_confidence_level_validation(self) -> None:
+        """Confidence level property setter should raise ValueError on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            self.evaluator.confidence_level = -1.
+
+        with self.assertRaises(ValueError):
+            self.evaluator.confidence_level = 1.5
+
+        try:
+
+            self.evaluator.confidence_level = 0.
+            self.evaluator.confidence_level = 1.
+
+        except ValueError:
+            self.fail()
+
+    def test_confidence_margin_setget(self) -> None:
+        """Confidence margin property getter should return setter argument."""
+
+        margin = .5
+        self.evaluator.confidence_margin = margin
+
+        self.assertEqual(margin, self.evaluator.confidence_margin)
+
+    def test_confidence_margin_validation(self) -> None:
+        """Confidence margin property setter should raise ValueError on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            self.evaluator.confidence_level = -1.
+
+        try:
+
+            self.evaluator.confidence_level = 0.
+            self.evaluator.confidence_level = 1.
+
+        except ValueError:
+            self.fail()
 
 
 class TestObjectMock(object):
