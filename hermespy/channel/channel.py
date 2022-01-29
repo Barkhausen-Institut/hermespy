@@ -10,7 +10,7 @@ from typing import List, Optional, Tuple, Type, Union
 from itertools import chain, product
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from ruamel.yaml import SafeRepresenter, MappingNode
 
 from ..core import RandomNode
 from ..core.device import Device
@@ -22,7 +22,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
