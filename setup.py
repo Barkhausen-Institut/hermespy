@@ -10,16 +10,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="hermespy",
-    version="0.2.3",
+    version="0.2.5",
     author="Jan Adler",
     author_email="jan.adler@barkhauseninstitut.org",
     description="The Heterogeneous Mobile Radio Simulator",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/barkhauseninstitut/wicon/hermespy",
+    url="https://github.com/Barkhausen-Institut/hermespy",
     project_urls={
         "Barkhausen Institute": "https://www.barkhauseninstitut.org",
-        "Bug Tracker": "https://gitlab.com/barkhauseninstitut/wicon/hermespy/issues",
+        "Bug Tracker": "https://github.com/Barkhausen-Institut/hermespy/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3.9",
@@ -30,7 +30,11 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     packages=find_packages(exclude=['tests']),
+    namespace_packages=['hermespy'],
     package_dir={"hermespy": "hermespy"},
+    package_data={
+      'hermespy': ['resources/styles/*.mplstyle', 'resources/matlab/*.m']
+    },
     include_package_data=True,
     exclude_package_data={
         '': ['3rdparty', 'tests'],
@@ -45,7 +49,7 @@ setup(
     command_options={
         'build_sphinx': {
             'project': ('setup.py', 'HermesPy'),
-            'version': ('setup.py', '0.2.3'),
+            'version': ('setup.py', '0.2.5'),
             # 'release': ('setup.py', release),
             'source_dir': ('setup.py', 'docssource'),
             'build_dir': ('setup.py', 'documentation'),
