@@ -1,51 +1,42 @@
 !<Simulation>
 
-plot_drop: true
-plot_drop_transmitted_signals: true
-plot_drop_transmit_spectrum: true
-plot_drop_received_signals: true
-plot_drop_bit_errors: true
-calc_transmit_spectrum: true
-calc_receive_spectrum: false
-calc_transmit_stft: false
-calc_receive_stft: false
-noise_loop: [24, 20, 16, 12, 8, 4, 0, -4, -8, -12]
-snr_type: EBN0
-max_num_drops: 20
-min_num_drops: 5
-spectrum_fft_size: 512
-confidence_level: 0.9
-confidence_margin: .1
-confidence_metric: BER
-plot_bit_error: true
-plot_block_error: false
-
+# Physical device models within the simulated scenario
 Devices:
 
-  - SimulatedDevice
+  # Representation of a single (virtual) device
+  - &device_alpha !<SimulatedDevice>
 
-    num_antennas: 2
+    carrier_frequency: 865e6        # Center frequency of Rf-band emitted signal
+    num_antennas: 2                 # Device features a single physical antenna
 
+
+# Operators transmitting or receiving signals over the devices
 Operators:
 
-  - Modem 0
+  # A single modem operating the device #0
+  - &modem_alpha !<Modem>
 
+    device: *device_alpha          # Device the modem is operating on
+
+    # Bit encoding configuration before mapping to modulation symbols
     Encoding:
 
-      - LDPC
+      - !<LDPC>
         block_size: 256
         rate: [1, 2]
 
+    # Stream encoding configuration
     Precoding:
-      - SM
+      - !<SM>
 
+    # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>
 
-      # Symbol modulation settings
-      modulation_order: 2
-      subcarrier_spacing: 30e3
-      dc_suppression: False
-      num_subcarriers: 3300
+      # !<Symbol> modulation settings
+      modulation_order: 2           # Modulation order, in other words 2 bit per subcarrier and frame
+      subcarrier_spacing: 30e3      # Spacing between the individual subcarrier center frequencies in Hz
+      dc_suppression: False         # Ignore the DC component during the DFT
+      num_subcarriers: 3300         # Number of subcarriers per communiction frame
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
@@ -73,18 +64,43 @@ Operators:
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
       Structure:
 
-        - Symbol
+        - !<Symbol>
           num_repetitions: 1
           pattern: [1, 0, 0, 0]
 
-        - Guard
+        - !<Guard>
           num_repetitions: 3
           duration: 35.677083e-6
 
-        - Symbol
+        - !<Symbol>
           num_repetitions: 1
           pattern: [1, 0, 0, 0]
 
-        - Guard
+        - !<Guard>
           num_repetitions: 3
           duration: 35.677083e-6
+
+
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_alpha
+    receiving_modem: *modem_alpha
+    confidence: .9
+    tolerance: .01
+
+
+# Simulation parameters
+num_samples: 20                    # Number of samples per simulation grid section
+min_num_samples: 5                 # Minimum number of samples per simulation grid section before premature stopping
+snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+plot_results: True                 # Visualize the evaluations after the simulation has finished
+
+
+# Scenario parameters over which the Monte-Carlo simulation sweeps
+Dimensions:
+
+  snr: [24, 20, 16, 12, 8, 4, 0, -4, -8, -12] dB

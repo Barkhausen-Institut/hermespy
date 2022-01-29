@@ -339,7 +339,7 @@ class Factory:
                 Second dimension within the matrix.
             """
 
-        indices = tag_suffix.split(' ')
+        indices: List[str] = re.split(' |_', tag_suffix)
         if indices[0] == '':
             indices.pop(0)
 
@@ -633,9 +633,9 @@ class Factory:
 
         clean_stream = ''
         for line in stream.readlines():
-            clean_line = self.__restore_regex_alpha.sub(self.__restore_callback_alpha, line)
-            clean_line = self.__restore_regex_beta.sub(self.__restore_callback_beta, clean_line)
-            clean_line = self.__db_regex.sub(self.__decibel_conversion, clean_line)
+            # clean_line = self.__restore_regex_alpha.sub(self.__restore_callback_alpha, line)
+            # clean_line = self.__restore_regex_beta.sub(self.__restore_callback_beta, line)
+            clean_line = self.__db_regex.sub(self.__decibel_conversion, line)
             clean_stream += clean_line
 
         hermes_objects = self.__yaml.load(StringIO(clean_stream))
