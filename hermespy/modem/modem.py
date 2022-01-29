@@ -185,7 +185,7 @@ from hermespy.coding import EncoderManager, Encoder
 from hermespy.core import DuplexOperator, RandomNode
 from hermespy.core.factory import SerializableArray
 from hermespy.core.signal_model import Signal
-from hermespy.precoding import SymbolPrecoding
+from hermespy.precoding import SymbolPrecoding, SymbolPrecoder
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import Symbols
 from .waveform_generator import WaveformGenerator
@@ -667,7 +667,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         state = constructor.construct_mapping(node, deep=True)
 
         encoding: List[Encoder] = state.pop('Encoding', [])
-        precoding: Optional[SymbolPrecoding] = state.pop('Precoding', None)
+        precoding: List[SymbolPrecoder] = state.pop('Precoding', [])
         waveform: Optional[WaveformGenerator] = state.pop('Waveform', None)
 
         modem = cls.InitializationWrapper(state)
@@ -675,8 +675,8 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         for encoder in encoding:
             modem.encoder_manager.add_encoder(encoder)
 
-        if precoding is not None:
-            modem.precoding = precoding
+        for precoder_idx, precoder in enumerate(precoding):
+            modem.precoding[precoder_idx] = precoder
 
         if waveform is not None:
             modem.waveform_generator = waveform

@@ -7,6 +7,7 @@ from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import uniform
 
 from ..core.executable import Executable
 from ..core.factory import Serializable
@@ -131,13 +132,15 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
 
     @property
     def abbreviation(self) -> str:
-
         return "BER"
 
     @property
     def title(self) -> str:
-
         return "Bit Error Rate Evaluation"
+
+    @staticmethod
+    def _scalar_cdf(scalar: float) -> float:
+        return uniform.cdf(scalar)
 
 
 class BlockErrorArtifact(ArtifactTemplate[np.ndarray]):

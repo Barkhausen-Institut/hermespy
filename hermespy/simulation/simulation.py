@@ -445,32 +445,6 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
             raise ValueError("Confidence level must be between zero and one")
 
         self.__confidence_level = level
-        
-    @property
-    def confidence_margin(self) -> float:
-        """Access margin for confidence level at which execution may be prematurely terminated.
-
-        Return:
-            float: Absolute margin confidence margin.
-        """
-
-        return self.__confidence_margin
-
-    @confidence_margin.setter
-    def confidence_margin(self, margin: float) -> None:
-        """Modify margin for confidence level at which execution may be prematurely terminated.
-
-        Args:
-            margin (float): Absolute margin.
-
-        Raises:
-            ValueError: If `margin` is smaller than zero.
-        """
-
-        if margin < 0.0:
-            raise ValueError("Margin must be greater or equal to zero")
-
-        self.__confidence_margin = margin
 
     @property
     def drop_duration(self) -> float:
