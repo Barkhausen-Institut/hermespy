@@ -35,25 +35,22 @@ class QuadrigaChannel(Channel):
     def __init__(self,
                  transmitter: Optional[Transmitter] = None,
                  receiver: Optional[Receiver] = None,
-                 scenario: Optional[Scenario] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: Optional[float] = None,
                  sync_offset_high: Optional[float] = None,
-                 random_generator: Optional[rnd.Generator] = None) -> None:
+                 seed: Optional[int] = None) -> None:
         """Quadriga Channel object initialization.
 
         Automatically registers channel objects at the interface.
 
         Args:
+
             transmitter (Transmitter, optional):
                 The modem transmitting into this channel.
 
             receiver (Receiver, optional):
                 The modem receiving from this channel.
-
-            scenario (Scenario, optional):
-                Scenario this channel is attached to.
 
             active (bool, optional):
                 Channel activity flag.
@@ -62,16 +59,20 @@ class QuadrigaChannel(Channel):
             gain (float, optional):
                 Channel power gain.
                 1.0 by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Init base channel class
-        Channel.__init__(self, transmitter=transmitter,
-                               receiver=receiver,
-                               active=active,
-                               gain=gain,
-                               sync_offset_low=sync_offset_low,
-                               sync_offset_high=sync_offset_high,
-                               random_generator=random_generator)
+        Channel.__init__(self,
+                         transmitter=transmitter,
+                         receiver=receiver,
+                         active=active,
+                         gain=gain,
+                         sync_offset_low=sync_offset_low,
+                         sync_offset_high=sync_offset_high,
+                         seed=seed)
 
         # Register this channel at the interface
         self.__quadriga_interface.register_channel(self)
@@ -149,10 +150,7 @@ class QuadrigaChannel(Channel):
             'sync_offset_high': node.sync_offset_high
         }
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor,  node: MappingNode) -> QuadrigaChannel:

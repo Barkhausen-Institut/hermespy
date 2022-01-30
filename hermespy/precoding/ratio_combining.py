@@ -3,10 +3,12 @@
 
 from __future__ import annotations
 from typing import Type, Tuple
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
+
 import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 
 from . import SymbolPrecoder
+from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -18,7 +20,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MaximumRatioCombining(SymbolPrecoder):
+class MaximumRatioCombining(SymbolPrecoder, Serializable):
     """Maximum ratio combining symbol decoding step"""
 
     yaml_tag: str = u'MRC'

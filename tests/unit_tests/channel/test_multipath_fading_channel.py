@@ -1,29 +1,28 @@
 # -*- coding: utf-8 -*-
 """Test Multipath Fading Channel Model."""
 
-import copy
 import unittest
+from copy import deepcopy
 from unittest.mock import Mock
 
 import numpy as np
 import numpy.random as rand
 import numpy.testing as npt
-import scipy
 from numpy import exp
 from numpy.testing import assert_array_almost_equal
 from scipy import stats
 from scipy.constants import pi
 
 from hermespy.channel import MultipathFadingChannel
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.1.0"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -44,10 +43,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.num_sinusoids = 40
         self.doppler_frequency = 0.0
 
-        self.scenario = Mock()
         self.transmitter = Mock()
         self.receiver = Mock()
-        self.scenario.sampling_rate = self.sampling_rate
         self.transmitter.sampling_rate = self.sampling_rate
         self.receiver.sampling_rate = self.sampling_rate
         self.transmitter.num_antennas = 1
@@ -61,7 +58,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
             'rice_factors': self.rice_factors,
             'transmitter': self.transmitter,
             'receiver': self.receiver,
-            'scenario': self.scenario,
             'active': self.active,
             'gain': self.gain,
             'num_sinusoids': self.num_sinusoids,
@@ -69,7 +65,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             'doppler_frequency': self.doppler_frequency,
             'sync_offset_low': self.sync_offset_low,
             'sync_offset_high': self.sync_offset_high,
-            'random_generator': np.random.default_rng(0)
+            'seed': 42,
         }
 
         self.num_samples = 100
@@ -98,32 +94,32 @@ class TestMultipathFadingChannel(unittest.TestCase):
         """Object initialization should raise ValueError on invalid arguments."""
 
         with self.assertRaises(ValueError):
-            params = copy.deepcopy(self.channel_params)
+            params = deepcopy(self.channel_params)
             params['delays'] = np.array([1, 2])
             _ = MultipathFadingChannel(**params)
 
         with self.assertRaises(ValueError):
-            params = copy.deepcopy(self.channel_params)
+            params = deepcopy(self.channel_params)
             params['power_profile'] = np.array([1, 2])
             _ = MultipathFadingChannel(**params)
 
         with self.assertRaises(ValueError):
-            params = copy.deepcopy(self.channel_params)
+            params = deepcopy(self.channel_params)
             params['rice_factors'] = np.array([1, 2])
             _ = MultipathFadingChannel(**params)
 
         with self.assertRaises(ValueError):
-            params = copy.deepcopy(self.channel_params)
+            params = deepcopy(self.channel_params)
             params['delays'] = np.array([-1.0])
             _ = MultipathFadingChannel(**params)
 
         with self.assertRaises(ValueError):
-            params = copy.deepcopy(self.channel_params)
+            params = deepcopy(self.channel_params)
             params['power_profile'] = np.array([-1.0])
             _ = MultipathFadingChannel(**params)
 
         with self.assertRaises(ValueError):
-            params = copy.deepcopy(self.channel_params)
+            params = deepcopy(self.channel_params)
             params['rice_factors'] = np.array([-1.0])
             _ = MultipathFadingChannel(**params)
 
@@ -169,64 +165,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel.doppler_frequency = doppler_frequency
         channel.los_doppler_frequency = None
         self.assertEqual(doppler_frequency, channel.los_doppler_frequency)
-
-    def test_transmit_precoding_setget(self) -> None:
-        """Transmit precoding property getter should return setter argument."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        precoding = np.identity(5)
-        channel.transmit_precoding = precoding
-        npt.assert_array_equal(precoding, channel.transmit_precoding)
-
-        channel.transmit_precoding = None
-        self.assertEqual(None, channel.transmit_precoding)
-
-    def test_transmit_precoding_validation(self) -> None:
-        """Doppler frequency setter should raise ValueError on invalid arguments."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        with self.assertRaises(ValueError):
-            precoding = np.array([1])
-            channel.transmit_precoding = precoding
-
-        with self.assertRaises(ValueError):
-            precoding = np.array([[1, 0], [1, 1]])
-            channel.transmit_precoding = precoding
-
-        with self.assertRaises(ValueError):
-            precoding = np.ones((2, 2))
-            channel.transmit_precoding = precoding
-            
-    def test_receive_postcoding_setget(self) -> None:
-        """Transmit postcoding property getter should return setter argument."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        postcoding = np.identity(5)
-        channel.receive_postcoding = postcoding
-        npt.assert_array_equal(postcoding, channel.receive_postcoding)
-
-        channel.receive_postcoding = None
-        self.assertEqual(None, channel.receive_postcoding)
-
-    def test_receive_postcoding_validation(self) -> None:
-        """Doppler frequency setter should raise ValueError on invalid arguments."""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        with self.assertRaises(ValueError):
-            postcoding = np.array([1])
-            channel.receive_postcoding = postcoding
-
-        with self.assertRaises(ValueError):
-            postcoding = np.array([[1, 0], [1, 1]])
-            channel.receive_postcoding = postcoding
-
-        with self.assertRaises(ValueError):
-            postcoding = np.ones((2, 2))
-            channel.receive_postcoding = postcoding
 
     def test_max_delay_get(self) -> None:
         """Max delay property should return maximum of delays."""
@@ -282,52 +220,14 @@ class TestMultipathFadingChannel(unittest.TestCase):
         """Re-setting the random rng seed should result in identical impulse responses."""
 
         channel = MultipathFadingChannel(**self.channel_params)
-        timestamps = np.arange(self.num_samples) / self.sampling_rate
 
-        channel.random_generator = np.random.default_rng(100)
-        first_draw = channel.impulse_response(timestamps, self.sampling_rate)
+        channel.set_seed(100)
+        first_draw = channel.impulse_response(self.num_samples, self.sampling_rate)
 
-        channel.random_generator = np.random.default_rng(100)
-        second_draw = channel.impulse_response(timestamps, self.sampling_rate)
+        channel.set_seed(100)
+        second_draw = channel.impulse_response(self.num_samples, self.sampling_rate)
 
         assert_array_almost_equal(first_draw, second_draw)
-
-    def test_antenna_correlation(self) -> None:
-        """Test the antenna correlation."""
-
-        num_antennas = 2
-
-        self.transmitter.num_antennas = num_antennas
-        self.receiver.num_antennas = num_antennas
-
-        transmit_precoding = scipy.linalg.sqrtm(np.identity(num_antennas) * 4)
-        receive_postcoding = scipy.linalg.sqrtm(np.identity(num_antennas) * 8)
-        self.channel_params['transmit_precoding'] = transmit_precoding
-        self.channel_params['receive_postcoding'] = receive_postcoding
-
-        correlated_channel = MultipathFadingChannel(**self.channel_params)
-
-        self.channel_params.pop('transmit_precoding')
-        self.channel_params.pop('receive_postcoding')
-        uncorrelated_channel = MultipathFadingChannel(**self.channel_params)
-
-        tx_samples = np.exp(2j * pi * np.arange(num_antennas * self.num_samples) *
-                            self.transmit_frequency / self.sampling_rate).reshape((num_antennas, self.num_samples))
-        tx_signal = Signal(tx_samples, self.sampling_rate)
-
-        correlated_channel.random_generator = np.random.default_rng(22)
-        rx_signal_correlated_channel, correlated_channel_state = correlated_channel.propagate(tx_signal)
-
-        uncorrelated_channel.random_generator = np.random.default_rng(22)
-        rx_signal_uncorrelated_channel, uncorrelated_channel_state =\
-            uncorrelated_channel.propagate(Signal(transmit_precoding @ tx_samples, self.sampling_rate))
-
-        # Make sure both channels generated the same impulse response for propagation
-        np.testing.assert_array_equal(correlated_channel_state.state, uncorrelated_channel_state.state)
-
-        expected_rx_signal_correlated_channel = (receive_postcoding  @ rx_signal_uncorrelated_channel.samples)
-        np.testing.assert_array_almost_equal(expected_rx_signal_correlated_channel,
-                                             rx_signal_correlated_channel.samples)
 
     def test_propagation_siso_no_fading(self) -> None:
         """
@@ -342,9 +242,9 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         timestamps = np.arange(self.num_samples) / self.sampling_rate
         transmission = exp(1j * timestamps * self.transmit_frequency).reshape(1, self.num_samples)
-        output, _ = channel.propagate(Signal(transmission, self.sampling_rate))
+        output, _, _ = channel.propagate(Signal(transmission, self.sampling_rate))
 
-        self.assertEqual(10, output.num_samples - transmission.shape[1],
+        self.assertEqual(10, output[0].num_samples - transmission.shape[1],
                          "Propagation impulse response has unexpected length")
 
     def test_propagation_fading(self) -> None:
@@ -369,14 +269,14 @@ class TestMultipathFadingChannel(unittest.TestCase):
             delayed_params['delays'] = reference_params['delays'] + delay
             delayed_channel = MultipathFadingChannel(**delayed_params)
 
-            reference_channel.random_generator = np.random.default_rng(d)
-            reference_propagation, _ = reference_channel.propagate(transmit_signal)
+            reference_channel.set_seed(d)
+            reference_propagation, _, _ = reference_channel.propagate(transmit_signal)
 
-            delayed_channel.random_generator = np.random.default_rng(d)
-            delayed_propagation, _ = delayed_channel.propagate(transmit_signal)
+            delayed_channel.set_seed(d)
+            delayed_propagation, _, _ = delayed_channel.propagate(transmit_signal)
 
             zero_pads = int(self.sampling_rate * float(delay))
-            npt.assert_array_almost_equal(reference_propagation.samples, delayed_propagation.samples[:, zero_pads:])
+            npt.assert_array_almost_equal(reference_propagation[0].samples, delayed_propagation[0].samples[:, zero_pads:])
 
     def test_rayleigh(self) -> None:
         """
@@ -395,9 +295,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         channel = MultipathFadingChannel(**self.channel_params)
 
-        time_interval = 1 / self.doppler_frequency  # get uncorrelated samples
-        timestamps = np.arange(samples_per_drop) * time_interval
-
         samples = np.array([])
 
         is_rayleigh = False
@@ -407,11 +304,11 @@ class TestMultipathFadingChannel(unittest.TestCase):
         number_of_drops = 0
         while not is_rayleigh and number_of_drops < max_number_of_drops:
 
-            channel_gains = channel.impulse_response(timestamps, self.sampling_rate)
+            channel_gains = channel.impulse_response(samples_per_drop, self.doppler_frequency)
             samples = np.append(samples, channel_gains.ravel())
 
             _, p_real = stats.kstest(np.real(samples), 'norm', args=(0, 1 / np.sqrt(2)))
-            _, p_imag = stats.kstest(np.real(samples), 'norm', args=(0, 1 / np.sqrt(2)))
+            _, p_imag = stats.kstest(np.imag(samples), 'norm', args=(0, 1 / np.sqrt(2)))
 
             corr = np.corrcoef(np.real(samples), np.imag(samples))
             corr = corr[0, 1]
@@ -437,10 +334,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.channel_params['doppler_frequency'] = doppler_frequency
 
         channel = MultipathFadingChannel(**self.channel_params)
-
-        time_interval = 1 / doppler_frequency  # get uncorrelated samples
-        timestamps = np.arange(samples_per_drop) * time_interval
-
         samples = np.array([])
 
         is_rice = False
@@ -449,7 +342,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         number_of_drops = 0
         while not is_rice and number_of_drops < max_number_of_drops:
 
-            channel_gains = channel.impulse_response(timestamps, self.sampling_rate)
+            channel_gains = channel.impulse_response(samples_per_drop, doppler_frequency)
             samples = np.append(samples, channel_gains.ravel())
 
             dummy, p_real = stats.kstest(np.abs(samples), 'rice', args=(np.sqrt(2), 0, 1 / 2))
@@ -482,12 +375,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         delayed_channel = MultipathFadingChannel(**self.channel_params)
 
-        timestamps = np.arange(samples_per_drop) / self.sampling_rate
-
         for s in range(max_number_of_drops):
 
             delayed_channel.random_generator = np.random.default_rng(s+10)
-            delayed_response = delayed_channel.impulse_response(timestamps, self.sampling_rate)
+            delayed_response = delayed_channel.impulse_response(samples_per_drop, self.sampling_rate)
 
             delayed_time = np.arange(delayed_response.shape[-1]) / self.sampling_rate
             delay_diff = (delayed_time - np.mean(delayed_time)) ** 2
@@ -522,20 +413,20 @@ class TestMultipathFadingChannel(unittest.TestCase):
         tx_signal = Signal(tx_samples, self.sampling_rate)
 
         channel_no_gain.random_generator = np.random.default_rng(42)  # Reset random number rng
-        signal_out_no_gain, _ = channel_no_gain.propagate(tx_signal)
+        signal_out_no_gain, _, _ = channel_no_gain.propagate(tx_signal)
 
         channel_gain.random_generator = np.random.default_rng(42)   # Reset random number rng
-        signal_out_gain, _ = channel_gain.propagate(tx_signal)
+        signal_out_gain, _, _ = channel_gain.propagate(tx_signal)
 
-        assert_array_almost_equal(signal_out_gain.samples, signal_out_no_gain.samples * gain)
+        assert_array_almost_equal(signal_out_gain[0].samples, signal_out_no_gain[0].samples * gain)
 
         timestamps = np.array([0, 100, 500]) / self.sampling_rate
 
         channel_no_gain.random_generator = np.random.default_rng(50)  # Reset random number rng
-        channel_state_info_no_gain = channel_no_gain.impulse_response(timestamps, self.sampling_rate)
+        channel_state_info_no_gain = channel_no_gain.impulse_response(len(timestamps), self.sampling_rate)
 
         channel_gain.random_generator = np.random.default_rng(50)   # Reset random number rng
-        channel_state_info_gain = channel_gain.impulse_response(timestamps, self.sampling_rate)
+        channel_state_info_gain = channel_gain.impulse_response(len(timestamps), self.sampling_rate)
 
         npt.assert_array_almost_equal(channel_state_info_gain, channel_state_info_no_gain * gain)
 

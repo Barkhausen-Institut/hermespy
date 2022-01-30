@@ -18,8 +18,8 @@ __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -211,13 +211,10 @@ class QuadrigaInterface:
 
         Args:
             channel (QuadrigaChannel): The channel to be removed.
-
-        Raises:
-            ValueError: If the `channel` is not currently registered.
         """
 
         if channel not in self.__channels:
-            raise ValueError("Channel is currently not registered")
+            return
 
         self.__channels.pop(self.__channels.index(channel))
 

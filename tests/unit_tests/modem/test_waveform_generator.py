@@ -12,7 +12,7 @@ from math import floor
 
 from hermespy.channel import ChannelStateFormat, ChannelStateInformation
 from hermespy.modem import WaveformGenerator
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
