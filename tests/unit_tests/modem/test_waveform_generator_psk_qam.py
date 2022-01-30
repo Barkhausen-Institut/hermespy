@@ -134,7 +134,7 @@ class TestWaveformGeneratorPskQam(TestCase):
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        assert_array_almost_equal(expected_symbols.raw.flatten(), symbols)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a symbol stream should yield identical symbols."""
@@ -146,7 +146,7 @@ class TestWaveformGeneratorPskQam(TestCase):
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        assert_array_almost_equal(expected_symbols.raw.flatten(), symbols, decimal=2)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=2)
         
     def test_guard_interval_setget(self) -> None:
         """Guard interval property getter should return setter argument."""
@@ -234,7 +234,7 @@ class TestWaveformGeneratorPskQam(TestCase):
         channel_state = ChannelStateInformation.Ideal(self.generator.samples_in_frame)
 
         data_symbols, _, _ = self.generator.demodulate(signal, channel_state)
-        bits = self.generator.unmap(Symbols(data_symbols))
+        bits = self.generator.unmap(data_symbols)
 
         self.assertEqual(len(bits), self.generator.bits_per_frame)
 
@@ -247,7 +247,7 @@ class TestWaveformGeneratorPskQam(TestCase):
 
         symbols, _, _ = self.generator.demodulate(signal, channel_state)
 
-        self.assertEqual(len(symbols), self.generator.symbols_per_frame)
+        self.assertEqual(len(symbols.raw.flatten()), self.generator.symbols_per_frame)
 
     def test_bit_energy(self) -> None:
         """Bit energy property should compute correct bit energy."""
