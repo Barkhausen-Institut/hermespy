@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 from typing import Tuple
-from numpy import real, imag, argmax
-import numpy as np
 
+import numpy as np
+from numpy import argmax
+
+from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.core.factory import Serializable
 from .symbol_precoder import SymbolPrecoder
-from hermespy.channel import ChannelStateInformation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -19,7 +21,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SingleCarrier(SymbolPrecoder):
+class SingleCarrier(SymbolPrecoder, Serializable):
     """Single Carrier data symbol precoding step.
 
     Takes a on-dimensional input stream and distributes the symbols to multiple output streams.

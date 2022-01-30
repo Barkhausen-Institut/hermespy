@@ -4,7 +4,10 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
+
 import numpy as np
+
+from hermespy.core.factory import Serializable
 
 if TYPE_CHECKING:
     from . import EncoderManager
@@ -20,7 +23,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Encoder(ABC):
+class Encoder(ABC, Serializable):
     """This class serves as an abstract class for all encoders.
 
     All deriving classes must overwrite the `encode(data_bits)` and

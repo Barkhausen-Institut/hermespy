@@ -3,21 +3,15 @@
 
 from __future__ import annotations
 from itertools import product
-from typing import TYPE_CHECKING, Optional, Type, Union, List, Tuple
+from typing import Any, Optional, Type, Union, List
 
 import numpy as np
 from numpy import cos, exp
-import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 from scipy.constants import pi
 
-from hermespy.channel.channel import Channel, ChannelStateInformation
+from hermespy.channel.channel import Channel
 from hermespy.helpers.resampling import delay_resampling_matrix
-from hermespy.signal import Signal
-
-if TYPE_CHECKING:
-    from hermespy.scenario import Scenario
-    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -85,8 +79,6 @@ class MultipathFadingChannel(Channel):
         __los_angle (Optional[float]): Line of sight angle of arrival.
         los_gains (np.array): Path gains for line of sight component in sample sequence, derived from rice factor
         non_los_gains (np.array): Path gains for non-line of sight in sample sequence, derived from rice factor
-        __transmit_precoding (np.ndarray): Precoding matrix for antenna streams before propagation.
-        __receive_postcoding (np.ndarray): Postcoding matrix for antenna streams after propagation.
         __doppler_frequency (float): Doppler frequency in Hz.
         __los_doppler_frequency (Optional[float]): Optional doppler frequency for the line of sight component.
         interpolate_signals (bool): Interpolate signals during time-delay modeling. Disabled by default.
@@ -103,8 +95,6 @@ class MultipathFadingChannel(Channel):
     __num_sinusoids: int
     __los_angle: Optional[float]
     los_gains: np.ndarray
-    __transmit_precoding: Optional[np.ndarray]
-    __receive_postcoding: Optional[np.ndarray]
     __doppler_frequency: float
     __los_doppler_frequency: Optional[float]
     interpolate_signals: bool
@@ -113,22 +103,12 @@ class MultipathFadingChannel(Channel):
                  delays: Union[np.ndarray, List[float]],
                  power_profile: Union[np.ndarray, List[float]],
                  rice_factors: Union[np.ndarray, List[float]],
-                 transmitter: Optional[Transmitter] = None,
-                 receiver: Optional[Receiver] = None,
-                 scenario: Optional[Scenario] = None,
-                 active: Optional[bool] = None,
-                 gain: Optional[float] = None,
-                 random_generator: Optional[rnd.Generator] = None,
                  num_sinusoids: Optional[float] = None,
                  los_angle: Optional[float] = None,
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
-                 transmit_precoding: Optional[np.ndarray] = None,
-                 receive_postcoding: Optional[np.ndarray] = None,
                  interpolate_signals: bool = None,
-                 sync_offset_low: float = 0.,
-                 sync_offset_high: float = 0.,
-                 impulse_response_interpolation: bool = True) -> None:
+                 **kwargs: Any) -> None:
         """Object initialization.
 
         Args:
@@ -168,11 +148,8 @@ class MultipathFadingChannel(Channel):
             doppler_frequency (float, optional):
                 Doppler frequency shift of the statistical distribution.
 
-            transmit_precoding (np.ndarray):
-                Transmit precoding matrix.
-
-            receive_postcoding (np.ndarray):
-                Receive postcoding matrix.
+            **kwargs (Any, optional):
+                Channel base class initialization parameters.
 
         Raises:
             ValueError:
@@ -206,16 +183,7 @@ class MultipathFadingChannel(Channel):
             raise ValueError("Rice factors must be greater or equal to zero")
 
         # Init base class
-        Channel.__init__(self,
-                         transmitter=transmitter,
-                         receiver=receiver,
-                         scenario=scenario,
-                         active=active,
-                         gain=gain,
-                         sync_offset_low=sync_offset_low,
-                         sync_offset_high=sync_offset_high,
-                         random_generator=random_generator,
-                         impulse_response_interpolation=impulse_response_interpolation)
+        Channel.__init__(self, **kwargs)
 
         # Sort delays
         sorting = np.argsort(delays)
@@ -223,28 +191,14 @@ class MultipathFadingChannel(Channel):
         self.__delays = self.__delays[sorting]
         self.__power_profile = self.__power_profile[sorting]
         self.__rice_factors = self.__rice_factors[sorting]
-        self.__num_sinusoids = 20
+        self.__num_sinusoids = 20 if num_sinusoids is None else num_sinusoids
         self.los_angle = los_angle
-        self.__transmit_precoding = None
-        self.__receive_postcoding = None
-        self.__doppler_frequency = 0.0
+        self.doppler_frequency = 0.0 if doppler_frequency is None else doppler_frequency
         self.__los_doppler_frequency = None
         self.interpolate_signals = interpolate_signals
 
-        if num_sinusoids is not None:
-            self.num_sinusoids = num_sinusoids
-
-        if doppler_frequency is not None:
-            self.doppler_frequency = doppler_frequency
-
         if los_doppler_frequency is not None:
             self.los_doppler_frequency = los_doppler_frequency
-
-        if transmit_precoding is not None:
-            self.transmit_precoding = transmit_precoding
-
-        if receive_postcoding is not None:
-            self.receive_postcoding = receive_postcoding
 
         # Infer additional parameters
         self.__max_delay = max(self.__delays)
@@ -336,82 +290,6 @@ class MultipathFadingChannel(Channel):
         self.__los_doppler_frequency = frequency
 
     @property
-    def transmit_precoding(self) -> Optional[np.ndarray]:
-        """Access transmit precoding matrix.
-
-        Returns:
-            Optional[np.ndarray]: Transmit precoding matrix, None if no matrix ix configured.
-        """
-
-        return self.__transmit_precoding
-
-    @transmit_precoding.setter
-    def transmit_precoding(self, matrix: Optional[np.ndarray]) -> None:
-        """Configure transmit precoding matrix.
-
-        Args:
-            matrix (Optional[np.ndarray]): New transmit precoding matrix.
-
-        Raises:
-            ValueError: If `matrix` is not a matrix (does not have two dimensions).
-            ValueError: If `matrix` is not positive definite or hermitian.
-        """
-
-        if matrix is None:
-
-            self.__transmit_precoding = None
-            return
-
-        if matrix.ndim != 2:
-            raise ValueError("Transmit precoding must be a matrix (an array with two dimensions)")
-
-        if not np.array_equal(matrix, matrix.conj().transpose()):
-            raise ValueError("Transmit precoding matrix must be hermitian")
-
-        if not np.all(np.linalg.eigvals(matrix) > 0):
-            raise ValueError("Transmit precoding matrix must be positive definite")
-
-        self.__transmit_precoding = matrix
-
-    @property
-    def receive_postcoding(self) -> Optional[np.ndarray]:
-        """Access receive postcoding matrix.
-
-        Returns:
-            Optional[np.ndarray]: Receive postcoding matrix, None if no matrix ix configured.
-        """
-
-        return self.__receive_postcoding
-    
-    @receive_postcoding.setter
-    def receive_postcoding(self, matrix: Optional[np.ndarray]) -> None:
-        """Configure receive postcoding matrix.
-
-        Args:
-            matrix (Optional[np.ndarray]): New receive postcoding matrix.
-
-        Raises:
-            ValueError: If `matrix` is not a matrix (does not have two dimensions).
-            ValueError: If `matrix` is not positive definite or hermitian.
-        """
-
-        if matrix is None:
-
-            self.__receive_postcoding = None
-            return
-
-        if matrix.ndim != 2:
-            raise ValueError("Receive postcoding must be a matrix (an array with two dimensions)")
-
-        if not np.array_equal(matrix, matrix.conj().transpose()):
-            raise ValueError("Receive postcoding matrix must be hermitian")
-
-        if not np.all(np.linalg.eigvals(matrix) > 0):
-            raise ValueError("Receive postcoding matrix must be positive definite")
-
-        self.__receive_postcoding = matrix
-
-    @property
     def max_delay(self) -> float:
         """Access the maximum multipath delay.
 
@@ -477,30 +355,12 @@ class MultipathFadingChannel(Channel):
 
         self.__los_angle = angle
 
-    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
-
-        propagated_signal = transmitted_signal.copy()
-
-        # Introduce transmit precoding
-        if self.__transmit_precoding is not None:
-            propagated_signal.samples = self.__transmit_precoding @ propagated_signal.samples
-
-        # Propagate over channel impulse response
-        propagated_signal, impulse_response = Channel.propagate(self, propagated_signal)
-
-        # ToDo: Should we consider the pre-and postcoding matrices in the impulse response?
-        # Currently, pre- and postcoding is not considered and will probably degrade channel equalization
-
-        # Introduce receive postcoding
-        if self.__receive_postcoding is not None:
-            propagated_signal.samples = self.__receive_postcoding @ propagated_signal.samples
-
-        return propagated_signal, impulse_response
-
-    def impulse_response(self, timestamps: np.ndarray, sampling_rate: float) -> np.ndarray:
+    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
 
         max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
-        impulse_response = np.zeros((len(timestamps),
+        timestamps = np.arange(num_samples) / sampling_rate
+
+        impulse_response = np.zeros((num_samples,
                                      self.receiver.num_antennas,
                                      self.transmitter.num_antennas,
                                      max_delay_in_samples + 1), dtype=complex)
@@ -532,16 +392,25 @@ class MultipathFadingChannel(Channel):
         Implements equation (18) of the underlying paper.
 
         Args:
-            timestamps (np.ndarray): Time instances at which the channel should be sampled.
-            los_gain (complex): Gain of the line-of-sight (specular) model component.
-            nlos_gain (complex): Gain of the non-line-of-sight model components.
+
+            timestamps (np.ndarray):
+                Time instances at which the channel should be sampled.
+
+            los_gain (complex):
+                Gain of the line-of-sight (specular) model component.
+
+            nlos_gain (complex):
+                Gain of the non-line-of-sight model components.
+
         Returns:
-            np.ndarray: Channel gains at requested timestamps.
+
+            np.ndarray:
+                Channel gains at requested timestamps.
         """
 
         nlos_doppler = self.doppler_frequency
-        nlos_angles = self.random_generator.uniform(0, 2*pi, self.num_sinusoids)
-        nlos_phases = self.random_generator.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_angles = self._rng.uniform(0, 2*pi, self.num_sinusoids)
+        nlos_phases = self._rng.uniform(0, 2*pi, self.num_sinusoids)
 
         nlos_component = np.zeros(len(timestamps), dtype=complex)
         for s in range(self.num_sinusoids):
@@ -555,10 +424,10 @@ class MultipathFadingChannel(Channel):
             los_angle = self.los_angle
 
         else:
-            los_angle = self.random_generator.uniform(0, 2*pi)
+            los_angle = self._rng.uniform(0, 2*pi)
 
         los_doppler = self.los_doppler_frequency
-        los_phase = self.random_generator.uniform(0, 2*pi)
+        los_phase = self._rng.uniform(0, 2*pi)
         los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
         return los_component + nlos_component
 
@@ -602,7 +471,8 @@ class MultipathFadingChannel(Channel):
         return filter_instances
 
     @classmethod
-    def to_yaml(cls: Type[MultipathFadingChannel], representer: SafeRepresenter,
+    def to_yaml(cls: Type[MultipathFadingChannel],
+                representer: SafeRepresenter,
                 node: MultipathFadingChannel) -> MappingNode:
         """Serialize a channel object to YAML.
 
@@ -628,17 +498,12 @@ class MultipathFadingChannel(Channel):
             'los_angle': node.los_angle,
             'doppler_frequency': node.doppler_frequency,
             'los_doppler_frequency': node.los_doppler_frequency,
-            'transmit_precoding': node.transmit_precoding,
-            'receive_postcoding': node.receive_postcoding,
             'interpolate_signals': node.interpolate_signals,
             'sync_offset_low': node.sync_offset_low,
             'sync_offset_high': node.sync_offset_high
         }
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[MultipathFadingChannel],
@@ -647,6 +512,7 @@ class MultipathFadingChannel(Channel):
         """Recall a new `MultipathFadingChannel` instance from YAML.
 
         Args:
+
             constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
@@ -654,21 +520,18 @@ class MultipathFadingChannel(Channel):
                 YAML node representing the `MultipathFadingChannel` serialization.
 
         Returns:
+
             MultipathFadingChannel:
-                Newly created `MultipathFadingChannel` instance. The internal references to modems will be `None` and need to be
+                Newly created `MultipathFadingChannel` instance.
+                The internal references to modems will be `None` and need to be
                 initialized by the `scenario` YAML constructor.
 
         """
 
         state = constructor.construct_mapping(node)
 
-        seed = state.pop('seed', None)
-        power_profile = state.pop('power_profile', None)
-
-        if seed is not None:
-            state['random_generator'] = rnd.default_rng(seed)
-
         # Convert power profile from dB to linear
+        power_profile = state.pop('power_profile', None)
         if power_profile is not None:
             state['power_profile'] = 10 ** (np.array(power_profile) / 10)
 

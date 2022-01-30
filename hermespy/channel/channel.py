@@ -1,33 +1,35 @@
 # -*- coding: utf-8 -*-
-"""Channel model for wireless transmission links."""
+"""
+================
+Channel Modeling
+================
+"""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Tuple, Type
-from itertools import product
+from typing import List, Optional, Tuple, Type, Union
+from itertools import chain, product
 
 import numpy as np
-import numpy.random as rnd
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from ruamel.yaml import SafeRepresenter, MappingNode
 
-from .channel_state_information import ChannelStateFormat, ChannelStateInformation
-from hermespy.signal import Signal
-
-if TYPE_CHECKING:
-    from hermespy.scenario import Scenario
-    from hermespy.modem import Transmitter, Receiver
+from ..core import RandomNode
+from ..core.device import Device
+from ..core.factory import SerializableArray
+from ..core.signal_model import Signal
+from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel:
-    """Implements an ideal distortion-less channel.
+class Channel(SerializableArray, RandomNode):
+    """An ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
 
@@ -38,71 +40,35 @@ class Channel:
     a random number generator, given by `rnd` may be needed. The sampling rate is
     the same at both input and output of the channel, and is given by `sampling_rate`
     samples/second.
-
-    Attributes:
-
-        __active (bool):
-            Flag enabling signal propagation over this specific channel.
-            Enabled by default, may be disabled to easily debug scenarios.
-
-        __transmitter (Optional[Transmitter]):
-            Handle to the wireless modem transmitting into this channel.
-            If set to `None`, this channel instance is considered floating.
-
-        __receiver (Optional[Receiver]):
-            Handle to the wireless modem receiving from this channel.
-            If set to `None`, this channel instance is considered floating.
-
-        __gain (float):
-            Linear factor by which signals propagated over this channel will be scaled.
-            1.0 by default, i.e. no free-space propagation losses are considered in the default channel.
-
-        __random_generator (Optional[numpy.random.Generator]):
-            Random generator object used to generate pseudo-random number sequences for this channel instance.
-            If set to `None`, the channel will instead access the random generator of `scenario`.
-
-        __scenario (Optional[Scenario]):
-            HermesPy scenario description this channel belongs to.
-            If set to `None`, this channel instance is considered floating.
-
-        impulse_response_interpolation (bool):
-            Allow for the impulse response to be resampled and interpolated.
     """
 
-    yaml_tag = u'Channel'
+    yaml_tag: str = u'Channel'
     yaml_matrix = True
     __active: bool
-    __transmitter: Optional[Transmitter]
-    __receiver: Optional[Receiver]
+    __transmitter: Optional[Device]
+    __receiver: Optional[Device]
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
-    __random_generator: Optional[rnd.Generator]
-    __scenario: Optional[Scenario]
     impulse_response_interpolation: bool
 
     def __init__(self,
-                 transmitter: Optional[Transmitter] = None,
-                 receiver: Optional[Receiver] = None,
-                 scenario: Optional[Scenario] = None,
+                 transmitter: Optional[Device] = None,
+                 receiver: Optional[Device] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: float = 0.,
                  sync_offset_high: float = 0.,
-                 random_generator: Optional[rnd.Generator] = None,
-                 impulse_response_interpolation: bool = True
-                 ) -> None:
-        """Channel model initialization.
-
+                 impulse_response_interpolation: bool = True,
+                 seed: Optional[int] = None) -> None:
+        """
         Args:
+
             transmitter (Transmitter, optional):
                 The modem transmitting into this channel.
 
             receiver (Receiver, optional):
                 The modem receiving from this channel.
-
-            scenario (Scenario, optional):
-                Scenario this channel is attached to.
 
             active (bool, optional):
                 Channel activity flag.
@@ -118,12 +84,17 @@ class Channel:
             sync_offset_high (float, optional):
                 Maximum synchronization error in seconds.
 
-            random_generator (rnd.Generator, optional):
-                Generator object for random number sequences.
-
             impulse_response_interpolation (bool, optional):
                 Allow the impulse response to be interpolated during sampling.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
+
+        # Initialize base classes
+        SerializableArray.__init__(self)        # Must be first in order for correct diamond resolve
+        RandomNode.__init__(self, seed=seed)
+
         # Default parameters
         self.__active = True
         self.__transmitter = None
@@ -134,9 +105,6 @@ class Channel:
         self.sync_offset_high = sync_offset_high
         self.recent_response = None
         self.impulse_response_interpolation = impulse_response_interpolation
-
-        self.random_generator = random_generator
-        self.scenario = scenario
 
         if transmitter is not None:
             self.transmitter = transmitter
@@ -149,12 +117,6 @@ class Channel:
 
         if gain is not None:
             self.gain = gain
-
-        self._verify_sync_offsets()
-
-    def _verify_sync_offsets(self):
-        if not (self.sync_offset_low <= self.sync_offset_high):
-            raise ValueError("Lower bound of uniform distribution must be smaller than higher bound.")
 
     @property
     def active(self) -> bool:
@@ -179,56 +141,48 @@ class Channel:
         self.__active = active
 
     @property
-    def transmitter(self) -> Transmitter:
-        """Access the modem transmitting into this channel.
+    def transmitter(self) -> Device:
+        """Device transmitting into this channel.
 
         Returns:
             Transmitter: A handle to the modem transmitting into this channel.
-        """
-
-        return self.__transmitter
-
-    @transmitter.setter
-    def transmitter(self, new_transmitter: Transmitter) -> None:
-        """Configure the modem transmitting into this channel.
-
-        Args:
-            new_transmitter (Transmitter): The transmitter to be configured.
 
         Raises:
             RuntimeError: If a transmitter is already configured.
         """
 
+        return self.__transmitter
+
+    @transmitter.setter
+    def transmitter(self, value: Device) -> None:
+        """Set the device transmitting into this channel."""
+
         if self.__transmitter is not None:
             raise RuntimeError("Overwriting a transmitter configuration is not supported")
 
-        self.__transmitter = new_transmitter
+        self.__transmitter = value
 
     @property
-    def receiver(self) -> Receiver:
-        """Access the modem receiving from this channel.
+    def receiver(self) -> Device:
+        """Device receiving from this channel.
 
         Returns:
-            Receiver: A handle to the modem receiving from this channel.
-        """
-
-        return self.__receiver
-
-    @receiver.setter
-    def receiver(self, new_receiver: Receiver) -> None:
-        """Configure the modem receiving from this channel.
-
-        Args:
-            new_receiver (Receiver): The receiver to be configured.
+            Receiver: A handle to the device receiving from this channel.
 
         Raises:
             RuntimeError: If a receiver is already configured.
         """
 
+        return self.__receiver
+
+    @receiver.setter
+    def receiver(self, value: Device) -> None:
+        """Set the device receiving from this channel."""
+
         if self.__receiver is not None:
             raise RuntimeError("Overwriting a receiver configuration is not supported")
 
-        self.__receiver = new_receiver
+        self.__receiver = value
 
     @property
     def sync_offset_low(self) -> float:
@@ -312,72 +266,6 @@ class Channel:
             raise ValueError("Channel gain must be greater or equal to zero")
 
         self.__gain = value
-        
-    @property
-    def random_generator(self) -> rnd.Generator:
-        """Access the random number generator assigned to this channel.
-
-        This property will return the scenarios random generator if no random generator has been specifically set.
-
-        Returns:
-            numpy.random.Generator: The random generator.
-
-        Raises:
-            RuntimeError: If trying to access the random generator of a floating channel.
-        """
-
-        if self.__random_generator is not None:
-            return self.__random_generator
-
-        if self.__scenario is None:
-            raise RuntimeError("Trying to access the random generator of a floating channel")
-
-        return self.scenario.random_generator
-
-    @random_generator.setter
-    def random_generator(self, generator: Optional[rnd.Generator]) -> None:
-        """Modify the configured random number generator assigned to this channel.
-
-        Args:
-            generator (Optional[numpy.random.generator]): The random generator. None if not specified.
-        """
-
-        self.__random_generator = generator
-        
-    @property
-    def scenario(self) -> Scenario:
-        """Access the scenario this channel is attached to.
-
-        Returns:
-            Scenario:
-                The referenced scenario.
-
-        Raises:
-            RuntimeError: If the channel is currently floating.
-        """
-
-        if self.__scenario is None:
-            raise RuntimeError("Error trying to access the scenario of a floating channel")
-
-        return self.__scenario
-
-    @scenario.setter
-    def scenario(self, scenario: Scenario) -> None:
-        """Attach the channel to a specific scenario.
-
-        This can only be done once to a floating channel.
-
-        Args:
-            scenario (Scenario): The scenario this channel should be attached to.
-
-        Raises:
-            RuntimeError: If the channel is already attached to a scenario.
-        """
-
-        if self.__scenario is not None:
-            raise RuntimeError("Error trying to modify the scenario of an already attached channel")
-
-        self.__scenario = scenario
 
     @property
     def num_inputs(self) -> int:
@@ -417,38 +305,44 @@ class Channel:
 
         return self.__receiver.num_antennas
 
-    @property
-    def indices(self) -> Tuple[int, int]:
-        """The indices of this channel within the scenarios channel matrix.
-
-        Returns:
-            int:
-                Transmitter index.
-            int:
-                Receiver index.
-        """
-
-        return self.__transmitter.index, self.__receiver.index
-
-    def propagate(self, transmitted_signal: Signal) -> Tuple[Signal, ChannelStateInformation]:
-        """Modifies the input signal and returns it after channel propagation.
+    def propagate(self,
+                  forwards: Union[Signal, List[Signal], None] = None,
+                  backwards: Union[Signal, List[Signal], None] = None) -> \
+            Tuple[List[Signal], List[Signal], ChannelStateInformation]:
+        """Propagate radio-frequency band signals over a channel instance.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of ones.
         The routine samples a new impulse response, which will be converted to ChannelStateInformation.
 
         Args:
 
-            transmitted_signal (Signal):
-                Radio-Frequency band antenna signals to be propagated of this channel instance.
+            forwards (Union[Signal, List[Signal]], optional):
+                Signal models emitted by `device_alpha` associated with this wireless channel model.
+
+            backwards (Union[Signal, List[Signal]], optional):
+                Signal models emitted by `device_beta` associated with this wireless channel model.
 
         Returns:
-            (Signal, ChannelStateInformation):
-                Tuple of the distorted signal after propagation and the respective channel state.
-                Note that the channel may append samples to the propagated signal.
+
+            Tuple[List[Signal], List[Signal], ChannelStateInformation]:
+
+                forwards_receptions (List[Signal]):
+                    Signal models impinging onto `device_beta` after channel propagation.
+
+                backwards_receptions (List[Signal]):
+                    Signal models impinging onto `device_alpha` after channel propagation.
+
+                csi (ChannelStateInformation):
+                    State of the channel during signal propagation.
+
         Raises:
 
             ValueError:
-                If the number of streams in `transmitted_signal` is not one or the number of transmitting antennas.
+                If the number of streams in `forwards` is not one
+                or the number of antennas in `device_alpha`.
+                If the number of streams in `backwards` is not one
+                or the number of antennas in `device_beta`.
+
 
             RuntimeError:
                 If the scenario configuration is not supported by the default channel model.
@@ -457,49 +351,100 @@ class Channel:
                 If the channel is currently floating.
         """
 
+        # Convert forwards and backwards transmissions to lists if required
+        forwards = [] if forwards is None else forwards
+        backwards = [] if backwards is None else backwards
+        forwards = [forwards] if isinstance(forwards, Signal) else forwards
+        backwards = [backwards] if isinstance(backwards, Signal) else backwards
+
+        # Abort if the channel is considered floating, since physical device properties are required for
+        # channel modeling
         if self.transmitter is None or self.receiver is None:
             raise RuntimeError("Channel is floating, making propagation simulation impossible")
 
-        if transmitted_signal.num_streams != self.transmitter.num_antennas:
-            raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+        # Validate that the signal models contain the correct number of streams
+        for signal in forwards:
+            if signal.num_streams != self.transmitter.num_antennas:
+                raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+
+        for signal in backwards:
+            if signal.num_streams != self.receiver.num_antennas:
+                raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+
+        # Determine the sampling rate and sample count of the CSI samples
+        # For now, the sampling rate and sample count is the maximum over all provided signal models
+        csi_sampling_rate = 0.
+        csi_num_samples = 0
+        for signal in chain(forwards, backwards):
+
+            csi_sampling_rate = max(csi_sampling_rate, signal.sampling_rate)
+            csi_num_samples = max(csi_num_samples, signal.num_samples)
 
         # If the channel is inactive, propagation will result in signal loss
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
-            return (Signal.empty(transmitted_signal.sampling_rate),
-                    ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0))
+            return [], [], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
 
         # Generate the channel's impulse response
-        impulse_response = self.impulse_response(transmitted_signal.timestamps, transmitted_signal.sampling_rate)
+        impulse_response = self.impulse_response(csi_num_samples, csi_sampling_rate)
 
         # Consider the a random synchronization offset between transmitter and receiver
-        sync_offset: float = self.random_generator.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
+        sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
-        # The maximum delay in samples is modeled by the last impulse response dimension
-        num_delay_samples = impulse_response.shape[3] - 1
+        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), impulse_response, sync_offset)
+                               for signal in forwards]
+        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate),
+                                               impulse_response.transpose((0, 2, 1, 3)), sync_offset)
+                                for signal in backwards]
 
-        # Propagate the signal
-        received_samples = np.zeros((self.receiver.num_antennas,
-                                    transmitted_signal.num_samples + num_delay_samples), dtype=complex)
-
-        for delay_index in range(num_delay_samples+1):
-            for tx_idx, rx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
-
-                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] *\
-                                 transmitted_signal.samples[tx_idx, :]
-                received_samples[rx_idx, delay_index:delay_index+transmitted_signal.num_samples] += delayed_signal
-
-        propagated_signal = Signal(received_samples,
-                                   transmitted_signal.sampling_rate,
-                                   carrier_frequency=transmitted_signal.carrier_frequency,
-                                   delay=transmitted_signal.delay+sync_offset)
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
                                                 impulse_response.transpose((1, 2, 0, 3)))
 
-        return propagated_signal, channel_state
+        return forwards_receptions, backwards_receptions, channel_state
+
+    @staticmethod
+    def Propagate(signal: Signal,
+                  impulse_response: np.ndarray,
+                  delay: float) -> Signal:
+        """Propagate a single signal model given a specific channel impulse response.
+
+        Args:
+
+            signal (Signal):
+                Signal model to be propagated.
+
+            impulse_response (np.ndarray):
+                The impulse response by which to propagate the signal model.
+
+            delay (float):
+                Additional delays, for example synchronization offsets.
+
+        Returns:
+
+            propagated_signal (Signal):
+                Propagated signal model.
+        """
+
+        # The maximum delay in samples is modeled by the last impulse response dimension
+        num_delay_samples = impulse_response.shape[3] - 1
+        num_tx_streams = impulse_response.shape[2]
+        num_rx_streams = impulse_response.shape[1]
+
+        # Propagate the signal
+        propagated_samples = np.zeros((impulse_response.shape[1],
+                                       signal.num_samples + num_delay_samples), dtype=complex)
+
+        for delay_index in range(num_delay_samples+1):
+            for tx_idx, rx_idx in product(range(num_tx_streams), range(num_rx_streams)):
+
+                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
+                propagated_samples[rx_idx, delay_index:delay_index+signal.num_samples] += delayed_signal
+
+        return Signal(propagated_samples, sampling_rate=signal.sampling_rate,
+                      carrier_frequency=signal.carrier_frequency, delay=signal.delay+delay)
 
     def impulse_response(self,
-                         timestamps: np.ndarray,
+                         num_samples: int,
                          sampling_rate: float) -> np.ndarray:
         """Sample a new channel impulse response.
 
@@ -507,8 +452,8 @@ class Channel:
 
         Args:
 
-            timestamps (np.ndarray):
-                Time instants with length `T` to calculate the response for.
+            num_samples (int):
+                Number of samples within the impulse response.
 
             sampling_rate (float):
                 The rate at which the delay taps will be sampled, i.e. the delay resolution.
@@ -527,17 +472,17 @@ class Channel:
         # MISO case
         if self.receiver.num_antennas == 1:
             impulse_responses = np.tile(np.ones((1, self.transmitter.num_antennas), dtype=complex),
-                                        (timestamps.size, 1, 1))
+                                        (num_samples, 1, 1))
 
         # SIMO case
         elif self.transmitter.num_antennas == 1:
             impulse_responses = np.tile(np.ones((self.receiver.num_antennas, 1), dtype=complex),
-                                        (timestamps.size, 1, 1))
+                                        (num_samples, 1, 1))
 
         # MIMO case
         else:
             impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas,
-                                               dtype=complex), (timestamps.size, 1, 1))
+                                               dtype=complex), (num_samples, 1, 1))
 
         # Scale by channel gain and add dimension for delay response
         impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
@@ -583,37 +528,4 @@ class Channel:
             'sync_offset_high': node.__sync_offset_high
         }
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
-
-    @classmethod
-    def from_yaml(cls: Type[Channel], constructor: SafeConstructor,  node: MappingNode) -> Channel:
-        """Recall a new `Channel` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Channel` serialization.
-
-        Returns:
-            Channel:
-                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
-                initialized by the `scenario` YAML constructor.
-
-        """
-
-        # Handle empty yaml nodes
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        state = constructor.construct_mapping(node)
-
-        seed = state.pop('seed', None)
-        if seed is not None:
-            state['random_generator'] = rnd.default_rng(seed)
-
-        return cls(**state)
+        return representer.represent_mapping(cls.yaml_tag, state)

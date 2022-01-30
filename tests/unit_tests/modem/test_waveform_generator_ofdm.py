@@ -11,6 +11,7 @@ from numpy.random import default_rng
 from scipy.constants import pi
 
 from hermespy.channel import ChannelStateInformation
+from hermespy.modem.modem import Symbols
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
 from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection
 
@@ -398,11 +399,11 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a data frame should yield identical symbols."""
 
-        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
-                            np.arange(1, 1 + self.generator.symbols_per_frame))
+        expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
+                                   np.arange(1, 1 + self.generator.symbols_per_frame))
 
         baseband_signal = self.generator.modulate(expected_symbols)
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        assert_array_almost_equal(expected_symbols, symbols)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw)

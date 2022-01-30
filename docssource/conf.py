@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../h
 # -- Project information -----------------------------------------------------
 
 project = 'HermesPy'
-copyright = '2020, Barkhausen Institut gGmbH'
+copyright = '2021, Barkhausen Institut gGmbH'
 author = 'Barkhausen Institut gGmbH'
 
 

@@ -6,8 +6,8 @@ from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
 import numpy as np
 
+from hermespy.core.factory import Serializable
 from hermespy.coding import Encoder
-
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -19,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class BlockInterleaver(Encoder):
+class BlockInterleaver(Encoder, Serializable):
     """A bit block interleaving encoder.
 
     Attributes:
