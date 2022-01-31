@@ -37,8 +37,8 @@ Channel and Interference Model
 ------------------------------
 
 * Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading
-* COST-259 macrocell model :cite:p:`3gpp_tr25_943`
-* 5G TDL model :cite:p:`3gpp_tr38_901`
+* COST-259 macrocell model :cite:p:`2004:3GPP:TR25943`
+* 5G TDL model :cite:p:`2017:3GPP:TR38901`
 * MIMO support with antenna correlation, following Kronecker model
 * Interface to `Quadriga <https://quadriga-channel-model.de/>`_ channel model (requires Matlab or Octave)
 * Interference among different modems, with arbitrary transmit powers for different transmitters
