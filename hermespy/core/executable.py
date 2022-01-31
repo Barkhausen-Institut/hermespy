@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""HermesPy base for executable configurations."""
+"""
+===========
+Executable
+===========
+
+HermesPy base for executable configurations.
+"""
 
 from __future__ import annotations
 import os.path as path
@@ -16,7 +22,7 @@ import matplotlib.pyplot as plt
 from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

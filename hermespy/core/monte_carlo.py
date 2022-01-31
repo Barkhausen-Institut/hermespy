@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Monte Carlo Simulation on Python Ray."""
+"""
+=======
+PyMonte
+=======
+"""
 
 from __future__ import annotations
 from abc import abstractmethod, ABC

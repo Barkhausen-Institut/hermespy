@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""HermesPy Signal Model."""
+"""
+===============
+Signal Modeling
+===============
+"""
 
 from __future__ import annotations
 from copy import deepcopy
