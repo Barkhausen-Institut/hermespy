@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../h
 # -- Project information -----------------------------------------------------
 
 project = 'HermesPy'
-copyright = '2020, Barkhausen Institut gGmbH'
+copyright = '2022, Barkhausen Institut gGmbH'
 author = 'Barkhausen Institut gGmbH'
 
 
@@ -35,7 +35,6 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
     'sphinx_autodoc_typehints',
-    'sphinx.ext.autosummary',
     'sphinx_rtd_dark_mode',
     'sphinx_tabs.tabs',
 ]

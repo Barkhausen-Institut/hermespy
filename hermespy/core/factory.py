@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""HermesPy serialization factory.
+"""
+=====================
+Serialization Factory
+=====================
 
 This module implements the main interface for loading and dumping HermesPy configurations.
 
