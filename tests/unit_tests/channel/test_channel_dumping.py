@@ -16,7 +16,7 @@ def create_section_yaml_str(section: str) -> str:
 
 def create_channel_yaml_str(tx: int, rx: int) -> str:
     return f"""
-  - Channel {tx} {rx}
+  - !<Channel_{tx}_{rx}>
     active: true
 
 """
