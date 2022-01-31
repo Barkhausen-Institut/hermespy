@@ -680,9 +680,14 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
                 signals.append(signal)
 
         if clear_cache:
-            self.__signals = [None for _ in self.__iter__()]
+            self.clear_cache()
 
         return signals
+
+    def clear_cache(self) -> None:
+        """Clear the cached transmission of all registered transmit operators."""
+
+        self.__signals = [None for _ in self.__iter__()]
 
 
 class ReceiverSlot(OperatorSlot[Receiver]):

@@ -10,9 +10,6 @@ import numpy as np
 
 from hermespy.modem.bits_source import RandomBitsSource, StreamBitsSource
 
-
-
-
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
