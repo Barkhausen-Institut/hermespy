@@ -1,0 +1,3 @@
+.. automodule:: coding.scrambler
+
+.. footbibliography::

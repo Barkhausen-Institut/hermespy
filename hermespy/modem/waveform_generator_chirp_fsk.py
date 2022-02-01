@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Chirp Frequency Shift Keying Waveform Generator."""
+"""
+============================
+Chirp Frequency Shift Keying
+============================
+"""
 
 from __future__ import annotations
 from typing import Optional, Tuple, Type

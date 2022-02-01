@@ -1,0 +1,3 @@
+.. automodule:: channel.channel
+
+.. footbibliography::

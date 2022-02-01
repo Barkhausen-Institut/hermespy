@@ -7,7 +7,7 @@ Power Amplifier Modeling
 Power amplification modeling represents a single processing step within the radio-frequency hardware model of
 transmitting modems.
 
-.. autoclasstree:: hermespy.modem.rf_chain_models.power_amplifier
+.. autoclasstree:: hermespy.simulation.rf_chain.power_amplifier
    :strict:
    :full:
 
@@ -32,7 +32,7 @@ from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter, RoundTripConst
 from ruamel.yaml.constructor import ConstructorError
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

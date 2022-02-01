@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""LDPC Encoding."""
+"""
+===============================
+Low Differential Parity Checks
+===============================
+"""
 
 from __future__ import annotations
 from typing import Tuple, Set, Optional, Type

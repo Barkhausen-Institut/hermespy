@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Bit scrambling encoders."""
+"""
+==========
+Scrambling
+==========
+"""
 
 from __future__ import annotations
 from collections import deque

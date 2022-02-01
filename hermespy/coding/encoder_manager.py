@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Encoder Manager."""
+"""
+=============
+Bit Encoding
+=============
+"""
 
 from __future__ import annotations
 from math import ceil

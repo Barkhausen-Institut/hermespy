@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=======================================
-Hardware Radio Frequency Chain Modeling
-=======================================
+==============================
+Radio Frequency Chain Modeling
+==============================
 """
 
 
@@ -16,7 +16,7 @@ from hermespy.core.signal_model import Signal
 from .power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
