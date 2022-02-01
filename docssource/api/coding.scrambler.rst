@@ -1,3 +1,3 @@
-.. automodule:: coding.scrambler
+.. automodule:: hermespy.coding.scrambler
 
 .. footbibliography::

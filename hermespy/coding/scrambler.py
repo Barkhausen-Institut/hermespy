@@ -16,7 +16,7 @@ from hermespy.core.factory import Serializable
 from .encoder import Encoder
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
@@ -28,7 +28,7 @@ __status__ = "Prototype"
 class PseudoRandomGenerator:
     """A rng for pseudo-random bit sequences.
 
-    See also TS 138 211 section 5.2.1 for details.
+    See also :footcite:t:`2018:ts138211` for further details.
     """
 
     __queue_x1: deque
@@ -128,7 +128,7 @@ class PseudoRandomGenerator:
 class Scrambler3GPP(Encoder, Serializable):
     """This class represents a scrambler in the physical up- and down-link channel of the 3GPP.
 
-    See section 7.3.1.1 of the respective technical standard TS 138 211 for details.
+    See section 7.3.1.1 of the respective technical standard :footcite:t:`2018:ts138211` for details.
 
     Attributes:
 
@@ -221,9 +221,9 @@ class Scrambler3GPP(Encoder, Serializable):
 
 
 class Scrambler80211a(Encoder, Serializable):
-    """This class represents a scrambler in the `802.11a`_ standard.
+    """This class represents a scrambler in the `802.11a` standard.
 
-    Refer to section 17.3.5.4 of :cite:p:`80211a:1999` for further details.
+    Refer to section 17.3.5.4 of :footcite:t:`80211a:1999` for further details.
     """
 
     factory_tag: str = "SCRAMBLER_80211A"
