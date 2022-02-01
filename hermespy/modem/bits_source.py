@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Source of bit streams to be transmitted."""
+"""
+==========
+Bit Source
+==========
+"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod

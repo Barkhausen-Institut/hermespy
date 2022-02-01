@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
+"""
+==========================================
+Orthogonal Frequency Division Multiplexing
+==========================================
+"""
 
 from __future__ import annotations
 from typing import List, Tuple, Optional, Type, Union, Any

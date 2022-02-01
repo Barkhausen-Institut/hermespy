@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Cyclic Redundancy Check bit encoding."""
+"""
+========================
+Cyclic Redundancy Checks
+========================
+"""
 
 from __future__ import annotations
 from typing import Type

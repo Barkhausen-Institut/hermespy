@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Multipath Fading Channel Model."""
+"""
+=================
+Multipath Fading
+=================
+"""
 
 from __future__ import annotations
 from itertools import product
@@ -48,21 +52,13 @@ class MultipathFadingChannel(Channel):
     They both must be Hermitian, positive definite square matrices.
 
     Rayleigh/Rice fading and uncorrelated scattering is considered. Fading follows Jakes'
-    Doppler spectrum, using the simulation approach from:
-
-        `C. Xiao, Zheng, Y. and Beaulieu, N. "Novel sum-of-sinusoids simulation models for
-        rayleigh and rician fading channels. IEEE Trans. Wireless Comm., 5(12), 2006`
-
+    Doppler spectrum, using the simulation approach from :footcite:t:`2006:xiao`,
     which is based on the sum of sinusoids with random phases.
 
     If the delays are not multiple of the sampling interval, then sinc-based interpolation is
     considered.
 
-    Antenna correlation considers the Kronecker model, as described in:
-
-        K. Yu, M. Bengtsson, B. Ottersten, D. McNamara, P. Karlsson, and M. Beach, “A wideband
-        statistical model for NLOS indoor MIMO channels,” IEEE Veh. Technol. Conf.
-        (VTC - Spring), 2002
+    Antenna correlation considers the Kronecker model, as described in :footcite:t:`2002:yu`.
 
     The channel will provide 'number_rx_antennas' outputs to a signal
     consisting of 'number_tx_antennas' inputs. A random number generator,

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation."""
+"""
+====================================================
+Phase Shift Keying / Quadrature Amplitude Modulation
+====================================================
+"""
 
 from __future__ import annotations
 from abc import ABC
@@ -21,7 +25,7 @@ from .symbols import Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

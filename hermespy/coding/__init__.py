@@ -4,6 +4,7 @@ from .block_interleaver import BlockInterleaver
 from .cyclic_redundancy_check import CyclicRedundancyCheck
 from .repetition_encoder import RepetitionEncoder
 from .scrambler import Scrambler3GPP, Scrambler80211a
+from .turbo import RSC
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -26,4 +27,4 @@ except ImportError:
     warnings.warn("LDPC C++ binding could not be imported, falling back to slower Python LDPC implementation")
 
 __all__ = ['Encoder', 'EncoderManager', 'BlockInterleaver', 'LDPC', 'RepetitionEncoder', 'Scrambler80211a',
-           'Scrambler3GPP', 'CyclicRedundancyCheck']
+           'Scrambler3GPP', 'CyclicRedundancyCheck', 'RSC']

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Modem evaluators."""
+"""
+========================
+Communication Evaluators
+========================
+"""
 
 from __future__ import annotations
 from abc import ABC

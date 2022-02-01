@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Noise model base class."""
+"""
+================
+Noise Model Base
+================
+"""
 
 from __future__ import annotations
 from abc import abstractmethod
@@ -12,10 +16,10 @@ from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter, SafeConstructo
 from hermespy.core import RandomNode
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

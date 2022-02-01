@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Interleaving Encoder."""
+"""
+============
+Interleaving
+============
+"""
 
 from __future__ import annotations
 from typing import Type
@@ -10,7 +14,7 @@ from hermespy.core.factory import Serializable
 from hermespy.coding import Encoder
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

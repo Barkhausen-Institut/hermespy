@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Precoding step of communication symbols."""
+"""
+===================
+Precoding Step Base
+===================
+"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -13,7 +17,7 @@ from . import SymbolPrecoding
 from hermespy.channel import ChannelStateInformation
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Repetition Encoder."""
+"""
+==================
+Repetition Coding
+==================
+"""
 
 from __future__ import annotations
 from typing import Type
