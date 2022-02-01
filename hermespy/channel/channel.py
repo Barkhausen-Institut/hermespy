@@ -19,7 +19,7 @@ from ..core.signal_model import Signal
 from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
