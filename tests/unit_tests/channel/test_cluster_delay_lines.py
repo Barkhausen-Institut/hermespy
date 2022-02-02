@@ -6,6 +6,10 @@
 """
 
 from unittest import TestCase
+from unittest.mock import Mock
+
+import numpy as np
+from numpy.random import default_rng
 
 from hermespy.channel.cluster_delay_lines import ClusterDelayLine
 
@@ -23,6 +27,14 @@ class ClusterDelayLineMock(ClusterDelayLine):
     """Mock of the abstract cluster delay line base class"""
 
     @property
+    def aod_spread_mean(self) -> float:
+        return 1.21
+
+    @property
+    def aod_spread_std(self) -> float:
+        return .41
+
+    @property
     def aoa_spread_mean(self) -> float:
         return 1.73
 
@@ -31,12 +43,32 @@ class ClusterDelayLineMock(ClusterDelayLine):
         return 0.28
 
     @property
-    def aod_spread_mean(self) -> float:
-        return 1.21
+    def zoa_spread_mean(self) -> float:
+        return .73
 
     @property
-    def aod_spread_std(self) -> float:
-        return .41
+    def zoa_spread_std(self) -> float:
+        return .34
+
+    @property
+    def cluster_azimuth_spread_departure(self) -> float:
+        return 3.
+
+    @property
+    def cluster_azimuth_spread_arrival(self) -> float:
+        return 17.
+
+    @property
+    def cluster_zenith_spread_arrival(self) -> float:
+        return 7.
+
+    @property
+    def cross_polarization_power_mean(self) -> float:
+        return 9.
+
+    @property
+    def cross_polarization_power_std(self) -> float:
+        return 3.
 
 
 class TestClusterDelayLine(TestCase):
@@ -44,13 +76,33 @@ class TestClusterDelayLine(TestCase):
 
     def setUp(self) -> None:
 
+        self.rng = default_rng(42)
+        self.random_node = Mock()
+        self.random_node._rng = self.rng
+
         self.num_clusters = 10
         self.delay_spread = 11e-9
         self.delay_scaling = 1.1
+        self.carrier_frequency = 1e9
+
+        self.receiver = Mock()
+        self.receiver.num_antennas = 1
+        self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
+        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
+        self.receiver.carrier_frequency = self.carrier_frequency
+
+        self.transmitter = Mock()
+        self.transmitter.num_antennas = 1
+        self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
+        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
+        self.transmitter.carrier_frequency = 1e9
 
         self.channel = ClusterDelayLineMock(num_clusters=self.num_clusters,
                                             delay_spread=self.delay_spread,
-                                            delay_scaling=self.delay_scaling)
+                                            delay_scaling=self.delay_scaling,
+                                            receiver=self.receiver,
+                                            transmitter=self.transmitter)
+        self.channel.random_mother = self.random_node
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
@@ -184,6 +236,10 @@ class TestClusterDelayLine(TestCase):
         except ValueError:
             self.fail()
 
-    def test_xxx(self):
+    def test_impulse_response(self):
 
-        self.channel.xxxx()
+        num_samples = 5000
+        sampling_rate = 5e8
+
+        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        return

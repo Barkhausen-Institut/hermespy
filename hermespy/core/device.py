@@ -927,6 +927,18 @@ class Device(ABC, RandomNode):
 
         return self.__topology.shape[0]
 
+
+    @property
+    def antenna_positions(self) -> np.ndarray:
+        """Global positions of the antenna array elements.
+
+        Returns:
+            np.ndarray:
+                Matrix of dimension `num_antennas x 3`.
+        """
+
+        return self.topology + self.position
+
     @property
     def max_frame_duration(self) -> float:
         """Maximum frame duration transmitted by this device.
