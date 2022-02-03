@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Type, Optional, Union, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
@@ -49,6 +50,12 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
     snr_type: SNRType
     """Global type of signal to noise ratio."""
 
+    plot_results: bool
+    """Plot results after simulation runs"""
+
+    dump_results: bool
+    """Dump results to files after simulation runs."""
+
     __channels: np.ndarray
     __operators: List[Operator]
     __snr: Optional[float]
@@ -57,6 +64,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                  num_samples: int = 100,
                  drop_duration: float = 0.,
                  plot_results: bool = False,
+                 dump_results: bool = True,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
                  results_dir: Optional[str] = None,
                  verbosity: Union[str, Verbosity] = Verbosity.INFO,
@@ -65,6 +73,14 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
 
             drop_duration(float, optional):
                 Duration of simulation drops in seconds.
+
+            plot_results (bool, optional):
+                Plot results after simulation runs.
+                Disabled by default.
+
+            dump_results (bool, optional):
+                Dump results to files after simulation runs.
+                Enabled by default.
 
             snr_type (Union[str, SNRType]):
                 The signal to noise ratio metric to be used.
@@ -86,6 +102,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
 
         self.__channels = np.ndarray((0, 0), dtype=object)
         self.plot_results = plot_results
+        self.dump_results = dump_results
         self.drop_duration = drop_duration
         self.snr_type = snr_type
         self.snr = None
@@ -287,6 +304,9 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 result.plot()
                 plt.show()
 
+        if self.dump_results:
+            result.save_to_matlab(path.join(self.results_dir, 'results.mat'))
+
         return result
 
     def drop(self,
@@ -393,58 +413,6 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 raise ValueError("Signal to noise ratio must be greater than zero")
 
             self.__snr = value
-
-    @property
-    def min_num_drops(self) -> int:
-        """Minimum number of drops before confidence check may terminate execution.
-
-        Returns:
-            int: Minimum number of drops.
-        """
-
-        return self.__min_num_drops
-
-    @min_num_drops.setter
-    def min_num_drops(self, val: int) -> None:
-        """Modify minimum number of drops before confidence check may terminate execution.
-
-        Args:
-            val (int): Minim number of drops.
-
-        Raises:
-            ValueError: If `num_drops` is smaller than zero.
-        """
-
-        if val < 0:
-            raise ValueError("Minimum number of drops must be greater or equal to zero.")
-
-        self.__min_num_drops = val
-
-    @property
-    def confidence_level(self) -> float:
-        """Access confidence level at which execution may be prematurely terminated.
-
-        Return:
-            float: Confidence level between 0.0 and 1.0.
-        """
-
-        return self.__confidence_level
-
-    @confidence_level.setter
-    def confidence_level(self, level: float) -> None:
-        """Modify confidence level at which execution may be prematurely terminated.
-
-        Args:
-            level (float): Confidence level between 0.0 and 1.0.
-
-        Raises:
-            ValueError: If `level` is not between 0.0 and 1.0.
-        """
-
-        if not 0.0 <= level <= 1.0:
-            raise ValueError("Confidence level must be between zero and one")
-
-        self.__confidence_level = level
 
     @property
     def drop_duration(self) -> float:

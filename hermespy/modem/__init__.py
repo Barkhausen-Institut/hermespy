@@ -5,7 +5,7 @@ from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSyn
 from .waveform_generator_psk_qam import WaveformGeneratorPskQam
 from .waveform_generator_ofdm import WaveformGeneratorOfdm, FrameGuardSection, FrameSymbolSection, FrameResource
 from .tools.shaping_filter import ShapingFilter
-from .evaluators import BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator
+from .evaluators import BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -19,4 +19,5 @@ __status__ = "Prototype"
 
 __all__ = ['Modem', 'WaveformGenerator', 'WaveformGeneratorChirpFsk', 'WaveformGeneratorPskQam',
            'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection', 'FrameSymbolSection',
-           'FrameResource', 'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator', 'FrameErrorEvaluator']
+           'FrameResource', 'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator', 'FrameErrorEvaluator',
+           'ThroughputEvaluator']
