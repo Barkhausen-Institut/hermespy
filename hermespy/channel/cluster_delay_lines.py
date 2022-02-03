@@ -657,13 +657,47 @@ class ClusterDelayLine(Channel, Serializable):
                                        cos(ray_zod[cluster_idx, ray_idx])]) * wavelength_factor
 
             # Equation 7.5-22
-            for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions),
-                                                              enumerate(tx_positions)):
+            for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions), enumerate(tx_positions)):
 
                 ray_coefficients = (np.exp(rx_wave_vector @ rx_pos) * np.exp(tx_wave_vector @ tx_pos) *
                                     complex(np.ones((2, 1)).T @ phases[:, :, cluster_idx, ray_idx] @ np.ones((2, 1))) *
                                     np.exp(rx_wave_vector @ fast_fading).T)
                 nlos_coefficients[6 + cluster_idx, :, rx_idx, tx_idx] += ray_coefficients * sqrt(cluster_powers[cluster_idx] / num_rays)
+
+        # In the case of line-of-sight, scale the coefficients and append another set according to equation 7.5-30
+        if self.line_of_sight:
+
+            rice_factor_lin = db2lin(rice_factor)
+            receiver_position = self.receiver.position
+            transmitter_position = self.transmitter.position
+
+            # Raise an exception if the positions are identical
+            if np.array_equal(receiver_position, transmitter_position):
+                raise RuntimeError("Identical device positions violate the far-field assumption in the line-of-sight"
+                                   " case of the 3GPP CDL channel model")
+
+            device_vector = receiver_position - transmitter_position
+            los_distance = np.linalg.norm(device_vector, 2)
+            rx_wave_vector = device_vector / los_distance * wavelength_factor
+            tx_wave_vector = -rx_wave_vector
+
+            nlos_coefficients *= (1 + rice_factor_lin) ** -.5
+
+            los_coefficients = np.empty((num_samples, self.receiver.num_antennas, self.transmitter.num_antennas),
+                                        dtype=complex)
+
+            # Equation 7.5-29
+            for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions), enumerate(tx_positions)):
+
+                los_coefficients[:, rx_idx, tx_idx] = \
+                    (complex(np.ones((2, 1)).T @ np.array([[1, 0], [0, -1]]) @ np.ones((2, 1))) *
+                     np.exp(-wavelength_factor * los_distance) * np.exp(rx_wave_vector @ rx_pos) *
+                     np.exp(tx_wave_vector @ tx_pos) * np.exp(rx_wave_vector @ fast_fading).T)
+
+            # Equation 7.5-30 (second part of the sum)
+            los_coefficients *= sqrt(rice_factor_lin / (rice_factor_lin + 1))
+            resampling_matrix = delay_resampling_matrix(sampling_rate, 1, cluster_delays[0], num_delay_samples).flatten()
+            impulse_response += np.multiply.outer(los_coefficients, resampling_matrix)
 
         for coefficients, delay in zip(nlos_coefficients, virtual_cluster_delays):
 
