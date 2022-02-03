@@ -93,7 +93,7 @@ class TestStreetCanyonNLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e5
+        sampling_rate = 1e8
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
