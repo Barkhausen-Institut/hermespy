@@ -59,6 +59,14 @@ Evaluators:
     confidence: .9
     tolerance: .01
 
+  # Evaluate throughput of `modem_alpha` communicating over `device_alpha`
+  - !<ThroughputEvaluator>
+
+    transmitting_modem: *modem_alpha
+    receiving_modem: *modem_alpha
+    confidence: .9
+    tolerance: .01
+
 
 # Simulation parameters
 num_samples: 1000                  # Number of samples per simulation grid section
