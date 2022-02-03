@@ -171,14 +171,23 @@ class Executable(ABC, Serializable):
         today = str(datetime.date.today())
 
         dir_index = 0
-        results_dir = path.join(getcwd(), "results", today + '_' + '{:03d}'.format(dir_index))
+
+        base_directory = path.join(getcwd(), "results")
+
+        # Create results directory within the current working directory if it does not exist yet
+        if not path.exists(base_directory):
+            mkdir(base_directory)
+
+        results_dir = path.join(base_directory, today + '_' + '{:03d}'.format(dir_index))
 
         while path.exists(results_dir):
 
             dir_index += 1
-            results_dir = path.join(getcwd(), "results", today + '_' + '{:03d}'.format(dir_index))
+            results_dir = path.join(base_directory, today + '_' + '{:03d}'.format(dir_index))
 
+        # Create the results directory
         mkdir(results_dir)
+
         return results_dir
 
     @property
