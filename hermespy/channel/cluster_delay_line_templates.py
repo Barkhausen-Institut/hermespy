@@ -46,7 +46,7 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def aoa_spread_std(self) -> float:
-        return -.025 * log10(1 + self._center_frequency * 1e-9) + .28
+        return -.014 * log10(1 + self._center_frequency * 1e-9) + .28
 
     @property
     def zoa_spread_mean(self) -> float:
@@ -95,6 +95,102 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
     @property
     def cluster_aoa_spread(self) -> float:
         return 17
+
+    @property
+    def cluster_zoa_spread(self) -> float:
+        return 7.
+
+    @property
+    def cluster_shadowing_std(self) -> float:
+        return 3.
+
+    @property
+    def _center_frequency(self) -> float:
+
+        return 2e9
+
+
+class StreetCanyonNonLineOfSight(ClusterDelayLineBase, Serializable):
+    """Parameter Preset for the 3GPP Cluster Delay Line Urban Microcells Street Canyon Model."""
+
+    yaml_tag = u'StreetCanyonNLOS'
+    """YAML serialization tag."""
+
+    @property
+    def line_of_sight(self) -> bool:
+        return False
+
+    @property
+    def delay_spread_mean(self) -> float:
+        return -.24 * log10(1 + self._center_frequency * 1e-9) - 6.83
+
+    @property
+    def delay_spread_std(self) -> float:
+        return .16 * log10(1 + self._center_frequency * 1e-9) - .28
+
+    @property
+    def aod_spread_mean(self) -> float:
+        return -.23 * log10(1 + self._center_frequency * 1e-9) + 1.53
+
+    @property
+    def aod_spread_std(self) -> float:
+        return .11 * log10(1 + self._center_frequency * 1e-9) - .33
+
+    @property
+    def aoa_spread_mean(self) -> float:
+        return -.08 * log10(1 + self._center_frequency * 1e-9) + 1.81
+
+    @property
+    def aoa_spread_std(self) -> float:
+        return -.05 * log10(1 + self._center_frequency * 1e-9) + .3
+
+    @property
+    def zoa_spread_mean(self) -> float:
+        return -.04 * log10(1 + self._center_frequency * 1e-9) + .92
+
+    @property
+    def zoa_spread_std(self) -> float:
+        return -.07 * log10(1 + self._center_frequency * 1e-9) + .41
+
+    @property
+    def rice_factor_mean(self) -> float:
+        return 9.
+
+    @property
+    def rice_factor_std(self) -> float:
+        return 5.
+
+    @property
+    def delay_scaling(self) -> float:
+        return 2.1
+
+    @property
+    def cross_polarization_power_mean(self) -> float:
+        return 8.
+
+    @property
+    def cross_polarization_power_std(self) -> float:
+        return 3.
+
+    @property
+    def num_clusters(self) -> int:
+        return 19
+
+    @property
+    def num_rays(self) -> int:
+        return 20
+
+    @property
+    def cluster_delay_spread(self) -> float:
+        return 11.
+
+    @property
+    def cluster_aod_spread(self) -> float:
+        return 10.
+
+    @property
+    def cluster_aoa_spread(self) -> float:
+        return 22.
 
     @property
     def cluster_zoa_spread(self) -> float:
