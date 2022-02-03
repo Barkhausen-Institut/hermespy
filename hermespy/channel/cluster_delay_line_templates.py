@@ -582,3 +582,276 @@ class UrbanMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
     @property
     def _center_frequency(self) -> float:
         return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+
+
+class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
+    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+
+    yaml_tag = u'RMaLOS'
+    """YAML serialization tag."""
+
+    @property
+    def line_of_sight(self) -> bool:
+        return True
+
+    @property
+    def delay_spread_mean(self) -> float:
+        return -7.49
+
+    @property
+    def delay_spread_std(self) -> float:
+        return .55
+
+    @property
+    def aod_spread_mean(self) -> float:
+        return .9
+
+    @property
+    def aod_spread_std(self) -> float:
+        return .38
+
+    @property
+    def aoa_spread_mean(self) -> float:
+        return 1.52
+
+    @property
+    def aoa_spread_std(self) -> float:
+        return .24
+
+    @property
+    def zoa_spread_mean(self) -> float:
+        return .47
+
+    @property
+    def zoa_spread_std(self) -> float:
+        return .4
+
+    @property
+    def rice_factor_mean(self) -> float:
+        return 7.
+
+    @property
+    def rice_factor_std(self) -> float:
+        return 4.
+
+    @property
+    def delay_scaling(self) -> float:
+        return 3.8
+
+    @property
+    def cross_polarization_power_mean(self) -> float:
+        return 12.
+
+    @property
+    def cross_polarization_power_std(self) -> float:
+        return 4.
+
+    @property
+    def num_clusters(self) -> int:
+        return 11
+
+    @property
+    def num_rays(self) -> int:
+        return 20
+
+    @property
+    def cluster_delay_spread(self) -> float:
+        return 0.
+
+    @property
+    def cluster_aod_spread(self) -> float:
+        return 2.
+
+    @property
+    def cluster_aoa_spread(self) -> float:
+        return 3.
+
+    @property
+    def cluster_zoa_spread(self) -> float:
+        return 3.
+
+    @property
+    def cluster_shadowing_std(self) -> float:
+        return 3.
+
+
+class RuralMacrocellsNoneLineOfSight(ClusterDelayLineBase, Serializable):
+    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+
+    yaml_tag = u'RMaLOS'
+    """YAML serialization tag."""
+
+    @property
+    def line_of_sight(self) -> bool:
+        return False
+
+    @property
+    def delay_spread_mean(self) -> float:
+        return -7.43
+
+    @property
+    def delay_spread_std(self) -> float:
+        return .48
+
+    @property
+    def aod_spread_mean(self) -> float:
+        return .95
+
+    @property
+    def aod_spread_std(self) -> float:
+        return .45
+
+    @property
+    def aoa_spread_mean(self) -> float:
+        return 1.52
+
+    @property
+    def aoa_spread_std(self) -> float:
+        return .13
+
+    @property
+    def zoa_spread_mean(self) -> float:
+        return .58
+
+    @property
+    def zoa_spread_std(self) -> float:
+        return .37
+
+    @property
+    def rice_factor_mean(self) -> float:
+        return 0.
+
+    @property
+    def rice_factor_std(self) -> float:
+        return 0.
+
+    @property
+    def delay_scaling(self) -> float:
+        return 1.7
+
+    @property
+    def cross_polarization_power_mean(self) -> float:
+        return 7.
+
+    @property
+    def cross_polarization_power_std(self) -> float:
+        return 3.
+
+    @property
+    def num_clusters(self) -> int:
+        return 10
+
+    @property
+    def num_rays(self) -> int:
+        return 20
+
+    @property
+    def cluster_delay_spread(self) -> float:
+        return 0.
+
+    @property
+    def cluster_aod_spread(self) -> float:
+        return 2.
+
+    @property
+    def cluster_aoa_spread(self) -> float:
+        return 3.
+
+    @property
+    def cluster_zoa_spread(self) -> float:
+        return 3.
+
+    @property
+    def cluster_shadowing_std(self) -> float:
+        return 3.
+
+
+class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
+    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+
+    yaml_tag = u'RMaO2I'
+    """YAML serialization tag."""
+
+    @property
+    def line_of_sight(self) -> bool:
+        return False
+
+    @property
+    def delay_spread_mean(self) -> float:
+        return -7.47
+
+    @property
+    def delay_spread_std(self) -> float:
+        return .24
+
+    @property
+    def aod_spread_mean(self) -> float:
+        return .67
+
+    @property
+    def aod_spread_std(self) -> float:
+        return .18
+
+    @property
+    def aoa_spread_mean(self) -> float:
+        return 1.66
+
+    @property
+    def aoa_spread_std(self) -> float:
+        return .21
+
+    @property
+    def zoa_spread_mean(self) -> float:
+        return .93
+
+    @property
+    def zoa_spread_std(self) -> float:
+        return .22
+
+    @property
+    def rice_factor_mean(self) -> float:
+        return 0.
+
+    @property
+    def rice_factor_std(self) -> float:
+        return 0.
+
+    @property
+    def delay_scaling(self) -> float:
+        return 1.7
+
+    @property
+    def cross_polarization_power_mean(self) -> float:
+        return 7.
+
+    @property
+    def cross_polarization_power_std(self) -> float:
+        return 3.
+
+    @property
+    def num_clusters(self) -> int:
+        return 10
+
+    @property
+    def num_rays(self) -> int:
+        return 20
+
+    @property
+    def cluster_delay_spread(self) -> float:
+        return 0.
+
+    @property
+    def cluster_aod_spread(self) -> float:
+        return 2.
+
+    @property
+    def cluster_aoa_spread(self) -> float:
+        return 3.
+
+    @property
+    def cluster_zoa_spread(self) -> float:
+        return 3.
+
+    @property
+    def cluster_shadowing_std(self) -> float:
+        return 3.
