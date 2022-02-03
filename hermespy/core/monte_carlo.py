@@ -11,8 +11,9 @@ enabling efficient and flexible MonteCarlo simulations over arbitrary configurat
 from __future__ import annotations
 
 from abc import abstractmethod
-from math import ceil, exp, sqrt
 from functools import reduce
+from itertools import product
+from math import ceil, exp, sqrt
 from shutil import get_terminal_size
 from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple
 from warnings import catch_warnings, simplefilter
@@ -22,6 +23,7 @@ import numpy as np
 import ray
 from ray.util import ActorPool
 from scipy.constants import pi
+from scipy.io import savemat
 from scipy.stats import norm
 
 __author__ = "Jan Adler"
@@ -98,8 +100,7 @@ class ArtifactTemplate(Generic[AT], Artifact):
         return self.__artifact
 
     def __str__(self) -> str:
-
-        return str(self.to_scalar())
+        return f"{self.to_scalar():.3f}"
 
     def to_scalar(self) -> float:
 
@@ -638,6 +639,96 @@ class MonteCarloResult(Generic[MO]):
             figures.append(figure)
 
         return figures
+
+    def save_to_matlab(self, file: str) -> None:
+        """Save simulation results to a matlab file.
+
+        Args:
+
+            file (str):
+                File location to which the results should be saved.
+        """
+
+        # Prepare artifacts
+        mean_scalar_artifacts = np.empty([*self.__sections.shape, len(self.__evaluators)], dtype=float)
+        flat_iter = self.__sections.flat
+        for section in flat_iter:
+            mean_scalar_artifacts[np.array(flat_iter.coords)-1, :] = np.mean(section.scalars, axis=1)
+
+        mat_dict = {
+            "dimensions": np.array(list(self.__dimensions.keys()), dtype=str),
+            "dimension_sections": np.array(list(product(self.__dimensions.values()))),
+            "evaluators": [evaluator.abbreviation for evaluator in self.__evaluators],
+            "evaluations": mean_scalar_artifacts,
+        }
+
+        """mat_dict = {      
+            "snr_type": self.snr_type.name,
+            "snr_vector": self.snr_loop,
+            "ber_mean": self.average_bit_error_rate,
+            "fer_mean": self.average_block_error_rate,
+            "ber_lower": self.bit_error_min,
+            "ber_upper": self.bit_error_max,
+            "fer_lower": self.block_error_min,
+            "fer_upper": self.block_error_max,
+        }
+
+        if self.__calc_transmit_spectrum:
+            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_tx, self._frequency_range_tx)):
+                if periodogram is not None and frequency is not None:
+                    mat_dict["frequency_tx_" + str(idx)] = fft.fftshift(frequency)
+                    mat_dict["power_spectral_density_tx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
+
+        if self.__calc_transmit_stft:
+            for idx, (time, freq, power) in enumerate(self._stft_tx):
+                if time is not None and freq is not None and power is not None:
+                    mat_dict["stft_time_tx_" + str(idx)] = time
+                    mat_dict["stft_frequency_tx" + str(idx)] = freq
+                    mat_dict["stft_power_tx" + str(idx)] = power
+
+        if self.__calc_receive_spectrum:
+            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_rx, self._frequency_range_rx)):
+
+                mat_dict["frequency_rx_" + str(idx)] = fft.fftshift(frequency)
+                mat_dict["power_spectral_density_rx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
+
+        if self.__calc_receive_stft:
+            for idx, (time, freq, power) in enumerate(self._stft_rx):
+                if time is not None and freq is not None and power is not None:
+                    mat_dict["stft_time_rx_" + str(idx)] = time
+                    mat_dict["stft_frequency_rx_" + str(idx)] = freq
+                    mat_dict["stft_power_rx_" + str(idx)] = power
+
+        ber_theory = np.nan * np.ones((self.__scenario.num_transmitters,
+                                      self.__scenario.num_receivers,
+                                      self.__num_snr_loops), dtype=float)
+        fer_theory = np.nan * np.ones((self.__scenario.num_transmitters,
+                                      self.__scenario.num_receivers,
+                                      self.__num_snr_loops), dtype=float)
+        theory_notes = [[np.nan for _ in self.__scenario.receivers] for _ in self.__scenario.transmitters]
+
+        if self.theoretical_results is not None:
+
+            for tx_idx, rx_idx in zip(range(self.__scenario.num_transmitters), range(self.__scenario.num_receivers)):
+
+                link_theory = self.theoretical_results[tx_idx, rx_idx]
+                if link_theory is not None:
+
+                    if 'ber' in link_theory:
+                        ber_theory[tx_idx, rx_idx, :] = link_theory['ber']
+
+                    if 'fer' in link_theory:
+                        fer_theory[tx_idx, rx_idx, :] = link_theory['fer']
+
+                    if 'notes' in link_theory:
+                        theory_notes[tx_idx][rx_idx] = link_theory['notes']
+
+            mat_dict["ber_theory"] = ber_theory
+            mat_dict["fer_theory"] = fer_theory
+            mat_dict["theory_notes"] = theory_notes"""
+
+        # Save results in matlab file
+        savemat(file, mat_dict)
 
 
 class MonteCarlo(Generic[MO]):
