@@ -126,7 +126,7 @@ class StreetCanyonNonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def delay_spread_std(self) -> float:
-        return .16 * log10(1 + self._center_frequency * 1e-9) - .28
+        return .16 * log10(1 + self._center_frequency * 1e-9) + .28
 
     @property
     def aod_spread_mean(self) -> float:
