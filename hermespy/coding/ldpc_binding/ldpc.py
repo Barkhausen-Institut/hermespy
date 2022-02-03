@@ -40,8 +40,8 @@ class LDPCBinding(LDPC):
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
 
-        codes = encoded_bits.copy().astype(int)
-        codes[codes < .5] = -1
+        codes = encoded_bits.copy().astype(float)
+        codes[codes < .5] = -1.
 
         test = ldpc_binding.decode(
             [codes], self.code_block_size, 1, self.num_parity_bits,
