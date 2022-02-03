@@ -87,12 +87,14 @@ class TestClusterDelayLine(TestCase):
 
         self.receiver = Mock()
         self.receiver.num_antennas = 1
+        self.receiver.position = np.array([100., 0., 0.])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
 
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
+        self.transmitter.position = np.array([-100., 0., 0.])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -236,8 +238,17 @@ class TestClusterDelayLine(TestCase):
         except ValueError:
             self.fail()
 
-    def test_impulse_response(self):
+    def test_impulse_response_nlos(self):
 
+        num_samples = 5000
+        sampling_rate = 5e8
+
+        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        return
+
+    def test_impulse_response_los(self):
+
+        self.channel.line_of_sight = True
         num_samples = 5000
         sampling_rate = 5e8
 
