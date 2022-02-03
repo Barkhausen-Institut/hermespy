@@ -23,54 +23,6 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ClusterDelayLineMock(ClusterDelayLine):
-    """Mock of the abstract cluster delay line base class"""
-
-    @property
-    def aod_spread_mean(self) -> float:
-        return 1.21
-
-    @property
-    def aod_spread_std(self) -> float:
-        return .41
-
-    @property
-    def aoa_spread_mean(self) -> float:
-        return 1.73
-
-    @property
-    def aoa_spread_std(self) -> float:
-        return 0.28
-
-    @property
-    def zoa_spread_mean(self) -> float:
-        return .73
-
-    @property
-    def zoa_spread_std(self) -> float:
-        return .34
-
-    @property
-    def cluster_azimuth_spread_departure(self) -> float:
-        return 3.
-
-    @property
-    def cluster_azimuth_spread_arrival(self) -> float:
-        return 17.
-
-    @property
-    def cluster_zenith_spread_arrival(self) -> float:
-        return 7.
-
-    @property
-    def cross_polarization_power_mean(self) -> float:
-        return 9.
-
-    @property
-    def cross_polarization_power_std(self) -> float:
-        return 3.
-
-
 class TestClusterDelayLine(TestCase):
     """Test the 3GPP Cluster Delay Line Model Implementation."""
 
@@ -81,7 +33,8 @@ class TestClusterDelayLine(TestCase):
         self.random_node._rng = self.rng
 
         self.num_clusters = 10
-        self.delay_spread = 11e-9
+        self.delay_spread_mean = 11e-9
+        self.delay_spread_std = 1e-10
         self.delay_scaling = 1.1
         self.carrier_frequency = 1e9
 
@@ -99,18 +52,21 @@ class TestClusterDelayLine(TestCase):
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
 
-        self.channel = ClusterDelayLineMock(num_clusters=self.num_clusters,
-                                            delay_spread=self.delay_spread,
-                                            delay_scaling=self.delay_scaling,
-                                            receiver=self.receiver,
-                                            transmitter=self.transmitter)
+        self.channel = ClusterDelayLine(delay_spread_mean=self.delay_spread_mean,
+                                        delay_spread_std=self.delay_spread_std,
+                                        delay_scaling=self.delay_scaling,
+                                        num_clusters=self.num_clusters,
+                                        receiver=self.receiver,
+                                        transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
 
+        self.assertEqual(self.delay_spread_mean, self.channel.delay_spread_mean)
+        self.assertEqual(self.delay_spread_std, self.channel.delay_spread_std)
         self.assertEqual(self.num_clusters, self.channel.num_clusters)
-        self.assertEqual(self.delay_spread, self.channel.delay_spread)
+
         self.assertEqual(self.delay_scaling, self.channel.delay_scaling)
 
     def test_num_clusters_setget(self) -> None:

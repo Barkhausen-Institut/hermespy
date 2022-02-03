@@ -6,7 +6,6 @@
 """
 
 from __future__ import annotations
-from abc import abstractmethod
 from itertools import product
 from math import ceil, sin, cos, sqrt
 from typing import Any, List
@@ -30,6 +29,7 @@ __status__ = "Prototype"
 
 
 class ClusterDelayLine(Channel, Serializable):
+    """3GPP Cluster Delay Line Channel Model."""
 
     yaml_tag = u'ClusterDelayLine'
     """YAML serialization tag."""
@@ -37,12 +37,26 @@ class ClusterDelayLine(Channel, Serializable):
     line_of_sight: bool
     """Is this model a line of sight model?"""
 
-    __num_clusters: int             # Number of generated clusters per channel sample
-    __delay_spread: float           # Root-Mean-Square spread of the cluster delay in seconds
-    __delay_scaling: float          # Delay distribution proportionality factor
-    __rice_factor_mean: float       # Mean of the rice factor K
-    __rice_factor_std: float        # Standard deviation of the rice factor K
-    __cluster_shadowing_std: float  # Cluster shadowing standard deviation in dB
+    __delay_spread_mean: float
+    __delay_spread_std: float
+    __aod_spread_mean: float
+    __aod_spread_std: float
+    __aoa_spread_mean: float
+    __aoa_spread_std: float
+    __zoa_spread_mean: float
+    __zoa_spread_std: float
+    __rice_factor_mean: float
+    __rice_factor_std: float
+    __delay_scaling: float
+    __cross_polarization_power_mean: float
+    __cross_polarization_power_std: float
+    __num_clusters: int
+    __num_rays: int
+    __cluster_delay_spread: float
+    __cluster_aod_spread: float
+    __cluster_aoa_spread: float
+    __cluster_zoa_spread: float
+    __cluster_shadowing_std: float
 
     # Cluster scaling factors for the angle of arrival
     __azimuth_scaling_factors = np.array([[4, .779],
@@ -75,13 +89,27 @@ class ClusterDelayLine(Channel, Serializable):
                                              [12, 13, 14, 15]]
 
     def __init__(self,
-                 num_clusters: int = 10,
-                 delay_spread: float = 10e-9,
+                 delay_spread_mean: float = 7.14,
+                 delay_spread_std: float = .38,
+                 aod_spread_mean: float = 1.21,
+                 aod_spread_std: float = .41,
+                 aoa_spread_mean: float = 1.73,
+                 aoa_spread_std: float = .28,
+                 zoa_spread_mean: float = .73,
+                 zoa_spread_std: float = .34,
+                 rice_factor_mean: float = 9.,
+                 rice_factor_std: float = 5.,
                  delay_scaling: float = 1.,
-                 rice_factor_mean: float = 7.,
-                 rice_factor_std: float = 4.,
+                 cross_polarization_power_mean: float = 9.,
+                 cross_polarization_power_std: float = 3.,
+                 num_clusters: int = 12,
+                 num_rays: int = 20,
+                 cluster_delay_spread: float = 5.,
+                 cluster_aod_spread: float = 5.,
+                 cluster_aoa_spread: float = 17.,
+                 cluster_zoa_spread: float = 7.,
                  cluster_shadowing_std: float = 3.,
-                 line_of_sight: bool = False,
+                 line_of_sight: bool = True,
                  **kwargs: Any) -> None:
         """
         Args:
@@ -109,76 +137,249 @@ class ClusterDelayLine(Channel, Serializable):
 
         """
 
-        self.line_of_sight = line_of_sight
-        self.num_clusters = num_clusters
-        self.delay_spread = delay_spread
-        self.delay_scaling = delay_scaling
+        # Set initial parameters
+        self.delay_spread_mean = delay_spread_mean
+        self.delay_spread_std = delay_spread_std
+        self.aod_spread_mean = aod_spread_mean
+        self.aod_spread_std = aod_spread_std
+        self.aoa_spread_mean = aoa_spread_mean
+        self.aoa_spread_std = aoa_spread_std
+        self.zoa_spread_mean = zoa_spread_mean
+        self.zoa_spread_std = zoa_spread_std
         self.rice_factor_mean = rice_factor_mean
         self.rice_factor_std = rice_factor_std
+        self.delay_scaling = delay_scaling
+        self.cross_polarization_power_mean = cross_polarization_power_mean
+        self.cross_polarization_power_std = cross_polarization_power_std
+        self.num_clusters = num_clusters
+        self.num_rays = num_rays
+        self.cluster_delay_spread = cluster_delay_spread
+        self.cluster_aod_spread = cluster_aod_spread
+        self.cluster_aoa_spread = cluster_aoa_spread
+        self.cluster_zoa_spread = cluster_zoa_spread
         self.cluster_shadowing_std = cluster_shadowing_std
+        self.line_of_sight = line_of_sight
 
         # Initialize base class
         Channel.__init__(self, **kwargs)
 
     @property
-    def num_clusters(self) -> int:
-        """Number of clusters.
+    def delay_spread_mean(self) -> float:
+        """Mean of the cluster delay spread.
+
+        The spread realization and its mean are referred to as 
+        :math:`\\mathrm{DS}` and :math:`\\mu_{\\mathrm{lgDS}}` within the the standard, respectively.
 
         Returns:
-            int: Number of generated clusters per channel sample.
+            float: Mean delay spread in seconds.
+        """
+
+        return self.__delay_spread_mean
+
+    @delay_spread_mean.setter
+    def delay_spread_mean(self, value: float) -> None:
+
+        self.__delay_spread_mean = value
+        
+    @property
+    def delay_spread_std(self) -> float:
+        """Standard deviation of the cluster delay spread.
+
+        The spread realization and its standard deviation are referred to as 
+        :math:`\\mathrm{DS}` and :math:`\\sigma_{\\mathrm{lgDS}}` within the the standard, respectively.
+
+        Returns:
+            float: Delay spread standard deviation in seconds.
 
         Raises:
-            ValueError: If the number of clusters is smaller than one.
+            ValueError: If the standard deviation is smaller than zero.
         """
 
-        return self.__num_clusters
+        return self.__delay_spread_std
 
-    @num_clusters.setter
-    def num_clusters(self, value: int) -> None:
-
-        if value < 1:
-            raise ValueError("Number of clusters must be greater or equal to one")
-
-        self.__num_clusters = value
-
-    @property
-    def delay_spread(self) -> float:
-        """Root-Mean-Square spread of the cluster delay.
-
-        Referred to as :math:`\\mathrm{DS}` within the the standard.
-
-        Returns:
-            float: Delay spread in seconds.
-
-        Raises:
-            ValueError: If the delay spread is smaller than zero.
-        """
-
-        return self.__delay_spread
-
-    @property
-    def intra_cluster_delay_spread(self) -> float:
-        """Delay spread within an individual cluster.
-
-        Referred to as :math:`c_{DS}` within the standard.
-
-        Returns:
-            float: Delay spread in seconds.
-        """
-
-        return 3.91e-9
-
-    @delay_spread.setter
-    def delay_spread(self, value: float) -> None:
+    @delay_spread_std.setter
+    def delay_spread_std(self, value: float) -> None:
 
         if value < 0.:
-            raise ValueError("Delay spread must be greater or equal to zero")
+            raise ValueError("Delay spread standard deviation must be greater or equal to zero")
 
-        self.__delay_spread = value
+        self.__delay_spread_std = value
+
+    @property
+    def aod_spread_mean(self) -> float:
+        """Mean of the Azimuth Angle-of-Departure spread.
+
+        The spread realization and its mean are referred to as 
+        :math:`\\mathrm{ASD}` and :math:`\\mu_{\\mathrm{lgASD}}` within the the standard, respectively.
+
+        Returns:
+            float: Mean angle spread in seconds
+        """
+
+        return self.__aod_spread_mean
+
+    @aod_spread_mean.setter
+    def aod_spread_mean(self, value: float) -> None:
+
+        self.__aod_spread_mean = value
+
+    @property
+    def aod_spread_std(self) -> float:
+        """Standard deviation of the Azimuth Angle-of-Departure spread.
+
+        The spread realization and its standard deviation are referred to as 
+        :math:`\\mathrm{ASD}` and :math:`\\sigma_{\\mathrm{lgASD}}` within the the standard, respectively.
+
+        Returns:
+            float: Angle spread standard deviation in seconds.
+
+        Raises:
+            ValueError: If the standard deviation is smaller than zero.
+        """
+
+        return self.__aod_spread_std
+
+    @aod_spread_std.setter
+    def aod_spread_std(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Angle spread standard deviation must be greater or equal to zero")
+
+        self.__aod_spread_std = value
+        
+    @property
+    def aoa_spread_mean(self) -> float:
+        """Mean of the Azimuth Angle-of-Arriaval spread.
+
+        The spread realization and its mean are referred to as 
+        :math:`\\mathrm{ASA}` and :math:`\\mu_{\\mathrm{lgASA}}` within the the standard, respectively.
+
+        Returns:
+            float: Mean angle spread in seconds
+        """
+
+        return self.__aoa_spread_mean
+
+    @aoa_spread_mean.setter
+    def aoa_spread_mean(self, value: float) -> None:
+
+        self.__aoa_spread_mean = value
+
+    @property
+    def aoa_spread_std(self) -> float:
+        """Standard deviation of the Azimuth Angle-of-Arrival spread.
+
+        The spread realization and its standard deviation are referred to as 
+        :math:`\\mathrm{ASA}` and :math:`\\sigma_{\\mathrm{lgASA}}` within the the standard, respectively.
+
+        Returns:
+            float: Angle spread standard deviation in seconds.
+
+        Raises:
+            ValueError: If the standard deviation is smaller than zero.
+        """
+
+        return self.__aoa_spread_std
+
+    @aoa_spread_std.setter
+    def aoa_spread_std(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Angle spread standard deviation must be greater or equal to zero")
+
+        self.__aoa_spread_std = value
+
+    @property
+    def zoa_spread_mean(self) -> float:
+        """Mean of the Zenith Angle-of-Arriaval spread.
+
+        The spread realization and its mean are referred to as 
+        :math:`\\mathrm{ZSA}` and :math:`\\mu_{\\mathrm{lgZSA}}` within the the standard, respectively.
+
+        Returns:
+            float: Mean angle spread in seconds
+        """
+
+        return self.__zoa_spread_mean
+
+    @zoa_spread_mean.setter
+    def zoa_spread_mean(self, value: float) -> None:
+
+        self.__zoa_spread_mean = value
+
+    @property
+    def zoa_spread_std(self) -> float:
+        """Standard deviation of the Zenith Angle-of-Arrival spread.
+
+        The spread realization and its standard deviation are referred to as 
+        :math:`\\mathrm{ZSA}` and :math:`\\sigma_{\\mathrm{lgZSA}}` within the the standard, respectively.
+
+        Returns:
+            float: Angle spread standard deviation in seconds.
+
+        Raises:
+            ValueError: If the standard deviation is smaller than zero.
+        """
+
+        return self.__zoa_spread_std
+
+    @zoa_spread_std.setter
+    def zoa_spread_std(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Angle spread standard deviation must be greater or equal to zero")
+
+        self.__zoa_spread_std = value
+
+    ###############################
+    # ToDo: Shadow fading function
+    ###############################
+
+    @property
+    def rice_factor_mean(self) -> float:
+        """Mean of the rice factor distribution.
+
+        The rice factor realization and its mean are referred to as
+        :math:`K` and :math:`\\mu_K` within the the standard, respectively.
+
+        Returns:
+            float: Rice factor mean in dB.
+        """
+
+        return self.__rice_factor_mean
+
+    @rice_factor_mean.setter
+    def rice_factor_mean(self, value: float) -> None:
+
+        self.__rice_factor_mean = value
+
+    @property
+    def rice_factor_std(self) -> float:
+        """Standard deviation of the rice factor distribution.
+
+        The rice factor realization and its standard deviation are referred to as
+        :math:`K` and :math:`\\sigma_K` within the the standard, respectively.
+
+        Returns:
+            float: Rice factor standard deviation in dB.
+
+        Raises:
+            ValueError: If the standard deviation is smaller than zero.
+        """
+
+        return self.__rice_factor_std
+
+    @rice_factor_std.setter
+    def rice_factor_std(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Rice factor standard deviation must be greater or equal to zero")
+
+        self.__rice_factor_std = value
 
     @property
     def delay_scaling(self) -> float:
-        """Delay distribution proportionality factor.
+        """Delay scaling proportionality factor
 
         Referred to as :math:`r_{\\tau}` within the standard.
 
@@ -201,56 +402,190 @@ class ClusterDelayLine(Channel, Serializable):
         self.__delay_scaling = value
         
     @property
-    def rice_factor_mean(self) -> float:
-        """Mean of the rice factor distribution.
+    def cross_polarization_power_mean(self) -> float:
+        """Mean of the cross-polarization power.
 
-        Referred to as :math:`\\mu_K` within the the standard.
+        The cross-polarization power and its mean are referred to as
+        :math:`\\mathrm{XPR}` and :math:`\\mu_{\\mathrm{XPR}}` within the the standard, respectively.
 
         Returns:
-            float: Rice factor mean
-
-        Raises:
-            ValueError: If the mean is smaller than zero.
+            float: Mean power in dB.
         """
 
-        return self.__rice_factor_mean
+        return self.__cross_polarization_power_mean
 
-    @rice_factor_mean.setter
-    def rice_factor_mean(self, value: float) -> None:
+    @cross_polarization_power_mean.setter
+    def cross_polarization_power_mean(self, value: float) -> None:
+
+        self.__cross_polarization_power_mean = value
+
+    @property
+    def cross_polarization_power_std(self) -> float:
+        """Standard deviation of the cross-polarization power.
+
+        The cross-polarization power and its standard deviation are referred to as
+        :math:`\\mathrm{XPR}` and :math:`\\sigma_{\\mathrm{XPR}}` within the the standard, respectively.
+
+        Returns:
+            float: Power standard deviation in dB.
+
+        Raises:
+            ValueError: If the standard deviation is smaller than zero.
+        """
+
+        return self.__cross_polarization_power_std
+
+    @cross_polarization_power_std.setter
+    def cross_polarization_power_std(self, value: float) -> None:
 
         if value < 0.:
-            raise ValueError("Rice factor mean must be greater or equal to zero")
+            raise ValueError("Cross-polarization power standard deviation must be greater or equal to zero")
 
-        self.__rice_factor_mean = value
+        self.__cross_polarization_power_std = value
+
+    @property
+    def num_clusters(self) -> int:
+        """Number of clusters.
+        
+        Referred to as :math:`M` within the standard.
+
+        Returns:
+            int: Number of clusters.
+
+        Raises:
+            ValueError: If the number of clusters is smaller than one.
+        """
+
+        return self.__num_clusters
+
+    @num_clusters.setter
+    def num_clusters(self, value: int) -> None:
+
+        if value < 1:
+            raise ValueError("Number of clusters must be greater or equal to one")
+
+        self.__num_clusters = value
+
+    @property
+    def num_rays(self) -> int:
+        """Number of rays per cluster.
+
+        Referred to as :math:`N` within the standard.
+
+        Returns:
+            int: Number of rays.
+
+        Raises:
+            ValueError: If the number of clusters is smaller than one.
+        """
+
+        return self.__num_rays
+
+    @num_rays.setter
+    def num_rays(self, value: int) -> None:
+
+        if value < 1:
+            raise ValueError("Number of rays per cluster must be greater or equal to one")
+
+        self.__num_rays = value
+
+    @property
+    def cluster_delay_spread(self) -> float:
+        """Delay spread within an individual cluster.
+
+        Referred to as :math:`c_{DS}` within the standard.
+
+        Returns:
+            float: Delay spread in seconds.
+
+        Raises:
+            ValueError: If spread is smaller than zero.
+        """
+
+        return self.__cluster_delay_spread
+
+    @cluster_delay_spread.setter
+    def cluster_delay_spread(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Cluster delay spread must be greater or equal to zero")
+
+        self.__cluster_delay_spread = value
         
     @property
-    def rice_factor_std(self) -> float:
-        """Standard deviation of the rice factor distribution.
+    def cluster_aod_spread(self) -> float:
+        """Azimuth Angle-of-Departure spread within an individual cluster.
 
-        Referred to as :math:`\\sigma_K` within the the standard.
+        Referred to as :math:`c_{ASD}` within the standard.
 
         Returns:
-            float: Rice factor standard deviation.
+            float: Angle spread in degrees.
 
         Raises:
-            ValueError: If the deviation is smaller than zero.
+            ValueError: If spread is smaller than zero.
         """
 
-        return self.__rice_factor_std
+        return self.__cluster_aod_spread
 
-    @rice_factor_std.setter
-    def rice_factor_std(self, value: float) -> None:
+    @cluster_aod_spread.setter
+    def cluster_aod_spread(self, value: float) -> None:
 
         if value < 0.:
-            raise ValueError("Rice factor standard deviation must be greater or equal to zero")
+            raise ValueError("Cluster angle spread must be greater or equal to zero")
 
-        self.__rice_factor_std = value
+        self.__cluster_aod_spread = value
+        
+    @property
+    def cluster_aoa_spread(self) -> float:
+        """Azimuth Angle-of-Arrival spread within an individual cluster.
+
+        Referred to as :math:`c_{ASA}` within the standard.
+
+        Returns:
+            float: Angle spread in degrees.
+
+        Raises:
+            ValueError: If spread is smaller than zero.
+        """
+
+        return self.__cluster_aoa_spread
+
+    @cluster_aoa_spread.setter
+    def cluster_aoa_spread(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Cluster angle spread must be greater or equal to zero")
+
+        self.__cluster_aoa_spread = value
+
+    @property
+    def cluster_zoa_spread(self) -> float:
+        """Zenith Angle-of-Arrival spread within an individual cluster.
+
+        Referred to as :math:`c_{ZSA}` within the standard.
+
+        Returns:
+            float: Angle spread in degrees.
+
+        Raises:
+            ValueError: If spread is smaller than zero.
+        """
+
+        return self.__cluster_zoa_spread
+
+    @cluster_zoa_spread.setter
+    def cluster_zoa_spread(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Cluster angle spread must be greater or equal to zero")
+
+        self.__cluster_zoa_spread = value
         
     @property
     def cluster_shadowing_std(self) -> float:
         """Standard deviation of the cluster shadowing.
 
-        Referred to as ??? within the the standard.
+        Referred to as :math:`\\zeta` within the the standard.
 
         Returns:
             float: Cluster shadowing standard deviation.
@@ -269,123 +604,17 @@ class ClusterDelayLine(Channel, Serializable):
 
         self.__cluster_shadowing_std = value
 
-    @property
-    @abstractmethod
-    def aod_spread_mean(self) -> float:
-        """Azimuth Angle-of-Departure spread mean.
-
-        Returns:
-            float: Mean spread in degrees.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def aod_spread_std(self) -> float:
-        """Azimuth Angle-of-Departure spread standard deviation.
-
-        Returns:
-            float: Spread standard deviation in degrees.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def aoa_spread_mean(self) -> float:
-        """Angle-of-Arrival spread mean.
-
-        Returns:
-            float: Mean spread in degrees.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def aoa_spread_std(self) -> float:
-        """Angle-of-Arrival spread standard deviation.
-
-        Returns:
-            float: Spread standard deviation in degrees.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def zoa_spread_mean(self) -> float:
-        """Zenith Angle-of-Arrival spread mean.
-
-        Returns:
-            float: Mean spread in degrees.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def zoa_spread_std(self) -> float:
-        """Zenith Angle-of-Arrival spread standard deviation.
-
-        Returns:
-            float: Spread standard deviation in degrees.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def cluster_azimuth_spread_departure(self) -> float:
-        """Cluster azimuth ray spread during departure.
-
-        Returns:
-            float: Spread in deg.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def cluster_azimuth_spread_arrival(self) -> float:
-        """Cluster azimuth ray spread during arrival.
-
-        Returns:
-            float: Spread in deg.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def cluster_zenith_spread_arrival(self) -> float:
-        """Cluster zenith ray spread during arrival.
-
-        Returns:
-            float: Spread in deg.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def cross_polarization_power_mean(self) -> float:
-        """Mean of the cross polarization power.
-
-        Returns:
-            float: Power mean.
-        """
-        ...
-
-    @property
-    @abstractmethod
-    def cross_polarization_power_std(self) -> float:
-        """Standard deviation of the cross polarization power.
-
-        Returns:
-            float: Power standard deviation.
-        """
-        ...
-
     def _cluster_delays(self,
+                        delay_spread: float,
                         rice_factor: float) -> np.ndarray:
         """Compute a single sample set of normalized cluster delays.
 
         A single cluster delay is referred to as :math:`\\tau_n` within the the standard.
 
         Args:
+
+            delay_spread (float):
+                Delay spread in seconds.
 
             rice_factor (float):
                 Rice factor K in dB.
@@ -396,7 +625,7 @@ class ClusterDelayLine(Channel, Serializable):
                 Vector of cluster delays.
         """
 
-        delays = - self.delay_scaling * self.delay_spread * np.log(self._rng.uniform(size=self.num_clusters))
+        delays = - self.delay_scaling * delay_spread * np.log(self._rng.uniform(size=self.num_clusters))
 
         delays -= delays.min()
         delays.sort()
@@ -410,6 +639,7 @@ class ClusterDelayLine(Channel, Serializable):
         return delays
 
     def _cluster_powers(self,
+                        delay_spread: float,
                         delays: np.ndarray,
                         rice_factor: float) -> np.ndarray:
         """Compute a single sample set of normalized cluster power factors from delays.
@@ -417,6 +647,9 @@ class ClusterDelayLine(Channel, Serializable):
         A single cluster power factor is referred to as :math:`P_n` within the the standard.
 
         Args:
+
+            delay_spread (float):
+                Delay spread in seconds.
 
             delays (np.ndarray):
                 Vector of cluster delays.
@@ -431,7 +664,7 @@ class ClusterDelayLine(Channel, Serializable):
         """
 
         shadowing = 10 ** (-.1 * self._rng.normal(scale=self.cluster_shadowing_std, size=delays.shape))
-        powers = np.exp(-delays * (self.delay_scaling - 1) / (self.delay_scaling * self.delay_spread)) * shadowing
+        powers = np.exp(-delays * (self.delay_scaling - 1) / (self.delay_scaling * delay_spread)) * shadowing
 
         # In case of line of sight, add a specular component to the cluster delays
         if self.line_of_sight:
@@ -485,7 +718,7 @@ class ClusterDelayLine(Channel, Serializable):
         # Assign positive / negative integers and add some noise
         angle_variation = self._rng.normal(0., (spread / 7) ** 2, size=size)
         angle_spread_sign = self._rng.choice([-1., 1.], size=size)
-        angles = angle_spread_sign * angles + angle_variation
+        angles: np.ndarray = angle_spread_sign * angles + angle_variation
 
         # Add the actual line of sight term
         if self.line_of_sight:
@@ -498,7 +731,7 @@ class ClusterDelayLine(Channel, Serializable):
             angles += los_azimuth
 
         # Spread the angles
-        ray_offsets = self.cluster_azimuth_spread_arrival * self.__ray_offset_angles
+        ray_offsets = self.cluster_aoa_spread * self.__ray_offset_angles
         ray_angles = np.tile(angles[:, None], len(ray_offsets)) + ray_offsets
 
         return ray_angles
@@ -545,7 +778,7 @@ class ClusterDelayLine(Channel, Serializable):
         cluster_sign = self._rng.choice([-1., 1.], size=size)
 
         # ToDo: Treat the BST-UT case!!!! (los_zenith = 90°)
-        cluster_zenith = cluster_sign * cluster_zenith + cluster_variation
+        cluster_zenith: np.ndarray = cluster_sign * cluster_zenith + cluster_variation
 
         if self.line_of_sight:
             cluster_zenith += los_zenith - cluster_zenith[0]
@@ -554,7 +787,7 @@ class ClusterDelayLine(Channel, Serializable):
             cluster_zenith += los_zenith
 
         # Spread the angles
-        ray_offsets = self.cluster_zenith_spread_arrival * self.__ray_offset_angles
+        ray_offsets = self.cluster_zoa_spread * self.__ray_offset_angles
         ray_zenith = np.tile(cluster_zenith[:, None], len(ray_offsets)) + ray_offsets
 
         return ray_zenith
@@ -563,6 +796,7 @@ class ClusterDelayLine(Channel, Serializable):
                          num_samples: int,
                          sampling_rate: float) -> np.ndarray:
 
+        delay_spread = self._rng.normal(self.delay_spread_mean, self.delay_spread_std)
         rice_factor = self._rng.normal(loc=self.rice_factor_mean, scale=self.rice_factor_std)
         los_aoa = 0.
         los_aod = 0.
@@ -572,8 +806,8 @@ class ClusterDelayLine(Channel, Serializable):
         num_clusters = self.num_clusters
         num_rays = 20
 
-        cluster_delays = self._cluster_delays(rice_factor)
-        cluster_powers = self._cluster_powers(cluster_delays, rice_factor)
+        cluster_delays = self._cluster_delays(delay_spread, rice_factor)
+        cluster_powers = self._cluster_powers(delay_spread, cluster_delays, rice_factor)
 
         ray_aod = self._ray_azimuth_angles(cluster_powers, rice_factor, los_aod)
         ray_aoa = self._ray_azimuth_angles(cluster_powers, rice_factor, los_aoa)
@@ -608,7 +842,7 @@ class ClusterDelayLine(Channel, Serializable):
 
         # Prepare the cluster delays, equation 7.5-26
         subcluster_delays = (np.repeat(cluster_delays[:num_split_clusters, None], 3, axis=1) +
-                             self.intra_cluster_delay_spread * np.array([1., 1.28, 2.56]))
+                             self.cluster_delay_spread * np.array([1., 1.28, 2.56]))
         virtual_cluster_delays = np.concatenate((subcluster_delays.flatten(), cluster_delays[num_split_clusters:]))
 
         # Weak cluster coefficients
@@ -705,3 +939,14 @@ class ClusterDelayLine(Channel, Serializable):
             impulse_response += np.multiply.outer(coefficients, resampling_matrix)
 
         return impulse_response
+
+    @property
+    def _center_frequency(self) -> float:
+        """Model center frequency between transmitter and receiver carrier frequency.
+
+        Returns:
+            float:
+                Frequency in Hz.
+        """
+
+        return .5 * (self.receiver.carrier_frequency + self.transmitter.carrier_frequency)
