@@ -204,7 +204,7 @@ class TestUrbanMacrocellsNLOS(TestCase):
         self.transmitter.carrier_frequency = 1e9
 
         self.channel = UrbanMacrocellsNoLineOfSight(receiver=self.receiver,
-                                                      transmitter=self.transmitter)
+                                                    transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
     def test_impulse_response(self):
@@ -432,7 +432,7 @@ class TestIndoorOfficeNLOS(TestCase):
         self.transmitter.carrier_frequency = 1e9
 
         self.channel = IndoorOfficeNoLineOfSight(receiver=self.receiver,
-                                                   transmitter=self.transmitter)
+                                                 transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
     def test_impulse_response(self):
