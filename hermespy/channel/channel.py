@@ -394,7 +394,7 @@ class Channel(SerializableArray, RandomNode):
         forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), impulse_response, sync_offset)
                                for signal in forwards]
         backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate),
-                                               impulse_response.transpose((0, 2, 1, 3)), sync_offset)
+                                               impulse_response.transpose((0, 2, 1, 3)).conj(), sync_offset)
                                 for signal in backwards]
 
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
