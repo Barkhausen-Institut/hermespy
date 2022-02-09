@@ -3,6 +3,62 @@
 =======
 PyMonte
 =======
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   flowchart LR
+
+   subgraph gridsection[Grid Section]
+
+      parameter_a(Parameter)
+      parameter_b(Parameter)
+   end
+
+   object((Investigated Object))
+   evaluator_a{{Evaluator}}
+   evaluator_b{{Evaluator}}
+   evaluator_c{{Evaluator}}
+
+   subgraph sample[Sample]
+
+       artifact_a[(Artifact)]
+       artifact_b[(Artifact)]
+       artifact_c[(Artifact)]
+   end
+
+   parameter_a --> object
+   parameter_b --> object
+   object ---> evaluator_a ---> artifact_a
+   object ---> evaluator_b ---> artifact_b
+   object ---> evaluator_c ---> artifact_c
+
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   flowchart LR
+
+   controller{Simulation Controller}
+
+   gridsection_a[Grid Section]
+   gridsection_b[Grid Section]
+
+   sample_a[Sample]
+   sample_b[Sample]
+
+   subgraph actor_a[Actor #1]
+
+       object_a((Investigated Object))
+   end
+
+   subgraph actor_b[Actor #N]
+
+       object_b((Investigated Object))
+   end
+
+   controller --> gridsection_a --> actor_a --> sample_a
+   controller --> gridsection_b --> actor_b --> sample_b
 """
 
 from __future__ import annotations
