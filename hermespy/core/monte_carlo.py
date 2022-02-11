@@ -4,6 +4,12 @@
 PyMonte
 =======
 
+PyMonte is a stand-alone core module of HermesPy,
+enabling efficient and flexible MonteCarlo simulations over arbitrary configuration parameter combinations.
+By wrapping the core of the `Ray`_ project,
+any object serializable by the `pickle`_ standard module can become a system model for a Monte Carlo style simulation
+campaign.
+
 .. mermaid::
 
    %%{init: {'theme': 'dark'}}%%
@@ -34,6 +40,15 @@ PyMonte
    object ---> evaluator_c ---> artifact_c
 
 
+Monte Carlo simulations usually sweep over combinations of multiple parameters settings,
+configuring the underlying system model and generating simulation samples from independent realizations
+of the model state.
+PyMonte refers to a single parameter combination as :class:`.GridSection`,
+with the set of all parameter combinations making up the simulation grid.
+
+
+
+
 .. mermaid::
 
    %%{init: {'theme': 'dark'}}%%
@@ -59,6 +74,10 @@ PyMonte
 
    controller --> gridsection_a --> actor_a --> sample_a
    controller --> gridsection_b --> actor_b --> sample_b
+
+
+.. _Ray: https://www.ray.io/
+.. _pickle: https://docs.python.org/3/library/pickle.html
 """
 
 from __future__ import annotations
