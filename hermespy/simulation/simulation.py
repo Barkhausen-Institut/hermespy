@@ -7,20 +7,23 @@ Simulation
 
 from __future__ import annotations
 from typing import Any, List, Type, Optional, Union, Tuple
+from typing import Any, Dict, List, Type, Optional, Union, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
+from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core.executable import Executable, Verbosity
-from hermespy.core.drop import Drop
-from hermespy.channel import QuadrigaInterface, Channel, ChannelStateInformation
-
-from hermespy.core.factory import Serializable
-from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MO
-from hermespy.core.scenario import Scenario
-from hermespy.core.signal_model import Signal
-from hermespy.core.statistics import SNRType, Statistics, ConfidenceMetric
+from ..core.executable import Executable, Verbosity
+from ..core.device import Operator
+from ..core.drop import Drop
+from ..channel import QuadrigaInterface, Channel, ChannelStateInformation
+from ..core.factory import Serializable
+from ..core.monte_carlo import Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
+from ..core.scenario import Scenario
+from ..core.signal_model import Signal
+from ..core.statistics import SNRType
 from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -44,110 +47,48 @@ class SimulationDrop(Drop):
 
 
 class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo[Scenario[SimulatedDevice]]):
-    """HermesPy simulation configuration.
-
-    """
+    """HermesPy simulation configuration."""
 
     yaml_tag = u'Simulation'
+    """YAML serialization tag."""
+
+    snr_type: SNRType
+    """Global type of signal to noise ratio."""
+
+    plot_results: bool
+    """Plot results after simulation runs"""
+
+    dump_results: bool
+    """Dump results to files after simulation runs."""
 
     __channels: np.ndarray
-    snr_type: SNRType
-    noise_loop: List[float]
-    confidence_metric: ConfidenceMetric
-    plot_bit_error: bool
-    plot_block_error: bool
-    __min_num_drops: int
-    __confidence_level: float
-    __confidence_margin: float
-    plot_drop_transmitted_bits: bool
-    plot_drop_transmitted_signals: bool
-    plot_drop_received_signals: bool
-    plot_drop_received_bits: bool
-    plot_drop_bit_errors: bool
-    plot_drop_block_errors: bool
-    plot_drop_transmitted_symbols: bool
-    plot_drop_received_symbols: bool
-    plot_drop_transmit_stft: bool
-    plot_drop_receive_stft: bool
-    plot_drop_transmit_spectrum: bool
-    plot_drop_receive_spectrum: bool
+    __operators: List[Operator]
     __snr: Optional[float]
 
     def __init__(self,
+                 num_samples: int = 100,
                  drop_duration: float = 0.,
-                 plot_drop: bool = True,
-                 calc_transmit_spectrum: bool = False,
-                 calc_receive_spectrum: bool = False,
-                 calc_transmit_stft: bool = False,
-                 calc_receive_stft: bool = False,
-                 spectrum_fft_size: int = 0,
-                 plot_bit_error: bool = False,
-                 plot_block_error: bool = False,
-                 plot_drop_transmitted_symbols: bool = False,
-                 plot_drop_received_symbols: bool = False,
+                 plot_results: bool = False,
+                 dump_results: bool = True,
                  snr_type: Union[str, SNRType] = SNRType.EBN0,
-                 confidence_metric: Union[ConfidenceMetric, str] = ConfidenceMetric.DISABLED,
-                 min_num_drops: int = 0,
-                 max_num_drops: int = 1,
-                 confidence_level: float = 1.0,
-                 confidence_margin: float = 0.0,
                  results_dir: Optional[str] = None,
                  verbosity: Union[str, Verbosity] = Verbosity.INFO,
                  seed: Optional[int] = None) -> None:
-        """Simulation object initialization.
-
-        Args:
+        """Args:
 
             drop_duration(float, optional):
                 Duration of simulation drops in seconds.
 
-            plot_drop (bool, optional):
-                Plot each drop during execution of scenarios.
+            plot_results (bool, optional):
+                Plot results after simulation runs.
+                Disabled by default.
 
-            calc_transmit_spectrum (bool):
-                Compute the transmitted signals frequency domain spectra.
-
-            calc_receive_spectrum (bool):
-                Compute the received signals frequency domain spectra.
-
-            calc_transmit_stft (bool):
-                Compute the short time Fourier transform of transmitted signals.
-
-            calc_receive_stft (bool):
-                Compute the short time Fourier transform of received signals.
-
-            spectrum_fft_size (int):
-                Number of discrete frequency bins computed within the Fast Fourier Transforms.
-
-            plot_bit_error (bool, optional):
-                Plot resulting bit error rate after simulation.
-
-            plot_block_error (bool, optional):
-                Plot resulting block error rate after simulation.
-
-            plot_drop_transmitted_symbols (bool, optional):
-                Plot the constellation of transmitted symbols
-
-            plot_drop_received_symbols (bool, optional);
-                Plot the constellation of received symbols.
+            dump_results (bool, optional):
+                Dump results to files after simulation runs.
+                Enabled by default.
 
             snr_type (Union[str, SNRType]):
                 The signal to noise ratio metric to be used.
-
-            confidence_metric (Union[ConfidenceMetric, str], optional):
-                Metric for premature simulation stopping criterion
-
-            min_num_drops (int, optional):
-                Minimum number of drops before confidence check may prematurely terminate execution.
-
-            max_num_drops (int, optional):
-                Maximum number of drops before confidence check may prematurely terminate execution.
-
-            confidence_level (float, optional):
-                Confidence at which execution should be terminated.
-
-            confidence_margin (float, optional):
-                Margin for the confidence check
 
             results_dir (str, optional):
                 Directory in which all simulation artifacts will be dropped.
@@ -159,45 +100,18 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 Random seed used to initialize the pseudo-random number generator.
         """
 
-        Executable.__init__(self, plot_drop, calc_transmit_spectrum, calc_receive_spectrum,
-                            calc_transmit_stft, calc_receive_stft, spectrum_fft_size, max_num_drops,
-                            results_dir, verbosity)
-
+        # Initialize base classes
+        Executable.__init__(self, results_dir, verbosity)
         Scenario.__init__(self, seed=seed)
-        MonteCarlo.__init__(self, investigated_object=self, num_samples=max_num_drops)
+        MonteCarlo.__init__(self, investigated_object=self, num_samples=num_samples)
 
         self.__channels = np.ndarray((0, 0), dtype=object)
+        self.plot_results = plot_results
+        self.dump_results = dump_results
         self.drop_duration = drop_duration
-        self.plot_drop_transmitted_bits = False
-        self.plot_drop_transmitted_signals = False
-        self.plot_drop_received_signals = False
-        self.plot_drop_received_bits = False
-        self.plot_drop_bit_errors = False
-        self.plot_drop_block_errors = False
-        self.plot_drop_transmitted_symbols = plot_drop_transmitted_symbols
-        self.plot_drop_received_symbols = plot_drop_received_symbols
-        self.plot_drop_transmit_stft = False
-        self.plot_drop_receive_stft = False
-        self.plot_drop_transmit_spectrum = False
-        self.plot_drop_receive_spectrum = False
         self.snr_type = snr_type
-        self.plot_bit_error = plot_bit_error
-        self.plot_block_error = plot_block_error
-        self.min_num_drops = min_num_drops
-        self.max_num_drops = max_num_drops
-        self.confidence_level = confidence_level
-        self.confidence_margin = confidence_margin
         self.snr = None
-
-        # Recover confidence metric enumeration from string value if the provided argument is a string
-        if isinstance(confidence_metric, str):
-            self.confidence_metric = ConfidenceMetric[confidence_metric]
-
-        else:
-            self.confidence_metric = confidence_metric
-
-        if self.max_num_drops < self.min_num_drops:
-            raise ValueError("Minimum number of drops must be smaller than maximum number of drops.")
+        self.__operators: List[Operator] = []
 
     def new_device(self) -> SimulatedDevice:
         """Add a new device to the simulation scenario.
@@ -339,15 +253,18 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
 
         return channels
 
-    def set_channel(self, receiver_index: int, transmitter_index: int, channel: Channel) -> None:
+    def set_channel(self,
+                    receiver: Union[int, SimulatedDevice],
+                    transmitter: Union[int, SimulatedDevice],
+                    channel: Channel) -> None:
         """Specify a channel within the channel matrix.
 
         Args:
 
-            receiver_index (int):
+            receiver (int):
                 Index of the receiver within the channel matrix.
 
-            transmitter_index (int):
+            transmitter (int):
                 Index of the transmitter within the channel matrix.
 
             channel (Channel):
@@ -358,171 +275,44 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 If `transmitter_index` or `receiver_index` are greater than the channel matrix dimensions.
         """
 
-        if self.__channels.shape[0] <= transmitter_index or 0 > transmitter_index:
+        if isinstance(receiver, SimulatedDevice):
+            receiver = self.devices.index(receiver)
+
+        if isinstance(transmitter, SimulatedDevice):
+            transmitter = self.devices.index(transmitter)
+
+        if self.__channels.shape[0] <= transmitter or 0 > transmitter:
             raise ValueError("Transmitter index greater than channel matrix dimension")
 
-        if self.__channels.shape[1] <= receiver_index or 0 > receiver_index:
+        if self.__channels.shape[1] <= receiver or 0 > receiver:
             raise ValueError("Receiver index greater than channel matrix dimension")
 
         # Update channel field within the matrix
-        self.__channels[transmitter_index, receiver_index] = channel
+        self.__channels[transmitter, receiver] = channel
 
         # Set proper receiver and transmitter fields
-        channel.transmitter = self.devices[transmitter_index]
-        channel.receiver = self.devices[receiver_index]
+        channel.transmitter = self.devices[transmitter]
+        channel.receiver = self.devices[receiver]
         channel.random_mother = self
         channel.scenario = self
 
-    def run(self) -> None:
+    def run(self) -> MonteCarloResult[Scenario[SimulatedDevice]]:
 
-        self.simulate(SimulationActor)
+        # Generate simulation result
+        result = self.simulate(SimulationActor)
 
-#    def run(self) -> Statistics:
-#        """Run the full simulation configuration.
-#
-#        Returns:
-#            Statistics: Statistics of the simulation.
-#        """
-#
-#        # Plot scenario information
-#        if self.verbosity.value <= Verbosity.INFO.value:
-#
-#            print(f"\nExecuting scenario simulation")
-#            print(f"{'SNR':<10}{'Drop':<10}{'Link':<15}{'BER':<15}{'BLER':<15}")
-#            print("="*65)
-#
-#        # Initialize plot statistics with current scenario state
-#        statistics = Statistics(scenario=self,
-#                                snr_loop=self.noise_loop,
-#                                calc_transmit_spectrum=self.calc_transmit_spectrum,
-#                                calc_receive_spectrum=self.calc_receive_spectrum,
-#                                calc_transmit_stft=self.calc_transmit_stft,
-#                                calc_receive_stft=self.calc_receive_stft,
-#                                spectrum_fft_size=self.spectrum_fft_size,
-#                                confidence_margin=self.confidence_margin,
-#                                confidence_level=self.confidence_level,
-#                                confidence_metric=self.confidence_metric,
-#                                min_num_drops=self.min_num_drops,
-#                                max_num_drops=self.max_num_drops)
-#
-#        # Save most recent drop
-#        drop: Optional[SimulationDrop] = None
-#
-#        for noise_index, snr in enumerate(self.noise_loop):
-#
-#            for d in range(self.max_num_drops):
-#
-#                drop_run_flag = statistics.run_flag_matrix[:, :, noise_index]
-#
-#                # Prematurely abort the drop loop if all stopping criteria have been met
-#                if np.sum(drop_run_flag.flatten()) == 0:
-#
-#                    if self.verbosity.value <= Verbosity.INFO.value:
-#
-#                        info_str = f" Stopping criteria for SNR tap #{noise_index} met "
-#                        padding = .5 * max(65 - len(info_str), 0)
-#                        print('-' * floor(padding) + info_str + '-' * ceil(padding))
-#
-#                    break
-#
-#                drop = self.drop(snr, drop_run_flag)
-#
-#                # Print drop statistics if verbosity flag is set
-#                if self.verbosity.value <= Verbosity.INFO.value:
-#
-#                    bers = drop.bit_error_rates
-#                    blers = drop.block_error_rates
-#
-#                    for tx_id, (tx_bers, tx_blers) in enumerate(zip(bers, blers)):
-#                        for rx_id, (ber, bler) in enumerate(zip(tx_bers, tx_blers)):
-#
-#                            link_str = f"{tx_id}x{rx_id}"
-#                            ber_str = "-" if ber is None else f"{ber:.4f}"
-#                            bler_str = "-" if bler is None else f"{bler:.4f}"
-#
-#                            if tx_id == 0 and rx_id == 0:
-#
-#                                snr_str = f"{10 * np.log10(snr):.1f}"
-#                                print(f"{snr_str:<10}{d:<10}{link_str:<15}{ber_str:<15}{bler_str:<15}")
-#
-#                            else:
-#                                print(" " * 20 + f"{link_str:<15}{ber_str:<15}{bler_str:<15}")
-#
-#                # Visualize plot if requested
-#                if self.plot_drop:
-#
-#                    if self.plot_drop_transmitted_bits:
-#                        drop.plot_transmitted_bits()
-#
-#                    if self.plot_drop_transmitted_signals:
-#                        drop.plot_transmitted_signals()
-#
-#                    if self.plot_drop_received_signals:
-#                        drop.plot_received_signals()
-#
-#                    if self.plot_drop_received_bits:
-#                        drop.plot_received_bits()
-#
-#                    if self.plot_drop_bit_errors:
-#                        drop.plot_bit_errors()
-#
-#                    if self.plot_drop_transmitted_symbols:
-#                        drop.plot_transmitted_symbols()
-#
-#                    if self.plot_drop_received_symbols:
-#                        drop.plot_received_symbols()
-#
-#                    if self.plot_drop_block_errors:
-#                        drop.plot_block_errors()
-#
-#                    if self.plot_drop_transmit_stft:
-#                        drop.plot_transmit_stft()
-#
-#                    if self.plot_drop_receive_stft:
-#                        drop.plot_receive_stft()
-#
-#                    if self.plot_drop_transmit_spectrum:
-#                        drop.plot_transmit_spectrum()
-#
-#                    if self.plot_drop_receive_spectrum:
-#                        drop.plot_receive_spectrum()
-#
-#                    plt.show()
-#
-#                # Add drop to the statistics
-#                statistics.add_drop(drop, noise_index)
-#
-#                # Check confidence if the routine is enabled and
-#                # the minimum number of configured drops has been reached
-#                # if self.confidence_metric is not ConfidenceMetric.DISABLED and d >= self.min_num_drops:
-#
-#        # Dump statistics results
-#        # statistics.save(self.results_dir)
-#
-#        # Plot statistics results, if flags apply
-#        if self.calc_transmit_spectrum:
-#            statistics.plot_transmit_spectrum()
-#
-#        if self.calc_receive_spectrum:
-#            statistics.plot_receive_spectrum()
-#
-#        if self.plot_bit_error:
-#            statistics.plot_bit_error_rates()
-#
-#        if self.plot_block_error:
-#            statistics.plot_block_error_rates()
-#
-#        # Plot the last drop to visualize stfts, if available
-#        if drop is not None:
-#
-#            if self.calc_transmit_stft:
-#                drop.plot_transmit_stft()
-#
-#            if self.calc_receive_stft:
-#                drop.plot_receive_stft()
-#
-#        plt.show()
-#        return statistics
+        # Visualize results if the flag is enabled
+        if self.plot_results:
+
+            with self.style_context():
+
+                result.plot()
+                plt.show()
+
+        if self.dump_results:
+            result.save_to_matlab(path.join(self.results_dir, 'results.mat'))
+
+        return result
 
     def drop(self,
              snr: float,
@@ -628,84 +418,6 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 raise ValueError("Signal to noise ratio must be greater than zero")
 
             self.__snr = value
-
-    @property
-    def min_num_drops(self) -> int:
-        """Minimum number of drops before confidence check may terminate execution.
-
-        Returns:
-            int: Minimum number of drops.
-        """
-
-        return self.__min_num_drops
-
-    @min_num_drops.setter
-    def min_num_drops(self, val: int) -> None:
-        """Modify minimum number of drops before confidence check may terminate execution.
-
-        Args:
-            val (int): Minim number of drops.
-
-        Raises:
-            ValueError: If `num_drops` is smaller than zero.
-        """
-
-        if val < 0:
-            raise ValueError("Minimum number of drops must be greater or equal to zero.")
-
-        self.__min_num_drops = val
-
-    @property
-    def confidence_level(self) -> float:
-        """Access confidence level at which execution may be prematurely terminated.
-
-        Return:
-            float: Confidence level between 0.0 and 1.0.
-        """
-
-        return self.__confidence_level
-
-    @confidence_level.setter
-    def confidence_level(self, level: float) -> None:
-        """Modify confidence level at which execution may be prematurely terminated.
-
-        Args:
-            level (float): Confidence level between 0.0 and 1.0.
-
-        Raises:
-            ValueError: If `level` is not between 0.0 and 1.0.
-        """
-
-        if not 0.0 <= level <= 1.0:
-            raise ValueError("Confidence level must be between zero and one")
-
-        self.__confidence_level = level
-        
-    @property
-    def confidence_margin(self) -> float:
-        """Access margin for confidence level at which execution may be prematurely terminated.
-
-        Return:
-            float: Absolute margin confidence margin.
-        """
-
-        return self.__confidence_margin
-
-    @confidence_margin.setter
-    def confidence_margin(self, margin: float) -> None:
-        """Modify margin for confidence level at which execution may be prematurely terminated.
-
-        Args:
-            margin (float): Absolute margin.
-
-        Raises:
-            ValueError: If `margin` is smaller than zero.
-        """
-
-        if margin < 0.0:
-            raise ValueError("Margin must be greater or equal to zero")
-
-        self.__confidence_margin = margin
 
     @property
     def drop_duration(self) -> float:
@@ -1070,65 +782,46 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 Newly created `Simulation` instance.
         """
 
-        state = constructor.construct_mapping(node)
+        state = constructor.construct_mapping(node, deep=True)
 
         # Launch a global quadriga instance
         quadriga_interface: Optional[QuadrigaInterface] = state.pop(QuadrigaInterface.yaml_tag, None)
         if quadriga_interface is not None:
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
 
-        plot_drop_transmitted_bits = state.pop('plot_drop_transmitted_bits', False)
-        plot_drop_transmitted_signals = state.pop('plot_drop_transmitted_signals', False)
-        plot_drop_received_signals = state.pop('plot_drop_received_signals', False)
-        plot_drop_received_bits = state.pop('plot_drop_received_bits', False)
-        plot_drop_bit_errors = state.pop('plot_drop_bit_errors', False)
-        plot_drop_block_errors = state.pop('plot_drop_block_errors', False)
-        plot_drop_transmit_stft = state.pop('plot_drop_transmit_stft', False)
-        plot_drop_receive_stft = state.pop('plot_drop_receive_stft', False)
-        plot_drop_transmit_spectrum = state.pop('plot_drop_transmit_spectrum', False)
-        plot_drop_receive_spectrum = state.pop('plot_drop_receive_spectrum', False)
+        # Pop configuration sections for "special" treatment
         devices: List[SimulatedDevice] = state.pop('Devices', [])
-        operators: List[Tuple[Any, int, ...]] = state.pop('Operators', [])
         channels: List[Tuple[Channel, int, ...]] = state.pop('Channels', [])
+        operators: List[Operator] = state.pop('Operators', [])
+        evaluators: List[Evaluator] = state.pop('Evaluators', [])
+        dimensions: Dict[str, Any] = state.pop('Dimensions', {})
 
-        # Convert noise loop dB to linear
-        noise_loop = state.pop('noise_loop', None)
-        if noise_loop is not None:
-            state['noise_loop'] = 10 ** (np.array(noise_loop) / 10)
-
-        simulation = cls(**state)
-
-        simulation.plot_drop_transmitted_bits = plot_drop_transmitted_bits
-        simulation.plot_drop_transmitted_signals = plot_drop_transmitted_signals
-        simulation.plot_drop_received_signals = plot_drop_received_signals
-        simulation.plot_drop_received_bits = plot_drop_received_bits
-        simulation.plot_drop_bit_errors = plot_drop_bit_errors
-        simulation.plot_drop_block_errors = plot_drop_block_errors
-        simulation.plot_drop_transmit_stft = plot_drop_transmit_stft
-        simulation.plot_drop_receive_stft = plot_drop_receive_stft
-        simulation.plot_drop_transmit_spectrum = plot_drop_transmit_spectrum
-        simulation.plot_drop_receive_spectrum = plot_drop_receive_spectrum
+        # Initialize simulation
+        simulation = cls.InitializationWrapper(state)
 
         # Add devices to the simulation
         for device in devices:
             simulation.add_device(device)
 
-        # Assign operators their respective devices
-        for operator_tuple in operators:
-
-            operator = operator_tuple[0]
-            device_index = operator_tuple[1]
-
-            operator.device = simulation.devices[device_index]
-
         # Assign channel models
-        for channel_tuple in channels:
+        for channel, channel_position in channels:
 
-            channel = channel_tuple[0]
-            output_device_idx = channel_tuple[1]
-            input_device_idx = channel_tuple[2]
+            output_device_idx = channel_position[0]
+            input_device_idx = channel_position[1]
 
             simulation.set_channel(output_device_idx, input_device_idx, channel)
+
+        # Register operators
+        for operator in operators:
+            simulation.__operators.append(operator)
+
+        # Register evaluators
+        for evaluator in evaluators:
+            simulation.add_evaluator(evaluator)
+
+        # Add simulation dimensions
+        for dimension_key, dimension_values in dimensions.items():
+            simulation.add_dimension(dimension_key, dimension_values)
 
         # Return simulation instance recovered from the serialization
         return simulation

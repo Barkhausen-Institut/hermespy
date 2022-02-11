@@ -146,8 +146,6 @@ class MultipathFadingCost256(MultipathFadingChannel):
             'los_angle': node.los_angle,
             'doppler_frequency': node.doppler_frequency,
             'los_doppler_frequency': node.los_doppler_frequency,
-            'transmit_precoding': node.transmit_precoding,
-            'receive_postcoding': node.receive_postcoding,
             'sync_offset_low': node.sync_offset_low,
             'sync_offset_high': node.sync_offset_high
         }
@@ -155,10 +153,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
         if node.model_type is MultipathFadingCost256.TYPE.HILLY:
             state.pop('los_angle')
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[MultipathFadingCost256], constructor: SafeConstructor, node: MappingNode) -> \
@@ -360,8 +355,6 @@ class MultipathFading5GTDL(MultipathFadingChannel):
             'los_angle': node.los_angle,
             'doppler_frequency': node.doppler_frequency,
             'los_doppler_frequency': node.los_doppler_frequency,
-            'transmit_precoding': node.transmit_precoding,
-            'receive_postcoding': node.receive_postcoding,
             'sync_offset_low': node.sync_offset_low,
             'sync_offset_high': node.sync_offset_high
         }
@@ -369,10 +362,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         if node.model_type is MultipathFading5GTDL.TYPE.C or MultipathFading5GTDL.TYPE.E:
             state.pop('los_doppler_frequency')
 
-        transmitter_index, receiver_index = node
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[MultipathFading5GTDL], constructor: SafeConstructor, node: MappingNode) -> \
@@ -494,14 +484,11 @@ class MultipathFadingExponential(MultipathFadingChannel):
             'los_angle': node.los_angle,
             'doppler_frequency': node.doppler_frequency,
             'los_doppler_frequency': node.los_doppler_frequency,
-            'transmit_precoding': node.transmit_precoding,
-            'receive_postcoding': node.receive_postcoding,
             'sync_offset_low': node.sync_offset_low,
             'sync_offset_high': node.sync_offset_high
         }
 
-        transmitter_index, receiver_index = node.indices
-        return representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[MultipathFadingExponential], constructor: SafeConstructor, node: MappingNode) -> \

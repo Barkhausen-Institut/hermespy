@@ -81,14 +81,22 @@ with the set of all parameter combinations making up the simulation grid.
 """
 
 from __future__ import annotations
-from abc import abstractmethod, ABC
-from functools import reduce
-from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple
 
+from abc import abstractmethod
+from functools import reduce
+from itertools import product
+from math import ceil, exp, sqrt
+from shutil import get_terminal_size
+from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple
+from warnings import catch_warnings, simplefilter
+
+import matplotlib.pyplot as plt
 import numpy as np
 import ray
 from ray.util import ActorPool
-from scipy.stats import bayes_mvs
+from scipy.constants import pi
+from scipy.io import savemat
+from scipy.stats import norm
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -164,8 +172,7 @@ class ArtifactTemplate(Generic[AT], Artifact):
         return self.__artifact
 
     def __str__(self) -> str:
-
-        return str(self.to_scalar())
+        return f"{self.to_scalar():.3f}"
 
     def to_scalar(self) -> float:
 
@@ -178,6 +185,18 @@ class Evaluator(Generic[MO]):
     Once a simulation sample has been generated, its properties of interest must be extracted.
     This is done by evaluators.
     """
+
+    # Berry-Esseen constants ToDo: Check the proper selection here
+    __C_0: float = .4785
+    __C_1: float = 30.2338
+
+    __confidence: float
+    __tolerance: float
+
+    def __init__(self) -> None:
+
+        self.confidence = 1.
+        self.tolerance = 0.
 
     @abstractmethod
     def evaluate(self, investigated_object: MO) -> Artifact:
@@ -195,16 +214,147 @@ class Evaluator(Generic[MO]):
         """
         ...
 
+    @property
     @abstractmethod
-    def __str__(self) -> None:
-        """String representation of this evaluator.
+    def abbreviation(self) -> str:
+        """Short string representation of this evaluator.
 
-        Used as a label for the console output.
+        Used as a label for console output and plot axes annotations.
+
+        Returns:
+            str: String representation
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def title(self) -> str:
+        """Long string representation of this evaluator.
+
+        Used as plot title.
+
+        Returns:
+            str: String representation
+        """
+        ...
+
+    @property
+    def confidence(self) -> float:
+        """Confidence required for premature simulation abortion.
+
+        Returns:
+            float: Confidence between zero and one.
+
+        Raises:
+            ValueError: If confidence is lower than zero or greater than one.
+        """
+
+        return self.__confidence
+
+    @confidence.setter
+    def confidence(self, value: float) -> None:
+
+        if value < 0. or value > 1.:
+            raise ValueError("Confidence level must be in the interval between zero and one")
+
+        self.__confidence = value
+
+    @property
+    def tolerance(self) -> float:
+        """Tolerance for premature simulation abortion.
+
+        Returns:
+            float: Non-negative tolerance.
+
+        Raises:
+            ValueError: If tolerance is negative.
+        """
+
+        return self.__tolerance
+
+    @tolerance.setter
+    def tolerance(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Tolerance must be greater or equal to zero")
+
+        self.__tolerance = value
+
+    def __str__(self) -> str:
+        """String object representation.
 
         Returns:
             str: String representation.
         """
-        ...
+
+        return self.abbreviation
+
+    @staticmethod
+    def _scalar_cdf(scalar: float) -> float:
+        """Assumed cumulative probability of the scalar representation.
+
+        Args:
+
+            scalar (float):
+                The scalar value.
+
+        Returns:
+
+            float: Cumulative probability between zero and one.
+        """
+
+        return norm.cdf(scalar)
+
+    def confidence_level(self,
+                         scalars: np.ndarray) -> float:
+        """Compute the confidence level in a given set of scalars.
+
+        Refer to :footcite:t:`2014:bayer` for a detailed derivation of the implement equations.
+
+        Args:
+            scalars (np.ndarray): Numpy vector of scalar representations.
+
+        Raises:
+            ValueError: If `scalars` is not a vector.
+        """
+
+        # Raise a value error if the scalars argument is not a vector
+        if scalars.ndim != 1:
+            raise ValueError("Scalars must be a vector (on-dimensional array)")
+
+        n = len(scalars)
+
+        # Compute unbiased samples
+        sample_mean = np.mean(scalars)
+        unbiased_samples = scalars - sample_mean
+
+        # Compute moments
+        sigma_moment = sqrt(np.sum(unbiased_samples ** 2) / n)
+
+        # A sigma moment of 0 indicates zero variance within the samples, therefore maximum confidence
+        if sigma_moment == 0.:
+            return 1.0
+
+        beta_bar_moment = np.sum(np.abs(unbiased_samples) ** 3) / (n * sigma_moment ** 3)
+        beta_hat_moment = np.sum(unbiased_samples ** 3) / (n * sigma_moment ** 3)
+        kappa_moment = np.sum(unbiased_samples ** 4) / (n * sigma_moment ** 4) - 3
+
+        # Estimate the confidence
+        sample_sqrt = sqrt(n)
+        sigma_tolerance = sample_sqrt * self.tolerance / sigma_moment
+        sigma_tolerance_squared = sigma_tolerance ** 2
+        kappa_term = 4 * (2 / (n - 1) + kappa_moment / n)
+
+        confidence_bound = 2 * ((1 - self._scalar_cdf(sigma_tolerance)) +
+                                min(self.__C_0, self.__C_1 * (1 + abs(sigma_tolerance)) ** -3)
+                                * beta_bar_moment / sample_sqrt * min(1., kappa_term))
+
+        if kappa_term < 1. and sigma_tolerance_squared < 1418.:
+
+            confidence_bound += ((1 - kappa_term) * abs(sigma_tolerance_squared - 1) * abs(beta_hat_moment) /
+                                 (exp(.5 * sigma_tolerance_squared) * 3 * sqrt(2 * pi * n) * sigma_moment ** 3))
+
+        return 1. - confidence_bound
 
 
 class MonteCarloSample(object):
@@ -266,6 +416,139 @@ class MonteCarloSample(object):
 
         return self.__artifacts
 
+    @property
+    def num_artifacts(self) -> int:
+        """Number of contained artifact objects.
+
+        Returns:
+            int: Number of artifacts.
+        """
+
+        return len(self.__artifacts)
+
+    @property
+    def artifact_scalars(self) -> np.ndarray:
+        """Collect scalar artifact representations.
+
+        Returns:
+            np.ndarray: Vector of scalar artifact representations.
+        """
+
+        return np.array([artifact.to_scalar() for artifact in self.artifacts], dtype=float)
+
+
+class GridSection(object):
+
+    __coordinates: Tuple[int, ...]          # Section indices within the simulation grid
+    __samples: List[MonteCarloSample]       # Set of generated samples
+    __evaluators: List[Evaluator]           # Number of artifacts per sample
+    __scalars: np.ndarray
+    __evaluator_confidences: np.ndarray     # Confidence level for each evaluator
+
+    def __init__(self,
+                 coordinates: Tuple[int, ...],
+                 evaluators: List[Evaluator]) -> None:
+        """
+        Args:
+
+            coordinates (Tuple[int, ...]):
+                Section indices within the simulation grid.
+
+            evaluators (List[Evaluator]):
+                Configured evaluators.
+        """
+
+        self.__coordinates = coordinates
+        self.__samples = []
+        self.__evaluators = evaluators
+        self.__scalars = np.empty((self.num_evaluators, 0), dtype=float)
+        self.__evaluator_confidences = np.zeros(self.num_evaluators, dtype=bool)
+
+    @property
+    def coordinates(self) -> Tuple[int, ...]:
+        """Grid section coordinates within the simulation grid.
+
+        Returns:
+            Tuple[int, ...]: Section coordinates.
+        """
+
+        return self.__coordinates
+
+    @property
+    def num_samples(self) -> int:
+        """Number of already generated samples within this section.
+
+        Returns:
+            int: Number of samples.
+        """
+
+        return len(self.__samples)
+
+    @property
+    def num_evaluators(self) -> int:
+        """Number of configured evaluators.
+
+        Returns:
+            int: Number of evaluators.
+        """
+
+        return len(self.__evaluators)
+
+    def add_sample(self, sample: MonteCarloSample) -> None:
+        """Add a new sample to this grid section collection.
+
+        Args:
+            sample (MonteCarloSample):
+                The sample to be added.
+
+        Raises:
+            ValueError: If the number of artifacts in `sample` does not match the initialization.
+        """
+
+        # Make sure the provided number of artifacts is correct
+        if sample.num_artifacts != self.num_evaluators:
+            raise ValueError(f"Number of sample artifacts ({sample.num_artifacts}) does not match the "
+                             f"configured number of evaluators ({self.num_evaluators})")
+
+        # Append sample to the stored list
+        self.__samples.append(sample)
+
+        # Update scalar storage
+        scalars = sample.artifact_scalars
+        self.__scalars = np.append(self.__scalars, scalars[::, np.newaxis], axis=1)
+
+        # Update scalar confidences
+        for evaluator_idx, evaluator in enumerate(self.__evaluators):
+
+            # Retrieve cached scalars for the respective evaluator
+            evaluator_scalars = self.__scalars[evaluator_idx, :]
+
+            # Compute confidence level
+            confidence_level = evaluator.confidence_level(evaluator_scalars)
+            self.__evaluator_confidences[evaluator_idx] = confidence_level >= evaluator.confidence
+
+    @property
+    def confidences(self) -> np.ndarray:
+        """Confidence in the scalar evaluations.
+
+        Returns:
+            np.ndarray: Boolean array indicating confidence.
+        """
+
+        return self.__evaluator_confidences
+
+    @property
+    def scalars(self) -> np.ndarray:
+        """Access the scalar evaluator representations in this grid section.
+
+        Returns:
+            np.ndarray:
+                Matrix of scalar representations.
+                First dimension indicates the evaluator index, second dimension the sample.
+        """
+
+        return self.__scalars.copy()
+
 
 class MonteCarloActor(Generic[MO]):
     """Monte Carlo Simulation Actor.
@@ -280,26 +563,19 @@ class MonteCarloActor(Generic[MO]):
     __evaluators: List[Evaluator[MO]]               # Evaluators used to process the investigated object sample state
 
     def __init__(self,
-                 x) -> None:
-                 # investigated_object: MO,
-                 # dimensions: dict[str, List[Any]],
-                 # evaluators: Set[Evaluator[MO]]) -> None:
+                 argument_tuple: Tuple[MO, dict[str, List[Any]], List[Evaluator[MO]]]) -> None:
         """
         Args:
 
-            investigated_object (MO):
+            argument_tuple:
                 Object to be investigated during the simulation runtime.
-
-            dimensions (dict[str, List[Any]]):
                 Dimensions over which the simulation will iterate.
-
-            evaluators (Set[Evaluator[MO]]):
                 Evaluators used to process the investigated object sample state.
         """
 
-        investigated_object = x[0]
-        dimensions = x[1]
-        evaluators = x[2]
+        investigated_object = argument_tuple[0]
+        dimensions = argument_tuple[1]
+        evaluators = argument_tuple[2]
 
         self.__investigated_object = investigated_object  # deepcopy(investigated_object)
         self.__dimension_parameters = [dimension_parameters for dimension_parameters in dimensions.values()]
@@ -309,17 +585,13 @@ class MonteCarloActor(Generic[MO]):
         self.__configuration_lambdas = [self.__setter_lambda(dimension) for dimension in dimensions.keys()]
 
     def run(self,
-            grid_section: Tuple[int, ...],
-            sample_index: int) -> MonteCarloSample:
+            grid_section: Tuple[int, ...]) -> MonteCarloSample:
         """Run the simulation actor.
 
         Args:
 
             grid_section (Tuple[int, ...]):
                 Sample point index of each grid dimension.
-
-            sample_index (int):
-                Sample index of the grid section.
 
         Returns:
             MonteCarloSample:
@@ -339,7 +611,7 @@ class MonteCarloActor(Generic[MO]):
         evaluations = [evaluator.evaluate(sampled_object) for evaluator in self.__evaluators]
 
         # Return results
-        return MonteCarloSample(grid_section, sample_index, evaluations)
+        return MonteCarloSample(grid_section, 0, evaluations)
 
     @abstractmethod
     def sample(self, investigated_object: MO) -> MO:
@@ -377,6 +649,159 @@ class MonteCarloActor(Generic[MO]):
         # Implicitly we assume that every non-callable reference is an attribute
         return lambda args: setattr(object_reference, stages[-1], args)
 
+#    @classmethod
+#    def remote(cls, *args) -> MonteCarloActor:
+#
+#        raise NotImplementedError("Please apply the ray remote decorator to your actor")
+
+
+class MonteCarloResult(Generic[MO]):
+
+    __dimensions: dict[str, List[Any]]
+    __evaluators: List[Evaluator[MO]]
+    __sections: np.ndarray
+
+    def __init__(self,
+                 dimensions: dict[str, List[Any]],
+                 evaluators: List[Evaluator],
+                 sections: np.ndarray) -> None:
+        """
+        Args:
+
+            dimensions (dict[str, List[Any]]):
+                Dimensions over which the simulation has swept.
+
+            evaluators (List[Evaluator]):
+                Evaluators used to evaluated the simulation artifacts.
+
+            sections (np.ndarray):
+                Evaluation results.
+
+        Raises:
+            ValueError:
+                If the dimensions of `samples` do not match the supplied sweeping dimensions and evaluators.
+        """
+
+        self.__dimensions = dimensions
+        self.__evaluators = evaluators
+        self.__sections = sections
+
+    def plot(self) -> List[plt.Figure]:
+
+        dimension_strs = list(self.__dimensions.keys())
+        dimension_values = list(self.__dimensions.values())
+
+        visualized_slice = 0
+
+        figures: List[plt.Figure] = []
+
+        # Prepare artifacts
+        section: GridSection
+        graph_artifacts = np.array([np.mean(section.scalars, axis=1)
+                                    for section in self.__sections.flatten()], dtype=float)
+
+        for evaluator_idx, (evaluator, scalar_means) in enumerate(zip(self.__evaluators, graph_artifacts.T)):
+
+            figure, axes = plt.subplots()
+            figure.suptitle(evaluator.title)
+            axes.plot(dimension_values[visualized_slice], scalar_means)
+            axes.set_xlabel(dimension_strs[visualized_slice])
+            axes.set_ylabel(evaluator.abbreviation)
+
+            figures.append(figure)
+
+        return figures
+
+    def save_to_matlab(self, file: str) -> None:
+        """Save simulation results to a matlab file.
+
+        Args:
+
+            file (str):
+                File location to which the results should be saved.
+        """
+
+        # Prepare artifacts
+        mean_scalar_artifacts = np.empty([*self.__sections.shape, len(self.__evaluators)], dtype=float)
+        flat_iter = self.__sections.flat
+        for section in flat_iter:
+            mean_scalar_artifacts[np.array(flat_iter.coords)-1, :] = np.mean(section.scalars, axis=1)
+
+        mat_dict = {
+            "dimensions": np.array(list(self.__dimensions.keys()), dtype=str),
+            "dimension_sections": np.array(list(product(self.__dimensions.values()))),
+            "evaluators": [evaluator.abbreviation for evaluator in self.__evaluators],
+            "evaluations": mean_scalar_artifacts,
+        }
+
+        """mat_dict = {      
+            "snr_type": self.snr_type.name,
+            "snr_vector": self.snr_loop,
+            "ber_mean": self.average_bit_error_rate,
+            "fer_mean": self.average_block_error_rate,
+            "ber_lower": self.bit_error_min,
+            "ber_upper": self.bit_error_max,
+            "fer_lower": self.block_error_min,
+            "fer_upper": self.block_error_max,
+        }
+
+        if self.__calc_transmit_spectrum:
+            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_tx, self._frequency_range_tx)):
+                if periodogram is not None and frequency is not None:
+                    mat_dict["frequency_tx_" + str(idx)] = fft.fftshift(frequency)
+                    mat_dict["power_spectral_density_tx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
+
+        if self.__calc_transmit_stft:
+            for idx, (time, freq, power) in enumerate(self._stft_tx):
+                if time is not None and freq is not None and power is not None:
+                    mat_dict["stft_time_tx_" + str(idx)] = time
+                    mat_dict["stft_frequency_tx" + str(idx)] = freq
+                    mat_dict["stft_power_tx" + str(idx)] = power
+
+        if self.__calc_receive_spectrum:
+            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_rx, self._frequency_range_rx)):
+
+                mat_dict["frequency_rx_" + str(idx)] = fft.fftshift(frequency)
+                mat_dict["power_spectral_density_rx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
+
+        if self.__calc_receive_stft:
+            for idx, (time, freq, power) in enumerate(self._stft_rx):
+                if time is not None and freq is not None and power is not None:
+                    mat_dict["stft_time_rx_" + str(idx)] = time
+                    mat_dict["stft_frequency_rx_" + str(idx)] = freq
+                    mat_dict["stft_power_rx_" + str(idx)] = power
+
+        ber_theory = np.nan * np.ones((self.__scenario.num_transmitters,
+                                      self.__scenario.num_receivers,
+                                      self.__num_snr_loops), dtype=float)
+        fer_theory = np.nan * np.ones((self.__scenario.num_transmitters,
+                                      self.__scenario.num_receivers,
+                                      self.__num_snr_loops), dtype=float)
+        theory_notes = [[np.nan for _ in self.__scenario.receivers] for _ in self.__scenario.transmitters]
+
+        if self.theoretical_results is not None:
+
+            for tx_idx, rx_idx in zip(range(self.__scenario.num_transmitters), range(self.__scenario.num_receivers)):
+
+                link_theory = self.theoretical_results[tx_idx, rx_idx]
+                if link_theory is not None:
+
+                    if 'ber' in link_theory:
+                        ber_theory[tx_idx, rx_idx, :] = link_theory['ber']
+
+                    if 'fer' in link_theory:
+                        fer_theory[tx_idx, rx_idx, :] = link_theory['fer']
+
+                    if 'notes' in link_theory:
+                        theory_notes[tx_idx][rx_idx] = link_theory['notes']
+
+            mat_dict["ber_theory"] = ber_theory
+            mat_dict["fer_theory"] = fer_theory
+            mat_dict["theory_notes"] = theory_notes"""
+
+        # Save results in matlab file
+        savemat(file, mat_dict)
+
 
 class MonteCarlo(Generic[MO]):
     """Grid of parameters over which to iterate the simulation."""
@@ -392,7 +817,7 @@ class MonteCarlo(Generic[MO]):
                  investigated_object: MO,
                  num_samples: int,
                  evaluators: Optional[List[Evaluator[MO]]] = None,
-                 min_num_samples: int = 0,
+                 min_num_samples: int = -1,
                  num_actors: int = 0) -> None:
         """
         Args:
@@ -415,36 +840,43 @@ class MonteCarlo(Generic[MO]):
 
         # Initialize ray if it hasn't been initialized yet. Required to query ideal number of actors
         if not ray.is_initialized():
-            ray.init()
+
+            with catch_warnings():
+
+                simplefilter("ignore")
+                ray.init()
 
         self.__dimensions = {}
         self.__investigated_object = investigated_object
         self.__evaluators = [] if evaluators is None else evaluators
         self.num_samples = num_samples
-        self.min_num_samples = min_num_samples
+        self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(.5 * num_samples)
         self.num_actors = int(ray.available_resources()['CPU']) if num_actors <= 0 else num_actors
 
-    def simulate(self, actor: Type[MonteCarloActor]) -> None:
+    def simulate(self, actor: Type[MonteCarloActor]) -> MonteCarloResult[MO]:
         """Launch the Monte Carlo simulation.
 
         Args:
 
             actor (Type[MonteCarloActor]):
                 The actor from which to generate the simulation samples.
+
+        Returns:
+            np.ndarray: Generated samples.
         """
 
         # Print meta-information and greeting
         print(f"Launched simulation campaign with {self.__num_actors} dedicated actors")
 
-        num_samples = self.num_samples
-        dimension_str = f"{num_samples}"
-        for dimension in self.__dimensions:
+        max_num_samples = self.num_samples
+        dimension_str = f"{max_num_samples}"
+        for dimension in self.__dimensions.values():
 
             num_sections = len(dimension)
-            num_samples *= num_sections
+            max_num_samples *= num_sections
             dimension_str += f" x {num_sections}"
 
-        print(f"Generating a maximum of {num_samples} = " + dimension_str +
+        print(f"Generating a maximum of {max_num_samples} = " + dimension_str +
               f" samples inspected by {len(self.__evaluators)} evaluators\n")
 
         # Print grid information
@@ -455,10 +887,16 @@ class MonteCarlo(Generic[MO]):
 
                 line = f"{dimension:<10}   "
                 for section in sections:
-                    line += f"{section:<6}  "
+                    line += f"{section:<6.2f}  "
                 print(line)
 
             print("\r")
+
+        # Query terminal dimensions
+        terminal_size = get_terminal_size()
+        progress_percent_size = 5
+        progress_bar_size = terminal_size.columns - progress_percent_size - 10
+        progress_bar_elements = progress_bar_size - 2
 
         # Print axis information
         header = ""
@@ -469,7 +907,7 @@ class MonteCarlo(Generic[MO]):
         header += f"{'Sample':<13}"
 
         for evaluator in self.__evaluators:
-            header += f"{str(evaluator):<13}"
+            header += f"{evaluator.abbreviation:<13}"
 
         num_header_sections = 1 + len(self.__dimensions) + len(self.__evaluators)
         num_separator_elements = 13 * num_header_sections
@@ -482,17 +920,22 @@ class MonteCarlo(Generic[MO]):
                                 for _ in range(self.__num_actors)])
 
         # Generate section sample containers and meta-information
-        samples = np.frompyfunc(list, 0, 1)(np.empty([len(dimension) for dimension in self.__dimensions.values()],
-                                                     dtype=object))
-        max_num_samples = self.num_samples * np.prod(np.array(samples.shape))
-        num_samples = 0
+        grid_task_count = np.zeros([len(dimension) for dimension in self.__dimensions.values()], dtype=int)
+        grid_active_mask = np.ones([len(dimension) for dimension in self.__dimensions.values()], dtype=bool)
+        grid = np.empty([len(dimension) for dimension in self.__dimensions.values()], dtype=object)
+
+        grid_iter = grid.flat
+        for _ in grid_iter:
+
+            cords = tuple(np.array(grid_iter.coords) - 1)
+            grid[cords] = GridSection(cords, self.__evaluators)
 
         # Submit initial actor tasks
-        for _ in range(self.__num_actors + 2):
+        task_overhead = 2   # A little overhead in task submission might speed things up? Not clear atm.
+        for _ in range(self.__num_actors + task_overhead):
+            _ = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
 
-            actor_pool.submit(lambda a, s: a.run.remote(*s),
-                              self.__section(num_samples))
-            num_samples += 1
+        sample_info_queue = ['' for _ in range(8)]
 
         # Keep executing until all samples are computed
         while actor_pool.has_next():
@@ -500,62 +943,111 @@ class MonteCarlo(Generic[MO]):
             # Retrieve result from pool
             sample: MonteCarloSample = actor_pool.get_next_unordered(timeout=None)
 
-            # Print sample information
-            info = ''
-            for dimension, section_idx in zip(self.__dimensions.values(), sample.grid_section):
-                info += f"{dimension[section_idx]:<13}"
+            # Decrease task counter
+            grid_task_count[sample.grid_section] -= 1
 
-            info += f"{sample.sample_index:<13}"
-
-            for artifact in sample.artifacts:
-                info += f"{str(artifact):<13}"
-
-            print(info)
+            # Queue next task and retrieve progress
+            progress = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
 
             # Save result
-            samples[sample.grid_section] = sample
+            grid_section: GridSection = grid[sample.grid_section]
+            grid_section.add_sample(sample)
 
-            # Push next job to actor pool if there are still jobs to be done
-            if num_samples < max_num_samples:
+            # Check for stopping criteria
+            if grid_section.num_samples >= self.min_num_samples:
 
-                actor_pool.submit(lambda a, s: a.run.remote(*s),
-                                  self.__section(num_samples))
-                num_samples += 1
+                confident: bool = sum(np.invert(grid_section.confidences)) == 0.
+                if confident:
+                    grid_active_mask[sample.grid_section] = False
 
-            # Calculate confidences and decide to prematurely stop the iteration (if possible)
-            if sample.sample_index >= self.min_num_samples:
-                pass
+            # Print sample information
+            sample_info = ''
+            for dimension, section_idx in zip(self.__dimensions.values(), sample.grid_section):
+                sample_info += f"{dimension[section_idx]:<13.2f}"
 
-        return samples
+            sample_info += f"{sample.sample_index:<13}"
 
-    def __section(self, index: int) -> Tuple[Tuple[int, ...], int]:
+            for artifact in sample.artifacts:
+                sample_info += f"{str(artifact):<13}"
+
+            progress_percent = int(100 * progress)
+            progress_num_elements = int(ceil(progress_bar_elements * progress))
+            progress_elements = '█' * progress_num_elements + '░' * (progress_bar_elements - progress_num_elements)
+
+            sample_info_queue.pop(0)
+            sample_info_queue.append(sample_info)
+
+            for sample_info in reversed(sample_info_queue):
+                print(sample_info, flush=False)
+
+            print(f"Progress: [{progress_elements}]{progress_percent:>4}%", flush=True)
+
+        return MonteCarloResult[MO](self.__dimensions, self.__evaluators, grid)
+
+    def __next_section(self,
+                       grid: np.ndarray,
+                       grid_active_mask: np.ndarray,
+                       grid_task_count: np.ndarray) -> Tuple[Optional[Tuple[int, ...]], float]:
         """Calculate grid section and sample indices given a global sample index.
 
         Args:
 
-            index (int):
-                Global sample index over all grid sections.
+            grid (np.ndarray):
+                Simulation result grid.
+
+            grid_active_mask (np.ndarray):
+                Activity mask.
+
+            grid_task_count (np.ndarray):
+                Count of already submitted tasks within the sections.
 
         Returns:
 
-            Tuple[np.ndarray, int]:
-
-                section_indices (Tuple[int, ...],):
-                    Indices of the grid section associated with the `index`.
-
-                sample_index (np.ndarray):
-                    Index of the sample within the respective section.
+            Optional[Tuple[int, ...]]:
+                Coordinates of the next section to be queued for sampling.
+                `None` if we are done!
         """
 
-        section_indices = tuple()
-        num_dimension_sections = np.array([len(v) for v in self.__dimensions.values()], dtype=int)
+        num_processed_samples = 0
+        flat_grid = grid.flatten()
+        grid_section: GridSection
+        for grid_section in flat_grid:
 
-        for dimension_idx, num_sections in enumerate(num_dimension_sections):
+            section_coordinates = grid_section.coordinates
 
-            section_indices += (int(index / np.prod(num_dimension_sections[1+dimension_idx:])
-                                    / self.num_samples) % num_sections),
+            # The grid section has already been marked inactive? Skip!
+            if not grid_active_mask[section_coordinates]:
 
-        return section_indices, 0
+                num_processed_samples += self.num_samples
+                continue
+
+            # The grid section has already the maximum amount of tasks queued? Skip!
+            if grid_section.num_samples + grid_task_count[section_coordinates] >= self.max_num_samples:
+
+                num_processed_samples += grid_section.num_samples
+                continue
+
+            num_processed_samples += grid_section.num_samples
+            progress = num_processed_samples / (len(flat_grid) * self.num_samples)
+
+            return section_coordinates, progress
+
+        return None, 1.0
+
+    def __queue_next(self,
+                     pool: ActorPool,
+                     grid: np.ndarray,
+                     grid_active_mask: np.ndarray,
+                     grid_task_count: np.ndarray) -> float:
+
+        next_section, progress = self.__next_section(grid, grid_active_mask, grid_task_count)
+
+        if next_section is not None:
+
+            pool.submit(lambda a, s: a.run.remote(s), next_section)
+            grid_task_count[next_section] += 1
+
+        return progress
 
     @property
     def investigated_object(self) -> Any:
@@ -646,6 +1138,20 @@ class MonteCarlo(Generic[MO]):
             raise ValueError("Number of samples must be greater or equal to zero")
 
         self .__min_num_samples = value
+
+    @property
+    def max_num_samples(self) -> int:
+        """Maximum number of samples over the whole simulation.
+
+        Returns:
+            int: Number of samples.
+        """
+
+        num_samples = self.num_samples
+        for grid_sections in self.__dimensions.values():
+            num_samples *= len(grid_sections)
+
+        return num_samples
 
     @property
     def num_actors(self) -> int:

@@ -4,9 +4,13 @@
 import unittest
 import tempfile
 from contextlib import _GeneratorContextManager
+from typing import Type
 from unittest.mock import Mock, patch
 
+from ruamel.yaml import SafeRepresenter, Node, ScalarNode
+
 from hermespy.core import Executable, Verbosity
+from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -27,35 +31,28 @@ class ExecutableStub(Executable):
     def run(self) -> None:
         pass
 
+    @classmethod
+    def to_yaml(cls: Type[Serializable],
+                representer: SafeRepresenter,
+                node: Serializable) -> Node:
+
+        return ScalarNode('ExecutableStub', None)
+
 
 class TestExecutable(unittest.TestCase):
     """Test the base executable prototype, the base class for hermes operations."""
 
     def setUp(self) -> None:
 
-        self.plot_drop = True
-        self.calc_transmit_spectrum = True
-        self.calc_receive_spectrum = True
-        self.calc_transmit_stft = True
-        self.calc_receive_stft = True
-        self.spectrum_fft_size = 20
         self.max_num_drops = 1
         self.verbosity = Verbosity.NONE
 
         with tempfile.TemporaryDirectory() as tempdir:
-            self.executable = ExecutableStub(self.plot_drop, self.calc_transmit_spectrum, self.calc_receive_spectrum,
-                                             self.calc_transmit_stft, self.calc_receive_stft, self.spectrum_fft_size,
-                                             self.max_num_drops, tempdir, self.verbosity)
+            self.executable = ExecutableStub(self.max_num_drops, tempdir, self.verbosity)
 
     def test_init(self) -> None:
         """Executable initialization parameters should be properly stored."""
 
-        self.assertEqual(self.plot_drop, self.executable.plot_drop)
-        self.assertEqual(self.calc_transmit_spectrum, self.executable.calc_transmit_spectrum)
-        self.assertEqual(self.calc_receive_spectrum, self.executable.calc_receive_spectrum)
-        self.assertEqual(self.calc_transmit_stft, self.executable.calc_transmit_stft)
-        self.assertEqual(self.calc_receive_stft, self.executable.calc_receive_stft)
-        self.assertEqual(self.spectrum_fft_size, self.executable.spectrum_fft_size)
         self.assertEqual(self.max_num_drops, self.executable.max_num_drops)
         self.assertEqual(self.verbosity, self.executable.verbosity)
 
@@ -66,16 +63,6 @@ class TestExecutable(unittest.TestCase):
 
             self.executable.execute()
             self.assertTrue(run.called)
-
-    def test_add_scenario(self) -> None:
-        """Scenario property should return scenarios added by the add_scenario function."""
-
-        scenarios = [Mock() for _ in range(10)]
-
-        for scenario in scenarios:
-            self.executable.add_scenario(scenario)
-
-        self.assertCountEqual(scenarios, self.executable.scenarios)
 
     def test_spectrum_fft_size_setget(self) -> None:
         """Spectrum FFT size property getter should return setter argument."""

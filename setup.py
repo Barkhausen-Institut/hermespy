@@ -1,5 +1,5 @@
 from skbuild import setup
-from setuptools import find_packages
+from setuptools import find_namespace_packages
 from sphinx.setup_command import BuildDoc
 
 cmdclass = {'build_sphinx': BuildDoc}
@@ -29,7 +29,7 @@ setup(
         "Natural Language :: English",
         "Topic :: Scientific/Engineering",
     ],
-    packages=find_packages(exclude=['tests']),
+    packages=find_namespace_packages(include=['hermespy.*'], exclude=['tests']),
     namespace_packages=['hermespy'],
     package_dir={"hermespy": "hermespy"},
     package_data={

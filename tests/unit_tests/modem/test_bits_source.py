@@ -1,10 +1,17 @@
+# -*- coding: utf-8 -*-
 """Test source of bit streams to be transmitted."""
 
-from hermespy.modem.bits_source import RandomBitsSource
-
+from os import path
+from tempfile import TemporaryDirectory
+from unittest import TestCase
 from unittest.mock import Mock
-import unittest
+
 import numpy as np
+
+from hermespy.modem.bits_source import RandomBitsSource, StreamBitsSource
+
+
+
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -16,7 +23,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestRandomBitsSource(unittest.TestCase):
+class TestRandomBitsSource(TestCase):
 
     def setUp(self) -> None:
 
@@ -46,3 +53,29 @@ class TestRandomBitsSource(unittest.TestCase):
 
             # Assert that all bits are actually either zeros or ones
             self.assertEqual(True, np.any((bits == 1) | (bits == 0)))
+
+
+class TestStreamBitsSource(TestCase):
+
+    def setUp(self) -> None:
+
+        self.temp_dir = TemporaryDirectory()
+        self.file_path = path.join(self.temp_dir.name, 'file')
+        self.text = b'Hello World'
+
+        with open(self.file_path, 'wb') as file_stream:
+            file_stream.write(self.text)
+
+        self.source = StreamBitsSource(self.file_path)
+
+    def tearDown(self) -> None:
+
+        del self.source
+        self.temp_dir.cleanup()
+
+    def test_get_bits(self) -> None:
+
+        bits = self.source.generate_bits(len(self.text)*8)
+        text = np.packbits(bits).tobytes()
+
+        self.assertEqual(self.text, text)

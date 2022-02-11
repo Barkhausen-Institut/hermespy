@@ -7,11 +7,10 @@ Phase Shift Keying / Quadrature Amplitude Modulation
 
 from __future__ import annotations
 from abc import ABC
-from typing import Any, Tuple, List, Optional, Type
+from typing import Any, Tuple, Optional, Type
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
-from scipy.signal import correlate, find_peaks
 
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.core.device import FloatingError
@@ -289,7 +288,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
     def demodulate(self,
                    baseband_signal: np.ndarray,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float = 0.) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+                   noise_variance: float = 0.) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
 
         # Filter the signal
         filtered_signal = self.rx_filter.filter(baseband_signal)
@@ -325,7 +324,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
 
         noise = np.repeat(noise_variance, len(data))
 
-        return data, data_state, noise
+        return Symbols(data), data_state, noise
 
     @property
     def bandwidth(self) -> float:

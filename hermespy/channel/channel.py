@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-=======
-Channel
-=======
+================
+Channel Modeling
+================
 """
 
 from __future__ import annotations
@@ -10,13 +10,13 @@ from typing import List, Optional, Tuple, Type, Union
 from itertools import chain, product
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from ruamel.yaml import SafeRepresenter, MappingNode
 
-from hermespy.core import Device, RandomNode
-from hermespy.core.factory import SerializableArray
-from hermespy.core.signal_model import Signal
-from hermespy.core.channel_state_information import ChannelStateFormat, ChannelStateInformation
-
+from ..core import RandomNode
+from ..core.device import Device
+from ..core.factory import SerializableArray
+from ..core.signal_model import Signal
+from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -28,8 +28,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel(RandomNode, SerializableArray):
-    """Implements an ideal distortion-less channel.
+class Channel(SerializableArray, RandomNode):
+    """An ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
 
@@ -61,8 +61,7 @@ class Channel(RandomNode, SerializableArray):
                  sync_offset_high: float = 0.,
                  impulse_response_interpolation: bool = True,
                  seed: Optional[int] = None) -> None:
-        """Channel model initialization.
-
+        """
         Args:
 
             transmitter (Transmitter, optional):
@@ -92,7 +91,8 @@ class Channel(RandomNode, SerializableArray):
                 Seed used to initialize the pseudo-random number generator.
         """
 
-        # Initialize base class
+        # Initialize base classes
+        SerializableArray.__init__(self)        # Must be first in order for correct diamond resolve
         RandomNode.__init__(self, seed=seed)
 
         # Default parameters
@@ -391,11 +391,10 @@ class Channel(RandomNode, SerializableArray):
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
-        forwards_receptions = [self.__propagate_scalar(signal.resample(csi_sampling_rate), impulse_response,
-                                                       sync_offset)
+        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), impulse_response, sync_offset)
                                for signal in forwards]
-        backwards_receptions = [self.__propagate_scalar(signal.resample(csi_sampling_rate),
-                                                        impulse_response.transpose((0, 2, 1, 3)), sync_offset)
+        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate),
+                                               impulse_response.transpose((0, 2, 1, 3)), sync_offset)
                                 for signal in backwards]
 
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
@@ -403,10 +402,10 @@ class Channel(RandomNode, SerializableArray):
 
         return forwards_receptions, backwards_receptions, channel_state
 
-    def __propagate_scalar(self,
-                           signal: Signal,
-                           impulse_response: np.ndarray,
-                           delay: float) -> Signal:
+    @staticmethod
+    def Propagate(signal: Signal,
+                  impulse_response: np.ndarray,
+                  delay: float) -> Signal:
         """Propagate a single signal model given a specific channel impulse response.
 
         Args:
@@ -529,31 +528,4 @@ class Channel(RandomNode, SerializableArray):
             'sync_offset_high': node.__sync_offset_high
         }
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
-
-    @classmethod
-    def from_yaml(cls: Type[Channel], constructor: SafeConstructor,  node: MappingNode) -> Channel:
-        """Recall a new `Channel` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Channel` serialization.
-
-        Returns:
-            Channel:
-                Newly created `Channel` instance. The internal references to modems will be `None` and need to be
-                initialized by the `scenario` YAML constructor.
-
-        """
-
-        # Handle empty yaml nodes
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        return constructor.construct_mapping(node)
+        return representer.represent_mapping(cls.yaml_tag, state)

@@ -34,7 +34,10 @@ WaveformType = TypeVar('WaveformType', bound='WaveformGenerator')
 
 
 class Synchronization(Generic[WaveformType], ABC):
-    """Abstract base class for synchronization routines of waveform generators."""
+    """Abstract base class for synchronization routines of waveform generators.
+
+    Refer to :footcite:t:`2016:nasir` for an overview of the current state of the art.
+    """
 
     __waveform_generator: Optional[WaveformType]       # Waveform generator this routine is attached to
 
@@ -482,7 +485,7 @@ class WaveformGenerator(ABC):
     def demodulate(self,
                    signal: np.ndarray,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+                   noise_variance: float) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
         """Demodulate a base-band signal stream to data symbols.
 
         Args:

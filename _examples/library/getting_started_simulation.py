@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from hermespy import Simulation
-from hermespy.modem import Modem, WaveformGeneratorPskQam
+from hermespy.simulation.simulation import Simulation
+from hermespy.modem.modem import Modem
+from hermespy.modem.evaluators import BitErrorEvaluator, FrameErrorEvaluator
+from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
 
 # Create a new HermesPy simulation scenario
 simulation = Simulation()
@@ -15,22 +17,11 @@ modem = Modem()
 modem.waveform_generator = WaveformGeneratorPskQam()
 modem.device = device
 
-drop = simulation.drop(40.)
-drop.plot_received_symbols()
-drop.plot_bit_errors()
-
-drop = simulation.drop(5.)
-drop.plot_received_symbols()
-drop.plot_bit_errors()
-
-plt.show()
-
 # Monte-Carlo simulation
-simulation.noise_loop = 10 ** (np.array([10., 8., 6., 4., 2., 1., 0.1, 1e-2, 1e-3]) / 10)
-simulation.max_num_drops = 50
-simulation.min_num_drops = 10
-simulation.confidence_margin = .8
+simulation.add_evaluator(BitErrorEvaluator(modem, modem))
+simulation.add_dimension('snr', [10, 4, 2, 1, 0.5])
+simulation.num_samples = 1000
+result = simulation.run()
 
-statistics = simulation.run()
-statistics.plot_bit_error_rates()
+result.plot()
 plt.show()
