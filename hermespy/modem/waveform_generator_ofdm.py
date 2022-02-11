@@ -15,11 +15,11 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNod
 from scipy.fft import fft, ifft
 from scipy.interpolate import griddata
 
-from hermespy.core.factory import Serializable
-from hermespy.core.channel_state_information import ChannelStateInformation, ChannelStateDimension
-from hermespy.core.signal_model import Signal
-from hermespy.modem import WaveformGenerator
-from hermespy.modem.tools import PskQamMapping
+from ..core.factory import Serializable
+from ..core.channel_state_information import ChannelStateInformation, ChannelStateDimension
+from ..core.signal_model import Signal
+from .modem import Symbols, WaveformGenerator
+from .tools import PskQamMapping
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -384,7 +384,7 @@ class FrameSymbolSection(FrameSection, Serializable):
         mask = self.resource_mask
 
         # Fill up the time-frequency grid exploiting the mask
-        grid = np.zeros((self.frame.num_subcarriers, self.num_words), complex)
+        grid = np.zeros((self.frame.num_subcarriers, self.num_words), dtype=complex)
 
         # Reference fields all currently carry the complex symbol 1+j0
         # ToDo: Implement reference symbol configurations
@@ -794,18 +794,21 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
 
         return num
 
-    def map(self, data_bits: np.ndarray) -> np.ndarray:
-        return self._mapping.get_symbols(data_bits)
+    def map(self, data_bits: np.ndarray) -> Symbols:
+        return Symbols(self._mapping.get_symbols(data_bits))
 
-    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
+    def unmap(self, data_symbols: Symbols) -> np.ndarray:
 
-        detected_bits = self._mapping.detect_bits(data_symbols).astype(int)
+        detected_bits = self._mapping.detect_bits(data_symbols.raw).astype(int)
         return detected_bits
 
-    def modulate(self, data_symbols: np.ndarray) -> Signal:
+    def modulate(self, data_symbols: Symbols) -> Signal:
 
         # The number of samples in time domain the frame should contain, given the current sample frequency
         output_signal = np.empty(0, dtype=complex)
+
+        # Convert symbols
+        data_symbols = data_symbols.raw.flatten()
 
         sent_data_symbols = 0
         for section in self.structure:
@@ -821,13 +824,13 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
             section_signal = section.modulate(section_data_symbols)
             output_signal = np.append(output_signal, section_signal)
 
-        signal_model = Signal(output_signal, self.sampling_rate, carrier_frequency=self.modem.carrier_frequency)
+        signal_model = Signal(output_signal, self.sampling_rate)
         return signal_model
 
     def demodulate(self,
                    signal: np.ndarray,
                    channel_state: ChannelStateInformation,
-                   noise_variance: float = 0.0) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
+                   noise_variance: float = 0.0) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
 
         # Recover OFDM grid
         symbol_grid = np.empty((self.num_subcarriers, self.words_per_frame), dtype=complex)
@@ -873,7 +876,7 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
         data_symbols = symbol_grid.T[data_mask.T]
         noise_variances = np.repeat(noise_variance, self.symbols_per_frame)
 
-        return data_symbols, channel_state_estimation, noise_variances
+        return Symbols(data_symbols), channel_state_estimation, noise_variances
 
     @property
     def bandwidth(self) -> float:

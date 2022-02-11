@@ -5,7 +5,6 @@ from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
 from hermespy.coding.turbo import RSC
-from hermespy.hardware_loop.physical_device import PhysicalDevice
 
 
 class TestRSC(TestCase):
@@ -29,16 +28,3 @@ class TestRSC(TestCase):
         decoded_sequence = self.rsc.decode(encoded_sequence)
 
         assert_array_equal(bit_sequence, decoded_sequence)
-
-class Test(PhysicalDevice):
-    def trigger(self) -> None:
-        pass
-
-    @property
-    def carrier_frequency(self) -> float:
-        pass
-
-
-@property
-def sampling_rate(self) -> float:
-    pass

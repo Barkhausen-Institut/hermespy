@@ -7,17 +7,15 @@ Multipath Fading
 
 from __future__ import annotations
 from itertools import product
-from typing import Any, Optional, Type, Union, List, Tuple
+from typing import Any, Optional, Type, Union, List
 
 import numpy as np
 from numpy import cos, exp
-import numpy.random as rnd
 from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 from scipy.constants import pi
 
-from hermespy.channel.channel import Channel, ChannelStateInformation
+from hermespy.channel.channel import Channel
 from hermespy.helpers.resampling import delay_resampling_matrix
-from hermespy.core.signal_model import Signal
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -77,8 +75,6 @@ class MultipathFadingChannel(Channel):
         __los_angle (Optional[float]): Line of sight angle of arrival.
         los_gains (np.array): Path gains for line of sight component in sample sequence, derived from rice factor
         non_los_gains (np.array): Path gains for non-line of sight in sample sequence, derived from rice factor
-        __transmit_precoding (np.ndarray): Precoding matrix for antenna streams before propagation.
-        __receive_postcoding (np.ndarray): Postcoding matrix for antenna streams after propagation.
         __doppler_frequency (float): Doppler frequency in Hz.
         __los_doppler_frequency (Optional[float]): Optional doppler frequency for the line of sight component.
         interpolate_signals (bool): Interpolate signals during time-delay modeling. Disabled by default.
@@ -290,82 +286,6 @@ class MultipathFadingChannel(Channel):
         self.__los_doppler_frequency = frequency
 
     @property
-    def transmit_precoding(self) -> Optional[np.ndarray]:
-        """Access transmit precoding matrix.
-
-        Returns:
-            Optional[np.ndarray]: Transmit precoding matrix, None if no matrix ix configured.
-        """
-
-        return self.__transmit_precoding
-
-    @transmit_precoding.setter
-    def transmit_precoding(self, matrix: Optional[np.ndarray]) -> None:
-        """Configure transmit precoding matrix.
-
-        Args:
-            matrix (Optional[np.ndarray]): New transmit precoding matrix.
-
-        Raises:
-            ValueError: If `matrix` is not a matrix (does not have two dimensions).
-            ValueError: If `matrix` is not positive definite or hermitian.
-        """
-
-        if matrix is None:
-
-            self.__transmit_precoding = None
-            return
-
-        if matrix.ndim != 2:
-            raise ValueError("Transmit precoding must be a matrix (an array with two dimensions)")
-
-        if not np.array_equal(matrix, matrix.conj().transpose()):
-            raise ValueError("Transmit precoding matrix must be hermitian")
-
-        if not np.all(np.linalg.eigvals(matrix) > 0):
-            raise ValueError("Transmit precoding matrix must be positive definite")
-
-        self.__transmit_precoding = matrix
-
-    @property
-    def receive_postcoding(self) -> Optional[np.ndarray]:
-        """Access receive postcoding matrix.
-
-        Returns:
-            Optional[np.ndarray]: Receive postcoding matrix, None if no matrix ix configured.
-        """
-
-        return self.__receive_postcoding
-    
-    @receive_postcoding.setter
-    def receive_postcoding(self, matrix: Optional[np.ndarray]) -> None:
-        """Configure receive postcoding matrix.
-
-        Args:
-            matrix (Optional[np.ndarray]): New receive postcoding matrix.
-
-        Raises:
-            ValueError: If `matrix` is not a matrix (does not have two dimensions).
-            ValueError: If `matrix` is not positive definite or hermitian.
-        """
-
-        if matrix is None:
-
-            self.__receive_postcoding = None
-            return
-
-        if matrix.ndim != 2:
-            raise ValueError("Receive postcoding must be a matrix (an array with two dimensions)")
-
-        if not np.array_equal(matrix, matrix.conj().transpose()):
-            raise ValueError("Receive postcoding matrix must be hermitian")
-
-        if not np.all(np.linalg.eigvals(matrix) > 0):
-            raise ValueError("Receive postcoding matrix must be positive definite")
-
-        self.__receive_postcoding = matrix
-
-    @property
     def max_delay(self) -> float:
         """Access the maximum multipath delay.
 
@@ -547,7 +467,8 @@ class MultipathFadingChannel(Channel):
         return filter_instances
 
     @classmethod
-    def to_yaml(cls: Type[MultipathFadingChannel], representer: SafeRepresenter,
+    def to_yaml(cls: Type[MultipathFadingChannel],
+                representer: SafeRepresenter,
                 node: MultipathFadingChannel) -> MappingNode:
         """Serialize a channel object to YAML.
 
@@ -573,17 +494,12 @@ class MultipathFadingChannel(Channel):
             'los_angle': node.los_angle,
             'doppler_frequency': node.doppler_frequency,
             'los_doppler_frequency': node.los_doppler_frequency,
-            'transmit_precoding': node.transmit_precoding,
-            'receive_postcoding': node.receive_postcoding,
             'interpolate_signals': node.interpolate_signals,
             'sync_offset_low': node.sync_offset_low,
             'sync_offset_high': node.sync_offset_high
         }
 
-        transmitter_index, receiver_index = node.indices
-
-        yaml = representer.represent_mapping(u'{.yaml_tag} {} {}'.format(cls, transmitter_index, receiver_index), state)
-        return yaml
+        return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[MultipathFadingChannel],

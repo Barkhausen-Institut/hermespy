@@ -37,11 +37,13 @@ class TestMMSESpaceEqualizer(unittest.TestCase):
         self.precoding.required_inputs = lambda precoder: 1
         self.precoder.precoding = self.precoding
 
-    def test_encode_stub(self) -> None:
-        """Calling encode should raise a NotImplementedError."""
+    def test_encode(self) -> None:
+        """Calling encode should do nothing."""
 
-        with self.assertRaises(NotImplementedError):
-            _ = self.precoder.encode(np.empty(0))
+        data = self.generator.random(100)
+        encoded_data = self.precoder.encode(data)
+
+        assert_array_almost_equal(data, encoded_data)
 
     def test_decode_noiseless(self) -> None:
         """Decode should properly equalize the provided stream response in the absence of noise."""

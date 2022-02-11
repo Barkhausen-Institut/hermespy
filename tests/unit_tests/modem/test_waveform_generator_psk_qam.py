@@ -10,6 +10,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
 
 from hermespy.core.channel_state_information import ChannelStateInformation
+from hermespy.modem.modem import Symbols
 from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamCorrelationSynchronization
 from hermespy.modem.tools import ShapingFilter
 
@@ -126,34 +127,26 @@ class TestWaveformGeneratorPskQam(TestCase):
         self.generator.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
         self.generator.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
-        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
-                            np.arange(1, 1 + self.generator.symbols_per_frame))
+        expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
+                                   np.arange(1, 1 + self.generator.symbols_per_frame))
 
         baseband_signal = self.generator.modulate(expected_symbols)
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        assert_array_almost_equal(expected_symbols, symbols)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a symbol stream should yield identical symbols."""
 
-        expected_symbols = (np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)))
+        expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)))
         # * np.arange(1, 1 + self.rng.symbols_per_frame))
 
         baseband_signal = self.generator.modulate(expected_symbols)
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        assert_array_almost_equal(expected_symbols, symbols, decimal=2)
-
-    def test_equalization_setget(self) -> None:
-        """Equalization property getter should return setter argument."""
-
-        equalization = self.generator.Equalization.MMSE
-        self.generator.equalization = equalization
-
-        self.assertEqual(equalization, self.generator.equalization)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=2)
         
     def test_guard_interval_setget(self) -> None:
         """Guard interval property getter should return setter argument."""
@@ -187,7 +180,7 @@ class TestWaveformGeneratorPskQam(TestCase):
         """Symbol samples in frame property should compute the correct sample count."""
 
         self.generator.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
-        symbols = np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame))
+        symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)))
         signal = self.generator.modulate(symbols)
 
         self.assertEqual(signal.num_samples, self.generator.symbol_samples_in_frame)
@@ -195,7 +188,7 @@ class TestWaveformGeneratorPskQam(TestCase):
     def test_samples_in_frame(self) -> None:
         """Samples in frame property should compute the correct sample count."""
 
-        symbols = np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame))
+        symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)))
         signal = self.generator.modulate(symbols)
 
         self.assertEqual(signal.num_samples, self.generator.samples_in_frame)
@@ -254,7 +247,7 @@ class TestWaveformGeneratorPskQam(TestCase):
 
         symbols, _, _ = self.generator.demodulate(signal, channel_state)
 
-        self.assertEqual(len(symbols), self.generator.symbols_per_frame)
+        self.assertEqual(len(symbols.raw.flatten()), self.generator.symbols_per_frame)
 
     def test_bit_energy(self) -> None:
         """Bit energy property should compute correct bit energy."""

@@ -1,47 +1,58 @@
 !<Simulation>
 
-seed: 15                        # Fix random number generation to a global seed
-
-max_num_drops: 10               # Maximum number of simulation runs
-min_num_drops: 5                # Minimum number of simulation runs
-confidence_level: .9
-confidence_margin: .1
-confidence_metric: BER
-
-noise_loop: [20, 10, 2, 0]  # dB
-snr_type: EBN0                  # SNR is defined as the ratio between bit energy and noise power
-
-calc_transmit_spectrum: true    # Calculate the average transmit spectrum over all drops
-calc_receive_spectrum: true     # Calculate the average receive spectrum over all drops
-spectrum_fft_size: 512          # Spectrum calculations should contain 512 frequency bins
-
+# Physical device models within the simulated scenario
 Devices:
 
-  - SimulatedDevice
+  # Representation of a single (virtual) device
+  - &device_alpha !<SimulatedDevice>
 
-    carrier_frequency: 3e9
-    num_antennas: 2
+    carrier_frequency: 865e6        # Center frequency of Rf-band emitted signal
+    num_antennas: 2                 # Device features a single physical antenna
 
 
+# Channel models between device models
+Channels:
+
+  # 5G TDL model at alpha device
+  - !<5GTDL_0_0>
+    type: A
+    rms_delay: 1e-6
+
+
+# Operators transmitting or receiving signals over the devices
 Operators:
 
-  - Modem 0 0
+  # A single modem operating the device #0
+  - &modem_alpha !<Modem>
 
+    device: *device_alpha          # Device the modem is operating on
+
+    # Bit encoding configuration before mapping to modulation symbols
+    Encoding:
+
+      - !<LDPC>
+        block_size: 256
+        rate: [1, 2]
+
+    # Stream encoding configuration
     Precoding:
 
-      - DFT
-      - SM
-      - MMSE-Space
-      - MMSE-Time
+      - !<DFT>
+      - !<SM>
+      - !<ZF-Space>
+      - !<ZF-Time>
+#      - !<MMSE-Space>
+#      - !<MMSE-Time>
 
+    # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>
 
-      # Symbol modulation settings
-      modulation_order: 16
-      subcarrier_spacing: 15e3
-      dc_suppression: False
-      num_subcarriers: 100
-      channel_estimation: IDEAL
+      # !<Symbol> modulation settings
+      modulation_order: 16          # Modulation order, in other words 2 bit per subcarrier and frame
+      subcarrier_spacing: 15e3      # Spacing between the individual subcarrier center frequencies in Hz
+      dc_suppression: False         # Ignore the DC component during the DFT
+      num_subcarriers: 100          # Number of subcarriers per communiction frame
+      channel_estimation: IDEAL     # Ideal channel estimation routine
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
@@ -61,16 +72,35 @@ Operators:
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
       Structure:
 
-        - Symbol
+        - !<Symbol>
           num_repetitions: 2
           pattern: [0, 1]
 
-        - Guard
+        - !<Guard>
           num_repetitions: 1
           duration: 2e-3
 
-Channels:
 
-  - 5GTDL 0 0
-    type: A
-    rms_delay: 1e-6
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_alpha
+    receiving_modem: *modem_alpha
+    confidence: .9
+    tolerance: .01
+
+
+# Simulation parameters
+num_samples: 100                   # Number of samples per simulation grid section
+min_num_samples: 10                # Minimum number of samples per simulation grid section before premature stopping
+snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+plot_results: True                 # Visualize the evaluations after the simulation has finished
+
+
+# Scenario parameters over which the Monte-Carlo simulation sweeps
+Dimensions:
+
+  snr: [20, 10, 2, 0] dB

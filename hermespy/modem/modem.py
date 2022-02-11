@@ -174,18 +174,18 @@ Modem
 """
 
 from __future__ import annotations
-from typing import Any, List, Tuple, Type, Optional
+from typing import List, Tuple, Type, Optional
 from math import floor
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
 
 from hermespy.channel import ChannelStateDimension, ChannelStateInformation
-from hermespy.coding import EncoderManager
+from hermespy.coding import EncoderManager, Encoder
 from hermespy.core import DuplexOperator, RandomNode
 from hermespy.core.factory import SerializableArray
 from hermespy.core.signal_model import Signal
-from hermespy.precoding import SymbolPrecoding
+from hermespy.precoding import SymbolPrecoding, SymbolPrecoder
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import Symbols
 from .waveform_generator import WaveformGenerator
@@ -194,7 +194,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -429,7 +429,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
                 # Demodulate the frame into data symbols
                 s_symbols, s_channel_state, s_noise = self.waveform_generator.demodulate(*stream, noise)
 
-                symbols.append(s_symbols)
+                symbols.append(s_symbols.raw)
                 channel_states.append(s_channel_state)
                 noises.append(s_noise)
 
@@ -664,19 +664,19 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
                 Newly created serializable instance.
         """
 
-        state = constructor.construct_mapping(node)
+        state = constructor.construct_mapping(node, deep=True)
 
-        encoding: Optional[EncoderManager] = state.pop('Encoding', None)
-        precoding: Optional[SymbolPrecoding] = state.pop('Precoding', None)
+        encoding: List[Encoder] = state.pop('Encoding', [])
+        precoding: List[SymbolPrecoder] = state.pop('Precoding', [])
         waveform: Optional[WaveformGenerator] = state.pop('Waveform', None)
 
-        modem = cls(**state)
+        modem = cls.InitializationWrapper(state)
 
-        if encoding is not None:
-            modem.encoder_manager = encoding
+        for encoder in encoding:
+            modem.encoder_manager.add_encoder(encoder)
 
-        if precoding is not None:
-            modem.precoding = precoding
+        for precoder_idx, precoder in enumerate(precoding):
+            modem.precoding[precoder_idx] = precoder
 
         if waveform is not None:
             modem.waveform_generator = waveform

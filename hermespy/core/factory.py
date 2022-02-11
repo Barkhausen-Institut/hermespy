@@ -18,21 +18,24 @@ This module implements the main interface for loading and dumping HermesPy confi
 """
 
 from __future__ import annotations
-from abc import ABCMeta, abstractmethod
+
+import re
+from abc import ABCMeta
 from collections.abc import Iterable
 from functools import partial
-from inspect import getmembers, isclass
+from inspect import getmembers, isclass, signature
 from importlib import import_module
 from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
 from re import compile, Pattern, Match
-from typing import Any, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
+from typing import Any, Dict, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
 
-from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, Node, MappingNode, SequenceNode
+from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
 
 import hermespy as hermes
+from ..tools import db2lin
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -54,7 +57,6 @@ class Serializable(metaclass=ABCMeta):
     """YAML serialization tag."""
 
     @classmethod
-    @abstractmethod
     def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
         """Serialize a serializable object to YAML.
 
@@ -72,11 +74,13 @@ class Serializable(metaclass=ABCMeta):
             Node:
                 The serialized YAML node.
         """
-        ...
+
+        return ScalarNode(cls.yaml_tag, None)
 
     @classmethod
-    @abstractmethod
-    def from_yaml(cls: Type[Serializable], constructor: SafeConstructor, node: Node) -> Serializable:
+    def from_yaml(cls: Type[Serializable],
+                  constructor: SafeConstructor,
+                  node: Node) -> Serializable:
         """Recall a new serializable class instance from YAML.
 
         Args:
@@ -90,9 +94,68 @@ class Serializable(metaclass=ABCMeta):
         Returns:
 
             Serializable:
-                Newly created serializable instance.
+                The de-serialized object.
         """
-        ...
+
+        # Handle empty yaml nodes
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        return cls.InitializationWrapper(constructor.construct_mapping(node))
+
+    @classmethod
+    def InitializationWrapper(cls,
+                              configuration: Dict[str, Any]) -> Serializable:
+        """Conveniently initializes serializable classes.
+
+        Args:
+
+            configuration (Dict[str, Any]):
+                Configuration parameter dictionary.
+
+        Returns:
+            SerializableArray: Initialized class instance.
+        """
+
+        # Extract initialization signature
+        init_signature = list(signature(cls.__init__).parameters.keys())
+        init_signature.remove('self')
+
+        # Extract settable class properties
+        properties: List[str] = []
+        for attribute_key, attribute_type in getmembers(cls):
+
+            # Prevent the access to protected or private attributes
+            if attribute_key.startswith('_'):
+                continue
+
+            # Make sure the attribute is a property and settable
+            if isinstance(attribute_type, property) and attribute_type.setter:
+                properties.append(attribute_key)
+
+        init_parameters: Dict[str, Any] = {}
+        init_properties: Dict[str, Any] = {}
+
+        for configuration_key in list(configuration.keys()):
+
+            if configuration_key in init_signature:
+
+                init_parameters[configuration_key] = configuration.pop(configuration_key)
+                continue
+
+            if configuration_key in properties:
+                init_properties[configuration_key] = configuration.pop(configuration_key)
+
+        # Initialize class
+        init_parameters.update(configuration)       # Remaining configuration fields get treated as kwargs
+        instance = cls(**init_parameters)
+
+        # Configure properties
+        for property_name, property_value in init_properties.items():
+            setattr(instance, property_name, property_value)
+
+        # Return configured class instance
+        return instance
 
 
 class SerializableArray(Serializable, metaclass=ABCMeta):
@@ -103,46 +166,25 @@ class SerializableArray(Serializable, metaclass=ABCMeta):
     integers indicating their location within the array grid.
     """
 
-    @classmethod
-    @abstractmethod
-    def to_yaml(cls: Type[SerializableArray], representer: SafeRepresenter, node: Serializable) -> Tuple[Node, int, ...]:
-        """Serialize a serializable object to YAML.
+    @staticmethod
+    def Set_Array(matrix: Union[Mapping, Sequence],
+                  deserialized_data: List[Tuple[SerializableArray, Tuple[int, ...]]]) -> None:
+        """Set matrix fields from deserialized array data.
 
         Args:
 
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
+            matrix (Union[Mapping, Sequence]):
+                The matrix to be set.
 
-            node (SerializableArray):
-                The channel instance to be serialized.
-
-        Returns:
-
-            Node:
-                The serialized YAML node.
+            deserialized_data (
         """
-        ...
 
-    @classmethod
-    @abstractmethod
-    def from_yaml(cls: Type[SerializableArray], constructor: SafeConstructor, node: Node) -> SerializableArray:
-        """Recall a new serializable class instance from YAML.
+        # Skip if no data was provided
+        if not deserialized_data or len(deserialized_data) < 1:
+            return
 
-        Args:
-
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Channel` serialization.
-
-        Returns:
-
-            SerializableArray:
-                Newly created serializable instance.
-        """
-        ...
+        for deserialized_object, position in deserialized_data:
+            matrix[position] = deserialized_object
 
 
 class Factory:
@@ -155,6 +197,7 @@ class Factory:
     __clean: bool
     __purge_regex_alpha: Pattern
     __purge_regex_beta: Pattern
+    __db_regex: Pattern
     __restore_regex_alpha: Pattern
     __registered_classes: Set[Type[Serializable]]
     __registered_tags: Set[str]
@@ -195,13 +238,14 @@ class Factory:
 
         # Add constructors for untagged classes
         self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
-        self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
+        # self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
 
         # Construct regular expressions for purging
         self.__purge_regex_alpha = compile(r': !<.*')
         self.__purge_regex_beta = compile(r"- !<([^']+)>")
         self.__restore_regex_alpha = compile(r"([ ]*)([a-zA-Z]+):\n$")
         self.__restore_regex_beta = compile(r"([ ]*)- ([^\s]+)([^']*)\n$")
+        self.__db_regex = compile(r"\[([ 0-9.,-]*)\][ ]*dB")
 
     @property
     def clean(self) -> bool:
@@ -269,7 +313,7 @@ class Factory:
 
     @staticmethod
     def __construct_matrix(cls: Any, constructor: SafeConstructor, tag_suffix: str, node: Any)\
-            -> Tuple[Any, int, ...]:
+            -> Tuple[Any, Tuple[int, ...]]:
         """Construct a matrix node from YAML.
 
         Args:
@@ -298,13 +342,13 @@ class Factory:
                 Second dimension within the matrix.
             """
 
-        indices = tag_suffix.split(' ')
+        indices: List[str] = re.split(' |_', tag_suffix)
         if indices[0] == '':
             indices.pop(0)
 
-        indices: List[int] = [int(idx) for idx in indices]
+        indices: Tuple[int] = tuple([int(idx) for idx in indices])
 
-        return cls.from_yaml(constructor, node), *indices
+        return cls.from_yaml(constructor, node), indices
 
     @staticmethod
     def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:
@@ -377,6 +421,26 @@ class Factory:
     def refurbish_tags(self, serialization: str) -> str:
         """Callback to restore explicit YAML tags to serialization streams."""
         pass
+
+    @staticmethod
+    def __decibel_conversion(match: re.Match) -> str:
+        """Convert linear series to decibel series.
+
+        Args:
+            match (re.Match): The serialization sequence to be converted.
+
+        Returns:
+            str: The purged sequence.
+        """
+
+        linear_values = [db2lin(float(str_rep)) for str_rep in match[1].replace(' ', '').split(',')]
+
+        string_replacement = "["
+        for linear_value in linear_values:
+            string_replacement += str(linear_value) + ', '
+
+        string_replacement += "]"
+        return string_replacement
 
     def from_path(self, paths: Union[str, Set[str]]) -> List[Any]:
         """Load a configuration from an arbitrary file system path.
@@ -572,8 +636,9 @@ class Factory:
 
         clean_stream = ''
         for line in stream.readlines():
-            clean_line = self.__restore_regex_alpha.sub(self.__restore_callback_alpha, line)
-            clean_line = self.__restore_regex_beta.sub(self.__restore_callback_beta, clean_line)
+            # clean_line = self.__restore_regex_alpha.sub(self.__restore_callback_alpha, line)
+            # clean_line = self.__restore_regex_beta.sub(self.__restore_callback_beta, line)
+            clean_line = self.__db_regex.sub(self.__decibel_conversion, line)
             clean_stream += clean_line
 
         hermes_objects = self.__yaml.load(StringIO(clean_stream))

@@ -970,6 +970,19 @@ class Device(ABC, RandomNode):
         """
         ...
 
+    @property
+    @abstractmethod
+    def velocity(self) -> np.ndarray:
+        """Cartesian device velocity vector.
+
+        Returns:
+            np.ndarray: Velocity vector.
+
+        Raises:
+            ValueError: If `velocity` is not three-dimensional.
+            NotImplementedError: If `velocity` is unknown.
+        """
+
     def transmit(self,
                  clear_cache: bool = True) -> Signal:
         """Transmit signal over this device.

@@ -6,8 +6,7 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from enum import Enum
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Type
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
@@ -51,6 +50,7 @@ class SimulatedDevice(Device, Serializable):
     __scenario: Optional[Scenario]          # Scenario this device is attached to
     __sampling_rate: Optional[float]        # Sampling rate at which this device operate
     __carrier_frequency: float              # Center frequency of the mixed signal in rf-band
+    __velocity: np.ndarray                  # Cartesian device velocity vector
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
@@ -99,6 +99,7 @@ class SimulatedDevice(Device, Serializable):
         self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
+        self.velocity = np.zeros(3, dtype=float)
 
         # If num_antennas is configured initialize the modem as a Uniform Linear Array
         # with half wavelength element spacing
@@ -216,6 +217,21 @@ class SimulatedDevice(Device, Serializable):
             raise ValueError("Carrier frequency must be greater or equal to zero")
 
         self.__carrier_frequency = value
+
+    @property
+    def velocity(self) -> np.ndarray:
+
+        return self.__velocity
+
+    @velocity.setter
+    def velocity(self, value: np.ndarray) -> None:
+
+        value = value.flatten()
+
+        if len(value) != 3:
+            raise ValueError("Velocity vector must be three-dimensional")
+
+        self.__velocity = value
 
     def transmit(self,
                  clear_cache: bool = True) -> List[Signal]:
@@ -368,3 +384,5 @@ class SimulatedDevice(Device, Serializable):
 
         if operator_separation is not None:
             device.operator_separation = operator_separation
+
+        return device

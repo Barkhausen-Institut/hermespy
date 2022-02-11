@@ -11,7 +11,7 @@ from scipy.constants import pi
 
 from hermespy.channel import MultipathFading5GTDL, MultipathFadingCost256
 from hermespy.precoding import SymbolPrecoding, MMSETimeEqualizer, MMSESpaceEqualizer, ZFTimeEqualizer, ZFSpaceEqualizer
-from hermespy.signal import Signal
+from hermespy.core.signal_model import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -38,6 +38,8 @@ class TestMeanSquareTimeEqualization(unittest.TestCase):
         self.receiver.num_antennas = 1
 
         self.rng = np.random.default_rng(42)
+        self.random_mother = Mock()
+        self.random_mother._rng = self.rng
         self.num_samples = 1000
         self.sampling_rate = 1e6
         self.samples = np.exp(2j * self.rng.uniform(0., pi, self.num_samples))
@@ -56,14 +58,14 @@ class TestMeanSquareTimeEqualization(unittest.TestCase):
             channel = MultipathFading5GTDL(model_type=model_type,
                                            rms_delay=rms_delay,
                                            transmitter=self.transmitter,
-                                           receiver=self.receiver,
-                                           random_generator=self.rng)
+                                           receiver=self.receiver)
+            channel.random_mother = self.random_mother
 
-            propagated_signal, channel_state = channel.propagate(self.signal)
+            propagated_signal, _, channel_state = channel.propagate(self.signal)
 
-            noise = (self.rng.normal(0., noise_variance ** .5, propagated_signal.samples.shape) +
-                     1j * self.rng.normal(0., noise_variance ** .5, propagated_signal.samples.shape)) * 2 ** -.5
-            noisy_signal = propagated_signal.samples + noise
+            noise = (self.rng.normal(0., noise_variance ** .5, propagated_signal[0].samples.shape) +
+                     1j * self.rng.normal(0., noise_variance ** .5, propagated_signal[0].samples.shape)) * 2 ** -.5
+            noisy_signal = propagated_signal[0].samples + noise
 
             signal_power = np.var(self.signal.samples)
             equalized_signal = self.precoding.decode(noisy_signal, channel_state, noise_variance)
@@ -78,14 +80,14 @@ class TestMeanSquareTimeEqualization(unittest.TestCase):
 
             channel = MultipathFadingCost256(model_type=model_type,
                                              transmitter=self.transmitter,
-                                             receiver=self.receiver,
-                                             random_generator=self.rng)
+                                             receiver=self.receiver)
+            channel.random_mother = self.random_mother
 
-            propagated_signal, channel_state = channel.propagate(self.signal)
+            propagated_signal, _, channel_state = channel.propagate(self.signal)
 
-            noise = (self.rng.normal(0., noise_variance ** .5, propagated_signal.samples.shape) +
-                     1j * self.rng.normal(0., noise_variance ** .5, propagated_signal.samples.shape)) * 2 ** -.5
-            noisy_signal = propagated_signal.samples + noise
+            noise = (self.rng.normal(0., noise_variance ** .5, propagated_signal[0].samples.shape) +
+                     1j * self.rng.normal(0., noise_variance ** .5, propagated_signal[0].samples.shape)) * 2 ** -.5
+            noisy_signal = propagated_signal[0].samples + noise
 
             signal_power = np.var(self.signal.samples)
             equalized_signal = self.precoding.decode(noisy_signal, channel_state, noise_variance)
@@ -109,6 +111,8 @@ class TestMeanSquareSpaceEqualization(unittest.TestCase):
         self.receiver.num_antennas = 1
 
         self.rng = np.random.default_rng(42)
+        self.random_mother = Mock()
+        self.random_mother._rng = self.rng
         self.num_samples = 100
         self.sampling_rate = 1e6
 
@@ -129,12 +133,12 @@ class TestMeanSquareSpaceEqualization(unittest.TestCase):
             channel = MultipathFading5GTDL(model_type=model_type,
                                            rms_delay=0.,
                                            transmitter=self.transmitter,
-                                           receiver=self.receiver,
-                                           random_generator=self.rng)
+                                           receiver=self.receiver)
+            channel.random_mother = self.random_mother
 
-            propagated_signal, channel_state = channel.propagate(signal)
+            propagated_signal, _, channel_state = channel.propagate(signal)
 
-            equalized_signal, _, _ = self.equalizer.decode(propagated_signal.samples, channel_state, noise)
+            equalized_signal, _, _ = self.equalizer.decode(propagated_signal[0].samples, channel_state, noise)
             assert_array_almost_equal(samples, equalized_signal)
 
 
@@ -153,6 +157,8 @@ class TestZeroForcingTimeEqualization(unittest.TestCase):
         self.receiver.num_antennas = 1
 
         self.generator = np.random.default_rng(42)
+        self.random_mother = Mock()
+        self.random_mother._rng = self.generator
         self.num_samples = 100
         self.sampling_rate = 1e6
         self.samples = np.exp(2j * self.generator.uniform(0., pi, self.num_samples))
@@ -168,15 +174,15 @@ class TestZeroForcingTimeEqualization(unittest.TestCase):
             channel = MultipathFading5GTDL(model_type=model_type,
                                            rms_delay=rms_delay,
                                            transmitter=self.transmitter,
-                                           receiver=self.receiver,
-                                           random_generator=self.generator)
+                                           receiver=self.receiver)
+            channel.random_mother = self.random_mother
 
-            propagated_signal, channel_state = channel.propagate(self.signal)
+            propagated_signal, _, channel_state = channel.propagate(self.signal)
 
             expected_propagated_samples = channel_state.linear[0, 0, :, :].todense() @ self.samples
-            assert_array_almost_equal(expected_propagated_samples, propagated_signal.samples[0, :])
+            assert_array_almost_equal(expected_propagated_samples, propagated_signal[0].samples[0, :])
 
-            equalized_signal = self.precoding.decode(propagated_signal.samples, channel_state, 0.)
+            equalized_signal = self.precoding.decode(propagated_signal[0].samples, channel_state, 0.)
             assert_array_almost_equal(self.samples, equalized_signal)
 
     def test_equalize_Cost256(self) -> None:
@@ -186,15 +192,15 @@ class TestZeroForcingTimeEqualization(unittest.TestCase):
 
             channel = MultipathFadingCost256(model_type=model_type,
                                              transmitter=self.transmitter,
-                                             receiver=self.receiver,
-                                             random_generator=self.generator)
+                                             receiver=self.receiver)
+            channel.random_mother = self.random_mother
 
-            propagated_signal, channel_state = channel.propagate(self.signal)
+            propagated_signal, _, channel_state = channel.propagate(self.signal)
 
             expected_propagated_samples = channel_state.linear[0, 0, :, :].todense() @ self.samples
-            assert_array_almost_equal(expected_propagated_samples, propagated_signal.samples[0, :])
+            assert_array_almost_equal(expected_propagated_samples, propagated_signal[0].samples[0, :])
 
-            equalized_signal = self.precoding.decode(propagated_signal.samples, channel_state, 0.)
+            equalized_signal = self.precoding.decode(propagated_signal[0].samples, channel_state, 0.)
             assert_array_almost_equal(self.samples, equalized_signal)
 
 
@@ -213,6 +219,8 @@ class TestZeroForcingSpaceEqualization(unittest.TestCase):
         self.receiver.num_antennas = 1
 
         self.rng = np.random.default_rng(42)
+        self.random_mother = Mock()
+        self.random_mother._rng = self.rng
         self.num_samples = 100
         self.sampling_rate = 1e6
 
@@ -233,10 +241,10 @@ class TestZeroForcingSpaceEqualization(unittest.TestCase):
             channel = MultipathFading5GTDL(model_type=model_type,
                                            rms_delay=0.,
                                            transmitter=self.transmitter,
-                                           receiver=self.receiver,
-                                           random_generator=self.rng)
+                                           receiver=self.receiver)
+            channel.random_mother = self.random_mother
 
-            propagated_signal, channel_state = channel.propagate(signal)
+            propagated_signal, _, channel_state = channel.propagate(signal)
 
-            equalized_signal, _, _ = self.equalizer.decode(propagated_signal.samples, channel_state, noise)
+            equalized_signal, _, _ = self.equalizer.decode(propagated_signal[0].samples, channel_state, noise)
             assert_array_almost_equal(samples, equalized_signal)

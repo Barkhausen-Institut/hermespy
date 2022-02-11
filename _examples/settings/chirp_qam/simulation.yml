@@ -1,33 +1,31 @@
 !<Simulation>
 
-  noise_loop: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] # dB
-  snr_type: EBN0
-  max_num_drops: 50
-  min_num_drops: 10
-  spectrum_fft_size: 512
-  confidence_level: 0.9
-  confidence_margin: .1
-  confidence_metric: BER
-  plot_bit_error: true
+# Physical device models within the simulated scenario
+Devices:
 
-  Devices:
+  - &device_alpha !<SimulatedDevice>
 
-    - SimulatedDevice
+    num_antennas: 1                # Device features a single physical antenna
 
-      num_antennas: 1
+# Operators transmitting or receiving signals over the devices
+Operators:
 
-  Operators:
+  # A single modem operating the device #0
+  - &modem_alpha !<Modem>
 
-    - Modem 0
+    device: *device_alpha          # Device the modem is operating on
 
-      Encoding:
+    # Bit encoding configuration before mapping to modulation symbols
+    Encoding:
 
-        - Repetition
-          bit_block_size: 1000
-          repetitions: 4
+      # Repetition encoding, repeating bit sections for redundancy
+      - !<Repetition>
 
-      # Waveform configuration
-      Waveform: !<PskQam>
+        bit_block_size: 1000       # Block size
+        repetitions: 4             # Number of times the bits within the block get repeated
+
+    # Waveform configuration
+    Waveform: !<PskQam>
 
         # Symbol settings
         symbol_rate: 100e6
@@ -45,3 +43,25 @@
         num_data_symbols: 1000
         pilot_rate: 1e6
         guard_interval: 1e-6
+
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_alpha
+    receiving_modem: *modem_alpha
+    confidence: .9
+    tolerance: .01
+
+# Simulation parameters
+num_samples: 50                    # Number of samples per simulation grid section
+min_num_samples: 10                # Minimum number of samples per simulation grid section before premature stopping
+snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+plot_results: True                 # Visualize the evaluations after the simulation has finished
+
+# Scenario parameters over which the Monte-Carlo simulation sweeps
+Dimensions:
+
+  snr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20] dB

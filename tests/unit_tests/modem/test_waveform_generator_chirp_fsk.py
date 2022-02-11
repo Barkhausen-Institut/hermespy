@@ -10,6 +10,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from hermespy.channel import ChannelStateInformation
+from hermespy.modem.modem import Symbols
 from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSynchronization,\
     ChirpFskCorrelationSynchronization
 
@@ -456,7 +457,8 @@ class TestChirpFskCorrelationSynchronization(unittest.TestCase):
         expected_frames = []
         for f in range(self.num_frames):
 
-            data_symbols = self.rng.integers(0, self.waveform.modulation_order, self.waveform.symbols_per_frame)
+            data_symbols = Symbols(self.rng.integers(0, self.waveform.modulation_order,
+                                                     self.waveform.symbols_per_frame))
             signal_samples = self.waveform.modulate(data_symbols).samples[0, :]
 
             frame_offset = self.rng.integers(0, self.max_offset) + f * self.waveform.samples_in_frame
