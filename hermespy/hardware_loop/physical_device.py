@@ -63,3 +63,4 @@ class PhysicalDevice(Device):
     def velocity(self) -> np.ndarray:
 
         raise NotImplementedError("The velocity of physical devices is undefined by default")
+    
