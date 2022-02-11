@@ -40,14 +40,21 @@ campaign.
    object ---> evaluator_c ---> artifact_c
 
 
-Monte Carlo simulations usually sweep over combinations of multiple parameters settings,
+Monte Carlo simulations usually sweep over multiple combinations of multiple parameters settings,
 configuring the underlying system model and generating simulation samples from independent realizations
 of the model state.
 PyMonte refers to a single parameter combination as :class:`.GridSection`,
 with the set of all parameter combinations making up the simulation grid.
+Each settable property of the investigated object is treated as a potential simulation parameter within the grid,
+i.e. each settable property can be represented by an axis within the multidimensional simulation grid.
 
-
-
+:class:`.Evaluator` instances extract performance indicators from each investigated object realization, referred to as :class:`.Artifact`.
+A set of artifacts drawn from the same investigated object realization make up a single :class:`.MonteCarloSample`.
+During the execution of PyMonte simulations between :math:`N_\\mathrm{min}` and :math:`N_\\mathrm{max}`
+are generated from investigated object realizations for each grid section.
+The sample generation for each grid section may be aborted prematurely if all evaluators have reached a configured
+confidence threshold
+Refer to :footcite:t:`2014:bayer` for a detailed description of the implemented algorithm.
 
 .. mermaid::
 
@@ -75,6 +82,12 @@ with the set of all parameter combinations making up the simulation grid.
    controller --> gridsection_a --> actor_a --> sample_a
    controller --> gridsection_b --> actor_b --> sample_b
 
+
+The actual simulation workload distribution is visualized in the previous flowchart.
+Using `Ray`_, PyMonte spawns a number of :class:`.MonteCarloActor` containers,
+with the number of actors depending on the available resources (i.e. number of CPU cores) detected.
+A central simulation controller schedules the workload by assigning :class:`.GridSection` indices as tasks
+to the actors, which return the resulting simulation Samples after the simulation iteration is completed.
 
 .. _Ray: https://www.ray.io/
 .. _pickle: https://docs.python.org/3/library/pickle.html
