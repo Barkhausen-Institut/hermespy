@@ -7,7 +7,7 @@ the wireless transmission link between devices on a physical level.
 
 .. autoclasstree:: hermespy.channel
    :strict:
-   :namespace: hermespy.channel
+   :namespace: hermespy
 
 The base class of all channel model implementations is defined within
 

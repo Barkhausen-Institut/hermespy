@@ -5,6 +5,10 @@ Simulation Module
 The simulation module provides the basis for all HermesPy simulations,
 including noise and hardware modeling.
 
+.. autoclasstree:: hermespy.simulation
+   :strict:
+   :namespace: hermespy
+
 .. toctree::
 
    simulation.simulation
