@@ -32,8 +32,7 @@ class LDPC(Encoder, Serializable):
     Refer to :footcite:t:`2004:sharon` for further information on the algorithm implemented.
     """
 
-    yaml_tag = u'LDPC'
-    """YAML serialization tag."""
+    yaml_tag: str = u'LDPC'
 
     CODE_RATES: Set[Fraction] = {
         Fraction(1, 3),
@@ -62,10 +61,18 @@ class LDPC(Encoder, Serializable):
                  custom_codes: Set[str] = None) -> None:
         """
         Args:
-            block_size (int, optional): LDPC coding matrix block size.
-            rate: (Fraction, optional): Coding rate.
-            iterations (int, optional): Number of decoding iterations.
-            custom_codes (Set[str], optional): Discovery path for custom LDPC codings.
+
+            block_size (int, optional):
+                LDPC coding matrix block size.
+
+            rate: (Fraction, optional):
+                Coding rate.
+
+            iterations (int, optional):
+                Number of decoding iterations.
+
+            custom_codes (Set[str], optional):
+                Discovery path for custom LDPC codings.
         """
 
         Encoder.__init__(self)
@@ -89,24 +96,19 @@ class LDPC(Encoder, Serializable):
 
     @property
     def iterations(self) -> int:
-        """Access the configured number of coding iterations.
+        """Number of iterations performed during decoding.
 
         Returns:
-            int: The number of coding iterations.
+            int: Number of iterations.
+
+        Raises:
+            ValueError: If `iterations` is less than one.
         """
 
         return self.__iterations
 
     @iterations.setter
     def iterations(self, num: int) -> None:
-        """Modify the configured number of coding iterations.
-
-        Args:
-            num (int): The new number of coding iterations.
-
-        Raises:
-            ValueError: If the number of iterations is less than one.
-        """
 
         if num < 1:
             raise ValueError("Number of iterations must be greater or equal to zero")
@@ -115,7 +117,7 @@ class LDPC(Encoder, Serializable):
 
     @property
     def custom_codes(self) -> Set[str]:
-        """Access and modify custom code lookup paths."""
+        """Custom code lookup paths."""
 
         return self.__custom_codes
 
@@ -186,7 +188,7 @@ class LDPC(Encoder, Serializable):
         """The number of parity bis introduced by the LDPC coding.
 
         Returns:
-            int: the number of parity bits.
+            int: The number of parity bits.
         """
 
         # The number of parity bits is identical to the first dimension of the parity check matrix H
@@ -235,14 +237,22 @@ class LDPC(Encoder, Serializable):
         and denominator respectively, i.e. BS256_1_2.mat for block size 256 and rate 1/2.
 
         Args:
-            block_size (int): LDPC matrix coding block size.
-            rate (Fraction): Code rate, i.e. the relation between number of data and code bits.
+
+            block_size (int):
+                LDPC matrix coding block size.
+
+            rate (Fraction):
+                Code rate, i.e. the relation between number of data and code bits.
 
         Raises:
-            RuntimeError: If a valid save file could not be detected in all lookup paths.
+
+            RuntimeError:
+                If a valid save file could not be detected in all lookup paths.
 
         Returns:
-            Tuple[np.ndarray, np.ndarray]: LDPC coding and decoding matrices.
+
+            Tuple[np.ndarray, np.ndarray]:
+                LDPC coding and decoding matrices.
         """
 
         lookup_paths = {
@@ -290,6 +300,8 @@ class LDPC(Encoder, Serializable):
         Returns:
             Node:
                 The serialized YAML node.
+
+        :meta private:
         """
 
         state = {
@@ -319,6 +331,8 @@ class LDPC(Encoder, Serializable):
                 Newly created `LDPC` encoder instance.
 
         Note that the created instance is floating by default.
+
+        :meta private:
         """
 
         state = constructor.construct_mapping(node)
