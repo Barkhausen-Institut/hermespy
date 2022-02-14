@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-==================
+=================
 Repetition Coding
-==================
+=================
+
+Repetition codes are among the most basic channel coding schemes.
+The achieve redundancy by repeating all bits within a block during encoding.
 """
 
 from __future__ import annotations
 from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
-import numpy as np
 
-from hermespy.core.factory import Serializable
+import numpy as np
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+
+from ..core.factory import Serializable
 from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
@@ -24,7 +28,41 @@ __status__ = "Prototype"
 
 
 class RepetitionEncoder(Encoder, Serializable):
-    """Exemplary implementation of a repetition channel encoder."""
+    """A channel coding scheme based on block-wise repetition of bits.
+
+    During encoding, the repetition encoder repeats a block of :math:`K_n` :meth:`.bit_block_size` bits
+    :math:`\\tilde{M}` :meth:`.repetitions` times, leading to a :meth:`.code_block_size` of
+
+    .. math::
+
+       L_n = \\tilde{M} \\cdot K_n
+
+    bits and a coding rate of
+
+    .. math::
+
+       R_n = \\frac{K_n}{L_n} = \\frac{1}{\\tilde{M}} \\mathrm{.}
+
+    Let
+
+    .. math::
+
+       \\mathbf{x}  = \\left[ x_1, x_2, \\dots, x_{K_n} \\right]^\\intercal \\in \\left\\lbrace 0, 1 \\right\\rbrace^{K_n}
+
+    be the vector of input bits and
+
+    .. math::
+
+       \\mathbf{y}  = \\left[ y_1, y_2, \\dots, y_{K_n} \\right]^\\intercal \\in \\left\\lbrace 0, 1 \\right\\rbrace^{L_n}
+
+    be the vector of repeated output bits. The implemented block repetition scheme can be described by
+
+    .. math::
+
+        y_k = x_{k \\mod{K_n}} \\mathrm{,}
+
+    assigning input bits to output bits by index.
+    """
 
     yaml_tag = 'Repetition'
     __bit_block_size: int
@@ -33,8 +71,7 @@ class RepetitionEncoder(Encoder, Serializable):
     def __init__(self,
                  bit_block_size: int = 32,
                  repetitions: int = 2) -> None:
-        """Object initialization.
-
+        """
         Args:
             bit_block_size (int, optional): The number of input bits per data block.
             repetitions (int, optional): The number of times the input bit block is repeated.
@@ -52,27 +89,11 @@ class RepetitionEncoder(Encoder, Serializable):
             raise ValueError("The number of generated bits must be smaller or equal to the configured code block size")
 
     def encode(self, bits: np.ndarray) -> np.ndarray:
-        """Encodes a single block of bits.
-
-        Args:
-            bits (np.ndarray): A block of bits to be encoded by this `Encoder`.
-
-        Returns:
-            np.ndarray: The encoded `bits` block.
-        """
 
         code = np.tile(bits, self.repetitions)
         return code
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
-        """Decodes a single block of encoded bits.
-
-        Args:
-            encoded_bits (np.ndarray): An encoded block of bits.
-
-        Returns:
-            np.ndarray: A decoded block of bits.
-        """
 
         code = encoded_bits.reshape((self.repetitions, self.bit_block_size))
         bits = (np.sum(code, axis=0) / self.repetitions) >= 0.5  # Majority voting
@@ -81,24 +102,11 @@ class RepetitionEncoder(Encoder, Serializable):
 
     @property
     def bit_block_size(self) -> int:
-        """The number of resulting bits after decoding / the number of bits required before encoding.
-
-        Returns:
-            int: The number of bits.
-        """
 
         return self.__bit_block_size
 
     @bit_block_size.setter
     def bit_block_size(self, num_bits: int) -> None:
-        """Configure the number of resulting bits after decoding / the number of bits required before encoding.
-
-        Args:
-            num_bits (int): The number of bits.
-
-        Raises:
-            ValueError: If `num_bits` is smaller than one.
-        """
 
         if num_bits < 1:
             raise ValueError("Number data bits must be greater or equal to one")
@@ -107,34 +115,24 @@ class RepetitionEncoder(Encoder, Serializable):
 
     @property
     def code_block_size(self) -> int:
-        """The number of resulting bits after encoding / the number of bits required before decoding.
-
-        Returns:
-            int: The number of bits.
-        """
 
         return self.__repetitions * self.__bit_block_size
 
     @property
     def repetitions(self) -> int:
-        """The number of bit repetitions during coding.
+        """Number of times the bit block is repeated during encoding.
 
         Returns:
-            int: The number of bits.
+            int: Number of repetitions :math:`\\tilde{M}`.
+
+        Raises:
+            ValueError: If `repetitions` is smaller than one.
         """
 
         return self.__repetitions
 
     @repetitions.setter
     def repetitions(self, num: int) -> None:
-        """Configure the number of bit repetitions during coding.
-
-        Args:
-            num (int): The number of repetitions.
-
-        Raises:
-            ValueError: If `num` is smaller than one.
-        """
 
         if num < 1:
             raise ValueError("The number of data bit repetitions must be at least one")
@@ -146,6 +144,7 @@ class RepetitionEncoder(Encoder, Serializable):
         """Serialize a `RepetitionEncoder` to YAML.
 
         Args:
+
             representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
@@ -154,8 +153,11 @@ class RepetitionEncoder(Encoder, Serializable):
                 The `RepetitionEncoder` instance to be serialized.
 
         Returns:
+
             Node:
                 The serialized YAML node.
+
+        :meta private:
         """
 
         state = {
@@ -170,6 +172,7 @@ class RepetitionEncoder(Encoder, Serializable):
         """Recall a new `RepetitionEncoder` from YAML.
 
         Args:
+
             constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
@@ -181,6 +184,8 @@ class RepetitionEncoder(Encoder, Serializable):
                 Newly created `RepetitionEncoder` instance.
 
         Note that the created instance is floating by default.
+
+        :meta private:
         """
 
         state = constructor.construct_mapping(node)

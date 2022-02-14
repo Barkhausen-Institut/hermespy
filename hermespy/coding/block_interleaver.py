@@ -13,7 +13,7 @@ i.e. the code rate is :math:`R = 1`.
 
 from __future__ import annotations
 from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import numpy as np
 
 from hermespy.core.factory import Serializable
@@ -130,9 +130,6 @@ class BlockInterleaver(Encoder, Serializable):
 
         :meta private:
         """
-
-        if isinstance(node, ScalarNode):
-            return cls()
 
         state = constructor.construct_mapping(node)
         return cls(**state)
