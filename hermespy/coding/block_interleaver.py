@@ -50,9 +50,9 @@ class BlockInterleaver(Encoder, Serializable):
 
     .. math::
 
-        y_k = x_{k \\cdot \\tilde{M}}
+        y_k = x_{(k \\cdot \\tilde{M}) \\mod{K_n}}
 
-    describes the block interleaving routine.
+    describes the block interleaving scheme.
     """
 
     yaml_tag = 'BlockInterleaver'
