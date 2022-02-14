@@ -50,7 +50,7 @@ i.e. each settable property can be represented by an axis within the multidimens
 
 :class:`.Evaluator` instances extract performance indicators from each investigated object realization, referred to as :class:`.Artifact`.
 A set of artifacts drawn from the same investigated object realization make up a single :class:`.MonteCarloSample`.
-During the execution of PyMonte simulations between :math:`N_\\mathrm{min}` and :math:`N_\\mathrm{max}`
+During the execution of PyMonte simulations between :math:`M_\\mathrm{min}` and :math:`M_\\mathrm{max}`
 are generated from investigated object realizations for each grid section.
 The sample generation for each grid section may be aborted prematurely if all evaluators have reached a configured
 confidence threshold

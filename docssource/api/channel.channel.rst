@@ -1,3 +1,3 @@
-.. automodule:: channel.channel
+.. automodule:: hermespy.channel.channel
 
 .. footbibliography::

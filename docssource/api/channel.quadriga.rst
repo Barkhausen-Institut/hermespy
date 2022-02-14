@@ -1,3 +1,3 @@
-.. automodule:: channel.quadriga_channel
+.. automodule:: hermespy.channel.quadriga_channel
 
 .. footbibliography::
