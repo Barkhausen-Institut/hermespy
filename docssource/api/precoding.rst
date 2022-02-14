@@ -5,6 +5,10 @@ Precoding Module
 The precoding module of HermesPy provides functionalities to code multidimensional wireless streams
 for spatial channel propagation.
 
+.. autoclasstree:: hermespy.precoding
+   :strict:
+   :namespace: hermespy
+
 .. toctree::
 
    precoding.precoding

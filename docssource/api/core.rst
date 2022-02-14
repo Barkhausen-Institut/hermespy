@@ -6,6 +6,7 @@ The core module of HermesPy provides all basic functionalities of the simulator.
 
 .. autoclasstree:: hermespy.core
    :strict:
+   :namespace: hermespy
 
 It is split into several interdependent sub-modules:
 
