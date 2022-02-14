@@ -14,7 +14,7 @@ import os
 import numpy as np
 
 from hermespy.core.factory import Serializable
-from hermespy.coding import Encoder
+from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

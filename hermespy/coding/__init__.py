@@ -1,5 +1,4 @@
-from .encoder import Encoder
-from .encoder_manager import EncoderManager
+from .coding import Encoder, EncoderManager
 from .block_interleaver import BlockInterleaver
 from .cyclic_redundancy_check import CyclicRedundancyCheck
 from .repetition_encoder import RepetitionEncoder

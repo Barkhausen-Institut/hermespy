@@ -10,8 +10,8 @@ from typing import Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import numpy as np
 
-from hermespy.coding.encoder import Encoder
 from hermespy.core.factory import Serializable
+from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

@@ -12,7 +12,7 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 from hermespy.core.factory import Serializable
-from .encoder import Encoder
+from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

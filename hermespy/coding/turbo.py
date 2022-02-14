@@ -12,7 +12,7 @@ from typing import List, Tuple, Type
 import numpy as np
 from ruamel.yaml import SafeConstructor, Node, SafeRepresenter
 
-from .encoder import Encoder
+from .coding import Encoder
 from ..core.factory import Serializable
 
 __author__ = "Jan Adler"
