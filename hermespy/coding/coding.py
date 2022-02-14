@@ -1,13 +1,45 @@
 # -*- coding: utf-8 -*-
 """
-=============
-Bit Encoding
-=============
+===========
+Bit Encoder
+===========
+
+This module introduces the concept of bit :class:`.Encoder` steps,
+which form single chain link within a channel coding processing chain.
+
+Considering an arbitrary coding scheme consisting of multiple steps,
+the process of encoding bit streams during transmission and decoding them during
+subsequent reception is modeled by a chain of :class:`.Encoder` instances:
+
+.. mermaid::
+
+   %%{init: {'theme': 'dark'}}%%
+   flowchart LR
+
+      input([Input Bits]) ---> n_i[...]
+      n_i ---> n_a[Encoder N-1] ---> n_b[Encoder N] ---> n_c[Encoder N+1]  ---> n_o[...]
+      n_o ---> output([Coded Bits])
+
+During transmission encoding the processing chain is sequentially executed from left to right,
+during reception decoding in reverse order.
+
+Within bit streams, :class:`.Encoder` instances sequentially encode block sections of :math:`K_n` bits into
+code sections of :math:`L_n` bits.
+Therefore, the rate of the :math:`n`-th :class:`.Encoder`
+
+.. math::
+
+   R_n = \\frac{K_n}{L_n}
+
+is defined as the relation between input and output block length.
+
 """
 
 from __future__ import annotations
+from abc import ABC, abstractmethod
 from math import ceil
-from typing import Type, List, Optional, TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Type, List, Optional
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
@@ -16,17 +48,130 @@ from hermespy.core.factory import Serializable
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
-    from . import Encoder
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class Encoder(ABC, Serializable):
+    """This class serves as an abstract class for all encoders.
+
+    All deriving classes must overwrite the `encode(data_bits)` and
+    `decode(encoded_bits)` function.
+    """
+
+    yaml_tag = u'Encoder'
+    __manager: Optional[EncoderManager]
+
+    def __init__(self, manager: EncoderManager = None) -> None:
+        """Object initialization.
+
+        Args:
+            manager (EncoderManager, optional): The encoding configuration this encoder belongs to.
+        """
+
+        # Default settings
+        self.__manager = None
+
+        if manager is not None:
+            self.manager = manager
+
+    @property
+    def manager(self) -> EncoderManager:
+        """Access the configuration this encoding step is attached to.
+
+        Returns:
+            EncoderManager:
+                Handle to the configuration object.
+
+        Raises:
+            RuntimeError: If the encoder is floating.
+        """
+
+        if self.__manager is None:
+            raise RuntimeError("Trying to access the manager of a floating encoding")
+
+        return self.__manager
+
+    @manager.setter
+    def manager(self, manager: EncoderManager) -> None:
+        """Modify the configuration this encoding step is attached to.
+
+        Args:
+            manager (EncoderManager): Handle to the encoding manager.
+        """
+
+        if self.__manager is not manager:
+            self.__manager = manager
+
+    @abstractmethod
+    def encode(self, bits: np.ndarray) -> np.ndarray:
+        """Encodes a single block of bits.
+
+        Args:
+            bits (np.ndarray): A block of bits to be encoded by this `Encoder`.
+
+        Returns:
+            np.ndarray: The encoded `bits` block.
+
+        Raises:
+            ValueError: If the number of `bits` does not match the `Encoder` requirements.
+        """
+        ...
+
+    @abstractmethod
+    def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
+        """Decodes a single block of encoded bits.
+
+        Args:
+            encoded_bits (np.ndarray): An encoded block of bits.
+
+        Returns:
+            np.ndarray: A decoded block of bits.
+
+        Raises:
+            ValueError: If the number of `bits` does not match the `Encoder` requirements.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def bit_block_size(self) -> int:
+        """The number of resulting bits after decoding / the number of bits required before encoding.
+
+        Returns:
+            int: The number of bits.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def code_block_size(self) -> int:
+        """The number of resulting bits after encoding / the number of bits required before decoding.
+
+        Returns:
+            int: The number of bits.
+        """
+        ...
+
+    @property
+    def rate(self) -> float:
+        """Code rate.
+
+        The relation between the number of source bits to the number of code bits.
+
+        Returns:
+            float: The code rate.
+        """
+
+        return self.bit_block_size / self.code_block_size
 
 
 class EncoderManager(Serializable):

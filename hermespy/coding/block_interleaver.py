@@ -11,7 +11,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNod
 import numpy as np
 
 from hermespy.core.factory import Serializable
-from hermespy.coding import Encoder
+from .coding import Encoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
