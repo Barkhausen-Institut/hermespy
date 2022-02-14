@@ -1,3 +1,3 @@
-.. automodule:: coding.repetition_encoder
+.. automodule:: hermespy.coding.repetition_encoder
 
 .. footbibliography::

@@ -1,3 +1,3 @@
-.. automodule:: channel.radar_channel
+.. automodule:: hermespy.channel.radar_channel
 
 .. footbibliography::

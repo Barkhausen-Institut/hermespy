@@ -1,3 +1,3 @@
-.. automodule:: channel.multipath_fading_channel
+.. automodule:: hermespy.channel.multipath_fading_channel
 
 .. footbibliography::
