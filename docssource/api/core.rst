@@ -17,5 +17,6 @@ It is split into several interdependent sub-modules:
    core.factory
    core.device
    core.random_node
+   core.scenario
    core.signal_model
    core.channel_state_information
