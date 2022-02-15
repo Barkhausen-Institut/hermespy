@@ -15,3 +15,4 @@ including noise and hardware modeling.
    simulation.simulated_device
    simulation.rf_chain
    simulation.rf_chain.power_amplifier
+   simulation.noise

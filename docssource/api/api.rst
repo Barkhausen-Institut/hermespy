@@ -16,6 +16,5 @@ The subpackages may have interdependencies, but in general, the root of dependen
    channel
    hardware_loop
    modem
-   noise
    precoding
    simulation
