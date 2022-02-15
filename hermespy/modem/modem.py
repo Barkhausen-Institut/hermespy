@@ -4,7 +4,24 @@
 Modem
 =====
 
+Within HermesPy, the Modem class represents the full signal processing chain configuration for the transmission
+of information in form of bits.
+Modems are a form of :class:`hermespy.core.device.DuplexOperator`,
+binding to both the transmitter and receiver slot of :class:`hermespy.core.device.Device` objects.
+In other words, they both transmit and receive complex waveforms over the devices.
+It acts as a managing container for 5 signal processing step abstractions:
+
+================================ =======================================
+Processing Step                  Description
+================================ =======================================
+:class:`.BitsSource`             Source of data bits to be transmitted
+:class:`.EncoderManager`         Channel coding pipeline configuration
+:class:`.WaveformGenerator`      Communication waveform configuration
+:class:`.StreamCoding`           Precoding configuration
+================================ =======================================
+
 .. mermaid::
+   :caption: Modem Signal Processing Chain
 
    %%{init: {'theme': 'dark'}}%%
    flowchart LR
