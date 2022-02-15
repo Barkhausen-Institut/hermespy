@@ -17,4 +17,5 @@ The subpackages may have interdependencies, but in general, the root of dependen
    hardware_loop
    modem
    precoding
+   radar
    simulation
