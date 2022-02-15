@@ -1,3 +1,4 @@
+from .bits_source import RandomBitsSource, StreamBitsSource
 from .modem import Modem
 from .waveform_generator import WaveformGenerator, Synchronization
 from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSynchronization,\
@@ -17,7 +18,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['Modem', 'WaveformGenerator', 'WaveformGeneratorChirpFsk', 'WaveformGeneratorPskQam',
-           'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection', 'FrameSymbolSection',
-           'FrameResource', 'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator', 'FrameErrorEvaluator',
-           'ThroughputEvaluator']
+__all__ = ['RandomBitsSource', 'StreamBitsSource', 'Modem', 'WaveformGenerator', 'WaveformGeneratorChirpFsk',
+           'WaveformGeneratorPskQam', 'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection',
+           'FrameSymbolSection', 'FrameResource', 'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator',
+           'FrameErrorEvaluator', 'ThroughputEvaluator']
