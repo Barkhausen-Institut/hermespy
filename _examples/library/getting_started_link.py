@@ -1,18 +1,28 @@
-from hermespy import Scenario, Transmitter, Receiver
-from hermespy.modem import WaveformGeneratorPskQam
+import matplotlib.pyplot as plt
 
-transmitter = Transmitter()
-transmitter.waveform_generator = WaveformGeneratorPskQam()
+from hermespy.channel import Channel
+from hermespy.simulation import SimulatedDevice
+from hermespy.modem import Modem, WaveformGeneratorPskQam, BitErrorEvaluator
 
-receiver = Receiver()
-receiver.waveform_generator = WaveformGeneratorPskQam()
+tx_device = SimulatedDevice()
+rx_device = SimulatedDevice()
 
-scenario = Scenario()
-scenario.add_transmitter(transmitter)
-scenario.add_receiver(receiver)
+tx_operator = Modem()
+tx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+tx_operator.device = tx_device
 
-transmitted_signal, _ = transmitter.send()
-propagated_signal, channel_state = scenario.channel(transmitter, receiver).propagate(transmitted_signal)
+rx_operator = Modem()
+rx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+rx_operator.device = rx_device
 
-received_signal = receiver.receive(propagated_signal)
-received_bits, received_symbols = receiver.demodulate(propagated_signal, channel_state)
+channel = Channel(tx_operator.device, rx_operator.device)
+
+evaluator = BitErrorEvaluator(tx_operator, rx_operator)
+
+tx_signal, _, tx_bits = tx_operator.transmit()
+rx_signal, _, channel_state = channel.propagate(tx_signal)
+rx_device.receive(rx_signal)
+_, _, rx_bits = rx_operator.receive()
+
+evaluator.evaluate().plot()
+plt.show()

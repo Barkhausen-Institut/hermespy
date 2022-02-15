@@ -256,7 +256,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
     def set_channel(self,
                     receiver: Union[int, SimulatedDevice],
                     transmitter: Union[int, SimulatedDevice],
-                    channel: Channel) -> None:
+                    channel: Optional[Channel]) -> None:
         """Specify a channel within the channel matrix.
 
         Args:
@@ -267,7 +267,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
             transmitter (int):
                 Index of the transmitter within the channel matrix.
 
-            channel (Channel):
+            channel (Optional[Channel]):
                 The channel instance to be set at position (`transmitter_index`, `receiver_index`).
 
         Raises:
@@ -290,11 +290,13 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
         # Update channel field within the matrix
         self.__channels[transmitter, receiver] = channel
 
-        # Set proper receiver and transmitter fields
-        channel.transmitter = self.devices[transmitter]
-        channel.receiver = self.devices[receiver]
-        channel.random_mother = self
-        channel.scenario = self
+        if channel is not None:
+
+            # Set proper receiver and transmitter fields
+            channel.transmitter = self.devices[transmitter]
+            channel.receiver = self.devices[receiver]
+            channel.random_mother = self
+            channel.scenario = self
 
     def run(self) -> MonteCarloResult[Scenario[SimulatedDevice]]:
 
@@ -309,7 +311,7 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 result.plot()
                 plt.show()
 
-        if self.dump_results:
+        if self.dump_results and self.results_dir is not None:
             result.save_to_matlab(path.join(self.results_dir, 'results.mat'))
 
         return result
@@ -579,11 +581,16 @@ class Simulation(Executable, Scenario[SimulatedDevice], Serializable, MonteCarlo
                 alpha_transmissions = transmitted_signals[device_alpha_idx]
                 beta_transmissions = transmitted_signals[device_beta_idx]
 
-                channel: Channel = self.__channels[device_alpha_idx, device_beta_idx]
-                alpha_receptions, beta_receptions, csi = channel.propagate(alpha_transmissions, beta_transmissions)
+                channel: Optional[Channel] = self.__channels[device_alpha_idx, device_beta_idx]
 
-                propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi)
-                propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
+                if channel is None:
+                    propagation_matrix[device_alpha_idx, device_beta_idx] = (None, None)
+
+                else:
+                    alpha_receptions, beta_receptions, csi = channel.propagate(alpha_transmissions, beta_transmissions)
+
+                    propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi)
+                    propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
 
         return propagation_matrix
 
