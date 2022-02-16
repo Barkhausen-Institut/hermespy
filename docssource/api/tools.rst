@@ -1,0 +1,10 @@
+=============
+Tools Module
+=============
+
+The tools module contains a lose collection of various sub-routines supporting
+the main modules.
+
+.. toctree::
+
+   tools.math

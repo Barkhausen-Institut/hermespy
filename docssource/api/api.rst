@@ -8,7 +8,7 @@ each tackling a different aspect of signal processing for wireless systems.
 The subpackages may have interdependencies, but in general, the root of dependencies is provided by the core package.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :glob:
 
    core
@@ -20,3 +20,4 @@ The subpackages may have interdependencies, but in general, the root of dependen
    radar
    simulation
    bin
+   tools
