@@ -63,7 +63,7 @@ namely :doc:`Simulated Devices</api/simulation.simulated_device>` and
 verification contexts, respectively.
 For the scope of this introduction we will focus on simulated devices, since they, as the name suggests,
 do not require any additional hardware from the user.
-Complex wireless :doc:`Scenarios</api/core.scenario/>` can theoretically be configured feature
+Complex wireless :doc:`Scenarios</api/core.scenario/>` can theoretically be configured to feature
 an unlimited amount of devices.
 Within :doc:`Simulations</api/simulation.simulation/>`,
 the devices and the channels linking them form a symmetric matrix of channel instances:
@@ -105,16 +105,16 @@ the devices and the channels linking them form a symmetric matrix of channel ins
 Each link channel model may be configured according to the scenario assumptions.
 Note that the diagonal of this channel matrix approach patches the devices transmission back as receptions,
 enabling, for example, self-interference or sensing investigations.
-Currently available link models are provided by the :doc:`Channel</api/channel>` package.
+Currently available channel models are provided by the :doc:`Channel</api/channel>` package.
 
 Each device may transmit and arbitrary :doc:`Signal Model</api/core.signal_model>` over its transmit slot and
 receive an arbitrary signal over its receive slot after propagation.
-:doc:`Signal Models</api/core.signal_model>` contain baseband-samples of the signals transmitted / received by each
+:doc:`Signal Models</api/core.signal_model>` contain base-band samples of the signals transmitted / received by each
 device antenna as well as meta-information about the assumed radio-frequency band center frequency and sampling rate.
-In general, an unlimited amount of :class:`Operators<hermespy.core.device.Operator>` may be configured to operate any
+In general, an unlimited amount of :class:`Operators<hermespy.core.device.Operator>` may be configured to operate on any
 device's slots.
 Transmit operators may submit individual :doc:`Signal Models</api/core.signal_model>` to its configured device slot.
-The signal transmitted by the device will then transmit a superposition of all submitted signals.
+The signal transmitted by the device will then be formed by a superposition of all submitted operator signals.
 Inversely, receive operators are provided with the signal received by its configured device after propagation.
 Currently two types of :class:`Duplex Operators<hermespy.core.device.DuplexOperator>`,
 operating both the transmit and receive slot of their configured device, are implemented:
@@ -122,15 +122,21 @@ operating both the transmit and receive slot of their configured device, are imp
 * :doc:`Communication Modems</api/modem.modem>` for information exchange in form of bits
 * :doc:`Radars</api/radar.radar>` for wireless sensing
 
-The operators each model the signal processing steps for the transmission and reception of their respective signal
-signals in a modular fashion.
-Each processing step is represented by a customizable or interchangeable class.
+These operators each model the sequential signal processing steps for the transmission and reception of their
+respective waveforms in a modular fashion.
+Each processing step is represented by a customizable or interchangeable class slot.
 The :doc:`Communication Modem</api/modem.modem>` operator class currently considers
 
 * :doc:`Bit Sources</api/modem.bits_source>` as the source of data bits to be transmitted
 * :doc:`Channel Codings</api/coding.coding>` as the channel coding configuration
 * :doc:`Waveform Generators</api/modem.waveform_generator>` as the transmit waveform configuration
 * :doc:`Channel Precodings</api/precoding.precoding>` as the channel precoding configuration
+
+while the :doc:`Radar</api/radar.radar>` operator only considers
+
+* :doc:`Radar Waveforms</api/radar.radar>` as the transmit waveform configuration
+
+making it much easier to configure.
 
 
 .. _GettingStarted_Library:
@@ -223,13 +229,14 @@ This is an example of a core evaluation routine commonly executed in link-level 
 However, when considering multiple devices and channel models, as well as performing Monte Carlo style simulations
 over scenario parameters, the utilization of the :doc:`Simulation</api/simulation.simulation>` helper class is advised
 for optimal scaling.
+Its usage is introduced in the next section.
 
 -----------
 Simulations
 -----------
 
 Evaluating multiple transmissions in scenarios featuring several modems can become quite tedious,
-which is why HermesPy offers the :doc:`Simulation </api/hermespy.simulator_core.simulation>` helper class.
+which is why HermesPy offers the :doc:`Simulation </api/simulation.simulation>` helper class.
 Considering the same scenario as before, the following snippet demonstrates how
 a single communication drop at 40dB signal-to-noise ratio can be generated:
 
