@@ -14,8 +14,8 @@ from numpy import cos, exp
 from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 from scipy.constants import pi
 
-from hermespy.channel.channel import Channel
-from hermespy.helpers.resampling import delay_resampling_matrix
+from ..tools import delay_resampling_matrix
+from .channel import Channel
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

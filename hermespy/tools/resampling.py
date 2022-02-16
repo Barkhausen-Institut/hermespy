@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""HermesPy resampling routines."""
+"""
+===================
+Resampling Routines
+===================
+"""
 
 from math import ceil
 
