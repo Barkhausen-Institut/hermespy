@@ -13,7 +13,7 @@ setup(
     version="0.2.5",
     author="Jan Adler",
     author_email="jan.adler@barkhauseninstitut.org",
-    description="The Heterogeneous Mobile Radio Simulator",
+    description="The Heterogeneous Radio Mobile Simulator",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Barkhausen-Institut/hermespy",
