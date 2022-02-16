@@ -15,9 +15,9 @@ Modulation and Coding
 
     * Repetition Codes
     * 3GPP-like LDPC codes (faster implementation with C++)
-    * 3GPP-like scrambler
-    * Block interleaver
-    * CRC overhead
+    * 3GPP Scrambler
+    * Block Interleaving
+    * Cyclic Redundancy Check Mock
 
 * Modulation and Waveforms
 
@@ -42,7 +42,7 @@ Channel and Interference Model
 ------------------------------
 
 * Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading
-* COST-259 macrocell model :footcite:p:`2004:3GPP:TR25943`
+* COST-259 Macrocell Model :footcite:p:`2004:3GPP:TR25943`
 * 5G TDL model :footcite:p:`2017:3GPP:TR38901`
 * MIMO support with antenna correlation, following Kronecker model
 * Interface to `Quadriga <https://quadriga-channel-model.de/>`_ channel model (requires Matlab or Octave)
@@ -105,7 +105,7 @@ For the next release in April 2022, the current plan is
 * **Modulation and coding**
 
    * Radar Detection for FMCW and OFDM
-   * Beamforming
+   * Beam-Forming
 
 * **Channel and interference model**
 

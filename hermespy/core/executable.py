@@ -42,7 +42,10 @@ class Verbosity(Enum):
 
 
 class Executable(ABC, Serializable):
-    """Abstract base class for executable configurations."""
+    """Base Class for HermesPy Entry Points.
+
+    All executables are required to implement the :meth:`.run` method.
+    """
 
     yaml_tag = u'Executable'
     """YAML serialization tag."""
@@ -64,6 +67,7 @@ class Executable(ABC, Serializable):
 
             verbosity (Union[str, Verbosity], optional):
                 Information output behaviour during execution.
+                By default, the verbosity level is `INFO`.
         """
 
         # Default parameters
@@ -72,7 +76,10 @@ class Executable(ABC, Serializable):
         self.verbosity = verbosity
 
     def execute(self) -> None:
-        """Execute the executable."""
+        """Execute the executable.
+
+        Sets up the environment to the implemented :meth:`.run` routine.
+        """
 
         with self.style_context():
             self.run()
@@ -211,7 +218,6 @@ class Executable(ABC, Serializable):
 
     @style.setter
     def style(self, value: str) -> None:
-        """Set the Matplotlib color scheme."""
 
         hermes_styles = self.__hermes_styles()
         if value in hermes_styles:
@@ -244,7 +250,8 @@ class Executable(ABC, Serializable):
         """Context for the configured style.
 
         Returns:
-            ContextManager: Style context manager.
+            ContextManager:
+                Style context manager.
         """
 
         if Executable.__style in Executable.__hermes_styles():
@@ -256,7 +263,7 @@ class Executable(ABC, Serializable):
 
     @staticmethod
     def __hermes_root_dir() -> str:
-        """HermesPy package root directory.
+        """HermesPy Package Root Directory.
 
         Returns:
             str: Path to the package root.
