@@ -8,3 +8,4 @@ the main modules.
 .. toctree::
 
    tools.math
+   tools.resampling
