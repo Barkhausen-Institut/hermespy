@@ -770,6 +770,7 @@ class MonteCarlo(Generic[MO]):
     __dimensions: dict[str, List[Any]]          # Simulation dimensions which make up the grid
     __evaluators: List[Evaluator[MO]]           # Evaluators used to process the investigated object sample state
     __console: Console                          # Console the simulation writes to
+    __section_block_size: int                   # Number of samples per section block
 
     def __init__(self,
                  investigated_object: MO,
@@ -777,7 +778,8 @@ class MonteCarlo(Generic[MO]):
                  evaluators: Optional[List[Evaluator[MO]]] = None,
                  min_num_samples: int = -1,
                  num_actors: int = 0,
-                 console: Optional[Console] = None) -> None:
+                 console: Optional[Console] = None,
+                 section_block_size: int = 10) -> None:
         """
         Args:
             investigated_object (MO):
@@ -798,6 +800,10 @@ class MonteCarlo(Generic[MO]):
 
             console (Console, optional):
                 Console the simulation writes to.
+
+            section_block_size (int, optional):
+                Number of samples per section block.
+                10 by default, although this number is somewhat arbitrary.
         """
 
         # Initialize ray if it hasn't been initialized yet. Required to query ideal number of actors
@@ -815,6 +821,7 @@ class MonteCarlo(Generic[MO]):
         self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(.5 * num_samples)
         self.num_actors = int(ray.available_resources()['CPU']) if num_actors <= 0 else num_actors
         self.__console = Console() if console is None else console
+        self.section_block_size = section_block_size
 
     def simulate(self,
                  actor: Type[MonteCarloActor]) -> MonteCarloResult[MO]:
@@ -890,11 +897,11 @@ class MonteCarlo(Generic[MO]):
 
         # Initialize progress bar
         progress = Progress(SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True)
-        task1 = progress.add_task("Computing", total=100.)
+        task1 = progress.add_task("Computing", total=max_num_samples)
 
         # Display results in a live table
         status_group = Group(progress, '')
-        with Live(status_group, console=self.console) as live:
+        with Live(status_group, console=self.console):
 
             # Keep executing until all samples are computed
             result_index = 0
@@ -907,7 +914,7 @@ class MonteCarlo(Generic[MO]):
                 grid_task_count[samples[0].grid_section] -= 1
 
                 # Queue next task and retrieve progress
-                relative_progress = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
+                num_samples = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
 
                 # Save result
                 grid_section: GridSection = grid[samples[0].grid_section]
@@ -950,8 +957,11 @@ class MonteCarlo(Generic[MO]):
                 for result in results:
                     results_table.add_row(*result)
 
+                if result_index > 13000:
+                    print('test')
+
                 status_group.renderables[1] = results_table
-                progress.update(task1, completed=relative_progress)
+                progress.update(task1, completed=num_samples)
 
         # Measure elapsed time
         stop_time = perf_counter()
@@ -990,28 +1000,25 @@ class MonteCarlo(Generic[MO]):
         num_processed_samples = 0
         flat_grid = grid.flatten()
         grid_section: GridSection
+        section_coordinates = None
         for grid_section in flat_grid:
 
             section_coordinates = grid_section.coordinates
 
             # The grid section has already been marked inactive? Skip!
-            if not grid_active_mask[section_coordinates]:
-
-                num_processed_samples += self.num_samples
-                continue
-
             # The grid section has already the maximum amount of tasks queued? Skip!
-            if grid_section.num_samples + grid_task_count[section_coordinates] >= self.max_num_samples:
+            if (not grid_active_mask[section_coordinates] or
+                    grid_section.num_samples + grid_task_count[section_coordinates] >= self.num_samples):
 
-                num_processed_samples += grid_section.num_samples
+                num_processed_samples += (self.num_samples -
+                                          grid_task_count[section_coordinates] * self.section_block_size)
+                section_coordinates = None
                 continue
 
             num_processed_samples += grid_section.num_samples
-            progress = num_processed_samples / (len(flat_grid) * self.num_samples)
+            break
 
-            return section_coordinates, progress
-
-        return None, 1.0
+        return section_coordinates, num_processed_samples
 
     def __queue_next(self,
                      pool: ActorPool,
@@ -1169,3 +1176,25 @@ class MonteCarlo(Generic[MO]):
     def console(self, value: Console) -> None:
 
         self.__console = value
+
+    @property
+    def section_block_size(self) -> int:
+        """Number of generated samples per section block.
+
+        Returns:
+            int: Number of samples per block.
+
+        Raises:
+            ValueError:
+                If the block size is smaller than one.
+        """
+
+        return self.__section_block_size
+
+    @section_block_size.setter
+    def section_block_size(self, value: int) -> None:
+
+        if value < 1:
+            raise ValueError("Section block size must be greater or equal to one")
+
+        self.__section_block_size = value
