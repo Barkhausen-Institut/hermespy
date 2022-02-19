@@ -13,15 +13,19 @@ from __future__ import annotations
 from abc import abstractmethod
 from functools import reduce
 from itertools import product
-from math import ceil, exp, sqrt
-from shutil import get_terminal_size
-from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple
+from math import exp, sqrt
+from time import perf_counter
+from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple, Union
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
 import numpy as np
 import ray
 from ray.util import ActorPool
+from rich.console import Console, Group
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
+from rich.live import Live
+from rich.table import Table
 from scipy.constants import pi
 from scipy.io import savemat
 from scipy.stats import norm
@@ -422,28 +426,34 @@ class GridSection(object):
 
         return len(self.__evaluators)
 
-    def add_sample(self, sample: MonteCarloSample) -> None:
+    def add_samples(self, samples: Union[MonteCarloSample, List[MonteCarloSample]]) -> None:
         """Add a new sample to this grid section collection.
 
         Args:
-            sample (MonteCarloSample):
-                The sample to be added.
+
+            samples (Union[MonteCarloSample, List[MonteCarloSample])):
+                Samples to be added to this section.
 
         Raises:
             ValueError: If the number of artifacts in `sample` does not match the initialization.
         """
 
-        # Make sure the provided number of artifacts is correct
-        if sample.num_artifacts != self.num_evaluators:
-            raise ValueError(f"Number of sample artifacts ({sample.num_artifacts}) does not match the "
-                             f"configured number of evaluators ({self.num_evaluators})")
+        if not isinstance(samples, list):
+            samples = [samples]
 
-        # Append sample to the stored list
-        self.__samples.append(sample)
+        for sample in samples:
 
-        # Update scalar storage
-        scalars = sample.artifact_scalars
-        self.__scalars = np.append(self.__scalars, scalars[::, np.newaxis], axis=1)
+            # Make sure the provided number of artifacts is correct
+            if sample.num_artifacts != self.num_evaluators:
+                raise ValueError(f"Number of sample artifacts ({sample.num_artifacts}) does not match the "
+                                 f"configured number of evaluators ({self.num_evaluators})")
+
+            # Append sample to the stored list
+            self.__samples.append(sample)
+
+            # Update scalar storage
+            scalars = sample.artifact_scalars
+            self.__scalars = np.append(self.__scalars, scalars[::, np.newaxis], axis=1)
 
         # Update scalar confidences
         for evaluator_idx, evaluator in enumerate(self.__evaluators):
@@ -489,9 +499,11 @@ class MonteCarloActor(Generic[MO]):
     __dimension_parameters: List[List[Any]]         # Parameter samples along each simulation grid dimension
     __configuration_lambdas: List[Callable]         # Configuration lambdas to configure grid parameters
     __evaluators: List[Evaluator[MO]]               # Evaluators used to process the investigated object sample state
+    __section_block_size: int = 10                  # Number of samples per section block
 
     def __init__(self,
-                 argument_tuple: Tuple[MO, dict[str, List[Any]], List[Evaluator[MO]]]) -> None:
+                 argument_tuple: Tuple[MO, dict[str, List[Any]], List[Evaluator[MO]]],
+                 section_block_size: int = 10) -> None:
         """
         Args:
 
@@ -499,11 +511,15 @@ class MonteCarloActor(Generic[MO]):
                 Object to be investigated during the simulation runtime.
                 Dimensions over which the simulation will iterate.
                 Evaluators used to process the investigated object sample state.
+
+            section_block_size (int):
+                Number of samples generated per section block.
         """
 
         investigated_object = argument_tuple[0]
         dimensions = argument_tuple[1]
         evaluators = argument_tuple[2]
+        self.__section_block_size = section_block_size
 
         self.__investigated_object = investigated_object  # deepcopy(investigated_object)
         self.__dimension_parameters = [dimension_parameters for dimension_parameters in dimensions.values()]
@@ -512,8 +528,18 @@ class MonteCarloActor(Generic[MO]):
         # Generate configuration lambdas
         self.__configuration_lambdas = [self.__setter_lambda(dimension) for dimension in dimensions.keys()]
 
+    @property
+    def _investigated_object(self) -> MO:
+        """State of the Investigated Object.
+
+        Returns:
+            Mo: Investigated object.
+        """
+
+        return self.__investigated_object
+
     def run(self,
-            grid_section: Tuple[int, ...]) -> MonteCarloSample:
+            grid_section: Tuple[int, ...]) -> List[MonteCarloSample]:
         """Run the simulation actor.
 
         Args:
@@ -526,32 +552,33 @@ class MonteCarloActor(Generic[MO]):
                 The generated sample object.
         """
 
-        # Configure the object under investigation
-        for (configuration_lambda, parameters, parameter_idx) in zip(self.__configuration_lambdas,
-                                                                     self.__dimension_parameters,
-                                                                     grid_section):
-            configuration_lambda(parameters[parameter_idx])
+        samples: List[MonteCarloSample] = []
+        for sample_index in range(self.__section_block_size):
 
-        # Sample the investigated object
-        sampled_object = self.sample(self.__investigated_object)
+            # Configure the object under investigation
+            for (configuration_lambda, parameters, parameter_idx) in zip(self.__configuration_lambdas,
+                                                                         self.__dimension_parameters,
+                                                                         grid_section):
+                configuration_lambda(parameters[parameter_idx])
 
-        # Evaluate the sample
-        evaluations = [evaluator.evaluate(sampled_object) for evaluator in self.__evaluators]
+            # Sample the investigated object
+            sampled_object = self.sample()
+
+            # Evaluate the sample
+            evaluations = [evaluator.evaluate(sampled_object) for evaluator in self.__evaluators]
+
+            # Save generated sample
+            samples.append(MonteCarloSample(grid_section, sample_index, evaluations))
 
         # Return results
-        return MonteCarloSample(grid_section, 0, evaluations)
+        return samples
 
     @abstractmethod
-    def sample(self, investigated_object: MO) -> MO:
+    def sample(self) -> MO:
         """Generate a sample of the investigated object.
 
-        Args:
-            investigated_object (MO):
-                The object to be investigated.
-                It will be already configured to the grid parameters of the current sample.
-
         Returns:
-            object: The resulting sample.
+            MO: The resulting sample.
         """
         ...
 
@@ -577,22 +604,19 @@ class MonteCarloActor(Generic[MO]):
         # Implicitly we assume that every non-callable reference is an attribute
         return lambda args: setattr(object_reference, stages[-1], args)
 
-#    @classmethod
-#    def remote(cls, *args) -> MonteCarloActor:
-#
-#        raise NotImplementedError("Please apply the ray remote decorator to your actor")
-
 
 class MonteCarloResult(Generic[MO]):
 
     __dimensions: dict[str, List[Any]]
     __evaluators: List[Evaluator[MO]]
     __sections: np.ndarray
+    __performance_time: float           # Time required to compute the simulation.
 
     def __init__(self,
                  dimensions: dict[str, List[Any]],
                  evaluators: List[Evaluator],
-                 sections: np.ndarray) -> None:
+                 sections: np.ndarray,
+                 performance_time: float) -> None:
         """
         Args:
 
@@ -605,6 +629,9 @@ class MonteCarloResult(Generic[MO]):
             sections (np.ndarray):
                 Evaluation results.
 
+            performance_time (float):
+                Time required to compute the simulation.
+
         Raises:
             ValueError:
                 If the dimensions of `samples` do not match the supplied sweeping dimensions and evaluators.
@@ -613,6 +640,7 @@ class MonteCarloResult(Generic[MO]):
         self.__dimensions = dimensions
         self.__evaluators = evaluators
         self.__sections = sections
+        self.__performance_time = performance_time
 
     def plot(self) -> List[plt.Figure]:
 
@@ -660,6 +688,7 @@ class MonteCarloResult(Generic[MO]):
             "dimension_sections": np.array(list(product(self.__dimensions.values()))),
             "evaluators": [evaluator.abbreviation for evaluator in self.__evaluators],
             "evaluations": mean_scalar_artifacts,
+            "performance_time": self.__performance_time,
         }
 
         """mat_dict = {      
@@ -739,14 +768,16 @@ class MonteCarlo(Generic[MO]):
     __num_actors: int                           # Number of dedicated actors spawned during simulation
     __investigated_object: MO                   # The object to be investigated
     __dimensions: dict[str, List[Any]]          # Simulation dimensions which make up the grid
-    __evaluators: List[Evaluator[MO]]  # Evaluators used to process the investigated object sample state
+    __evaluators: List[Evaluator[MO]]           # Evaluators used to process the investigated object sample state
+    __console: Console                          # Console the simulation writes to
 
     def __init__(self,
                  investigated_object: MO,
                  num_samples: int,
                  evaluators: Optional[List[Evaluator[MO]]] = None,
                  min_num_samples: int = -1,
-                 num_actors: int = 0) -> None:
+                 num_actors: int = 0,
+                 console: Optional[Console] = None) -> None:
         """
         Args:
             investigated_object (MO):
@@ -764,6 +795,9 @@ class MonteCarlo(Generic[MO]):
             num_actors (int, optional):
                 Number of dedicated actors spawned during simulation.
                 By default, the number of actors will be the number of available CPU cores.
+
+            console (Console, optional):
+                Console the simulation writes to.
         """
 
         # Initialize ray if it hasn't been initialized yet. Required to query ideal number of actors
@@ -780,8 +814,10 @@ class MonteCarlo(Generic[MO]):
         self.num_samples = num_samples
         self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(.5 * num_samples)
         self.num_actors = int(ray.available_resources()['CPU']) if num_actors <= 0 else num_actors
+        self.__console = Console() if console is None else console
 
-    def simulate(self, actor: Type[MonteCarloActor]) -> MonteCarloResult[MO]:
+    def simulate(self,
+                 actor: Type[MonteCarloActor]) -> MonteCarloResult[MO]:
         """Launch the Monte Carlo simulation.
 
         Args:
@@ -793,8 +829,11 @@ class MonteCarlo(Generic[MO]):
             np.ndarray: Generated samples.
         """
 
+        # Generate start timestamp
+        start_time = perf_counter()
+
         # Print meta-information and greeting
-        print(f"Launched simulation campaign with {self.__num_actors} dedicated actors")
+        self.console.log(f"Launched simulation campaign with {self.__num_actors} dedicated actors")
 
         max_num_samples = self.num_samples
         dimension_str = f"{max_num_samples}"
@@ -804,113 +843,125 @@ class MonteCarlo(Generic[MO]):
             max_num_samples *= num_sections
             dimension_str += f" x {num_sections}"
 
-        print(f"Generating a maximum of {max_num_samples} = " + dimension_str +
-              f" samples inspected by {len(self.__evaluators)} evaluators\n")
+        self.console.log(f"Generating a maximum of {max_num_samples} = " + dimension_str +
+                         f" samples inspected by {len(self.__evaluators)} evaluators\n")
 
-        # Print grid information
-        if len(self.__dimensions) > 0:
+        # Render simulation grid table
+        dimension_table = Table(title="Simulation Grid", title_justify="left")
+        dimension_table.add_column("Dimension", style="cyan")
+        dimension_table.add_column("Sections", style="green")
 
-            print("Simulation Grid\nDimension    Sections")
-            for dimension, sections in self.__dimensions.items():
+        for dimension, sections in self.__dimensions.items():
 
-                line = f"{dimension:<10}   "
-                for section in sections:
-                    line += f"{section:<6.2f}  "
-                print(line)
+            section_str = ""
+            for section in sections:
+                section_str += f"{section:.2f} "
 
-            print("\r")
+            dimension_table.add_row(dimension, section_str)
 
-        # Query terminal dimensions
-        terminal_size = get_terminal_size()
-        progress_percent_size = 5
-        progress_bar_size = terminal_size.columns - progress_percent_size - 10
-        progress_bar_elements = progress_bar_size - 2
+        self.console.print(dimension_table)
+        self.console.print()
 
-        # Print axis information
-        header = ""
+        # Launch actors and queue the first tasks
+        with self.console.status("Launching Actor Pool...", spinner='dots'):
 
-        for dimension in self.__dimensions:
-            header += f"{dimension:<13}"
+            # Generate the actor pool
+            actor_pool = ActorPool([actor.remote((self.__investigated_object, self.__dimensions, self.__evaluators))
+                                    for _ in range(self.__num_actors)])
 
-        header += f"{'Sample':<13}"
+            # Generate section sample containers and meta-information
+            grid_task_count = np.zeros([len(dimension) for dimension in self.__dimensions.values()], dtype=int)
+            grid_active_mask = np.ones([len(dimension) for dimension in self.__dimensions.values()], dtype=bool)
+            grid = np.empty([len(dimension) for dimension in self.__dimensions.values()], dtype=object)
 
-        for evaluator in self.__evaluators:
-            header += f"{evaluator.abbreviation:<13}"
+            grid_iter = grid.flat
+            for _ in grid_iter:
+                cords = tuple(np.array(grid_iter.coords) - 1)
+                grid[cords] = GridSection(cords, self.__evaluators)
 
-        num_header_sections = 1 + len(self.__dimensions) + len(self.__evaluators)
-        num_separator_elements = 13 * num_header_sections
+            # Submit initial actor tasks
+            task_overhead = 2  # A little overhead in task submission might speed things up? Not clear atm.
+            for _ in range(self.__num_actors + task_overhead):
+                _ = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
 
-        print(header)
-        print("="*num_separator_elements)
+        # Initialize results table
+        num_result_rows = 5
+        results: List[List[str]] = [[] for _ in range(num_result_rows)]
 
-        # Generate the actor pool
-        actor_pool = ActorPool([actor.remote((self.__investigated_object, self.__dimensions, self.__evaluators))
-                                for _ in range(self.__num_actors)])
+        # Initialize progress bar
+        progress = Progress(SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True)
+        task1 = progress.add_task("Computing", total=100.)
 
-        # Generate section sample containers and meta-information
-        grid_task_count = np.zeros([len(dimension) for dimension in self.__dimensions.values()], dtype=int)
-        grid_active_mask = np.ones([len(dimension) for dimension in self.__dimensions.values()], dtype=bool)
-        grid = np.empty([len(dimension) for dimension in self.__dimensions.values()], dtype=object)
+        # Display results in a live table
+        status_group = Group(progress, '')
+        with Live(status_group, console=self.console) as live:
 
-        grid_iter = grid.flat
-        for _ in grid_iter:
+            # Keep executing until all samples are computed
+            result_index = 0
+            while actor_pool.has_next():
 
-            cords = tuple(np.array(grid_iter.coords) - 1)
-            grid[cords] = GridSection(cords, self.__evaluators)
+                # Retrieve result from pool
+                samples: List[MonteCarloSample] = actor_pool.get_next_unordered(timeout=None)
 
-        # Submit initial actor tasks
-        task_overhead = 2   # A little overhead in task submission might speed things up? Not clear atm.
-        for _ in range(self.__num_actors + task_overhead):
-            _ = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
+                # Decrease task counter
+                grid_task_count[samples[0].grid_section] -= 1
 
-        sample_info_queue = ['' for _ in range(8)]
+                # Queue next task and retrieve progress
+                relative_progress = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
 
-        # Keep executing until all samples are computed
-        while actor_pool.has_next():
+                # Save result
+                grid_section: GridSection = grid[samples[0].grid_section]
+                grid_section.add_samples(samples)
 
-            # Retrieve result from pool
-            sample: MonteCarloSample = actor_pool.get_next_unordered(timeout=None)
+                # Check for stopping criteria
+                if grid_section.num_samples >= self.min_num_samples:
 
-            # Decrease task counter
-            grid_task_count[sample.grid_section] -= 1
+                    confident: bool = sum(np.invert(grid_section.confidences)) == 0.
+                    if confident:
+                        grid_active_mask[samples[0].grid_section] = False
 
-            # Queue next task and retrieve progress
-            progress = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
+                # Print sample information by updating the table
+                for sample in samples:
 
-            # Save result
-            grid_section: GridSection = grid[sample.grid_section]
-            grid_section.add_sample(sample)
+                    results_row: List[str] = []
 
-            # Check for stopping criteria
-            if grid_section.num_samples >= self.min_num_samples:
+                    for dimension, section_idx in zip(self.__dimensions.values(), sample.grid_section):
+                        results_row.append(f"{dimension[section_idx]:.2f}")
 
-                confident: bool = sum(np.invert(grid_section.confidences)) == 0.
-                if confident:
-                    grid_active_mask[sample.grid_section] = False
+                    results_row.append(str(result_index))
 
-            # Print sample information
-            sample_info = ''
-            for dimension, section_idx in zip(self.__dimensions.values(), sample.grid_section):
-                sample_info += f"{dimension[section_idx]:<13.2f}"
+                    for artifact in sample.artifacts:
+                        results_row.append(str(artifact))
 
-            sample_info += f"{sample.sample_index:<13}"
+                    results[result_index % num_result_rows] = results_row
+                    result_index += 1
 
-            for artifact in sample.artifacts:
-                sample_info += f"{str(artifact):<13}"
+                # Render results table
+                results_table = Table(min_width=self.console.measure(progress).minimum)
 
-            progress_percent = int(100 * progress)
-            progress_num_elements = int(ceil(progress_bar_elements * progress))
-            progress_elements = '█' * progress_num_elements + '░' * (progress_bar_elements - progress_num_elements)
+                for dimension in self.__dimensions:
+                    results_table.add_column(dimension, style="cyan")
 
-            sample_info_queue.pop(0)
-            sample_info_queue.append(sample_info)
+                results_table.add_column("#", style="blue")
 
-            for sample_info in reversed(sample_info_queue):
-                print(sample_info, flush=False)
+                for evaluator in self.__evaluators:
+                    results_table.add_column(evaluator.abbreviation, style="green")
 
-            print(f"Progress: [{progress_elements}]{progress_percent:>4}%", flush=True)
+                for result in results:
+                    results_table.add_row(*result)
 
-        return MonteCarloResult[MO](self.__dimensions, self.__evaluators, grid)
+                status_group.renderables[1] = results_table
+                progress.update(task1, completed=relative_progress)
+
+        # Measure elapsed time
+        stop_time = perf_counter()
+        performance_time = stop_time - start_time
+
+        # Print finish notifier
+        self.console.print()
+        self.console.log(f"Simulation finished after {performance_time:.2f} seconds")
+
+        return MonteCarloResult[MO](self.__dimensions, self.__evaluators, grid, performance_time)
 
     def __next_section(self,
                        grid: np.ndarray,
@@ -1103,3 +1154,18 @@ class MonteCarlo(Generic[MO]):
             raise ValueError("Number of actors must be greater or equal to zero")
 
         self.__num_actors = value
+
+    @property
+    def console(self) -> Console:
+        """Console the Simulation writes to.
+
+        Returns:
+            Console: Handle to the console.
+        """
+
+        return self.__console
+
+    @console.setter
+    def console(self, value: Console) -> None:
+
+        self.__console = value

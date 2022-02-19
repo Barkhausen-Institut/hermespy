@@ -12,6 +12,7 @@ from os import getcwd, mkdir
 from typing import ContextManager, List, Optional, Union
 
 import matplotlib.pyplot as plt
+from rich.console import Console
 
 from hermespy.core.factory import Serializable
 
@@ -46,10 +47,12 @@ class Executable(ABC, Serializable):
     __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
     __verbosity: Verbosity          # Information output behaviour during execution.
     __style: str = 'dark'           # Color scheme
+    __console: Console              # Rich console instance for text output
 
     def __init__(self,
                  results_dir: Optional[str] = None,
-                 verbosity: Union[Verbosity, str] = Verbosity.INFO) -> None:
+                 verbosity: Union[Verbosity, str] = Verbosity.INFO,
+                 console: Optional[Console] = None) -> None:
         """
         Args:
 
@@ -58,12 +61,16 @@ class Executable(ABC, Serializable):
 
             verbosity (Union[str, Verbosity], optional):
                 Information output behaviour during execution.
+
+            console (Console, optional):
+                The console instance the executable will operate on.
         """
 
         # Default parameters
         self.__scenarios = []
         self.results_dir = results_dir
         self.verbosity = verbosity
+        self.__console = Console(record=False) if console is None else console
 
     def execute(self) -> None:
         """Execute the executable."""
@@ -257,3 +264,18 @@ class Executable(ABC, Serializable):
         """
 
         return path.dirname(path.dirname(path.abspath(__file__)))
+
+    @property
+    def console(self) -> Console:
+        """Console the Simulation writes to.
+
+        Returns:
+            Console: Handle to the console.
+        """
+
+        return self.__console
+
+    @console.setter
+    def console(self, value: Console) -> None:
+
+        self.__console = value
