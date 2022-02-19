@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Monte Carlo Simulation on Python Ray."""
+
+from __future__ import annotations
 import unittest
 import warnings
 from contextlib import redirect_stdout
@@ -11,10 +13,10 @@ from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MonteCarloSam
     Evaluator, ArtifactTemplate, MO, Artifact
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -44,52 +46,52 @@ class TestEvaluator(unittest.TestCase):
     def test_init(self) -> None:
         """Initialization should set the proper default attributes."""
 
-        self.assertEqual(1., self.evaluator.confidence_level)
-        self.assertEqual(0., self.evaluator.confidence_margin)
+        self.assertEqual(1., self.evaluator.confidence)
+        self.assertEqual(0., self.evaluator.tolerance)
 
-    def test_confidence_level_setget(self) -> None:
-        """Confidence level property getter should return setter argument."""
+    def test_confidence_setget(self) -> None:
+        """Confidence property getter should return setter argument."""
 
         confidence = .5
-        self.evaluator.confidence_level = confidence
+        self.evaluator.confidence = confidence
 
-        self.assertEqual(confidence, self.evaluator.confidence_level)
+        self.assertEqual(confidence, self.evaluator.confidence)
 
     def test_confidence_level_validation(self) -> None:
-        """Confidence level property setter should raise ValueError on invalid arguments."""
+        """Confidence property setter should raise ValueError on invalid arguments."""
 
         with self.assertRaises(ValueError):
-            self.evaluator.confidence_level = -1.
+            self.evaluator.confidence = -1.
 
         with self.assertRaises(ValueError):
-            self.evaluator.confidence_level = 1.5
+            self.evaluator.confidence = 1.5
 
         try:
 
-            self.evaluator.confidence_level = 0.
-            self.evaluator.confidence_level = 1.
+            self.evaluator.confidence = 0.
+            self.evaluator.confidence = 1.
 
         except ValueError:
             self.fail()
 
-    def test_confidence_margin_setget(self) -> None:
-        """Confidence margin property getter should return setter argument."""
+    def test_tolerance_setget(self) -> None:
+        """Tolerance property getter should return setter argument."""
 
-        margin = .5
-        self.evaluator.confidence_margin = margin
+        tolerance = .5
+        self.evaluator.tolerance = tolerance
 
-        self.assertEqual(margin, self.evaluator.confidence_margin)
+        self.assertEqual(tolerance, self.evaluator.tolerance)
 
-    def test_confidence_margin_validation(self) -> None:
+    def test_tolerance_validation(self) -> None:
         """Confidence margin property setter should raise ValueError on invalid arguments."""
 
         with self.assertRaises(ValueError):
-            self.evaluator.confidence_level = -1.
+            self.evaluator.tolerance = -1.
 
         try:
 
-            self.evaluator.confidence_level = 0.
-            self.evaluator.confidence_level = 1.
+            self.evaluator.tolerance = 0.
+            self.evaluator.tolerance = 1.
 
         except ValueError:
             self.fail()
@@ -170,9 +172,8 @@ class ProductEvaluator(Evaluator[TestObjectMock]):
 class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
     """Mock of a Monte Carlo Actor."""
 
-    def sample(self, investigated_object: TestObjectMock) -> TestObjectMock:
-
-        return investigated_object
+    def sample(self) -> TestObjectMock:
+        return self._investigated_object
 
 
 class TestMonteCarloSample(unittest.TestCase):
@@ -201,9 +202,10 @@ class TestMonteCarloActor(unittest.TestCase):
         self.investigated_object = TestObjectMock()
         self.investigated_object.property = 1
         self.dimensions = {'property_a': [1, 2, 6, 7, 8]}
-        self.evaluators = set()
+        self.evaluators = [SumEvaluator(), ProductEvaluator()]
 
-        self.actor = MonteCarloActorMock.remote([self.investigated_object, self.dimensions, self.evaluators])
+        self.actor = MonteCarloActorMock.remote((self.investigated_object, self.dimensions, self.evaluators),
+                                                section_block_size=1)
 
     def test_run(self) -> None:
         """Running the actor should produce the expected result."""
@@ -211,11 +213,9 @@ class TestMonteCarloActor(unittest.TestCase):
         for sample_idx, sample_value in enumerate(self.dimensions['property_a']):
 
             expected_grid_section = [sample_idx]
-            expected_sample = 2 * sample_value
 
-            sample = ray.get(self.actor.run.remote([sample_idx], sample_idx))
-            self.assertCountEqual(expected_grid_section, sample.grid_section)
-            #self.assertEqual(expected_sample, sample)
+            samples = ray.get(self.actor.run.remote((sample_idx,)))
+            self.assertCountEqual(expected_grid_section, samples[0].grid_section)
 
 
 class TestMonteCarlo(unittest.TestCase):
@@ -224,7 +224,7 @@ class TestMonteCarlo(unittest.TestCase):
     def setUp(self) -> None:
 
         self.investigated_object = TestObjectMock()
-        self.evaluators = {ProductEvaluator(), SumEvaluator()}
+        self.evaluators = [ProductEvaluator(), SumEvaluator()]
         self.num_samples = 3
         self.num_actors = 2
 
@@ -306,5 +306,5 @@ class TestMonteCarlo(unittest.TestCase):
         for dimension, parameters in dimensions.items():
             self.monte_carlo.add_dimension(dimension, parameters)
 
-        with redirect_stdout(None):
+        with self.monte_carlo.console.capture():
             self.monte_carlo.simulate(MonteCarloActorMock)
