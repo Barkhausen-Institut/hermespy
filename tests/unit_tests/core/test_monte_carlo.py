@@ -308,3 +308,20 @@ class TestMonteCarlo(unittest.TestCase):
 
         with self.monte_carlo.console.capture():
             self.monte_carlo.simulate(MonteCarloActorMock)
+
+    def test_section_block_size_setget(self) -> None:
+        """Section block size property getter should return setter argument."""
+
+        section_block_size = 10
+        self.monte_carlo.section_block_size = section_block_size
+
+        self.assertEqual(section_block_size, self.monte_carlo.section_block_size)
+
+    def test_section_block_size_validation(self) -> None:
+        """Section block size property setter should raise ValueError on arguments smaller than one."""
+
+        with self.assertRaises(ValueError):
+            self.monte_carlo.section_block_size = -1
+
+        with self.assertRaises(ValueError):
+            self.monte_carlo.section_block_size = 0
