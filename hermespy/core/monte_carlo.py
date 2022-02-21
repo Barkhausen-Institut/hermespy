@@ -957,9 +957,6 @@ class MonteCarlo(Generic[MO]):
                 for result in results:
                     results_table.add_row(*result)
 
-                if result_index > 13000:
-                    print('test')
-
                 status_group.renderables[1] = results_table
                 progress.update(task1, completed=num_samples)
 
