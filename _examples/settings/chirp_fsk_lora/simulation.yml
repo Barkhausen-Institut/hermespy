@@ -78,4 +78,4 @@ plot_results: True                 # Visualize the evaluations after the simulat
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2] dB
+  snr: [10, 9, ..., -2] dB
