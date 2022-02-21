@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 from hermespy.simulation.simulation import Simulation
 from hermespy.modem.modem import Modem
-from hermespy.modem.evaluators import BitErrorEvaluator, FrameErrorEvaluator
+from hermespy.modem.evaluators import BitErrorEvaluator
 from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
 
 # Create a new HermesPy simulation scenario
