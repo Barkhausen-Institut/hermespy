@@ -96,6 +96,14 @@ class TestEvaluator(unittest.TestCase):
         except ValueError:
             self.fail()
 
+    def test_plot_scale_setget(self) -> None:
+        """Plot scale property getter should return setter argument."""
+
+        plot_scale = 'abce'
+        self.evaluator.plot_scale = plot_scale
+
+        self.assertEqual(plot_scale, self.evaluator.plot_scale)
+
 
 class TestObjectMock(object):
     """Mock of a tested object."""
