@@ -91,6 +91,7 @@ Evaluators:
     receiving_modem: *modem_alpha
     confidence: .9
     tolerance: .01
+    plot_scale: log
 
 
 # Simulation parameters
