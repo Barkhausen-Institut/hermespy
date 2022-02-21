@@ -58,14 +58,15 @@ Evaluators:
     receiving_modem: *modem_alpha
     confidence: .9
     tolerance: .01
+    plot_scale: log
 
   # Evaluate throughput of `modem_alpha` communicating over `device_alpha`
   - !<ThroughputEvaluator>
 
     transmitting_modem: *modem_alpha
     receiving_modem: *modem_alpha
-    confidence: .9
-    tolerance: .01
+    confidence: 0.
+    plot_scale: log
 
 
 # Simulation parameters
@@ -78,4 +79,4 @@ plot_results: True                 # Visualize the evaluations after the simulat
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2] dB
+  snr: [10, 9, ..., -2] dB
