@@ -31,10 +31,10 @@ from scipy.io import savemat
 from scipy.stats import norm
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -124,11 +124,13 @@ class Evaluator(Generic[MO]):
 
     __confidence: float
     __tolerance: float
+    __plot_scale: str       # Plot axis scaling
 
     def __init__(self) -> None:
 
         self.confidence = 1.
         self.tolerance = 0.
+        self.plot_scale = 'linear'
 
     @abstractmethod
     def evaluate(self, investigated_object: MO) -> Artifact:
@@ -236,6 +238,25 @@ class Evaluator(Generic[MO]):
         """
 
         return norm.cdf(scalar)
+
+    @property
+    def plot_scale(self) -> str:
+        """Scale of the scalar evaluation plot.
+
+        Refer to the `Matplotlib`_ documentation for a list of a accepted values.
+
+        Returns:
+            str: The  scale identifier string.
+
+        .. _Matplotlib: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_yscale.html
+        """
+
+        return self.__plot_scale
+
+    @plot_scale.setter
+    def plot_scale(self, value: str) -> None:
+
+        self.__plot_scale = value
 
     def confidence_level(self,
                          scalars: np.ndarray) -> float:
@@ -643,6 +664,12 @@ class MonteCarloResult(Generic[MO]):
         self.__performance_time = performance_time
 
     def plot(self) -> List[plt.Figure]:
+        """Plot evaluation figures for all contained evaluator artifacts.
+
+        Returns:
+            List[plt.Figure]:
+                List of handles to all created Matplotlib figures.
+        """
 
         dimension_strs = list(self.__dimensions.keys())
         dimension_values = list(self.__dimensions.values())
@@ -661,11 +688,18 @@ class MonteCarloResult(Generic[MO]):
             figure, axes = plt.subplots()
             figure.suptitle(evaluator.title)
             axes.plot(dimension_values[visualized_slice], scalar_means)
+
+            # Configure axes labels
             axes.set_xlabel(dimension_strs[visualized_slice])
             axes.set_ylabel(evaluator.abbreviation)
 
+            # Configure axes scales
+            axes.set_yscale(evaluator.plot_scale)
+
+            # Save figure to result list
             figures.append(figure)
 
+        # Return list of resulting figures
         return figures
 
     def save_to_matlab(self, file: str) -> None:
