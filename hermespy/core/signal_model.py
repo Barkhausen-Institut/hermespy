@@ -16,12 +16,13 @@ from numba import jit, complex128
 from scipy.constants import pi
 from scipy.fft import fft, fftshift, fftfreq
 
+from .executable import Executable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.0"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -346,30 +347,32 @@ class Signal:
 
         title = "Signal Model" if title is None else title
 
-        fig, axes = plt.subplots(self.num_streams, 2, squeeze=False)
-        fig.suptitle(title)
+        with Executable.style_context():
 
-        timestamps = self.timestamps
+            fig, axes = plt.subplots(self.num_streams, 2, squeeze=False)
+            fig.suptitle(title)
 
-        for stream_idx, stream_samples in enumerate(self.__samples):
+            timestamps = self.timestamps
 
-            real = axes[stream_idx, 0].plot(timestamps, stream_samples.real, label='Real')
-            imag = axes[stream_idx, 0].plot(timestamps, stream_samples.imag, label='Imag')
-            axes[stream_idx, 0].set_xlabel('Time-Domain [s]')
-            axes[stream_idx, 0].legend(fancybox=True, shadow=True)
+            for stream_idx, stream_samples in enumerate(self.__samples):
 
-            frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
-            bins = fftshift(fft(stream_samples))
+                real = axes[stream_idx, 0].plot(timestamps, stream_samples.real, label='Real')
+                imag = axes[stream_idx, 0].plot(timestamps, stream_samples.imag, label='Imag')
+                axes[stream_idx, 0].set_xlabel('Time-Domain [s]')
+                axes[stream_idx, 0].legend(fancybox=True, shadow=True)
 
-            axes[stream_idx, 1].plot(frequencies, np.abs(bins))
-            axes[stream_idx, 1].set_ylabel('Abs')
-            axes[stream_idx, 1].set_xlabel('Frequency-Domain [Hz]')
+                frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
+                bins = fftshift(fft(stream_samples))
 
-            if angle:
+                axes[stream_idx, 1].plot(frequencies, np.abs(bins))
+                axes[stream_idx, 1].set_ylabel('Abs')
+                axes[stream_idx, 1].set_xlabel('Frequency-Domain [Hz]')
 
-                phase = axes[stream_idx, 1].twinx()
-                phase.plot(frequencies, np.angle(bins))
-                phase.set_ylabel('Angle [Rad]')
+                if angle:
+
+                    phase = axes[stream_idx, 1].twinx()
+                    phase.plot(frequencies, np.angle(bins))
+                    phase.set_ylabel('Angle [Rad]')
 
     @staticmethod
     @jit(nopython=True)
