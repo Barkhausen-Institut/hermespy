@@ -21,7 +21,5 @@ as well as specific processing step implementations
 
    coding.block_interleaver
    coding.cyclic_redundancy_check
-   coding.ldpc
    coding.repetition
    coding.scrambler
-   coding.turbo
