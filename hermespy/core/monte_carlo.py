@@ -19,6 +19,7 @@ from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, T
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import ray
 from ray.util import ActorPool
@@ -29,6 +30,8 @@ from rich.table import Table
 from scipy.constants import pi
 from scipy.io import savemat
 from scipy.stats import norm
+
+from .executable import Executable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -275,6 +278,10 @@ class Evaluator(Generic[MO]):
         if scalars.ndim != 1:
             raise ValueError("Scalars must be a vector (on-dimensional array)")
 
+        # Return zero if the tolerance is set to zero
+        if self.__tolerance == 0.:
+            return 0.
+
         n = len(scalars)
 
         # Compute unbiased samples
@@ -284,9 +291,9 @@ class Evaluator(Generic[MO]):
         # Compute moments
         sigma_moment = sqrt(np.sum(unbiased_samples ** 2) / n)
 
-        # A sigma moment of 0 indicates zero variance within the samples, therefore maximum confidence
+        # A sigma moment of 0 indicates zero variance within the samples, therefore minimal confidence?
         if sigma_moment == 0.:
-            return 1.0
+            return .0
 
         beta_bar_moment = np.sum(np.abs(unbiased_samples) ** 3) / (n * sigma_moment ** 3)
         beta_hat_moment = np.sum(unbiased_samples ** 3) / (n * sigma_moment ** 3)
@@ -517,13 +524,13 @@ class MonteCarloActor(Generic[MO]):
     """
 
     __investigated_object: MO                       # Copy of the object to be investigated
-    __dimension_parameters: List[List[Any]]         # Parameter samples along each simulation grid dimension
+    __grid: List[GridDimension]                     # Simulation grid dimensions
     __configuration_lambdas: List[Callable]         # Configuration lambdas to configure grid parameters
     __evaluators: List[Evaluator[MO]]               # Evaluators used to process the investigated object sample state
     __section_block_size: int = 10                  # Number of samples per section block
 
     def __init__(self,
-                 argument_tuple: Tuple[MO, dict[str, List[Any]], List[Evaluator[MO]]],
+                 argument_tuple: Tuple[MO, List[GridDimension], List[Evaluator[MO]]],
                  section_block_size: int = 10) -> None:
         """
         Args:
@@ -538,16 +545,13 @@ class MonteCarloActor(Generic[MO]):
         """
 
         investigated_object = argument_tuple[0]
-        dimensions = argument_tuple[1]
+        grid = argument_tuple[1]
         evaluators = argument_tuple[2]
         self.__section_block_size = section_block_size
 
         self.__investigated_object = investigated_object  # deepcopy(investigated_object)
-        self.__dimension_parameters = [dimension_parameters for dimension_parameters in dimensions.values()]
+        self.__grid = grid
         self.__evaluators = evaluators
-
-        # Generate configuration lambdas
-        self.__configuration_lambdas = [self.__setter_lambda(dimension) for dimension in dimensions.keys()]
 
     @property
     def _investigated_object(self) -> MO:
@@ -577,10 +581,8 @@ class MonteCarloActor(Generic[MO]):
         for sample_index in range(self.__section_block_size):
 
             # Configure the object under investigation
-            for (configuration_lambda, parameters, parameter_idx) in zip(self.__configuration_lambdas,
-                                                                         self.__dimension_parameters,
-                                                                         grid_section):
-                configuration_lambda(parameters[parameter_idx])
+            for (grid_dimension, parameter_idx) in zip(self.__grid, grid_section):
+                grid_dimension.configure_point(parameter_idx)
 
             # Sample the investigated object
             sampled_object = self.sample()
@@ -603,45 +605,23 @@ class MonteCarloActor(Generic[MO]):
         """
         ...
 
-    def __setter_lambda(self, dimension: str) -> Callable:
-        """Generate a setter lambda callback for a selected grid dimension.
-
-        dimension (str):
-            String representation of dimension location relative to the investigated object.
-
-        Returns:
-            Callable: The setter lambda.
-        """
-
-        stages = dimension.split('.')
-        object_reference = reduce(lambda obj, attr: getattr(obj, attr), stages[:-1], self.__investigated_object)
-
-        # Return a lambda to the function if the reference is callable
-        function_reference = getattr(object_reference, stages[-1])
-        if callable(function_reference):
-            return lambda args: function_reference(args)
-
-        # Return a setting lambda if the reference is not callable
-        # Implicitly we assume that every non-callable reference is an attribute
-        return lambda args: setattr(object_reference, stages[-1], args)
-
 
 class MonteCarloResult(Generic[MO]):
 
-    __dimensions: dict[str, List[Any]]
+    __grid: List[GridDimension]
     __evaluators: List[Evaluator[MO]]
     __sections: np.ndarray
     __performance_time: float           # Time required to compute the simulation.
 
     def __init__(self,
-                 dimensions: dict[str, List[Any]],
+                 grid: List[GridDimension],
                  evaluators: List[Evaluator],
                  sections: np.ndarray,
                  performance_time: float) -> None:
         """
         Args:
 
-            dimensions (dict[str, List[Any]]):
+            grid (List[GridDimension]):
                 Dimensions over which the simulation has swept.
 
             evaluators (List[Evaluator]):
@@ -658,7 +638,7 @@ class MonteCarloResult(Generic[MO]):
                 If the dimensions of `samples` do not match the supplied sweeping dimensions and evaluators.
         """
 
-        self.__dimensions = dimensions
+        self.__grid = grid
         self.__evaluators = evaluators
         self.__sections = sections
         self.__performance_time = performance_time
@@ -671,33 +651,64 @@ class MonteCarloResult(Generic[MO]):
                 List of handles to all created Matplotlib figures.
         """
 
-        dimension_strs = list(self.__dimensions.keys())
-        dimension_values = list(self.__dimensions.values())
-
         visualized_slice = 0
 
         figures: List[plt.Figure] = []
 
         # Prepare artifacts
-        section: GridSection
-        graph_artifacts = np.array([np.mean(section.scalars, axis=1)
-                                    for section in self.__sections.flatten()], dtype=float)
+        graph_artifacts = np.empty((len(self.__evaluators),) + self.__sections.shape, dtype=float)
+        for section_coords in np.ndindex(self.__sections.shape):
+            graph_artifacts[(slice(0, None),) + section_coords] = np.mean(self.__sections[section_coords].scalars, axis=1)
 
-        for evaluator_idx, (evaluator, scalar_means) in enumerate(zip(self.__evaluators, graph_artifacts.T)):
+        if len(self.__grid) == 1:
 
-            figure, axes = plt.subplots()
-            figure.suptitle(evaluator.title)
-            axes.plot(dimension_values[visualized_slice], scalar_means)
+            for evaluator_idx, (evaluator, scalar_means) in enumerate(zip(self.__evaluators, graph_artifacts)):
 
-            # Configure axes labels
-            axes.set_xlabel(dimension_strs[visualized_slice])
-            axes.set_ylabel(evaluator.abbreviation)
+                with Executable.style_context():
 
-            # Configure axes scales
-            axes.set_yscale(evaluator.plot_scale)
+                    figure, axes = plt.subplots()
+                    figure.suptitle(evaluator.title)
 
-            # Save figure to result list
-            figures.append(figure)
+                    axes.plot(self.__grid[visualized_slice].sample_points, scalar_means)
+
+                    # Configure axes labels
+                    axes.set_xlabel(self.__grid[visualized_slice].title)
+                    axes.set_ylabel(evaluator.abbreviation)
+
+                    # Configure axes scales
+                    axes.set_yscale(self.__grid[visualized_slice].plot_scale)
+                    axes.set_yscale(evaluator.plot_scale)
+
+                    # Save figure to result list
+                    figures.append(figure)
+
+        elif len(self.__grid) == 2:
+
+            for evaluator_idx, (evaluator, scalar_means) in enumerate(zip(self.__evaluators, graph_artifacts)):
+
+                with Executable.style_context():
+
+                    figure = plt.figure()
+                    figure.suptitle(evaluator.title)
+                    axes = figure.add_subplot(projection='3d')
+
+                    y, x = np.meshgrid(self.__grid[1].sample_points, self.__grid[0].sample_points)
+                    axes.plot_surface(x, y, scalar_means)
+
+                    # Configure axes labels
+                    axes.set_xlabel(self.__grid[0].title)
+                    axes.set_ylabel(self.__grid[1].title)
+                    axes.set_zlabel(evaluator.abbreviation)
+
+                    # Configure axes scales
+                    axes.set_xscale(self.__grid[0].plot_scale)
+                    axes.set_yscale(self.__grid[1].plot_scale)
+                    axes.set_zscale(evaluator.plot_scale)
+
+                    # Save figure to result list
+                    figures.append(figure)
+        else:
+            print("High-dimensional plotting is currently not supported")
 
         # Return list of resulting figures
         return figures
@@ -794,6 +805,181 @@ class MonteCarloResult(Generic[MO]):
         savemat(file, mat_dict)
 
 
+class GridDimension(object):
+    """Single axis within the simulation grid."""
+
+    __considered_object: Any
+    __dimension: str
+    __sample_points: List[Any]
+    __title: Optional[str]
+    __setter_lambda: Callable
+    __plot_scale: str
+
+    def __init__(self,
+                 considered_object: Any,
+                 dimension: str,
+                 sample_points: List[Any],
+                 title: Optional[str] = None,
+                 plot_scale: Optional[str] = None) -> None:
+        """
+        Args:
+
+            considered_object (Any):
+                The considered object of this grid section.
+
+            dimension (str):
+                Path to the attribute.
+
+            sample_points (List[Any]):
+                Sections the grid is sampled at.
+
+            title (str, optional):
+                Title of this dimension.
+                If not specified, the attribute string is assumed.
+
+            plot_scale (str, optional):
+                Scale of the axis within plots.
+
+        Raises:
+
+            ValueError:
+                If the selected `dimension` does not exist within the `considered_object`.
+        """
+
+        # Make sure the dimension exists
+        try:
+            _ = reduce(lambda obj, attr: getattr(obj, attr), dimension.split('.'), considered_object)
+
+        except AttributeError:
+            raise ValueError("Dimension '" + dimension + "' does not exist within the investigated object")
+
+        if len(sample_points) < 1:
+            raise ValueError("A simulation grid dimension must have at least one sample point")
+
+        self.__considered_object = considered_object
+        self.__dimension = dimension
+        self.__sample_points = sample_points
+        self.__title = title
+        self.__setter_lambda = self.__create_setter_lambda(considered_object, dimension)
+        self.plot_scale = 'linear' if plot_scale is None else plot_scale
+
+    @property
+    def considered_object(self) -> Any:
+        """Considered object of this grid section."""
+
+        return self.__considered_object
+
+    @property
+    def sample_points(self) -> List[Any]:
+        """Points at which this grid dimension is sampled.
+
+        Returns:
+
+            List[Any]:
+                List of sample points.
+        """
+
+        return self.__sample_points
+
+    @property
+    def num_sample_points(self) -> int:
+        """Number of dimension sample points.
+
+        Returns:
+
+            int:
+                Number of sample points.
+        """
+
+        return len(self.__sample_points)
+
+    def configure_point(self, point_index: int) -> None:
+        """Configure a specific sample point.
+
+        Args:
+
+            point_index (int):
+                Index of the sample point to configure.
+
+        Raises:
+
+            ValueError:
+                For invalid indexes.
+        """
+
+        if point_index < 0 or point_index >= len(self.__sample_points):
+            raise ValueError(f"Index {point_index} is out of the range for grid dimension '{self.title}'")
+
+        self.__setter_lambda(self.__sample_points[point_index])
+
+    @property
+    def title(self) -> str:
+        """Title of the dimension.
+
+        Returns:
+            The title string.
+        """
+
+        return self.__dimension if self.__title is None else self.__title
+
+    @title.setter
+    def title(self, value: str) -> None:
+
+        if value is None or len(value) == 0:
+            self.__title = None
+
+        else:
+            self.__title = value
+
+    @property
+    def plot_scale(self) -> str:
+        """Scale of the scalar evaluation plot.
+
+        Refer to the `Matplotlib`_ documentation for a list of a accepted values.
+
+        Returns:
+            str: The  scale identifier string.
+
+        .. _Matplotlib: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_yscale.html
+        """
+
+        return self.__plot_scale
+
+    @plot_scale.setter
+    def plot_scale(self, value: str) -> None:
+
+        self.__plot_scale = value
+
+    @staticmethod
+    def __create_setter_lambda(considered_object: Any,
+                               dimension: str) -> Callable:
+        """Generate a setter lambda callback for a selected grid dimension.
+
+        Args:
+
+            considered_object (Any):
+                The considered object root.
+
+            dimension (str):
+                String representation of dimension location relative to the investigated object.
+
+        Returns:
+            Callable: The setter lambda.
+        """
+
+        stages = dimension.split('.')
+        object_reference = reduce(lambda obj, attr: getattr(obj, attr), stages[:-1], considered_object)
+
+        # Return a lambda to the function if the reference is callable
+        function_reference = getattr(object_reference, stages[-1])
+        if callable(function_reference):
+            return lambda args: function_reference(args)
+
+        # Return a setting lambda if the reference is not callable
+        # Implicitly we assume that every non-callable reference is an attribute
+        return lambda args: setattr(object_reference, stages[-1], args)
+
+
 class MonteCarlo(Generic[MO]):
     """Grid of parameters over which to iterate the simulation."""
 
@@ -801,7 +987,7 @@ class MonteCarlo(Generic[MO]):
     __min_num_samples: int                      # Minimum number of samples per grid element
     __num_actors: int                           # Number of dedicated actors spawned during simulation
     __investigated_object: MO                   # The object to be investigated
-    __dimensions: dict[str, List[Any]]          # Simulation dimensions which make up the grid
+    __dimensions: List[GridDimension]           # Simulation grid dimensions which make up the grid
     __evaluators: List[Evaluator[MO]]           # Evaluators used to process the investigated object sample state
     __console: Console                          # Console the simulation writes to
     __section_block_size: int                   # Number of samples per section block
@@ -848,7 +1034,7 @@ class MonteCarlo(Generic[MO]):
                 simplefilter("ignore")
                 ray.init()
 
-        self.__dimensions = {}
+        self.__dimensions = []
         self.__investigated_object = investigated_object
         self.__evaluators = [] if evaluators is None else evaluators
         self.num_samples = num_samples
@@ -878,11 +1064,10 @@ class MonteCarlo(Generic[MO]):
 
         max_num_samples = self.num_samples
         dimension_str = f"{max_num_samples}"
-        for dimension in self.__dimensions.values():
+        for dimension in self.__dimensions:
 
-            num_sections = len(dimension)
-            max_num_samples *= num_sections
-            dimension_str += f" x {num_sections}"
+            max_num_samples *= dimension.num_sample_points
+            dimension_str += f" x {dimension.num_sample_points}"
 
         self.console.log(f"Generating a maximum of {max_num_samples} = " + dimension_str +
                          f" samples inspected by {len(self.__evaluators)} evaluators\n")
@@ -892,13 +1077,13 @@ class MonteCarlo(Generic[MO]):
         dimension_table.add_column("Dimension", style="cyan")
         dimension_table.add_column("Sections", style="green")
 
-        for dimension, sections in self.__dimensions.items():
+        for dimension in self.__dimensions:
 
             section_str = ""
-            for section in sections:
-                section_str += f"{section:.2f} "
+            for sample_point in dimension.sample_points:
+                section_str += f"{sample_point:.2f} "
 
-            dimension_table.add_row(dimension, section_str)
+            dimension_table.add_row(dimension.title, section_str)
 
         self.console.print(dimension_table)
         self.console.print()
@@ -911,14 +1096,14 @@ class MonteCarlo(Generic[MO]):
                                     for _ in range(self.__num_actors)])
 
             # Generate section sample containers and meta-information
-            grid_task_count = np.zeros([len(dimension) for dimension in self.__dimensions.values()], dtype=int)
-            grid_active_mask = np.ones([len(dimension) for dimension in self.__dimensions.values()], dtype=bool)
-            grid = np.empty([len(dimension) for dimension in self.__dimensions.values()], dtype=object)
+            grid_task_count = np.zeros([dimension.num_sample_points for dimension in self.__dimensions], dtype=int)
+            grid_active_mask = np.ones([dimension.num_sample_points for dimension in self.__dimensions], dtype=bool)
+            grid = np.empty([dimension.num_sample_points for dimension in self.__dimensions], dtype=object)
 
-            grid_iter = grid.flat
-            for _ in grid_iter:
-                cords = tuple(np.array(grid_iter.coords) - 1)
-                grid[cords] = GridSection(cords, self.__evaluators)
+            for coordinates in np.ndindex(grid.shape):
+
+                coordinate_tuple = tuple(coordinates)
+                grid[coordinate_tuple] = GridSection(coordinate_tuple, self.__evaluators)
 
             # Submit initial actor tasks
             task_overhead = 2  # A little overhead in task submission might speed things up? Not clear atm.
@@ -966,8 +1151,8 @@ class MonteCarlo(Generic[MO]):
 
                     results_row: List[str] = []
 
-                    for dimension, section_idx in zip(self.__dimensions.values(), sample.grid_section):
-                        results_row.append(f"{dimension[section_idx]:.2f}")
+                    for dimension, section_idx in zip(self.__dimensions, sample.grid_section):
+                        results_row.append(f"{dimension.sample_points[section_idx]:.2f}")
 
                     results_row.append(str(result_index))
 
@@ -981,7 +1166,7 @@ class MonteCarlo(Generic[MO]):
                 results_table = Table(min_width=self.console.measure(progress).minimum)
 
                 for dimension in self.__dimensions:
-                    results_table.add_column(dimension, style="cyan")
+                    results_table.add_column(dimension.title, style="cyan")
 
                 results_table.add_column("#", style="blue")
 
@@ -1072,12 +1257,17 @@ class MonteCarlo(Generic[MO]):
 
         return self.__investigated_object
 
-    def add_dimension(self, dimension: str, sample_points: List[Any]) -> None:
+    def new_dimension(self,
+                      dimension: str,
+                      sample_points: List[Any],
+                      considered_object: Optional[Any] = None) -> GridDimension:
+
         """Add a dimension to the simulation grid.
 
         Must be a property of the investigated object.
 
         Args:
+
             dimension (str):
                 String representation of dimension location relative to the investigated object.
 
@@ -1085,21 +1275,37 @@ class MonteCarlo(Generic[MO]):
                 List points at which the dimension will be sampled into a grid.
                 The type of points must be identical to the grid arguments / type.
 
-        Raises:
-            ValueError: If the selected `dimension` does not exist within the investigated object.
+            considered_object (Any, optional):
+                The object the dimension belongs to.
+                Resolved to the investigated object by default,
+                but may be an attribute or sub-attribute of the investigated object.
+
+        Returns:
+            The newly created dimension object.
         """
 
-        # Make sure the dimension exists
-        try:
-            _ = reduce(lambda obj, attr: getattr(obj, attr), dimension.split('.'), self.__investigated_object)
+        considered_object = self.__investigated_object if considered_object is None else considered_object
+        dimension = GridDimension(considered_object, dimension, sample_points)
+        self.add_dimension(dimension)
 
-        except AttributeError:
-            raise ValueError("Dimension '" + dimension + "' does not exist within the investigated object")
+        return dimension
 
-        if len(sample_points) < 1:
-            raise ValueError("A simulation grid dimension must have at least one sample point")
+    def add_dimension(self, dimension: GridDimension) -> None:
+        """Add a new dimension to the simulation grid.
 
-        self.__dimensions[dimension] = sample_points
+        Args:
+            dimension:
+                Dimension to be added.
+
+        Raises:
+            ValueError:
+                If the `dimension` already exists within the grid.
+        """
+
+        if dimension in self.__dimensions:
+            raise ValueError("Dimension instance already registered within the grid")
+
+        self.__dimensions.append(dimension)
 
     def add_evaluator(self, evaluator: Evaluator[MO]) -> None:
         """Add new evaluator to the Monte Carlo simulation.
@@ -1165,8 +1371,8 @@ class MonteCarlo(Generic[MO]):
         """
 
         num_samples = self.num_samples
-        for grid_sections in self.__dimensions.values():
-            num_samples *= len(grid_sections)
+        for dimension in self.__dimensions:
+            num_samples *= dimension.num_sample_points
 
         return num_samples
 
