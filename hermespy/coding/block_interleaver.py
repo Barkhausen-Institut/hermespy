@@ -1,16 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Interleaving Encoder."""
+"""
+============
+Interleaving
+============
+
+The term interleaving describes the channel process of exchanging the bit positions during coding.
+This is usually being done in order to distribute the bit errors resulting from a wrong symbol decision
+during waveform demodulation over the communication data frame.
+Therefore, most interleaving coding operations do not introduce redundancy to the interleaved blocks,
+i.e. the code rate is :math:`R = 1`.
+"""
 
 from __future__ import annotations
 from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import numpy as np
 
 from hermespy.core.factory import Serializable
-from hermespy.coding import Encoder
+from .coding import Encoder
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
@@ -20,26 +30,39 @@ __status__ = "Prototype"
 
 
 class BlockInterleaver(Encoder, Serializable):
-    """A bit block interleaving encoder.
+    """An encoding operation interleaving bits in a block-wise fashion.
 
-    Attributes:
+    During encoding, the block interleaver divides a block of :math:`K_n` :meth:`.bit_block_size` bits
+    into :math:`\\tilde{M}` :meth:`.interleave_blocks` of length :math:`\\tilde{K}`.
+    Let
 
-        __block_size (int):
-            The number of bits the interleaver operates on.
+    .. math::
 
-        __interleave_blocks (int):
-            The number of sub-blocks the interleaver divides `__block_size` in.
+       \\mathbf{x}  = \\left[ x_1, x_2, \\dots, x_{K_n} \\right]^\\intercal \\in \\left\\lbrace 0, 1 \\right\\rbrace^{K_n}
+
+    be the vector of input bits and
+
+    .. math::
+
+       \\mathbf{y}  = \\left[ y_1, y_2, \\dots, y_{K_n} \\right]^\\intercal \\in \\left\\lbrace 0, 1 \\right\\rbrace^{K_n}
+
+    be the vector of interleaved output bits, then
+
+    .. math::
+
+        y_k = x_{(k \\cdot \\tilde{M}) \\mod{K_n}}
+
+    describes the block interleaving scheme.
     """
 
     yaml_tag = 'BlockInterleaver'
-    __block_size: int
-    __interleave_blocks: int
+    __block_size: int           # The number of bits the interleaver operates on
+    __interleave_blocks: int    # The number of sub-blocks the interleaver divides `__block_size` in
 
     def __init__(self,
                  block_size: int,
                  interleave_blocks: int) -> None:
-        """Block interleaving encoder object initialization.
-
+        """
         Args:
 
             block_size (int):
@@ -48,13 +71,10 @@ class BlockInterleaver(Encoder, Serializable):
             interleave_blocks (int):
                 The number of sections being interleaved.
 
-        The block interleaver accepts bit blocks of length `block_size` and divides them into `interleave_blocks`
-        sections. Afterwards, bits within the sections will be swapped.
-        The first output section will contain the first bits of each input section,
-        the second output section the second bits of each input section, and so on.
-
         Raises:
-            ValueError: If `block_size` is not dividable into `interleave_blocks`.
+
+            ValueError:
+                If `block_size` is not dividable into `interleave_blocks`.
         """
 
         # Default parameters
@@ -80,6 +100,8 @@ class BlockInterleaver(Encoder, Serializable):
         Returns:
             Node:
                 The serialized YAML node.
+
+        :meta private:
         """
 
         state = {
@@ -105,61 +127,28 @@ class BlockInterleaver(Encoder, Serializable):
                 Newly created `Interleaver` instance.
 
         Note that the created instance is floating by default.
-        """
 
-        if isinstance(node, ScalarNode):
-            return cls()
+        :meta private:
+        """
 
         state = constructor.construct_mapping(node)
         return cls(**state)
 
     def encode(self, bits: np.ndarray) -> np.ndarray:
-        """Interleaves a single block of bits.
-
-        Args:
-            bits (np.ndarray): A block of bits to be encoded by this `Encoder`.
-
-        Returns:
-            np.ndarray: The encoded `bits` block.
-
-        Raises:
-            ValueError: If the number of `bits` does not match the `Encoder` requirements.
-        """
 
         return bits.reshape((self.interleave_blocks, -1)).T.flatten()
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
-        """De-interleaves a single block of encoded bits.
-
-        Args:
-            encoded_bits (np.ndarray): An encoded block of bits.
-
-        Returns:
-            np.ndarray: A decoded block of bits.
-
-        Raises:
-            ValueError: If the number of `bits` does not match the `Encoder` requirements.
-        """
 
         return encoded_bits.reshape((-1, self.interleave_blocks)).T.flatten()
 
     @property
     def bit_block_size(self) -> int:
-        """The number of resulting bits after decoding / the number of bits required before encoding.
-
-        Returns:
-            int: The number of bits.
-        """
 
         return self.block_size
 
     @property
     def code_block_size(self) -> int:
-        """The number of resulting bits after encoding / the number of bits required before decoding.
-
-        Returns:
-            int: The number of bits.
-        """
 
         return self.block_size
 
@@ -191,24 +180,19 @@ class BlockInterleaver(Encoder, Serializable):
 
     @property
     def interleave_blocks(self) -> int:
-        """The configured number of interleaved sections.
+        """The number of sub-blocks in which which the input block is divided.
 
         Returns:
-            int: The number of interleaved sections.
+            int: The number of interleaved sections :math:`\\tilde{M}`.
+
+        Raises:
+            ValueError: If the number of interleaved sections is less than one.
         """
 
         return self.__interleave_blocks
 
     @interleave_blocks.setter
     def interleave_blocks(self, num_blocks: int) -> None:
-        """Modify configured number of interleaved sections.
-
-        Args:
-            num_blocks (int): The new number of interleaved sections.
-
-        Raises:
-            ValueError: If the number of interleaved sections is less than one.
-        """
 
         if num_blocks < 1:
             raise ValueError("The number of interleaved sections must be at least one")
@@ -217,13 +201,5 @@ class BlockInterleaver(Encoder, Serializable):
 
     @property
     def rate(self) -> float:
-        """Code rate.
-
-        The relation between the number of source bits to the number of code bits.
-        Always one in proper interleavers.
-
-        Returns:
-            float: The code rate.
-        """
 
         return 1.0

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Channel State Information model for wireless transmission links."""
+"""
+===============================
+Channel State Information Model
+===============================
+"""
 
 from __future__ import annotations
 from typing import Generator, Optional, List, Union
@@ -11,7 +15,7 @@ from scipy.fft import fft, ifft
 from sparse import COO, diagonal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

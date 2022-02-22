@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+=======================
+Space-Time Block Coding
+=======================
+"""
+
 from __future__ import annotations
 from typing import Type, Tuple
 
@@ -8,7 +15,7 @@ from hermespy.core.factory import Serializable
 from.ratio_combining import MaximumRatioCombining
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

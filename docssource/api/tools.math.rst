@@ -1,0 +1,3 @@
+.. automodule:: tools.math
+
+.. footbibliography::

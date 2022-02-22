@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""HermesPy scenario configuration."""
+"""
+=================
+Wireless Scenario
+=================
+"""
 
 from __future__ import annotations
 import numpy as np

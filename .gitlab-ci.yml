@@ -11,7 +11,7 @@ test:
     - apt update
     - apt-get install -y build-essential
     - pip install -r requirements.txt
-    - pip install -e .
+    - pip install .
   script:
     - python -m unittest discover tests/unit_tests
 

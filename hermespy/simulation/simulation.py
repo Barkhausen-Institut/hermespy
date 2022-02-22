@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""HermesPy simulation configuration."""
+"""
+==========
+Simulation
+==========
+"""
 
 from __future__ import annotations
 from typing import Any, Dict, List, Type, Optional, Union, Tuple
@@ -21,10 +25,10 @@ from ..core.statistics import SNRType
 from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -192,7 +196,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     def set_channel(self,
                     receiver: Union[int, SimulatedDevice],
                     transmitter: Union[int, SimulatedDevice],
-                    channel: Channel) -> None:
+                    channel: Optional[Channel]) -> None:
         """Specify a channel within the channel matrix.
 
         Args:
@@ -203,7 +207,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             transmitter (int):
                 Index of the transmitter within the channel matrix.
 
-            channel (Channel):
+            channel (Optional[Channel]):
                 The channel instance to be set at position (`transmitter_index`, `receiver_index`).
 
         Raises:
@@ -227,11 +231,13 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         self.__channels[transmitter, receiver] = channel
         self.__channels[receiver, transmitter] = channel
 
-        # Set proper receiver and transmitter fields
-        channel.transmitter = self.devices[transmitter]
-        channel.receiver = self.devices[receiver]
-        channel.random_mother = self
-        channel.scenario = self
+        if channel is not None:
+
+            # Set proper receiver and transmitter fields
+            channel.transmitter = self.devices[transmitter]
+            channel.receiver = self.devices[receiver]
+            channel.random_mother = self
+            channel.scenario = self
 
     @property
     def snr(self) -> Optional[float]:
@@ -282,7 +288,7 @@ class SimulationRunner(object):
         """
 
         self.__scenario = scenario
-        
+
     def transmit_operators(self,
                            drop_duration: Optional[float] = None) -> None:
         """Generate base-band signal models emitted by all registered transmitting operators.
@@ -720,7 +726,7 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
 
         # Add simulation dimensions
         for dimension_key, dimension_values in dimensions.items():
-            simulation.add_dimension(dimension_key, dimension_values)
+            simulation.new_dimension(dimension_key, dimension_values)
 
         # Return simulation instance recovered from the serialization
         return simulation
