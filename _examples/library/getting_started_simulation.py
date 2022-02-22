@@ -1,26 +1,29 @@
 import matplotlib.pyplot as plt
 
-from hermespy.simulation.simulation import Simulation
-from hermespy.modem.modem import Modem
-from hermespy.modem.evaluators import BitErrorEvaluator
-from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
+# Import required HermesPy modules
+from hermespy.channel import Channel
+from hermespy.simulation import Simulation
+from hermespy.modem import Modem, WaveformGeneratorPskQam, BitErrorEvaluator
 
 # Create a new HermesPy simulation scenario
 simulation = Simulation()
 
-# Create a new simulated device
-device = simulation.new_device()
+# Create device
+device = simulation.scenario.new_device()
 
-# Add a modem at the simulated device
-modem = Modem()
-modem.waveform_generator = WaveformGeneratorPskQam()
-modem.device = device
+# Configure device operator
+operator = Modem()
+operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+operator.device = device
 
-# Monte-Carlo simulation
-simulation.add_evaluator(BitErrorEvaluator(modem, modem))
-simulation.add_dimension('snr', [10, 4, 2, 1, 0.5])
+# Configure Monte Carlo simulation
+simulation.add_evaluator(BitErrorEvaluator(operator, operator))
+simulation.new_dimension('snr', [10, 4, 2, 1, 0.5])
 simulation.num_samples = 1000
+
+# Launch simulation campaign
 result = simulation.run()
 
+# Visualize results
 result.plot()
 plt.show()

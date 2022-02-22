@@ -1,5 +1,51 @@
 # -*- coding: utf-8 -*-
-"""Modem evaluators."""
+"""
+========================
+Communication Evaluators
+========================
+
+This module introduces several evaluators for performance indicators in communication scenarios.
+Refer to the :doc:`PyMonte</api/core.monte_carlo>` documentation for a detailed introduction to the concept of
+:class:`Evaluators<hermespy.core.monte_carlo.Evaluator>`.
+
+.. autoclasstree:: hermespy.modem.evaluators
+   :alt: Communication Evaluator Class Tree
+   :strict:
+   :namespace: hermespy
+
+The implemented :class:`CommunicationEvaluators<.CommunicationEvaluator>` all inherit from the identically named common
+base which gets initialized by selecting the two :class:`Modem<hermespy.modem.modem.Modem>` instances whose communication
+should be evaluated.
+The currently considered performance indicators are
+
+============================= ============================= ========================================================
+Evaluator                     Artifact                      Performance Indicator
+============================= ============================= ========================================================
+:class:`.BitErrorEvaluator`   :class:`.BitErrorArtifact`    Errors comparing two bit streams
+:class:`.BlockErrorEvaluator` :class:`.BlockErrorArtifact`  Errors comparing two bit streams divided into blocks
+:class:`.FrameErrorEvaluator` :class:`.FrameErrorArtifact`  Errors comparing two bit streams divided into frames
+:class:`.ThroughputEvaluator` :class:`.ThroughputArtifact`  Rate of correct frames multiplied by the frame bit rate
+============================= ============================= ========================================================
+
+Configuring :class:`CommunicationEvaluators<.CommunicationEvaluator>` to evaluate the communication process between two
+:class:`Modem<hermespy.modem.modem.Modem>` instances is rather straightforward:
+
+.. code-block:: python
+
+   # Create two separate modem instances
+   modem_alpha = Modem()
+   modem_beta = Modem()
+
+   # Create a bit error evaluation as a communication evaluation example
+   communication_evaluator = BitErrorEvaluator(modem_alpha, modem_beta)
+
+   # Extract evaluation artifact
+   communication_artifact = communication_evaluator.evaluate()
+
+   # Visualize artifact
+   communication_artifact.plot()
+
+"""
 
 from __future__ import annotations
 from abc import ABC
@@ -16,7 +62,7 @@ from ..core.monte_carlo import Evaluator, ArtifactTemplate, Artifact
 from .modem import Modem
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
@@ -112,6 +158,7 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Optional[Scenario] = None) -> BitErrorArtifact:
 
@@ -171,6 +218,7 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Scenario) -> BlockErrorArtifact:
 
@@ -236,6 +284,7 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Scenario) -> FrameErrorArtifact:
 

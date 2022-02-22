@@ -1,29 +1,52 @@
 #!/usr/bin/env python
 
-"""This function calls the simulator main function.
+"""
+=============================
+Hermes Command Line Interface
+=============================
 
-It loads and checks all input parameters, creates results directories, initializes random numbers seeds, adds the
-simulation paths, generates, saves and plots the statistics.
+Within this module the primary entry point to the HermesPy simulation routine is defined as
+command line interface (CLI).
+In order to conveniently launch HermesPy from any command line,
+make sure that the virtual Python environment you installed HermesPy in is activated by executing
 
-It can be called as follows:
+.. tabs::
 
-Example:
-    $ python hermes.py
+   .. code-tab:: powershell Conda
 
-    uses default parameter (../_settings) and output directories (_results_yyyy-mm-dd_iii)
+      conda activate <envname>
 
-    $ python hermes.py -o <output_dir> -p <parameter_dir>
+   .. code-tab:: batch VEnv
 
-    uses user-defined parameter and output directories
+      <envname>\\Scripts\\activate.bat
 
-    $python hermes.py -h
+within a terminal.
+Usually activated environments are indicated by a `(<envname>)` in front of your terminal command line.
+Afterwards, HermesPy can be launched by executing the command
 
-    help on usage
+.. code-block:: console
 
+   hermes -p <parameter_dir> -o <output_dir>
 
-@authors: Andre Noll Barreto (andre.nollbarreto@barkhauseninstitut.org)
-Copyright (C) 2019 Barkhausen Institut gGmbH
-Released under the Gnu Public License Version 3
+The available argument options are
+
+.. list-table:: CLI Argument Options
+   :align: center
+
+   * - -h, --help
+     - Display the CLI help
+
+   * - -p `<directory>`
+     - Specify the parameter source directory
+
+   * - -o `<directory>`
+     - Specify the result output directory
+
+   * - -s `<style>`
+     - Specify the style of the result plots
+
+   * - -t
+     - Run the CLI in test mode
 
 """
 import os
@@ -39,20 +62,25 @@ from hermespy.core.executable import Executable
 from hermespy.core.factory import Serializable, Factory
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
-__maintainer__ = "André Noll Barreto"
-__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 def hermes(args: Optional[List[str]] = None) -> None:
-    """HermesPy command line routine.
+    """HermesPy Command Line Interface.
+
+    Default entry point to execute hermespy `.yml` files via terminals.
 
     Args:
-        args ([List[str], optional): Command line arguments.
+
+        args ([List[str], optional):
+            Command line arguments.
+            By default, the system argument vector will be interpreted.
     """
 
     # Recover command line arguments from system if none are provided

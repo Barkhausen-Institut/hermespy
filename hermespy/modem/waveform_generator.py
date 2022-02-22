@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Prototype for Waveform Generation Modeling."""
+"""
+===========================
+Communication Waveform Base
+===========================
+"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -16,9 +20,9 @@ from .symbols import Symbols
 if TYPE_CHECKING:
     from hermespy.modem import Modem
 
-__author__ = "Tobias Kronauer"
+__author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
 __maintainer__ = "Jan Adler"

@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Bit scrambling encoders."""
+"""
+==========
+Scrambling
+==========
+
+Scrambling as a channel coding step masks transmitted bits by a pseudo-random sequence
+known at both receiver and transmitter in order to prevent long sequences of identical
+bits.
+Therefore, most scrambling coding operations do not introduce redundancy to the scrambled bit blocks,
+i.e. the code rate is usually :math:`R = 1`.
+"""
 
 from __future__ import annotations
 from collections import deque
@@ -9,10 +19,10 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
 
 from hermespy.core.factory import Serializable
-from .encoder import Encoder
+from .coding import Encoder
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
@@ -22,9 +32,10 @@ __status__ = "Prototype"
 
 
 class PseudoRandomGenerator:
-    """A rng for pseudo-random bit sequences.
+    """A generator for pseudo-random bit sequences.
 
-    See also TS 138 211 section 5.2.1 for details.
+    Generators with identical initialization will output identical random sequences.
+    Implements pseudo-random generator as described in the 3GPP standard for :footcite:t:`2018:ts138211`.
     """
 
     __queue_x1: deque
@@ -33,13 +44,11 @@ class PseudoRandomGenerator:
     __initial_queue_x2: deque
 
     def __init__(self, init_sequence: np.ndarray, offset: int = 1600) -> None:
-        """Class initialization.
-
-        Generators with identical initialization will output identical random sequences!
-
+        """
         Args:
+
             init_sequence(np.ndarray):
-                A sequence of 31 bits initializing the rng.
+                A sequence of 31 bits initializing the generator.
 
             offset(int):
                 Gold sequence parameter controlling the sequence offset.
@@ -70,7 +79,7 @@ class PseudoRandomGenerator:
         self.__initial_queue_x2 = self.__queue_x2.copy()
 
     def generate(self) -> int:
-        """Generate the next bit within the rng sequence.
+        """Generate the next bit within the pseudo-random sequence.
 
         Returns:
             int:
@@ -98,7 +107,7 @@ class PseudoRandomGenerator:
         return sequence
 
     def reset(self) -> None:
-        """Resets the rng to its default state.
+        """Resets the gernator to its default state.
 
         This implies reverting the queues back to their original state (at rng position n = 0).
         """
@@ -122,25 +131,20 @@ class PseudoRandomGenerator:
 
 
 class Scrambler3GPP(Encoder, Serializable):
-    """This class represents a scrambler in the physical up- and down-link channel of the 3GPP.
+    """Scrambler channel coding in the physical up- and down-link standard of the 3GPP.
 
-    See section 7.3.1.1 of the respective technical standard TS 138 211 for details.
-
-    Attributes:
-
-        __random_generator (PseudoRandomGenerator):
-            Random rng used to generate scramble sequences.
+    See section 7.3.1.1 of the respective technical standard :footcite:t:`2018:ts138211` for details.
     """
 
     yaml_tag: str = u'SCRAMBLER_3GPP'
-    __random_generator: PseudoRandomGenerator
+    __random_generator: PseudoRandomGenerator               # Random rng used to generate scramble sequences.
     __default_seed = np.array([0, 1, 0, 1, 1, 0, 1], int)
 
     def __init__(self,
                  seed: Optional[np.ndarray] = None) -> None:
-        """3GPP Scramble initialization.
-
+        """
         Args:
+
             seed (np.ndarray, optional):
                 Seed used to initialize the scrambling sequence generation.
                 Must contain a sequence of bits.
@@ -180,6 +184,7 @@ class Scrambler3GPP(Encoder, Serializable):
         """Serialize a `Scrambler3GPP` to YAML.
 
         Args:
+
             representer (SafeRepresenter):
                 A handle to a representer used to generate valid YAML code.
                 The representer gets passed down the serialization tree to each node.
@@ -188,8 +193,11 @@ class Scrambler3GPP(Encoder, Serializable):
                 The `Scrambler3GPP` instance to be serialized.
 
         Returns:
+
             Node:
                 The serialized YAML node.
+
+        :meta private:
         """
 
         return representer.represent_scalar(cls.yaml_tag, None)
@@ -199,6 +207,7 @@ class Scrambler3GPP(Encoder, Serializable):
         """Recall a new `Scrambler3GPP` from YAML.
 
         Args:
+
             constructor (SafeConstructor):
                 A handle to the constructor extracting the YAML information.
 
@@ -206,10 +215,13 @@ class Scrambler3GPP(Encoder, Serializable):
                 YAML node representing the `Scrambler3GPP` serialization.
 
         Returns:
+
             Scrambler3GPP:
                 Newly created `Scrambler3GPP` instance.
 
         Note that the created instance is floating by default.
+
+        :meta private:
         """
 
         # state = constructor.construct_mapping(node)
@@ -217,21 +229,21 @@ class Scrambler3GPP(Encoder, Serializable):
 
 
 class Scrambler80211a(Encoder, Serializable):
-    """This class represents a scrambler in the `802.11a`_ standard.
+    """Scrambler channel coding in the the `802.11a` standard.
 
-    Refer to section 17.3.5.4 of :cite:p:`80211a:1999` for further details.
+    Refer to section 17.3.5.4 of :footcite:t:`80211a:1999` for further details.
     """
 
-    factory_tag: str = "SCRAMBLER_80211A"
+    yaml_tag: str = "SCRAMBLER_80211A"
     __seed: np.array
     __queue: deque
     __default_seed: np.ndarray = np.array([0, 1, 0, 1, 1, 0, 1], dtype=int)
 
     def __init__(self,
                  seed: Optional[np.ndarray] = None) -> None:
-        """802.11a scrambler initialization.
-
+        """
         Args:
+
             seed (np.ndarray, optional):
                 Seed used to initialize the scrambling sequence generation.
                 Must contain a sequence of 7 bits.
@@ -246,21 +258,24 @@ class Scrambler80211a(Encoder, Serializable):
 
     @property
     def seed(self) -> np.array:
+        """Random sequence generator seed.
+
+        Resets the internal register queue used to generate the scrambling sequence.
+
+        Returns:
+
+            np.ndarray:
+                Numpy vector containing the generator seed.
+                Must be an array of dimension 7 containing only soft bits.
+
+        Raises:
+            ValueError: If `seed` does not contain exactly 7 bits.
+        """
+
         return self.__seed
 
     @seed.setter
     def seed(self, value: np.array) -> None:
-        """Set the scramble seed.
-
-        Resets the internal register queue used to generate the scrambling sequence.
-
-        Args:
-            value(np.array):
-                The new seed. Must be an array of dimension 7 containing only soft bits.
-
-        Raises:
-            ValueError: If `value` does not contain exactly 7 bits.
-        """
 
         if value.shape[0] != 7:
             raise ValueError("The seed must contain exactly 7 bit")
@@ -332,6 +347,8 @@ class Scrambler80211a(Encoder, Serializable):
         Returns:
             Node:
                 The serialized YAML node.
+
+        :meta private:
         """
 
         return representer.represent_scalar(cls.yaml_tag, None)
@@ -352,6 +369,8 @@ class Scrambler80211a(Encoder, Serializable):
                 Newly created `Scrambler80211a` instance.
 
         Note that the created instance is floating by default.
+
+        :meta private:
         """
 
         # state = constructor.construct_mapping(node)

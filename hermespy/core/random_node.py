@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-===========
-Random Node
-===========
+============
+Random Graph
+============
 """
 
 from __future__ import annotations
