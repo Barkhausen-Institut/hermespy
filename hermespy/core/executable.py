@@ -84,32 +84,6 @@ class Executable(ABC, Serializable):
         ...
 
     @property
-    def spectrum_fft_size(self) -> int:
-        """Number of discrete frequency bins considered during Fast Fourier Transform.
-
-        Returns:
-            int: The number of bins.
-        """
-
-        return self.__spectrum_fft_size
-
-    @spectrum_fft_size.setter
-    def spectrum_fft_size(self, bins: int) -> None:
-        """Modify the configured number of discrete frequency bins considered during Fast Fourier Transform.
-
-        Args:
-            bins (int): The new number of bins.
-
-        Raises:
-            ValueError: If `bins` is negative.
-        """
-
-        if bins < 0:
-            raise ValueError("Number of bins must be greater or equal to zero")
-
-        self.__spectrum_fft_size = bins
-
-    @property
     def results_dir(self) -> str:
         """Directory in which the execution results will be saved.
 
