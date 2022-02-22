@@ -158,6 +158,7 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Optional[Scenario] = None) -> BitErrorArtifact:
 
@@ -217,6 +218,7 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Scenario) -> BlockErrorArtifact:
 
@@ -282,6 +284,7 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Scenario) -> FrameErrorArtifact:
 
