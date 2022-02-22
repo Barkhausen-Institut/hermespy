@@ -110,33 +110,33 @@
 <p>This module provides functionalities to transmit information in form of bits over a wireless link.</p>
 <div class="mermaid">
             classDiagram
+  FrameSection &lt;|-- FrameGuardSection
+  RandomNode &lt;|-- Modem
+  DuplexOperator &lt;|-- Modem
+  Serializable &lt;|-- BitErrorEvaluator
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorPskQam
+  Serializable &lt;|-- FrameSymbolSection
+  Serializable &lt;|-- WaveformGeneratorPskQam
+  FrameSection &lt;|-- FrameSymbolSection
+  Serializable &lt;|-- WaveformGeneratorOfdm
   Serializable &lt;|-- FrameErrorEvaluator
-  BitsSource &lt;|-- StreamBitsSource
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
+  Serializable &lt;|-- RandomBitsSource
+  WaveformGenerator &lt;|-- WaveformGeneratorOfdm
+  Serializable &lt;|-- ThroughputEvaluator
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  BitsSource &lt;|-- RandomBitsSource
+  Serializable &lt;|-- WaveformGeneratorChirpFsk
+  Synchronization &lt;|-- ChirpFskSynchronization
+  SerializableArray &lt;|-- Modem
+  Serializable &lt;|-- BlockErrorEvaluator
+  Serializable &lt;|-- StreamBitsSource
+  Serializable &lt;|-- FrameGuardSection
   CommunicationEvaluator &lt;|-- BitErrorEvaluator
   CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
-  Serializable &lt;|-- WaveformGeneratorOfdm
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
-  Serializable &lt;|-- RandomBitsSource
-  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
-  FrameSection &lt;|-- FrameSymbolSection
-  Synchronization &lt;|-- ChirpFskSynchronization
-  Serializable &lt;|-- ThroughputEvaluator
-  BitsSource &lt;|-- RandomBitsSource
-  Serializable &lt;|-- WaveformGeneratorPskQam
-  WaveformGenerator &lt;|-- WaveformGeneratorOfdm
-  Serializable &lt;|-- WaveformGeneratorChirpFsk
-  DuplexOperator &lt;|-- Modem
-  Serializable &lt;|-- FrameGuardSection
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorPskQam
-  SerializableArray &lt;|-- Modem
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
-  RandomNode &lt;|-- Modem
-  Serializable &lt;|-- BlockErrorEvaluator
-  FrameSection &lt;|-- FrameGuardSection
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  Serializable &lt;|-- BitErrorEvaluator
-  Serializable &lt;|-- FrameSymbolSection
-  Serializable &lt;|-- StreamBitsSource
+  BitsSource &lt;|-- StreamBitsSource
         </div><p>It consists of the base configuration classes for communication modems</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -169,7 +169,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fb5428177c0>
+<jinja2.runtime.BlockReference object at 0x7ff285c52760>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

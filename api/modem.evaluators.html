@@ -114,19 +114,19 @@ Refer to the <a class="reference internal" href="core.monte_carlo.html"><span cl
 <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluators</span></code></a>.</p>
 <div class="mermaid">
             classDiagram
-  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  ArtifactTemplate &lt;|-- FrameErrorArtifact
   Serializable &lt;|-- ThroughputEvaluator
-  Serializable &lt;|-- FrameErrorEvaluator
-  Artifact &lt;|-- ThroughputArtifact
-  Serializable &lt;|-- BlockErrorEvaluator
   CommunicationEvaluator &lt;|-- BitErrorEvaluator
-  Evaluator &lt;|-- CommunicationEvaluator
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  Serializable &lt;|-- BlockErrorEvaluator
   ArtifactTemplate &lt;|-- BitErrorArtifact
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
-  Serializable &lt;|-- BitErrorEvaluator
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  Artifact &lt;|-- ThroughputArtifact
   ArtifactTemplate &lt;|-- BlockErrorArtifact
+  Serializable &lt;|-- BitErrorEvaluator
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  Evaluator &lt;|-- CommunicationEvaluator
+  Serializable &lt;|-- FrameErrorEvaluator
+  ArtifactTemplate &lt;|-- FrameErrorArtifact
         </div><p>The implemented <a class="reference internal" href="#hermespy.modem.evaluators.CommunicationEvaluator" title="hermespy.modem.evaluators.CommunicationEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationEvaluators</span></code></a> all inherit from the identically named common
 base which gets initialized by selecting the two <a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Modem</span></code></a> instances whose communication
 should be evaluated.
@@ -640,7 +640,7 @@ the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fb542684280>
+<jinja2.runtime.BlockReference object at 0x7ff285ac0220>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
