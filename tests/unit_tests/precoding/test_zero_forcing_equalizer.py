@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import Mock
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from scipy.constants import pi
 
 from hermespy.channel import ChannelStateFormat, ChannelStateInformation
@@ -37,11 +37,11 @@ class TestZeroForcingSpaceEqualizer(unittest.TestCase):
         self.precoding.required_inputs = lambda precoder: 1
         self.precoder.precoding = self.precoding
 
-    def test_encode_stub(self) -> None:
+    def test_encode(self) -> None:
         """Calling encode should raise a NotImplementedError."""
 
-        with self.assertRaises(NotImplementedError):
-            _ = self.precoder.encode(np.empty(0))
+        stream = self.generator.random((5, 10))
+        assert_array_equal(stream, self.precoder.encode(stream))
 
     def test_decode_noiseless(self) -> None:
         """Decode should properly equalize the provided stream response in the absence of noise."""

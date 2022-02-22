@@ -18,8 +18,8 @@ from hermespy.core.factory import Serializable
 from hermespy.core.scenario import Scenario
 from hermespy.core.signal_model import Signal
 from hermespy.core.statistics import SNRType
-from .rf_chain import RfChain
-from .noise.noise import Noise, AWGN
+from .rf_chain.rf_chain import RfChain
+from .noise import Noise, AWGN
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
