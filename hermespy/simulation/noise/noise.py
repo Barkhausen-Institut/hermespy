@@ -9,10 +9,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Optional
 
-import numpy as np
-from numpy.random import default_rng
 
-from hermespy.core.factory import Factory
 from hermespy.core.random_node import RandomNode
 from hermespy.core.signal_model import Signal
 

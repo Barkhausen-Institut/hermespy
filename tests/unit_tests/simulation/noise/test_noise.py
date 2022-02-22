@@ -7,19 +7,20 @@ from unittest.mock import Mock
 import numpy as np
 import numpy.random as rnd
 
-from hermespy.noise import Noise
+from hermespy.core.signal_model import Signal
+from hermespy.simulation.noise import AWGN
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestNoise(unittest.TestCase):
+class TestAWGN(unittest.TestCase):
     """Test the base class for noise models."""
 
     def setUp(self) -> None:
@@ -27,7 +28,7 @@ class TestNoise(unittest.TestCase):
         self.random_node = Mock()
         self.random_node._rng = rnd.default_rng(42)
 
-        self.noise = Noise()
+        self.noise = AWGN()
         self.noise.random_mother = self.random_node
 
     def test_add_noise_power(self) -> None:
@@ -38,9 +39,9 @@ class TestNoise(unittest.TestCase):
 
         for expected_noise_power in powers:
 
-            noisy_signal = self.noise.add_noise(signal, expected_noise_power)
-            noisy_signal = noisy_signal - np.mean(noisy_signal)
-            noise_power = sum(noisy_signal.real ** 2 + noisy_signal.imag ** 2) / (len(signal))
+            noisy_signal = Signal(signal, sampling_rate=1.)
+            self.noise.add(noisy_signal, expected_noise_power)
+            noise_power = np.var(noisy_signal.samples)
 
             self.assertTrue(abs(noise_power - expected_noise_power) <= (0.001 * expected_noise_power))
 
