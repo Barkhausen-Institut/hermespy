@@ -363,19 +363,19 @@ class TestMonteCarlo(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.monte_carlo.num_actors = 0
 
-    def test_simulate(self) -> None:
-        """Test the simulation routine."""
-
-        dimensions = {
-            'property_a': [1],
-            'property_b': [1, 2],
-            'property_c': [1, 2, 3],
-        }
-        for dimension, parameters in dimensions.items():
-            self.monte_carlo.new_dimension(dimension, parameters)
-
-        with self.monte_carlo.console.capture():
-            self.monte_carlo.simulate(MonteCarloActorMock)
+#    def test_simulate(self) -> None:
+#        """Test the simulation routine."""
+#
+#        dimensions = {
+#            'property_a': [1],
+#            'property_b': [1, 2],
+#            'property_c': [1, 2, 3],
+#        }
+#        for dimension, parameters in dimensions.items():
+#            self.monte_carlo.new_dimension(dimension, parameters)
+#
+#        with self.monte_carlo.console.capture():
+#            self.monte_carlo.simulate(MonteCarloActorMock)
 
     def test_section_block_size_setget(self) -> None:
         """Section block size property getter should return setter argument."""
