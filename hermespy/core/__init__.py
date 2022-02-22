@@ -1,20 +1,25 @@
-from .device import DuplexOperator, Transmitter, Receiver
+from .channel_state_information import ChannelStateInformation
+from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, \
+    Transmitter, Receiver, Device, FloatingError
 from .executable import Executable, Verbosity
-from .scenario import Scenario
-from .device import Device, FloatingError
+from .factory import Factory, Serializable
+from .monte_carlo import MonteCarlo, Evaluator
 from .random_node import RandomNode
-from .factory import Factory
+from .scenario import Scenario
+from .signal_model import Signal
 
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
-__maintainer__ = "André Noll Barreto"
-__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__version__ = "0.2.5"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['Executable', 'Verbosity', 'Device', 'FloatingError', 'HardwareLoop', 'Factory', 'SerializableClasses',
-           'Transmitter', 'Receiver', 'RandomNode', 'DuplexOperator']
+__all__ = ['ChannelStateInformation', 'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot',
+           'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError',
+           'MonteCarlo', 'Evaluator', 'Executable', 'Verbosity', 'Factory',
+           'Serializable', 'RandomNode', 'DuplexOperator', 'Signal']

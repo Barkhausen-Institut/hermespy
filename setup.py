@@ -13,7 +13,7 @@ setup(
     version="0.2.5",
     author="Jan Adler",
     author_email="jan.adler@barkhauseninstitut.org",
-    description="The Heterogeneous Mobile Radio Simulator",
+    description="The Heterogeneous Radio Mobile Simulator",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Barkhausen-Institut/hermespy",
@@ -33,7 +33,7 @@ setup(
     namespace_packages=['hermespy'],
     package_dir={"hermespy": "hermespy"},
     package_data={
-      'hermespy': ['resources/styles/*.mplstyle', 'resources/matlab/*.m']
+      'hermespy.core': ['styles/*.mplstyle']
     },
     include_package_data=True,
     exclude_package_data={

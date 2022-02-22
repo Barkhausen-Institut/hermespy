@@ -1,5 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Source of bit streams to be transmitted."""
+"""
+==========
+Bit Source
+==========
+
+Bit sources represent, as the title suggest, a source of (hard) communication bits
+to be transmitted over a modem.
+Every bit source implementation is expected to inherit from the :class:`.BitsSource` base class,
+which in turn represents a random node.
+
+.. autoclasstree:: hermespy.modem.bits_source
+   :align: center
+   :alt: Bits source class tree
+   :strict:
+   :namespace: hermespy
+
+There are currently two basic types of bit sources available:
+
+* :class:`.RandomBitsSource` instances implement a random stream of bits
+* :class:`.StreamBitsSource` instances implement a deterministic stream of bits
+
+
+"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -11,18 +33,21 @@ import numpy as np
 from hermespy.core.factory import Serializable
 from hermespy.core.random_node import RandomNode
 
-__author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__author__ = "Andre Noll Barreto"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class BitsSource(ABC, RandomNode):
-    """Prototype class for sources of bit-streams."""
+    """Base Class for Arbitrary Streams of Communication Bits.
+
+    Inheriting classes are required to implement the :meth:`.generate_bits` routine.
+    """
 
     def __init__(self,
                  seed: Optional[int] = None) -> None:
@@ -35,13 +60,16 @@ class BitsSource(ABC, RandomNode):
 
     @abstractmethod
     def generate_bits(self, num_bits: int) -> np.ndarray:
-        """Generate a sequence of bits.
+        """Generate a new sequence of bits.
 
         Args:
-            num_bits (int): Number of bits to be generated.
+
+            num_bits (int):
+                Number of bits to be generated.
 
         Returns:
-            np.ndarray: A vector of `num_bits` generated bits.
+            np.ndarray:
+                A numpy vector of `num_bits` generated bits.
         """
         ...
 
@@ -55,7 +83,8 @@ class RandomBitsSource(BitsSource, Serializable):
                  seed: Optional[int] = None) -> None:
         """
         Args:
-            seed (int, optional): Seed used to initialize the pseudo-random number generator.
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base classes
@@ -67,7 +96,7 @@ class RandomBitsSource(BitsSource, Serializable):
 
 
 class StreamBitsSource(BitsSource, Serializable):
-    """Bit generator mapping input streams to bit sources."""
+    """Bit-stream generator mapping representing file system streams as bit sources."""
 
     __stream: BinaryIO
 
@@ -76,8 +105,8 @@ class StreamBitsSource(BitsSource, Serializable):
         """
         Args:
 
-        path (str):
-            Path to stream bits source.
+            path (str):
+                Path to the stream bits source.
         """
 
         BitsSource.__init__(self)

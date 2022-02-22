@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 from hermespy.simulation.simulation import Simulation
 from hermespy.modem.modem import Modem
@@ -24,8 +23,8 @@ simulation.add_evaluator(BitErrorEvaluator(modem, modem))
 simulation.add_evaluator(ThroughputEvaluator(modem, modem))
 
 # Configure simulation sweep dimensions
-snr_dimension = simulation.new_dimension('snr', [4, 2, 1, 0.5, 0.25, .125])
-rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7], modem.encoder_manager[0])
+snr_dimension = simulation.new_dimension('snr', [10, 8, 6, 4, 2, 1, 0.5, 0.25, .125, .0625])
+rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], modem.encoder_manager[0])
 snr_dimension.title = 'SNR'
 rep_dimension.title = 'Code Repetitions'
 
