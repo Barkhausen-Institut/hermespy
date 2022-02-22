@@ -33,7 +33,7 @@ setup(
     namespace_packages=['hermespy'],
     package_dir={"hermespy": "hermespy"},
     package_data={
-      'hermespy': ['resources/styles/*.mplstyle', 'resources/matlab/*.m']
+      'hermespy.core': ['styles/*.mplstyle']
     },
     include_package_data=True,
     exclude_package_data={
