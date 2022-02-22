@@ -8,27 +8,16 @@ from hermespy.modem import Modem, WaveformGeneratorPskQam, BitErrorEvaluator
 # Create a new HermesPy simulation scenario
 simulation = Simulation()
 
-# Create devices
-tx_device = simulation.scenario.new_device()
-rx_device = simulation.scenario.new_device()
+# Create device
+device = simulation.scenario.new_device()
 
-# Configure device operators
-tx_operator = Modem()
-tx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
-tx_operator.device = tx_device
-
-rx_operator = Modem()
-rx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
-rx_operator.device = rx_device
-
-# Configure the channel model between the two simulated devices
-simulation.scenario.set_channel(rx_device, tx_device, Channel())
-simulation.scenario.set_channel(rx_device, rx_device, None)
-simulation.scenario.set_channel(tx_device, tx_device, None)
+# Configure device operator
+operator = Modem()
+operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+operator.device = device
 
 # Configure Monte Carlo simulation
-simulation.add_evaluator(BitErrorEvaluator(tx_operator, tx_operator))
-simulation.add_evaluator(BitErrorEvaluator(rx_operator, rx_operator))
+simulation.add_evaluator(BitErrorEvaluator(operator, operator))
 simulation.new_dimension('snr', [10, 4, 2, 1, 0.5])
 simulation.num_samples = 1000
 
