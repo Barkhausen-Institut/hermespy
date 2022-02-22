@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 import warnings
 from unittest.mock import Mock
+from ray.util import inspect_serializability
 
 import ray
 
@@ -217,6 +218,7 @@ class TestMonteCarloActor(unittest.TestCase):
     def test_run(self) -> None:
         """Running the actor should produce the expected result."""
 
+        pass
         for sample_idx in range(self.dimensions[0].num_sample_points):
 
             expected_grid_section = [sample_idx]
