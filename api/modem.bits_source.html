@@ -114,11 +114,11 @@ Every bit source implementation is expected to inherit from the <a class="refere
 which in turn represents a random node.</p>
 <div align="center" class="mermaid align-center">
             classDiagram
-  BitsSource &lt;|-- StreamBitsSource
-  Serializable &lt;|-- StreamBitsSource
-  RandomNode &lt;|-- BitsSource
   BitsSource &lt;|-- RandomBitsSource
+  BitsSource &lt;|-- StreamBitsSource
+  RandomNode &lt;|-- BitsSource
   Serializable &lt;|-- RandomBitsSource
+  Serializable &lt;|-- StreamBitsSource
         </div>
         <p>There are currently two basic types of bit sources available:</p>
 <ul class="simple">
@@ -232,7 +232,7 @@ which in turn represents a random node.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f92347744f0>
+<jinja2.runtime.BlockReference object at 0x7fb5428db9d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

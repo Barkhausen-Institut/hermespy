@@ -109,15 +109,15 @@
 <p>The core module of HermesPy provides all basic functionalities of the simulator.</p>
 <div class="mermaid">
             classDiagram
-  OperatorSlot &lt;|-- TransmitterSlot
-  OperatorSlot &lt;|-- ReceiverSlot
-  Serializable &lt;|-- Executable
-  RandomNode &lt;|-- Receiver
   MixingOperator &lt;|-- Receiver
+  OperatorSlot &lt;|-- TransmitterSlot
   MixingOperator &lt;|-- Transmitter
-  RandomNode &lt;|-- Transmitter
+  Serializable &lt;|-- Executable
   RandomNode &lt;|-- Scenario
   RandomNode &lt;|-- Device
+  RandomNode &lt;|-- Receiver
+  RandomNode &lt;|-- Transmitter
+  OperatorSlot &lt;|-- ReceiverSlot
   Operator &lt;|-- MixingOperator
         </div><p>It is split into several interdependent sub-modules:</p>
 <div class="toctree-wrapper compound">
@@ -145,7 +145,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9235f60520>
+<jinja2.runtime.BlockReference object at 0x7fb5440cb430>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -344,8 +344,13 @@ and <a class="reference internal" href="api/core.monte_carlo.html#hermespy.core.
 waveform propagation between devices.
 Depending on the simulation assumptions, users may select from a multitude of different classes providing specific
 model implementations.
-Refer to the <a class="reference internal" href="api/channel.html"><span class="doc">Channel Module</span></a> for a detailed overview.</p>
-<p>Executing the snippet above results in two visualizations being rendered after propagation,</p>
+Refer to the <a class="reference internal" href="api/channel.html"><span class="doc">Channel Module</span></a> for a detailed overview.
+<a class="reference internal" href="api/core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluators</span></code></a> HermesPy’s abstraction for the extraction of specific
+performance indicators from simulation objects.
+In theory, almost any object and its respective properties can be used to implement custom evaluation routines.
+For communication evaluations, several default evaluation routines are already shipped within the
+<a class="reference internal" href="api/modem.evaluators.html"><span class="doc">Communication Evaluators</span></a> module.</p>
+<p>Executing the snippet above results in two visualizations being rendered after propagation simulation,</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 50%" />
@@ -368,12 +373,12 @@ Refer to the <a class="reference internal" href="api/channel.html"><span class="
 <p>namely a symbol constellation diagram at the receiver side and a bit error evaluation stem graph.
 Since the channel we model is actually an ideal channel and no noise is added at the receiver,
 no bit errors occur during data transmission.
-By adapting line 28 of the snippet according to</p>
+Adapting line 28 of the snippet according to</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rx_device</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">rx_signal</span><span class="p">,</span> <span class="n">snr</span><span class="o">=</span><span class="mf">4.</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>and adding noise at the receiver side with a signal to noise ratio of <span class="math notranslate nohighlight">\(4\)</span>,
-the constellation gets distorted, leading to false decisions during demodulation and therefore
+<p>will result in additive white gaussian being added at the receiver side with a signal to noise ratio of <span class="math notranslate nohighlight">\(4\)</span>.
+As a consequence, the constellation gets distorted, leading to false decisions during demodulation and therefore
 to a number of bit errors during data transmission.
 Executing the snippet with noise consideration results in a visualization similar to</p>
 <table class="docutils align-default">
@@ -395,19 +400,26 @@ Executing the snippet with noise consideration results in a visualization simila
 </tr>
 </tbody>
 </table>
-<p>where this is clearly visible.</p>
-<p>This is an example of a core evaluation routine commonly executed in link-level simulations.
-However, when considering multiple devices and channel models, as well as performing Monte Carlo style simulations
-over scenario parameters, the utilization of the <a class="reference internal" href="api/simulation.simulation.html"><span class="doc">Simulation</span></a> helper class is advised
-for optimal scaling.
+<p>where said effects are clearly visible.</p>
+<p>Propagating signal models over a channel linking two devices is an example of one of the fundamental
+routines commonly executed in link-level simulations.
+However, complex investigations usually consider multiple devices and channel models,
+as well as perform Monte Carlo style simulations over a grid of model parametrizations,
+which can lead to computationally complex routines, even for seemingly simple scenarios.
+In order to streamline simulation definition and execution, HermesPy provides the
+<a class="reference internal" href="api/simulation.simulation.html"><span class="doc">Simulation</span></a> helper class, which automizes the process
+of distributing the simulation workload in multicore systems and parameter grid evaluations.
 Its usage is introduced in the next section.</p>
 </div>
 <div class="section" id="simulations">
 <h3>Simulations<a class="headerlink" href="#simulations" title="Permalink to this headline"></a></h3>
-<p>Evaluating multiple transmissions in scenarios featuring several modems can become quite tedious,
-which is why HermesPy offers the <a class="reference internal" href="api/simulation.simulation.html"><span class="doc">Simulation</span></a> helper class.
-Considering the same scenario as before, the following snippet demonstrates how
-a single communication drop at 40dB signal-to-noise ratio can be generated:</p>
+<p>Consider the simulation scenario of a single device transmitting its waveforms and receiving them back
+after reflections from surroundings, assuming ideal isolation between transmit and receive chain.
+One of the most frequently conducted investigations in communication signal processing is the estimation of the
+bit error rate (BER) in relation to the noise power at the receiver side of the communication link.
+Within HermesPy, <a class="reference internal" href="api/simulation.simulation.html"><span class="doc">Simulations</span></a> can be configured to estimate performance indicators
+such as bit error rate over arbitrary parameter dimensions.
+For example, the following snippet</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="c1"># Import required HermesPy modules</span>
@@ -439,57 +451,73 @@ a single communication drop at 40dB signal-to-noise ratio can be generated:</p>
 <span class="linenos">29</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Note that lines <em>5-16</em> are identical to the previous snippet, defining a scenario with a single receiver
-and transmitter modem emitting <span class="xref std std-doc">PKS/QAM</span> waveforms.
-However, the scenario is now being managed by the <span class="xref std std-doc">Simulation</span> helper.
-It generates and visualizes a single information exchange between all scenario modems <em>(lines 18)</em>.
-In HermesPy, this is referred to as a <span class="xref std std-doc">Drop</span>.
-Visualizing the received symbols <em>(line 19)</em> and bit errors <em>(line 20)</em> during transmission
-results in the following constellation and bit error plots:</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><div class="figure align-default" id="id8">
-<img alt="_images/getting_started_constellation_low_noise.png" src="_images/getting_started_constellation_low_noise.png" />
-<p class="caption"><span class="caption-text">Symbol Constellation, Low Noise</span><a class="headerlink" href="#id8" title="Permalink to this image"></a></p>
+<p>defines the described scenario, adds a bit error rate evaluation and, most importantly,
+defines a sweep over the (linear) signal to noise ratio from <span class="math notranslate nohighlight">\(10\)</span> to <span class="math notranslate nohighlight">\(5\)</span>,
+collecting <span class="math notranslate nohighlight">\(1000\)</span> samples for each sweep point, respectively.
+Executing the script will launch a full simulation run and a rendered result</p>
+<div class="figure align-center" id="id8">
+<a class="reference internal image-reference" href="_images/getting_started_ber_evaluation.png"><img alt="Bit Error Rate Plot" src="_images/getting_started_ber_evaluation.png" style="width: 480.0px; height: 360.0px;" /></a>
+<p class="caption"><span class="caption-text">Bit Error Rate Evaluation</span><a class="headerlink" href="#id8" title="Permalink to this image"></a></p>
 </div>
-</td>
-<td><div class="figure align-default" id="id9">
-<img alt="_images/getting_started_errors_low_noise.png" src="_images/getting_started_errors_low_noise.png" />
-<p class="caption"><span class="caption-text">Bit Errors, Low Noise</span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Of course, due to the high signal-to-noise ratio and the ideal channel model, no bit errors occur during transmission.
-Generating another drop at a much lower ratio, namely 5dB,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">drop</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="mf">5.</span><span class="p">)</span>
+<p>of the bit error rate graph.</p>
+<p>Now, a typical approach to reduce the bit errors is the introduction of <a class="reference internal" href="api/coding.html"><span class="doc">Channel Coding</span></a>
+schemes for error correction.
+They introduce redundancy within the transmitted bit stream during transmission
+and exploit said redundancy at the receiver to correct errors.
+One of the most basic error-correcting channel codes is the <a class="reference internal" href="api/coding.repetition.html"><span class="doc">Repetition Encoder</span></a>,
+which simply repeats bits to be transmitted and decodes by majority voting after reception.
+In theory, the more repetitions per transmitted data frame, the higher the error correction capabilites.
+But the more redundancy is introduced, the lower the actual information throughput becomes.
+Therefore, there is a sweet-spot within the tradeoff between data throughput and repetitions for a given signal to noise
+ratio.</p>
+<p>The following snippet configures HermesPy to conduct a simulation visualizing the data rate relative
+to number of repetitions and noise ratio:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.simulation.simulation</span> <span class="kn">import</span> <span class="n">Simulation</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.modem.modem</span> <span class="kn">import</span> <span class="n">Modem</span>
+<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">hermespy.modem.evaluators</span> <span class="kn">import</span> <span class="n">BitErrorEvaluator</span><span class="p">,</span> <span class="n">ThroughputEvaluator</span>
+<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">hermespy.modem.waveform_generator_psk_qam</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
+<span class="linenos"> 7</span><span class="kn">from</span> <span class="nn">hermespy.coding</span> <span class="kn">import</span> <span class="n">RepetitionEncoder</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="c1"># Create a new HermesPy simulation scenario</span>
+<span class="linenos">10</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="c1"># Create a new simulated device</span>
+<span class="linenos">13</span><span class="n">device</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">new_device</span><span class="p">()</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="c1"># Add a modem at the simulated device</span>
+<span class="linenos">16</span><span class="n">modem</span> <span class="o">=</span> <span class="n">Modem</span><span class="p">()</span>
+<span class="linenos">17</span><span class="n">modem</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
+<span class="linenos">18</span><span class="n">modem</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+<span class="linenos">19</span><span class="n">modem</span><span class="o">.</span><span class="n">encoder_manager</span><span class="o">.</span><span class="n">add_encoder</span><span class="p">(</span><span class="n">RepetitionEncoder</span><span class="p">(</span><span class="n">repetitions</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="c1"># Configure simulation evaluators</span>
+<span class="linenos">22</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">BitErrorEvaluator</span><span class="p">(</span><span class="n">modem</span><span class="p">,</span> <span class="n">modem</span><span class="p">))</span>
+<span class="linenos">23</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">ThroughputEvaluator</span><span class="p">(</span><span class="n">modem</span><span class="p">,</span> <span class="n">modem</span><span class="p">))</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span><span class="c1"># Configure simulation sweep dimensions</span>
+<span class="linenos">26</span><span class="n">snr_dimension</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;snr&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">.125</span><span class="p">,</span> <span class="mf">.0625</span><span class="p">])</span>
+<span class="linenos">27</span><span class="n">rep_dimension</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;repetitions&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="n">modem</span><span class="o">.</span><span class="n">encoder_manager</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="linenos">28</span><span class="n">snr_dimension</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;SNR&#39;</span>
+<span class="linenos">29</span><span class="n">rep_dimension</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Code Repetitions&#39;</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="c1"># Run the simulation</span>
+<span class="linenos">32</span><span class="n">simulation</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="linenos">33</span><span class="n">result</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="linenos">34</span>
+<span class="linenos">35</span><span class="c1"># Plot simulation results</span>
+<span class="linenos">36</span><span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="linenos">37</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>leads to several bit-errors during data transmission:</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><div class="figure align-default" id="id10">
-<img alt="_images/getting_started_constellation_high_noise.png" src="_images/getting_started_constellation_high_noise.png" />
-<p class="caption"><span class="caption-text">Symbol Constellation, High Noise</span><a class="headerlink" href="#id10" title="Permalink to this image"></a></p>
+<p>Executing it leads to the rendering of a surface plot visualization, from which engineers
+can infer the selection of a proper repetition rate in order to achieve a required data rate for
+a given noise ratio:</p>
+<div class="figure align-center" id="id9">
+<a class="reference internal image-reference" href="_images/getting_started_simulation_multidim_drx.png"><img alt="Throughput" src="_images/getting_started_simulation_multidim_drx.png" style="width: 480.0px; height: 360.0px;" /></a>
+<p class="caption"><span class="caption-text">Data Throughput</span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
 </div>
-</td>
-<td><div class="figure align-default" id="id11">
-<img alt="_images/getting_started_errors_high_noise.png" src="_images/getting_started_errors_high_noise.png" />
-<p class="caption"><span class="caption-text">Bit Errors, High Noise</span><a class="headerlink" href="#id11" title="Permalink to this image"></a></p>
-</div>
-</td>
-</tr>
-</tbody>
-</table>
 </div>
 </div>
 <div class="section" id="command-line-tool">
@@ -497,9 +525,9 @@ Generating another drop at a much lower ratio, namely 5dB,</p>
 <p>This section outlines how to use HermesPy as a command line tool
 and provides some reference examples to get new users accustomed with the process of configuring scenarios.</p>
 <p>Once HermesPy is installed within any Python environment,
-users may call the command line interface by executing the command <code class="docutils literal notranslate"><span class="pre">hermes</span></code>
+users may call the command line interface by executing the command <code class="xref py py-mod docutils literal notranslate"><span class="pre">hermes</span></code>
 in both Linux and Windows command line terminals.
-Consult <span class="xref std std-doc">/api/hermespy.bin.hermes</span> for a detailed description of all available command line options.</p>
+Consult <a class="reference internal" href="api/bin.hermes.html"><span class="doc">Hermes Command Line Interface</span></a> for a detailed description of all available command line options.</p>
 <p>In short, entering</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes -p /path/to/settings -o /path/to/output
 </pre></div>
@@ -513,59 +541,99 @@ All data resulting from this execution will be stored within <em>/path/to/output
 If the <code class="docutils literal notranslate"><span class="pre">-o</span></code> is left out, then the results will be stored in a unique sub-folder of <em>/results/</em>.</p>
 <div class="section" id="first-steps">
 <h3>First Steps<a class="headerlink" href="#first-steps" title="Permalink to this headline"></a></h3>
-<p>Let’s start by configuring a basic simulation scenario.
+<p>Let’s begin by configuring a basic simulation scenario.
 It should consist of:</p>
 <ol class="arabic simple">
-<li><p>A single transmitting modem, a single receiving modem, both featuring a single ideal antenna</p></li>
-<li><p>A Quadrature-Amplitude modulation scheme</p></li>
-<li><p>A central carrier frequency of 1GHz</p></li>
-<li><p>An ideal channel between both transmitting and receiving modem</p></li>
+<li><p>A single device featuring a single omnidirectional antenna</p></li>
+<li><p>A modem operator with</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(R = \frac{1}{3}\)</span> repetition coding</p></li>
+<li><p>100GHz symbol rate</p></li>
+<li><p>Root-Raised-Cosine waveforms</p></li>
+<li><p>a modulation order of 16</p></li>
+<li><p>a frame consisting of 10 preamble- and 1000 data symbols</p></li>
+</ul>
+</li>
+<li><p>An evaluation routine for the bit error rate</p></li>
+<li><p>A parameter sweep over the SNR between 0 and 20 dB</p></li>
 </ol>
-<p>This scenario is represented by the following <em>scenario.yml</em> file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kt">!&lt;Scenario&gt;</span><span class="w"></span>
+<p>This scenario is represented by the following <em>simulation.yml</em> file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kt">!&lt;Simulation&gt;</span><span class="w"></span>
 <span class="linenos"> 2</span>
-<span class="linenos"> 3</span><span class="nt">Modems</span><span class="p">:</span><span class="w"></span>
-<span class="linenos"> 4</span>
-<span class="linenos"> 5</span><span class="w">   </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Transmitter</span><span class="w"></span>
-<span class="linenos"> 6</span>
-<span class="linenos"> 7</span><span class="w">     </span><span class="l l-Scalar l-Scalar-Plain">carrier_frequency</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e9</span><span class="w"></span>
-<span class="linenos"> 8</span>
-<span class="linenos"> 9</span><span class="w">     </span><span class="nt">WaveformPskQam</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">10</span><span class="w">         </span><span class="nt">num_data_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
-<span class="linenos">11</span>
-<span class="linenos">12</span><span class="w">   </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Receiver</span><span class="w"></span>
-<span class="linenos">13</span>
-<span class="linenos">14</span><span class="w">     </span><span class="l l-Scalar l-Scalar-Plain">carrier_frequency</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e9</span><span class="w"></span>
+<span class="linenos"> 3</span><span class="c1"># Physical device models within the simulated scenario</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="nt">Devices</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;device_alpha</span><span class="w"> </span><span class="kt">!&lt;SimulatedDevice&gt;</span><span class="w"></span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="nt">num_antennas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">                </span><span class="c1"># Device features a single physical antenna</span><span class="w"></span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="c1"># Operators transmitting or receiving signals over the devices</span><span class="w"></span>
+<span class="linenos">11</span><span class="nt">Operators</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="w">  </span><span class="c1"># A single modem operating the device #0</span><span class="w"></span>
+<span class="linenos">14</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;modem_alpha</span><span class="w"> </span><span class="kt">!&lt;Modem&gt;</span><span class="w"></span>
 <span class="linenos">15</span>
-<span class="linenos">16</span><span class="w">     </span><span class="nt">WaveformPskQam</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">17</span><span class="w">         </span><span class="nt">num_data_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
+<span class="linenos">16</span><span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="nv">*device_alpha</span><span class="w">          </span><span class="c1"># Device the modem is operating on</span><span class="w"></span>
+<span class="linenos">17</span>
+<span class="linenos">18</span><span class="w">    </span><span class="c1"># Bit encoding configuration before mapping to modulation symbols</span><span class="w"></span>
+<span class="linenos">19</span><span class="w">    </span><span class="nt">Encoding</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="w">      </span><span class="c1"># Repetition encoding, repeating bit sections for redundancy</span><span class="w"></span>
+<span class="linenos">22</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;Repetition&gt;</span><span class="w"></span>
+<span class="linenos">23</span>
+<span class="linenos">24</span><span class="w">        </span><span class="nt">bit_block_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w">       </span><span class="c1"># Block size</span><span class="w"></span>
+<span class="linenos">25</span><span class="w">        </span><span class="nt">repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">             </span><span class="c1"># Number of times the bits within the block get repeated</span><span class="w"></span>
+<span class="linenos">26</span>
+<span class="linenos">27</span><span class="w">    </span><span class="c1"># Waveform configuration</span><span class="w"></span>
+<span class="linenos">28</span><span class="w">    </span><span class="nt">Waveform</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;PskQam&gt;</span><span class="w"></span>
+<span class="linenos">29</span>
+<span class="linenos">30</span><span class="w">        </span><span class="c1"># Symbol settings</span><span class="w"></span>
+<span class="linenos">31</span><span class="w">        </span><span class="nt">symbol_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100e6</span><span class="w"></span>
+<span class="linenos">32</span><span class="w">        </span><span class="nt">modulation_order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span><span class="w"></span>
+<span class="linenos">33</span><span class="w">        </span><span class="nt">oversampling_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w"></span>
+<span class="linenos">34</span>
+<span class="linenos">35</span><span class="w">        </span><span class="c1"># Filter settings</span><span class="w"></span>
+<span class="linenos">36</span><span class="w">        </span><span class="nt">filter</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">37</span><span class="w">          </span><span class="nt">filter_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ROOT_RAISED_COSINE</span><span class="w"></span>
+<span class="linenos">38</span>
+<span class="linenos">39</span><span class="w">        </span><span class="c1"># Frame settings</span><span class="w"></span>
+<span class="linenos">40</span><span class="w">        </span><span class="nt">num_preamble_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
+<span class="linenos">41</span><span class="w">        </span><span class="nt">num_data_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"></span>
+<span class="linenos">42</span><span class="w">        </span><span class="nt">pilot_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e6</span><span class="w"></span>
+<span class="linenos">43</span><span class="w">        </span><span class="nt">guard_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-6</span><span class="w"></span>
+<span class="linenos">44</span>
+<span class="linenos">45</span><span class="c1"># Performance indication evaluation configuration</span><span class="w"></span>
+<span class="linenos">46</span><span class="nt">Evaluators</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">47</span>
+<span class="linenos">48</span><span class="w">  </span><span class="c1"># Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`</span><span class="w"></span>
+<span class="linenos">49</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;BitErrorEvaluator&gt;</span><span class="w"></span>
+<span class="linenos">50</span>
+<span class="linenos">51</span><span class="w">    </span><span class="nt">transmitting_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
+<span class="linenos">52</span><span class="w">    </span><span class="nt">receiving_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
+<span class="linenos">53</span><span class="w">    </span><span class="nt">confidence</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.9</span><span class="w"></span>
+<span class="linenos">54</span><span class="w">    </span><span class="nt">tolerance</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.01</span><span class="w"></span>
+<span class="linenos">55</span><span class="w">    </span><span class="nt">plot_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">log</span><span class="w"></span>
+<span class="linenos">56</span>
+<span class="linenos">57</span><span class="c1"># Simulation parameters</span><span class="w"></span>
+<span class="linenos">58</span><span class="nt">num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">                    </span><span class="c1"># Number of samples per simulation grid section</span><span class="w"></span>
+<span class="linenos">59</span><span class="nt">min_num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">                </span><span class="c1"># Minimum number of samples per simulation grid section before premature stopping</span><span class="w"></span>
+<span class="linenos">60</span><span class="nt">snr_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EBN0</span><span class="w">                     </span><span class="c1"># SNR is defined as the ratio between bit energy and noise power</span><span class="w"></span>
+<span class="linenos">61</span><span class="nt">plot_results</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w">                 </span><span class="c1"># Visualize the evaluations after the simulation has finished</span><span class="w"></span>
+<span class="linenos">62</span>
+<span class="linenos">63</span><span class="c1"># Scenario parameters over which the Monte-Carlo simulation sweeps</span><span class="w"></span>
+<span class="linenos">64</span><span class="nt">Dimensions</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">65</span>
+<span class="linenos">66</span><span class="w">  </span><span class="nt">snr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">...</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dB</span><span class="w"></span>
 </pre></div>
 </div>
-<p>A second <em>simulation.yml</em> file determines the execution behaviour of the scenario.
-For now, the baseband-waveforms as well as the mapped symbol constellations
-at both the transmitter and receiver should be plotted:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="kt">!&lt;Simulation&gt;</span><span class="w"></span>
-<span class="linenos">2</span>
-<span class="linenos">3</span><span class="w"> </span><span class="nt">snr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"></span>
-<span class="linenos">4</span>
-<span class="linenos">5</span><span class="w"> </span><span class="nt">plot_drop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="linenos">6</span><span class="w"> </span><span class="nt">plot_drop_transmitted_signals</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="linenos">7</span><span class="w"> </span><span class="nt">plot_drop_received_signals</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="linenos">8</span><span class="w"> </span><span class="nt">plot_drop_transmitted_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-<span class="linenos">9</span><span class="w"> </span><span class="nt">plot_drop_received_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
-</pre></div>
-</div>
-<p>Assuming both <em>scenario.yaml</em> and  <em>simulation.yml</em> are located within <em>/path/to/settings</em>, calling</p>
+<p>Assuming <em>simulation.yml</em> is located within <em>/path/to/settings</em>, calling</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes -p /path/to/settings
 </pre></div>
 </div>
-<p>will result in the rendering of four plots displaying the respective information.</p>
-<p>A series of configuration files for different waveforms and scenarios is given in <code class="docutils literal notranslate"><span class="pre">/_examples/settings</span></code>.
-For instance, calling</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes -p /settings/chirp_qam
-</pre></div>
-</div>
-<p>will result in a simulation of a communication system employing QAM-modulated chirps.</p>
+<p>will result in the rendering of four plots displaying the respective information.
+The resulting plots and a matlab dump of the evaluation data will be saved in your current working directory.
+For different types of configurations, please refer to the <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy/tree/main/_examples/settings">Examples</a> folder within the HermesPy
+Github repository.</p>
 </div>
 </div>
 </div>
@@ -581,7 +649,7 @@ For instance, calling</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f92353bb940>
+<jinja2.runtime.BlockReference object at 0x7fb543569c10>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

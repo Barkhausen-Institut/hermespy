@@ -107,14 +107,14 @@
 the wireless transmission link between devices on a physical level.</p>
 <div class="mermaid">
             classDiagram
-  Channel &lt;|-- RadarChannel
-  RandomNode &lt;|-- Channel
-  SerializableArray &lt;|-- Channel
-  MultipathFadingChannel &lt;|-- MultipathFadingCost256
-  MultipathFadingChannel &lt;|-- MultipathFading5GTDL
-  Channel &lt;|-- QuadrigaChannel
-  Channel &lt;|-- MultipathFadingChannel
   MultipathFadingChannel &lt;|-- MultipathFadingExponential
+  Channel &lt;|-- QuadrigaChannel
+  SerializableArray &lt;|-- Channel
+  Channel &lt;|-- MultipathFadingChannel
+  MultipathFadingChannel &lt;|-- MultipathFading5GTDL
+  RandomNode &lt;|-- Channel
+  Channel &lt;|-- RadarChannel
+  MultipathFadingChannel &lt;|-- MultipathFadingCost256
         </div><p>The base class of all channel model implementations is defined within</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -143,7 +143,7 @@ the wireless transmission link between devices on a physical level.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f923545c400>
+<jinja2.runtime.BlockReference object at 0x7fb543569520>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -104,11 +104,11 @@
 HermesPy over real hardware setups such as USRPs (Universal Software-Defined Radio Peripherals).</p>
 <div align="center" class="mermaid align-center">
             classDiagram
-  Executable &lt;|-- HardwareLoop
-  SimulatedDevice &lt;|-- PhysicalDeviceDummy
-  PhysicalDevice &lt;|-- PhysicalDeviceDummy
   Device &lt;|-- PhysicalDevice
+  PhysicalDevice &lt;|-- PhysicalDeviceDummy
+  SimulatedDevice &lt;|-- PhysicalDeviceDummy
   Scenario &lt;|-- HardwareLoop
+  Executable &lt;|-- HardwareLoop
         </div>
         <div class="toctree-wrapper compound">
 <ul>
@@ -129,7 +129,7 @@ HermesPy over real hardware setups such as USRPs (Universal Software-Defined Rad
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9234761af0>
+<jinja2.runtime.BlockReference object at 0x7fb54293d3a0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

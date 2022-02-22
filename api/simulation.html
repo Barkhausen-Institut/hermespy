@@ -107,17 +107,17 @@
 including noise and hardware modeling.</p>
 <div class="mermaid">
             classDiagram
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
-  PowerAmplifier &lt;|-- RappPowerAmplifier
-  Serializable &lt;|-- RfChain
-  MonteCarlo &lt;|-- Simulation
-  Serializable &lt;|-- SimulatedDevice
-  Serializable &lt;|-- Simulation
   PowerAmplifier &lt;|-- CustomPowerAmplifier
+  Serializable &lt;|-- Simulation
+  Serializable &lt;|-- RfChain
+  Serializable &lt;|-- SimulatedDevice
   RandomNode &lt;|-- Noise
-  PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  PowerAmplifier &lt;|-- RappPowerAmplifier
+  MonteCarlo &lt;|-- Simulation
   Device &lt;|-- SimulatedDevice
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
   Executable &lt;|-- Simulation
+  PowerAmplifier &lt;|-- ClippingPowerAmplifier
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -140,7 +140,7 @@ including noise and hardware modeling.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9234b20a30>
+<jinja2.runtime.BlockReference object at 0x7fb5424d8820>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

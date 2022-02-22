@@ -110,33 +110,33 @@
 <p>This module provides functionalities to transmit information in form of bits over a wireless link.</p>
 <div class="mermaid">
             classDiagram
+  Serializable &lt;|-- FrameErrorEvaluator
   BitsSource &lt;|-- StreamBitsSource
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
-  Serializable &lt;|-- ThroughputEvaluator
-  Serializable &lt;|-- FrameSymbolSection
-  Serializable &lt;|-- FrameGuardSection
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  Serializable &lt;|-- WaveformGeneratorOfdm
-  BitsSource &lt;|-- RandomBitsSource
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorPskQam
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  CommunicationEvaluator &lt;|-- BitErrorEvaluator
   CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
-  Serializable &lt;|-- StreamBitsSource
+  Serializable &lt;|-- WaveformGeneratorOfdm
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  Serializable &lt;|-- RandomBitsSource
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  FrameSection &lt;|-- FrameSymbolSection
   Synchronization &lt;|-- ChirpFskSynchronization
+  Serializable &lt;|-- ThroughputEvaluator
+  BitsSource &lt;|-- RandomBitsSource
+  Serializable &lt;|-- WaveformGeneratorPskQam
   WaveformGenerator &lt;|-- WaveformGeneratorOfdm
   Serializable &lt;|-- WaveformGeneratorChirpFsk
-  SerializableArray &lt;|-- Modem
-  Serializable &lt;|-- RandomBitsSource
-  Serializable &lt;|-- BlockErrorEvaluator
-  Serializable &lt;|-- FrameErrorEvaluator
   DuplexOperator &lt;|-- Modem
-  FrameSection &lt;|-- FrameSymbolSection
-  Serializable &lt;|-- WaveformGeneratorPskQam
-  FrameSection &lt;|-- FrameGuardSection
-  CommunicationEvaluator &lt;|-- BitErrorEvaluator
-  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  Serializable &lt;|-- FrameGuardSection
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorPskQam
+  SerializableArray &lt;|-- Modem
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
   RandomNode &lt;|-- Modem
+  Serializable &lt;|-- BlockErrorEvaluator
+  FrameSection &lt;|-- FrameGuardSection
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
   Serializable &lt;|-- BitErrorEvaluator
+  Serializable &lt;|-- FrameSymbolSection
+  Serializable &lt;|-- StreamBitsSource
         </div><p>It consists of the base configuration classes for communication modems</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -169,7 +169,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f92346a8c40>
+<jinja2.runtime.BlockReference object at 0x7fb5428177c0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
