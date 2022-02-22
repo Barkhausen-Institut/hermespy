@@ -29,7 +29,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
-        pip install -e .
+        pip install .
 
     - name: Run unit tests
       run: python -m unittest discover tests/unit_tests

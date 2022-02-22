@@ -17,7 +17,7 @@ from ..tools import db2lin
 from .channel import Channel
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

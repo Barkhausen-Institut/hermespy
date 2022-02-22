@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
+"""
+==========================================
+Orthogonal Frequency Division Multiplexing
+==========================================
+"""
 
 from __future__ import annotations
 from typing import List, Tuple, Optional, Type, Union, Any
@@ -19,7 +23,7 @@ from .tools import PskQamMapping
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["André Barreto", "Jan Adler"]
+__credits__ = ["André Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"
 __maintainer__ = "Jan Adler"

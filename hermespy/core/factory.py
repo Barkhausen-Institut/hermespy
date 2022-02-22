@@ -1,17 +1,33 @@
 # -*- coding: utf-8 -*-
-"""HermesPy serialization factory.
+"""
+=====================
+Serialization Factory
+=====================
 
-This module implements the main interface for loading and dumping HermesPy configurations.
+This module implements the main interface for loading / dumping HermesPy configurations from / to `YAML`_ files.
+Every mutable object that is expected to have its state represented as a text-section within configuration files
+must inherit from the :class:`.Serializable` base class.
 
-    Dumping to text file:
+All :class:`.Serializable` classes within the `hermespy` namespace are detected automatically by the :class:`.Factory`
+managing the serialization process.
+As a result, dumping any :class:`.Serializable` object state to a `.yml` text file is as easy as
+
+.. code-block:: python
+
+   factory = Factory()
+   factory.to_file("dump.yml", serializable)
+
+and can be loaded again just as easily via
+
+.. code-block::  python
 
         factory = Factory()
-        factory.to_file("config.yml", simulation)
+        serializable = factory.from_file("dump.yml")
 
-    Loading from text file:
+from any context.
 
-        factory = Factory()
-        simulation = factory.from_file("config.yml")
+
+.. _YAML: https://yaml.org/
 """
 
 from __future__ import annotations
@@ -36,7 +52,7 @@ import hermespy as hermes
 from ..tools import db2lin
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

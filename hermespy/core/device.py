@@ -982,6 +982,7 @@ class Device(ABC, RandomNode):
             ValueError: If `velocity` is not three-dimensional.
             NotImplementedError: If `velocity` is unknown.
         """
+        ...
 
     def transmit(self,
                  clear_cache: bool = True) -> Signal:

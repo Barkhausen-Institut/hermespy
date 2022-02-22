@@ -1,0 +1,3 @@
+.. automodule:: tools.resampling
+
+.. footbibliography::
