@@ -222,7 +222,7 @@ class Executable(ABC, Serializable):
         """
 
         return [path.splitext(path.basename(x))[0] for x in
-                glob(path.join(Executable.__hermes_root_dir(), 'resources', 'styles', '*.mplstyle'))]
+                glob(path.join(Executable.__hermes_root_dir(), 'core', 'styles', '*.mplstyle'))]
 
     @staticmethod
     @contextmanager
@@ -235,7 +235,7 @@ class Executable(ABC, Serializable):
         """
 
         if Executable.__style in Executable.__hermes_styles():
-            yield plt.style.use(path.join(Executable.__hermes_root_dir(), 'resources', 'styles',
+            yield plt.style.use(path.join(Executable.__hermes_root_dir(), 'core', 'styles',
                                           Executable.__style + '.mplstyle'))
 
         else:
