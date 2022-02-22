@@ -1,5 +1,5 @@
-from skbuild import setup
-from setuptools import find_namespace_packages
+# from skbuild import setup
+from setuptools import find_namespace_packages, setup
 from sphinx.setup_command import BuildDoc
 
 cmdclass = {'build_sphinx': BuildDoc}
