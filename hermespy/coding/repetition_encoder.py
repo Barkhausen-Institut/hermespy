@@ -70,7 +70,7 @@ class RepetitionEncoder(Encoder, Serializable):
 
     def __init__(self,
                  bit_block_size: int = 32,
-                 repetitions: int = 2) -> None:
+                 repetitions: int = 3) -> None:
         """
         Args:
             bit_block_size (int, optional): The number of input bits per data block.
@@ -85,15 +85,15 @@ class RepetitionEncoder(Encoder, Serializable):
         self.bit_block_size = bit_block_size
         self.repetitions = repetitions
 
-        if self.bit_block_size * repetitions > self.code_block_size:
-            raise ValueError("The number of generated bits must be smaller or equal to the configured code block size")
-
     def encode(self, bits: np.ndarray) -> np.ndarray:
 
         code = np.tile(bits, self.repetitions)
         return code
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
+
+        if self.repetitions == 1:
+            return encoded_bits
 
         code = encoded_bits.reshape((self.repetitions, self.bit_block_size))
         bits = (np.sum(code, axis=0) / self.repetitions) >= 0.5  # Majority voting
@@ -126,7 +126,12 @@ class RepetitionEncoder(Encoder, Serializable):
             int: Number of repetitions :math:`\\tilde{M}`.
 
         Raises:
-            ValueError: If `repetitions` is smaller than one.
+
+            ValueError:
+                If `repetitions` is smaller than one.
+
+            ValueError:
+                If `repetitions` is even.
         """
 
         return self.__repetitions
@@ -136,6 +141,9 @@ class RepetitionEncoder(Encoder, Serializable):
 
         if num < 1:
             raise ValueError("The number of data bit repetitions must be at least one")
+
+        if num % 2 == 0:
+            raise ValueError("Repetitions must be an uneven integer")
 
         self.__repetitions = num
 
