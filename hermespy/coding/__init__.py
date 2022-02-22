@@ -15,15 +15,5 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-try:
-    from .ldpc_binding.ldpc import LDPC
-
-except ImportError:
-
-    from .ldpc import LDPC
-    import warnings
-
-    warnings.warn("LDPC C++ binding could not be imported, falling back to slower Python LDPC implementation")
-
-__all__ = ['Encoder', 'EncoderManager', 'BlockInterleaver', 'LDPC', 'RepetitionEncoder', 'Scrambler80211a',
+__all__ = ['Encoder', 'EncoderManager', 'BlockInterleaver', 'RepetitionEncoder', 'Scrambler80211a',
            'Scrambler3GPP', 'CyclicRedundancyCheck']
