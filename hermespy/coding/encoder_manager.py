@@ -411,3 +411,19 @@ class EncoderManager(Serializable):
 
         num_blocks = int(num_code_bits / self.code_block_size)
         return self.bit_block_size * num_blocks
+
+    def __getitem__(self, item: int) -> Encoder:
+        """Select an encoder from the current configuration chain.
+
+        Args:
+
+            item (int):
+                Index of the encoder within the chain.
+
+        Returns:
+
+            Encoder:
+                The selected encoder.
+        """
+
+        return self._encoders[item]

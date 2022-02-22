@@ -573,7 +573,7 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
                 figures = result.plot()
 
         # Dump results if the respective flag is enabled
-        if self.dump_results:
+        if self.dump_results and self.results_dir is not None:
 
             # Save figures to png files
             for figure_idx, figure in enumerate(figures):

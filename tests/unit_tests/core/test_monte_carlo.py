@@ -4,13 +4,12 @@
 from __future__ import annotations
 import unittest
 import warnings
-from contextlib import redirect_stdout
 from unittest.mock import Mock
 
 import ray
 
 from hermespy.core.monte_carlo import MonteCarlo, MonteCarloActor, MonteCarloSample, \
-    Evaluator, ArtifactTemplate, MO, Artifact
+    Evaluator, ArtifactTemplate, MO, Artifact, GridDimension
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -209,7 +208,7 @@ class TestMonteCarloActor(unittest.TestCase):
 
         self.investigated_object = TestObjectMock()
         self.investigated_object.property = 1
-        self.dimensions = {'property_a': [1, 2, 6, 7, 8]}
+        self.dimensions = [GridDimension(self.investigated_object, 'property_a', [1, 2, 6, 7, 8])]
         self.evaluators = [SumEvaluator(), ProductEvaluator()]
 
         self.actor = MonteCarloActorMock.remote((self.investigated_object, self.dimensions, self.evaluators),
@@ -218,12 +217,64 @@ class TestMonteCarloActor(unittest.TestCase):
     def test_run(self) -> None:
         """Running the actor should produce the expected result."""
 
-        for sample_idx, sample_value in enumerate(self.dimensions['property_a']):
+        for sample_idx in range(self.dimensions[0].num_sample_points):
 
             expected_grid_section = [sample_idx]
 
             samples = ray.get(self.actor.run.remote((sample_idx,)))
             self.assertCountEqual(expected_grid_section, samples[0].grid_section)
+
+
+class TestGridDimension(unittest.TestCase):
+    """Test the simulation grid dimension class."""
+
+    def setUp(self) -> None:
+
+        self.considered_object = Mock()
+        self.considered_object.dimension = 11234
+        self.sample_points = [1, 2, 3, 4]
+
+        self.dimension = GridDimension(self.considered_object, 'dimension', self.sample_points)
+
+    def test_considered_object(self) -> None:
+        """Considered object property should return considered object."""
+
+        self.assertIs(self.considered_object, self.dimension.considered_object)
+
+    def test_sample_points(self) -> None:
+        """Sample points property should return sample points."""
+
+        self.assertIs(self.sample_points, self.dimension.sample_points)
+
+    def test_num_sample_points(self) -> None:
+        """Number of sample points property should return the correct amount of sample points."""
+
+        self.assertEqual(4, self.dimension.num_sample_points)
+
+    def test_configure_point(self) -> None:
+        """Configuring a point should set the property correctly."""
+
+        expected_value = self.sample_points[3]
+        self.dimension.configure_point(3)
+
+        self.assertEqual(expected_value, self.considered_object.dimension)
+
+    def test_title(self) -> None:
+        """Title property should infer the correct title."""
+
+        self.dimension.title = None
+        self.assertEqual("dimension", self.dimension.title)
+
+        self.dimension.title = "xyz"
+        self.assertEqual("xyz", self.dimension.title)
+
+    def test_plot_scale_setget(self) -> None:
+        """Plot scale property getter should return setter argument."""
+
+        scale = 'loglin'
+        self.dimension.plot_scale = scale
+
+        self.assertEqual(scale, self.dimension.plot_scale)
 
 
 class TestMonteCarlo(unittest.TestCase):
@@ -252,22 +303,29 @@ class TestMonteCarlo(unittest.TestCase):
         self.assertEqual(self.num_samples, self.monte_carlo.num_samples)
         self.assertEqual(self.num_actors, self.monte_carlo.num_actors)
 
-    def test_add_dimension(self) -> None:
-        """Test adding a simulation grid dimension by string representation."""
+    def test_new_dimension(self) -> None:
+        """Test adding a new grid dimension."""
 
         dimension_str = 'property_a'
         sample_points = [1, 2, 3, 4]
 
-        self.monte_carlo.add_dimension(dimension_str, sample_points)
+        dimension = self.monte_carlo.new_dimension(dimension_str, sample_points)
+        self.assertIs(self.investigated_object, dimension.considered_object)
+
+    def test_add_dimension(self) -> None:
+        """Test adding a grid dimension."""
+
+        dimension = Mock()
+        self.monte_carlo.add_dimension(dimension)
 
     def test_add_dimension_validation(self) -> None:
-        """Adding a non-existent simulation dimension should raise a ValueError."""
+        """Adding an already existing dimension should raise a ValueError."""
+
+        dimension = Mock()
+        self.monte_carlo.add_dimension(dimension)
 
         with self.assertRaises(ValueError):
-            self.monte_carlo.add_dimension('xxx', [1, 2, 3])
-
-        with self.assertRaises(ValueError):
-            self.monte_carlo.add_dimension('property', [])
+            self.monte_carlo.add_dimension(dimension)
 
     def test_num_samples_setget(self) -> None:
         """Number of samples property getter should return setter argument."""
@@ -312,7 +370,7 @@ class TestMonteCarlo(unittest.TestCase):
             'property_c': [1, 2, 3],
         }
         for dimension, parameters in dimensions.items():
-            self.monte_carlo.add_dimension(dimension, parameters)
+            self.monte_carlo.new_dimension(dimension, parameters)
 
         with self.monte_carlo.console.capture():
             self.monte_carlo.simulate(MonteCarloActorMock)
