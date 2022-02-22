@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Correlation-Based Waveform Synchronization &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Precoding Module" href="precoding.html" />
+    <link rel="prev" title="Orthogonal Frequency Division Multiplexing" href="modem.waveform_generator_ofdm.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication Module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_psk_qam.html">Phase Shift Keying / Quadrature Amplitude Modulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Correlation-Based Waveform Synchronization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">HermesPy API</a> &raquo;</li>
+          <li><a href="modem.html">Communication Module</a> &raquo;</li>
+      <li>Correlation-Based Waveform Synchronization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/modem.waveform_correlation_synchronization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="module-hermespy.modem.waveform_correlation_synchronization"></span><div class="section" id="correlation-based-waveform-synchronization">
+<h1>Correlation-Based Waveform Synchronization<a class="headerlink" href="#correlation-based-waveform-synchronization" title="Permalink to this headline"></a></h1>
+<dl class="py data">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.PGT">
+<span class="sig-name descname"><span class="pre">PGT</span></span><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.PGT" title="Permalink to this definition"></a></dt>
+<dd><p>Type of pilot-generating waveforms.</p>
+<p>alias of TypeVar(‘PGT’, bound=<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotWaveformGenerator</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CorrelationSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="#hermespy.modem.waveform_correlation_synchronization.PGT" title="hermespy.modem.waveform_correlation_synchronization.PGT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.modem.waveform_correlation_synchronization.PGT</span></code></a>], <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.Synchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_correlation_synchronization.PGT" title="hermespy.modem.waveform_correlation_synchronization.PGT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.modem.waveform_correlation_synchronization.PGT</span></code></a>]</p>
+<p>Correlation-based clock synchronization for arbitrary communication waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Correlation threshold at which a pilot signal is detected.</p></li>
+<li><p><strong>guard_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Guard ratio of frame duration.</p></li>
+<li><p><strong>*args</strong> – Synchronization base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.threshold">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.threshold" title="Permalink to this definition"></a></dt>
+<dd><p>Correlation threshold at which a pilot signal is detected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Threshold between zero and one.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If threshold is smaller than zero or greater than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.guard_ratio">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">guard_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.guard_ratio" title="Permalink to this definition"></a></dt>
+<dd><p>Correlation guard ratio at which a pilot signal is detected.</p>
+<p>After the detection of a pilot section, <cite>guard_ratio</cite> prevents the detection of another pilot in
+the following samples for a span relative to the configured frame duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Guard Ratio between zero and one.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If guard ratio is smaller than zero or greater than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.synchronize">
+<span class="sig-name descname"><span class="pre">synchronize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.synchronize" title="Permalink to this definition"></a></dt>
+<dd><p>Simulates time-synchronization at the receiver-side.</p>
+<p>Sorts base-band signal-sections into frames in time-domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of a single input stream with <cite>num_samples</cite> entries.</p></li>
+<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – State of the wireless transmission channel over which <cite>signal</cite> has been propagated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of <cite>signal</cite> samples and channel transformations sorted into frames</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[Tuple[np.ndarray, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>]]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the number of received streams in <cite>channel_state</cite> does not equal one.
+    If the length of <cite>signal</cite> and the number of samples in <cite>channel_state</cite> are not identical.</p></li>
+<li><p><strong>RuntimeError</strong> – If the synchronization routine is floating</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modem.waveform_generator_ofdm.html" class="btn btn-neutral float-left" title="Orthogonal Frequency Division Multiplexing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="precoding.html" class="btn btn-neutral float-right" title="Precoding Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f923473ec70>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

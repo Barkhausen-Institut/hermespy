@@ -55,6 +55,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#channel-and-interference-model">Channel and Interference Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rf-chain">RF Chain</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hardware-loop">Hardware Loop</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#statistics">Statistics</a></li>
 </ul>
 </li>
@@ -64,6 +65,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
@@ -96,38 +98,62 @@
 <h1>About<a class="headerlink" href="#about" title="Permalink to this headline"></a></h1>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline"></a></h2>
-<p>The current feature-set of HermesPy is steadily expanding and includes
-(new features in <strong>bold</strong>)</p>
+<p>The feature set of HermesPy is steadily expanding and currently includes
+(features in latest release are in <strong>bold</strong>)</p>
 <div class="section" id="modulation-and-coding">
 <h3>Modulation and Coding<a class="headerlink" href="#modulation-and-coding" title="Permalink to this headline"></a></h3>
-<ul class="simple">
+<ul>
+<li><p>Coding</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Repetition Codes</p></li>
+<li><p>3GPP-like LDPC codes (faster implementation with C++)</p></li>
+<li><p>3GPP Scrambler</p></li>
+<li><p>Block Interleaving</p></li>
+<li><p>Cyclic Redundancy Check Mock</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Modulation and Waveforms</p>
+<blockquote>
+<div><ul class="simple">
 <li><p>Generic PSK/QAM/PAM modem with square pulses, (root)-raised-cosine filters or FMCW</p></li>
-<li><p>Linear equalizers for non-orthogonal FMCW pulses in AWGN</p></li>
-<li><p>LLR calculation for BPSK/QAM/16-/64-/256-QAM</p></li>
-<li><p>Chirp FSK</p></li>
-<li><p>Generic OFDM with arbitrary allocation of data and reference symbols in each resource element</p></li>
-<li><p>DFT-spread supported</p></li>
-<li><p><strong>Extended GFDM framework</strong></p></li>
-<li><p>Repetition and LDPC codes</p></li>
-<li><p><strong>Faster LDPC decoder</strong></p></li>
-<li><p><strong>3GPP-like scrambler</strong></p></li>
-<li><p><strong>Block interleaver</strong></p></li>
-<li><p><strong>CRC overhead</strong></p></li>
+<li><p>Chirp FSK (a.k.a. chirp spread spectrum)</p></li>
+<li><p>OFDM frame with arbitrary allocation of data and reference symbols in each resource element</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt>multiple antennas and precoding</dt><dd><ul class="simple">
 <li><p>Transmit diversity (Alamouti) with 2 or 4 tx antennas</p></li>
 <li><p>Open-loop spatial multiplexing with linear receivers</p></li>
-<li><p>Receive diversity (SC or MRC)</p></li>
+<li><p>DFT-spread for OFDM</p></li>
+<li><p>Extended GFDM framework <a class="footnote-reference brackets" href="#footcite-2018-nimr" id="id1">1</a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Receiver algorithms</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>LLR calculation for BPSK/QAM/16-/64-/256-QAM</p></li>
+<li><p>Linear equalizers for non-orthogonal FMCW pulses in AWGN</p></li>
+<li><p>Channel estimation for OFDM</p></li>
+<li><p>Receiver diversity (SC or MRC)</p></li>
 <li><p><strong>Radar detection for FMCW</strong></p></li>
-<li><p><strong>Channel estimation for OFDM</strong></p></li>
+</ul>
+</div></blockquote>
+</li>
 </ul>
 </div>
 <div class="section" id="channel-and-interference-model">
 <h3>Channel and Interference Model<a class="headerlink" href="#channel-and-interference-model" title="Permalink to this headline"></a></h3>
 <ul class="simple">
 <li><p>Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading</p></li>
-<li><p>COST-259 macrocell model</p></li>
-<li><p>5G TDL model</p></li>
+<li><p>COST-259 Macrocell Model <a class="footnote-reference brackets" href="#footcite-2004-3gpp-tr25943" id="id2">2</a></p></li>
+<li><p>5G TDL model <a class="footnote-reference brackets" href="#footcite-2017-3gpp-tr38901" id="id3">3</a></p></li>
 <li><p>MIMO support with antenna correlation, following Kronecker model</p></li>
-<li><p>Interface to Quadriga channel model (requires Matlab or Octave)</p></li>
+<li><p>Interface to <a class="reference external" href="https://quadriga-channel-model.de/">Quadriga</a> channel model (requires Matlab or Octave)</p></li>
 <li><p>Interference among different modems, with arbitrary transmit powers for different transmitters</p></li>
 <li><p>Support for transmitters using different carrier frequencies and bandwidths</p></li>
 <li><p><strong>Single-target</strong> radar channel model</p></li>
@@ -136,32 +162,48 @@
 <div class="section" id="rf-chain">
 <h3>RF Chain<a class="headerlink" href="#rf-chain" title="Permalink to this headline"></a></h3>
 <ul class="simple">
-<li><p>Memoryless non linear power amplifier following an ideal clipper, Rapp’s, Saleh’s or any arbitrary AM/AM AM/PM responses</p></li>
-<li><p><strong>Random time offset</strong></p></li>
-<li><p><strong>I/Q imbalance</strong></p></li>
+<li><dl class="simple">
+<dt>Memoryless non linear power amplifier</dt><dd><ul>
+<li><p>Ideal Clipper</p></li>
+<li><p>Rapp’s model <a class="footnote-reference brackets" href="#footcite-1991-rapp" id="id4">4</a>,</p></li>
+<li><p>Saleh’s model <a class="footnote-reference brackets" href="#footcite-1981-saleh" id="id5">5</a>,</p></li>
+<li><p>Arbitrary AM/AM AM/PM responses</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Random time offset</p></li>
+<li><p>I/Q imbalance</p></li>
 </ul>
 </div>
 <div class="section" id="simulation">
 <h3>Simulation<a class="headerlink" href="#simulation" title="Permalink to this headline"></a></h3>
 <ul class="simple">
-<li><p><strong>Installation as a Python library</strong></p></li>
-<li><p><strong>Greater modularity and standalone usage of simulator classes</strong></p></li>
+<li><p><strong>Native Support for Workload Distribution on Multicore Systems</strong></p></li>
+<li><p>Greater modularity and standalone usage of simulator classes</p></li>
 <li><p>Full configuration using <strong>YAML</strong> settings files</p></li>
-<li><p>Script for plotting different simulations in one graph</p></li>
 <li><p>Drops containing several frames</p></li>
 <li><p>Support for multiple transmitter and receivers</p></li>
 <li><p>User manual provided</p></li>
 </ul>
 </div>
+<div class="section" id="hardware-loop">
+<h3>Hardware Loop<a class="headerlink" href="#hardware-loop" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p><strong>Support to Evaluate Arbitrary Waveforms Over Real Hardware</strong></p></li>
+</ul>
+</div>
 <div class="section" id="statistics">
 <h3>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline"></a></h3>
 <ul class="simple">
-<li><p>BER/FER statistics</p></li>
+<li><p>Bit Error Rate / Frame Error Rate Computation</p></li>
+<li><p><strong>Block Error Rate Computation</strong></p></li>
+<li><p><strong>Throughput Computation</strong></p></li>
 <li><p>Confidence interval is calculated and may be considered as a stopping criterion</p></li>
 <li><p>Theoretical results available (depending on simulation scenario)</p></li>
 <li><p>Power spectral density and time-frequency analysis</p></li>
-<li><p><strong>Time-domain waveform plots</strong></p></li>
-<li><p><strong>Constellation plots</strong></p></li>
+<li><p>Time-domain waveform plots</p></li>
+<li><p>Constellation plots</p></li>
 </ul>
 </div>
 </div>
@@ -169,26 +211,26 @@
 <h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline"></a></h2>
 <p>The known limitations currently include</p>
 <ul class="simple">
-<li><p>No native simulation parallelization</p></li>
+<li><p>Radar KPIs missing (only delay-Doppler map is generated)</p></li>
 </ul>
 </div>
 <div class="section" id="release-plan">
 <h2>Release Plan<a class="headerlink" href="#release-plan" title="Permalink to this headline"></a></h2>
 <p>Full releases with a new set of features will be provided on a half-yearly basis, with software patches in between.
-For the next release, the current plan is</p>
+For the next release in April 2022, the current plan is</p>
 <ul>
 <li><p><strong>Modulation and coding</strong></p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Radar Detection for FMCW and OFDM</p></li>
-<li><p>Beamforming</p></li>
+<li><p>Beam-Forming</p></li>
 </ul>
 </div></blockquote>
 </li>
 <li><p><strong>Channel and interference model</strong></p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Hardware in the Loop</p></li>
+<li><p>3GPP Clustered Delay Line Models</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -200,6 +242,24 @@ For the next release, the current plan is</p>
 </div></blockquote>
 </li>
 </ul>
+<p id="id6"><dl class="footnote brackets">
+<dt class="label" id="footcite-2018-nimr"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>A. Nimr, M. Chafii, M. Matthe, and G. Fettweis. Extended GFDM framework: OTFS and GFDM comparison. In <em>IEEE Global Communications Conference (GLOBECOM)</em>, volume. 2018. <a class="reference external" href="https://doi.org/10.1109/GLOCOM.2018.8647704">doi:10.1109/GLOCOM.2018.8647704</a>.</p>
+</dd>
+<dt class="label" id="footcite-2004-3gpp-tr25943"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>3GPP TSG-RAN. 3GPP TR 25.943 v6.0.0; Deployment aspects. 2004.</p>
+</dd>
+<dt class="label" id="footcite-2017-3gpp-tr38901"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2017. version 14.3.0 Release 14. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf</a>.</p>
+</dd>
+<dt class="label" id="footcite-1991-rapp"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dd><p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
+</dd>
+<dt class="label" id="footcite-1981-saleh"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
+<dd><p>A.A.M. Saleh. Frequency-independent and frequency-dependent nonlinear models of TWT amplifiers. <em>IEEE Transactions on Communications</em>, 29(11):1715–1720, November 1981. <a class="reference external" href="https://doi.org/10.1109/TCOM.1981.1094911">doi:10.1109/TCOM.1981.1094911</a>.</p>
+</dd>
+</dl>
+</p>
 </div>
 </div>
 
@@ -214,7 +274,12 @@ For the next release, the current plan is</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+<jinja2.runtime.BlockReference object at 0x7f9236934fd0>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

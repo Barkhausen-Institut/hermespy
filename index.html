@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="features.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
@@ -91,19 +92,22 @@ It specifically targets researchers, engineers and students interested in wirele
 </video>
 <br /> <br /><p>Within an easily expandable, holistic framework users can investigate</p>
 <ul class="simple">
-<li><p>Bit error detection and correction codes</p></li>
+<li><p>Bit error detection and error-correcting codes</p></li>
 <li><p>Communication symbol mappings</p></li>
 <li><p>Signal modulations and their respective waveforms</p></li>
 <li><p>Wireless communication channels</p></li>
 <li><p>Channel pre-coding and equalization</p></li>
-<li><p>Interference between multiple multi-antenna devices</p></li>
+<li><p>Interference between multiple multi-antenna heterogeneous devices</p></li>
+<li><p>Sensing algorithms and KPIs</p></li>
 </ul>
 <p>HermesPy may be used in one of two modes of operation:</p>
 <ol class="arabic simple">
 <li><p>As a command line tool for Monte-Carlo simulations of wireless transmission scenarios.
-See <a class="reference internal" href="getting_started_command_line.html"><span class="doc">Command Line Tool</span></a> for further information.</p></li>
+This allows one to define complex simulation scenarios by means of YML configuration files.
+See <a class="reference internal" href="getting_started.html#gettingstarted-commandlinetool"><span class="std std-ref">Getting Started -&gt; Command Line Tool</span></a> for further information.</p></li>
 <li><p>As a plug-in library for the simulation of realistic wireless transmissions within your own python projects.
-See <a class="reference internal" href="getting_started_library.html"><span class="doc">Library</span></a> for further information.</p></li>
+Only specific HermesPy modules can be thus picked up needed, or more complex simulation scenarios can be built using Python code.
+See <a class="reference internal" href="getting_started.html#gettingstarted-library"><span class="std std-ref">Getting Started -&gt; Library</span></a> for further information.</p></li>
 </ol>
 <div class="toctree-wrapper compound">
 </div>
@@ -119,7 +123,12 @@ See <a class="reference internal" href="getting_started_library.html"><span clas
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+<jinja2.runtime.BlockReference object at 0x7f9234bbe370>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Device Modeling &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Random Graph" href="core.random_node.html" />
+    <link rel="prev" title="Serialization Factory" href="core.factory.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core Module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Device Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">HermesPy API</a> &raquo;</li>
+          <li><a href="core.html">Core Module</a> &raquo;</li>
+      <li>Device Modeling</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/core.device.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="module-hermespy.core.device"></span><div class="section" id="device-modeling">
+<h1>Device Modeling<a class="headerlink" href="#device-modeling" title="Permalink to this headline"></a></h1>
+<div class="mermaid">
+            %%{init: {'theme': 'dark'}}%%
+classDiagram-v2
+
+direction RL
+
+class Device {
+
+    topology
+    carrier_frequency
+    transmit()
+    receive()
+}
+
+class SimulatedDevice {
+
+    position
+    orientation
+    velocity
+    acceleration
+}
+
+class HardwareDevice {
+
+    trigger()
+}
+
+class Operator {
+
+    transmit()
+    receive()
+}
+
+class Modem {
+
+    tx_bits
+    rx_bits
+    ...
+    waveform
+    transmit()
+    receive()
+}
+
+class Radar {
+
+    waveform
+    ...
+    target_estimates
+    transmit()
+    receive()
+}
+
+Operator &lt;|-- Modem
+Operator &lt;|-- Radar
+Device *-- Operator
+SimulatedDevice &lt;|-- Device
+HardwareDevice &lt;|-- Device
+        </div><div class="mermaid">
+            %%{init: {'theme': 'dark'}}%%
+flowchart LR
+
+channel{Real World}
+
+subgraph devicea[HardwareDevice]
+
+    direction TB
+    deviceatx&gt;Tx Slot] --&gt; deviceabinding[Hardware Binding] --&gt; devicearx&gt;Rx Slot]
+
+end
+
+subgraph deviceb[HardwareDevice]
+
+    direction TB
+    devicebtx&gt;Tx Slot] --&gt; devicebbinding[Hardware Binding] --&gt; devicebrx&gt;Rx Slot]
+end
+
+deviceabinding &lt;--&gt; channel
+devicebbinding &lt;--&gt; channel
+        </div><div class="mermaid">
+            %%{init: {'theme': 'dark'}}%%
+flowchart LR
+
+channel{Channel Modeling}
+
+subgraph devicea[SimulatedDevice]
+
+    direction TB
+    deviceatx&gt;Tx Slot]
+    devicearx&gt;Rx Slot]
+
+end
+
+subgraph deviceb[SimulatedDevice]
+
+    direction TB
+    devicebtx&gt;Tx Slot]
+    devicebrx&gt;Rx Slot]
+end
+
+deviceatx --&gt; channel --&gt; devicearx
+devicebtx --&gt; channel --&gt; devicebrx
+        </div><dl class="py exception">
+<dt class="sig sig-object py" id="hermespy.core.device.FloatingError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FloatingError</span></span><a class="headerlink" href="#hermespy.core.device.FloatingError" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></p>
+<p>Exception raised if an operation fails due to a currently being considered floating.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hermespy.core.device.SlotType">
+<span class="sig-name descname"><span class="pre">SlotType</span></span><a class="headerlink" href="#hermespy.core.device.SlotType" title="Permalink to this definition"></a></dt>
+<dd><p>Type of slot.</p>
+<p>alias of TypeVar(‘SlotType’, bound=<a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">OperatorSlot</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorType">
+<span class="sig-name descname"><span class="pre">OperatorType</span></span><a class="headerlink" href="#hermespy.core.device.OperatorType" title="Permalink to this definition"></a></dt>
+<dd><p>Type of operator.</p>
+<p>alias of TypeVar(‘OperatorType’, bound=<a class="reference internal" href="#hermespy.core.device.Operator" title="hermespy.core.device.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.Operator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Operator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="#hermespy.core.device.SlotType" title="hermespy.core.device.SlotType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.device.SlotType</span></code></a>]</p>
+<p>Base class for operators of devices.</p>
+<p>In HermesPy, operators may configure devices, broadcast signals over them or capture signals from them.
+Each operator is attached to a single device instance it operates on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>slot</strong> (<a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><em>OperatorSlot</em></a><em>, </em><em>optional</em>) – Device slot this operator is attached to.
+By default, the operator is not attached and considered floating.</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Operator.slot">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slot</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><span class="pre">hermespy.core.device.OperatorSlot</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Operator.slot" title="Permalink to this definition"></a></dt>
+<dd><p>Device slot this operator operates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the device slot.
+<cite>None</cite> if the operator is currently considered floating.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>slot (Optional[<a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot">OperatorSlot</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Operator.slot_index">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slot_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Operator.slot_index" title="Permalink to this definition"></a></dt>
+<dd><p>Index of the operator within its slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Index of the operator.
+<cite>None</cite> if the operator is currently considered floating.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>index (Optional[int])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Operator.device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">hermespy.core.device.Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Operator.device" title="Permalink to this definition"></a></dt>
+<dd><p>Device this operator is attached to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the operated device.
+<cite>None</cite> if the operator is currently considered floating.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>device (Optional[<a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device">Device</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Operator.attached">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attached</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.device.Operator.attached" title="Permalink to this definition"></a></dt>
+<dd><p>Attachment state of the operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Boolean attachment indicator</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Operator.frame_duration">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.Operator.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hermespy.core.device.SecondSlotType">
+<span class="sig-name descname"><span class="pre">SecondSlotType</span></span><a class="headerlink" href="#hermespy.core.device.SecondSlotType" title="Permalink to this definition"></a></dt>
+<dd><p>Type of slot.</p>
+<p>alias of TypeVar(‘SecondSlotType’, bound=<a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">OperatorSlot</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.MixingOperator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MixingOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.MixingOperator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="#hermespy.core.device.SlotType" title="hermespy.core.device.SlotType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.device.SlotType</span></code></a>], <a class="reference internal" href="#hermespy.core.device.Operator" title="hermespy.core.device.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Operator</span></code></a>[<a class="reference internal" href="#hermespy.core.device.SlotType" title="hermespy.core.device.SlotType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.device.SlotType</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Base class for operators performing mixing operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>carrier_frequency</strong> (<em>float</em><em>, </em><em>optional</em>) – Central frequency of the mixed signal in radio-frequency transmission band.</p></li>
+<li><p><strong>slot</strong> (<em>SlotType</em><em>, </em><em>optional</em>) – Device slot this operator operators.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.MixingOperator.carrier_frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">carrier_frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.MixingOperator.carrier_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Central frequency of the mixed signal in radio-frequency transmission band.</p>
+<p>By default, the carrier frequency of the operated device is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Carrier frequency in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the carrier frequency is smaller than zero.</p></li>
+<li><p><strong>RuntimeError</strong> – If the operator is considered floating.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.MixingOperator.sampling_rate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.MixingOperator.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate which this operator continuous signals into discrete samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>rate (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Receiver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Receiver" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a>, <a class="reference internal" href="#hermespy.core.device.MixingOperator" title="hermespy.core.device.MixingOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.MixingOperator</span></code></a>[<a class="reference internal" href="#hermespy.core.device.ReceiverSlot" title="hermespy.core.device.ReceiverSlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiverSlot</span></code></a>]</p>
+<p>Operator receiving from a device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p></li>
+<li><p><strong>*args</strong> – Operator base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – Operator base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver.slot">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slot</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><span class="pre">hermespy.core.device.OperatorSlot</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Receiver.slot" title="Permalink to this definition"></a></dt>
+<dd><p>Device slot this operator operates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the device slot.
+<cite>None</cite> if the operator is currently considered floating.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>slot (Optional[<a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot">OperatorSlot</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver.reference_transmitter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_transmitter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><span class="pre">hermespy.core.device.Transmitter</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Receiver.reference_transmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Reference transmitter for this receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to this receiver’s reference transmitter.
+<cite>None</cite>, if no reference transmitter is specified.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>transmitter (Optional[<a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter">Transmitter</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver.receive">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Receiver.receive" title="Permalink to this definition"></a></dt>
+<dd><p>Receive a signal.</p>
+<p>Pulls the required signal model and channel state information from the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tuple of received signal as well as additional information.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver.signal">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Receiver.signal" title="Permalink to this definition"></a></dt>
+<dd><p>Cached recently received signal model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Signal model.
+<cite>None</cite> if no signal model is cached.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>signal (Optional[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver.csi">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">csi</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><span class="pre">hermespy.core.channel_state_information.ChannelStateInformation</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Receiver.csi" title="Permalink to this definition"></a></dt>
+<dd><p>Cached recently received channel state information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Channel state information.
+<cite>None</cite> if no state information is cached.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>csi (Optional[<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver.cache_reception">
+<span class="sig-name descname"><span class="pre">cache_reception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Receiver.cache_reception" title="Permalink to this definition"></a></dt>
+<dd><p>Cache recent reception at this receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em>) – Recently received signal.</p></li>
+<li><p><strong>csi</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a><em>]</em>) – Recently received channel state.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Receiver.energy">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.Receiver.energy" title="Permalink to this definition"></a></dt>
+<dd><p>Average energy of the received signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Energy.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorSlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OperatorSlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.OperatorSlot" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="#hermespy.core.device.OperatorType" title="hermespy.core.device.OperatorType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.device.OperatorType</span></code></a>]</p>
+<p>Slot list for operators of a single device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device"><em>Device</em></a>) – Device this slot belongs to.</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorSlot.device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">hermespy.core.device.Device</span></a></em><a class="headerlink" href="#hermespy.core.device.OperatorSlot.device" title="Permalink to this definition"></a></dt>
+<dd><p>Device this operator slot belongs to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the device.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device">Device</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorSlot.operator_index">
+<span class="sig-name descname"><span class="pre">operator_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.OperatorSlot.operator_index" title="Permalink to this definition"></a></dt>
+<dd><p>Index of an operator within this slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The <cite>operator</cite>’s index.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>index (int)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the <cite>operator</cite> is not registered at this slot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorSlot.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.OperatorSlot.add" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new operator to this slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operator</strong> (<em>OperatorType</em>) – Operator to be added to this slot.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the <cite>operator</cite> is already registered at this slot.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorSlot.remove">
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.OperatorSlot.remove" title="Permalink to this definition"></a></dt>
+<dd><p>Remove an operator from this slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operator</strong> (<em>OperatorType</em>) – Handle to the operator to be removed.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the <cite>operator</cite> is not registered at this slot.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorSlot.registered">
+<span class="sig-name descname"><span class="pre">registered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.OperatorSlot.registered" title="Permalink to this definition"></a></dt>
+<dd><p>Check if an operator is registered at this slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Boolean indicating the registration status.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.OperatorSlot.num_operators">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_operators</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.core.device.OperatorSlot.num_operators" title="Permalink to this definition"></a></dt>
+<dd><p>Number of operators on this slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of operators.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.Transmitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Transmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Transmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a>, <a class="reference internal" href="#hermespy.core.device.MixingOperator" title="hermespy.core.device.MixingOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.MixingOperator</span></code></a>[<a class="reference internal" href="#hermespy.core.device.TransmitterSlot" title="hermespy.core.device.TransmitterSlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitterSlot</span></code></a>]</p>
+<p>Operator transmitting over a device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p></li>
+<li><p><strong>*args</strong> – Operator base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – Operator base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.Transmitter.transmit">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Transmitter.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Transmit a signal.</p>
+<p>Registers the signal samples to be transmitted by the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of the transmitted signal.
+If not specified, the duration will be inferred by the transmitter.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of transmitted signal as well as additional information.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Transmitter.slot">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">slot</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><span class="pre">hermespy.core.device.OperatorSlot</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Transmitter.slot" title="Permalink to this definition"></a></dt>
+<dd><p>Device slot this operator operates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the device slot.
+<cite>None</cite> if the operator is currently considered floating.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>slot (Optional[<a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot">OperatorSlot</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.TransmitterSlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TransmitterSlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.TransmitterSlot" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.OperatorSlot</span></code></a>[<a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Transmitter</span></code></a>]</p>
+<p>Slot for transmitting operators within devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – OperatorSlot base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – OperatorSlot base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.TransmitterSlot.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.TransmitterSlot.add" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new operator to this slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operator</strong> (<em>OperatorType</em>) – Operator to be added to this slot.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the <cite>operator</cite> is already registered at this slot.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.TransmitterSlot.add_transmission">
+<span class="sig-name descname"><span class="pre">add_transmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.TransmitterSlot.add_transmission" title="Permalink to this definition"></a></dt>
+<dd><p>Add a transmitter’s most recent transmission.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transmitter</strong> (<a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><em>Transmitter</em></a>) – The transmitter emitting the signal.</p></li>
+<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal to be transmitted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the transmitter is not registered at this slot.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.TransmitterSlot.get_transmissions">
+<span class="sig-name descname"><span class="pre">get_transmissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.TransmitterSlot.get_transmissions" title="Permalink to this definition"></a></dt>
+<dd><p>Get recent transmissions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.ReceiverSlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ReceiverSlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.ReceiverSlot" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.OperatorSlot</span></code></a>[<a class="reference internal" href="#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Receiver</span></code></a>]</p>
+<p>Slot for receiving operators within devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – OperatorSlot base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – OperatorSlot base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.ReceiverSlot.get_receptions">
+<span class="sig-name descname"><span class="pre">get_receptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.ReceiverSlot.get_receptions" title="Permalink to this definition"></a></dt>
+<dd><p>Get recent receptions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.UnsupportedSlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UnsupportedSlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.UnsupportedSlot" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.device.OperatorSlot" title="hermespy.core.device.OperatorSlot"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.OperatorSlot</span></code></a></p>
+<p>Slot for unsupported operations within devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device"><em>Device</em></a>) – Device this slot belongs to.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.UnsupportedSlot.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.UnsupportedSlot.add" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new operator to this slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operator</strong> (<em>OperatorType</em>) – Operator to be added to this slot.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the <cite>operator</cite> is already registered at this slot.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.Device">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Device" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a></p>
+<p>Physical device representation within HermesPy.</p>
+<p>It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>power</strong> (<em>float</em><em>, </em><em>optional</em>) – Average power of the transmitted signals in Watts.
+1.0 Watt by default.</p></li>
+<li><p><strong>position</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Position of the device within its scenario in cartesian coordinates.
+By default, the device position is considered to be unknown (<cite>None</cite>).</p></li>
+<li><p><strong>orientation</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Orientation of the device within its scenario as a quaternion.
+By default, the device orientation is considered to be unknown (<cite>None</cite>).</p></li>
+<li><p><strong>topology</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Antenna array topology of the device.
+By default, a single ideal omnidirectional antenna is assumed.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.transmitters">
+<span class="sig-name descname"><span class="pre">transmitters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.device.TransmitterSlot" title="hermespy.core.device.TransmitterSlot"><span class="pre">TransmitterSlot</span></a></em><a class="headerlink" href="#hermespy.core.device.Device.transmitters" title="Permalink to this definition"></a></dt>
+<dd><p>Transmitters broadcasting signals over this device.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.receivers">
+<span class="sig-name descname"><span class="pre">receivers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.device.ReceiverSlot" title="hermespy.core.device.ReceiverSlot"><span class="pre">ReceiverSlot</span></a></em><a class="headerlink" href="#hermespy.core.device.Device.receivers" title="Permalink to this definition"></a></dt>
+<dd><p>Receivers capturing signals from this device</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.Device.power" title="Permalink to this definition"></a></dt>
+<dd><p>Average power of the transmitted signal signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Power in Watt.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>power (float)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>value</cite> is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.position">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Device.position" title="Permalink to this definition"></a></dt>
+<dd><p>Position of the device within its scenario in cartesian coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The device’s position.
+<cite>None</cite> if the position is considered to be unknown.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>position (Optional[np.array])</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the <cite>position</cite> is not a valid cartesian vector.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.orientation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orientation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.Device.orientation" title="Permalink to this definition"></a></dt>
+<dd><p>Orientation of the device within its scenario as a quaternion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The modem orientation as a normalized quaternion.
+<cite>None</cite> if the position is considered to be unknown.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>orientation (Optional[np.array])</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>orientation</cite> is not a valid quaternion.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.topology">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.device.Device.topology" title="Permalink to this definition"></a></dt>
+<dd><p>Antenna array topology.</p>
+<p>The topology is represented by an <cite>Mx3</cite> numpy array,
+where the first dimension M is the number of antennas and the second dimension their cartesian position
+within the device’s local coordinate system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A matrix of <cite>Mx3</cite> entries describing the sensor array topology.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>topology (np.ndarray)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the first dimension <cite>topology</cite> is smaller than 1 or its second dimension is larger than 3.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.num_antennas">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_antennas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.core.device.Device.num_antennas" title="Permalink to this definition"></a></dt>
+<dd><p>Number of antennas within this device’s topology.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of antennas, greater or equal to one.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.max_frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.Device.max_frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Maximum frame duration transmitted by this device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Maximum duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>max_duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.carrier_frequency">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">carrier_frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.Device.carrier_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Central frequency of the device’s emissions in the RF-band.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Carrier frequency in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>frequency (float)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – On negative carrier frequencies.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.sampling_rate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.Device.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Sampling rate at which the device’s analog-to-digital converters operate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>sampling_rate (float)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the sampling rate is not greater than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.velocity">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.device.Device.velocity" title="Permalink to this definition"></a></dt>
+<dd><p>Cartesian device velocity vector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Velocity vector.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <cite>velocity</cite> is not three-dimensional.</p></li>
+<li><p><strong>NotImplementedError</strong> – If <cite>velocity</cite> is unknown.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Device.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Transmit signal over this device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>clear_cache</strong> (<em>bool</em><em>, </em><em>optional</em>) – Clear the cache of operator signals to be transmitted.
+Enabled by default.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Signal emitted by this device.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hermespy.core.device.DeviceType">
+<span class="sig-name descname"><span class="pre">DeviceType</span></span><a class="headerlink" href="#hermespy.core.device.DeviceType" title="Permalink to this definition"></a></dt>
+<dd><p>Type of device.</p>
+<p>alias of TypeVar(‘DeviceType’, bound=<a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Device</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexTransmitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DuplexTransmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplex_operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.DuplexTransmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Transmitter</span></code></a></p>
+<p>Transmitter within a duplex operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>duplex_operator</strong> (<a class="reference internal" href="#hermespy.core.device.DuplexOperator" title="hermespy.core.device.DuplexOperator"><em>DuplexOperator</em></a>) – Duplex operator this transmitter is bound to.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexTransmitter.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.DuplexTransmitter.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Transmit a signal.</p>
+<p>Registers the signal samples to be transmitted by the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of the transmitted signal.
+If not specified, the duration will be inferred by the transmitter.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of transmitted signal as well as additional information.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexTransmitter.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexTransmitter.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate which this operator continuous signals into discrete samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>rate (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexTransmitter.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexTransmitter.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexReceiver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DuplexReceiver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplex_operator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.DuplexReceiver" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Receiver</span></code></a></p>
+<p>Receiver within a duplex operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>duplex_operator</strong> (<a class="reference internal" href="#hermespy.core.device.DuplexOperator" title="hermespy.core.device.DuplexOperator"><em>DuplexOperator</em></a>) – Duplex operator this receiver is bound to.</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexReceiver.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexReceiver.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate which this operator continuous signals into discrete samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>rate (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexReceiver.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexReceiver.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexReceiver.reference_transmitter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_transmitter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><span class="pre">hermespy.core.device.Transmitter</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.DuplexReceiver.reference_transmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Reference transmitter for this receiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to this receiver’s reference transmitter.
+<cite>None</cite>, if no reference transmitter is specified.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>transmitter (Optional[<a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter">Transmitter</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexReceiver.receive">
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.DuplexReceiver.receive" title="Permalink to this definition"></a></dt>
+<dd><p>Receive a signal.</p>
+<p>Pulls the required signal model and channel state information from the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tuple of received signal as well as additional information.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexReceiver.energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexReceiver.energy" title="Permalink to this definition"></a></dt>
+<dd><p>Average energy of the received signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Energy.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DuplexOperator</span></span><a class="headerlink" href="#hermespy.core.device.DuplexOperator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Operator binding to both transmit and receive slots of any device.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">hermespy.core.device.Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.device.DuplexOperator.device" title="Permalink to this definition"></a></dt>
+<dd><p>Device this operator is operating.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the operated device.
+<cite>None</cite> if the operator is currently operating no device.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>device (Optional[device])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.reference_transmitter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_transmitter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><span class="pre">hermespy.core.device.Transmitter</span></a></em><a class="headerlink" href="#hermespy.core.device.DuplexOperator.reference_transmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Reference transmitter for this duplex operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to this receiver’s reference transmitter.
+By default, returns the duplex’s transmit operator.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>transmitter (<a class="reference internal" href="#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter">Transmitter</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.transmit">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.DuplexOperator.transmit" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.receive">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.DuplexOperator.receive" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.sampling_rate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexOperator.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.frame_duration">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexOperator.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.carrier_frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">carrier_frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexOperator.carrier_frequency" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.DuplexOperator.energy">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.device.DuplexOperator.energy" title="Permalink to this definition"></a></dt>
+<dd><p>Average energy of the transmitted and received signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Energy.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>flot</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="core.factory.html" class="btn btn-neutral float-left" title="Serialization Factory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="core.random_node.html" class="btn btn-neutral float-right" title="Random Graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f92351a3fa0>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -58,6 +58,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,7 +91,7 @@
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h1>
 <p>There are two supported ways to install HermesPy on your system.
 Users may either pull pre-built wheels from the official python package index <a class="reference external" href="https://pypi.org/">PyPi</a> or
-or clone the source code from the <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy">GitHub</a> and build the package from scratch.</p>
+or clone the source code from <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy">GitHub</a> and build the package from scratch.</p>
 <p>Both methods will be described in the following sections.</p>
 <div class="section" id="install-from-pypi">
 <h2>Install from PyPi<a class="headerlink" href="#install-from-pypi" title="Permalink to this headline"></a></h2>
@@ -128,15 +129,20 @@ you may omit step one and replace <cite>&lt;envname&gt;</cite> by the title of t
 for developers who plan on extending the HermesPy source code.
 Additionally, it can also be applied by users who, for any reason, are unable to install HermesPy from
 the index.</p>
-<p>Using the <a class="reference external" href="https://git-scm.com/">Git</a> command line interface,
+<p>Before cloning, make sure to have the <a class="reference external" href="https://git-lfs.github.com/">LFS</a> extension to <a class="reference external" href="https://git-scm.com/">Git</a> installed.
+Using the <a class="reference external" href="https://git-scm.com/">Git</a> command line interface,
 the HermesPy source code can be copied to any system by executing</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone &lt;this-repo&gt;
 <span class="nb">cd</span> hermespy/
 </pre></div>
 </div>
-<p>within a terminal.
-Make sure to have the <a class="reference external" href="https://git-lfs.github.com/">LFS</a> extension to <a class="reference external" href="https://git-scm.com/">Git</a> installed.</p>
-<p>Install the package by executing the following commands within a terminal:</p>
+<p>within a terminal.</p>
+<p>Some submodules of HermesPy are provided as C++ implementations with Python bindings for improved performance.
+Therefore, building the package from source requires your system to have a
+build chain detectable by <a class="reference external" href="https://cmake.org/">CMake</a> installed and configured.
+For Windows users, we recommend downloading and installing either the <a class="reference external" href="https://visualstudio.microsoft.com/de/downloads/#build-tools-for-visual-studio-2022">Visual Studio Build Tools</a>
+or <a class="reference external" href="https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer/mingw-w64-install.exe/download">MinGW</a> as a free open-source alternative.</p>
+<p>Build and install the package contained within the repository by executing the following commands within a terminal:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-V2luZG93cw==" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-V2luZG93cw==" name="V2luZG93cw==" role="tab" tabindex="0">Windows</button><button aria-controls="panel-1-TGludXg=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-TGludXg=" name="TGludXg=" role="tab" tabindex="-1">Linux</button></div><div aria-labelledby="tab-1-V2luZG93cw==" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-V2luZG93cw==" name="V2luZG93cw==" role="tabpanel" tabindex="0"><div class="highlight-batch notranslate"><div class="highlight"><pre><span></span>conda create -n <span class="p">&lt;</span>envname<span class="p">&gt;</span> python=3.9
 conda activate <span class="p">&lt;</span>envname&gt;
@@ -194,7 +200,12 @@ command line interface:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2020, Barkhausen Institut gGmbH.</p>
+<jinja2.runtime.BlockReference object at 0x7f923514b160>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

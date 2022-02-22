@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Repetition Coding &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scrambling" href="coding.scrambler.html" />
+    <link rel="prev" title="Cyclic Redundancy Checks" href="coding.cyclic_redundancy_check.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="coding.html">Channel Coding Module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coding.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.cyclic_redundancy_check.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.scrambler.html">Scrambling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">HermesPy API</a> &raquo;</li>
+          <li><a href="coding.html">Channel Coding Module</a> &raquo;</li>
+      <li>Repetition Coding</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/coding.repetition.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="module-hermespy.coding.repetition_encoder"></span><div class="section" id="repetition-coding">
+<h1>Repetition Coding<a class="headerlink" href="#repetition-coding" title="Permalink to this headline"></a></h1>
+<p>Repetition codes are among the most basic channel coding schemes.
+The achieve redundancy by repeating all bits within a block during encoding.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.coding.repetition_encoder.RepetitionEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RepetitionEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bit_block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repetitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.repetition_encoder.RepetitionEncoder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="coding.coding.html#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.coding.coding.Encoder</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<p>A channel coding scheme based on block-wise repetition of bits.</p>
+<p>During encoding, the repetition encoder repeats a block of <span class="math notranslate nohighlight">\(K_n\)</span> <a class="reference internal" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.bit_block_size" title="hermespy.coding.repetition_encoder.RepetitionEncoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a> bits
+<span class="math notranslate nohighlight">\(\tilde{M}\)</span> <a class="reference internal" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.repetitions" title="hermespy.coding.repetition_encoder.RepetitionEncoder.repetitions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">repetitions()</span></code></a> times, leading to a <a class="reference internal" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.code_block_size" title="hermespy.coding.repetition_encoder.RepetitionEncoder.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a> of</p>
+<div class="math notranslate nohighlight">
+\[L_n = \tilde{M} \cdot K_n\]</div>
+<p>bits and a coding rate of</p>
+<div class="math notranslate nohighlight">
+\[R_n = \frac{K_n}{L_n} = \frac{1}{\tilde{M}} \mathrm{.}\]</div>
+<p>Let</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{x}  = \left[ x_1, x_2, \dots, x_{K_n} \right]^\intercal \in \left\lbrace 0, 1 \right\rbrace^{K_n}\]</div>
+<p>be the vector of input bits and</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}  = \left[ y_1, y_2, \dots, y_{K_n} \right]^\intercal \in \left\lbrace 0, 1 \right\rbrace^{L_n}\]</div>
+<p>be the vector of repeated output bits. The implemented block repetition scheme can be described by</p>
+<div class="math notranslate nohighlight">
+\[y_k = x_{k \mod{K_n}} \mathrm{,}\]</div>
+<p>assigning input bits to output bits by index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bit_block_size</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of input bits per data block.</p></li>
+<li><p><strong>repetitions</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of times the input bit block is repeated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>bit_block_size</cite> times <cite>repetitions</cite> is smaller than <cite>code_block_size</cite>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.coding.repetition_encoder.RepetitionEncoder.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Repetition'</span></em><a class="headerlink" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.repetition_encoder.RepetitionEncoder.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.encode" title="Permalink to this definition"></a></dt>
+<dd><p>Encodes a single block of bits.</p>
+<p>Bit encoding routine during data transmission,
+encoding a block of <span class="math notranslate nohighlight">\(K_n\)</span> input bits into a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single bit block to be encoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> bits, representing a single code block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">bits</span></code> does not equal <a class="reference internal" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.bit_block_size" title="hermespy.coding.repetition_encoder.RepetitionEncoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.repetition_encoder.RepetitionEncoder.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoded_bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.decode" title="Permalink to this definition"></a></dt>
+<dd><p>Decodes a single block of bits.</p>
+<p>Bit decoding routine during data reception,
+decoding a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits into a block of <span class="math notranslate nohighlight">\(K_n\)</span> data bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> code bits, representing a single code block to be decoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single data block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">encoded_bits</span></code> does not equal <a class="reference internal" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.code_block_size" title="hermespy.coding.repetition_encoder.RepetitionEncoder.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.repetition_encoder.RepetitionEncoder.bit_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.bit_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Data bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during transmit encoding,
+or the number of output bits during receive decoding.
+Referred to as <span class="math notranslate nohighlight">\(K_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(K_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.repetition_encoder.RepetitionEncoder.code_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.code_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Code bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during receive decoding,
+or the number of output bits during transmit encoding.
+Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(L_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.repetition_encoder.RepetitionEncoder.repetitions">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">repetitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.coding.repetition_encoder.RepetitionEncoder.repetitions" title="Permalink to this definition"></a></dt>
+<dd><p>Number of times the bit block is repeated during encoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of repetitions <span class="math notranslate nohighlight">\(\tilde{M}\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <cite>repetitions</cite> is smaller than one.</p></li>
+<li><p><strong>ValueError</strong> – If <cite>repetitions</cite> is even.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="coding.cyclic_redundancy_check.html" class="btn btn-neutral float-left" title="Cyclic Redundancy Checks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coding.scrambler.html" class="btn btn-neutral float-right" title="Scrambling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f92354b8dc0>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

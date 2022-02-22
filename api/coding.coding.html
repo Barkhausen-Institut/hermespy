@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coding Pipeline &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Interleaving" href="coding.block_interleaver.html" />
+    <link rel="prev" title="Channel Coding Module" href="coding.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+          </a>
+              <div class="version">
+                0.2.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="coding.html">Channel Coding Module</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.cyclic_redundancy_check.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coding.scrambler.html">Scrambling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">HermesPy API</a> &raquo;</li>
+          <li><a href="coding.html">Channel Coding Module</a> &raquo;</li>
+      <li>Coding Pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/coding.coding.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="module-hermespy.coding.coding"></span><div class="section" id="coding-pipeline">
+<h1>Coding Pipeline<a class="headerlink" href="#coding-pipeline" title="Permalink to this headline"></a></h1>
+<p>This module introduces the concept of bit <a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a> steps,
+which form single chain link within a channel coding processing chain.</p>
+<p>Considering an arbitrary coding scheme consisting of multiple steps,
+the process of encoding bit streams during transmission and decoding them during
+subsequent reception is modeled by a chain of <a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a> instances:</p>
+<div class="mermaid">
+            %%{init: {'theme': 'dark'}}%%
+flowchart LR
+
+   input([Input Bits]) --&gt; n_i[...]
+   n_i --&gt; n_a[Encoder N-1] --&gt; n_b[Encoder N] --&gt; n_c[Encoder N+1]  --&gt; n_o[...]
+   n_o --&gt; output([Coded Bits])
+        </div><p>During transmission encoding the processing chain is sequentially executed from left to right,
+during reception decoding in reverse order.</p>
+<p>Within bit streams, <a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a> instances sequentially encode block sections of <span class="math notranslate nohighlight">\(K_n\)</span> bits into
+code sections of <span class="math notranslate nohighlight">\(L_n\)</span> bits.
+Therefore, the rate of the <span class="math notranslate nohighlight">\(n\)</span>-th <a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a></p>
+<div class="math notranslate nohighlight">
+\[R_n = \frac{K_n}{L_n}\]</div>
+<p>is defined as the relation between input and output block length.
+The pipeline configuration as well as the encoding step execution is managed by the <a class="reference internal" href="#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">EncoderManager</span></code></a>.
+Provided with a frame of <span class="math notranslate nohighlight">\(K\)</span> input bits, the manager will generate a coded frame of <span class="math notranslate nohighlight">\(L\)</span> bits by
+sequentially executing all <span class="math notranslate nohighlight">\(N\)</span> configured encoders.
+Considering a frame of <span class="math notranslate nohighlight">\(K_{\mathrm{Frame}, n}\)</span> input bits to the <span class="math notranslate nohighlight">\(n\)</span>-th encoder within the pipeline,
+the manager will split the frame into</p>
+<div class="math notranslate nohighlight">
+\[M_n(K_{\mathrm{Frame}, n}) = \left\lceil \frac{K_{\mathrm{Frame}, n}}{K_n} \right\rceil\]</div>
+<p>blocks to be encoded independently.
+The last block will be padded with zeros should it not contain sufficient bits.
+While this may not be exactly standard-compliant behaviour, it is a necessary simplification to enable
+arbitrary combinations of encoders.
+Therefore, the coding rate of the whole pipeline</p>
+<div class="math notranslate nohighlight">
+\[R = \frac{K}{L} = \frac{K}{M_N \cdot R_N}\]</div>
+<p>can only be defined recursively considering the number of input blocks <span class="math notranslate nohighlight">\(M_N\)</span> and rate <span class="math notranslate nohighlight">\(R_N\)</span> of the last
+encoder with in the pipeline, respectively.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.Encoder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<p>Base class of a single coding step within a channel coding pipeline.</p>
+<p>Instances of this class represent the <span class="math notranslate nohighlight">\(n\)</span>-th coding step within an <a class="reference internal" href="#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">EncoderManager</span></code></a> configuration,
+encoding blocks of <span class="math notranslate nohighlight">\(K_n\)</span> bits into blocks of <span class="math notranslate nohighlight">\(L_n\)</span> bits, respectively, therefore achieving a rate of</p>
+<div class="math notranslate nohighlight">
+\[R_n = \frac{K_n}{L_n} \mathrm{.}\]</div>
+<p>All inheriting classes represent implementations of coding steps and are required to implement the methods</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#hermespy.coding.coding.Encoder.encode" title="hermespy.coding.coding.Encoder.encode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">encode()</span></code></a> for encoding blocks during transmission</p></li>
+<li><p><a class="reference internal" href="#hermespy.coding.coding.Encoder.decode" title="hermespy.coding.coding.Encoder.decode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">decode()</span></code></a> for decoding blocks during reception</p></li>
+<li><p><a class="reference internal" href="#hermespy.coding.coding.Encoder.bit_block_size" title="hermespy.coding.coding.Encoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a> reporting the input bit block length</p></li>
+<li><p><a class="reference internal" href="#hermespy.coding.coding.Encoder.code_block_size" title="hermespy.coding.coding.Encoder.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a> reporting the output bit block length</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>manager</strong> (<a class="reference internal" href="#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager"><em>EncoderManager</em></a><em>, </em><em>optional</em>) – The coding pipeline configuration this encoder is registered in.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Encoder'</span></em><a class="headerlink" href="#hermespy.coding.coding.Encoder.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.manager">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager"><span class="pre">hermespy.coding.coding.EncoderManager</span></a></em><a class="headerlink" href="#hermespy.coding.coding.Encoder.manager" title="Permalink to this definition"></a></dt>
+<dd><p>Coding pipeline configuration this encoder is registered in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the coding pipeline.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager">EncoderManager</a></p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If the encoder is considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.encode">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.Encoder.encode" title="Permalink to this definition"></a></dt>
+<dd><p>Encodes a single block of bits.</p>
+<p>Bit encoding routine during data transmission,
+encoding a block of <span class="math notranslate nohighlight">\(K_n\)</span> input bits into a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single bit block to be encoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> bits, representing a single code block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">bits</span></code> does not equal <a class="reference internal" href="#hermespy.coding.coding.Encoder.bit_block_size" title="hermespy.coding.coding.Encoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.decode">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoded_bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.Encoder.decode" title="Permalink to this definition"></a></dt>
+<dd><p>Decodes a single block of bits.</p>
+<p>Bit decoding routine during data reception,
+decoding a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits into a block of <span class="math notranslate nohighlight">\(K_n\)</span> data bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> code bits, representing a single code block to be decoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single data block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">encoded_bits</span></code> does not equal <a class="reference internal" href="#hermespy.coding.coding.Encoder.code_block_size" title="hermespy.coding.coding.Encoder.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.bit_block_size">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.coding.coding.Encoder.bit_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Data bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during transmit encoding,
+or the number of output bits during receive decoding.
+Referred to as <span class="math notranslate nohighlight">\(K_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(K_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.code_block_size">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.coding.coding.Encoder.code_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Code bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during receive decoding,
+or the number of output bits during transmit encoding.
+Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(L_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.coding.coding.Encoder.rate" title="Permalink to this definition"></a></dt>
+<dd><p>Code rate achieved by this coding step.</p>
+<p>Defined as the relation</p>
+<div class="math notranslate nohighlight">
+\[R_n = \frac{K_n}{L_n}\]</div>
+<p>between the <a class="reference internal" href="#hermespy.coding.coding.Encoder.bit_block_size" title="hermespy.coding.coding.Encoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a> <span class="math notranslate nohighlight">\(K_n\)</span> and <a class="reference internal" href="#hermespy.coding.coding.Encoder.code_block_size" title="hermespy.coding.coding.Encoder.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a> <span class="math notranslate nohighlight">\(L_n\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The code rate <span class="math notranslate nohighlight">\(R_n\)</span></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EncoderManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_truncating</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.EncoderManager" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<p>Configuration managing a channel coding pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modem</strong> (<a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><em>Modem</em></a><em>, </em><em>optional</em>) – Communication modem instance this coding pipeline configuration is attached to.
+By default, the coding pipeline is considered to be floating.</p></li>
+<li><p><strong>allow_padding</strong> (<em>bool</em><em>, </em><em>optional</em>) – Tolerate padding of data bit blocks during encoding.
+Enabled by default.</p></li>
+<li><p><strong>allow_truncating</strong> (<em>bool</em><em>, </em><em>optional</em>) – Tolerate truncating of data code blocks during decoding.
+Enabled by default.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Encoding'</span></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.allow_padding">
+<span class="sig-name descname"><span class="pre">allow_padding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.allow_padding" title="Permalink to this definition"></a></dt>
+<dd><p>Tolerate padding of data bit blocks during encoding.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.allow_truncating">
+<span class="sig-name descname"><span class="pre">allow_truncating</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.allow_truncating" title="Permalink to this definition"></a></dt>
+<dd><p>Tolerate truncating of data code blocks during decoding.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.modem">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modem</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><span class="pre">hermespy.modem.modem.Modem</span></a></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.modem" title="Permalink to this definition"></a></dt>
+<dd><p>Communication modem instance this coding pipeline configuration is attached to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the modem instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem">Modem</a></p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If the encoding configuration is floating, i.e. not attached to a modem.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.add_encoder">
+<span class="sig-name descname"><span class="pre">add_encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.add_encoder" title="Permalink to this definition"></a></dt>
+<dd><p>Register a new encoder instance to this pipeline configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>encoder</strong> (<a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><em>Encoder</em></a>) – The new encoder to be added.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.encoders">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoders</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><span class="pre">hermespy.coding.coding.Encoder</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.encoders" title="Permalink to this definition"></a></dt>
+<dd><p>List of encoders registered within  this pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of <span class="math notranslate nohighlight">\(N\)</span> <a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a> instances where the <span class="math notranslate nohighlight">\(n\)</span>-th entry represents
+the <span class="math notranslate nohighlight">\(n\)</span>-th coding operation during transmit encoding, or, inversely,
+the <span class="math notranslate nohighlight">\(1 + N - n\)</span>-th coding operation during receive decoding.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="#hermespy.coding.coding.Encoder" title="hermespy.coding.coding.Encoder">Encoder</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_code_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.encode" title="Permalink to this definition"></a></dt>
+<dd><p>Encode a stream of data bits to a stream of code bits.</p>
+<p>By default, the input <cite>data_bits</cite> will be padded with zeros
+to match the next integer multiple of the expected <a class="reference internal" href="#hermespy.coding.coding.Encoder.bit_block_size" title="hermespy.coding.coding.Encoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Encoder.bit_block_size()</span></code></a>.</p>
+<p>The resulting code will be padded with zeros to match the requested <cite>num_code_bits</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_bits</strong> (<em>np.ndarray</em>) – Numpy vector of data bits to be encoded.</p></li>
+<li><p><strong>num_code_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – The expected resulting number of code bits.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Numpy vector of encoded bits.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>num_code_bits</cite> is smaller than the resulting code bits after encoding.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoded_bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.decode" title="Permalink to this definition"></a></dt>
+<dd><p>Decode a stream of code bits to a stream of plain data bits.</p>
+<p>By default, decoding <cite>encoded_bits</cite> may ignore bits in order
+to match the next integer multiple of the expected <cite>code_block_size</cite>.</p>
+<p>The resulting data might be cut to match the requested <cite>num_data_bits</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – Numpy vector of code bits to be decoded to data bits.</p></li>
+<li><p><strong>num_data_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – The expected number of resulting data bits.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Numpy vector of the resulting data bit stream after decoding.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – If <cite>num_data_bits</cite> is bigger than the resulting data bits after decoding.</p></li>
+<li><p><strong>RuntimeError</strong> – If truncating is required but disabled by <code class="xref py py-meth docutils literal notranslate"><span class="pre">allow_truncating()</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.bit_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.bit_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Data bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during transmit encoding,
+or the number of output bits during receive decoding.
+Referred to as <span class="math notranslate nohighlight">\(K\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(K\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.code_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.code_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Code bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during receive decoding,
+or the number of output bits during transmit encoding.
+Referred to as <span class="math notranslate nohighlight">\(L\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(L\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.rate" title="Permalink to this definition"></a></dt>
+<dd><p>Code rate achieved by this coding pipeline configuration.</p>
+<p>Defined as the relation</p>
+<div class="math notranslate nohighlight">
+\[R = \frac{K}{L}\]</div>
+<p>between the <a class="reference internal" href="#hermespy.coding.coding.EncoderManager.bit_block_size" title="hermespy.coding.coding.EncoderManager.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a> <span class="math notranslate nohighlight">\(K\)</span> and <a class="reference internal" href="#hermespy.coding.coding.EncoderManager.code_block_size" title="hermespy.coding.coding.EncoderManager.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a> <span class="math notranslate nohighlight">\(L\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The code rate <span class="math notranslate nohighlight">\(R\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager.required_num_data_bits">
+<span class="sig-name descname"><span class="pre">required_num_data_bits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_code_bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.EncoderManager.required_num_data_bits" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the number of input bits required to produce a certain number of output bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>num_code_bits</strong> (<em>int</em>) – The expected number of output bits.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The required number of input bits.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="coding.html" class="btn btn-neutral float-left" title="Channel Coding Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coding.block_interleaver.html" class="btn btn-neutral float-right" title="Interleaving" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f92351d41c0>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
