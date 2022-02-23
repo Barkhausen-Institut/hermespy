@@ -37,7 +37,7 @@
             <a href="../index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.6
+                0.2.7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -115,10 +115,10 @@ which in turn represents a random node.</p>
 <div align="center" class="mermaid align-center">
             classDiagram
   Serializable &lt;|-- RandomBitsSource
+  RandomNode &lt;|-- BitsSource
   BitsSource &lt;|-- StreamBitsSource
   Serializable &lt;|-- StreamBitsSource
   BitsSource &lt;|-- RandomBitsSource
-  RandomNode &lt;|-- BitsSource
         </div>
         <p>There are currently two basic types of bit sources available:</p>
 <ul class="simple">
@@ -232,7 +232,7 @@ which in turn represents a random node.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9feb61c4f0>
+<jinja2.runtime.BlockReference object at 0x7f389c5123d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

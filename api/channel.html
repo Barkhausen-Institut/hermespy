@@ -37,7 +37,7 @@
             <a href="../index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.6
+                0.2.7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -107,14 +107,14 @@
 the wireless transmission link between devices on a physical level.</p>
 <div class="mermaid">
             classDiagram
-  SerializableArray &lt;|-- Channel
-  RandomNode &lt;|-- Channel
-  Channel &lt;|-- RadarChannel
-  Channel &lt;|-- MultipathFadingChannel
-  MultipathFadingChannel &lt;|-- MultipathFadingExponential
-  MultipathFadingChannel &lt;|-- MultipathFadingCost256
-  Channel &lt;|-- QuadrigaChannel
   MultipathFadingChannel &lt;|-- MultipathFading5GTDL
+  MultipathFadingChannel &lt;|-- MultipathFadingCost256
+  RandomNode &lt;|-- Channel
+  SerializableArray &lt;|-- Channel
+  Channel &lt;|-- RadarChannel
+  Channel &lt;|-- QuadrigaChannel
+  MultipathFadingChannel &lt;|-- MultipathFadingExponential
+  Channel &lt;|-- MultipathFadingChannel
         </div><p>The base class of all channel model implementations is defined within</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -143,7 +143,7 @@ the wireless transmission link between devices on a physical level.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9fec2fe430>
+<jinja2.runtime.BlockReference object at 0x7f389d123700>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

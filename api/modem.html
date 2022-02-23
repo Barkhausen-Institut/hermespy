@@ -37,7 +37,7 @@
             <a href="../index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.6
+                0.2.7
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -110,33 +110,33 @@
 <p>This module provides functionalities to transmit information in form of bits over a wireless link.</p>
 <div class="mermaid">
             classDiagram
-  RandomNode &lt;|-- Modem
   FrameSection &lt;|-- FrameSymbolSection
+  Serializable &lt;|-- ThroughputEvaluator
+  SerializableArray &lt;|-- Modem
   PilotWaveformGenerator &lt;|-- WaveformGeneratorPskQam
+  Serializable &lt;|-- FrameErrorEvaluator
+  DuplexOperator &lt;|-- Modem
   CommunicationEvaluator &lt;|-- FrameErrorEvaluator
   Serializable &lt;|-- RandomBitsSource
-  Serializable &lt;|-- FrameErrorEvaluator
-  BitsSource &lt;|-- RandomBitsSource
-  DuplexOperator &lt;|-- Modem
-  Serializable &lt;|-- WaveformGeneratorChirpFsk
-  Serializable &lt;|-- BlockErrorEvaluator
+  Serializable &lt;|-- WaveformGeneratorPskQam
+  BitsSource &lt;|-- StreamBitsSource
+  Serializable &lt;|-- FrameSymbolSection
+  Synchronization &lt;|-- ChirpFskSynchronization
+  WaveformGenerator &lt;|-- WaveformGeneratorOfdm
+  FrameSection &lt;|-- FrameGuardSection
+  CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
   PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
   Serializable &lt;|-- FrameGuardSection
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  Serializable &lt;|-- WaveformGeneratorOfdm
-  Serializable &lt;|-- FrameSymbolSection
-  SerializableArray &lt;|-- Modem
-  BitsSource &lt;|-- StreamBitsSource
   Serializable &lt;|-- StreamBitsSource
-  WaveformGenerator &lt;|-- WaveformGeneratorOfdm
-  Serializable &lt;|-- ThroughputEvaluator
-  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  Serializable &lt;|-- WaveformGeneratorChirpFsk
   Serializable &lt;|-- BitErrorEvaluator
   FrameErrorEvaluator &lt;|-- ThroughputEvaluator
-  CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
-  FrameSection &lt;|-- FrameGuardSection
-  Serializable &lt;|-- WaveformGeneratorPskQam
-  Synchronization &lt;|-- ChirpFskSynchronization
+  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  RandomNode &lt;|-- Modem
+  Serializable &lt;|-- BlockErrorEvaluator
+  BitsSource &lt;|-- RandomBitsSource
+  Serializable &lt;|-- WaveformGeneratorOfdm
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
         </div><p>It consists of the base configuration classes for communication modems</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -169,7 +169,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9feb54fc10>
+<jinja2.runtime.BlockReference object at 0x7f389c505e20>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
