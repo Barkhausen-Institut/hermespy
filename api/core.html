@@ -37,7 +37,7 @@
             <a href="../index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.5
+                0.2.6
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -109,16 +109,16 @@
 <p>The core module of HermesPy provides all basic functionalities of the simulator.</p>
 <div class="mermaid">
             classDiagram
-  RandomNode &lt;|-- Device
-  Serializable &lt;|-- Executable
   Operator &lt;|-- MixingOperator
-  MixingOperator &lt;|-- Receiver
-  RandomNode &lt;|-- Receiver
-  MixingOperator &lt;|-- Transmitter
-  OperatorSlot &lt;|-- TransmitterSlot
-  RandomNode &lt;|-- Scenario
   RandomNode &lt;|-- Transmitter
+  MixingOperator &lt;|-- Transmitter
+  Serializable &lt;|-- Executable
+  RandomNode &lt;|-- Receiver
+  MixingOperator &lt;|-- Receiver
+  RandomNode &lt;|-- Device
   OperatorSlot &lt;|-- ReceiverSlot
+  RandomNode &lt;|-- Scenario
+  OperatorSlot &lt;|-- TransmitterSlot
         </div><p>It is split into several interdependent sub-modules:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -145,7 +145,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7ff2876749d0>
+<jinja2.runtime.BlockReference object at 0x7f9fecc42fd0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

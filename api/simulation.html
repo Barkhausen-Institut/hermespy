@@ -37,7 +37,7 @@
             <a href="../index.html" class="icon icon-home"> HermesPy
           </a>
               <div class="version">
-                0.2.5
+                0.2.6
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -107,17 +107,17 @@
 including noise and hardware modeling.</p>
 <div class="mermaid">
             classDiagram
-  MonteCarlo &lt;|-- Simulation
   Device &lt;|-- SimulatedDevice
   PowerAmplifier &lt;|-- RappPowerAmplifier
-  Executable &lt;|-- Simulation
-  Serializable &lt;|-- SimulatedDevice
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
-  PowerAmplifier &lt;|-- ClippingPowerAmplifier
-  PowerAmplifier &lt;|-- CustomPowerAmplifier
-  Serializable &lt;|-- Simulation
-  Serializable &lt;|-- RfChain
   RandomNode &lt;|-- Noise
+  MonteCarlo &lt;|-- Simulation
+  Serializable &lt;|-- RfChain
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
+  PowerAmplifier &lt;|-- CustomPowerAmplifier
+  Serializable &lt;|-- SimulatedDevice
+  PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  Serializable &lt;|-- Simulation
+  Executable &lt;|-- Simulation
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -140,7 +140,7 @@ including noise and hardware modeling.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7ff2859137c0>
+<jinja2.runtime.BlockReference object at 0x7f9feb211730>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
