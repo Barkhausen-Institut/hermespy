@@ -154,11 +154,11 @@ class StreetCanyonNonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def rice_factor_mean(self) -> float:
-        return 9.
+        return 0.
 
     @property
     def rice_factor_std(self) -> float:
-        return 5.
+        return 0.
 
     @property
     def delay_scaling(self) -> float:
