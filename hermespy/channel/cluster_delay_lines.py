@@ -588,8 +588,7 @@ class ClusterDelayLineBase(Channel):
         ray_zod = self._ray_zoa(cluster_powers, rice_factor, los_zod)  # ToDo: Zenith departure modeling
         ray_zoa = self._ray_zoa(cluster_powers, rice_factor, los_zoa)
 
-        # Cuple angles ToDo
-        # azimuth_ray_couples =
+        # ToDo: Couple cluster angles randomly
 
         # Generate cross-polarization power ratios (step 9)
         xpr = 10 ** (.1 * self._rng.normal(self.cross_polarization_power_mean,

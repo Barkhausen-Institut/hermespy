@@ -121,9 +121,10 @@ from typing import Any, Generic, List, Optional, Tuple, TypeVar
 
 import numpy as np
 
-from hermespy.core.channel_state_information import ChannelStateInformation
-from hermespy.core.signal_model import Signal
-from hermespy.core.random_node import RandomNode
+from ..tools.math import transform_coordinates
+from .channel_state_information import ChannelStateInformation
+from .signal_model import Signal
+from .random_node import RandomNode
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -927,7 +928,6 @@ class Device(ABC, RandomNode):
 
         return self.__topology.shape[0]
 
-
     @property
     def antenna_positions(self) -> np.ndarray:
         """Global positions of the antenna array elements.
@@ -937,7 +937,7 @@ class Device(ABC, RandomNode):
                 Matrix of dimension `num_antennas x 3`.
         """
 
-        return self.topology + self.position
+        return transform_coordinates(self.topology, self.position, self.orientation)
 
     @property
     def max_frame_duration(self) -> float:
