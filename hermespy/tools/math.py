@@ -1,7 +1,10 @@
+
+from enum import Enum
+from math import cos, sin
+from typing import Optional
+
 import numpy as np
 from scipy import stats
-from enum import Enum
-from typing import Optional
 from numba import jit
 
 
@@ -79,3 +82,19 @@ def marcum_q(a: float,
     q = stats.ncx2.sf(b**2, 2 * m, a**2)
 
     return q
+
+
+#@jit(nopython=True)
+def transform_coordinates(coordinates: np.ndarray,
+                          position: np.ndarray,
+                          orientation: np.ndarray) -> np.ndarray:
+
+    a = orientation[0]
+    b = orientation[1]
+    c = orientation[2]
+
+    R = np.array([[cos(a)*cos(b), cos(a)*sin(b)*sin(c) - sin(a)*cos(c), cos(a)*sin(b)*cos(c) + sin(a)*sin(c)],
+                  [sin(a)*cos(b), sin(a)*sin(b)*sin(c) + cos(a)*cos(c), sin(a)*sin(b)*cos(c) - cos(a)*sin(c)],
+                  [-sin(b), cos(b)*sin(c), cos(b)*cos(c)]])
+
+    return (R @ coordinates.T + position[:, np.newaxis]).T

@@ -10,14 +10,15 @@ from typing import List, Optional, Type
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
-from scipy.constants import speed_of_light
+from scipy.constants import pi, speed_of_light
 
-from hermespy.channel import ChannelStateInformation
-from hermespy.core import Device, FloatingError
-from hermespy.core.factory import Serializable
-from hermespy.core.scenario import Scenario
-from hermespy.core.signal_model import Signal
-from hermespy.core.statistics import SNRType
+from ..core.channel_state_information import ChannelStateInformation
+from ..core import Device, FloatingError
+from ..core.factory import Serializable
+from ..core.random_node import RandomNode
+from ..core.scenario import Scenario
+from ..core.signal_model import Signal
+from ..core.statistics import SNRType
 from .rf_chain.rf_chain import RfChain
 from .noise.noise import Noise, AWGN
 
@@ -31,7 +32,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SimulatedDevice(Device, Serializable):
+class SimulatedDevice(Device, RandomNode, Serializable):
     """Representation of a device simulating hardware.
 
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
@@ -132,6 +133,18 @@ class SimulatedDevice(Device, Serializable):
             raise FloatingError("Error trying to access the scenario of a floating modem")
 
         return self.__scenario
+
+    @Device.orientation.getter
+    def orientation(self) -> np.ndarray:
+
+        angles: Optional[np.ndarray] = Device.orientation.fget(self)
+
+        # Return the fixed angle configuration if it is specified
+        if angles is not None:
+            return angles
+
+        # Draw a random orientation if the angle configuration was not specified
+        return self._rng.uniform(0, 2 * pi, 3)
 
     @scenario.setter
     def scenario(self, scenario: Scenario) -> None:
