@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+===========
+Math Tools
+===========
+
+Implementations of basic maths equations.
+
+"""
 
 from enum import Enum
 from math import cos, sin
@@ -7,13 +16,21 @@ import numpy as np
 from scipy import stats
 from numba import jit
 
+__author__ = "Andre Noll Barreto"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Andre Noll Barreto"]
+__license__ = "AGPLv3"
+__version__ = "0.2.7"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class DbConversionType(Enum):
     """Supported db conversion types."""
     POWER = 0
     AMPLITUDE = 1
     HILLY = 2
-
 
 @jit
 def db2lin(db_val: float,

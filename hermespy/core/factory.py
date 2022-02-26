@@ -1,17 +1,33 @@
 # -*- coding: utf-8 -*-
-"""HermesPy serialization factory.
+"""
+=====================
+Serialization Factory
+=====================
 
-This module implements the main interface for loading and dumping HermesPy configurations.
+This module implements the main interface for loading / dumping HermesPy configurations from / to `YAML`_ files.
+Every mutable object that is expected to have its state represented as a text-section within configuration files
+must inherit from the :class:`.Serializable` base class.
 
-    Dumping to text file:
+All :class:`.Serializable` classes within the `hermespy` namespace are detected automatically by the :class:`.Factory`
+managing the serialization process.
+As a result, dumping any :class:`.Serializable` object state to a `.yml` text file is as easy as
+
+.. code-block:: python
+
+   factory = Factory()
+   factory.to_file("dump.yml", serializable)
+
+and can be loaded again just as easily via
+
+.. code-block::  python
 
         factory = Factory()
-        factory.to_file("config.yml", simulation)
+        serializable = factory.from_file("dump.yml")
 
-    Loading from text file:
+from any context.
 
-        factory = Factory()
-        simulation = factory.from_file("config.yml")
+
+.. _YAML: https://yaml.org/
 """
 
 from __future__ import annotations
@@ -28,6 +44,7 @@ from pkgutil import iter_modules
 from re import compile, Pattern, Match
 from typing import Any, Dict, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
 
+import numpy as np
 from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
 
@@ -35,10 +52,10 @@ import hermespy as hermes
 from ..tools import db2lin
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.5"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -242,6 +259,7 @@ class Factory:
         self.__purge_regex_beta = compile(r"- !<([^']+)>")
         self.__restore_regex_alpha = compile(r"([ ]*)([a-zA-Z]+):\n$")
         self.__restore_regex_beta = compile(r"([ ]*)- ([^\s]+)([^']*)\n$")
+        self.__range_regex = compile(r'([0-9.e-]*)[ ]*,[ ]*([0-9.e-]*)[ ]*,[ ]*\.\.\.[ ]*,[ ]*([0-9.e-]*)')
         self.__db_regex = compile(r"\[([ 0-9.,-]*)\][ ]*dB")
 
     @property
@@ -615,6 +633,31 @@ class Factory:
         else:
             return m.string
 
+    @staticmethod
+    def __range_restore_callback(m: Match) -> str:
+        """Internal regular expression callback.
+
+        Args:
+            m (Match): Regular expression match.
+
+        Returns:
+            str: The processed match line.
+        """
+
+        # Extract range parameters
+        start = float(m.group(1))
+        step = float(m.group(2)) - start
+        stop = float(m.group(3)) + step
+
+        range = np.arange(start=start, stop=stop, step=step)
+
+        replacement = ''
+        for step in range[:-1]:
+            replacement += str(step) + ', '
+
+        replacement += str(range[-1])
+        return replacement
+
     def from_stream(self, stream: TextIOBase) -> List[Any]:
         """Load a configuration from an arbitrary text stream.
 
@@ -633,9 +676,9 @@ class Factory:
 
         clean_stream = ''
         for line in stream.readlines():
-            # clean_line = self.__restore_regex_alpha.sub(self.__restore_callback_alpha, line)
-            # clean_line = self.__restore_regex_beta.sub(self.__restore_callback_beta, line)
-            clean_line = self.__db_regex.sub(self.__decibel_conversion, line)
+
+            clean_line = self.__range_regex.sub(self.__range_restore_callback, line)
+            clean_line = self.__db_regex.sub(self.__decibel_conversion, clean_line)
             clean_stream += clean_line
 
         hermes_objects = self.__yaml.load(StringIO(clean_stream))

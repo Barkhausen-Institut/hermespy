@@ -11,7 +11,7 @@ from numpy.random import default_rng
 from hermespy.channel import Channel
 from hermespy.core.signal_model import Signal
 
-__author__ = "Tobias Kronauer"
+__author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"

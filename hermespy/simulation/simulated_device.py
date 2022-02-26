@@ -6,7 +6,7 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from typing import List, Optional, Type
+from typing import List, Optional, Type, Union
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
@@ -20,13 +20,13 @@ from ..core.scenario import Scenario
 from ..core.signal_model import Signal
 from ..core.statistics import SNRType
 from .rf_chain.rf_chain import RfChain
-from .noise.noise import Noise, AWGN
+from .noise import Noise, AWGN
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -260,14 +260,14 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         return transmissions
 
     def receive(self,
-                device_signals: np.ndarray,
+                device_signals: Union[List[Signal], np.ndarray],
                 snr: float = float('inf'),
                 snr_type: SNRType = SNRType.EBN0) -> Signal:
         """Receive signals at this device.
 
         Args:
 
-            device_signals (np.ndarray):
+            device_signals (Union[List[Signal], np.ndarray]):
                 List of signal models arriving at the device.
 
             snr (float, optional):
@@ -287,9 +287,20 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
-        for signals, _ in device_signals:
-            for signal in signals:
-                mixed_signal.superimpose(signal)
+        if isinstance(device_signals, List):
+
+            for signal in device_signals:
+
+                if signal is not None:
+                    mixed_signal.superimpose(signal)
+
+        elif isinstance(device_signals, np.ndarray):
+
+            for signals, _ in device_signals:
+
+                if signals is not None:
+                    for signal in signals:
+                        mixed_signal.superimpose(signal)
 
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(mixed_signal)
@@ -298,7 +309,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         for receiver in self.receivers:
 
             # Collect the reference channel if a reference transmitter has been specified
-            if receiver.reference_transmitter is not None:
+            if receiver.reference_transmitter is not None and self.attached:
 
                 reference_device = receiver.reference_transmitter.device
                 reference_device_idx = self.scenario.devices.index(reference_device)
