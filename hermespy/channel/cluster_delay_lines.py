@@ -16,7 +16,7 @@ from scipy.constants import pi, speed_of_light
 
 from ..core.factory import Serializable
 from ..tools.math import db2lin
-from ..helpers.resampling import delay_resampling_matrix
+from ..tools.resampling import delay_resampling_matrix
 from .channel import Channel
 
 __author__ = "Jan Adler"

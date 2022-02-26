@@ -1,18 +1,13 @@
 import matplotlib.pyplot as plt
-from hermespy import Scenario, Transmitter
-from hermespy.modem import WaveformGeneratorPskQam
 
-transmitter = Transmitter()
-transmitter.waveform_generator = WaveformGeneratorPskQam()
+from hermespy.simulation import SimulatedDevice
+from hermespy.modem import Modem, WaveformGeneratorPskQam
 
-scenario = Scenario()
-scenario.add_transmitter(transmitter)
+operator = Modem()
+operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+operator.device = SimulatedDevice()
 
-signal, _ = transmitter.send()
+signal, _, _ = operator.transmit()
+
 signal.plot()
-
-transmitter.waveform_generator.num_preamble_symbols = 0
-signal, _ = transmitter.send()
-signal.plot()
-
 plt.show()

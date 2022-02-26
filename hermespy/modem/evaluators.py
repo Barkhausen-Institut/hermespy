@@ -1,5 +1,51 @@
 # -*- coding: utf-8 -*-
-"""Modem evaluators."""
+"""
+========================
+Communication Evaluators
+========================
+
+This module introduces several evaluators for performance indicators in communication scenarios.
+Refer to the :doc:`PyMonte</api/core.monte_carlo>` documentation for a detailed introduction to the concept of
+:class:`Evaluators<hermespy.core.monte_carlo.Evaluator>`.
+
+.. autoclasstree:: hermespy.modem.evaluators
+   :alt: Communication Evaluator Class Tree
+   :strict:
+   :namespace: hermespy
+
+The implemented :class:`CommunicationEvaluators<.CommunicationEvaluator>` all inherit from the identically named common
+base which gets initialized by selecting the two :class:`Modem<hermespy.modem.modem.Modem>` instances whose communication
+should be evaluated.
+The currently considered performance indicators are
+
+============================= ============================= ========================================================
+Evaluator                     Artifact                      Performance Indicator
+============================= ============================= ========================================================
+:class:`.BitErrorEvaluator`   :class:`.BitErrorArtifact`    Errors comparing two bit streams
+:class:`.BlockErrorEvaluator` :class:`.BlockErrorArtifact`  Errors comparing two bit streams divided into blocks
+:class:`.FrameErrorEvaluator` :class:`.FrameErrorArtifact`  Errors comparing two bit streams divided into frames
+:class:`.ThroughputEvaluator` :class:`.ThroughputArtifact`  Rate of correct frames multiplied by the frame bit rate
+============================= ============================= ========================================================
+
+Configuring :class:`CommunicationEvaluators<.CommunicationEvaluator>` to evaluate the communication process between two
+:class:`Modem<hermespy.modem.modem.Modem>` instances is rather straightforward:
+
+.. code-block:: python
+
+   # Create two separate modem instances
+   modem_alpha = Modem()
+   modem_beta = Modem()
+
+   # Create a bit error evaluation as a communication evaluation example
+   communication_evaluator = BitErrorEvaluator(modem_alpha, modem_beta)
+
+   # Extract evaluation artifact
+   communication_artifact = communication_evaluator.evaluate()
+
+   # Visualize artifact
+   communication_artifact.plot()
+
+"""
 
 from __future__ import annotations
 from abc import ABC
@@ -12,14 +58,14 @@ from scipy.stats import uniform
 from ..core.executable import Executable
 from ..core.factory import Serializable
 from ..core.scenario import Scenario
-from ..core.monte_carlo import Evaluator, ArtifactTemplate
+from ..core.monte_carlo import Evaluator, ArtifactTemplate, Artifact
 from .modem import Modem
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -112,6 +158,7 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Optional[Scenario] = None) -> BitErrorArtifact:
 
@@ -151,8 +198,11 @@ class BlockErrorArtifact(ArtifactTemplate[np.ndarray]):
         return np.sum(self.artifact) / len(self.artifact)
 
 
-class BlockErrorEvaluator(CommunicationEvaluator):
+class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate block errors between two modems exchanging information."""
+
+    yaml_tag = u'BlockErrorEvaluator'
+    """YAML serialization tag"""
 
     def __init__(self,
                  transmitting_modem: Modem,
@@ -168,6 +218,7 @@ class BlockErrorEvaluator(CommunicationEvaluator):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Scenario) -> BlockErrorArtifact:
 
@@ -213,8 +264,11 @@ class FrameErrorArtifact(ArtifactTemplate[np.ndarray]):
         return np.sum(self.artifact) / len(self.artifact)
 
 
-class FrameErrorEvaluator(CommunicationEvaluator):
+class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate frame errors between two modems exchanging information."""
+
+    yaml_tag = u'FrameErrorEvaluator'
+    """YAML serialization tag"""
 
     def __init__(self,
                  transmitting_modem: Modem,
@@ -230,6 +284,7 @@ class FrameErrorEvaluator(CommunicationEvaluator):
         """
 
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = 'log'  # Plot logarithmically by default
 
     def evaluate(self, investigated_object: Scenario) -> FrameErrorArtifact:
 
@@ -265,3 +320,86 @@ class FrameErrorEvaluator(CommunicationEvaluator):
     def abbreviation(self) -> str:
 
         return "FER"
+
+
+class ThroughputArtifact(Artifact):
+    """Artifact of a throughput evaluation between two modems exchanging information."""
+
+    __bits_per_frame: int           # Number of bits per communication frame
+    __frame_duration: float         # Duration of a single communication frame in seconds
+    __frame_errors: np.ndarray      # Frame error indicators
+
+    def __init__(self,
+                 bits_per_frame: int,
+                 frame_duration: float,
+                 frame_errors: np.ndarray) -> None:
+        """
+        Args:
+
+            bits_per_frame (int):
+                Number of bits per communication frame
+
+            frame_duration (float):
+                Duration of a single communication frame in seconds
+
+            frame_errors (np.ndarray):
+                Frame error indicators
+        """
+
+        self.__bits_per_frame = bits_per_frame
+        self.__frame_duration = frame_duration
+        self.__frame_errors = frame_errors
+
+    def __str__(self) -> str:
+        return f"{self.to_scalar():.3f}"
+
+    def to_scalar(self) -> float:
+
+        num_frames = len(self.__frame_errors)
+        num_correct_frames = np.sum(np.invert(self.__frame_errors))
+        throughput = num_correct_frames * self.__bits_per_frame / (num_frames * self.__frame_duration)
+
+        return throughput
+
+
+class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
+    """Evaluate data throughput between two modems exchanging information."""
+
+    yaml_tag = u'ThroughputEvaluator'
+    """YAML serialization tag"""
+
+    def __init__(self,
+                 transmitting_modem: Modem,
+                 receiving_modem: Modem) -> None:
+        """
+        Args:
+
+            transmitting_modem (Modem):
+                Modem transmitting information.
+
+            receiving_modem (Modem):
+                Modem receiving information.
+        """
+
+        FrameErrorEvaluator.__init__(self, transmitting_modem, receiving_modem)
+
+    def evaluate(self, investigated_object: Scenario) -> ThroughputArtifact:
+
+        # Get the frame errors
+        frame_errors = FrameErrorEvaluator.evaluate(self, investigated_object).artifact.flatten()
+
+        # Transform frame errors to data throughput
+        bits_per_frame = self.receiving_modem.num_data_bits_per_frame
+        frame_duration = self.receiving_modem.frame_duration
+
+        return ThroughputArtifact(bits_per_frame, frame_duration, frame_errors)
+
+    @property
+    def title(self) -> str:
+
+        return "Data Throughput"
+
+    @property
+    def abbreviation(self) -> str:
+
+        return "DRX"
