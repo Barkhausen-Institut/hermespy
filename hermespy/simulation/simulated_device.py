@@ -6,7 +6,8 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from typing import List, Optional, Type, Union
+from abc import abstractmethod
+from typing import List, Optional, Tuple, Type, Union
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
