@@ -7,10 +7,14 @@ Antenna Simulation Modeling
 
 from __future__ import annotations
 from abc import abstractmethod
+from math import cos, sin, sqrt
 from typing import Optional, Tuple
 
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+import matplotlib.tri as tri
 import numpy as np
+from scipy.constants import pi
 
 from hermespy.core import Executable, FloatingError, Serializable
 
@@ -154,6 +158,125 @@ class Antenna(Serializable):
                 Vertical and horizontal polarization components of the antenna response.
         """
         ...
+
+    def plot_ploarization(self, angle_resolution: int = 180) -> plt.Figure:
+        """Visualize the antenna polarization depending on the angles of interest.
+        
+        Args:
+
+            angle_resolution (int, optional):
+                Resolution of the polarization visualization.
+
+
+        Returns:
+
+            np.Figure:
+                The created matplotlib figure.
+
+        Raises:
+
+            ValueError:
+                If `angle_resolution` is smaller than one.
+        """
+
+        with Executable.style_context():
+
+            figure, axes = plt.subplots(1, 2, subplot_kw={"projection": "3d"})
+            figure.suptitle('Antenna Polarization')
+
+            azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution
+            elevation_angles = 2 * pi * np.arange(int(.5 * angle_resolution)) / int(.5 * angle_resolution) - pi
+
+            azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
+            e_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
+            e_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
+            h_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
+            h_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
+            
+            for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
+                
+                e_magnitude, h_magnitude = self.polarization(azimuth, elevation)
+                
+                e_magnitudes[i] = e_magnitude
+                h_magnitudes[i] = h_magnitude
+                
+                e_surface[i, :] = (e_magnitude * cos(azimuth) * cos(elevation),
+                                   e_magnitude * sin(azimuth) * cos(elevation),
+                                   e_magnitude * sin(elevation))
+                h_surface[i, :] = (h_magnitude * cos(azimuth) * cos(elevation),
+                                   h_magnitude * sin(azimuth) * cos(elevation),
+                                   h_magnitude * sin(elevation))
+
+            triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
+
+            e_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(e_magnitudes.min(), e_magnitudes.max()), cmap='jet')
+            e_cmap.set_array(e_magnitude)
+            h_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(h_magnitudes.min(), h_magnitudes.max()), cmap='jet')
+            h_cmap.set_array(e_magnitude)
+
+            axes[0].set_title('E-Field')
+            axes[0].plot_trisurf(e_surface[:, 0], e_surface[:, 1], e_surface[:, 2], triangles=triangles.triangles, cmap=e_cmap.cmap, norm=e_cmap.norm, linewidth=0.)
+
+            axes[1].set_title('H-Field')
+            axes[1].plot_trisurf(h_surface[:, 0], h_surface[:, 1], h_surface[:, 2], triangles=triangles.triangles, cmap=h_cmap.cmap, norm=h_cmap.norm, linewidth=0.)
+
+            return figure
+
+
+    def plot_gain(self, angle_resolution: int = 180) -> plt.Figure:
+        """Visualize the antenna gain depending on the angles of interest.
+        
+        Args:
+
+            angle_resolution (int, optional):
+                Resolution of the polarization visualization.
+
+
+        Returns:
+
+            np.Figure:
+                The created matplotlib figure.
+
+        Raises:
+
+            ValueError:
+                If `angle_resolution` is smaller than one.
+        """
+
+        with Executable.style_context():
+
+            figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
+            figure.suptitle('Antenna Gain')
+
+            azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution
+            elevation_angles = 2 * pi * np.arange(int(.5 * angle_resolution)) / int(.5 * angle_resolution) - pi
+
+            azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
+            surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
+            magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
+
+            for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
+                
+                e_magnitude, h_magnitude = self.polarization(azimuth, elevation)
+                magnitude = sqrt(e_magnitude ** 2 + h_magnitude **2)    
+                magnitudes[i] = magnitude
+                
+                surface[i, :] = (magnitude * cos(azimuth) * cos(elevation),
+                                 magnitude * sin(azimuth) * cos(elevation),
+                                 magnitude * sin(elevation))
+
+
+            triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
+
+            cmap = plt.cm.ScalarMappable(norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap='jet')
+            cmap.set_array(magnitudes)
+
+            axes.plot_trisurf(surface[:, 0], surface[:, 1], surface[:, 2], triangles=triangles.triangles, cmap=cmap.cmap, norm=cmap.norm, linewidth=0.)
+            axes.set_xlabel('X')
+            axes.set_ylabel('Y')
+            axes.set_zlabel('Z')
+
+            return figure
 
 
 class IdealAntenna(Antenna):
