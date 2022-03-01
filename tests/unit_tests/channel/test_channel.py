@@ -164,7 +164,7 @@ class TestChannel(unittest.TestCase):
         """Number of inputs property must return number of transmitting antennas."""
 
         num_inputs = 5
-        self.transmitter.num_antennas = num_inputs
+        self.transmitter.antennas.num_antennas = num_inputs
 
         self.assertEqual(num_inputs, self.channel.num_inputs, "Number of inputs property returned unexpected result")
 
@@ -179,7 +179,7 @@ class TestChannel(unittest.TestCase):
         """Number of outputs property must return number of receiving antennas."""
 
         num_outputs = 5
-        self.receiver.num_antennas = num_outputs
+        self.receiver.antennas.num_antennas = num_outputs
 
         self.assertEqual(num_outputs, self.channel.num_outputs, "Number of outputs property returned unexpected result")
 
@@ -193,8 +193,8 @@ class TestChannel(unittest.TestCase):
     def test_propagate_SISO(self) -> None:
         """Test valid propagation for the Single-Input-Single-Output channel."""
 
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
@@ -213,8 +213,8 @@ class TestChannel(unittest.TestCase):
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel."""
 
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 3
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 3
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
@@ -239,8 +239,8 @@ class TestChannel(unittest.TestCase):
         """Test valid propagation for the Multiple-Input-Single-Output channel."""
 
         num_transmit_antennas = 3
-        self.transmitter.num_antennas = num_transmit_antennas
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = num_transmit_antennas
+        self.receiver.antennas.num_antennas = 1
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
@@ -265,8 +265,8 @@ class TestChannel(unittest.TestCase):
         """Test valid propagation for the Multiple-Input-Multiple-Output channel."""
 
         num_antennas = 3
-        self.transmitter.num_antennas = num_antennas
-        self.receiver.num_antennas = num_antennas
+        self.transmitter.antennas.num_antennas = num_antennas
+        self.receiver.antennas.num_antennas = num_antennas
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
@@ -302,8 +302,8 @@ class TestChannel(unittest.TestCase):
     def test_impulse_response_SISO(self) -> None:
         """Test the impulse response generation for the Single-Input-Single-Output case."""
 
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -317,8 +317,8 @@ class TestChannel(unittest.TestCase):
     def test_impulse_response_SIMO(self) -> None:
         """Test the impulse response generation for the Single-Input-Multiple-Output case."""
 
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 3
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 3
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -333,8 +333,8 @@ class TestChannel(unittest.TestCase):
     def test_impulse_response_MISO(self) -> None:
         """Test the impulse response generation for the Multiple-Input-Single-Output case."""
 
-        self.transmitter.num_antennas = 3
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 3
+        self.receiver.antennas.num_antennas = 1
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -350,8 +350,8 @@ class TestChannel(unittest.TestCase):
         """Test the impulse response generation for the Multiple-Input-Multiple-Output case."""
 
         num_antennas = 3
-        self.transmitter.num_antennas = num_antennas
-        self.receiver.num_antennas = num_antennas
+        self.transmitter.antennas.num_antennas = num_antennas
+        self.receiver.antennas.num_antennas = num_antennas
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -375,8 +375,8 @@ class TestChannel(unittest.TestCase):
     def test_channel_state_information(self) -> None:
         """Propagating over the linear channel state model should return identical results."""
 
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:

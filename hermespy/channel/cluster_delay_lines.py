@@ -8,28 +8,25 @@
 from __future__ import annotations
 from abc import abstractmethod
 from itertools import product
-from math import ceil, log, sin, cos, sqrt
+from math import atan, ceil, log, sin, cos, sqrt
 from typing import Any, List
 
 import numpy as np
 from scipy.constants import pi, speed_of_light
 
-from ..core.factory import Serializable
-from ..tools.math import db2lin
-from ..tools.resampling import delay_resampling_matrix
+from hermespy.core.factory import Serializable
+from hermespy.tools.math import db2lin, rotation_matrix
+from hermespy.tools.resampling import delay_resampling_matrix
 from .channel import Channel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.5"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-_log10 = log(10)
 
 
 class ClusterDelayLineBase(Channel):
@@ -485,7 +482,7 @@ class ClusterDelayLineBase(Channel):
             angle_scale *= 1.1035 - .028 * rice_factor - 2e-3 * rice_factor ** 2 + 1e-4 * rice_factor ** 3
 
         # Draw azimuth angle spread from the distribution
-        spread = self._rng.lognormal(_log10 * self.aoa_spread_mean, _log10 * self.aoa_spread_std, size=size)
+        spread = self._rng.lognormal(self.aoa_spread_mean, self.aoa_spread_std, size=size)
 
         angles = 2 * (spread / 1.4) * np.sqrt(-np.log(cluster_powers / cluster_powers.max())) / angle_scale
 
@@ -543,7 +540,7 @@ class ClusterDelayLineBase(Channel):
             zenith_scale *= 1.3086 + .0339 * rice_factor - .0077 * rice_factor ** 2 + 2e-4 * rice_factor ** 3
 
         # Draw zenith angle spread from the distribution
-        zenith_spread = self._rng.lognormal(_log10 * self.zoa_spread_mean, _log10 * self.zoa_spread_std, size=size)
+        zenith_spread = self._rng.lognormal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
 
         # Generate angle starting point
         cluster_zenith = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
@@ -570,12 +567,27 @@ class ClusterDelayLineBase(Channel):
                          num_samples: int,
                          sampling_rate: float) -> np.ndarray:
 
-        delay_spread = self._rng.lognormal(_log10 * self.delay_spread_mean, _log10 * self.delay_spread_std)
+        delay_spread = self._rng.lognormal(self.delay_spread_mean, self.delay_spread_std)
         rice_factor = self._rng.normal(loc=self.rice_factor_mean, scale=self.rice_factor_std)
-        los_aoa = 0.
-        los_aod = 0.
-        los_zoa = 0.
-        los_zod = 0.
+
+        # Query device positions and orientations
+        tx_position = self.transmitter.position
+        rx_position = self.receiver.position
+
+        # Positions may not be unspecified
+        if tx_position is None or rx_position is None:
+            raise ValueError("Cluster delay line models require specified transmitter and receiver positions")
+
+        # Compute the respective angles of arrival and departure
+        # Note: We assume that we may substitute zenith by elevation in this model
+        los_vector = rx_position - tx_position
+        tx_los_vector = rotation_matrix(self.transmitter.orientation).T @ los_vector
+        rx_los_vector = rotation_matrix(self.receiver.orientation).T @ los_vector
+
+        los_aoa = atan(rx_los_vector[1] / rx_los_vector[0])
+        los_aod = atan(tx_los_vector[1] / tx_los_vector[0])
+        los_zoa = atan(rx_los_vector[2] / sqrt(rx_los_vector[0] ** 2 + rx_los_vector[1] ** 2))
+        los_zod = atan(tx_los_vector[2] / sqrt(tx_los_vector[0] ** 2 + tx_los_vector[1] ** 2))
 
         num_clusters = self.num_clusters
         num_rays = 20
@@ -642,8 +654,8 @@ class ClusterDelayLineBase(Channel):
                                                cos(ray_zod[cluster_idx, ray_idx])]) * wavelength_factor
 
                     # Equation 7.5-28
-                    for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions),
-                                                                      enumerate(tx_positions)):
+                    for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions), enumerate(tx_positions)):
+
                         ray_coefficients = (np.exp(rx_wave_vector @ rx_pos) * np.exp(tx_wave_vector @ tx_pos) *
                                             complex(np.ones((2, 1)).T @ phases[:, :, cluster_idx, ray_idx] @ np.ones(
                                                 (2, 1))) *
@@ -935,6 +947,9 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @rice_factor_mean.setter
     def rice_factor_mean(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Rice factor must be greater or equal to zero")
 
         self.__rice_factor_mean = value
 

@@ -101,10 +101,7 @@ def marcum_q(a: float,
     return q
 
 
-#@jit(nopython=True)
-def transform_coordinates(coordinates: np.ndarray,
-                          position: np.ndarray,
-                          orientation: np.ndarray) -> np.ndarray:
+def rotation_matrix(orientation: np.ndarray) -> np.ndarray:
 
     a = orientation[0]
     b = orientation[1]
@@ -114,4 +111,12 @@ def transform_coordinates(coordinates: np.ndarray,
                   [sin(a)*cos(b), sin(a)*sin(b)*sin(c) + cos(a)*cos(c), sin(a)*sin(b)*cos(c) - cos(a)*sin(c)],
                   [-sin(b), cos(b)*sin(c), cos(b)*cos(c)]])
 
+    return R
+
+
+def transform_coordinates(coordinates: np.ndarray,
+                          position: np.ndarray,
+                          orientation: np.ndarray) -> np.ndarray:
+
+    R = rotation_matrix(orientation)
     return (R @ coordinates.T + position[:, np.newaxis]).T
