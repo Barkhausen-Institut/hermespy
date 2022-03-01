@@ -73,7 +73,7 @@ class TestIdealAntenna(TestCase):
     def test_plot_polarization(self) -> None:
         """Calling the plot rountine should return a figure object."""
 
-        self.assertIsInstance(self.antenna.plot_ploarization(), plt.Figure)
+        self.assertIsInstance(self.antenna.plot_polarization(), plt.Figure)
 
     def test_plot_gain(self) -> None:
         """Calling the plot rountine should return a figure object."""

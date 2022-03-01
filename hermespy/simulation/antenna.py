@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-===========================
-Antenna Simulation Modeling
-===========================
+================
+Antenna Modeling
+================
 """
 
 from __future__ import annotations
 from abc import abstractmethod
 from math import cos, sin, exp, sqrt
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ import matplotlib.tri as tri
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Executable, FloatingError, Serializable
+from hermespy.core import Executable, FloatingError, Serializable, Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -160,7 +160,7 @@ class Antenna(Serializable):
 
         ...
 
-    def plot_ploarization(self, angle_resolution: int = 180) -> plt.Figure:
+    def plot_polarization(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna polarization depending on the angles of interest.
         
         Args:
@@ -297,7 +297,10 @@ class IdealAntenna(Antenna):
 
 
 class PatchAntenna(Antenna):
-    """Model of a Patch Antenna."""
+    """Realistic model of a vertically polarized patch antenna.
+    
+    See :footcite:t:`2012:jaeckel` for further information.
+    """
 
     def polarization(self, azimuth: float, elevation: float) -> Tuple[float, float]:
 
