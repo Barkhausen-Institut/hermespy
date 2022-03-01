@@ -21,5 +21,6 @@ The following statistical / spatial channel models are currently supported:
 
    channel.multipath_fading_channel
    channel.multipath_fading_templates
+   channel.cluster_delay_lines
    channel.radar_channel
    channel.quadriga
