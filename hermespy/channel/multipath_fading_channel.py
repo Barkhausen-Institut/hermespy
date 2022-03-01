@@ -357,8 +357,8 @@ class MultipathFadingChannel(Channel):
         timestamps = np.arange(num_samples) / sampling_rate
 
         impulse_response = np.zeros((num_samples,
-                                     self.receiver.num_antennas,
-                                     self.transmitter.num_antennas,
+                                     self.receiver.antennas.num_antennas,
+                                     self.transmitter.antennas.num_antennas,
                                      max_delay_in_samples + 1), dtype=complex)
 
         interpolation_filter: Optional[np.ndarray] = None
@@ -368,7 +368,8 @@ class MultipathFadingChannel(Channel):
         for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths),
                                                         self.los_gains, self.non_los_gains):
 
-            for rx_idx, tx_idx in product(range(self.transmitter.num_antennas), range(self.receiver.num_antennas)):
+            for rx_idx, tx_idx in product(range(self.transmitter.antennas.num_antennas),
+                                          range(self.receiver.antennas.num_antennas)):
                 signal_weights = power ** .5 * self.__tap(timestamps, los_gain, nlos_gain)
 
                 if interpolation_filter is not None:
