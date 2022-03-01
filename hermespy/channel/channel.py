@@ -365,11 +365,11 @@ class Channel(SerializableArray, RandomNode):
 
         # Validate that the signal models contain the correct number of streams
         for signal in forwards:
-            if signal.num_streams != self.transmitter.num_antennas:
+            if signal.num_streams != self.transmitter.antennas.num_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         for signal in backwards:
-            if signal.num_streams != self.receiver.num_antennas:
+            if signal.num_streams != self.receiver.antennas.num_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         # Determine the sampling rate and sample count of the CSI samples
@@ -471,18 +471,19 @@ class Channel(SerializableArray, RandomNode):
             raise RuntimeError("Channel is floating, making impulse response simulation impossible")
 
         # MISO case
-        if self.receiver.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((1, self.transmitter.num_antennas), dtype=complex),
+        if self.receiver.antennas.num_antennas == 1:
+            impulse_responses = np.tile(np.ones((1, self.transmitter.antennas.num_antennas), dtype=complex),
                                         (num_samples, 1, 1))
 
         # SIMO case
-        elif self.transmitter.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((self.receiver.num_antennas, 1), dtype=complex),
+        elif self.transmitter.antennas.num_antennas == 1:
+            impulse_responses = np.tile(np.ones((self.receiver.antennas.num_antennas, 1), dtype=complex),
                                         (num_samples, 1, 1))
 
         # MIMO case
         else:
-            impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas,
+            impulse_responses = np.tile(np.eye(self.receiver.antennas.num_antennas,
+                                               self.transmitter.antennas.num_antennas,
                                                dtype=complex), (num_samples, 1, 1))
 
         # Scale by channel gain and add dimension for delay response

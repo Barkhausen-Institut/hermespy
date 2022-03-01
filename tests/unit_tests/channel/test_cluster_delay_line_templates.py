@@ -10,6 +10,7 @@ from unittest.mock import Mock
 
 import numpy as np
 from numpy.random import default_rng
+from scipy.constants import pi
 
 from hermespy.channel.cluster_delay_line_templates import StreetCanyonLineOfSight, StreetCanyonNonLineOfSight,\
     StreetCanyonOutsideToInside, UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, \
@@ -20,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.5"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -40,6 +41,7 @@ class TestStreetCanyonLOS(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, pi])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -47,6 +49,7 @@ class TestStreetCanyonLOS(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -79,12 +82,14 @@ class TestStreetCanyonNLOS(TestCase):
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
 
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -96,7 +101,7 @@ class TestStreetCanyonNLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -117,12 +122,14 @@ class TestStreetCanyonO2I(TestCase):
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
 
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -134,7 +141,7 @@ class TestStreetCanyonO2I(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -154,6 +161,7 @@ class TestUrbanMacrocellsLOS(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -161,6 +169,7 @@ class TestUrbanMacrocellsLOS(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -172,7 +181,7 @@ class TestUrbanMacrocellsLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -192,6 +201,7 @@ class TestUrbanMacrocellsNLOS(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -199,6 +209,7 @@ class TestUrbanMacrocellsNLOS(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -210,7 +221,7 @@ class TestUrbanMacrocellsNLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -230,6 +241,7 @@ class TestUrbanMacrocellsO2I(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -237,6 +249,7 @@ class TestUrbanMacrocellsO2I(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -248,7 +261,7 @@ class TestUrbanMacrocellsO2I(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -268,6 +281,7 @@ class TestRuralMacrocellsLOS(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -275,6 +289,7 @@ class TestRuralMacrocellsLOS(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -286,7 +301,7 @@ class TestRuralMacrocellsLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -306,6 +321,7 @@ class TestRuralMacrocellsNLOS(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -313,6 +329,7 @@ class TestRuralMacrocellsNLOS(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -324,7 +341,7 @@ class TestRuralMacrocellsNLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -344,6 +361,7 @@ class TestRuralMacrocellsO2I(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -351,6 +369,7 @@ class TestRuralMacrocellsO2I(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -362,7 +381,7 @@ class TestRuralMacrocellsO2I(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -382,6 +401,7 @@ class TestIndoorOfficeLOS(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -389,6 +409,7 @@ class TestIndoorOfficeLOS(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -400,7 +421,7 @@ class TestIndoorOfficeLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -420,6 +441,7 @@ class TestIndoorOfficeNLOS(TestCase):
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0, 0, 0])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -427,6 +449,7 @@ class TestIndoorOfficeNLOS(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0, 0, 0])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -438,7 +461,7 @@ class TestIndoorOfficeNLOS(TestCase):
     def test_impulse_response(self):
 
         num_samples = 5000
-        sampling_rate = 1e8
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return

@@ -4,6 +4,9 @@
 import unittest
 from unittest.mock import Mock
 
+import numpy as np
+from scipy.constants import pi
+
 from hermespy.channel import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
 
 __author__ = "Jan Adler"
@@ -23,8 +26,12 @@ class TestCost256(unittest.TestCase):
 
         self.transmitter = Mock()
         self.receiver = Mock()
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
+        self.transmitter.position = np.array([100, 0, 0])
+        self.receiver.position = np.array([0, 100, 0])
+        self.transmitter.orientation = np.array([0, 0, 0])
+        self.receiver.orientation = np.array([0, 0, pi])
         self.sync_offset_low = 3
         self.sync_offset_high = 5
 
@@ -78,8 +85,12 @@ class Test5GTDL(unittest.TestCase):
         self.rms_delay = 1e-6
         self.transmitter = Mock()
         self.receiver = Mock()
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
+        self.transmitter.position = np.array([100, 0, 0])
+        self.receiver.position = np.array([0, 100, 0])
+        self.transmitter.orientation = np.array([0, 0, 0])
+        self.receiver.orientation = np.array([0, 0, pi])
         self.sync_offset_low = 3
         self.sync_offset_high = 5
 

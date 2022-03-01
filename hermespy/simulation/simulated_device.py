@@ -140,7 +140,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         self.__scenario = scenario
 
-    @property
+    @Device.topology.getter
     def topology(self) -> np.ndarray:
 
         return self.antennas.topology

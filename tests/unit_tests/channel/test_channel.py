@@ -394,8 +394,8 @@ class TestChannel(unittest.TestCase):
     def test_synchronization_offset(self) -> None:
         """The synchronization offset should be applied properly by adding a delay to the propgated signal."""
 
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         mock_generator = Mock()
         self.random_node._rng = mock_generator
