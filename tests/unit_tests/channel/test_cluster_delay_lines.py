@@ -10,6 +10,7 @@ from unittest.mock import Mock
 
 import numpy as np
 from numpy.random import default_rng
+from scipy.constants import pi
 
 from hermespy.channel.cluster_delay_lines import ClusterDelayLine
 
@@ -33,14 +34,15 @@ class TestClusterDelayLine(TestCase):
         self.random_node._rng = self.rng
 
         self.num_clusters = 10
-        self.delay_spread_mean = 11e-9
-        self.delay_spread_std = 1e-10
-        self.delay_scaling = 1.1
+        self.delay_spread_mean = -7.49
+        self.delay_spread_std = 0.55
+        self.delay_scaling = 3.8
         self.carrier_frequency = 1e9
 
         self.receiver = Mock()
         self.receiver.num_antennas = 1
         self.receiver.position = np.array([100., 0., 0.])
+        self.receiver.orientation = np.array([0., 0., 0.])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
         self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
@@ -48,6 +50,7 @@ class TestClusterDelayLine(TestCase):
         self.transmitter = Mock()
         self.transmitter.num_antennas = 1
         self.transmitter.position = np.array([-100., 0., 0.])
+        self.transmitter.orientation = np.array([0., 0., pi])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
         self.transmitter.carrier_frequency = 1e9
@@ -86,26 +89,21 @@ class TestClusterDelayLine(TestCase):
         with self.assertRaises(ValueError):
             self.channel.num_clusters = 0
 
-    def test_delay_spread_setget(self) -> None:
-        """Delay spread property getter should return setter argument."""
+    def test_delay_spread_mean_setget(self) -> None:
+        """Delay spread mean property getter should return setter argument."""
 
         delay_spread = 123
-        self.channel.delay_spread = delay_spread
+        self.channel.delay_spread_mean = delay_spread
 
-        self.assertEqual(delay_spread, self.channel.delay_spread)
+        self.assertEqual(delay_spread, self.channel.delay_spread_mean)
 
-    def test_delay_spread_validation(self) -> None:
-        """Delay spread property setter should raise ValueError on invalid arguments."""
+    def test_delay_spread_std_setget(self) -> None:
+        """Delay spread mean property getter should return setter argument."""
 
-        with self.assertRaises(ValueError):
-            self.channel.delay_spread = -1.
+        std = 123
+        self.channel.delay_spread_std = std
 
-        try:
-
-            self.channel.delay_spread = 0.
-
-        except ValueError:
-            self.fail()
+        self.assertEqual(std, self.channel.delay_spread_std)
 
     def test_delay_scaling_setget(self) -> None:
         """Delay scaling property getter should return setter argument."""
@@ -197,7 +195,7 @@ class TestClusterDelayLine(TestCase):
     def test_impulse_response_nlos(self):
 
         num_samples = 5000
-        sampling_rate = 5e8
+        sampling_rate = 1e6
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return
@@ -206,7 +204,7 @@ class TestClusterDelayLine(TestCase):
 
         self.channel.line_of_sight = True
         num_samples = 5000
-        sampling_rate = 5e8
+        sampling_rate = 1e6
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         return

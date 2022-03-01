@@ -366,6 +366,17 @@ class AntennaArrayBase(object):
 
     @property
     @abstractmethod
+    def num_antennas(self) -> int:
+        """Number of antenna elements within this array.
+
+        Returns:
+            int: Number of antenna elements.
+        """
+
+        ...
+
+    @property
+    @abstractmethod
     def topology(self) -> np.ndarray:
         """Sensor array topology.
 
@@ -433,12 +444,12 @@ class UniformArray(AntennaArrayBase, Serializable):
     yaml_tag = u'UniformArray'
     __antenna: Antenna                      # The assumed antenna model
     __spacing: float                        # Spacing betwene the antenna elements
-    __num_antennas: Tuple[int, int, int]    # Number of antennas in x-, y-, and z-direction
+    __dimensions: Tuple[int, int, int]    # Number of antennas in x-, y-, and z-direction
 
     def __init__(self,
                  antenna: Antenna,
                  spacing: float,
-                 num_antennas: Tuple[int, ...]) -> None:
+                 dimensions: Tuple[int, ...]) -> None:
         """
         Args:
 
@@ -448,13 +459,13 @@ class UniformArray(AntennaArrayBase, Serializable):
             spacing (float):
                 Spacing between the antenna elements in m.
 
-            num_antennas (Tuple[int, ...]):
+            dimensions (Tuple[int, ...]):
                 The number of antennas in x-, y-, and z-dimension.
         """
 
         self.__antenna = antenna
         self.spacing = spacing
-        self.num_antennas = num_antennas
+        self.dimensions = dimensions
 
     @property
     def spacing(self) -> float:
@@ -479,7 +490,12 @@ class UniformArray(AntennaArrayBase, Serializable):
         self.__spacing = value
 
     @property
-    def num_antennas(self) -> Tuple[int, int, int]:
+    def num_antennas(self) -> int:
+
+        return self.__dimensions[0] * self.__dimensions[1] * self.__dimensions[2]
+
+    @property
+    def dimensions(self) -> Tuple[int, int, int]:
         """Number of antennas in x-, y-, and z-dimension.
 
         Returns:
@@ -487,10 +503,10 @@ class UniformArray(AntennaArrayBase, Serializable):
                 Number of antennas in each direction.
         """
 
-        return self.__num_antennas
+        return self.__dimensions
 
-    @num_antennas.setter
-    def num_antennas(self, value: Tuple[int, int, int]) -> None:
+    @dimensions.setter
+    def dimensions(self, value: Tuple[int, int, int]) -> None:
 
         if isinstance(value, int):
             value = value,
@@ -507,12 +523,12 @@ class UniformArray(AntennaArrayBase, Serializable):
         if any([num < 1 for num in value]):
             raise ValueError("Number of antenna elements must be greater than zero in every dimension")
 
-        self.__num_antennas = value
+        self.__dimensions = value
 
     @property
     def topology(self) -> np.ndarray:
 
-        grid = np.meshgrid(np.arange(self.__num_antennas[0]), np.arange(self.__num_antennas[1]), np.arange(self.__num_antennas[2]))
+        grid = np.meshgrid(np.arange(self.__dimensions[0]), np.arange(self.__dimensions[1]), np.arange(self.__dimensions[2]))
         positions = self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T
         return positions
 
@@ -522,12 +538,8 @@ class UniformArray(AntennaArrayBase, Serializable):
 
         # Query polarization of the base antenna model
         polarization = np.array(self.__antenna.polarization(azimuth, elevation), dtype=float)[np.newaxis, :]
+        polarization = np.tile(polarization, (self.num_antennas, 1))
 
-        # The polarization pattern is the repetition of the nuclear polarization
-        num_antennas = self.num_antennas
-        num_antennas = num_antennas[0] * num_antennas[1] * num_antennas[2]
-        
-        polarization = np.tile(polarization, (num_antennas, 1))
         return polarization
 
 

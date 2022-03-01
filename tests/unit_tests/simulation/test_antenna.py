@@ -96,9 +96,9 @@ class TestUniformArray(TestCase):
         self.antenna = Mock()
         self.antenna.polarization.return_value = np.array([2 ** -.5, 2 ** -.5])
         self.spacing = 1e-3
-        self.num_antennas = (10, 9, 8)
+        self.dimensions = (10, 9, 8)
 
-        self.array = UniformArray(self.antenna, self.spacing, self.num_antennas)
+        self.array = UniformArray(self.antenna, self.spacing, self.dimensions)
 
     def test_spacing_setget(self) -> None:
         """Spacing property getter should return setter argument."""
@@ -117,35 +117,40 @@ class TestUniformArray(TestCase):
         with self.assertRaises(ValueError):
             self.array.spacing = 0.
 
-    def test_num_antennas_setget(self) -> None:
-        """The number of antennas property getter should return the proper antenna count."""
+    def test_num_antennas(self) -> None:
+        """The number of antennas property should report the correct antenna count."""
 
-        self.array.num_antennas = 1
-        self.assertCountEqual((1, 1, 1), self.array.num_antennas)
+        self.assertEqual(720, self.array.num_antennas)
 
-        self.array.num_antennas = (1, 2)
-        self.assertCountEqual((1, 2, 1), self.array.num_antennas)
+    def test_dimensions_setget(self) -> None:
+        """The dimensions property getter should return the proper antenna count."""
 
-        self.array.num_antennas = (1, 2, 3)
-        self.assertCountEqual((1, 2, 3), self.array.num_antennas)
+        self.array.dimensions = 1
+        self.assertCountEqual((1, 1, 1), self.array.dimensions)
 
-    def test_num_antennas_validation(self) -> None:
-        """The number of antennas property setter should raise a ValueError on invalid arguments."""
+        self.array.dimensions = (1, 2)
+        self.assertCountEqual((1, 2, 1), self.array.dimensions)
+
+        self.array.dimensions = (1, 2, 3)
+        self.assertCountEqual((1, 2, 3), self.array.dimensions)
+
+    def test_dimensions_validation(self) -> None:
+        """The dimensions property setter should raise a ValueError on invalid arguments."""
 
         with self.assertRaises(ValueError):
-            self.array.num_antennas = (1, 2, 3, 4)
+            self.array.dimensions = (1, 2, 3, 4)
 
         with self.assertRaises(ValueError):
-            self.array.num_antennas = (1, 2, -1)
+            self.array.dimensions = (1, 2, -1)
 
     def test_topology(self) -> None:
 
-        num_antennas = 5
+        dimensions = 5
         spacing = 1.
-        expected_topology = np.zeros((num_antennas, 3), dtype=float)
-        expected_topology[:, 0] = spacing * np.arange(num_antennas)
+        expected_topology = np.zeros((dimensions, 3), dtype=float)
+        expected_topology[:, 0] = spacing * np.arange(dimensions)
 
-        self.array.num_antennas = num_antennas
+        self.array.dimensions = dimensions
         self.array.spacing = spacing
 
         assert_array_equal(expected_topology, self.array.topology)
@@ -153,9 +158,9 @@ class TestUniformArray(TestCase):
     def test_polarization(self) -> None:
         """The polarization should compute the correct polarization array."""
 
-        polariization = self.array.polarization(0., 0.)
-        self.assertCountEqual((10 * 9 * 8, 2), polariization.shape)
-        self.assertTrue(np.any(polariization == 2 ** -.5))
+        polarization = self.array.polarization(0., 0.)
+        self.assertCountEqual((10 * 9 * 8, 2), polarization.shape)
+        self.assertTrue(np.any(polarization == 2 ** -.5))
 
     def test_plot_topology(self) -> None:
         """Calling the plot rountine should return a figure object."""
