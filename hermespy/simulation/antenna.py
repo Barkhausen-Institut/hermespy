@@ -92,7 +92,6 @@ class Antenna(Serializable):
 
         self.__array.set_antenna_position(self)
 
-
     def transmit(self, signal: Signal) -> Signal:
         """Transmit a signal over this antenna.
 
@@ -229,7 +228,6 @@ class Antenna(Serializable):
 
             return figure
 
-
     def plot_gain(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna gain depending on the angles of interest.
         
@@ -272,7 +270,6 @@ class Antenna(Serializable):
                                  magnitude * sin(azimuth) * cos(elevation),
                                  magnitude * sin(elevation))
 
-
             triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
 
             cmap = plt.cm.ScalarMappable(norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap='jet')
@@ -287,7 +284,27 @@ class Antenna(Serializable):
 
 
 class IdealAntenna(Antenna):
-    """An ideal antenna model."""
+    """Theoretic model of an ideal antenna.
+
+    .. figure:: /images/api_antenna_idealantenna_gain.png
+       :alt: Ideal Antenna Gain
+       :scale: 70%
+       :align: center
+
+       Ideal Antenna Characteristics
+
+    The assumed characteristic is
+
+    .. math::
+
+       \\mathbf{F}(\\phi, \\theta) =
+          \\begin{pmatrix}
+             \\sqrt{2} \\\\
+             \\sqrt{2} \\\\
+          \\end{pmatrix}
+
+    resulting in unit gain in every direction.
+    """
 
     yaml_tag: u'IdealAntenna'
 
@@ -298,8 +315,15 @@ class IdealAntenna(Antenna):
 
 class PatchAntenna(Antenna):
     """Realistic model of a vertically polarized patch antenna.
-    
-    See :footcite:t:`2012:jaeckel` for further information.
+
+    .. figure:: /images/api_antenna_patchantenna_gain.png
+       :alt: Patch Antenna Gain
+       :scale: 70%
+       :align: center
+
+       Patch Antenna Characteristics
+
+    Refer to :footcite:t:`2012:jaeckel` for further information.
     """
 
     def polarization(self, azimuth: float, elevation: float) -> Tuple[float, float]:
@@ -310,6 +334,33 @@ class PatchAntenna(Antenna):
         return max(.1, vertical_azimuth * vertical_elevation), 0.
 
 
+class Dipole(Antenna):
+    """Model of vertically polarized half-wavelength dipole antenna.
+
+    .. figure:: /images/api_antenna_dipole_gain.png
+       :alt: Dipole Antenna Gain
+       :scale: 70%
+       :align: center
+
+       Dipole Antenna Characteristics
+
+    The assumed characteristic is
+
+    .. math::
+
+       F_\\mathrm{V}(\\phi, \\theta) &= \\frac{ \\cos( \\frac{\\pi}{2} \\cos(\\theta)) }{ \\sin(\\theta) } \\\\
+       F_\\mathrm{H}(\\phi, \\theta) &= 0
+
+    """
+
+    def polarization(self,
+                     azimuth: float,
+                     elevation) -> Tuple[float, float]:
+
+        vertical_polarization = 0. if elevation == 0. else cos(.5 * pi * cos(elevation)) / sin(elevation)
+        return vertical_polarization, 0.
+
+
 class AntennaArrayBase(object):
     """Base class of a model of a set of antennas."""
 
@@ -328,7 +379,6 @@ class AntennaArrayBase(object):
         """
 
         ...
-
 
     @abstractmethod
     def polarization(self,
@@ -420,7 +470,6 @@ class UniformArray(AntennaArrayBase, Serializable):
 
         return self.__spacing
 
-
     @spacing.setter
     def spacing(self, value: float) -> None:
 
@@ -428,7 +477,6 @@ class UniformArray(AntennaArrayBase, Serializable):
             raise ValueError("Spacing must be greater than zero")
 
         self.__spacing = value
-
 
     @property
     def num_antennas(self) -> Tuple[int, int, int]:
@@ -551,9 +599,8 @@ class AntennaArray(Serializable):
         if len(position) != 3:
             raise ValueError("Antenna position must be a cartesian vector")
 
-
         # Raise exception if the orientation is not 2D for azimuth and elevation
-        orientation = np.array([0., 0.], dtyep=float) if orientation is None else orientation.flatten()
+        orientation = np.array([0., 0.], dtype=float) if orientation is None else orientation.flatten()
         if len(orientation) != 2:
             raise ValueError("Antenna orientation must contain azimuath and elevation angles information")
 
@@ -564,7 +611,6 @@ class AntennaArray(Serializable):
 
         # Register the antenna array at the antenna element
         antenna.array = self
-
 
     def remove_antenna(self, antenna: Antenna) -> None:
         """Remove an antenna element from this array.
@@ -587,390 +633,8 @@ class AntennaArray(Serializable):
 
         return np.array(self.__positions, dtype=float)
 
-
-    @property
-    def polarization(self,
-                      azimuth: float,
-                      elevation: float) -> np.ndarray:
-        
-        return np.narray([ant.polarization(azimuth, elevation) for ant in self.__antennas], dtype=float)
-        
-
-
-class Dipole(Antenna):
-    """Model of a dipole antenna."""
-
-    __length: float             # Length of the antenna in m
-
-    def __init__(self, length: float) -> None:
-        """
-        Args:
-
-            length (float):
-                Length of the antenna in m.
-        """
-
-        self.length = length
-        Antenna.__init__(self)
-
-
-    @property
-    def length(self) -> float:
-        """Length of the antenna.
-
-        Returns:
-            float:
-                Length in m.
-
-        Raises:
-            ValueError:
-                For a `length` smaller or equal to zero.
-        """
-
-        return self.__length
-
-    @length.setter
-    def length(self, value: float) -> None:
-
-        if value <= 0.:
-            raise ValueError("Antenna length must be greater than zero")
-
-        self.__length = value
-
-class PatchAntenna(Antenna):
-    """Model of a Patch Antenna."""
-
-    def polarization(self, azimuth: float, elevation: float) -> Tuple[float, float]:
-
-        vertical_azimuth = .1 + .9 * exp(-1.315 * azimuth ** 2)
-        vertical_elevation = cos(elevation ** 2)
-
-        return max(.1, vertical_azimuth * vertical_elevation), 0.
-
-
-class AntennaArrayBase(object):
-    """Base class of a model of a set of antennas."""
-
-    @property
-    @abstractmethod
-    def topology(self) -> np.ndarray:
-        """Sensor array topology.
-
-        Access the array topology as a :math:`M \\times 3` matrix indicating the cartesian locations
-        of each antenna element within the local coordinate system.
-
-        Returns:
-
-            np.ndarray:
-                math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
-        """
-
-        ...
-
-
-    @abstractmethod
     def polarization(self,
                      azimuth: float,
                      elevation: float) -> np.ndarray:
-        """Sensor array polaroizations towards a certain angle.
-           
-        Args:
         
-            azimuth (float):
-                Azimuth angle of interest in radians.
-
-
-            elevation (float):
-                Elevation angle of interest in radians.
-
-        Returns:
-
-            np.ndarray:
-                math:`M \\times 2` topology matrix, where :math:`M` is the number of antenna elements.
-        """
-
-        ...
-
-    def plot_topology(self) -> plt.Figure:
-        """Plot a scatter representation of the array topology.
-        
-        Returns:
-            plt.Figure:
-                The created figure.
-        """
-
-        topology = self.topology
-
-        with Executable.style_context():
-
-            figure = plt.figure()
-            figure.suptitle('Antenna Array Topology')
-
-            axes = figure.add_subplot(projection='3d')
-            axes.scatter(topology[:, 0], topology[:, 1], topology[:, 2])
-            axes.set_xlabel('X [m]')
-            axes.set_ylabel('Y [m]')
-            axes.set_zlabel('Z [m]')
-
-            return figure
-
-
-class UniformArray(AntennaArrayBase, Serializable):
-    """Model of a Uniform Antenna Array."""
-
-    yaml_tag = u'UniformArray'
-    __antenna: Antenna                      # The assumed antenna model
-    __spacing: float                        # Spacing betwene the antenna elements
-    __num_antennas: Tuple[int, int, int]    # Number of antennas in x-, y-, and z-direction
-
-    def __init__(self,
-                 antenna: Antenna,
-                 spacing: float,
-                 num_antennas: Tuple[int, ...]) -> None:
-        """
-        Args:
-
-            antenna (Antenna):
-                The anntenna model this uniform array assumes.
-
-            spacing (float):
-                Spacing between the antenna elements in m.
-
-            num_antennas (Tuple[int, ...]):
-                The number of antennas in x-, y-, and z-dimension.
-        """
-
-        self.__antenna = antenna
-        self.spacing = spacing
-        self.num_antennas = num_antennas
-
-    @property
-    def spacing(self) -> float:
-        """Spacing between the antenna elements.
-
-        Returns:
-            float: Spacing in m.
-
-        Raises:
-            ValueError:
-                If `spacing` is less or equal to zero.
-        """
-
-        return self.__spacing
-
-
-    @spacing.setter
-    def spacing(self, value: float) -> None:
-
-        if value <= 0.:
-            raise ValueError("Spacing must be greater than zero")
-
-        self.__spacing = value
-
-
-    @property
-    def num_antennas(self) -> Tuple[int, int, int]:
-        """Number of antennas in x-, y-, and z-dimension.
-
-        Returns:
-            Tuple[int, int, int]:
-                Number of antennas in each direction.
-        """
-
-        return self.__num_antennas
-
-    @num_antennas.setter
-    def num_antennas(self, value: Tuple[int, int, int]) -> None:
-
-        if isinstance(value, int):
-            value = value,
-
-        if len(value) == 1:
-            value += 1, 1
-
-        elif len(value) == 2:
-            value += 1,
-
-        elif len(value) > 3:
-            raise ValueError("Number of antennas must have three or less entries")
-
-        if any([num < 1 for num in value]):
-            raise ValueError("Number of antenna elements must be greater than zero in every dimension")
-
-        self.__num_antennas = value
-
-    @property
-    def topology(self) -> np.ndarray:
-
-        grid = np.meshgrid(np.arange(self.__num_antennas[0]), np.arange(self.__num_antennas[1]), np.arange(self.__num_antennas[2]))
-        positions = self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T
-        return positions
-
-    def polarization(self,
-                     azimuth: float,
-                     elevation: float) -> np.ndarray:
-
-        # Query polarization of the base antenna model
-        polarization = np.array(self.__antenna.polarization(azimuth, elevation), dtype=float)[np.newaxis, :]
-
-        # The polarization pattern is the repetition of the nuclear polarization
-        num_antennas = self.num_antennas
-        num_antennas = num_antennas[0] * num_antennas[1] * num_antennas[2]
-        
-        polarization = np.tile(polarization, (num_antennas, 1))
-        return polarization
-
-
-class AntennaArray(Serializable):
-    """Model of a set of arbitrary antennas."""
-
-    __antennas: List[Antenna]           
-    __positions: List[np.ndarray]
-    __orientations: List[np.ndarray]
-
-    def __init__(self) -> None:
-
-        self.__antennas = []
-        self.__positions = []
-        self.__orientations = []
-
-    @property
-    def antennas(self) -> List[Antenna]:
-        """Antennas within this array.
-
-        Returns:
-            List[Antenna]:
-                List of antenna elements.
-        """
-
-        return self.__antennas.copy()
-
-    @property
-    def num_antennas(self) -> int:
-        """Number of antenna elements within this array.
-
-        Returns:
-            int:
-                Number of antenna elements.
-        """
-
-        return len(self.__antennas)
-
-    def add_antenna(self,
-                    antenna: Antenna,
-                    position: np.ndarray,
-                    orientation: Optional[np.ndarray]) -> None:
-        """Add a new antenna element to this array.
-
-        Args:
-
-            antenna (Antenna):
-                The new antenna to be added.
-
-            position (np.ndarray):
-                Position of the antenna within the local coordinate system.
-
-            orientation (np.ndarray, optional):
-                Orientation of the antenna within the local coordinate system.
-
-        Raises:
-
-            ValueError:
-                If the `position` is not a three-dimensional vector.
-                If the specified `orientation` is not a tuple of azimuth and elevation angles.
-        """
-
-        # Do nothing if the antenna is already registered within this array
-        if antenna.array is self:
-            return
-
-        # Raise exception if the position is not a cartesian vector
-        position = position.flatten()
-        if len(position) != 3:
-            raise ValueError("Antenna position must be a cartesian vector")
-
-
-        # Raise exception if the orientation is not 2D for azimuth and elevation
-        orientation = np.array([0., 0.], dtyep=float) if orientation is None else orientation.flatten()
-        if len(orientation) != 2:
-            raise ValueError("Antenna orientation must contain azimuath and elevation angles information")
-
-        # Add information to the internal lists
-        self.__antennas.append(antenna)
-        self.__positions.append(position)
-        self.__orientations.append(orientation)
-
-        # Register the antenna array at the antenna element
-        antenna.array = self
-
-
-    def remove_antenna(self, antenna: Antenna) -> None:
-        """Remove an antenna element from this array.
-
-        Args:
-
-            antenna (Antenna):
-                The antenna element to be removed.
-        """
-
-        # Do nothing if the antenna is not within this array
-        if antenna not in self.__antennas:
-            return
-
-        self.__antennas.remove(antenna)
-        antenna.array = None
-
-    @property
-    def topology(self) -> np.ndarray:
-
-        return np.array(self.__positions, dtype=float)
-
-
-    @property
-    def polarization(self,
-                      azimuth: float,
-                      elevation: float) -> np.ndarray:
-        
-        return np.narray([ant.polarization(azimuth, elevation) for ant in self.__antennas], dtype=float)
-        
-
-
-class Dipole(Antenna):
-    """Model of a dipole antenna."""
-
-    __length: float             # Length of the antenna in m
-
-    def __init__(self, length: float) -> None:
-        """
-        Args:
-
-            length (float):
-                Length of the antenna in m.
-        """
-
-        self.length = length
-        Antenna.__init__(self)
-
-
-    @property
-    def length(self) -> float:
-        """Length of the antenna.
-
-        Returns:
-            float:
-                Length in m.
-
-        Raises:
-            ValueError:
-                For a `length` smaller or equal to zero.
-        """
-
-        return self.__length
-
-    @length.setter
-    def length(self, value: float) -> None:
-
-        if value <= 0.:
-            raise ValueError("Antenna length must be greater than zero")
-
-        self.__length = value
+        return np.array([ant.polarization(azimuth, elevation) for ant in self.__antennas], dtype=float)

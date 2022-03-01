@@ -5,9 +5,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.testing import assert_array_equal
 
-
 from hermespy.core import FloatingError
-from hermespy.simulation.antenna import AntennaArray, IdealAntenna, UniformArray
+from hermespy.simulation.antenna import IdealAntenna, UniformArray
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.2.7"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestIdealAntenna(TestCase):
@@ -36,7 +44,6 @@ class TestIdealAntenna(TestCase):
         self.antenna.array = None
 
         self.assertEqual(1, array.remove_antenna.call_count)
-
 
     def test_pos_set(self) -> None:
         """Setting an antenna element position should call the respective array callback"""
@@ -80,6 +87,7 @@ class TestIdealAntenna(TestCase):
 
         self.assertIsInstance(self.antenna.plot_gain(), plt.Figure)
 
+
 class TestUniformArray(TestCase):
     """Test the Uniform array model."""
 
@@ -91,7 +99,6 @@ class TestUniformArray(TestCase):
         self.num_antennas = (10, 9, 8)
 
         self.array = UniformArray(self.antenna, self.spacing, self.num_antennas)
-
 
     def test_spacing_setget(self) -> None:
         """Spacing property getter should return setter argument."""
@@ -110,13 +117,11 @@ class TestUniformArray(TestCase):
         with self.assertRaises(ValueError):
             self.array.spacing = 0.
 
-
     def test_num_antennas_setget(self) -> None:
         """The number of antennas property getter should return the proper antenna count."""
 
         self.array.num_antennas = 1
         self.assertCountEqual((1, 1, 1), self.array.num_antennas)
-
 
         self.array.num_antennas = (1, 2)
         self.assertCountEqual((1, 2, 1), self.array.num_antennas)
