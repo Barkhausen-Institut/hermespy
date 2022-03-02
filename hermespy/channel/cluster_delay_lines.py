@@ -7,8 +7,7 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from itertools import product
-from math import atan, ceil, log, sin, cos, sqrt
+from math import atan, ceil, sin, cos, sqrt
 from typing import Any, List
 
 import numpy as np
@@ -567,6 +566,8 @@ class ClusterDelayLineBase(Channel):
                          num_samples: int,
                          sampling_rate: float) -> np.ndarray:
 
+        center_frequency = self.transmitter.carrier_frequency
+
         delay_spread = self._rng.lognormal(self.delay_spread_mean, self.delay_spread_std)
         rice_factor = self._rng.normal(loc=self.rice_factor_mean, scale=self.rice_factor_std)
 
@@ -595,10 +596,10 @@ class ClusterDelayLineBase(Channel):
         cluster_delays = self._cluster_delays(delay_spread, rice_factor)
         cluster_powers = self._cluster_powers(delay_spread, cluster_delays, rice_factor)
 
-        ray_aod = self._ray_azimuth_angles(cluster_powers, rice_factor, los_aod)
-        ray_aoa = self._ray_azimuth_angles(cluster_powers, rice_factor, los_aoa)
-        ray_zod = self._ray_zoa(cluster_powers, rice_factor, los_zod)  # ToDo: Zenith departure modeling
-        ray_zoa = self._ray_zoa(cluster_powers, rice_factor, los_zoa)
+        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, los_aod)
+        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, los_aoa)
+        ray_zod = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, los_zod)  # ToDo: Zenith departure modeling
+        ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, los_zoa)
 
         # ToDo: Couple cluster angles randomly
 
@@ -608,9 +609,9 @@ class ClusterDelayLineBase(Channel):
                                            size=(num_clusters, num_rays)))
 
         # Draw initial random phases (step 10)
-        phases = np.exp(2j * pi * self._rng.uniform(size=(2, 2, num_clusters, num_rays)))
-        phases[0, 1, ::] *= xpr ** -.5
-        phases[1, 0, ::] *= xpr ** -.5
+        jones_matrix = np.exp(2j * pi * self._rng.uniform(size=(2, 2, num_clusters, num_rays)))
+        jones_matrix[0, 1, ::] *= xpr ** -.5
+        jones_matrix[1, 0, ::] *= xpr ** -.5
 
         # Initialize channel matrices
         num_delay_samples = 1 + ceil(cluster_delays.max() * sampling_rate)
@@ -630,59 +631,38 @@ class ClusterDelayLineBase(Channel):
                              self.cluster_delay_spread * np.array([1., 1.28, 2.56]))
         virtual_cluster_delays = np.concatenate((subcluster_delays.flatten(), cluster_delays[num_split_clusters:]))
 
-        # Weak cluster coefficients
-        rx_positions = self.receiver.antenna_positions
-        tx_positions = self.transmitter.antenna_positions
-
         # Wavelength factor
         wavelength_factor = 2j * pi * self.transmitter.carrier_frequency / speed_of_light
-        fast_fading = wavelength_factor * np.outer(self.receiver.velocity, np.arange(num_samples) / sampling_rate)
+        relative_velocity = self.receiver.velocity - self.transmitter.velocity
+        fast_fading = wavelength_factor * np.arange(num_samples) / sampling_rate
 
-        for cluster_idx in range(0, num_split_clusters):
+        for subcluster_idx in range(0, virtual_num_clusters):
 
-            for subcluster_idx, ray_indices in enumerate(self.__subcluster_indices):
-                for ray_idx in ray_indices:
+            cluster_idx = int(subcluster_idx / 3) if subcluster_idx < 6 else subcluster_idx - 4
+            ray_indices = self.__subcluster_indices[cluster_idx] if cluster_idx < num_split_clusters else range(num_rays)
 
-                    # Equation 7.5-23
-                    rx_wave_vector = np.array([sin(ray_zoa[cluster_idx, ray_idx]) * cos(ray_aoa[cluster_idx, ray_idx]),
-                                               sin(ray_zoa[cluster_idx, ray_idx]) * sin(ray_aoa[cluster_idx, ray_idx]),
-                                               cos(ray_zoa[cluster_idx, ray_idx])]) * wavelength_factor
+            for aoa, zoa, aod, zod, jones in zip(ray_aoa[cluster_idx, ray_indices], ray_zoa[cluster_idx, ray_indices],
+                                                 ray_aod[cluster_idx, ray_indices], ray_zod[cluster_idx, ray_indices],
+                                                 jones_matrix[:, :, cluster_idx, ray_indices].transpose(2, 0, 1)):
 
-                    # Equation 7.5-24
-                    tx_wave_vector = np.array([sin(ray_zod[cluster_idx, ray_idx]) * cos(ray_aod[cluster_idx, ray_idx]),
-                                               sin(ray_zod[cluster_idx, ray_idx]) * sin(ray_aod[cluster_idx, ray_idx]),
-                                               cos(ray_zod[cluster_idx, ray_idx])]) * wavelength_factor
+                # Equation 7.5-23
+                rx_response = self.receiver.antennas.spherical_response(center_frequency, aoa, zoa)
 
-                    # Equation 7.5-28
-                    for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions), enumerate(tx_positions)):
+                # Equation 7.5-24
+                tx_response = self.transmitter.antennas.spherical_response(center_frequency, aod, zod)
 
-                        ray_coefficients = (np.exp(rx_wave_vector @ rx_pos) * np.exp(tx_wave_vector @ tx_pos) *
-                                            complex(np.ones((2, 1)).T @ phases[:, :, cluster_idx, ray_idx] @ np.ones(
-                                                (2, 1))) *
-                                            np.exp(rx_wave_vector @ fast_fading).T) * sqrt(
-                            cluster_powers[cluster_idx] / num_clusters)
+                # Equation 7.5-28
+                rx_polarization = self.receiver.antennas.polarization(aoa, zoa)
+                tx_polarization = self.transmitter.antennas.polarization(aod, zod)
 
-                        nlos_coefficients[3 * cluster_idx + subcluster_idx, :, rx_idx, tx_idx] = ray_coefficients
+                channel = ((rx_response[:, None] * rx_polarization) @ jones @ (tx_polarization * tx_response[:, None]).T
+                           * sqrt(cluster_powers[cluster_idx] / num_clusters))
 
-        for cluster_idx, ray_idx in product(range(num_clusters - 2), range(num_rays)):
+                wave_vector = np.array([cos(aoa) * sin(zoa), sin(aoa) * sin(zoa), cos(zoa)], dtype=float)
+                impulse = np.exp(2j * pi * center_frequency * np.inner(wave_vector, relative_velocity) * fast_fading)
 
-            # Equation 7.5-23
-            rx_wave_vector = np.array([sin(ray_zoa[cluster_idx, ray_idx]) * cos(ray_aoa[cluster_idx, ray_idx]),
-                                       sin(ray_zoa[cluster_idx, ray_idx]) * sin(ray_aoa[cluster_idx, ray_idx]),
-                                       cos(ray_zoa[cluster_idx, ray_idx])]) * wavelength_factor
-
-            # Equation 7.5-24
-            tx_wave_vector = np.array([sin(ray_zod[cluster_idx, ray_idx]) * cos(ray_aod[cluster_idx, ray_idx]),
-                                       sin(ray_zod[cluster_idx, ray_idx]) * sin(ray_aod[cluster_idx, ray_idx]),
-                                       cos(ray_zod[cluster_idx, ray_idx])]) * wavelength_factor
-
-            # Equation 7.5-22
-            for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions), enumerate(tx_positions)):
-                ray_coefficients = (np.exp(rx_wave_vector @ rx_pos) * np.exp(tx_wave_vector @ tx_pos) *
-                                    complex(np.ones((2, 1)).T @ phases[:, :, cluster_idx, ray_idx] @ np.ones((2, 1))) *
-                                    np.exp(rx_wave_vector @ fast_fading).T)
-                nlos_coefficients[6 + cluster_idx, :, rx_idx, tx_idx] += ray_coefficients * sqrt(
-                    cluster_powers[cluster_idx] / num_rays)
+                # Save the resulting channel coefficients for this ray
+                nlos_coefficients[cluster_idx, :, :, :] = (impulse[:, None, None] * channel[None, :, :])
 
         # In the case of line-of-sight, scale the coefficients and append another set according to equation 7.5-30
         if self.line_of_sight:
@@ -699,22 +679,21 @@ class ClusterDelayLineBase(Channel):
             device_vector = receiver_position - transmitter_position
             los_distance = np.linalg.norm(device_vector, 2)
             rx_wave_vector = device_vector / los_distance * wavelength_factor
-            tx_wave_vector = -rx_wave_vector
 
             nlos_coefficients *= (1 + rice_factor_lin) ** -.5
 
-            los_coefficients = np.empty((num_samples, self.receiver.num_antennas, self.transmitter.num_antennas),
-                                        dtype=complex)
-
             # Equation 7.5-29
-            for (rx_idx, rx_pos), (tx_idx, tx_pos) in product(enumerate(rx_positions), enumerate(tx_positions)):
-                los_coefficients[:, rx_idx, tx_idx] = \
-                    (complex(np.ones((2, 1)).T @ np.array([[1, 0], [0, -1]]) @ np.ones((2, 1))) *
-                     np.exp(-wavelength_factor * los_distance) * np.exp(rx_wave_vector @ rx_pos) *
-                     np.exp(tx_wave_vector @ tx_pos) * np.exp(rx_wave_vector @ fast_fading).T)
+            rx_response = self.receiver.antennas.spherical_response(center_frequency, los_aoa, los_zoa)
+            tx_response = self.transmitter.antennas.spherical_response(center_frequency, los_aod, los_zod)
+            rx_polarization = self.receiver.antennas.polarization(los_aoa, los_zoa)
+            tx_polarization = self.transmitter.antennas.polarization(los_aod, los_zod)
 
-            # Equation 7.5-30 (second part of the sum)
-            los_coefficients *= sqrt(rice_factor_lin / (rice_factor_lin + 1))
+            channel = (rx_response[:, None] * rx_polarization) @ (tx_polarization * tx_response[:, None]).T
+
+            impulse = np.exp(2j * pi * center_frequency * np.inner(rx_wave_vector, relative_velocity) * fast_fading)
+
+            los_coefficients = impulse[:, None, None] * channel[None, :, :]
+
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, cluster_delays[0],
                                                         num_delay_samples).flatten()
             impulse_response += np.multiply.outer(los_coefficients, resampling_matrix)
@@ -776,7 +755,7 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
                  cross_polarization_power_std: float = 3.,
                  num_clusters: int = 12,
                  num_rays: int = 20,
-                 cluster_delay_spread: float = 5.,
+                 cluster_delay_spread: float = 5e-9,
                  cluster_aod_spread: float = 5.,
                  cluster_aoa_spread: float = 17.,
                  cluster_zoa_spread: float = 7.,
