@@ -585,10 +585,10 @@ class ClusterDelayLineBase(Channel):
         tx_los_vector = rotation_matrix(self.transmitter.orientation).T @ los_vector
         rx_los_vector = rotation_matrix(self.receiver.orientation).T @ los_vector
 
-        los_aoa = atan(rx_los_vector[1] / rx_los_vector[0])
-        los_aod = atan(tx_los_vector[1] / tx_los_vector[0])
-        los_zoa = atan(rx_los_vector[2] / sqrt(rx_los_vector[0] ** 2 + rx_los_vector[1] ** 2))
-        los_zod = atan(tx_los_vector[2] / sqrt(tx_los_vector[0] ** 2 + tx_los_vector[1] ** 2))
+        los_aoa = atan(rx_los_vector[1] / rx_los_vector[0]) if rx_los_vector[1] != 0. and rx_los_vector[0] != 0. else 0.
+        los_aod = atan(tx_los_vector[1] / tx_los_vector[0]) if tx_los_vector[1] != 0. and tx_los_vector[0] != 0. else 0
+        los_zoa = atan(sqrt(rx_los_vector[0] ** 2 + rx_los_vector[1] ** 2) / rx_los_vector[2]) if rx_los_vector[2] != 0. else .5 * pi
+        los_zod = atan(sqrt(tx_los_vector[0] ** 2 + tx_los_vector[1] ** 2) / tx_los_vector[2]) if tx_los_vector[2] != 0. else .5 * pi
 
         num_clusters = self.num_clusters
         num_rays = 20
@@ -596,10 +596,10 @@ class ClusterDelayLineBase(Channel):
         cluster_delays = self._cluster_delays(delay_spread, rice_factor)
         cluster_powers = self._cluster_powers(delay_spread, cluster_delays, rice_factor)
 
-        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, los_aod)
-        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, los_aoa)
-        ray_zod = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, los_zod)  # ToDo: Zenith departure modeling
-        ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, los_zoa)
+        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aod / pi)
+        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aoa / pi)
+        ray_zod = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * los_zod / pi)  # ToDo: Zenith departure modeling
+        ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * los_zoa / pi)
 
         # ToDo: Couple cluster angles randomly
 
@@ -615,16 +615,16 @@ class ClusterDelayLineBase(Channel):
 
         # Initialize channel matrices
         num_delay_samples = 1 + ceil(cluster_delays.max() * sampling_rate)
-        impulse_response = np.ndarray((num_samples, self.receiver.num_antennas,
-                                       self.transmitter.num_antennas, num_delay_samples), dtype=complex)
+        impulse_response = np.ndarray((num_samples, self.receiver.antennas.num_antennas,
+                                       self.transmitter.antennas.num_antennas, num_delay_samples), dtype=complex)
 
         # Compute the number of clusters, considering the first two clusters get split into 3 partitions
         num_split_clusters = min(2, num_clusters)
         virtual_num_clusters = 3 * num_split_clusters + max(0, num_clusters - 2)
 
         # Prepare the channel coefficient storage
-        nlos_coefficients = np.zeros((virtual_num_clusters, num_samples, self.receiver.num_antennas,
-                                      self.transmitter.num_antennas), dtype=complex)
+        nlos_coefficients = np.zeros((virtual_num_clusters, num_samples, self.receiver.antennas.num_antennas,
+                                      self.transmitter.antennas.num_antennas), dtype=complex)
 
         # Prepare the cluster delays, equation 7.5-26
         subcluster_delays = (np.repeat(cluster_delays[:num_split_clusters, None], 3, axis=1) +
