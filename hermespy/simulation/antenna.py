@@ -14,7 +14,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
-from scipy.constants import pi
+from scipy.constants import pi, speed_of_light
 
 from hermespy.core import Executable, FloatingError, Serializable, Signal
 
@@ -437,6 +437,188 @@ class AntennaArrayBase(object):
 
             return figure
 
+    def cartesian_response(self,
+                           carrier_frequency: float,
+                           position: np.ndarray) -> np.ndarray:
+        """Response of the sensor array towards an impinging point source within its far-field.
+
+        Assuming a point source at position :math:`\\mathbf{t} \\in \\mathbb{R}^{3}` within the sensor array's
+        far field, so that :math:`\\lVert \\mathbf{t} \\rVert_2 \\gg 0`,
+        the :math:`m`-th array element at position :math:`\\mathbf{q}_m \\in \\mathbb{R}^{3}` responds with a factor
+
+        .. math::
+
+            a_{m} = e^{ \\mathrm{j} \\frac{2 \\pi f_\\mathrm{c}}{\\mathrm{c}}
+                        \\lVert \\mathbf{t} - \\mathbf{q}_{m} \\rVert_2 }
+
+        to an electromagnetic waveform emitted with center frequency :math:`f_\\mathrm{c}`.
+        The full array response vector is therefore
+
+        .. math::
+
+           \\mathbf{a} = \\left[ a_1, a_2, \\dots, a_{M} \\right]^{\\intercal} \\in \\mathbb{C}^{M} \\mathrm{.}
+
+        Args:
+
+            carrier_frequency (float):
+                Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
+
+            position (np.ndarray):
+                Cartesian location :math:`\\mathbf{t}` of the impinging target within the array's local coordinate system.
+
+        Returns:
+
+            np.ndarray:
+                The sensor array response vector :math:`\\mathbf{a}`.
+                A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
+
+        Raises:
+
+            ValueError: If `position` is not a cartesian vector.
+        """
+
+        position = position.flatten()
+        if len(position) != 3:
+            raise ValueError("Target position must be a cartesian (three-dimensional) vector")
+
+        # Expand the position by a new dimension
+        position = position[:, np.newaxis]
+
+        # Compute the distance between antenna elements and the point source
+        distances = np.linalg.norm(self.topology.T - position, axis=0, keepdims=False)
+
+        # Transform the distances to complex phases, i.e. the array response
+        response = np.exp(2j * pi * carrier_frequency * distances / speed_of_light)
+
+        # That's it
+        return response
+
+    def horizontal_response(self,
+                            carrier_frequency: float,
+                            azimuth: float,
+                            elevation: float) -> np.ndarray:
+        """Response of the sensor array towards an impinging point source within its far-field.
+
+        Assuming a far-field point source impinges onto the sensor array from horizontal angles of arrival
+        azimuth :math:`\\phi \\in [0,  2\\pi)` and elevation :math:`\\theta \\in [-\\pi,  \\pi]`,
+        the wave vector
+
+        .. math::
+
+            \\mathbf{k}(\\phi, \\theta) = \\frac{2 \\pi f_\\mathrm{c}}{\\mathrm{c}}
+            \\begin{pmatrix}
+                \\cos( \\phi ) \\cos( \\theta ) \\\\
+                \\sin( \\phi) \\cos( \\theta ) \\\\
+                \\sin( \\theta )
+            \\end{pmatrix}
+
+        defines the phase of a planar wave in horizontal coordinates.
+        The :math:`m`-th array element at position :math:`\\mathbf{q}_m \\in \\mathbb{R}^{3}` responds with a factor
+
+        .. math::
+
+            a_{m}(\\phi, \\theta) = e^{\\mathrm{j} \\mathbf{k}^\\intercal(\\phi, \\theta)\\mathbf{q}_{m} }
+
+        to an electromagnetic waveform emitted with center frequency :math:`f_\\mathrm{c}`.
+        The full array response vector is therefore
+
+        .. math::
+
+           \\mathbf{a}(\\phi, \\theta)  = \\left[ a_1(\\phi, \\theta) , a_2(\\phi, \\theta) , \\dots, a_{M}(\\phi, \\theta)  \\right]^{\\intercal} \\in \\mathbb{C}^{M} \\mathrm{.}
+
+        Args:
+
+            carrier_frequency (float):
+                Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
+
+            azimuth (float):
+                Azimuth angle :math:`\\phi` in radians.
+
+            elevation (float):
+                Elevation angle :math:`\\theta` in radians.
+
+        Returns:
+
+            np.ndarray:
+                The sensor array response vector :math:`\\mathbf{a}`.
+                A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
+
+        """
+
+        # Compute the wave vector
+        k = np.array([cos(azimuth) * cos(elevation),
+                      sin(azimuth) * cos(elevation),
+                      sin(elevation)], dtype=float)
+
+        # Transform the distances to complex phases, i.e. the array response
+        response = np.exp(2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
+
+        # That's it
+        return response
+
+    def spherical_response(self,
+                           carrier_frequency: float,
+                           azimuth: float,
+                           zenith: float) -> np.ndarray:
+        """Response of the sensor array towards an impinging point source within its far-field.
+
+        Assuming a far-field point source impinges onto the sensor array from spherical angles of arrival
+        azimuth :math:`\\phi \\in [0,  2\\pi)` and zenith :math:`\\theta \\in [0,  \\pi]`,
+        the wave vector
+
+        .. math::
+
+            \\mathbf{k}(\\phi, \\theta) = \\frac{2 \\pi f_\\mathrm{c}}{\\mathrm{c}}
+            \\begin{pmatrix}
+                \\cos( \\phi ) \\sin( \\theta ) \\\\
+                \\sin( \\phi) \\sin( \\theta ) \\\\
+                \\cos( \\theta )
+            \\end{pmatrix}
+
+        defines the phase of a planar wave in horizontal coordinates.
+        The :math:`m`-th array element at position :math:`\\mathbf{q}_m \\in \\mathbb{R}^{3}` responds with a factor
+
+        .. math::
+
+            a_{m}(\\phi, \\theta) = e^{\\mathrm{j} \\mathbf{k}^\\intercal(\\phi, \\theta)\\mathbf{q}_{m} }
+
+        to an electromagnetic waveform emitted with center frequency :math:`f_\\mathrm{c}`.
+        The full array response vector is therefore
+
+        .. math::
+
+           \\mathbf{a}(\\phi, \\theta)  = \\left[ a_1(\\phi, \\theta) , a_2(\\phi, \\theta) , \\dots, a_{M}(\\phi, \\theta)  \\right]^{\\intercal} \\in \\mathbb{C}^{M} \\mathrm{.}
+
+        Args:
+
+            carrier_frequency (float):
+                Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
+
+            azimuth (float):
+                Azimuth angle :math:`\\phi` in radians.
+
+            zenith (float):
+                Zenith angle :math:`\\theta` in radians.
+
+        Returns:
+
+            np.ndarray:
+                The sensor array response vector :math:`\\mathbf{a}`.
+                A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
+
+        """
+
+        # Compute the wave vector
+        k = np.array([cos(azimuth) * sin(zenith),
+                      sin(azimuth) * sin(zenith),
+                      cos(zenith)], dtype=float)
+
+        # Transform the distances to complex phases, i.e. the array response
+        response = np.exp(2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
+
+        # That's it
+        return response
+
 
 class UniformArray(AntennaArrayBase, Serializable):
     """Model of a Uniform Antenna Array."""
@@ -614,7 +796,7 @@ class AntennaArray(Serializable):
         # Raise exception if the orientation is not 2D for azimuth and elevation
         orientation = np.array([0., 0.], dtype=float) if orientation is None else orientation.flatten()
         if len(orientation) != 2:
-            raise ValueError("Antenna orientation must contain azimuath and elevation angles information")
+            raise ValueError("Antenna orientation must contain azimuth and elevation angles information")
 
         # Add information to the internal lists
         self.__antennas.append(antenna)

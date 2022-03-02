@@ -3,7 +3,8 @@ from unittest.mock import Mock
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+from scipy.constants import pi, speed_of_light
 
 from hermespy.core import FloatingError
 from hermespy.simulation.antenna import IdealAntenna, UniformArray
@@ -78,12 +79,12 @@ class TestIdealAntenna(TestCase):
         self.assertCountEqual((2 ** -.5, 2 ** -.5), self.antenna.polarization(0., 0.))
 
     def test_plot_polarization(self) -> None:
-        """Calling the plot rountine should return a figure object."""
+        """Calling the plot routine should return a figure object."""
 
         self.assertIsInstance(self.antenna.plot_polarization(), plt.Figure)
 
     def test_plot_gain(self) -> None:
-        """Calling the plot rountine should return a figure object."""
+        """Calling the plot routine should return a figure object."""
 
         self.assertIsInstance(self.antenna.plot_gain(), plt.Figure)
 
@@ -95,7 +96,9 @@ class TestUniformArray(TestCase):
 
         self.antenna = Mock()
         self.antenna.polarization.return_value = np.array([2 ** -.5, 2 ** -.5])
-        self.spacing = 1e-3
+        self.carrier_frequency = 1e-9
+        self.wavelength = self.carrier_frequency / speed_of_light
+        self.spacing = .5 * self.wavelength
         self.dimensions = (10, 9, 8)
 
         self.array = UniformArray(self.antenna, self.spacing, self.dimensions)
@@ -163,6 +166,45 @@ class TestUniformArray(TestCase):
         self.assertTrue(np.any(polarization == 2 ** -.5))
 
     def test_plot_topology(self) -> None:
-        """Calling the plot rountine should return a figure object."""
+        """Calling the plot routine should return a figure object."""
 
         self.assertIsInstance(self.array.plot_topology(), plt.Figure)
+
+    def test_cartesian_response(self) -> None:
+        """Cartesian response function should generate a proper sensor array response vector."""
+
+        front_target_position = np.array([100, 0, 0])
+        back_target_position = -front_target_position
+
+        front_array_response = self.array.cartesian_response(self.carrier_frequency, front_target_position)
+        back_array_response = self.array.cartesian_response(self.carrier_frequency, back_target_position)
+
+        assert_array_almost_equal(front_array_response, back_array_response)
+
+    def test_cartesian_response_validation(self) -> None:
+        """Cartesian response function should raise a ValueError on invalid arguments."""
+
+        with self.assertRaises(ValueError):
+            _ = self.array.cartesian_response(self.carrier_frequency, np.array([1, 2, 3, 4]))
+
+    def test_horizontal_response(self) -> None:
+        """Horizontal response function should generate a proper sensor array response vector."""
+
+        elevation = 0
+        azimuth = .25 * pi
+
+        front_array_response = self.array.horizontal_response(self.carrier_frequency, azimuth, elevation)
+        back_array_response = self.array.horizontal_response(self.carrier_frequency, azimuth - pi, elevation - pi)
+
+        assert_array_almost_equal(front_array_response, back_array_response)
+
+    def test_spherical_response(self) -> None:
+        """Spherical response function should generate a proper sensor array response vector."""
+
+        zenith = 0
+        azimuth = .25 * pi
+
+        front_array_response = self.array.spherical_response(self.carrier_frequency, azimuth, zenith)
+        back_array_response = self.array.spherical_response(self.carrier_frequency, azimuth - pi, zenith - pi)
+
+        assert_array_almost_equal(front_array_response, back_array_response)
