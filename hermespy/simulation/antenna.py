@@ -395,7 +395,7 @@ class AntennaArrayBase(object):
     def polarization(self,
                      azimuth: float,
                      elevation: float) -> np.ndarray:
-        """Sensor array polaroizations towards a certain angle.
+        """Sensor array polarizations towards a certain angle.
            
         Args:
         

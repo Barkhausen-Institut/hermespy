@@ -10,9 +10,10 @@ from unittest.mock import Mock
 
 import numpy as np
 from numpy.random import default_rng
-from scipy.constants import pi
+from scipy.constants import pi, speed_of_light
 
 from hermespy.channel.cluster_delay_lines import ClusterDelayLine
+from hermespy.simulation.antenna import IdealAntenna, UniformArray
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -33,14 +34,17 @@ class TestClusterDelayLine(TestCase):
         self.random_node = Mock()
         self.random_node._rng = self.rng
 
-        self.num_clusters = 10
+        self.num_clusters = 3
         self.delay_spread_mean = -7.49
         self.delay_spread_std = 0.55
         self.delay_scaling = 3.8
         self.carrier_frequency = 1e9
 
+        self.antennas = UniformArray(IdealAntenna(), .5 * self.carrier_frequency / speed_of_light, (2, 2))
+
         self.receiver = Mock()
-        self.receiver.num_antennas = 1
+        self.receiver.num_antennas = self.antennas.num_antennas
+        self.receiver.antennas = self.antennas
         self.receiver.position = np.array([100., 0., 0.])
         self.receiver.orientation = np.array([0., 0., 0.])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
@@ -48,7 +52,8 @@ class TestClusterDelayLine(TestCase):
         self.receiver.carrier_frequency = self.carrier_frequency
 
         self.transmitter = Mock()
-        self.transmitter.num_antennas = 1
+        self.transmitter.num_antennas = self.antennas.num_antennas
+        self.transmitter.antennas = self.antennas
         self.transmitter.position = np.array([-100., 0., 0.])
         self.transmitter.orientation = np.array([0., 0., pi])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
@@ -194,17 +199,24 @@ class TestClusterDelayLine(TestCase):
 
     def test_impulse_response_nlos(self):
 
-        num_samples = 5000
-        sampling_rate = 1e6
+        self.channel.line_of_sight = False
+        num_samples = 100
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
-        return
+
+        self.assertEqual(num_samples, impulse_response.shape[0])
+        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
+        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
 
     def test_impulse_response_los(self):
 
         self.channel.line_of_sight = True
-        num_samples = 5000
-        sampling_rate = 1e6
+        num_samples = 100
+        sampling_rate = 1e5
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
-        return
+
+        self.assertEqual(num_samples, impulse_response.shape[0])
+        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
+        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
