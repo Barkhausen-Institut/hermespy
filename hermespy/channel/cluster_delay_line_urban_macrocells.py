@@ -12,7 +12,7 @@ from math import log10
 
 import numpy as np
 
-from ..core.factory import Serializable
+from hermespy.core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"
@@ -67,6 +67,7 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
     def zoa_spread_std(self) -> float:
         return .16
 
+    @property
     def zod_spread_mean(self) -> float:
 
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
@@ -74,9 +75,11 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
         return max(-.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + .75)
 
+    @property
     def zod_spread_std(self) -> float:
         return .4
 
+    @property
     def zod_offset(self) -> float:
         return 0.
 
@@ -136,6 +139,7 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
     """Shared Parameters for all Urban Macrocells No Line of Sight Models."""
 
+    @property
     def zod_spread_mean(self) -> float:
 
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
@@ -143,9 +147,11 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
         return max(-.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + .9)
 
+    @property
     def zod_spread_std(self) -> float:
         return .49
 
+    @property
     def zod_offset(self) -> float:
 
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)

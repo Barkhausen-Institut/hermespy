@@ -636,7 +636,7 @@ class ClusterDelayLineBase(Channel):
             zenith_scale *= 1.3086 + .0339 * rice_factor - .0077 * rice_factor ** 2 + 2e-4 * rice_factor ** 3
 
         # Draw zenith angle spread from the distribution
-        zenith_spread = self._rng.lognormal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
+        zenith_spread = self._rng.lognormal(self.zod_spread_mean, self.zod_spread_std, size=size)
 
         # Generate angle starting point
         cluster_zenith = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
@@ -645,7 +645,8 @@ class ClusterDelayLineBase(Channel):
         cluster_sign = self._rng.choice([-1., 1.], size=size)
 
         # ToDo: Treat the BST-UT case!!!! (los_zenith = 90°)
-        cluster_zenith: np.ndarray = cluster_sign * cluster_zenith + cluster_variation
+        # Equation 7.5-19
+        cluster_zenith: np.ndarray = cluster_sign * cluster_zenith + cluster_variation + self.zod_offset
 
         if self.line_of_sight:
             cluster_zenith += los_zenith - cluster_zenith[0]
@@ -654,7 +655,8 @@ class ClusterDelayLineBase(Channel):
             cluster_zenith += los_zenith
 
         # Spread the angles
-        ray_offsets = self.cluster_zoa_spread * self.__ray_offset_angles
+        # Equation 7.5 -20
+        ray_offsets = 3 / 8 * 10 ** self.zoa_spread_mean * self.__ray_offset_angles
         ray_zenith = np.tile(cluster_zenith[:, None], len(ray_offsets)) + ray_offsets
 
         return ray_zenith
