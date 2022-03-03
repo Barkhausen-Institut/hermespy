@@ -1,5 +1,11 @@
 from hermespy.core.channel_state_information import ChannelStateDimension, ChannelStateFormat, ChannelStateInformation
 from .channel import Channel
+from .cluster_delay_line_indoor_factory import IndoorFactoryLineOfSight, IndoorFactoryNoLineOfSight
+from .cluster_delay_line_indoor_office import IndoorOfficeLineOfSight, IndoorOfficeNoLineOfSight
+from .cluster_delay_line_rural_macrocells import RuralMacrocellsLineOfSight, RuralMacrocellsNoLineOfSight, RuralMacrocellsOutsideToInside
+from .cluster_delay_line_street_canyon import StreetCanyonLineOfSight, StreetCanyonNoLineOfSight, StreetCanyonOutsideToInside
+from .cluster_delay_line_urban_macrocells import UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, UrbanMacrocellsOutsideToInside
+from .cluster_delay_lines import ClusterDelayLine
 from .multipath_fading_channel import MultipathFadingChannel
 from .multipath_fading_templates import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
 from .radar_channel import RadarChannel
@@ -9,8 +15,8 @@ __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -28,5 +34,11 @@ except ImportError:
 from .quadriga_channel import QuadrigaChannel
 
 __all__ = ['ChannelStateDimension', 'ChannelStateFormat', 'ChannelStateInformation', 'Channel',
+           'IndoorFactoryLineOfSight', 'IndoorFactoryNoLineOfSight',
+           'IndoorOfficeLineOfSight', 'IndoorOfficeNoLineOfSight',
+           'RuralMacrocellsLineOfSight', 'RuralMacrocellsNoLineOfSight', 'RuralMacrocellsOutsideToInside',
+           'StreetCanyonLineOfSight', 'StreetCanyonNoLineOfSight', 'StreetCanyonOutsideToInside',
+           'UrbanMacrocellsLineOfSight', 'UrbanMacrocellsNoLineOfSight', 'UrbanMacrocellsOutsideToInside',
+           'ClusterDelayLine',
            'MultipathFadingChannel', 'MultipathFading5GTDL', 'MultipathFadingCost256', 'MultipathFadingExponential',
            'QuadrigaChannel', 'QuadrigaInterface', 'RadarChannel']

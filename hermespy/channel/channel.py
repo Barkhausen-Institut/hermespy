@@ -6,17 +6,18 @@ Channel Modeling
 """
 
 from __future__ import annotations
-from typing import List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union, TYPE_CHECKING
 from itertools import chain, product
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 
-from ..core import RandomNode
-from ..core.device import Device
-from ..core.factory import SerializableArray
-from ..core.signal_model import Signal
-from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation
+from hermespy.core import RandomNode, Signal, ChannelStateInformation
+from hermespy.core.factory import SerializableArray
+from hermespy.core.channel_state_information import ChannelStateFormat
+
+if TYPE_CHECKING:
+    from hermespy.simulation import SimulatedDevice
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -45,16 +46,16 @@ class Channel(SerializableArray, RandomNode):
     yaml_tag: str = u'Channel'
     yaml_matrix = True
     __active: bool
-    __transmitter: Optional[Device]
-    __receiver: Optional[Device]
+    __transmitter: Optional[SimulatedDevice]
+    __receiver: Optional[SimulatedDevice]
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
     impulse_response_interpolation: bool
 
     def __init__(self,
-                 transmitter: Optional[Device] = None,
-                 receiver: Optional[Device] = None,
+                 transmitter: Optional[SimulatedDevice] = None,
+                 receiver: Optional[SimulatedDevice] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: float = 0.,
@@ -141,8 +142,8 @@ class Channel(SerializableArray, RandomNode):
         self.__active = active
 
     @property
-    def transmitter(self) -> Device:
-        """Device transmitting into this channel.
+    def transmitter(self) -> SimulatedDevice:
+        """SimulatedDevice transmitting into this channel.
 
         Returns:
             Transmitter: A handle to the modem transmitting into this channel.
@@ -154,7 +155,7 @@ class Channel(SerializableArray, RandomNode):
         return self.__transmitter
 
     @transmitter.setter
-    def transmitter(self, value: Device) -> None:
+    def transmitter(self, value: SimulatedDevice) -> None:
         """Set the device transmitting into this channel."""
 
         if self.__transmitter is not None:
@@ -163,8 +164,8 @@ class Channel(SerializableArray, RandomNode):
         self.__transmitter = value
 
     @property
-    def receiver(self) -> Device:
-        """Device receiving from this channel.
+    def receiver(self) -> SimulatedDevice:
+        """SimulatedDevice receiving from this channel.
 
         Returns:
             Receiver: A handle to the device receiving from this channel.
@@ -176,7 +177,7 @@ class Channel(SerializableArray, RandomNode):
         return self.__receiver
 
     @receiver.setter
-    def receiver(self, value: Device) -> None:
+    def receiver(self, value: SimulatedDevice) -> None:
         """Set the device receiving from this channel."""
 
         if self.__receiver is not None:
@@ -284,7 +285,7 @@ class Channel(SerializableArray, RandomNode):
         if self.__transmitter is None:
             raise RuntimeError("Error trying to access the number of inputs of a floating channel")
 
-        return self.__transmitter.num_antennas
+        return self.__transmitter.antennas.num_antennas
 
     @property
     def num_outputs(self) -> int:
@@ -303,7 +304,7 @@ class Channel(SerializableArray, RandomNode):
         if self.__receiver is None:
             raise RuntimeError("Error trying to access the number outputs of a floating channel")
 
-        return self.__receiver.num_antennas
+        return self.__receiver.antennas.num_antennas
 
     def propagate(self,
                   forwards: Union[Signal, List[Signal], None] = None,
@@ -364,11 +365,11 @@ class Channel(SerializableArray, RandomNode):
 
         # Validate that the signal models contain the correct number of streams
         for signal in forwards:
-            if signal.num_streams != self.transmitter.num_antennas:
+            if signal.num_streams != self.transmitter.antennas.num_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         for signal in backwards:
-            if signal.num_streams != self.receiver.num_antennas:
+            if signal.num_streams != self.receiver.antennas.num_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         # Determine the sampling rate and sample count of the CSI samples
@@ -470,18 +471,19 @@ class Channel(SerializableArray, RandomNode):
             raise RuntimeError("Channel is floating, making impulse response simulation impossible")
 
         # MISO case
-        if self.receiver.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((1, self.transmitter.num_antennas), dtype=complex),
+        if self.receiver.antennas.num_antennas == 1:
+            impulse_responses = np.tile(np.ones((1, self.transmitter.antennas.num_antennas), dtype=complex),
                                         (num_samples, 1, 1))
 
         # SIMO case
-        elif self.transmitter.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((self.receiver.num_antennas, 1), dtype=complex),
+        elif self.transmitter.antennas.num_antennas == 1:
+            impulse_responses = np.tile(np.ones((self.receiver.antennas.num_antennas, 1), dtype=complex),
                                         (num_samples, 1, 1))
 
         # MIMO case
         else:
-            impulse_responses = np.tile(np.eye(self.receiver.num_antennas, self.transmitter.num_antennas,
+            impulse_responses = np.tile(np.eye(self.receiver.antennas.num_antennas,
+                                               self.transmitter.antennas.num_antennas,
                                                dtype=complex), (num_samples, 1, 1))
 
         # Scale by channel gain and add dimension for delay response
