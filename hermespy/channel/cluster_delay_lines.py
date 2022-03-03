@@ -3,6 +3,31 @@
 =============================
 3GPP Cluster Delay Line Model
 =============================
+
+Within this module, HermesPy implements the 3GPP standard for cluster delay line models
+as defined in :footcite:t:`3GPP:TR38901`.
+For a comprehensive description of all the parameters involved, please refer to the standard document.
+
+The abstract base class :class:`.ClusterDelayLineBase` defines all required parameters as abstrat properties
+and is required to be implemented by each specific cluster delay line model.
+HermesPy features the full customizable model :class:`ClusterDelayLine` as well as
+implementations describing standard-compliant benchmark scenarios
+
+=====================================================================   ====================================  ======================================  ========================================
+Model                                                                   Line Of Sight                         No Line Of Sight                        Outside To Inside
+=====================================================================   ====================================  ======================================  ========================================
+:doc:`Indoor Factory <channel.cluster_delay_line_indoor_factory>`       :class:`.IndoorFactoryLineOfSight`    :class:`.IndoorFactoryNoLineOfSight`    *Undefined*
+:doc:`Indoor Office <channel.cluster_delay_line_indoor_office>`         :class:`.IndoorOfficeLineOfSight`     :class:`.IndoorOfficeNoLineOfSight`     *Undefined*
+:doc:`Rural Macrocells <channel.cluster_delay_line_rural_macrocells>`   :class:`.RuralMacrocellsLineOfSight`  :class:`.RuralMacrocellsNoLineOfSight`  :class:`.RuralMacrocellsOutsideToInside` 
+:doc:`Street Canyhon <channel.cluster_delay_line_street_canyon>`        :class:`.StreetCanyonLineOfSight`     :class:`.StreetCanyonNoLineOfSight`     :class:`.StreetCanyonOutsideToInside`
+:doc:`Urban Macrocells <channel.cluster_delay_line_urban_macrocells>`   :class:`.UrbanMacrocellsLineOfSight`  :class:`.UrbanMacrocellsNoLineOfSight`  :class:`.UrbanMacrocellsOutsideToInside`
+=====================================================================   ====================================  ======================================  ========================================
+
+with pre-defined parameters.
+In general, the HermesPy cluster delay line implementation mixes deterministic with
+statistical information:
+:doc:`Devices <simulation.simulated_device>` linked by cluster delay line models are required to specify their assumed
+positions and orientations, since the specular line of sight ray components are deterministic.
 """
 
 from __future__ import annotations
