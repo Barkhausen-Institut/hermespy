@@ -47,8 +47,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.receiver = Mock()
         self.transmitter.sampling_rate = self.sampling_rate
         self.receiver.sampling_rate = self.sampling_rate
-        self.transmitter.num_antennas = 1
-        self.receiver.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
         self.sync_offset_low = 1e-6
         self.sync_offset_high = 3e-6
 
