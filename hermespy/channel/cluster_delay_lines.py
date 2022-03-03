@@ -191,6 +191,47 @@ class ClusterDelayLineBase(Channel):
             ValueError: If the standard deviation is smaller than zero.
         """
         ...
+    
+    @property
+    @abstractmethod
+    def zod_spread_mean(self) -> float:
+        """Mean of the Zenith Angle-of-Departure spread.
+
+        The spread realization and its mean are referred to as
+        :math:`\\mathrm{ZOD}` and :math:`\\mu_{\\mathrm{lgZSD}}` within the the standard, respectively.
+
+        Returns:
+            float: Mean angle spread in degrees
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def zod_spread_std(self) -> float:
+        """Standard deviation of the Zenith Angle-of-Departure spread.
+
+        The spread realization and its standard deviation are referred to as
+        :math:`\\mathrm{ZOD}` and :math:`\\sigma_{\\mathrm{lgZOD}}` within the the standard, respectively.
+
+        Returns:
+            float: Angle spread standard deviation in degrees.
+
+        Raises:
+            ValueError: If the standard deviation is smaller than zero.
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def zod_offset(self) -> float:
+        """Offset between Zenith Angle-of-Arrival and Angle-of-Departure.
+
+        The offset is referred to as :math:`\\mu_{\\mathrm{offset,ZOD}}` within the standard.
+
+        Returns:
+            float: The offset in degrees.
+        """
+        ...
 
     ###############################
     # ToDo: Shadow fading function
@@ -562,6 +603,63 @@ class ClusterDelayLineBase(Channel):
 
         return ray_zenith
 
+    def _ray_zod(self,
+                 cluster_powers: np.ndarray,
+                 rice_factor: float,
+                 los_zenith: float) -> np.ndarray:
+        """Compute cluster ray zenith angles of departure.
+
+        Args:
+
+            cluster_powers (np.ndarray):
+                Vector of cluster powers. The length determines the number of clusters.
+
+            rice_factor (float):
+                Rice factor in dB.
+
+            los_zenith (float):
+                Line of sight zenith angle to the target in degrees.
+
+        Returns:
+            np.ndarray:
+                Matrix of angles in degrees.
+                The first dimension indicates the cluster index, the second dimension the ray index.
+        """
+
+        size = cluster_powers.shape
+
+        # Select the scaling factor
+        scale_index = np.argmin(np.abs(self.__zenith_scaling_factors[:, 0] - len(cluster_powers)))
+        zenith_scale = self.__zenith_scaling_factors[scale_index, 1]
+
+        if self.line_of_sight:
+            zenith_scale *= 1.3086 + .0339 * rice_factor - .0077 * rice_factor ** 2 + 2e-4 * rice_factor ** 3
+
+        # Draw zenith angle spread from the distribution
+        zenith_spread = self._rng.lognormal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
+
+        # Generate angle starting point
+        cluster_zenith = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
+
+        cluster_variation = self._rng.normal(0., (zenith_spread / 7) ** 2, size=size)
+        cluster_sign = self._rng.choice([-1., 1.], size=size)
+
+        # ToDo: Treat the BST-UT case!!!! (los_zenith = 90°)
+        cluster_zenith: np.ndarray = cluster_sign * cluster_zenith + cluster_variation
+
+        if self.line_of_sight:
+            cluster_zenith += los_zenith - cluster_zenith[0]
+
+        else:
+            cluster_zenith += los_zenith
+
+        # Spread the angles
+        ray_offsets = self.cluster_zoa_spread * self.__ray_offset_angles
+        ray_zenith = np.tile(cluster_zenith[:, None], len(ray_offsets)) + ray_offsets
+
+        return ray_zenith
+
+
     def impulse_response(self,
                          num_samples: int,
                          sampling_rate: float) -> np.ndarray:
@@ -598,7 +696,7 @@ class ClusterDelayLineBase(Channel):
 
         ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aod / pi)
         ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aoa / pi)
-        ray_zod = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * los_zod / pi)  # ToDo: Zenith departure modeling
+        ray_zod = pi / 180 * self._ray_zod(cluster_powers, rice_factor, 180 * los_zod / pi)  # ToDo: Zenith departure modeling
         ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * los_zoa / pi)
 
         # ToDo: Couple cluster angles randomly
@@ -725,6 +823,9 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
     __aoa_spread_std: float
     __zoa_spread_mean: float
     __zoa_spread_std: float
+    __zod_spread_mean: float
+    __zod_spread_std: float
+    __zod_offset: float
     __rice_factor_mean: float
     __rice_factor_std: float
     __delay_scaling: float
@@ -748,6 +849,9 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
                  aoa_spread_std: float = .28,
                  zoa_spread_mean: float = .73,
                  zoa_spread_std: float = .34,
+                 zod_spread_mean: float = .1, 
+                 zod_spread_std: float = 0.,
+                 zod_offset: float = 0.,
                  rice_factor_mean: float = 9.,
                  rice_factor_std: float = 5.,
                  delay_scaling: float = 1.,
@@ -797,6 +901,9 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
         self.aoa_spread_std = aoa_spread_std
         self.zoa_spread_mean = zoa_spread_mean
         self.zoa_spread_std = zoa_spread_std
+        self.zod_spread_mean = zod_spread_mean
+        self.zod_spread_std = zod_spread_mean
+        self.zod_offset = zod_offset
         self.rice_factor_mean = rice_factor_mean
         self.rice_factor_std = rice_factor_std
         self.delay_scaling = delay_scaling
@@ -914,6 +1021,37 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
             raise ValueError("Angle spread standard deviation must be greater or equal to zero")
 
         self.__zoa_spread_std = value
+        
+    @property
+    def zod_spread_mean(self) -> float:
+
+        return self.__zod_spread_mean
+
+    @zod_spread_mean.setter
+    def zod_spread_mean(self, value: float) -> None:
+
+        self.__zod_spread_mean = value
+
+    @property
+    def zod_spread_std(self) -> float:
+
+        return self.__zod_spread_std
+
+    @zod_spread_std.setter
+    def zod_spread_std(self, value: float) -> None:
+
+        if value < 0.:
+            raise ValueError("Zenith spread standard deviation must be greater or equal to zero")
+
+        self.__zod_spread_std = value
+
+    @property
+    def zod_offset(self) -> float:
+        return self.__zod_offset
+
+    @zod_offset.setter
+    def zod_offset(self, value: float) -> None:
+        self.__zod_offset = value
 
     ###############################
     # ToDo: Shadow fading function
