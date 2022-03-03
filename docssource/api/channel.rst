@@ -15,12 +15,22 @@ The base class of all channel model implementations is defined within
 
    channel.channel
 
-The following statistical / spatial channel models are currently supported:
+The following statistical channel models are currently supported:
 
 .. toctree::
 
    channel.multipath_fading_channel
    channel.multipath_fading_templates
+
+The following spatial channel models are currently supported:
+
+.. toctree::
+
    channel.cluster_delay_lines
+   channel.cluster_delay_line_indoor_factory
+   channel.cluster_delay_line_indoor_office
+   channel.cluster_delay_line_rural_macrocells
+   channel.cluster_delay_line_street_canyon
+   channel.cluster_delay_line_urban_macrocells
    channel.radar_channel
    channel.quadriga
