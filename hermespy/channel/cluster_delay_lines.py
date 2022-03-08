@@ -522,7 +522,7 @@ class ClusterDelayLineBase(Channel):
             angle_scale *= 1.1035 - .028 * rice_factor - 2e-3 * rice_factor ** 2 + 1e-4 * rice_factor ** 3
 
         # Draw azimuth angle spread from the distribution
-        spread = self._rng.lognormal(self.aoa_spread_mean, self.aoa_spread_std, size=size)
+        spread = 10 ** self._rng.normal(self.aoa_spread_mean, self.aoa_spread_std, size=size)
 
         angles = 2 * (spread / 1.4) * np.sqrt(-np.log(cluster_powers / cluster_powers.max())) / angle_scale
 
@@ -580,7 +580,7 @@ class ClusterDelayLineBase(Channel):
             zenith_scale *= 1.3086 + .0339 * rice_factor - .0077 * rice_factor ** 2 + 2e-4 * rice_factor ** 3
 
         # Draw zenith angle spread from the distribution
-        zenith_spread = self._rng.lognormal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
+        zenith_spread = 10 ** self._rng.normal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
 
         # Generate angle starting point
         cluster_zenith = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
@@ -636,7 +636,7 @@ class ClusterDelayLineBase(Channel):
             zenith_scale *= 1.3086 + .0339 * rice_factor - .0077 * rice_factor ** 2 + 2e-4 * rice_factor ** 3
 
         # Draw zenith angle spread from the distribution
-        zenith_spread = self._rng.lognormal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
+        zenith_spread = 10 ** self._rng.normal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
 
         # Generate angle starting point
         cluster_zenith = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
@@ -666,7 +666,7 @@ class ClusterDelayLineBase(Channel):
 
         center_frequency = self.transmitter.carrier_frequency
 
-        delay_spread = self._rng.lognormal(self.delay_spread_mean, self.delay_spread_std)
+        delay_spread = 10 ** self._rng.normal(self.delay_spread_mean, self.delay_spread_std)
         rice_factor = self._rng.normal(loc=self.rice_factor_mean, scale=self.rice_factor_std)
 
         # Query device positions and orientations
