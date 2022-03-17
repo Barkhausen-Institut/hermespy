@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Getting Started &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -94,7 +95,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="getting-started">
+  <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
 <p>Assuming HermesPy is properly <a class="reference internal" href="installation.html"><span class="doc">installed</span></a> within the currently selected Python environment,
 users may define custom wireless communication scenarios to be investigated within the context of
@@ -104,7 +105,7 @@ library via a detailed object-oriented programming interface or configured by YA
 and launched from any system command line.</p>
 <p>This section provides a rough description of the HermesPy software architecture and gives an introduction
 into both the library and command line interface in order to get new users quickly accustomed.</p>
-<div class="section" id="hermespy-architecture">
+<section id="hermespy-architecture">
 <h2>HermesPy Architecture<a class="headerlink" href="#hermespy-architecture" title="Permalink to this headline"></a></h2>
 <p>In its core, the HermesPy API aims to abstract the process of wireless communication and sensing signal processing
 within a strictly object-oriented class structure.
@@ -226,12 +227,12 @@ The <a class="reference internal" href="api/modem.modem.html"><span class="doc">
 <li><p><a class="reference internal" href="api/radar.radar.html"><span class="doc">Radar Waveforms</span></a> as the transmit waveform configuration</p></li>
 </ul>
 <p>making it much easier to configure.</p>
-</div>
-<div class="section" id="library">
+</section>
+<section id="library">
 <span id="gettingstarted-library"></span><h2>Library<a class="headerlink" href="#library" title="Permalink to this headline"></a></h2>
 <p>This chapter provides several examples outlining the utilization of HermesPy as a library within custom Python projects.
 A full description of the application programming interface can be found in the section <a class="reference internal" href="api/api.html"><span class="doc">HermesPy API</span></a>.</p>
-<div class="section" id="transmissions">
+<section id="transmissions">
 <h3>Transmissions<a class="headerlink" href="#transmissions" title="Permalink to this headline"></a></h3>
 <p>The following code generates the samples of a single communication frame
 transmitted by a PSK/QAM modem:</p>
@@ -264,10 +265,12 @@ waveform.</p></li>
 is generated and plotted <em>(lines 10-13)</em></p></li>
 </ul>
 <p>Executing the snippet will result in a plot similar to</p>
-<div class="figure align-center" id="id2">
+<figure class="align-center" id="id2">
 <a class="reference internal image-reference" href="_images/getting_started_signal_plot.png"><img alt="PSK/QAM default waveform plot" src="_images/getting_started_signal_plot.png" style="width: 480.0px; height: 360.0px;" /></a>
-<p class="caption"><span class="caption-text">Signal Model Plot</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Signal Model Plot</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <p>which visualizes the generated samples in time-domain (left sub-plot) and its respective
 discrete fourier transform (right sub-plot).</p>
 <p>While this is only a minimal example, it highlights the philosophy behind the HermesPy API, namely that
@@ -288,10 +291,12 @@ By modifying the property</p>
 </div>
 <p>the user may freely chose the number of preamble symbols.
 In this case, requesting <span class="math notranslate nohighlight">\(20\)</span> symbols results in a generated frame</p>
-<div class="figure align-center" id="id3">
+<figure class="align-center" id="id3">
 <a class="reference internal image-reference" href="_images/getting_started_signal_plot_preamble.png"><img alt="PSK/QAM waveform plot with preamble" src="_images/getting_started_signal_plot_preamble.png" style="width: 480.0px; height: 360.0px;" /></a>
-<p class="caption"><span class="caption-text">Signal Model Plot with Preamble</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Signal Model Plot with Preamble</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <p>featuring the added preamble.
 Describing all configurable parameters is beyond the scope of this introduction,
 the <a class="reference internal" href="api/api.html"><span class="doc">API</span></a> documentation of each processing step should be consulted for detailed descriptions.
@@ -357,15 +362,19 @@ For communication evaluations, several default evaluation routines are already s
 <col style="width: 50%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><div class="figure align-center" id="id4">
+<tr class="row-odd"><td><figure class="align-center" id="id4">
 <img alt="Constellation" src="_images/getting_started_constellation_low_noise.png" />
-<p class="caption"><span class="caption-text">Symbol Constellation, Noiseless</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Symbol Constellation, Noiseless</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 </td>
-<td><div class="figure align-center" id="id5">
+<td><figure class="align-center" id="id5">
 <img alt="BER" src="_images/getting_started_errors_low_noise.png" />
-<p class="caption"><span class="caption-text">Bit Errors, Noiseless</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Bit Errors, Noiseless</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 </td>
 </tr>
 </tbody>
@@ -387,15 +396,19 @@ Executing the snippet with noise consideration results in a visualization simila
 <col style="width: 50%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><div class="figure align-center" id="id6">
+<tr class="row-odd"><td><figure class="align-center" id="id6">
 <img alt="Constellation" src="_images/getting_started_constellation_high_noise.png" />
-<p class="caption"><span class="caption-text">Symbol Constellation, Noisy</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Symbol Constellation, Noisy</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 </td>
-<td><div class="figure align-center" id="id7">
+<td><figure class="align-center" id="id7">
 <img alt="BER" src="_images/getting_started_errors_high_noise.png" />
-<p class="caption"><span class="caption-text">Bit Errors, Noisy</span><a class="headerlink" href="#id7" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Bit Errors, Noisy</span><a class="headerlink" href="#id7" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 </td>
 </tr>
 </tbody>
@@ -410,8 +423,8 @@ In order to streamline simulation definition and execution, HermesPy provides th
 <a class="reference internal" href="api/simulation.simulation.html"><span class="doc">Simulation</span></a> helper class, which automizes the process
 of distributing the simulation workload in multicore systems and parameter grid evaluations.
 Its usage is introduced in the next section.</p>
-</div>
-<div class="section" id="simulations">
+</section>
+<section id="simulations">
 <h3>Simulations<a class="headerlink" href="#simulations" title="Permalink to this headline"></a></h3>
 <p>Consider the simulation scenario of a single device transmitting its waveforms and receiving them back
 after reflections from surroundings, assuming ideal isolation between transmit and receive chain.
@@ -455,10 +468,12 @@ For example, the following snippet</p>
 defines a sweep over the (linear) signal to noise ratio from <span class="math notranslate nohighlight">\(10\)</span> to <span class="math notranslate nohighlight">\(5\)</span>,
 collecting <span class="math notranslate nohighlight">\(1000\)</span> samples for each sweep point, respectively.
 Executing the script will launch a full simulation run and a rendered result</p>
-<div class="figure align-center" id="id8">
+<figure class="align-center" id="id8">
 <a class="reference internal image-reference" href="_images/getting_started_ber_evaluation.png"><img alt="Bit Error Rate Plot" src="_images/getting_started_ber_evaluation.png" style="width: 480.0px; height: 360.0px;" /></a>
-<p class="caption"><span class="caption-text">Bit Error Rate Evaluation</span><a class="headerlink" href="#id8" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Bit Error Rate Evaluation</span><a class="headerlink" href="#id8" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <p>of the bit error rate graph.</p>
 <p>Now, a typical approach to reduce the bit errors is the introduction of <a class="reference internal" href="api/coding.html"><span class="doc">Channel Coding</span></a>
 schemes for error correction.
@@ -514,13 +529,15 @@ to number of repetitions and noise ratio:</p>
 <p>Executing it leads to the rendering of a surface plot visualization, from which engineers
 can infer the selection of a proper repetition rate in order to achieve a required data rate for
 a given noise ratio:</p>
-<div class="figure align-center" id="id9">
+<figure class="align-center" id="id9">
 <a class="reference internal image-reference" href="_images/getting_started_simulation_multidim_drx.png"><img alt="Throughput" src="_images/getting_started_simulation_multidim_drx.png" style="width: 480.0px; height: 360.0px;" /></a>
-<p class="caption"><span class="caption-text">Data Throughput</span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
-</div>
-</div>
-</div>
-<div class="section" id="command-line-tool">
+<figcaption>
+<p><span class="caption-text">Data Throughput</span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="command-line-tool">
 <span id="gettingstarted-commandlinetool"></span><h2>Command Line Tool<a class="headerlink" href="#command-line-tool" title="Permalink to this headline"></a></h2>
 <p>This section outlines how to use HermesPy as a command line tool
 and provides some reference examples to get new users accustomed with the process of configuring scenarios.</p>
@@ -539,7 +556,7 @@ The configuration is subsequently being executed.
 All data resulting from this execution will be stored within <em>/path/to/output</em>.</p>
 <p>If the command-line parameter <code class="docutils literal notranslate"><span class="pre">-p</span></code> is left out, then the default path <em>/_settings</em> will be considered.
 If the <code class="docutils literal notranslate"><span class="pre">-o</span></code> is left out, then the results will be stored in a unique sub-folder of <em>/results/</em>.</p>
-<div class="section" id="first-steps">
+<section id="first-steps">
 <h3>First Steps<a class="headerlink" href="#first-steps" title="Permalink to this headline"></a></h3>
 <p>Let’s begin by configuring a basic simulation scenario.
 It should consist of:</p>
@@ -634,9 +651,9 @@ It should consist of:</p>
 The resulting plots and a matlab dump of the evaluation data will be saved in your current working directory.
 For different types of configurations, please refer to the <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy/tree/main/_examples/settings">Examples</a> folder within the HermesPy
 Github repository.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
@@ -649,7 +666,7 @@ Github repository.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f389d174af0>
+<jinja2.runtime.BlockReference object at 0x7f016cfeda30>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

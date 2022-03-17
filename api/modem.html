@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Communication Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -105,38 +106,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="communication-module">
+  <section id="communication-module">
 <h1>Communication Module<a class="headerlink" href="#communication-module" title="Permalink to this headline"></a></h1>
 <p>This module provides functionalities to transmit information in form of bits over a wireless link.</p>
 <div class="mermaid">
             classDiagram
-  FrameSection &lt;|-- FrameSymbolSection
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
+  BitsSource &lt;|-- StreamBitsSource
+  Serializable &lt;|-- WaveformGeneratorOfdm
+  Serializable &lt;|-- WaveformGeneratorChirpFsk
+  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  Serializable &lt;|-- StreamBitsSource
+  Serializable &lt;|-- FrameErrorEvaluator
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
+  WaveformGenerator &lt;|-- WaveformGeneratorOfdm
+  Serializable &lt;|-- WaveformGeneratorPskQam
   Serializable &lt;|-- ThroughputEvaluator
+  BitsSource &lt;|-- RandomBitsSource
+  Serializable &lt;|-- BlockErrorEvaluator
+  FrameSection &lt;|-- FrameSymbolSection
+  Serializable &lt;|-- RandomBitsSource
+  Serializable &lt;|-- BitErrorEvaluator
+  Serializable &lt;|-- FrameSymbolSection
   SerializableArray &lt;|-- Modem
   PilotWaveformGenerator &lt;|-- WaveformGeneratorPskQam
-  Serializable &lt;|-- FrameErrorEvaluator
   DuplexOperator &lt;|-- Modem
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
-  Serializable &lt;|-- RandomBitsSource
-  Serializable &lt;|-- WaveformGeneratorPskQam
-  BitsSource &lt;|-- StreamBitsSource
-  Serializable &lt;|-- FrameSymbolSection
-  Synchronization &lt;|-- ChirpFskSynchronization
-  WaveformGenerator &lt;|-- WaveformGeneratorOfdm
-  FrameSection &lt;|-- FrameGuardSection
-  CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
-  Serializable &lt;|-- FrameGuardSection
-  Serializable &lt;|-- StreamBitsSource
-  Serializable &lt;|-- WaveformGeneratorChirpFsk
-  Serializable &lt;|-- BitErrorEvaluator
-  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
-  CommunicationEvaluator &lt;|-- BitErrorEvaluator
   RandomNode &lt;|-- Modem
-  Serializable &lt;|-- BlockErrorEvaluator
-  BitsSource &lt;|-- RandomBitsSource
-  Serializable &lt;|-- WaveformGeneratorOfdm
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  Synchronization &lt;|-- ChirpFskSynchronization
+  FrameSection &lt;|-- FrameGuardSection
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  Serializable &lt;|-- FrameGuardSection
         </div><p>It consists of the base configuration classes for communication modems</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -156,7 +157,7 @@
 <li class="toctree-l1"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>
@@ -169,7 +170,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f389c505e20>
+<jinja2.runtime.BlockReference object at 0x7f016cacda60>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

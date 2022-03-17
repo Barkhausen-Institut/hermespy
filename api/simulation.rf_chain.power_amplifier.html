@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Power Amplifier Modeling &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -103,16 +104,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.simulation.rf_chain.power_amplifier"></span><div class="section" id="power-amplifier-modeling">
+  <span class="target" id="module-hermespy.simulation.rf_chain.power_amplifier"></span><section id="power-amplifier-modeling">
 <h1>Power Amplifier Modeling<a class="headerlink" href="#power-amplifier-modeling" title="Permalink to this headline"></a></h1>
 <p>Power amplification modeling represents a single processing step within the radio-frequency hardware model of
 transmitting modems.</p>
 <div class="mermaid">
             classDiagram
-  PowerAmplifier &lt;|-- CustomPowerAmplifier
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
   PowerAmplifier &lt;|-- ClippingPowerAmplifier
   PowerAmplifier &lt;|-- RappPowerAmplifier
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
+  PowerAmplifier &lt;|-- CustomPowerAmplifier
         </div><p>Each power amplifier model instance implements an equation</p>
 <div class="math notranslate nohighlight">
 \[s'(t) = f\lbrace s(t), t \rbrace \in \mathbb{C}\]</div>
@@ -568,7 +569,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
 
 </dd></dl>
 
-</div>
+</section>
 <p id="id3"><dl class="footnote brackets">
 <dt class="label" id="footcite-1991-rapp"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
@@ -590,7 +591,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f389cbf3af0>
+<jinja2.runtime.BlockReference object at 0x7f016d454160>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

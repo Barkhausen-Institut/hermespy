@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulation Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -101,23 +102,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="simulation-module">
+  <section id="simulation-module">
 <h1>Simulation Module<a class="headerlink" href="#simulation-module" title="Permalink to this headline"></a></h1>
 <p>The simulation module provides the basis for all HermesPy simulations,
 including noise and hardware modeling.</p>
 <div class="mermaid">
             classDiagram
-  Device &lt;|-- SimulatedDevice
-  PowerAmplifier &lt;|-- RappPowerAmplifier
-  Serializable &lt;|-- SimulatedDevice
-  MonteCarlo &lt;|-- Simulation
-  Executable &lt;|-- Simulation
-  Serializable &lt;|-- RfChain
-  RandomNode &lt;|-- Noise
-  PowerAmplifier &lt;|-- ClippingPowerAmplifier
-  PowerAmplifier &lt;|-- CustomPowerAmplifier
-  Serializable &lt;|-- Simulation
   PowerAmplifier &lt;|-- SalehPowerAmplifier
+  PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  Device &lt;|-- SimulatedDevice
+  Serializable &lt;|-- RfChain
+  PowerAmplifier &lt;|-- RappPowerAmplifier
+  RandomNode &lt;|-- Noise
+  Serializable &lt;|-- Simulation
+  PowerAmplifier &lt;|-- CustomPowerAmplifier
+  Serializable &lt;|-- SimulatedDevice
+  Executable &lt;|-- Simulation
+  MonteCarlo &lt;|-- Simulation
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -127,7 +128,7 @@ including noise and hardware modeling.</p>
 <li class="toctree-l1"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>
@@ -140,7 +141,7 @@ including noise and hardware modeling.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f389c09fb20>
+<jinja2.runtime.BlockReference object at 0x7f016d3c57f0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

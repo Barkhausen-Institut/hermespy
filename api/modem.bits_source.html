@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bit Source &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -106,7 +107,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.modem.bits_source"></span><div class="section" id="bit-source">
+  <span class="target" id="module-hermespy.modem.bits_source"></span><section id="bit-source">
 <h1>Bit Source<a class="headerlink" href="#bit-source" title="Permalink to this headline"></a></h1>
 <p>Bit sources represent, as the title suggest, a source of (hard) communication bits
 to be transmitted over a modem.
@@ -114,11 +115,11 @@ Every bit source implementation is expected to inherit from the <a class="refere
 which in turn represents a random node.</p>
 <div align="center" class="mermaid align-center">
             classDiagram
-  Serializable &lt;|-- RandomBitsSource
-  RandomNode &lt;|-- BitsSource
   BitsSource &lt;|-- StreamBitsSource
   Serializable &lt;|-- StreamBitsSource
   BitsSource &lt;|-- RandomBitsSource
+  RandomNode &lt;|-- BitsSource
+  Serializable &lt;|-- RandomBitsSource
         </div>
         <p>There are currently two basic types of bit sources available:</p>
 <ul class="simple">
@@ -219,7 +220,7 @@ which in turn represents a random node.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
@@ -232,7 +233,7 @@ which in turn represents a random node.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f389c5123d0>
+<jinja2.runtime.BlockReference object at 0x7f016cb10160>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

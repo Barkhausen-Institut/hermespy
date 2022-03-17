@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Channel Modeling Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -101,20 +102,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="channel-modeling-module">
+  <section id="channel-modeling-module">
 <h1>Channel Modeling Module<a class="headerlink" href="#channel-modeling-module" title="Permalink to this headline"></a></h1>
 <p>The channel modeling module provides functionalities to model
 the wireless transmission link between devices on a physical level.</p>
 <div class="mermaid">
             classDiagram
-  MultipathFadingChannel &lt;|-- MultipathFading5GTDL
-  MultipathFadingChannel &lt;|-- MultipathFadingCost256
   RandomNode &lt;|-- Channel
   SerializableArray &lt;|-- Channel
-  Channel &lt;|-- RadarChannel
-  Channel &lt;|-- QuadrigaChannel
+  MultipathFadingChannel &lt;|-- MultipathFadingCost256
   MultipathFadingChannel &lt;|-- MultipathFadingExponential
   Channel &lt;|-- MultipathFadingChannel
+  Channel &lt;|-- QuadrigaChannel
+  Channel &lt;|-- RadarChannel
+  MultipathFadingChannel &lt;|-- MultipathFading5GTDL
         </div><p>The base class of all channel model implementations is defined within</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -130,7 +131,7 @@ the wireless transmission link between devices on a physical level.</p>
 <li class="toctree-l1"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>
@@ -143,7 +144,7 @@ the wireless transmission link between devices on a physical level.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f389d123700>
+<jinja2.runtime.BlockReference object at 0x7f016da2adf0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

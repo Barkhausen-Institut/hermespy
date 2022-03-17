@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Core Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -104,21 +105,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="core-module">
+  <section id="core-module">
 <h1>Core Module<a class="headerlink" href="#core-module" title="Permalink to this headline"></a></h1>
 <p>The core module of HermesPy provides all basic functionalities of the simulator.</p>
 <div class="mermaid">
             classDiagram
-  OperatorSlot &lt;|-- TransmitterSlot
-  OperatorSlot &lt;|-- ReceiverSlot
-  Serializable &lt;|-- Executable
-  RandomNode &lt;|-- Scenario
   Operator &lt;|-- MixingOperator
-  MixingOperator &lt;|-- Receiver
-  RandomNode &lt;|-- Receiver
-  RandomNode &lt;|-- Transmitter
   MixingOperator &lt;|-- Transmitter
+  MixingOperator &lt;|-- Receiver
   RandomNode &lt;|-- Device
+  RandomNode &lt;|-- Transmitter
+  Serializable &lt;|-- Executable
+  OperatorSlot &lt;|-- TransmitterSlot
+  RandomNode &lt;|-- Receiver
+  RandomNode &lt;|-- Scenario
+  OperatorSlot &lt;|-- ReceiverSlot
         </div><p>It is split into several interdependent sub-modules:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -132,7 +133,7 @@
 <li class="toctree-l1"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>
@@ -145,7 +146,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f389d780d90>
+<jinja2.runtime.BlockReference object at 0x7f016d64feb0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
