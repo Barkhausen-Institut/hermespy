@@ -11,13 +11,13 @@ adjacent-channel interference among different communication systems.
 The current release version 0.2.7 serves as a platform for joint development.
 Its main focus is to provide a software architecture that can be easily extended.
 Detailed core features as well as a release plan can be found in the
-[features](https://barkhausen-institut.github.io/hermespy/features.html) list.
+[features](https://hermespy.org/features.html) list.
 
 ## Documentation
 
-For detailed [installation instructions](https://barkhausen-institut.github.io/hermespy/installation.html),
+For detailed [installation instructions](https://hermespy.org/installation.html),
 tutorials and a full API documentation, please consult the official
-[documentation](https://barkhausen-institut.github.io/hermespy/index.html) website.
+[documentation](https://hermespy.org/index.html) website.
 
 ## Contributors
 
@@ -26,4 +26,4 @@ tutorials and a full API documentation, please consult the official
 * [Jan Adler](https://github.com/adlerjan)
 
 ## Copyright
-Copyright (C) 2021 Barkhausen Institut gGmbH
+Copyright (C) 2022 Barkhausen Institut gGmbH

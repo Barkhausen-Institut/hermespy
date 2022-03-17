@@ -18,6 +18,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Barkhausen-Institut/hermespy",
     project_urls={
+        "Documentation": "https://hermespy.org/",
         "Barkhausen Institute": "https://www.barkhauseninstitut.org",
         "Bug Tracker": "https://github.com/Barkhausen-Institut/hermespy/issues",
     },
