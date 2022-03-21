@@ -623,7 +623,6 @@ class Transmitter(RandomNode, MixingOperator['TransmitterSlot']):
 class TransmitterSlot(OperatorSlot[Transmitter]):
     """Slot for transmitting operators within devices."""
 
-    __slots__ = ['__signals']
     __signals: List[Optional[Signal]]       # Next signals to be transmitted
 
     def __init__(self, *args, **kwargs) -> None:
@@ -675,10 +674,18 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
 
         signals: List[Signal] = []
 
-        for signal in self.__signals:
+        for operator_idx, signal in enumerate(self.__signals):
+            
+            # Ignore operators without registered signal transmissions
             if signal is not None:
+            
+                # If the signal is a base-band-band signal, assume the operator's carrier frequency requirements
+                if signal.carrier_frequency == 0.:
+                    signal.carrier_frequency = self[operator_idx].carrier_frequency
+                
                 signals.append(signal)
 
+        # Clear the cache if the respective flag is enabled
         if clear_cache:
             self.clear_cache()
 

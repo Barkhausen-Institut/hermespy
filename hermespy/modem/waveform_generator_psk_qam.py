@@ -248,8 +248,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
     def pilot(self) -> Signal:
         
         pilot = np.zeros(self.oversampling_factor * self.num_preamble_symbols, dtype=complex)
-        pilot[::2*self.oversampling_factor] = 1.
-        pilot[self.oversampling_factor::2 * self.oversampling_factor] = -1.
+        pilot[::self.oversampling_factor] = 1.
         pilot = self.tx_filter.filter(pilot)
 
         return Signal(pilot, sampling_rate=self.sampling_rate)
@@ -266,8 +265,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
 
         # Set preamble symbols
         num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
-        frame[:num_preamble_samples:2 * self.oversampling_factor] = 1.
-        frame[self.oversampling_factor:num_preamble_samples:2 * self.oversampling_factor] = -1.
+        frame[:num_preamble_samples:self.oversampling_factor] = 1.
 
         # Set data symbols
         num_data_samples = self.oversampling_factor * self.__num_data_symbols
@@ -292,7 +290,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
 
         # Filter the signal
         filtered_signal = self.rx_filter.filter(baseband_signal)
-        filter_delay = self.tx_filter.delay_in_samples + self.rx_filter.delay_in_samples
+        filter_delay = self.tx_filter.delay_in_samples + self.rx_filter.delay_in_samples + 0
 
         # Extract preamble symbols
         num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
@@ -757,9 +755,7 @@ class PskQamLeastSquaresChannelEstimation(PskQamChannelEstimation):
         preamble_symbols = signal.samples[0, preamble_start_idx:preamble_stop_idx:symbol_distance]
 
         # Reference preamble
-        reference = np.empty(num_preamble_symbols, dtype=complex)
-        reference[::2] = 1.
-        reference[1::2] = -1.
+        reference = np.ones(num_preamble_symbols, dtype=complex)
 
         # Compute channel weight.
         channel_weight = np.mean(preamble_symbols / reference)
