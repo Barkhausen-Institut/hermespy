@@ -155,6 +155,15 @@ class RadarCube(object):
                  angle_bins: np.ndarray,
                  velocity_bins: np.ndarray,
                  range_bins: np.ndarray) -> None:
+        
+        if data.shape[0] != len(angle_bins):
+            raise ValueError("Data cube angle dimension does not match angle bins")
+        
+        if data.shape[1] != len(velocity_bins):
+            raise ValueError("Data cube velocity dimension does not match velocity bins")
+
+        if data.shape[2] != len(range_bins):
+            raise ValueError("Data cube range dimension does not match range bins")
 
         self.data = data
         self.angle_bins = angle_bins
