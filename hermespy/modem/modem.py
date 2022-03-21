@@ -356,7 +356,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         # TODO: Not yet supported.
 
         # Change the signal carrier
-        signal.carrier_frequency = self.carrier_frequency
+        # signal.carrier_frequency = self.carrier_frequency
 
         # Transmit signal over the occupied device slot (if the modem is attached to a device)
         if self._transmitter.attached:
