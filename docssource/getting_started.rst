@@ -7,127 +7,179 @@ Getting Started
 ***************
 
 Assuming HermesPy is properly :doc:`installed</installation>` within the currently selected Python environment,
-users may define custom scenarios to be investigated.
+users may define custom wireless communication scenarios to be investigated within the context of
+:doc:`Simulations</api/simulation>` or :doc:`Hardware Loops</api/hardware_loop>`.
+The whole HermesPy suite can either be directly integrated into custom software projects and operated as a plug-in
+library via a detailed object-oriented programming interface or configured by YAML-style configuration files
+and launched from any system command line.
 
-This section outlines how to include HermesPy into your own Python projects and provides
-basic reference examples to get new users accustomed to the API.
+This section provides a rough description of the HermesPy software architecture and gives an introduction
+into both the library and command line interface in order to get new users quickly accustomed.
 
 =====================
 HermesPy Architecture
 =====================
 
-In its core, the HermesPy API aims to abstract the process of wireless communication signal processing
+In its core, the HermesPy API aims to abstract the process of wireless communication and sensing signal processing
 within a strictly object-oriented class structure.
-Each processing step is represented by a dedicated class and can be adapted and customized
-by the library user.
-Considering a single link between a receiving and transmitting modem,
-the software architecture is outlined in the following flowchart:
+Each processing step is represented by a dedicated class and can be adapted and customized by the software user.
+
+Consider a single link between a receiving and transmitting wireless :doc:`Device</api/core.device>`.
+HermesPy does not natively distinguish between Up- Down- and Side-Link,
+instead every link between two spatially separated wireless entities is characterized by
+two :doc:`Device</api/core.device>` instances and a :doc:`Channel</api/channel.channel>`,
+as visualized in the following flowchart:
+
 
 .. mermaid::
+   :align: center
 
    %%{init: {'theme': 'dark'}}%%
-   flowchart TD
+   flowchart LR
 
-      subgraph TX[Transmitter]
-            direction LR
+   channel{Channel Model}
 
-            BSTX(BitSource) --> BCTX(Bit-Encoding) --> MAPTX
+   subgraph devicea[SimulatedDevice]
 
-            subgraph WRX[WaveformGenerator]
-                direction LR
-                MAPTX(Mapping) --> PRETX(Precoding) --> MODTX(Modulation)
-            end
+       direction TB
+       deviceatx>Tx Slot]
+       devicearx>Rx Slot]
+
+   end
+
+   subgraph deviceb[SimulatedDevice]
+
+       direction TB
+       devicebtx>Tx Slot]
+       devicebrx>Rx Slot]
+   end
+
+   deviceatx --> channel --> devicearx
+   devicebtx --> channel --> devicebrx
+
+Currently two types of devices are supported,
+namely :doc:`Simulated Devices</api/simulation.simulated_device>` and
+:doc:`Physical Devices</api/hardware_loop.physical_device>`, used within simulation and hardware
+verification contexts, respectively.
+For the scope of this introduction we will focus on simulated devices, since they, as the name suggests,
+do not require any additional hardware from the user.
+Complex wireless :doc:`Scenarios</api/core.scenario/>` can theoretically be configured to feature
+an unlimited amount of devices.
+Within :doc:`Simulations</api/simulation.simulation/>`,
+the devices and the channels linking them form a symmetric matrix of channel instances:
+
+.. list-table:: Channel Matrix
+   :header-rows: 1
+   :stub-columns: 1
+
+   * -
+     - Device #1
+     - Device #2
+     - ...
+     - Device #N
+
+   * - Device #1
+     - Channel Model (1, 1)
+     - Channel Model (1, 2)
+     - ...
+     - Channel Model (1, N)
+
+   * - Device #2
+     - Channel Model (1, 2)
+     - Channel Model (2, 2)
+     - ...
+     - Channel Model (2, N)
+
+   * - ...
+     - ...
+     - ...
+     - ...
+     - ...
+
+   * - Device #N
+     - Channel Model (1, N)
+     - Channel Model (2, N)
+     - ...
+     - Channel Model (N, N)
+
+Each link channel model may be configured according to the scenario assumptions.
+Note that the diagonal of this channel matrix approach patches the devices transmission back as receptions,
+enabling, for example, self-interference or sensing investigations.
+Currently available channel models are provided by the :doc:`Channel</api/channel>` package.
+
+Each device may transmit and arbitrary :doc:`Signal Model</api/core.signal_model>` over its transmit slot and
+receive an arbitrary signal over its receive slot after propagation.
+:doc:`Signal Models</api/core.signal_model>` contain base-band samples of the signals transmitted / received by each
+device antenna as well as meta-information about the assumed radio-frequency band center frequency and sampling rate.
+In general, an unlimited amount of :class:`Operators<hermespy.core.device.Operator>` may be configured to operate on any
+device's slots.
+Transmit operators may submit individual :doc:`Signal Models</api/core.signal_model>` to its configured device slot.
+The signal transmitted by the device will then be formed by a superposition of all submitted operator signals.
+Inversely, receive operators are provided with the signal received by its configured device after propagation.
+Currently two types of :class:`Duplex Operators<hermespy.core.device.DuplexOperator>`,
+operating both the transmit and receive slot of their configured device, are implemented:
+
+* :doc:`Communication Modems</api/modem.modem>` for information exchange in form of bits
+* :doc:`Radars</api/radar.radar>` for wireless sensing
+
+These operators each model the sequential signal processing steps for the transmission and reception of their
+respective waveforms in a modular fashion.
+Each processing step is represented by a customizable or interchangeable class slot.
+The :doc:`Communication Modem</api/modem.modem>` operator class currently considers
+
+* :doc:`Bit Sources</api/modem.bits_source>` as the source of data bits to be transmitted
+* :doc:`Channel Codings</api/coding.coding>` as the channel coding configuration
+* :doc:`Waveform Generators</api/modem.waveform_generator>` as the transmit waveform configuration
+* :doc:`Channel Precodings</api/precoding.precoding>` as the channel precoding configuration
+
+while the :doc:`Radar</api/radar.radar>` operator only considers
+
+* :doc:`Radar Waveforms</api/radar.radar>` as the transmit waveform configuration
+
+making it much easier to configure.
 
 
-            MODTX --> RFTX(RF-Chain)
-      end
-
-      TX --> F[Channel] --> RX
-
-      subgraph RX[Receiver]
-            direction RL
-
-            RFRX(RF-Chain) --> SRX(Synchronization)
-
-            subgraph WTX[WaveformGenerator]
-                direction RL
-                SRX --> MODRX(De-Modulation) --> PRERX(Precoding) --> MAPRX(Un-Mapping)
-            end
-
-            MAPRX --> BCRX(Bit-Decoding)
-
-      end
-
-Each HermesPy :doc:`Scenario </api/hermespy.scenario.scenario>` consists of multiple links
-between :doc:`Transmitters </api/hermespy.modem.transmitter>`
-and :doc:`Receivers </api/hermespy.modem.receiver>`, which are both :doc:`Modems </api/hermespy.modem.modem>`.
-Transmitters feed :doc:`Signal</api/hermespy.signal.signal>` models of electromagnetic waves
-into a wireless transmission :doc:`Channel </api/hermespy.channel.channel>`.
-After propagation over said channel, receivers subsequently pick up the distorted signals.
-
-Both transmitters and receivers perform a sequence of processing steps in order to
-exchange information represented by binary bit-streams:
-
-#. :doc:`BitsSource</api/hermespy.source.bits_source>` *(transmitters only)* |br|
-   Generate a sequence of bits to be transmitted.
-
-#. :doc:`Bit-Encoding</api/hermespy.coding.encoder_manager>` |br|
-   Perform operations on the bit-sequence to add redundancy and correct errors.
-
-#. :doc:`Waveform-Generation </api/hermespy.modem.waveform_generator>` |br|
-   Map bits to communication symbols, modulate the symbols to electromagnetic baseband-signals.
-
-#. :doc:`Radio-Frequency Chain </api/hermespy.modem.rf_chain>` |br|
-   Mix and amplify the baseband-signals to radio-frequency-band signals.
-
-Note that receivers perform the inverse processing steps in reverse order.
+.. _GettingStarted_Library:
 
 ========
 Library
 ========
 
-This chapter provides several examples outlining the utilization of HermesPy as a library.
+This chapter provides several examples outlining the utilization of HermesPy as a library within custom Python projects.
+A full description of the application programming interface can be found in the section :doc:`/api/api`.
 
+-------------
 Transmissions
 -------------
 
 The following code generates the samples of a single communication frame
 transmitted by a PSK/QAM modem:
 
-.. code-block:: python
+.. literalinclude:: /../_examples/library/getting_started.py
+   :language: python
    :linenos:
-
-   import matplotlib.pyplot as plt
-   from hermespy.scenario import Scenario
-   from hermespy.modem import Transmitter, WaveformGeneratorPskQam
-
-   transmitter = Transmitter()
-   transmitter.waveform_generator = WaveformGeneratorPskQam()
-
-   scenario = Scenario()
-   scenario.add_transmitter(transmitter)
-
-   signal, _ = transmitter.send()
-   signal.plot()
-   plt.show()
 
 Within this snippet, multiple statements lead to the generation and simulation of a single communication frame signal.
 
-* Initially, the required Python modules are imported *(lines 1-3)*.
-* A new transmitter modem handle is created *(line 5)*.
-* The waveform to be generated by the transmitter is configured by assigning a specific
-  :doc:`Waveform Generator </api/hermespy.modem.waveform_generator>` instance to the transmitter's
-  waveform_generator property *(line 6)*. |br|
-  In our case, this is an instance of a :doc:`PKS/QAM </api/hermespy.modem.waveform_generator_psk_qam>`
-  waveform generator.
-* The transmitter is inserted into an empty simulation scenario *(lines 8-9)*
-* An electromagnetic waveform, encoding a single communication frame, emitted by the transmitter
-  is generated and plotted *(lines 11-13)*
+* Initially, the required Python modules are imported *(lines 1-4)*.
+* A new modem operator instance is created *(line 6)*.
+* The waveform to be generated by the modem is configured by assigning a specific
+  :doc:`Waveform Generator </api/modem.waveform_generator>` instance to the modem's
+  waveform_generator property *(line 7)*. |br|
+  In our case, this is an instance of a :doc:`PKS/QAM </api/modem.waveform_generator_psk_qam>`
+  waveform.
+* The device on which the modem operates is defined *(line 9)*.
+* An signal model, encoding a single communication frame, emitted by the modem operator
+  is generated and plotted *(lines 10-13)*
 
 Executing the snippet will result in a plot similar to
 
-.. image:: images/getting_started_signal_plot.png
+.. figure:: images/getting_started_signal_plot.png
+  :align: center
   :alt: PSK/QAM default waveform plot
+  :scale: 75%
+
+  Signal Model Plot
 
 which visualizes the generated samples in time-domain (left sub-plot) and its respective
 discrete fourier transform (right sub-plot).
@@ -135,132 +187,177 @@ discrete fourier transform (right sub-plot).
 While this is only a minimal example, it highlights the philosophy behind the HermesPy API, namely that
 each signal processing step is represented by a class modeling its functionality.
 Instances of those classes are assigned to property slots, where they will be executed sequentially
-during signal simulation.
-Changing the waveform generated by the transmitter defined in the previous snippet
+during signal generation.
+Changing the waveform generated by the modem operator defined in the previous snippet
 is therefore as simple as assigning a different type of
-:doc:`Waveform Generator </api/hermespy.modem.waveform_generator>`
-to its waveform_generator property slot.
+:doc:`Waveform Generator </api/modem.waveform_generator>`
+to its :meth:`hermespy.modem.modem.Modem.waveform_generator` property slot.
 
 Of course, a multitude of parameters can be configured to customize the behaviour of each processing step.
-For instance, the frame generated by a :doc:`PKS/QAM </api/hermespy.modem.waveform_generator_psk_qam>` waveform
-generator features a preamble of multiple reference symbols at the beginning of the communication frame.
-They may be removed by specifying the respective property
+For instance, the frame generated by a :doc:`PKS/QAM </api/modem.waveform_generator_psk_qam>` waveform
+generator features no preamble by default.
+A preamble is defined as a static set of known reference symbols at the beginning of the communication frame.
+By modifying the property
 
 .. code-block:: python
 
-   transmitter.waveform_generator.num_preamble_symbols = 0
+   operator.waveform_generator.num_preamble_symbols = 20
 
-configuring the number of preamble symbols, resulting in a signal waveform similar to
 
-.. image:: images/getting_started_signal_plot_no_preamble.png
-  :alt: PSK/QAM waveform plot without preamble
+the user may freely chose the number of preamble symbols.
+In this case, requesting :math:`20` symbols results in a generated frame
 
-in which the preamble has clearly been removed.
+.. figure:: images/getting_started_signal_plot_preamble.png
+  :alt: PSK/QAM waveform plot with preamble
+  :align: center
+  :scale: 75%
+
+  Signal Model Plot with Preamble
+
+featuring the added preamble.
 Describing all configurable parameters is beyond the scope of this introduction,
-the API documentation of each processing step should be consulted for detailed descriptions.
+the :doc:`API <api/api>` documentation of each processing step should be consulted for detailed descriptions.
+In general, each settable property may be freely configured by the user.
 
-A full communication link over an ideal channel between a single transmitter and receiver modem is established
-by adding receiver to the scenario:
+While the previous code snippet highlighted how to generate basic waveform models,
+link-level simulations usually consider the signal exchange between two dedicated devices.
+A full communication link over an ideal channel model between two dedicated simulated devices
+is implemented in the next example:
 
-.. code-block:: python
+.. literalinclude:: /../_examples/library/getting_started_link.py
+   :language: python
    :linenos:
 
-   from hermespy.scenario import Scenario
-   from hermespy.modem import Transmitter, Receiver, WaveformGeneratorPskQam
+While this code may seem somewhat complex at first glance, it expands the previous example by some important
+concepts, namely :class:`Channels <hermespy.channel.channel.Channel>`
+and :class:`Evaluators <hermespy.core.monte_carlo.Evaluator>`.
+:class:`Channels <hermespy.channel.channel.Channel>` are the key simulation entity modeling
+waveform propagation between devices.
+Depending on the simulation assumptions, users may select from a multitude of different classes providing specific
+model implementations.
+Refer to the :doc:`Channel Module<api/channel>` for a detailed overview.
+:class:`Evaluators <hermespy.core.monte_carlo.Evaluator>` HermesPy's abstraction for the extraction of specific
+performance indicators from simulation objects.
+In theory, almost any object and its respective properties can be used to implement custom evaluation routines.
+For communication evaluations, several default evaluation routines are already shipped within the
+:doc:`Communication Evaluators<api/modem.evaluators>` module.
 
-   transmitter = Transmitter()
-   transmitter.waveform_generator = WaveformGeneratorPskQam()
-
-   receiver = Receiver()
-   receiver.waveform_generator = WaveformGeneratorPskQam()
-
-   scenario = Scenario()
-   scenario.add_transmitter(transmitter)
-   scenario.add_receiver(receiver)
-
-   transmitted_signal, _ = transmitter.send()
-   propagated_signal, channel_state = scenario.channel(transmitter, receiver).propagate(transmitted_signal)
-
-   received_signal = receiver.receive(propagated_signal)
-   received_bits, received_symbols = receiver.demodulate(propagated_signal, channel_state)
-
-The relevant sections in lines *14-15* highlight how a signal transmission over the channel between
-two modems is simulated by selecting the respective channel and propagating a waveform over it.
-As a result, a tuple of the waveform after propagation and its respective channel state information is returned.
-In lines *17-18* the propagated signal is down-mixed by the receiver's radio-frequency chain and demodulated
-into symbols, and subsequently mapped to bits.
-
-Simulations
------------
-
-Evaluating multiple transmissions in scenarios featuring several modems can become quite tedious,
-which is why HermesPy offers the :doc:`Simulation </api/hermespy.simulator_core.simulation>` helper class.
-Considering the same scenario as before, the following snippet demonstrates how
-a single communication drop at 40dB signal-to-noise ratio can be generated:
-
-.. code-block:: python
-   :linenos:
-
-   import matplotlib.pyplot as plt
-   from hermespy.scenario import Scenario
-   from hermespy.modem import Transmitter, Receiver, WaveformGeneratorPskQam
-   from hermespy.simulator_core import Simulation
-
-   transmitter = Transmitter()
-   transmitter.waveform_generator = WaveformGeneratorPskQam()
-
-   receiver = Receiver()
-   receiver.waveform_generator = WaveformGeneratorPskQam()
-
-   scenario = Scenario()
-   scenario.add_transmitter(transmitter)
-   scenario.add_receiver(receiver)
-
-   simulation = Simulation()
-   simulation.add_scenario(scenario)
-
-   drop = simulation.drop(40.)
-   drop.plot_received_symbols()
-   drop.plot_bit_errors()
-
-   plt.show()
-
-Note that lines *5-16* are identical to the previous snippet, defining a scenario with a single receiver
-and transmitter modem emitting :doc:`PKS/QAM </api/hermespy.modem.waveform_generator_psk_qam>` waveforms.
-However, the scenario is now being managed by the :doc:`Simulation </api/hermespy.simulator_core.simulation>` helper.
-It generates and visualizes a single information exchange between all scenario modems *(lines 18)*.
-In HermesPy, this is referred to as a :doc:`Drop </api/hermespy.simulator_core.drop>`.
-Visualizing the received symbols *(line 19)* and bit errors *(line 20)* during transmission
-results in the following constellation and bit error plots:
+Executing the snippet above results in two visualizations being rendered after propagation simulation,
 
 .. list-table::
 
     * - .. figure:: /images/getting_started_constellation_low_noise.png
+           :align: center
+           :alt: Constellation
 
-           Symbol Constellation, Low Noise
+           Symbol Constellation, Noiseless
 
       - .. figure:: /images/getting_started_errors_low_noise.png
+           :align: center
+           :alt: BER
 
-           Bit Errors, Low Noise
+           Bit Errors, Noiseless
 
-Of course, due to the high signal-to-noise ratio and the ideal channel model, no bit errors occur during transmission.
-Generating another drop at a much lower ratio, namely 5dB,
+namely a symbol constellation diagram at the receiver side and a bit error evaluation stem graph.
+Since the channel we model is actually an ideal channel and no noise is added at the receiver,
+no bit errors occur during data transmission.
+Adapting line 28 of the snippet according to
 
 .. code-block:: python
 
-   drop = simulation.drop(5.)
+   rx_device.receive(rx_signal, snr=4.)
 
-leads to several bit-errors during data transmission:
+will result in additive white gaussian being added at the receiver side with a signal to noise ratio of :math:`4`.
+As a consequence, the constellation gets distorted, leading to false decisions during demodulation and therefore
+to a number of bit errors during data transmission.
+Executing the snippet with noise consideration results in a visualization similar to
 
 .. list-table::
 
     * - .. figure:: /images/getting_started_constellation_high_noise.png
+           :align: center
+           :alt: Constellation
 
-           Symbol Constellation, High Noise
+           Symbol Constellation, Noisy
 
       - .. figure:: /images/getting_started_errors_high_noise.png
+           :align: center
+           :alt: BER
 
-           Bit Errors, High Noise
+           Bit Errors, Noisy
+
+where said effects are clearly visible.
+
+Propagating signal models over a channel linking two devices is an example of one of the fundamental
+routines commonly executed in link-level simulations.
+However, complex investigations usually consider multiple devices and channel models,
+as well as perform Monte Carlo style simulations over a grid of model parametrizations,
+which can lead to computationally complex routines, even for seemingly simple scenarios.
+In order to streamline simulation definition and execution, HermesPy provides the
+:doc:`Simulation</api/simulation.simulation>` helper class, which automizes the process
+of distributing the simulation workload in multicore systems and parameter grid evaluations.
+Its usage is introduced in the next section.
+
+-----------
+Simulations
+-----------
+
+Consider the simulation scenario of a single device transmitting its waveforms and receiving them back
+after reflections from surroundings, assuming ideal isolation between transmit and receive chain.
+One of the most frequently conducted investigations in communication signal processing is the estimation of the
+bit error rate (BER) in relation to the noise power at the receiver side of the communication link.
+Within HermesPy, :doc:`Simulations</api/simulation.simulation>` can be configured to estimate performance indicators
+such as bit error rate over arbitrary parameter dimensions.
+For example, the following snippet
+
+.. literalinclude:: /../_examples/library/getting_started_simulation.py
+   :language: python
+   :linenos:
+
+defines the described scenario, adds a bit error rate evaluation and, most importantly,
+defines a sweep over the (linear) signal to noise ratio from :math:`10` to :math:`5`,
+collecting :math:`1000` samples for each sweep point, respectively.
+Executing the script will launch a full simulation run and a rendered result
+
+.. figure:: images/getting_started_ber_evaluation.png
+   :alt: Bit Error Rate Plot
+   :align: center
+   :scale: 75%
+
+   Bit Error Rate Evaluation
+
+of the bit error rate graph.
+
+Now, a typical approach to reduce the bit errors is the introduction of :doc:`Channel Coding<api/coding>`
+schemes for error correction.
+They introduce redundancy within the transmitted bit stream during transmission
+and exploit said redundancy at the receiver to correct errors.
+One of the most basic error-correcting channel codes is the :doc:`Repetition Encoder<api/coding.repetition>`,
+which simply repeats bits to be transmitted and decodes by majority voting after reception.
+In theory, the more repetitions per transmitted data frame, the higher the error correction capabilites.
+But the more redundancy is introduced, the lower the actual information throughput becomes.
+Therefore, there is a sweet-spot within the tradeoff between data throughput and repetitions for a given signal to noise
+ratio.
+
+The following snippet configures HermesPy to conduct a simulation visualizing the data rate relative
+to number of repetitions and noise ratio:
+
+.. literalinclude:: /../_examples/library/getting_started_simulation_multidim.py
+   :language: python
+   :linenos:
+
+Executing it leads to the rendering of a surface plot visualization, from which engineers
+can infer the selection of a proper repetition rate in order to achieve a required data rate for
+a given noise ratio:
+
+.. figure:: /images/getting_started_simulation_multidim_drx.png
+   :align: center
+   :alt: Throughput
+   :scale: 75%
+
+   Data Throughput
+
+.. _GettingStarted_CommandLineTool:
 
 =================
 Command Line Tool
@@ -269,10 +366,10 @@ Command Line Tool
 This section outlines how to use HermesPy as a command line tool
 and provides some reference examples to get new users accustomed with the process of configuring scenarios.
 
-Once HermesPy is installed within any python environment,
-users may call the command line interface by executing the command ``hermes``
+Once HermesPy is installed within any Python environment,
+users may call the command line interface by executing the command :mod:`hermes <hermespy.bin.hermes>`
 in both Linux and Windows command line terminals.
-Consult :doc:`/api/hermespy.bin.hermes` for a detailed description of all available command line options.
+Consult :doc:`/api/bin.hermes` for a detailed description of all available command line options.
 
 In short, entering
 
@@ -286,63 +383,44 @@ an executable scenario configuration.
 The configuration is subsequently being executed.
 All data resulting from this execution will be stored within */path/to/output*.
 
+If the command-line parameter ``-p`` is left out, then the default path */_settings* will be considered.
+If the ``-o`` is left out, then the results will be stored in a unique sub-folder of */results/*.
+
+
 -----------
 First Steps
 -----------
 
-Let's start by configuring a basic simulation scenario.
+Let's begin by configuring a basic simulation scenario.
 It should consist of:
 
-#. A single transmitting modem, a single receiving modem, both featuring a single ideal antenna
-#. A Quadrature-Amplitude modulation scheme
-#. A central carrier frequency of 1GHz
-#. An ideal channel between both transmitting and receiving modem
+#. A single device featuring a single omnidirectional antenna
+#. A modem operator with
 
-This scenario is represented by the following *scenario.yml* file:
+   * :math:`R = \frac{1}{3}` repetition coding
+   * 100GHz symbol rate
+   * Root-Raised-Cosine waveforms
+   * a modulation order of 16
+   * a frame consisting of 10 preamble- and 1000 data symbols
 
-.. code-block:: yaml
+#. An evaluation routine for the bit error rate
+#. A parameter sweep over the SNR between 0 and 20 dB
+
+This scenario is represented by the following *simulation.yml* file:
+
+.. literalinclude:: /../_examples/settings/chirp_qam/simulation.yml
+   :language: yaml
    :linenos:
 
-   !<Scenario>
-
-   Modems:
-
-      - Transmitter
-
-        carrier_frequency: 1e9
-
-        WaveformPskQam:
-            num_data_symbols: 100
-
-      - Receiver
-
-        carrier_frequency: 1e9
-
-        WaveformPskQam:
-            num_data_symbols: 100
-
-
-A second *simulation.yml* file determines the execution behaviour of the scenario.
-For now, the baseband-waveforms as well as the mapped symbol constellations
-at both the transmitter and receiver should be plotted:
-
-.. code-block:: yaml
-   :linenos:
-
-    !<Simulation>
-
-    snr: [20]
-
-    plot_drop: true
-    plot_drop_transmitted_signals: true
-    plot_drop_received_signals: true
-    plot_drop_transmitted_symbols: true
-    plot_drop_received_symbols: true
-
-Assuming both *scenario.yaml* and  *simulation.yml* are located within */path/to/settings*, calling
+Assuming *simulation.yml* is located within */path/to/settings*, calling
 
 .. code-block:: bash
 
    hermes -p /path/to/settings
 
 will result in the rendering of four plots displaying the respective information.
+The resulting plots and a matlab dump of the evaluation data will be saved in your current working directory.
+For different types of configurations, please refer to the `Examples`_ folder within the HermesPy
+Github repository.
+
+.. _examples: https://github.com/Barkhausen-Institut/hermespy/tree/main/_examples/settings

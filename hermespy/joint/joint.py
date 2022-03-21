@@ -6,7 +6,7 @@ from scipy.constants import speed_of_light
 from scipy.signal import correlate
 
 from hermespy.core.signal_model import Signal
-from hermespy.modem import Modem, Symbols
+from hermespy.modem import Modem
 from hermespy.radar import Radar
 from hermespy.radar.radar import RadarCube
 

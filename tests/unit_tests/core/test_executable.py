@@ -13,10 +13,10 @@ from hermespy.core import Executable, Verbosity
 from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.1.0"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -44,16 +44,14 @@ class TestExecutable(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        self.max_num_drops = 1
         self.verbosity = Verbosity.NONE
 
         with tempfile.TemporaryDirectory() as tempdir:
-            self.executable = ExecutableStub(self.max_num_drops, tempdir, self.verbosity)
+            self.executable = ExecutableStub(tempdir, self.verbosity)
 
     def test_init(self) -> None:
         """Executable initialization parameters should be properly stored."""
 
-        self.assertEqual(self.max_num_drops, self.executable.max_num_drops)
         self.assertEqual(self.verbosity, self.executable.verbosity)
 
     def test_execute(self) -> None:
@@ -63,43 +61,6 @@ class TestExecutable(unittest.TestCase):
 
             self.executable.execute()
             self.assertTrue(run.called)
-
-    def test_spectrum_fft_size_setget(self) -> None:
-        """Spectrum FFT size property getter should return setter argument."""
-
-        fft_size = 50
-        self.executable.spectrum_fft_size = fft_size
-
-        self.assertEqual(fft_size, self.executable.spectrum_fft_size)
-
-    def test_spectrum_fft_size_validation(self) -> None:
-        """Spectrum FFT size property setter should raise ValueError on negative arguments,"""
-
-        with self.assertRaises(ValueError):
-            self.executable.spectrum_fft_size = -1
-
-        try:
-            self.executable.spectrum_fft_size = 0
-
-        except ValueError:
-            self.fail("Spectrum FFT size setter should not raise ValueError on zero argument")
-
-    def test_max_num_drops_setget(self) -> None:
-        """Number of drops property getter should return setter argument."""
-
-        num_drops = 20
-        self.executable.max_num_drops = num_drops
-
-        self.assertEqual(num_drops, self.executable.max_num_drops)
-
-    def test_max_num_drops_validation(self) -> None:
-        """Number of drops property setter should raise ValueError on arguments smaller than one."""
-
-        with self.assertRaises(ValueError):
-            self.executable.max_num_drops = 0
-
-        with self.assertRaises(ValueError):
-            self.executable.max_num_drops = -1
 
     def test_results_dir_setget(self) -> None:
         """Results directory property getter should return setter argument."""

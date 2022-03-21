@@ -1,0 +1,3 @@
+.. automodule:: bin.hermes
+
+.. footbibliography::

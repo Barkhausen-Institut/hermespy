@@ -19,11 +19,11 @@ Operators:
     device: *device_alpha          # Device the modem is operating on
 
     # Bit encoding configuration before mapping to modulation symbols
-    Encoding:
-
-      - !<LDPC>
-        block_size: 256
-        rate: [1, 2]
+    #Encoding:
+    #
+    #  - !<LDPC>
+    #    block_size: 256
+    #    rate: [1, 2]
 
     # Stream encoding configuration
     Precoding:
@@ -91,6 +91,7 @@ Evaluators:
     receiving_modem: *modem_alpha
     confidence: .9
     tolerance: .01
+    plot_scale: log
 
 
 # Simulation parameters
@@ -103,4 +104,4 @@ plot_results: True                 # Visualize the evaluations after the simulat
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [24, 20, 16, 12, 8, 4, 0, -4, -8, -12] dB
+  snr: [24, 20, ..., -12] dB

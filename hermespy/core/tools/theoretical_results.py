@@ -14,11 +14,11 @@ from hermespy.core import Scenario, Transmitter, Receiver
 from hermespy.modem import WaveformGenerator, WaveformGeneratorChirpFsk, WaveformGeneratorPskQam
 from hermespy.channel import Channel, MultipathFadingChannel
 
-__author__ = "Tobias Kronauer"
+__author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__credits__ = [ "Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.5"
+__version__ = "0.2.7"
 __maintainer__ = "Tobias Kronauer"
 __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"

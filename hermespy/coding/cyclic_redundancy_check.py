@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Cyclic Redundancy Check bit encoding."""
+"""
+========================
+Cyclic Redundancy Checks
+========================
+
+Cyclic Redundancy Check (CRC) channel coding schemes introduce redundancy in order to detect the occurrence
+of errors within a block of coded bits after reception.
+CRC codings usually only detect errors, they do not correct them.
+"""
 
 from __future__ import annotations
 from typing import Type
@@ -8,47 +16,44 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 from hermespy.core.factory import Serializable
-from .encoder import Encoder
+from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.5"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class CyclicRedundancyCheck(Encoder, Serializable):
-    """Cyclic Redundancy Check Bit Encoding.
+    """Cyclic Redundancy Check Mock.
     
-    Note that redundancy checking does NOT correct errors!
-    
-    Attributes:
-        
-        __bit_block_size (int):
-            Number of bits per encoded block.
-            
-        __check_block_size (int):
-            Number of bits appended to bit blocks.
+    This channel coding step mocks CRC algorithms by appending a random checksum of
+    :math:`Q` :meth:`.check_block_size` bits to data bit blocks of size :math:`K_n` :meth:`.bit_block_size`.
+    The achieved coding rate is therefore
+
+    .. math::
+
+        R_{n} = \\frac{K_n}{K_n + Q} \\mathrm{.}
     """
 
     yaml_tag = u'CRC'
-    __bit_block_size: int
-    __check_block_size: int
+    __bit_block_size: int       # Number of bits per encoded block.
+    __check_block_size: int     # Number of bits appended to bit blocks.
 
     def __init__(self,
-                 bit_block_size: int = 1,
-                 check_block_size: int = 0) -> None:
-        """Cyclic Redundancy Check initialization.
-        
+                 bit_block_size,
+                 check_block_size) -> None:
+        """
         Args:
             
-            bit_block_size (int, optional):
+            bit_block_size (int):
                 Number of bits per encoded block.
                 
-            check_block_size (int, optional):
+            check_block_size (int):
                 Number of bits appended to bit blocks.
         """
 
@@ -59,7 +64,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
 
     def encode(self, data: np.ndarray) -> np.ndarray:
         
-        return data.append(self.manager.modem.random_generator.randint(2, self.__check_block_size))
+        return data.append(self.manager.modem._rng.randint(2, self.__check_block_size))
 
     def decode(self, code: np.ndarray) -> np.ndarray:
         
@@ -71,14 +76,6 @@ class CyclicRedundancyCheck(Encoder, Serializable):
     
     @bit_block_size.setter
     def bit_block_size(self, value: int) -> None:
-        """Modify the bit block size.
-        
-        Args:
-            value (int): New bit block size.
-            
-        Raises:
-            ValueError: If `value` is smaller than one.
-        """
         
         if value < 1:
             raise ValueError("CRC bit block size must be greater or equal to one")
@@ -87,25 +84,21 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         
     @property
     def check_block_size(self) -> int:
-        """Number of check bits per bit block.
+        """Number of appended check bits per bit block.
         
         Returns:
-            int: Number of check bits.
+            int: Number of check bits :math:`Q`.
+
+
+        Raises:
+            ValueError: If `check_block_size` is smaller than zero.
         """
         
         return self.__check_block_size
     
     @check_block_size.setter
     def check_block_size(self, value: int) -> None:
-        """Modify the number of check bits per bit block.
-        
-        Args:
-            value (int): New number of check bits.
-            
-        Raises:
-            ValueError: If `value` is smaller than zero.
-        """
-        
+
         if value < 0:
             raise ValueError("Number of check bits must be greater or equal to zero")
         
@@ -132,6 +125,8 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         Returns:
             MappingNode:
                 The serialized YAML node.
+
+        :meta private:
         """
 
         state = {
@@ -159,6 +154,8 @@ class CyclicRedundancyCheck(Encoder, Serializable):
                 Newly created `CyclicRedundancyCheck` instance.
 
         Note that the created instance is floating by default.
+
+        :meta private:
         """
 
         state = constructor.construct_mapping(node)
