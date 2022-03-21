@@ -49,12 +49,11 @@ class MatchedFilterJoint(Modem, Radar):
         # Receive information
         signal, symbols, bits = Modem.receive(self)
         
-        correlation = correlate(signal, self.__transmission.samples, mode='full', method='fft')
-        correlation /= (np.linalg.norm(self.__transmission.samples) ** 2)  # Normalize correlation
-        
+        correlation = abs(correlate(signal.samples, self.__transmission.samples, mode='valid', method='fft').flatten()) / self.__transmission.num_samples
+
         angle_bins = np.array([0.])
         velocity_bins = np.array([0.])
-        range_bins = np.array(signal.timestamps * speed_of_light)
+        range_bins = .5 * np.arange(len(correlation)) * speed_of_light / signal.sampling_rate
         cube_data = np.array([[correlation]], dtype=float)
         cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins)
 
