@@ -7,7 +7,7 @@ Frequency Modulated Continuous Waveform Radar
 
 import numpy as np
 from scipy.constants import speed_of_light, pi
-from scipy.fft import fft2
+from scipy.fft import fft2, fftshift
 
 from ..core.signal_model import Signal
 from .radar import RadarWaveform
@@ -52,7 +52,7 @@ class FMCW(RadarWaveform):
         chirp_stack = np.reshape(signal, (-1, len(chirp_prototype)))
 
         baseband_samples = chirp_stack.conj() * chirp_prototype
-        transform = fft2(baseband_samples)
+        transform = fftshift(fft2(baseband_samples))
 
         return np.abs(transform)
 
