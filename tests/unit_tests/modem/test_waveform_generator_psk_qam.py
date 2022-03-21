@@ -41,7 +41,7 @@ class TestWaveformGeneratorPskQam(TestCase):
         self.guard_interval = 1e-3
         self.num_data_symbols = 1000
         self.filter_length_in_symbols = 16
-        self.roll_off_factor = .3
+        self.roll_off_factor = .9
 
         self.tx_filter = ShapingFilter(filter_type=self.filter_type,
                                        samples_per_symbol=self.oversampling_factor,
@@ -146,7 +146,7 @@ class TestWaveformGeneratorPskQam(TestCase):
         channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
-        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=2)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
         
     def test_guard_interval_setget(self) -> None:
         """Guard interval property getter should return setter argument."""

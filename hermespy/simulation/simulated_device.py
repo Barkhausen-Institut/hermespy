@@ -291,7 +291,7 @@ class SimulatedDevice(Device, Serializable):
 
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(mixed_signal)
-
+        
         # Cache received signal at receiver slots
         for receiver in self.receivers:
 
