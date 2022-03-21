@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""HermesPy base for executable configurations."""
+"""
+===========
+Executable
+===========
+
+HermesPy base for executable configurations.
+"""
 
 from __future__ import annotations
 import os.path as path
@@ -12,14 +18,15 @@ from os import getcwd, mkdir
 from typing import ContextManager, List, Optional, Union
 
 import matplotlib.pyplot as plt
+from rich.console import Console
 
 from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.5"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -36,7 +43,10 @@ class Verbosity(Enum):
 
 
 class Executable(ABC, Serializable):
-    """Abstract base class for executable configurations."""
+    """Base Class for HermesPy Entry Points.
+
+    All executables are required to implement the :meth:`.run` method.
+    """
 
     yaml_tag = u'Executable'
     """YAML serialization tag."""
@@ -46,10 +56,12 @@ class Executable(ABC, Serializable):
     __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
     __verbosity: Verbosity          # Information output behaviour during execution.
     __style: str = 'dark'           # Color scheme
+    __console: Console              # Rich console instance for text output
 
     def __init__(self,
                  results_dir: Optional[str] = None,
-                 verbosity: Union[Verbosity, str] = Verbosity.INFO) -> None:
+                 verbosity: Union[Verbosity, str] = Verbosity.INFO,
+                 console: Optional[Console] = None) -> None:
         """
         Args:
 
@@ -58,15 +70,22 @@ class Executable(ABC, Serializable):
 
             verbosity (Union[str, Verbosity], optional):
                 Information output behaviour during execution.
+
+            console (Console, optional):
+                The console instance the executable will operate on.
         """
 
         # Default parameters
         self.__scenarios = []
         self.results_dir = results_dir
         self.verbosity = verbosity
+        self.__console = Console(record=False) if console is None else console
 
     def execute(self) -> None:
-        """Execute the executable."""
+        """Execute the executable.
+
+        Sets up the environment to the implemented :meth:`.run` routine.
+        """
 
         with self.style_context():
             self.run()
@@ -75,32 +94,6 @@ class Executable(ABC, Serializable):
     def run(self) -> None:
         """Execute the configuration."""
         ...
-
-    @property
-    def spectrum_fft_size(self) -> int:
-        """Number of discrete frequency bins considered during Fast Fourier Transform.
-
-        Returns:
-            int: The number of bins.
-        """
-
-        return self.__spectrum_fft_size
-
-    @spectrum_fft_size.setter
-    def spectrum_fft_size(self, bins: int) -> None:
-        """Modify the configured number of discrete frequency bins considered during Fast Fourier Transform.
-
-        Args:
-            bins (int): The new number of bins.
-
-        Raises:
-            ValueError: If `bins` is negative.
-        """
-
-        if bins < 0:
-            raise ValueError("Number of bins must be greater or equal to zero")
-
-        self.__spectrum_fft_size = bins
 
     @property
     def results_dir(self) -> str:
@@ -205,7 +198,6 @@ class Executable(ABC, Serializable):
 
     @style.setter
     def style(self, value: str) -> None:
-        """Set the Matplotlib color scheme."""
 
         hermes_styles = self.__hermes_styles()
         if value in hermes_styles:
@@ -230,7 +222,7 @@ class Executable(ABC, Serializable):
         """
 
         return [path.splitext(path.basename(x))[0] for x in
-                glob(path.join(Executable.__hermes_root_dir(), 'resources', 'styles', '*.mplstyle'))]
+                glob(path.join(Executable.__hermes_root_dir(), 'core', 'styles', '*.mplstyle'))]
 
     @staticmethod
     @contextmanager
@@ -238,11 +230,12 @@ class Executable(ABC, Serializable):
         """Context for the configured style.
 
         Returns:
-            ContextManager: Style context manager.
+            ContextManager:
+                Style context manager.
         """
 
         if Executable.__style in Executable.__hermes_styles():
-            yield plt.style.use(path.join(Executable.__hermes_root_dir(), 'resources', 'styles',
+            yield plt.style.use(path.join(Executable.__hermes_root_dir(), 'core', 'styles',
                                           Executable.__style + '.mplstyle'))
 
         else:
@@ -250,10 +243,25 @@ class Executable(ABC, Serializable):
 
     @staticmethod
     def __hermes_root_dir() -> str:
-        """HermesPy package root directory.
+        """HermesPy Package Root Directory.
 
         Returns:
             str: Path to the package root.
         """
 
         return path.dirname(path.dirname(path.abspath(__file__)))
+
+    @property
+    def console(self) -> Console:
+        """Console the Simulation writes to.
+
+        Returns:
+            Console: Handle to the console.
+        """
+
+        return self.__console
+
+    @console.setter
+    def console(self, value: Console) -> None:
+
+        self.__console = value

@@ -16,7 +16,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -27,7 +27,7 @@ class FMCWRadarSimulation(TestCase):
     def setUp(self) -> None:
 
         self.simulation = Simulation()
-        self.device = self.simulation.new_device()
+        self.device = self.simulation.scenario.new_device()
         self.device.carrier_frequency = 1e8
 
         self.waveform = FMCW()
@@ -40,7 +40,7 @@ class FMCWRadarSimulation(TestCase):
 
         self.channel = RadarChannel(target_range=.5*self.waveform.max_range,
                                     radar_cross_section=1.)
-        self.simulation.set_channel(self.device, self.device, self.channel)
+        self.simulation.scenario.set_channel(self.device, self.device, self.channel)
 
     def test_detection(self) -> None:
 

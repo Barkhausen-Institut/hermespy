@@ -1,6 +1,6 @@
 [bumpver]
 
-current_version = "0.2.5"
+current_version = "0.2.7"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bumb to version {new_version}"
 commit = false
@@ -18,15 +18,16 @@ push = false
 "hermespy/bin/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/channel/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/coding/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/helpers/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/core/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/core/tools/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/hardware_loop/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/modem/rf_chain_models/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/tools/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/noise/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/precoding/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/scenario/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/simulator_core/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/simulator_core/tools/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/source/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/radar/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/simulation/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/simulation/noise/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/simulation/rf_chain/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/tools/*.py" = [ '__version__ = "{version}"' ]
 
 # ToDo: Test files

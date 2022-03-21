@@ -3,7 +3,7 @@ Installation
 
 There are two supported ways to install HermesPy on your system.
 Users may either pull pre-built wheels from the official python package index `PyPi`_ or
-or clone the source code from the `GitHub`_ and build the package from scratch.
+or clone the source code from `GitHub`_ and build the package from scratch.
 
 Both methods will be described in the following sections.
 
@@ -51,6 +51,7 @@ for developers who plan on extending the HermesPy source code.
 Additionally, it can also be applied by users who, for any reason, are unable to install HermesPy from
 the index.
 
+Before cloning, make sure to have the `LFS`_ extension to `Git`_ installed.
 Using the `Git`_ command line interface,
 the HermesPy source code can be copied to any system by executing
 
@@ -60,9 +61,16 @@ the HermesPy source code can be copied to any system by executing
    cd hermespy/
 
 within a terminal.
-Make sure to have the `LFS`_ extension to `Git`_ installed.
 
-Install the package by executing the following commands within a terminal:
+
+Some submodules of HermesPy are provided as C++ implementations with Python bindings for improved performance.
+Therefore, building the package from source requires your system to have a
+build chain detectable by `CMake`_ installed and configured.
+For Windows users, we recommend downloading and installing either the `Visual Studio Build Tools`_
+or `MinGW`_ as a free open-source alternative.
+
+
+Build and install the package contained within the repository by executing the following commands within a terminal:
 
 .. tabs::
 
@@ -127,3 +135,6 @@ command line interface:
 .. _Octave: https://www.gnu.org/software/octave/index
 .. _matlab.engine: https://www.mathworks.com/help/matlab/matlab-engine-for-python.html
 .. _oct2py: https://pypi.org/project/oct2py/
+.. _CMake: https://cmake.org/
+.. _Visual Studio Build Tools: https://visualstudio.microsoft.com/de/downloads/#build-tools-for-visual-studio-2022
+.. _MinGW: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer/mingw-w64-install.exe/download
