@@ -455,15 +455,16 @@ class TestChirpFskCorrelationSynchronization(unittest.TestCase):
         csi = ChannelStateInformation.Ideal(num_samples)
         samples = np.zeros(num_samples, dtype=complex)
         expected_frames = []
-        for f in range(self.num_frames):
+        pilot_indices = self.rng.integers(0, self.max_offset, self.num_frames) + np.arange(self.num_frames) * self.waveform.samples_in_frame
+        
+        for p in pilot_indices:
 
             data_symbols = Symbols(self.rng.integers(0, self.waveform.modulation_order,
                                                      self.waveform.symbols_per_frame))
             signal_samples = self.waveform.modulate(data_symbols).samples[0, :]
 
-            frame_offset = self.rng.integers(0, self.max_offset) + f * self.waveform.samples_in_frame
-            samples[frame_offset:frame_offset+self.waveform.samples_in_frame] += signal_samples
-            expected_frames.append(samples[frame_offset:frame_offset+self.waveform.samples_in_frame])
+            samples[p:p+self.waveform.samples_in_frame] += signal_samples
+            expected_frames.append(samples[p:p+self.waveform.samples_in_frame])
 
         synchronized_frames = self.synchronization.synchronize(samples, csi)
 

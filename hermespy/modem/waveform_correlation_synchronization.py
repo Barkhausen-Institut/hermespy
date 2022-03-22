@@ -127,7 +127,12 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
             return []
           
         # Correct pilot indices by the convolution length
-        pilot_indices -= len(pilot_sequence) + 1
+        pilot_length = len(pilot_sequence)
+        if pilot_length % 2 == 0:
+            pilot_indices -= pilot_length - 1
+        else:
+            pilot_indices -= pilot_length + 1
+        
         pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
 
         # Sort inidices into frame lengths
