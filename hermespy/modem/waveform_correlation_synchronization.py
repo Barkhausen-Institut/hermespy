@@ -122,15 +122,15 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         frame_length = self.waveform_generator.samples_in_frame
         pilot_indices, _ = find_peaks(abs(correlation), height=.9, distance=int(.8 * frame_length))
         
-        pilot_length = len(pilot_sequence)
-        pilot_indices -= pilot_length
-        if pilot_length % 2 == 1:
-            pilot_indices += 2
-
         # Abort if no pilot section has been detected
         if len(pilot_indices) < 1:
             return []
+          
+        # Correct pilot indices by the convolution length
+        pilot_indices -= len(pilot_sequence) + 1
+        pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
 
+        # Sort inidices into frame lengths
         frames = []
         for pilot_index in pilot_indices:
 
