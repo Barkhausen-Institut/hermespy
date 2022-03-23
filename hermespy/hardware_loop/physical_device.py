@@ -8,6 +8,7 @@ Physical Devices
 from __future__ import annotations
 from pickle import dump, load
 
+import matplotlib.pyplot as plt
 import numpy as np
 from abc import abstractmethod
 from typing import Tuple
@@ -229,7 +230,8 @@ class PhysicalDevice(Device):
 
     def calibrate(self,
                   max_delay: float,
-                  calibration_file: str) -> None:
+                  calibration_file: str,
+                  num_iterations: int = 10) -> plt.Figure:
         """Calibrate the hardware.
 
         Currently the calibration will only compensate possible time-delays.
@@ -243,6 +245,15 @@ class PhysicalDevice(Device):
 
             calibration_file (str):
                 Location of the calibration dump within the filesystem.
+
+            num_iteratoins (int, optional):
+                Number of calibration iterations.
+                Default is 10.
+
+        Returns:
+
+            plt.Figure:
+                A figure of information regarding the calibration.
         """
 
         # Clear transmit caches
@@ -262,17 +273,28 @@ class PhysicalDevice(Device):
         waveform[:, dirac_index] = 1.
         calibration_signal = Signal(waveform, self.sampling_rate, self.carrier_frequency)
 
-        calibration_transmitter.transmit(calibration_signal)
-        self.trigger()
-        propagated_signal = calibration_receiver.receive()
+        propagated_signals: List[Signal] = []
+        propagated_dirac_indices = np.empty(num_iterations, dtype=int)
+
+        # Make multiple iteration calls for calibration
+        for i in range(num_iterations):
+
+            # Send and receive calibration waveform
+            calibration_transmitter.transmit(calibration_signal)
+            self.trigger()
+            propagated_signal = calibration_receiver.receive()
+
+            # Infer the implicit delay by estimating the sample index of the propagated dirac
+            propagated_signals.append(propagated_signal)
+            propagated_dirac_indices = np.argmax(abs(propagated_signal.samples[0, :]))
 
         # Un-register operators
         self.transmitters.remove(calibration_transmitter)
         self.receivers.remove(calibration_receiver)
 
-        propagated_dirac_index = np.argmax(abs(propagated_signal.samples[0, :]))
-
-        calibration_delay = (dirac_index - propagated_dirac_index) / propagated_signal.sampling_rate
+        # Compute calibration delay
+        mean_dirac_index = np.mean(propagated_dirac_indices)   # This is just a ML estimation
+        calibration_delay = (dirac_index - mean_dirac_index) / propagated_signal.sampling_rate
 
         # Dump calibration to pickle savefile
         with open(calibration_file, 'wb') as file_stream:
@@ -280,6 +302,15 @@ class PhysicalDevice(Device):
 
         # Save register calibration delay internally
         self.__calibration_delay = calibration_delay
+
+        # Visualize the results
+        fig, axes = plt.subplots(2, 1)
+        fig.suptitle('Device Delay Calibration')
+
+        axes[0].plot(calibration_signal.timestamps, abs(calibration_signal.samples[0, :]))
+        for sig in propagated_signals:
+            axes[1].plot(sig.timestamps, abs(sig.samples[0, :]), color='blue')
+        axes[1].axvline(x=(dirac_index / self.sampling_rate - calibration_delay), color='red')
 
     def load_calibration(self,
                          calibration_file: str) -> None:
