@@ -137,7 +137,8 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
 
             self.tx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
                                            self.oversampling_factor,
-                                           is_matched=False)
+                                           is_matched=False,
+                                           roll_off=.9)
 
         else:
 
@@ -147,7 +148,8 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
 
             self.rx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
                                            self.oversampling_factor,
-                                           is_matched=True)
+                                           is_matched=True,
+                                           roll_off=.9)
 
         else:
             self.rx_filter = rx_filter
