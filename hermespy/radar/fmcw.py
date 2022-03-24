@@ -52,7 +52,7 @@ class FMCW(RadarWaveform):
         chirp_stack = np.reshape(signal, (-1, len(chirp_prototype)))
 
         baseband_samples = chirp_stack.conj() * chirp_prototype
-        transform = fftshift(fft2(baseband_samples))
+        transform = fft2(baseband_samples)
 
         return np.abs(transform)
 

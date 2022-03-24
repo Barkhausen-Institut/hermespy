@@ -131,9 +131,9 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         if pilot_length % 2 == 0:
             pilot_indices -= pilot_length - 1
         else:
-            pilot_indices -= pilot_length + 1
+            pilot_indices -= pilot_length
         
-        pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
+        # pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
 
         # Sort inidices into frame lengths
         frames = []
