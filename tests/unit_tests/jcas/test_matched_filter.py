@@ -79,7 +79,7 @@ class TestMatchedFilterJoint(TestCase):
         range_resolution = 5.
         self.joint.range_resolution = range_resolution
         
-        self.assertEquals(range_resolution, self.joint.range_resolution)
+        self.assertEqual(range_resolution, self.joint.range_resolution)
         
     def test_range_resolution_validation(self) -> None:
         """Range resolution property setter should raise ValueError on non-positive arguments."""

@@ -6,12 +6,13 @@ Physical Devices
 """
 
 from __future__ import annotations
+from abc import abstractmethod
 from pickle import dump, load
+from time import sleep
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-from abc import abstractmethod
-from typing import Tuple
 
 from hermespy.core import Device, Transmitter, Receiver
 from hermespy.core.signal_model import Signal
@@ -167,6 +168,27 @@ class PhysicalDevice(Device):
         """Trigger the device."""
         ...
 
+    def transmit(self, clear_cache: bool = False) -> Signal:
+
+        # Generate transmitted signal over base function
+        transmission = Device.transmit(self, clear_cache)
+
+        # Account for negative calibrations delays by
+        # appending zeros to the signal start
+        if self.__calibration_delay  > 0.:
+
+            num_padding_zeros = int(self.__calibration_delay * transmission.sampling_rate)
+            zeros = np.zeros((transmission.num_streams, num_padding_zeros), dtype=complex)
+            transmission.samples = np.append(zeros, transmission.samples, axis=1)
+
+        if self.__calibration_delay < 0.:
+
+            num_padding_zeros = int(-self.__calibration_delay * transmission.sampling_rate)
+            zeros = np.zeros((transmission.num_streams, num_padding_zeros), dtype=complex)
+            transmission.samples = np.append(transmission.samples, zeros, axis=1)
+
+        return transmission
+
     def receive(self, signal: Signal) -> None:
         """Receive a new signal at this physical device.
 
@@ -178,12 +200,15 @@ class PhysicalDevice(Device):
         # Signal is now a baseband-signal
         signal.carrier_frequency = 0.
 
-        # Compensate for the calibration
-        delay_compensation = int(self.__calibration_delay * signal.sampling_rate)
-        signal.samples = np.roll(signal.samples, delay_compensation, axis=-1)
+        # Account for negative calibrations delays by
+        # appending zeros to the signal start
+        if self.__calibration_delay  < 0.:
 
+            num_padding_zeros = int(-self.__calibration_delay * signal.sampling_rate)
+            signal.samples = signal.samples[:,num_padding_zeros:]
+
+        # Cache reception at each operator
         for receiver in self.receivers:
-
             receiver.cache_reception(signal)
 
     @property
@@ -231,7 +256,8 @@ class PhysicalDevice(Device):
     def calibrate(self,
                   max_delay: float,
                   calibration_file: str,
-                  num_iterations: int = 10) -> plt.Figure:
+                  num_iterations: int = 10,
+                  wait: float = 0.) -> plt.Figure:
         """Calibrate the hardware.
 
         Currently the calibration will only compensate possible time-delays.
@@ -246,9 +272,12 @@ class PhysicalDevice(Device):
             calibration_file (str):
                 Location of the calibration dump within the filesystem.
 
-            num_iteratoins (int, optional):
+            num_iterations (int, optional):
                 Number of calibration iterations.
                 Default is 10.
+
+            wait (float, optional):
+                Idle time between iteration transmissions in seconds.
 
         Returns:
 
@@ -256,10 +285,18 @@ class PhysicalDevice(Device):
                 A figure of information regarding the calibration.
         """
 
+        if num_iterations < 1:
+            raise ValueError("The number of iterations must be greater or equal to one")
+
+        if wait < 0.:
+            raise ValueError("The waiting time must be greater or equal to zero")
+
         # Clear transmit caches
         self.transmitters.clear_cache()
 
         num_samples = int(2 * max_delay * self.sampling_rate)
+        if num_samples <= 1:
+            raise ValueError("The assumed maximum delay is not resolvable by the configured sampling rate")
 
         # Register operators
         calibration_transmitter = SignalTransmitter(num_samples)
@@ -287,6 +324,9 @@ class PhysicalDevice(Device):
             # Infer the implicit delay by estimating the sample index of the propagated dirac
             propagated_signals.append(propagated_signal)
             propagated_dirac_indices = np.argmax(abs(propagated_signal.samples[0, :]))
+
+            # Wait the configured amount of time between iterations
+            sleep(wait)
 
         # Un-register operators
         self.transmitters.remove(calibration_transmitter)
