@@ -213,10 +213,22 @@ class QuadrigaInterface:
             channel (QuadrigaChannel): The channel to be removed.
         """
 
-        if channel not in self.__channels:
-            return
+        if self.channel_registered(channel):
+            self.__channels.pop(self.__channels.index(channel))
 
-        self.__channels.pop(self.__channels.index(channel))
+    def channel_registered(self, channel: QuadrigaChannel) -> bool:
+        """Is the channel currently registered at the interface?
+
+        Args:
+
+            channel (QuadrigaChannel):
+                The channel in question.
+
+        Returns:
+            The registration state.
+        """
+
+        return channel in self.__channels
 
     def get_impulse_response(self, channel: QuadrigaChannel) -> Tuple[np.ndarray, np.ndarray]:
         """Get the impulse response for a specific quadriga channel.

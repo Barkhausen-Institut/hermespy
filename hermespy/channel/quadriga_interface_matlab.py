@@ -15,7 +15,7 @@ __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
 __maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
