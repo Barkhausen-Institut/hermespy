@@ -37,46 +37,11 @@ class QuadrigaChannel(Channel):
     yaml_matrix = True
 
     def __init__(self,
-                 transmitter: Optional[Transmitter] = None,
-                 receiver: Optional[Receiver] = None,
-                 active: Optional[bool] = None,
-                 gain: Optional[float] = None,
-                 sync_offset_low: Optional[float] = None,
-                 sync_offset_high: Optional[float] = None,
-                 seed: Optional[int] = None) -> None:
-        """Quadriga Channel object initialization.
-
-        Automatically registers channel objects at the interface.
-
-        Args:
-
-            transmitter (Transmitter, optional):
-                The modem transmitting into this channel.
-
-            receiver (Receiver, optional):
-                The modem receiving from this channel.
-
-            active (bool, optional):
-                Channel activity flag.
-                Activated by default.
-
-            gain (float, optional):
-                Channel power gain.
-                1.0 by default.
-
-            seed (int, optional):
-                Seed used to initialize the pseudo-random number generator.
-        """
+                 *args,
+                 **kwargs) -> None:
 
         # Init base channel class
-        Channel.__init__(self,
-                         transmitter=transmitter,
-                         receiver=receiver,
-                         active=active,
-                         gain=gain,
-                         sync_offset_low=sync_offset_low,
-                         sync_offset_high=sync_offset_high,
-                         seed=seed)
+        Channel.__init__(self, *args, **kwargs)
 
         # Register this channel at the interface
         self.__quadriga_interface.register_channel(self)
@@ -99,15 +64,17 @@ class QuadrigaChannel(Channel):
 
         return QuadrigaInterface.GlobalInstance()
 
-    def impulse_response(self, timestamps: np.ndarray, rng: np.random.Generator) -> np.ndarray:
-
+    def impulse_response(self,
+                         num_samples: int,
+                         sampling_rate: float) -> np.ndarray:
+        
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
 
         max_delay_in_samples = np.around(
-            np.max(path_delays) * self.scenario.sampling_rate).astype(int)
+            np.max(path_delays) * sampling_rate).astype(int)
 
-        impulse_response = np.zeros((timestamps.size,
+        impulse_response = np.zeros((num_samples,
                                      self.receiver.num_antennas,
                                      self.transmitter.num_antennas,
                                      max_delay_in_samples + 1), dtype=complex)
@@ -120,7 +87,7 @@ class QuadrigaChannel(Channel):
                 tau_txa_rxa = path_delays[rx_antenna, tx_antenna, :]
 
                 time_delay_in_samples_vec = np.around(
-                    tau_txa_rxa * self.scenario.sampling_rate).astype(int)
+                    tau_txa_rxa * sampling_rate).astype(int)
 
                 for delay_idx, delay_in_samples in enumerate(
                         time_delay_in_samples_vec):
