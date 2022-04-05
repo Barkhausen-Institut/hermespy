@@ -302,7 +302,7 @@ class QuadrigaInterface:
             if np.array_equal(position, np.array([0, 0, 0])):
                 raise RuntimeError("Position of transmitter must not be [0, 0, 0]")
 
-            sampling_rates[t] = transmitter.scenario.sampling_rate
+            sampling_rates[t] = transmitter.sampling_rate
             carriers[t] = transmitter.carrier_frequency
             tx_positions[t, :] = position
             tx_num_antennas[t] = transmitter.num_antennas
