@@ -40,7 +40,8 @@ setup(
     exclude_package_data={
         '': ['3rdparty', 'tests'],
     },
-    extras_require={"test": ["pytest"]},
+    extras_require={"test": ["pytest"],
+                    "quadriga": ["oct2py"]},
     zip_safe=False,
     python_requires=">=3.9",
     entry_points={
