@@ -125,6 +125,11 @@ command line interface:
 
    setx PATH "%PATH%;<path-to-octave-cli>"
 
+When installing HermesPy from the distributed `package`_, the Quadriga source code needs to be installed manually.
+Download the latest version of `Quadriga`_ and extract the zip archive in a location of your choice.
+Afterwards, set the environment variable `HERMES_QUADRIGA` to point to the `quadriga_src` directory.
+This will point Hermes to search for the Quadriga files within the specified location during simulation runtime.
+
 .. _PyPi: https://pypi.org/
 .. _GitHub: https://github.com/Barkhausen-Institut/hermespy
 .. _package: https://pypi.org/project/hermespy/
