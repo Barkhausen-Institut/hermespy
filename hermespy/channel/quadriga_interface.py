@@ -4,9 +4,10 @@
 from __future__ import annotations
 from typing import List, Tuple, Optional, Type, TYPE_CHECKING, Any
 
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import os
 import numpy as np
+from os import path
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 if TYPE_CHECKING:
 
@@ -63,7 +64,7 @@ class QuadrigaInterface:
         if self.__path_quadriga_src is None:
             self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '../..', '3rdparty', 'quadriga_src')
 
-        self.__antenna_kind = 'lhcp-rhcp-dipole'
+        self.__antenna_kind = 'omni'
         self.__scenario_label = '3GPP_38.901_UMa_LOS'
         self.__channels = []
         self.__fetched_channels = []
@@ -78,6 +79,16 @@ class QuadrigaInterface:
 
         if scenario_label is not None:
             self.scenario_label = scenario_label
+            
+    @property
+    def path_launch_script(self) -> str:
+        """Generate path to the launch Matlab script.
+        
+        Returns:
+            Path to the launch file.
+        """
+        
+        return path.join(path.split(__file__)[0], 'res')
 
     @classmethod
     def GlobalInstance(cls: Type[QuadrigaInterface]) -> QuadrigaInterface:
