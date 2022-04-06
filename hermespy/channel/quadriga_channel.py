@@ -35,13 +35,26 @@ class QuadrigaChannel(Channel):
 
     yaml_tag = u'Quadriga'
     yaml_matrix = True
+    
+    __interface: Optional[QuadrigaInterface]        # Reference to the interface class
 
     def __init__(self,
                  *args,
+                 interface: Optional[QuadrigaInterface] = None,
                  **kwargs) -> None:
+        """
+        Args:
+        
+            interface (Optional[QuadrigaInterface], optional):
+                Specifies the consisdered Quadriga interface.
+                Defaults to None.
+        """
 
         # Init base channel class
-        Channel.__init__(self, *args, **kwargs)
+        Channel.__init__(self,  *args, **kwargs)
+        
+        # Save interface settings
+        self.__interface = interface
 
         # Register this channel at the interface
         self.__quadriga_interface.register_channel(self)
@@ -62,7 +75,7 @@ class QuadrigaChannel(Channel):
             QuadrigaInterface: Global Quadriga interface.
         """
 
-        return QuadrigaInterface.GlobalInstance()
+        return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface
 
     def impulse_response(self,
                          num_samples: int,
