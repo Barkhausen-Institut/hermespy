@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from random import Random, randrange
 from unittest import TestCase
 from unittest.mock import Mock
-
-import numpy as np
-from numpy.random import default_rng
-from numpy.testing import assert_array_equal
-from scipy.constants import pi, speed_of_light
 
 from hermespy.core.random_node import RandomNode
 
