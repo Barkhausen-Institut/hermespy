@@ -24,20 +24,11 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
 
     __engine: MatlabEngine
 
-    def __init__(self,
-                 path_quadriga_src: Optional[str] = None,
-                 antenna_kind: Optional[str] = None,
-                 scenario_label: Optional[str] = None) -> None:
-        """Quadriga Matlab interface object initialization.
+    def __init__(self, *args, **kwargs) -> None:
 
-        Args:
-            path_quadriga_src (str, optional): Path to the Quadriga Matlab source files.
-            antenna_kind (str, optional): Type of antenna considered.
-            scenario_label (str, optional): Scenario label.
-        """
 
         # Init base class
-        QuadrigaInterface.__init__(self, path_quadriga_src, antenna_kind, scenario_label)
+        QuadrigaInterface.__init__(self, *args, **kwargs)
 
         # Start the matlab engine
         self.__engine = start_matlab()

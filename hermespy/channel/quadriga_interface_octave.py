@@ -2,7 +2,7 @@
 """Octave interface to the Quadriga channel model."""
 
 from __future__ import annotations
-from typing import Optional, List, Any, Type
+from typing import Optional, List, Any
 
 import numpy as np
 from oct2py import Oct2Py, Oct2PyError, Struct
@@ -15,7 +15,7 @@ __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
 __maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronaue@barkhauseninstitut.org"
+__email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -25,27 +25,30 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
     __octave: Oct2Py
 
     def __init__(self,
-                 path_quadriga_src: Optional[str] = None,
-                 antenna_kind: Optional[str] = None,
-                 scenario_label: Optional[str] = None,
-                 octave_bin: Optional[str] = None) -> None:
+                 octave_bin: Optional[str] = None,
+                 **kwargs: Any) -> None:
         """Quadriga Octave interface object initialization.
 
         Args:
-            path_quadriga_src (str, optional): Path to the Quadriga Matlab source files.
-            antenna_kind (str, optional): Type of antenna considered.
-            scenario_label (str, optional): Scenario label.
-            octave_bin (str, optional): Path to the octave cli executable.
+        
+            octave_bin (str, optional):
+                Path to the octave cli executable.
+                
+            kwargs (Any):
+                Interface arguments.
         """
 
         # Init base class
-        QuadrigaInterface.__init__(self, path_quadriga_src, antenna_kind, scenario_label)
+        QuadrigaInterface.__init__(self, **kwargs)
 
         # Init octave session
         self.__octave = Oct2Py()  # executable=octave_bin)
 
         # Add quadriga source folder to octave lookup paths
         self.__octave.addpath(self.path_quadriga_src)
+        
+        # Add launch script folder to octave loopkup paths
+        self.__octave.addpath(self.path_launch_script)
 
     def _run_quadriga(self, **parameters) -> List[Any]:
 
@@ -60,7 +63,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
 
         # Launch octave
         try:
-            self.__octave.eval("hermespy/resources/matlab/launch_quadriga_script")
+            self.__octave.eval('launch_quadriga')
 
         except Oct2PyError as error:
             raise RuntimeError(error)

@@ -48,7 +48,8 @@ class TestQuadrigaChannel(TestCase):
     def test_impulse_response(self) -> None:
         """Test the Quadriga Channel Impulse Response generation."""
 
-        self.channel.impulse_response(self.num_samples, self.sampling_rate)
+        response = self.channel.impulse_response(self.num_samples, self.sampling_rate)
+        self.assertCountEqual([self.num_samples, 1, 1], response.shape[:3])
 
 
 class TestQuadrigaInterface(TestCase):
