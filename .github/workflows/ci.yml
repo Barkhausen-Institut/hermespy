@@ -28,6 +28,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        apt update
         apt-get install -y build-essential octave
         pip install .[quadriga]
 
@@ -53,6 +54,7 @@ jobs:
 
     - name: Install doc dependencies
       run: |
+        apt update
         apt-get install -y build-essential
         pip install -e .[quadriga]
         pip install -r requirements_doc.txt
