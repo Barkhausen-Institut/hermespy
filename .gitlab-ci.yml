@@ -9,14 +9,15 @@ test:
   stage: test
   before_script:
     - apt update
-    - apt-get install -y build-essential
-    - pip install -r requirements.txt
-    - pip install .
+    - apt-get install -y build-essential octave
+    - pip install .[quadriga]
   script:
     - python -m unittest discover tests/unit_tests
 
 wheel-linux:
   stage: build
+  only:
+    - master
   before_script:
     - apt update
     - apt-get install -y build-essential
@@ -29,6 +30,7 @@ pages:
   only:
     - master
   before_script:
+    - pip install -e .[quadriga]
     - pip install -r requirements_doc.txt
   script:
     - python -m setup build_sphinx
