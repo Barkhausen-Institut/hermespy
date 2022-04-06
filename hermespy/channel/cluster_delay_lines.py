@@ -740,7 +740,7 @@ class ClusterDelayLineBase(Channel):
 
         # Initialize channel matrices
         num_delay_samples = 1 + ceil(cluster_delays.max() * sampling_rate)
-        impulse_response = np.ndarray((num_samples, self.receiver.antennas.num_antennas,
+        impulse_response = np.zeros((num_samples, self.receiver.antennas.num_antennas,
                                        self.transmitter.antennas.num_antennas, num_delay_samples), dtype=complex)
 
         # Compute the number of clusters, considering the first two clusters get split into 3 partitions
@@ -929,7 +929,7 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
         self.zoa_spread_mean = zoa_spread_mean
         self.zoa_spread_std = zoa_spread_std
         self.zod_spread_mean = zod_spread_mean
-        self.zod_spread_std = zod_spread_mean
+        self.zod_spread_std = zod_spread_std
         self.zod_offset = zod_offset
         self.rice_factor_mean = rice_factor_mean
         self.rice_factor_std = rice_factor_std

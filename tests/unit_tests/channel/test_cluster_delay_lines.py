@@ -9,7 +9,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
-from numpy.random import default_rng
+from numpy.testing import assert_array_equal
 from scipy.constants import pi, speed_of_light
 
 from hermespy.channel.cluster_delay_lines import ClusterDelayLine
@@ -30,9 +30,7 @@ class TestClusterDelayLine(TestCase):
 
     def setUp(self) -> None:
 
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
+        self.seed = 12345
 
         self.num_clusters = 3
         self.delay_spread_mean = -7.49
@@ -65,8 +63,8 @@ class TestClusterDelayLine(TestCase):
                                         delay_scaling=self.delay_scaling,
                                         num_clusters=self.num_clusters,
                                         receiver=self.receiver,
-                                        transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
+                                        transmitter=self.transmitter,
+                                        seed=1234)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
@@ -205,9 +203,11 @@ class TestClusterDelayLine(TestCase):
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
 
+        self.assertFalse(np.any(np.isnan(impulse_response)))
         self.assertEqual(num_samples, impulse_response.shape[0])
         self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
         self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+
 
     def test_impulse_response_los(self):
 
@@ -217,6 +217,28 @@ class TestClusterDelayLine(TestCase):
 
         impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
 
+        self.assertFalse(np.any(np.isnan(impulse_response)))
         self.assertEqual(num_samples, impulse_response.shape[0])
         self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
         self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+
+    def test_pseudo_randomness(self) -> None:
+        """Setting the random seed should result in identical impulse responses."""
+        
+        num_samples = 100
+        sampling_rate = 1e5
+        
+        # Generate first impulse response
+        self.channel.set_seed(1)
+        first_impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        first_number = self.channel._rng.normal()
+
+        # Generate second impulse response with identical initial seed
+        self.channel.set_seed(1)
+        second_impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        second_number = self.channel._rng.normal()
+
+        # Both should be identical
+        self.assertEqual(first_number, second_number)
+        assert_array_equal(first_impulse_response, second_impulse_response)
+        
