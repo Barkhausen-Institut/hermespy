@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the Quadriga Channel Matlab Interface to Hermes."""
 
-from os import environ
+from os import environ, path
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -22,7 +22,10 @@ __status__ = "Prototype"
 class TestQuadrigaChannel(TestCase):
 
     def setUp(self) -> None:
-
+        
+        path_quadriga_src = path.join(path.split(__file__)[0], 'res', 'quadriga_src')
+        self.interface = QuadrigaInterface(path_quadriga_src=path_quadriga_src)
+                                           
         self.sampling_rate = 1e6
         self.num_samples = 1000
         self.carrier_frequency = 1e9
@@ -38,12 +41,12 @@ class TestQuadrigaChannel(TestCase):
         self.transmitter.position = np.array([-500., 0., 0.], dtype=float)
         self.receiver.position = np.array([500., 0., 0.], dtype=float)
 
-        self.channel = QuadrigaChannel(self.transmitter, self.receiver)
+        self.channel = QuadrigaChannel(self.transmitter, self.receiver, interface=self.interface)
 
     def test_channel_registration(self) -> None:
         """Quadriga channel should be properly registered at the interface."""
 
-        self.assertTrue(QuadrigaInterface.GlobalInstance().channel_registered(self.channel))
+        self.assertTrue(self.interface.channel_registered(self.channel))
 
     def test_impulse_response(self) -> None:
         """Test the Quadriga Channel Impulse Response generation."""
