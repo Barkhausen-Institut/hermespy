@@ -2,6 +2,7 @@
 """Octave interface to the Quadriga channel model."""
 
 from __future__ import annotations
+from logging import getLogger, Logger
 from typing import Optional, List, Any
 
 import numpy as np
@@ -23,6 +24,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
     """Quadriga Octave Interface."""
 
     __octave: Oct2Py
+    __logger: Logger
 
     def __init__(self,
                  octave_bin: Optional[str] = None,
@@ -42,7 +44,8 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         QuadrigaInterface.__init__(self, **kwargs)
 
         # Init octave session
-        self.__octave = Oct2Py()  # executable=octave_bin)
+        self.__logger = getLogger('octave_logger')
+        self.__octave = Oct2Py(logger=self.__logger)  # executable=octave_bin)
 
         # Add quadriga source folder to octave lookup paths
         self.__octave.addpath(self.path_quadriga_src)
