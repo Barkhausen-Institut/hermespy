@@ -30,6 +30,7 @@ pages:
   only:
     - master
   before_script:
+    - apt-get install -y build-essential octave
     - pip install -e .[quadriga]
     - pip install -r requirements_doc.txt
   script:
