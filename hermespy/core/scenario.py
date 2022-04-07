@@ -65,8 +65,12 @@ class Scenario(RandomNode, Generic[DeviceType]):
         if self.device_registered(device):
             raise ValueError("Error trying to add an already registered device to a scenario")
 
+        # Add device to internal device list
         self.__devices.append(device)
+        
+        # Register scenario at the device
         device.random_mother = self
+        device.scenario = self
 
     def device_registered(self, device: DeviceType) -> bool:
         """Check if an device is registered in this scenario.
