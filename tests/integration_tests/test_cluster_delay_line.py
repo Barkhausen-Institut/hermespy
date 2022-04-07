@@ -29,7 +29,7 @@ class TestClusterDelayLine(TestCase):
         self.sampling_rate = 1e3
         self.frequency = .25 * self.sampling_rate
 
-        self.array_dimensions = (10, 10, 1)
+        self.array_dimensions = (30, 30, 1)
         self.antenna_spacing = .5 * speed_of_light / self.carrier_frequency
         self.antennas = UniformArray(IdealAntenna(), self.antenna_spacing, self.array_dimensions)
 
@@ -60,17 +60,14 @@ class TestClusterDelayLine(TestCase):
         reception_a, _, csi = self.channel.propagate(signal)
         samples = reception_a[0].samples
 
-        num_angle_candidates = 50
-        zenith_angles = np.linspace(0, .5 * pi, num_angle_candidates)
+        num_angle_candidates = 80
+        zenith_angles = np.linspace(0, pi, num_angle_candidates)
         azimuth_angles = np.linspace(0, 2 * pi, num_angle_candidates)
 
         dictionary = np.empty((self.antennas.num_antennas, num_angle_candidates ** 2), dtype=complex)
         for i, (aoa, zoa) in enumerate(product(azimuth_angles, zenith_angles)):
 
-            wave_vector = -2j * pi * speed_of_light / self.device_a.carrier_frequency * np.array([cos(aoa) * sin(zoa),
-                                                                                                  sin(aoa) * sin(zoa),
-                                                                                                  cos(zoa)])
-            dictionary[:, i] = np.exp(np.inner(wave_vector, self.device_a.topology))
+            dictionary[:, i] = self.device_a.antennas.spherical_response(self.frequency, aoa, zoa)
 
         beamformer = np.linalg.norm(dictionary.T @ samples, axis=1, keepdims=False).reshape((num_angle_candidates, num_angle_candidates))
         

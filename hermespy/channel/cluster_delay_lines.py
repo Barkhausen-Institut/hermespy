@@ -39,7 +39,7 @@ import numpy as np
 from scipy.constants import pi, speed_of_light
 
 from hermespy.core.factory import Serializable
-from hermespy.tools.math import db2lin, rotation_matrix
+from hermespy.tools.math import db2lin, transform_vector, rotation_matrix
 from hermespy.tools.resampling import delay_resampling_matrix
 from .channel import Channel
 
@@ -699,16 +699,16 @@ class ClusterDelayLineBase(Channel):
         # Query device positions and orientations
         tx_position = self.transmitter.position
         rx_position = self.receiver.position
+        tx_orientation = self.transmitter.orientation   # Orientation in RPY
+        rx_orientation = self.receiver.orientation      # Orientation in RPY
 
         # Positions may not be unspecified
         if tx_position is None or rx_position is None:
             raise ValueError("Cluster delay line models require specified transmitter and receiver positions")
 
         # Compute the respective angles of arrival and departure
-        # Note: We assume that we may substitute zenith by elevation in this model
-        los_vector = rx_position - tx_position
-        tx_los_vector = rotation_matrix(self.transmitter.orientation).T @ los_vector
-        rx_los_vector = rotation_matrix(self.receiver.orientation).T @ los_vector
+        tx_los_vector = rotation_matrix(-tx_orientation) @ (rx_position - tx_position)
+        rx_los_vector = rotation_matrix(-rx_orientation) @ (tx_position - rx_position)
 
         los_aoa = atan(rx_los_vector[1] / rx_los_vector[0]) if rx_los_vector[1] != 0. and rx_los_vector[0] != 0. else 0.
         los_aod = atan(tx_los_vector[1] / tx_los_vector[0]) if tx_los_vector[1] != 0. and tx_los_vector[0] != 0. else 0
@@ -777,7 +777,7 @@ class ClusterDelayLineBase(Channel):
                 rx_response = self.receiver.antennas.spherical_response(center_frequency, aoa, zoa)
 
                 # Equation 7.5-24
-                tx_response = self.transmitter.antennas.spherical_response(center_frequency, aod, zod)
+                tx_response = self.transmitter.antennas.spherical_response(center_frequency, aod, zod).conj()
 
                 # Equation 7.5-28
                 rx_polarization = self.receiver.antennas.polarization(aoa, zoa)
@@ -812,7 +812,7 @@ class ClusterDelayLineBase(Channel):
 
             # Equation 7.5-29
             rx_response = self.receiver.antennas.spherical_response(center_frequency, los_aoa, los_zoa)
-            tx_response = self.transmitter.antennas.spherical_response(center_frequency, los_aod, los_zod)
+            tx_response = self.transmitter.antennas.spherical_response(center_frequency, los_aod, los_zod).conj()
             rx_polarization = self.receiver.antennas.polarization(los_aoa, los_zoa)
             tx_polarization = self.transmitter.antennas.polarization(los_aod, los_zod)
 
