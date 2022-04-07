@@ -103,9 +103,9 @@ def marcum_q(a: float,
 
 def rotation_matrix(orientation: np.ndarray) -> np.ndarray:
 
-    a = orientation[0]
-    b = orientation[1]
-    c = orientation[2]
+    a = orientation[2]  # Pitch: Rotation around the z-axis
+    b = orientation[1]  # Yaw:   Rotation around the y-axis
+    c = orientation[0]  # Roll:  Rotation around the x-axis      
 
     R = np.array([[cos(a)*cos(b), cos(a)*sin(b)*sin(c) - sin(a)*cos(c), cos(a)*sin(b)*cos(c) + sin(a)*sin(c)],
                   [sin(a)*cos(b), sin(a)*sin(b)*sin(c) + cos(a)*cos(c), sin(a)*sin(b)*cos(c) - cos(a)*sin(c)],
@@ -113,6 +113,12 @@ def rotation_matrix(orientation: np.ndarray) -> np.ndarray:
 
     return R
 
+def transform_vector(vector: np.ndarray,
+                     position: np.ndarray,
+                     orientation: np.ndarray) -> np.ndarray:
+
+    R = rotation_matrix(orientation)
+    return R @ vector + position
 
 def transform_coordinates(coordinates: np.ndarray,
                           position: np.ndarray,
