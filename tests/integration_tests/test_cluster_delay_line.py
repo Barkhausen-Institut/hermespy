@@ -38,7 +38,7 @@ class TestClusterDelayLine(TestCase):
         self.device_b = self.simulation.scenario.new_device()
 
         self.device_a.antennas = self.antennas
-        self.device_b.antennas = self.antennas
+        self.device_b.antennas = UniformArray(IdealAntenna(), self.antenna_spacing, [1, 1, 1])
         self.device_a.position = np.array([0., 0., 0.])
         self.device_b.position = np.array([0., 0., 100.])
         self.device_a.orientation = np.array([0., 0., 0.])
@@ -47,30 +47,39 @@ class TestClusterDelayLine(TestCase):
         self.device_b.carrier_frequency = self.carrier_frequency
 
         self.channel = RuralMacrocellsLineOfSight()
-        self.channel.set_seed(123456)
         self.simulation.scenario.set_channel(self.device_a, self.device_b, self.channel)
+        self.channel.set_seed(123456)
 
     def test_cdl(self):
 
         num_samples = 1000
         signal_samples = np.tile(np.exp(2j * pi * self.frequency * np.arange(num_samples) / self.sampling_rate),
-                                 (self.antennas.num_antennas, 1))
+                                 (1, 1))
         signal = Signal(signal_samples, sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency)
 
         reception_a, _, csi = self.channel.propagate(signal)
         samples = reception_a[0].samples
 
         num_angle_candidates = 50
-        theta_angles = np.linspace(0, pi, num_angle_candidates)
-        phi_angles = np.linspace(-pi, pi, num_angle_candidates)
+        zenith_angles = np.linspace(0, .5 * pi, num_angle_candidates)
+        azimuth_angles = np.linspace(0, 2 * pi, num_angle_candidates)
 
         dictionary = np.empty((self.antennas.num_antennas, num_angle_candidates ** 2), dtype=complex)
-        for i, (theta, phi) in enumerate(product(theta_angles, phi_angles)):
+        for i, (aoa, zoa) in enumerate(product(azimuth_angles, zenith_angles)):
 
-            wave_vector = -2j * pi * speed_of_light / self.device_a.carrier_frequency * np.array([sin(theta)*cos(phi),
-                                                                                         sin(theta)*sin(phi),
-                                                                                         cos(theta)])
+            wave_vector = -2j * pi * speed_of_light / self.device_a.carrier_frequency * np.array([cos(aoa) * sin(zoa),
+                                                                                                  sin(aoa) * sin(zoa),
+                                                                                                  cos(zoa)])
             dictionary[:, i] = np.exp(np.inner(wave_vector, self.device_a.topology))
 
         beamformer = np.linalg.norm(dictionary.T @ samples, axis=1, keepdims=False).reshape((num_angle_candidates, num_angle_candidates))
+        
+        import matplotlib.pyplot as plt
+        
+        fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+        X, Y = np.meshgrid(azimuth_angles, zenith_angles)
+        ax.pcolormesh(X, Y, beamformer.T, shading='nearest')
+        ax.plot(azimuth_angles, zenith_angles, color='k', ls='none')
+        ax.grid()
+        plt.show()
         return
