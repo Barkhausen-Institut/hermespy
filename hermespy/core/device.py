@@ -926,7 +926,7 @@ class Device(ABC, RandomNode):
             int: Number of antennas, greater or equal to one.
         """
 
-        return self.__topology.shape[0]
+        return self.topology.shape[0]
 
     @property
     def antenna_positions(self) -> np.ndarray:

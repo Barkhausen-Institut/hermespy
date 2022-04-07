@@ -259,6 +259,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             device_signals (Union[List[Signal], np.ndarray]):
                 List of signal models arriving at the device.
+                May also be a two-dimensional numpy object array where the first dimension indicates the link
+                and the second dimension contains the transmitted signal as the first element and the link channel
+                as the second element.
 
             snr (float, optional):
                 Signal to noise power ratio.
