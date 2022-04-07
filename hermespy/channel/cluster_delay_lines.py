@@ -726,7 +726,10 @@ class ClusterDelayLineBase(Channel):
         ray_zod = pi / 180 * self._ray_zod(cluster_powers, rice_factor, 180 * los_zod / pi)  # ToDo: Zenith departure modeling
         ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * los_zoa / pi)
 
-        # ToDo: Couple cluster angles randomly
+        # Couple cluster angles randomly (step 8)
+        # This is equivalent to shuffeling the angles within each cluster set
+        for ray_angles in (ray_aod, ray_aoa, ray_zod, ray_zoa):
+            [self._rng.shuffle(a) for a in ray_angles]
 
         # Generate cross-polarization power ratios (step 9)
         xpr = 10 ** (.1 * self._rng.normal(self.cross_polarization_power_mean,
@@ -823,7 +826,9 @@ class ClusterDelayLineBase(Channel):
                                                         num_delay_samples).flatten()
             impulse_response += np.multiply.outer(los_coefficients, resampling_matrix)
 
+        # Finally, generate the impulse response for all non-line of sight components
         for coefficients, delay in zip(nlos_coefficients, virtual_cluster_delays):
+            
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples).flatten()
             impulse_response += np.multiply.outer(coefficients, resampling_matrix)
 
