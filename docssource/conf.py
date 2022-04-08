@@ -28,15 +28,16 @@ author = 'Barkhausen Institut gGmbH'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinxcontrib.mermaid',
-    'sphinxcontrib.bibtex',
+    'sphinxcontrib.mermaid',                    # Smooth flowcahrts
+    'sphinxcontrib.bibtex',                     # Latex bibliography support
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
     'sphinx_autodoc_typehints',
-    'sphinx_rtd_dark_mode',
-    'sphinx_tabs.tabs',
+    'sphinx_rtd_dark_mode',                     # Dark theme
+    'sphinx_tabs.tabs',                         # Multiple tabs
+    'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
 ]
 
 autoclass_content = "both"
