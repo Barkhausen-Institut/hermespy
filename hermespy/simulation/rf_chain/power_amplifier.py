@@ -19,17 +19,24 @@ Each power amplifier model instance implements an equation
 
 distorting complex-valued signal samples :math:`s(t) \\in \\mathbb{C}` feeding into the power amplifier.
 For time-invariant (i.e. memoryless) models :math:`f\\lbrace s(t), t \\rbrace = f\\lbrace s(t) \\rbrace`.
+The following figure visualizes the gain characteristics for the implemented amplification models for a saturation point :math:`s_\\mathrm{sat} = 1`.
+
+.. plot:: scripts/plot_pa_characteristics.py
+   :align: center
+
+
 """
 
 from __future__ import annotations
 from abc import abstractmethod
 from math import sqrt
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Tuple, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter, RoundTripConstructor, SafeConstructor
+from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter,  SafeConstructor
 from ruamel.yaml.constructor import ConstructorError
+from scipy.constants import pi
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -144,37 +151,55 @@ class PowerAmplifier:
         # No modeling in the prototype, just return the non-distorted input signal
         return input_signal
 
-    def plot(self, samples: Optional[np.ndarray] = None) -> None:
+    def plot(self,
+             samples: Optional[np.ndarray] = None,
+             axes: Optional[Tuple[plt.axes, plt.axes]] = None) -> None:
         """Plot the power amplifier distortion characteristics.
 
         Generates a matplotlib plot depicting the phase/amplitude.
 
         Args:
+        
             samples (np.ndarray, optional):
                 Sample points at which to evaluate the characteristics.
                 In other words, the x-axis of the resulting characteristics plot.
+                
+            axes (Optional[Tuple[plt.axes, plt.axes]], optional):
+                Axes to which to plot the charateristics.
+                By default, a new figure is created.
         """
 
         if samples is None:
             samples = np.arange(0, 2, 0.01) * self.saturation_amplitude
 
-        model = self.model(samples)
+        model = self.model(samples.astype(complex))
         amplitude = abs(model)
         phase = np.angle(model)
 
-        figure, amplitude_axes = plt.subplots()
-        figure.suptitle("Power Amplifier Characteristics")
+        figure: Optional[plt.figure] = None
+        if axes is None:
+            
+            figure, amplitude_axes = plt.subplots()
+            figure.suptitle(self.__class__.__name__ + " Characteristics")
 
-        amplitude_axes.set_xlabel("Input Amplitude")
+            amplitude_axes.set_xlabel("Input Amplitude")
+            amplitude_axes.set_ylabel("Output Amplitude")
+            
+            phase_axes = amplitude_axes.twinx()
+            phase_axes.set_ylabel("Output Phase")
+            phase_axes.set_ylim([-pi, pi])
+            
+        else:
+            
+            amplitude_axes = axes[0]
+            phase_axes = axes[1]
 
         amplitude_axes.plot(samples, amplitude)
-        amplitude_axes.set_ylabel("Output Amplitude")
-
-        phase_axes = amplitude_axes.twinx()
         phase_axes.plot(samples, phase)
-        phase_axes.set_ylabel("Output Phase")
-
-        figure.tight_layout()
+        
+        if figure is not None:
+            figure.tight_layout()
+        
     
     @classmethod
     def from_yaml(cls: Type[PowerAmplifier],
