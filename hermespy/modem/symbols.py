@@ -121,21 +121,31 @@ class Symbols(object):
 
             self.__symbols[slice] = value
 
-    def plot_constellation(self) -> plt.Figure:
+    def plot_constellation(self, axes: Optional[plt.axes.Axes] = None) -> Optional[plt.Figure]:
         """Plot the symbol constellation.
 
         Essentially projects the time-series of symbols onto a single complex plane.
+        
+        Args:
+        
+            axes (Optional[plt.axes.Axes], optional):
+                The axes to plot the graph to.
+                By default, a new matplotlib figure is created.
 
         Returns:
 
-            Figure:
+            Optional[plt.Figure]:
                 Handle to the created matplotlib.pyplot figure object.
+                None if the axes were provided.
         """
 
         symbols = self.__symbols.flatten()
+        figure: Optional[plt.figure.Figure] = None
 
-        figure, axes = plt.subplots()
-        figure.suptitle("Symbol Constellation")
+        # Create a new figure and the respective axes if none were provided
+        if axes is None:
+            figure, axes = plt.subplots()
+            figure.suptitle("Symbol Constellation")
 
         axes.scatter(symbols.real, symbols.imag)
         axes.set(ylabel="Imag")

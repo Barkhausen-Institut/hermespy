@@ -64,16 +64,25 @@ class MatchedFilterJcas(Modem, Radar):
         # Re-sample communication waveform
         resampled_signal = signal.resample(self.sampling_rate)
         
+        num_propagated_samples = int(2 * self.max_range / speed_of_light * self.sampling_rate)
+        
+        # Append additional samples if the signal is too short
+        required_num_received_samples = self.__transmission.num_samples + num_propagated_samples
+        if resampled_signal.num_samples < required_num_received_samples:
+            resampled_signal.append_samples(Signal(np.zeros((1, required_num_received_samples - resampled_signal.num_samples), dtype=complex), self.sampling_rate, resampled_signal.carrier_frequency))
+
+        # Remove possible overhead samples if signal is too long
+        # resampled_signal.samples = resampled_signal.samples[:, :num_samples]
+        
         correlation = abs(correlate(resampled_signal.samples, self.__transmission.samples, mode='valid', method='fft').flatten()) / self.__transmission.num_samples
         
         # Append zeros for correct depth estimation
-        num_samples = int(2 * self.max_range / speed_of_light * self.sampling_rate)
-        num_appended_zeros = max(0, num_samples - resampled_signal.num_samples)
-        correlation = np.append(correlation, np.zeros(num_appended_zeros))
+        #num_appended_zeros = max(0, num_samples - resampled_signal.num_samples)
+        #correlation = np.append(correlation, np.zeros(num_appended_zeros))
 
         angle_bins = np.array([0.])
         velocity_bins = np.array([0.])
-        range_bins = .5 * np.arange(len(correlation)) * speed_of_light / resampled_signal.sampling_rate
+        range_bins = .5 * speed_of_light / self.sampling_rate * np.arange(num_propagated_samples + 1)
         cube_data = np.array([[correlation]], dtype=float)
         cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins)
 
