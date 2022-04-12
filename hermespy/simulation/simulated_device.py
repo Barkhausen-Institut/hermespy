@@ -274,20 +274,19 @@ class SimulatedDevice(Device, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
+        # Tranform list arguments to matrix arguments
         if isinstance(device_signals, List):
+            
+            propagation_matrix = np.empty(1, dtype=object)
+            propagation_matrix[0] = (device_signals, None)
+            device_signals = propagation_matrix
 
-            for signal in device_signals:
+        # Superimpose transmit signals
+        for signals, _ in device_signals:
 
-                if signal is not None:
+            if signals is not None:
+                for signal in signals:
                     mixed_signal.superimpose(signal)
-
-        elif isinstance(device_signals, np.ndarray):
-
-            for signals, _ in device_signals:
-
-                if signals is not None:
-                    for signal in signals:
-                        mixed_signal.superimpose(signal)
 
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(mixed_signal)

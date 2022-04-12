@@ -220,7 +220,7 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
         self.plot_scale = 'log'  # Plot logarithmically by default
 
-    def evaluate(self, investigated_object: Scenario) -> BlockErrorArtifact:
+    def evaluate(self, investigated_object: Optional[Scenario] = None) -> BlockErrorArtifact:
 
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmitted_bits
@@ -286,7 +286,7 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
         self.plot_scale = 'log'  # Plot logarithmically by default
 
-    def evaluate(self, investigated_object: Scenario) -> FrameErrorArtifact:
+    def evaluate(self, investigated_object: Optional[Scenario] = None) -> FrameErrorArtifact:
 
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmitted_bits
@@ -383,7 +383,7 @@ class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
 
         FrameErrorEvaluator.__init__(self, transmitting_modem, receiving_modem)
 
-    def evaluate(self, investigated_object: Scenario) -> ThroughputArtifact:
+    def evaluate(self, investigated_object: Optional[Scenario] = None) -> ThroughputArtifact:
 
         # Get the frame errors
         frame_errors = FrameErrorEvaluator.evaluate(self, investigated_object).artifact.flatten()

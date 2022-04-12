@@ -1,4 +1,4 @@
-from .simulation import Simulation
+from .simulation import Simulation, SimulationScenario
 from .simulated_device import SimulatedDevice
 from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier,\
     CustomPowerAmplifier
@@ -13,5 +13,8 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = ['Simulation', 'SimulatedDevice', 'RfChain', 'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier',
-           'ClippingPowerAmplifier', 'CustomPowerAmplifier', 'Noise']
+__all__ = ['Simulation', 'SimulationScenario',
+           'SimulatedDevice',
+           'RfChain', 'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier',
+           'ClippingPowerAmplifier', 'CustomPowerAmplifier',
+           'Noise']
