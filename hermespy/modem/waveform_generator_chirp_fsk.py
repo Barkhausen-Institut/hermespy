@@ -528,6 +528,12 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
     @property
     def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
+    
+    @WaveformGenerator.modulation_order.setter
+    def modulation_order(self, value: int) -> None:
+        
+        self._prototypes.cache_clear()
+        WaveformGenerator.modulation_order.fset(self, value)
 
     @lru_cache(maxsize=1, typed=True)
     def _prototypes(self) -> Tuple[np.array, float]:
