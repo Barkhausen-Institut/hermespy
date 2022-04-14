@@ -249,9 +249,9 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
     @property
     def pilot(self) -> Signal:
         
-        pilot = np.zeros(self.oversampling_factor * self.num_preamble_symbols, dtype=complex)
-        pilot[::self.oversampling_factor] = 1.
-        pilot = self.tx_filter.filter(pilot)
+        filter_delay = self.tx_filter.delay_in_samples
+        pilot = np.zeros(filter_delay + self.oversampling_factor * self.num_preamble_symbols, dtype=complex)
+        pilot[filter_delay::self.oversampling_factor] = 1.
 
         return Signal(pilot, sampling_rate=self.sampling_rate)
 
