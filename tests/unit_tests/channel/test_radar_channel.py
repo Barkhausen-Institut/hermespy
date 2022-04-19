@@ -218,7 +218,7 @@ class TestRadarChannel(unittest.TestCase):
         self.transmitter.velocity = np.array([velocity, 0., 0.])
 
         num_samples = 100000
-        sinewave_frequency = 100e6
+        sinewave_frequency = .25 * self.transmitter.sampling_rate
         doppler_shift = 2 * velocity / speed_of_light * self.transmitter.carrier_frequency
 
         time = np.arange(num_samples) / self.transmitter.sampling_rate
