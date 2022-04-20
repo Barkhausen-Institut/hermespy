@@ -36,7 +36,7 @@ class TestRadarChannel(unittest.TestCase):
         self.transmitter = Mock()
         self.transmitter.carrier_frequency = 1e9
         self.transmitter.sampling_rate = 1e6
-        self.transmitter.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
         self.transmitter.velocity = np.zeros(3, dtype=float)
         self.receiver = self.transmitter
 

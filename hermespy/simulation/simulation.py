@@ -67,7 +67,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Add the device to the scenario
         Scenario.add_device(self, device)
-        device.scenario = self
 
         if self.num_devices == 1:
 
@@ -696,7 +695,7 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
 
         # Pop configuration sections for "special" treatment
         devices: List[SimulatedDevice] = state.pop('Devices', [])
-        channels: List[Tuple[Channel, int, ...]] = state.pop('Channels', [])
+        channels: List[Tuple[Channel, int]] = state.pop('Channels', [])
         operators: List[Operator] = state.pop('Operators', [])
         evaluators: List[Evaluator] = state.pop('Evaluators', [])
         dimensions: Dict[str, Any] = state.pop('Dimensions', {})
