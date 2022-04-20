@@ -54,6 +54,12 @@ __status__ = "Prototype"
 
 
 class ClusterDelayLineBase(Channel):
+    
+    normalize_delays: bool
+    """
+    Normalize propagation delays so that the first tap equals to zero.
+    Enabled by default.
+    """
 
     # Cluster scaling factors for the angle of arrival
     __azimuth_scaling_factors = np.array([[4, .779],
@@ -85,7 +91,17 @@ class ClusterDelayLineBase(Channel):
                                              [8, 9, 10, 11, 16, 17],
                                              [12, 13, 14, 15]]
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, normalize_delays: bool = True, **kwargs) -> None:
+        """
+        Args:
+        
+            normalize_delays (bool, optional):
+            
+                Normalize propagation delays so that the first tap equals to zero.
+                Enabled by default.
+        """
+        
+        self.normalize_delays = normalize_delays
 
         Channel.__init__(self, **kwargs)
 
@@ -462,9 +478,14 @@ class ClusterDelayLineBase(Channel):
                 Vector of cluster delays.
         """
 
+        # Generate delays according to the configured spread and scales
         delays = - self.delay_scaling * delay_spread * np.log(self._rng.uniform(size=self.num_clusters))
 
-        delays -= delays.min()
+        # Normalize delays if the respective flag is enabled
+        if self.normalize_delays:
+            delays -= delays.min()
+            
+        # Sort the delays in ascending order
         delays.sort()
 
         # In case of line of sight, scale the delays by the appropriate K-factor
