@@ -78,5 +78,5 @@ class TestClusterDelayLine(TestCase):
         ax.pcolormesh(X, Y, beamformer.T, shading='nearest')
         ax.plot(azimuth_angles, zenith_angles, color='k', ls='none')
         ax.grid()
-        plt.show()
+        #plt.show()
         return
