@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 from scipy.constants import speed_of_light
-from scipy.signal import correlate
+from scipy.signal import correlate, correlation_lags
 
 from hermespy.core.signal_model import Signal
 from hermespy.modem import Modem, Symbols
@@ -44,12 +44,14 @@ class MatchedFilterJcas(Modem, Radar):
     def transmit(self, duration: float = 0) -> Tuple[Signal, Symbols, np.ndarray]:
         
         # Cache the recently transmitted waveform for correlation during reception
-        signal, symbols, bits =  super().transmit(duration)
+        signal, symbols, bits = super().transmit(duration)
         
         # Resample the signal for an improved range resolution visualization
         # Cache the resampled transmission
         self.__transmission = signal.resample(self.sampling_rate)
-        
+        if self._transmitter.attached:
+            self._transmitter.slot.add_transmission(self._transmitter, self.__transmission)
+
         return signal, symbols, bits
         
     def receive(self) -> Tuple[Signal, Symbols, np.ndarray, RadarCube]:
@@ -59,30 +61,32 @@ class MatchedFilterJcas(Modem, Radar):
             raise RuntimeError("Receiving from a matched filter joint must be preceeded by a transmission")
         
         # Receive information
-        signal, symbols, bits = Modem.receive(self)
+        _, symbols, bits = Modem.receive(self)
         
         # Re-sample communication waveform
-        resampled_signal = signal.resample(self.sampling_rate)
+        signal = self._receiver.signal.resample(self.sampling_rate)
         
-        num_propagated_samples = int(2 * self.max_range / speed_of_light * self.sampling_rate)
+        resolution = self.range_resolution
+        num_propagated_samples = int(2 * self.max_range / resolution)
         
         # Append additional samples if the signal is too short
         required_num_received_samples = self.__transmission.num_samples + num_propagated_samples
-        if resampled_signal.num_samples < required_num_received_samples:
-            resampled_signal.append_samples(Signal(np.zeros((1, required_num_received_samples - resampled_signal.num_samples), dtype=complex), self.sampling_rate, resampled_signal.carrier_frequency))
+        if signal.num_samples < required_num_received_samples:
+            signal.append_samples(Signal(np.zeros((1, required_num_received_samples - signal.num_samples), dtype=complex), self.sampling_rate, signal.carrier_frequency))
 
         # Remove possible overhead samples if signal is too long
         # resampled_signal.samples = resampled_signal.samples[:, :num_samples]
         
-        correlation = abs(correlate(resampled_signal.samples, self.__transmission.samples, mode='valid', method='fft').flatten()) / self.__transmission.num_samples
-        
+        correlation = abs(correlate(signal.samples, self.__transmission.samples, mode='valid', method='fft').flatten()) / self.__transmission.num_samples
+        lags = correlation_lags(signal.num_samples, self.__transmission.num_samples, mode='valid')
+
         # Append zeros for correct depth estimation
         #num_appended_zeros = max(0, num_samples - resampled_signal.num_samples)
         #correlation = np.append(correlation, np.zeros(num_appended_zeros))
 
         angle_bins = np.array([0.])
         velocity_bins = np.array([0.])
-        range_bins = .5 * speed_of_light / self.sampling_rate * np.arange(num_propagated_samples + 1)
+        range_bins = .5 * lags * resolution
         cube_data = np.array([[correlation]], dtype=float)
         cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins)
 

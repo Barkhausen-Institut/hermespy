@@ -67,7 +67,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Add the device to the scenario
         Scenario.add_device(self, device)
-        device.scenario = self
 
         if self.num_devices == 1:
 
