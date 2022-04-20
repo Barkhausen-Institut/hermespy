@@ -37,8 +37,8 @@ pages:
   script:
     - python -m setup build_sphinx
   after_script:
-    - mkdir .public/
-    - cp -r .documentation/html/* .public/
+    - mkdir public/
+    - cp -r documentation/html/* public/
   artifacts:
     paths:
-      - pubic
+      - public
