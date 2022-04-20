@@ -97,7 +97,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from functools import reduce
-from itertools import product
 from math import exp, sqrt
 from time import perf_counter
 from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple, Union

@@ -22,4 +22,4 @@ __status__ = "Prototype"
 __all__ = ['ChannelStateInformation', 'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot',
            'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError',
            'MonteCarlo', 'Evaluator', 'Executable', 'Verbosity', 'Factory',
-           'Serializable', 'RandomNode', 'DuplexOperator', 'Signal']
+           'Serializable', 'RandomNode', 'DuplexOperator', 'Scenario', 'Signal']
