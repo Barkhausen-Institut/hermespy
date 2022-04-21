@@ -33,9 +33,9 @@ class TestMeanSquareTimeEqualization(unittest.TestCase):
         self.precoding[0] = self.equalizer
 
         self.transmitter = Mock()
-        self.transmitter.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
         self.receiver = Mock()
-        self.receiver.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         self.rng = np.random.default_rng(42)
         self.random_mother = Mock()
@@ -106,9 +106,9 @@ class TestMeanSquareSpaceEqualization(unittest.TestCase):
         self.precoding[0] = self.equalizer
 
         self.transmitter = Mock()
-        self.transmitter.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
         self.receiver = Mock()
-        self.receiver.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         self.rng = np.random.default_rng(42)
         self.random_mother = Mock()
@@ -123,8 +123,8 @@ class TestMeanSquareSpaceEqualization(unittest.TestCase):
 
         for model_type, num_antennas in product(MultipathFading5GTDL.TYPE, self.num_antennas):
 
-            self.transmitter.num_antennas = num_antennas
-            self.receiver.num_antennas = num_antennas
+            self.transmitter.antennas.num_antennas = num_antennas
+            self.receiver.antennas.num_antennas = num_antennas
 
             samples = np.exp(2j * self.rng.uniform(0., pi, (num_antennas, self.num_samples)))
             signal = Signal(samples, self.sampling_rate)
@@ -152,9 +152,9 @@ class TestZeroForcingTimeEqualization(unittest.TestCase):
         self.precoding[0] = self.equalizer
 
         self.transmitter = Mock()
-        self.transmitter.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
         self.receiver = Mock()
-        self.receiver.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         self.generator = np.random.default_rng(42)
         self.random_mother = Mock()
@@ -214,9 +214,9 @@ class TestZeroForcingSpaceEqualization(unittest.TestCase):
         self.precoding[0] = self.equalizer
 
         self.transmitter = Mock()
-        self.transmitter.num_antennas = 1
+        self.transmitter.antennas.num_antennas = 1
         self.receiver = Mock()
-        self.receiver.num_antennas = 1
+        self.receiver.antennas.num_antennas = 1
 
         self.rng = np.random.default_rng(42)
         self.random_mother = Mock()
@@ -231,8 +231,8 @@ class TestZeroForcingSpaceEqualization(unittest.TestCase):
 
         for model_type, num_antennas in product(MultipathFading5GTDL.TYPE, self.num_antennas):
 
-            self.transmitter.num_antennas = num_antennas
-            self.receiver.num_antennas = num_antennas
+            self.transmitter.antennas.num_antennas = num_antennas
+            self.receiver.antennas.num_antennas = num_antennas
 
             samples = np.exp(2j * self.rng.uniform(0., pi, (num_antennas, self.num_samples)))
             signal = Signal(samples, self.sampling_rate)

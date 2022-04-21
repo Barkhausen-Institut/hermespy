@@ -36,6 +36,9 @@ pages:
     - pip install -r requirements_doc.txt
   script:
     - python -m setup build_sphinx
+  after_script:
+    - mkdir public/
+    - cp -r documentation/html/* public/
   artifacts:
     paths:
-      - documentation/html
+      - public

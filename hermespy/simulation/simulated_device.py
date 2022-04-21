@@ -10,16 +10,13 @@ from typing import List, Optional, Type, Union
 
 import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
-from scipy.constants import speed_of_light
+from scipy.constants import pi
 
-from hermespy.channel import ChannelStateInformation
-from hermespy.core import Device, FloatingError
-from hermespy.core.factory import Serializable
-from hermespy.core.scenario import Scenario
-from hermespy.core.signal_model import Signal
+from hermespy.core import ChannelStateInformation, Device, FloatingError, RandomNode, Scenario, Serializable, Signal
 from hermespy.core.statistics import SNRType
-from .rf_chain.rf_chain import RfChain
+from .antenna import AntennaArrayBase, UniformArray, IdealAntenna
 from .noise import Noise, AWGN
+from .rf_chain.rf_chain import RfChain
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -31,7 +28,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SimulatedDevice(Device, Serializable):
+class SimulatedDevice(Device, RandomNode, Serializable):
     """Representation of a device simulating hardware.
 
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
@@ -39,6 +36,9 @@ class SimulatedDevice(Device, Serializable):
 
     yaml_tag = u'SimulatedDevice'
     """YAML serialization tag."""
+
+    antennas: AntennaArrayBase
+    """Model of the device's antenna array."""
 
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
@@ -54,7 +54,7 @@ class SimulatedDevice(Device, Serializable):
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
-                 num_antennas: Optional[int] = None,
+                 antennas: Optional[AntennaArrayBase] = None,
                  rf_chain: Optional[RfChain] = None,
                  sampling_rate: Optional[float] = None,
                  carrier_frequency: float = 0.,
@@ -67,10 +67,9 @@ class SimulatedDevice(Device, Serializable):
                 Scenario this device is attached to.
                 By default, the device is considered floating.
 
-            num_antennas (int, optional):
-                Number of antennas.
-                The information is used to initialize the simulated device as a Uniform Linear Array with
-                half-wavelength antenna spacing.
+            antennas (AntennaArrayBase, optional):
+                Model of the device's antenna array.
+                By default, a :class:`UniformArray` of ideal antennas is assumed.
 
             rf_chain (RfChain, optional):
                 Model of the device's radio frequency amplification chain.
@@ -94,26 +93,13 @@ class SimulatedDevice(Device, Serializable):
         Device.__init__(self, *args, **kwargs)
 
         self.scenario = scenario
+        self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.noise = AWGN()
         self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.velocity = np.zeros(3, dtype=float)
-
-        # If num_antennas is configured initialize the modem as a Uniform Linear Array
-        # with half wavelength element spacing
-        if num_antennas is not None:
-
-            if not np.array_equal(self.topology, np.zeros((1, 3))):
-                raise ValueError("The num_antennas and topology parameters are mutually exclusive")
-
-            # For a carrier frequency of 0.0 we will initialize all antennas at the same position.
-            half_wavelength = 0.0
-            if self.__carrier_frequency > 0.0:
-                half_wavelength = .5 * speed_of_light / self.__carrier_frequency
-
-            self.topology = half_wavelength * np.outer(np.arange(num_antennas), np.array([1., 0., 0.]))
 
     @property
     def scenario(self) -> Scenario:
@@ -133,6 +119,18 @@ class SimulatedDevice(Device, Serializable):
 
         return self.__scenario
 
+    @Device.orientation.getter
+    def orientation(self) -> np.ndarray:
+
+        angles: Optional[np.ndarray] = Device.orientation.fget(self)
+
+        # Return the fixed angle configuration if it is specified
+        if angles is not None:
+            return angles
+
+        # Draw a random orientation if the angle configuration was not specified
+        return self._rng.uniform(0, 2 * pi, 3)
+
     @scenario.setter
     def scenario(self, scenario: Scenario) -> None:
         """Set the scenario this device is attached to. """
@@ -141,6 +139,11 @@ class SimulatedDevice(Device, Serializable):
             raise RuntimeError("Error trying to modify the scenario of an already attached modem")
 
         self.__scenario = scenario
+
+    @Device.topology.getter
+    def topology(self) -> np.ndarray:
+
+        return self.antennas.topology
 
     @property
     def attached(self) -> bool:
@@ -256,6 +259,9 @@ class SimulatedDevice(Device, Serializable):
 
             device_signals (Union[List[Signal], np.ndarray]):
                 List of signal models arriving at the device.
+                May also be a two-dimensional numpy object array where the first dimension indicates the link
+                and the second dimension contains the transmitted signal as the first element and the link channel
+                as the second element.
 
             snr (float, optional):
                 Signal to noise power ratio.

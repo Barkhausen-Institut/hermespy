@@ -11,10 +11,10 @@ from hermespy.core.device import FloatingError
 from hermespy.simulation.simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -32,18 +32,17 @@ class TestSimulatedDevice(TestCase):
         self.scenario = Mock()
         self.position = np.zeros(3)
         self.orientation = np.zeros(3)
-        self.topology = np.array([[1., 2., 3.], [4., 5., 6.]], dtype=float)
+        self.antennas = Mock()
 
-        self.device = SimulatedDevice(scenario=self.scenario, position=self.position, orientation=self.orientation,
-                                      topology=self.topology)
+        self.device = SimulatedDevice(scenario=self.scenario, antennas=self.antennas, position=self.position, orientation=self.orientation)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
 
         self.assertIs(self.scenario, self.device.scenario)
+        self.assertIs(self.antennas, self.device.antennas)
         assert_array_equal(self.position, self.device.position)
         assert_array_equal(self.orientation, self.device.orientation)
-        assert_array_equal(self.topology, self.device.topology)
 
     def test_transmit(self) -> None:
         """Test modem transmission routine."""
@@ -134,21 +133,3 @@ class TestSimulatedDevice(TestCase):
         except RuntimeError:
 
             self.fail()
-
-
-class SimulatedDeviceULAInit(TestCase):
-    """Test default topology initialization"""
-
-    def test_num_antennas_init(self) -> None:
-        """Test topology initialization using num_antennas parameter."""
-
-        num_antennas = 10
-        simulated_device = SimulatedDevice(num_antennas=10, carrier_frequency=1.)
-
-        self.assertEqual(num_antennas, simulated_device.num_antennas)
-
-    def test_num_antennas_validation(self) -> None:
-        """Test topology initialization validation"""
-
-        with self.assertRaises(ValueError):
-            _ = SimulatedDevice(num_antennas=2, topology=np.zeros((2, 3)))
