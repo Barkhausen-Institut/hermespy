@@ -84,6 +84,7 @@ class TestEncoderManager(TestCase):
         self.encoder_alpha = StubEncoder(Mock(), 64)
         self.encoder_beta = StubEncoder(Mock(), 16)
         self.encoder_manager = EncoderManager(self.modem)
+        self.rng = np.random.default_rng(42)
 
     def test_init(self) -> None:
         """Test the object initialization behaviour."""
@@ -147,7 +148,7 @@ class TestEncoderManager(TestCase):
         self.encoder_manager.add_encoder(self.encoder_alpha)
         self.encoder_manager.add_encoder(self.encoder_beta)
 
-        self.assertEqual(self.encoder_manager.bit_block_size, 32,
+        self.assertEqual(self.encoder_manager.bit_block_size, 64,
                          "Bit block size calculation produced unexpected result")
 
     def test_code_block_size(self) -> None:
@@ -239,17 +240,29 @@ class TestEncoderManager(TestCase):
 
         self.encoder_manager.add_encoder(self.encoder_alpha)
 
-        data = np.ones(self.encoder_manager.bit_block_size, dtype=int)
-        expected_code = np.append(data.repeat(2), np.zeros(2, dtype=int))
-        code = self.encoder_manager.encode(data, expected_code.shape[0])
-        assert_array_equal(code, expected_code)
+        data = np.ones(self.encoder_manager.bit_block_size, dtype=bool)
+        code = self.encoder_manager.encode(data, self.encoder_manager.code_block_size + 2)
+        self.assertEqual(len(code), self.encoder_manager.code_block_size + 2)
 
     def test_truncating(self) -> None:
         """Test the truncating of bits on overflowing data lengths"""
 
         self.encoder_manager.add_encoder(self.encoder_alpha)
 
-        expected_data = ((np.arange(self.encoder_manager.bit_block_size) % 2) == 1).astype(int)
+        expected_data = (np.arange(self.encoder_manager.bit_block_size) % 2) == 1
         code = expected_data.repeat(2)
         data = self.encoder_manager.decode(code, expected_data.shape[0]-2)
         assert_array_equal(data, expected_data[:-2])
+
+    def test_encode_decode(self) -> None:
+        """Encoding a bit set and subsequently decoding it should yield the original set"""
+        
+        self.encoder_manager.add_encoder(self.encoder_alpha)
+        self.encoder_manager.add_encoder(self.encoder_beta)
+        
+        expected_data = self.rng.integers(0, 2, 20, dtype=bool)
+        
+        code = self.encoder_manager.encode(expected_data)
+        data = self.encoder_manager.decode(code, len(expected_data))
+        
+        assert_array_equal(expected_data, data)
