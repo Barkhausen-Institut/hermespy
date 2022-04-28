@@ -517,6 +517,20 @@ class WaveformGenerator(ABC):
             float: Bandwidth in Hz.
         """
         ...
+        
+    @property
+    def data_rate(self) -> float:
+        """Data rate theoretically achieved by this waveform configuration.
+        
+        Returns:
+        
+            Bits per second.
+        """
+        
+        time = self.frame_duration # ToDo: Consider guard interval
+        bits = self.bits_per_frame
+        
+        return bits / time
 
     @property
     def modem(self) -> Modem:
