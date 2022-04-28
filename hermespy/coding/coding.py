@@ -641,7 +641,9 @@ class EncoderManager(Serializable, RandomNode):
 
         code_rate = 1.0
         for encoder in self._encoders:
-            code_rate *= encoder.rate
+            
+            if encoder.enabled:
+                code_rate *= encoder.rate
 
         return code_rate
 

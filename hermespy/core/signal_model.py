@@ -393,7 +393,9 @@ class Signal:
                     axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label='Real')
                     axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label='Imag')
                     axes[stream_idx, time_axis_idx].set_xlabel('Time-Domain [s]')
-                    axes[stream_idx, time_axis_idx].legend(loc="upper left", fancybox=True, shadow=True)
+                    
+                    if legend:
+                        axes[stream_idx, time_axis_idx].legend(loc="upper left", fancybox=True, shadow=True)
 
                 # Plot frequency space
                 if space in {'both', 'frequency'}:
