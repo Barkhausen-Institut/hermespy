@@ -819,3 +819,98 @@ class PskQamZeroForcingChannelEqualization(PskQamChannelEqualization, ABC):
             stream /= csi.state[stream_idx, 0, :, 0]
 
         return signal
+
+
+class RootRaisedCosine(WaveformGeneratorPskQam):
+    """Root Raise Cosine Filter Modulation Scheme."""
+    
+    
+    def __init__(self, roll_off: float = .9, oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  roll_off=roll_off)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  roll_off=roll_off)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+        
+
+class RaisedCosine(WaveformGeneratorPskQam):
+    """Raise Cosine Filter Modulation Scheme."""
+    
+    
+    def __init__(self, roll_off: float = .9, oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  roll_off=roll_off)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  roll_off=roll_off)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+
+
+class RaisedCosine(WaveformGeneratorPskQam):
+    """Raise Cosine Filter Modulation Scheme."""
+    
+    
+    def __init__(self, roll_off: float = .9, oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  roll_off=roll_off)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  roll_off=roll_off)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+
+
+class Rectangular(WaveformGeneratorPskQam):
+    """Rectangular Filter Modulation Scheme."""
+    
+    
+    def __init__(self, bandwidth_factor: float = 1., oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.RECTANGULAR,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  bandwidth_factor=bandwidth_factor)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.RECTANGULAR,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  bandwidth_factor=bandwidth_factor)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+
+
+class FMCW(WaveformGeneratorPskQam):
+    """Frequency Modulated Continuous Waveform Filter Modulation Scheme."""
+    
+    
+    def __init__(self, bandwidth_factor: float = 1., oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.FMCW,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  bandwidth_factor=bandwidth_factor)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.FMCW,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  bandwidth_factor=bandwidth_factor)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
