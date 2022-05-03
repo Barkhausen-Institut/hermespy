@@ -96,6 +96,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.noise = AWGN()
+        self.snr = float('inf')
         self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
@@ -249,9 +250,28 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Return result
         return transmissions
 
+    @property
+    def snr(self) -> float:
+        """Signal to noise ratio at the receiver side.
+        
+        Returns:
+
+            Linear ratio of signal to noise power.
+        """
+
+        return self.__snr 
+
+    @snr.setter
+    def snr(self, value: float) -> None:
+
+        if value <= 0:
+            raise ValueError("The linear signal to noise ratio must be greater than zero")
+
+        self.__snr = value
+
     def receive(self,
                 device_signals: Union[List[Signal], np.ndarray],
-                snr: float = float('inf'),
+                snr: Optional[float] = None,
                 snr_type: SNRType = SNRType.EBN0) -> Signal:
         """Receive signals at this device.
 
@@ -275,6 +295,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             baseband_signal (Signal):
                 Baseband signal sampled after hardware-modeling.
         """
+
+        snr = self.snr if snr is None else snr
 
         # Mix arriving signals
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
