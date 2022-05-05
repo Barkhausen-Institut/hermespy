@@ -77,7 +77,7 @@ class TestMatchedFilterJoint(TestCase):
     def test_range_resolution_setget(self) -> None:
         """Range resolution property getter should return setter argument."""
         
-        range_resolution = 5.
+        range_resolution = 1e-3
         self.joint.range_resolution = range_resolution
         
         self.assertEqual(range_resolution, self.joint.range_resolution)
