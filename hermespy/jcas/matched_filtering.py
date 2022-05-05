@@ -131,7 +131,6 @@ class MatchedFilterJcas(Modem, Radar):
                 If the range resolution is smaller or equal to zero.
         """
         
-        
         return speed_of_light / self.sampling_rate
     
     @range_resolution.setter

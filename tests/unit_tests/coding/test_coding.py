@@ -148,7 +148,7 @@ class TestEncoderManager(TestCase):
         self.encoder_manager.add_encoder(self.encoder_alpha)
         self.encoder_manager.add_encoder(self.encoder_beta)
 
-        self.assertEqual(self.encoder_manager.bit_block_size, 64,
+        self.assertEqual(self.encoder_manager.bit_block_size, 32,
                          "Bit block size calculation produced unexpected result")
 
     def test_code_block_size(self) -> None:
