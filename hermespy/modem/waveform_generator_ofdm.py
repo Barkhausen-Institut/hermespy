@@ -1121,3 +1121,37 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
                 ofdm.add_section(section)
 
         return ofdm
+
+
+class SchmidlCoxPilotSection(FrameSection):
+    """Pilot Symbol Section of the Schmidl Cox Algorithm."""
+
+
+    def __init__(self, frame: Optional[WaveformGeneratorOfdm] = None) -> None:
+        """
+        Args:
+
+            frame (Optional[WaveformGeneratorOfdm], optional):
+                The frame configuration this pilot section belongs to.
+        """
+
+        FrameSection.__init__(self, num_repetitions=1, frame=frame)
+
+
+    def num_symbols(self) -> int:
+        return 0    # The pilot section does not modulate any information symbols
+
+    def modulate(self, symbols: Symbols) -> np.ndarray:
+
+        # Samples per OFMD symbol
+        samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
+
+        pilot_frequencies = np.zeros((self.frame.num_subcarriers, 2), dtype=complex)
+        pilot_frequencies[0::2, 0] = 7 + 7j
+        pilot_frequencies[1::2, 0] = -7 + 7j
+        pilot_frequencies[0::2, 1] = 5 * np.exp(.5j * pi * np.arange(int(.5 * self.frame.num_subcarriers)))
+        pilot_frequencies[1::2, 1] = -5 * np.exp(.5j * pi * np.arange(int(np.ceil(.5 * self.frame.num_subcarriers))))
+ 
+
+
+        timesignal = np.empty(2 * samples_per_symbol, dtype=complex)
