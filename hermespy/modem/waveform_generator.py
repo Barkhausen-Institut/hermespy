@@ -667,7 +667,7 @@ class PilotWaveformGenerator(WaveformGenerator, ABC):
 
     @property
     @abstractmethod
-    def pilot(self) -> Signal:
+    def pilot_signal(self) -> Signal:
         """Model of the pilot sequence within this communication waveform.
 
         Returns:

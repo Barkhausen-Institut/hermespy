@@ -109,7 +109,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
                     channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
 
         # Query the pilot signal from the waveform generator
-        pilot_sequence = self.waveform_generator.pilot.samples.flatten()
+        pilot_sequence = self.waveform_generator.pilot_signal.samples.flatten()
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:
