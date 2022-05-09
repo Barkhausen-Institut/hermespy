@@ -12,17 +12,19 @@ from abc import abstractmethod
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
-from scipy.fft import fft, ifft
+from scipy.constants import pi
+from scipy.fft import fft, ifft, fftshift
 from scipy.interpolate import griddata
 
 from ..core.factory import Serializable
-from ..core.channel_state_information import ChannelStateInformation, ChannelStateDimension
+from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from ..core.signal_model import Signal
-from .modem import Symbols, WaveformGenerator
+from .modem import Symbols
+from .waveform_generator import PilotWaveformGenerator
 from .tools import PskQamMapping
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
@@ -574,7 +576,7 @@ class FrameGuardSection(FrameSection, Serializable):
         return representer.represent_mapping(cls.yaml_tag, state)
 
 
-class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
+class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
     """Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.
 
     The following features are supported:
@@ -615,6 +617,7 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
     __channel_estimation_algorithm: ChannelEstimation
     __subcarrier_spacing: float
     __num_subcarriers: int
+    __pilot_section: Optional[FrameSection]
     dc_suppression: bool
     resources: List[FrameResource]
     structure: List[FrameSection]
@@ -657,13 +660,14 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
         """
 
         # Init base class
-        WaveformGenerator.__init__(self, **kwargs)
+        PilotWaveformGenerator.__init__(self, **kwargs)
 
         self.channel_estimation_algorithm = channel_estimation
         self.subcarrier_spacing = subcarrier_spacing
         self.num_subcarriers = num_subcarriers
         self.dc_suppression = dc_suppression
         self.resources = [] if resources is None else resources
+        self.__pilot_section = None
 
         self.structure = []
         if structure is not None:
@@ -693,6 +697,39 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
 
         self.structure.append(section)
         section.frame = self
+        
+    @property
+    def pilot_section(self) -> Optional[FrameSection]:
+        """Static pilot section transmitted at the beginning of each OFDM frame.
+        
+        Required for time-domain synchronization and equalization of carrier frequency offsets.
+        
+        Returns:
+            FrameSection of the pilot symbols, `None` if no pilot is configured.
+        """
+        
+        return self.__pilot_section
+    
+    @pilot_section.setter
+    def pilot_section(self, value: Optional[FrameSection]) -> None:
+        
+        if value is None:
+            self.__pilot_section = None
+            return
+            
+        self.__pilot_section = value
+        
+        if value.frame is not self:
+            value.frame = self
+            
+    @property
+    def pilot_signal(self) -> Signal:
+        
+        if self.pilot_section:
+            return Signal(self.pilot_section.modulate(), sampling_rate=self.sampling_rate)
+
+        else:
+            return Signal.empty(self.sampling_rate)
 
     @property
     def channel_estimation_algorithm(self) -> ChannelEstimation:
@@ -775,13 +812,7 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
 
     @property
     def frame_duration(self) -> float:
-
-        """"duration = 0.
-
-        for section in self.structure:
-            duration += section.duration
-
-        return duration"""
+        
         return self.samples_in_frame / self.sampling_rate
 
     @property
@@ -791,6 +822,9 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
         num = 0
         for section in self.structure:
             num += section.num_samples
+            
+        if self.pilot_signal:
+            num += self.pilot_signal.num_samples
 
         return num
 
@@ -806,6 +840,10 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
 
         # The number of samples in time domain the frame should contain, given the current sample frequency
         output_signal = np.empty(0, dtype=complex)
+        
+        # Start the frame with a pilot section, if configured
+        if self.pilot_section:
+            np.append(output_signal, self.pilot_section.modulate())
 
         # Convert symbols
         data_symbols = data_symbols.raw.flatten()
@@ -839,6 +877,11 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
 
         sample_index = 0
         word_index = 0
+        
+        # If the frame contains a pilot section, skip the respective samples
+        if self.pilot_section:
+            sample_index += self.pilot_section.num_samples
+        
         for section in self.structure:
 
             num_samples = section.num_samples
@@ -1124,8 +1167,14 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
 
 
 class SchmidlCoxPilotSection(FrameSection):
-    """Pilot Symbol Section of the Schmidl Cox Algorithm."""
-
+    """Pilot Symbol Section of the Schmidl Cox Algorithm.
+    
+    Refer to :footcite:t:`1997:schmidl` for a detailed description.
+    """
+    
+    __cached_num_subcarriers: int
+    __cached_oversampling_factor: int
+    __cached_pilot: Optional[np.ndarray]
 
     def __init__(self, frame: Optional[WaveformGeneratorOfdm] = None) -> None:
         """
@@ -1135,15 +1184,23 @@ class SchmidlCoxPilotSection(FrameSection):
                 The frame configuration this pilot section belongs to.
         """
 
+        self.__cached_num_subcarriers = -1
+        self.__cached_oversampling_factor = -1
+        self.__cached_pilot = None
+        
         FrameSection.__init__(self, num_repetitions=1, frame=frame)
 
+    @property
+    def num_samples(self) -> int:
+        
+        return 2 * self.frame.num_subcarriers * self.frame.oversampling_factor
 
-    def num_symbols(self) -> int:
-        return 0    # The pilot section does not modulate any information symbols
-
-    def modulate(self, symbols: Symbols) -> np.ndarray:
-
-        # Samples per OFMD symbol
+    def modulate(self, *_: Any) -> np.ndarray:
+        
+        # Return the cached pilot signal if available and the relevant frame parameters haven't changed
+        if self.__cached_pilot and self.__cached_num_subcarriers == self.frame.num_subcarriers and self.__cached_oversampling_factor == self.frame.oversampling_factor:
+            return self.__cached_pilot
+        
         samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
 
         pilot_frequencies = np.zeros((self.frame.num_subcarriers, 2), dtype=complex)
@@ -1152,6 +1209,17 @@ class SchmidlCoxPilotSection(FrameSection):
         pilot_frequencies[0::2, 1] = 5 * np.exp(.5j * pi * np.arange(int(.5 * self.frame.num_subcarriers)))
         pilot_frequencies[1::2, 1] = -5 * np.exp(.5j * pi * np.arange(int(np.ceil(.5 * self.frame.num_subcarriers))))
  
-
-
-        timesignal = np.empty(2 * samples_per_symbol, dtype=complex)
+        pilot_symbols_time = ifft(pilot_frequencies, axis=0, norm='ortho', n=samples_per_symbol)
+        pilot_samples = np.concatenate(pilot_symbols_time.T, axis=0)
+        
+        # Cache the pilot signal for faster use in later frame modulations
+        self.__cached_num_subcarriers = self.frame.num_subcarriers
+        self.__cached_oversampling_factor = self.frame.oversampling_factor
+        self.__cached_pilot = pilot_samples
+        
+        return pilot_samples
+    
+    def demodulate(self, *_: Any) -> Tuple[np.ndarray, ChannelStateInformation]:
+        
+        return np.empty(0, dtype=complex), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY)
+    
