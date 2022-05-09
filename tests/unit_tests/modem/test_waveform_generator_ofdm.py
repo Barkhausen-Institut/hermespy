@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Test HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
+from itertools import product
 from typing import Tuple
 from unittest import TestCase
 from unittest.mock import Mock
@@ -480,24 +481,33 @@ class TestSchmidlCoxSynchronization(TestCase):
 
     def setUp(self):
 
+        self.rng = default_rng(42)
+
         self.frame = WaveformGeneratorOfdm(oversampling_factor=4)
         self.frame.pilot_section = SchmidlCoxPilotSection()
 
         self.synchronization = SchmidlCoxSynchronization(self.frame)
 
+        self.num_streams = 3
         self.delays_in_samples = [0, 9, 80]
+        self.num_frames = [1, 2, 3]
 
     def test_synchronize(self) -> None:
         """Test the proper estimation of delays during Schmidl-Cox synchronization"""
 
-        signal = self.frame.modulate(Symbols()).samples
-        channel_state = ChannelStateInformation.Ideal(len(signal))
+        for d, n in product(self.delays_in_samples, self.num_frames):
 
-        for d in self.delays_in_samples:
+            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(Symbols()).samples for _ in range(n)]
+            
+            signal = np.empty((self.num_streams, 0), dtype=complex)
+            for frame in frames:
 
-            delayed_signal = np.append(np.zeros((1, d), dtype=complex), signal)
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
+            
+            channel_state = ChannelStateInformation.Ideal(len(signal), self.num_streams)
 
-            synchronized_frame = self.synchronization.synchronize(signal, channel_state)
+            synchronization = self.synchronization.synchronize(signal, channel_state)
 
-            self.assertEqual(1, len(synchronized_frame))
-            assert_array_equal(signal, synchronized_frame[0][0])
+            self.assertEqual(n, len(synchronization))
+            for frame, (synchronized_frame, _) in zip(frames, synchronization):
+                assert_array_equal(frame, synchronized_frame)
