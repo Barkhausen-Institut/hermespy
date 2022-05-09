@@ -13,7 +13,7 @@ from scipy.constants import pi
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, SchmidlCoxPilotSection
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -408,7 +408,6 @@ class TestWaveformGeneratorOFDM(TestCase):
         assert_array_equal(expected_samples[None, :], pilot_signal.samples)
         self.assertEqual(self.generator.sampling_rate, pilot_signal.sampling_rate)
 
-
     def test_subcarrier_spacing_setget(self) -> None:
         """Subcarrier spacing property getter should return setter argument."""
 
@@ -473,5 +472,32 @@ class TestSchmidlCoxPilotSection(TestCase):
         first_half_symbol = synchronization_symbol[:half_symbol_length]
         second_half_symbol = synchronization_symbol[half_symbol_length:]
         
-        
-        assert_array_equal(first_half_symbol, second_half_symbol, "Synchronization symbol not symmmetric")
+        assert_array_almost_equal(first_half_symbol, second_half_symbol, err_msg="Synchronization symbol not symmmetric")
+
+
+class TestSchmidlCoxSynchronization(TestCase):
+    """Test the Schmidle Cox Algorithm implementation."""
+
+    def setUp(self):
+
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=4)
+        self.frame.pilot_section = SchmidlCoxPilotSection()
+
+        self.synchronization = SchmidlCoxSynchronization(self.frame)
+
+        self.delays_in_samples = [0, 9, 80]
+
+    def test_synchronize(self) -> None:
+        """Test the proper estimation of delays during Schmidl-Cox synchronization"""
+
+        signal = self.frame.modulate(Symbols()).samples
+        channel_state = ChannelStateInformation.Ideal(len(signal))
+
+        for d in self.delays_in_samples:
+
+            delayed_signal = np.append(np.zeros((1, d), dtype=complex), signal)
+
+            synchronized_frame = self.synchronization.synchronize(signal, channel_state)
+
+            self.assertEqual(1, len(synchronized_frame))
+            assert_array_equal(signal, synchronized_frame[0][0])

@@ -15,12 +15,14 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNod
 from scipy.constants import pi
 from scipy.fft import fft, ifft, fftshift
 from scipy.interpolate import griddata
+from scipy.signal import find_peaks
 
 from ..core.factory import Serializable
 from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from ..core.signal_model import Signal
 from .modem import Symbols
-from .waveform_generator import PilotWaveformGenerator
+from .waveform_generator import PilotWaveformGenerator, Synchronization
+from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 
 __author__ = "André Noll Barreto"
@@ -837,13 +839,14 @@ class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
         return detected_bits
 
     def modulate(self, data_symbols: Symbols) -> Signal:
-
-        # The number of samples in time domain the frame should contain, given the current sample frequency
-        output_signal = np.empty(0, dtype=complex)
+       
         
         # Start the frame with a pilot section, if configured
         if self.pilot_section:
-            np.append(output_signal, self.pilot_section.modulate())
+            output_signal = self.pilot_section.modulate()
+
+        else:
+            output_signal = np.empty(0, dtype=complex)
 
         # Convert symbols
         data_symbols = data_symbols.raw.flatten()
@@ -1198,14 +1201,14 @@ class SchmidlCoxPilotSection(FrameSection):
     def modulate(self, *_: Any) -> np.ndarray:
         
         # Return the cached pilot signal if available and the relevant frame parameters haven't changed
-        if self.__cached_pilot and self.__cached_num_subcarriers == self.frame.num_subcarriers and self.__cached_oversampling_factor == self.frame.oversampling_factor:
+        if self.__cached_pilot is not None and self.__cached_num_subcarriers == self.frame.num_subcarriers and self.__cached_oversampling_factor == self.frame.oversampling_factor:
             return self.__cached_pilot
         
         samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
 
         pilot_frequencies = np.zeros((self.frame.num_subcarriers, 2), dtype=complex)
-        pilot_frequencies[0::2, 0] = 7 + 7j
-        pilot_frequencies[1::2, 0] = -7 + 7j
+        pilot_frequencies[0::4, 0] = 7 + 7j
+        pilot_frequencies[2::4, 0] = -7 + 7j
         pilot_frequencies[0::2, 1] = 5 * np.exp(.5j * pi * np.arange(int(.5 * self.frame.num_subcarriers)))
         pilot_frequencies[1::2, 1] = -5 * np.exp(.5j * pi * np.arange(int(np.ceil(.5 * self.frame.num_subcarriers))))
  
@@ -1222,4 +1225,54 @@ class SchmidlCoxPilotSection(FrameSection):
     def demodulate(self, *_: Any) -> Tuple[np.ndarray, ChannelStateInformation]:
         
         return np.empty(0, dtype=complex), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY)
+    
+
+class OFDMSynchronization(Synchronization[WaveformGeneratorOfdm]):
+    """Synchronization Routine for OFDM Waveforms."""
+    ...
+
+
+class OFDMCorrelationSynchronization(CorrelationSynchronization[WaveformGeneratorOfdm]):
+    """Correlation-Based Pilot Detection and Synchronization for OFDM Waveforms."""
+    ...
+
+
+class SchmidlCoxSynchronization(OFDMSynchronization):
+    """Schmidl-Cox Algorithm for OFDM Waveform Time Synchronization and Carrier Frequency Offset Equzalization.
+    
+    Applying the synchronization routine requires the respective waveform to have a :class:`.SchmidlCoxPilotSection` pilot
+    symbol section configured.
+
+    Refer to :footcite:t:`1997:schmidl` for a detailed description.
+    """
+
+    def synchronize(self,
+                    signal: np.ndarray,
+                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
+
+        symbol_length = self.waveform_generator.oversampling_factor * self.waveform_generator.num_subcarriers
+        
+        # Abort if the supplied signal is shorter than one symbol length
+        if signal.shape[-1] < symbol_length:
+            return []
+            
+        half_symbol_length = int(.5 * symbol_length)
+
+        num_delay_candidates = signal.shape[-1] - symbol_length
+        delay_powers = np.empty(1 + num_delay_candidates, dtype=float)
+        delay_powers[0] = 0.
+        for d in range(0, num_delay_candidates):
+
+            delay_powers[1 + d] = np.linalg.norm(signal[:, d:d + half_symbol_length] * signal[:, d + half_symbol_length:d + 2 * half_symbol_length], ord='fro')
+        
+        num_samples = self.waveform_generator.samples_in_frame
+        peaks, _ = find_peaks(delay_powers, distance=int(.8 * num_samples))
+        frame_indices = peaks - 1
+
+        frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
+        for frame_idx in frame_indices:
+
+            frames.append((signal[:, frame_idx:frame_idx + num_samples], channel_state[:, :, frame_idx:frame_idx + num_samples, :]))
+
+        return frames
     
