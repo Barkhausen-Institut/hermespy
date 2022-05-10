@@ -2,6 +2,7 @@
 """Test HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
 from itertools import product
+from multiprocessing.sharedctypes import Value
 from typing import Tuple
 from unittest import TestCase
 from unittest.mock import Mock
@@ -14,7 +15,7 @@ from scipy.constants import pi
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -443,6 +444,63 @@ class TestWaveformGeneratorOFDM(TestCase):
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
+
+class TestPilotSection(TestCase):
+    """Test the general base class for OFDM pilot sections."""
+    
+    def setUp(self) -> None:
+        
+        self.subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=4)
+        
+        self.pilot_section = PilotSection(pilot_subsymbols=self.subsymbols, frame=self.frame)
+        
+    def test_init(self) -> None:
+        """Initialization arguments should be properly stored as class attributes"""
+        
+        self.assertIs(self.subsymbols, self.pilot_section.pilot_subsymbols)
+        self.assertIs(self.frame, self.pilot_section.frame)
+        
+    def test_pilot_subsymbols_setget(self) -> None:
+        """Pilot subsymbol getter should return setter argument"""
+        
+        self.pilot_section.pilot_subsymbols = None
+        self.assertIs(None, self.pilot_section.pilot_subsymbols)
+        
+        expected_subsymbols = Symbols(np.array([-1., 1.]))
+        self.pilot_section.pilot_subsymbols = expected_subsymbols
+        self.assertIs(expected_subsymbols, self.pilot_section.pilot_subsymbols)
+        
+    def test_pilot_subsymbols_validation(self) -> None:
+        """Pilot subsymbol setter should raise ValueErrors on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.pilot_section.pilot_subsymbols = Symbols(np.array([[1], [1]]))
+            
+        with self.assertRaises(ValueError):
+            self.pilot_section.pilot_subsymbols = Symbols()
+            
+    def test_pseudorandom_pilot_sequence(self) -> None:
+        """Unspecified subsymbols should result in the generation of constant valid pilot sequence"""
+        
+        self.pilot_section.pilot_subsymbols = None
+        
+        first_pilot_sequence = self.pilot_section._pilot_sequence(self.frame.num_subcarriers)
+        second_pilot_sequence = self.pilot_section._pilot_sequence()
+        
+        self.assertEqual(1, first_pilot_sequence.num_streams)
+        self.assertEqual(self.frame.num_subcarriers, first_pilot_sequence.num_symbols)
+        assert_array_equal(first_pilot_sequence.raw, second_pilot_sequence.raw)
+        
+    def test_configured_pilot_sequence(self) -> None:
+        """Specified subsymbols should result in the generation of a valid pilot sequence"""
+        
+        self.pilot_section.pilot_subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
+        pilot_sequence = self.pilot_section._pilot_sequence()
+        
+        self.assertEqual(1, pilot_sequence.num_streams)
+        self.assertEqual(self.frame.num_subcarriers, pilot_sequence.num_symbols)
+        assert_array_equal(self.pilot_section.pilot_subsymbols.raw, pilot_sequence.raw[:, :4])
 
 class TestSchmidlCoxPilotSection(TestCase):
     """Test the Schmidl Cox Algorithm Pilot section implementation."""
