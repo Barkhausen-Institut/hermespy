@@ -6,9 +6,10 @@ Orthogonal Frequency Division Multiplexing
 """
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, Type, Union, Any
-from enum import Enum
 from abc import abstractmethod
+from enum import Enum
+from math import ceil
+from typing import List, Tuple, Optional, Type, Union, Any
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
@@ -1167,9 +1168,94 @@ class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
                 ofdm.add_section(section)
 
         return ofdm
+    
+
+class PilotSection(FrameSection):
+    """Pilot symbol section within an OFDM frame."""
+    
+    __pilot_subsymbols: Optional[Symbols]
+    
+    def __init__(self,
+                 pilot_subsymbols: Optional[Symbols] = None,
+                 frame: Optional[WaveformGeneratorOfdm] = None) -> None:
+        """
+        Args:
+        
+            pilot_subsymbols (Optional[Symbols], optional):
+                Symbols with which the subcarriers within the pilot will be modulated.
+                By default, a pseudo-random sequence from the frame mapping will be generated.
+
+            frame (Optional[WaveformGeneratorOfdm], optional):
+                The frame configuration this pilot section belongs to.
+        """
+        
+        self.__pilot_subsymbols = pilot_subsymbols
+        
+        FrameSection.__init__(self, num_repetitions=1, frame=frame)
+        
+    @property
+    def pilot_subsymbols(self) -> Optional[Symbols]:
+        """Symbols with which the subcarriers within the pilot will be modulated.
+        
+        Returns:
+        
+            A stream of symbols. `None`, if no subsymbols where specified.
+            
+        Raises:
+        
+            ValueError: If the configured symbols contains multiple streams.
+        """
+        
+        return self.__pilot_subsymbols
+    
+    @pilot_subsymbols.setter
+    def pilot_subsymbols(self, value: Optional[Symbols]) -> None:
+        
+        if value is None:
+            self.__pilot_subsymbols = None
+            return
+        
+        if value.num_streams != 1:
+            raise ValueError("Subsymbol pilot configuration may only contain a single stream")
+        
+        if value.num_symbols < 1:
+            raise ValueError("Subsymbol pilot configuration must contain at least one symbol")
+        
+        self.__pilot_subsymbols = value
+            
+    def _pilot_sequence(self, num_symbols: int = None) -> Symbols:
+        """Generate a new sequence of pilot subsymbols.
+        
+        Args:
+        
+            num_symbols (int, optional):
+                The required number of symbols.
+                By default, a symbol for each subcarrier is generated.
+                
+        Returns:
+        
+            A sequence of symbols.
+        """
+        
+        num_symbols = self.frame.num_subcarriers if num_symbols is None else num_symbols
+        
+        # Generate a pseudo-random symbol stream if no subsymbols are specified
+        if self.__pilot_subsymbols is None:
+            
+            rng = np.random.default_rng(42)
+            num_bits = num_symbols * self.frame._mapping.bits_per_symbol
+            subsymbols = self.frame._mapping.get_symbols(rng.integers(0, 2, num_bits))[None, :]
+            
+        else:
+            
+            num_repetitions = int(ceil(num_symbols / self.__pilot_subsymbols.num_symbols))
+            subsymbols = np.tile(self.__pilot_subsymbols.raw, (1, num_repetitions))
+            
+        return Symbols(subsymbols[:, :num_symbols])
+            
 
 
-class SchmidlCoxPilotSection(FrameSection):
+class SchmidlCoxPilotSection(PilotSection):
     """Pilot Symbol Section of the Schmidl Cox Algorithm.
     
     Refer to :footcite:t:`1997:schmidl` for a detailed description.
@@ -1179,19 +1265,13 @@ class SchmidlCoxPilotSection(FrameSection):
     __cached_oversampling_factor: int
     __cached_pilot: Optional[np.ndarray]
 
-    def __init__(self, frame: Optional[WaveformGeneratorOfdm] = None) -> None:
-        """
-        Args:
-
-            frame (Optional[WaveformGeneratorOfdm], optional):
-                The frame configuration this pilot section belongs to.
-        """
+    def __init__(self, *args, **kwargs) -> None:
 
         self.__cached_num_subcarriers = -1
         self.__cached_oversampling_factor = -1
         self.__cached_pilot = None
         
-        FrameSection.__init__(self, num_repetitions=1, frame=frame)
+        FrameSection.__init__(self, *args, **kwargs)
 
     @property
     def num_samples(self) -> int:
