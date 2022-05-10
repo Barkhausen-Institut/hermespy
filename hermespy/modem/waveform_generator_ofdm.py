@@ -1254,7 +1254,6 @@ class PilotSection(FrameSection):
         return Symbols(subsymbols[:, :num_symbols])
             
 
-
 class SchmidlCoxPilotSection(PilotSection):
     """Pilot Symbol Section of the Schmidl Cox Algorithm.
     
