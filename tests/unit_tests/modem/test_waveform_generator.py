@@ -98,12 +98,13 @@ class TestSynchronization(unittest.TestCase):
     def test_synchronize(self) -> None:
         """Default synchronization should properly split signals into frame-sections."""
 
+        num_streams = 3
         num_frames = 5
         num_offset_samples = 2
         num_samples = num_frames * self.waveform_generator.samples_in_frame + num_offset_samples
 
-        signal = np.exp(2j * self.rng.uniform(0, pi, num_samples))
-        csi = ChannelStateInformation.Ideal(num_samples)
+        signal = np.exp(2j * self.rng.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rng.uniform(0, pi, (1, num_samples)))
+        csi = ChannelStateInformation.Ideal(num_samples, num_streams)
 
         frames = self.synchronization.synchronize(signal, csi)
         self.assertEqual(num_frames, len(frames))
@@ -155,12 +156,13 @@ class TestWaveformGenerator(unittest.TestCase):
     def test_synchronize(self) -> None:
         """Default synchronization routine should properly split signals into frame-sections."""
 
+        num_streams = 3
         num_samples_test = [50, 100, 150, 200]
 
         for num_samples in num_samples_test:
 
-            signal = np.exp(2j * self.rnd.uniform(0, pi, num_samples))
-            channel_state = ChannelStateInformation.Ideal(num_samples=num_samples)
+            signal = np.exp(2j * self.rnd.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rnd.uniform(0, pi, (1, num_samples)))
+            channel_state = ChannelStateInformation.Ideal(num_samples, num_streams)
 
             synchronized_frames = self.waveform_generator.synchronization.synchronize(signal, channel_state)
 
@@ -172,7 +174,8 @@ class TestWaveformGenerator(unittest.TestCase):
             # Frames and channel states should each contain the correct amount of samples
             for frame_signal, frame_channel_state in synchronized_frames:
 
-                self.assertEqual(self.waveform_generator.samples_in_frame, frame_signal.shape[0])
+                self.assertEqual(num_streams, frame_signal.shape[0])
+                self.assertEqual(self.waveform_generator.samples_in_frame, frame_signal.shape[1])
                 self.assertEqual(self.waveform_generator.samples_in_frame, frame_channel_state.num_samples)
 
     def test_synchronize_validation(self) -> None:
