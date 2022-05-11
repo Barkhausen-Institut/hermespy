@@ -16,7 +16,7 @@ from scipy.fft import fft
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, OFDMCorrelationSynchronization, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -571,7 +571,41 @@ class TestCorrelationSynchronization(TestCase):
     """Test OFDM Synchronization via pilot section correlation"""
     
     def setUp(self) -> None:
-        ...
+
+        self.rng = default_rng(42)
+
+        test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1200)])
+        test_payload = FrameSymbolSection(num_repetitions=3, pattern=[0])
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=4, resources=[test_resource], structure=[test_payload])
+        self.frame.pilot_section = PilotSection()
+
+        self.synchronization = OFDMCorrelationSynchronization()
+        self.frame.synchronization = self.synchronization
+
+        self.num_streams = 3
+        self.delays_in_samples = [0, 9, 80]
+        self.num_frames = [1, 2, 3]
+        
+    def test_synchronize(self) -> None:
+        """Test the proper estimation of delays during correlation synchronization"""
+
+        for d, n in product(self.delays_in_samples, self.num_frames):
+
+            symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.frame.symbols_per_frame)))
+            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(Symbols(symbols[f, :])).samples for f in range(n)]
+            
+            signal = np.empty((self.num_streams, 0), dtype=complex)
+            for frame in frames:
+
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
+            
+            channel_state = ChannelStateInformation.Ideal(len(signal), self.num_streams)
+
+            synchronization = self.synchronization.synchronize(signal, channel_state)
+
+            self.assertEqual(n, len(synchronization))
+            for frame, (synchronized_frame, _) in zip(frames, synchronization):
+                assert_array_equal(frame, synchronized_frame)
 
 
 class TestSchmidlCoxSynchronization(TestCase):
