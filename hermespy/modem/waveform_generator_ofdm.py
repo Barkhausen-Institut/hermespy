@@ -1174,6 +1174,10 @@ class PilotSection(FrameSection):
     """Pilot symbol section within an OFDM frame."""
     
     __pilot_subsymbols: Optional[Symbols]
+    __cached_num_subcarriers: int
+    __cached_oversampling_factor: int
+    __cached_pilot: Optional[np.ndarray]
+
     
     def __init__(self,
                  pilot_subsymbols: Optional[Symbols] = None,
@@ -1190,8 +1194,16 @@ class PilotSection(FrameSection):
         """
         
         self.__pilot_subsymbols = pilot_subsymbols
+        self.__cached_num_subcarriers = -1
+        self.__cached_oversampling_factor = -1
+        self.__cached_pilot = None
         
         FrameSection.__init__(self, num_repetitions=1, frame=frame)
+        
+    @property
+    def num_samples(self) -> int:
+        
+        return self.frame.num_subcarriers * self.frame.oversampling_factor
         
     @property
     def pilot_subsymbols(self) -> Optional[Symbols]:
@@ -1220,6 +1232,9 @@ class PilotSection(FrameSection):
         
         if value.num_symbols < 1:
             raise ValueError("Subsymbol pilot configuration must contain at least one symbol")
+        
+        # Reset the cached pilot, since the subsymbols have changed
+        self.__cached_pilot = None
         
         self.__pilot_subsymbols = value
             
@@ -1252,52 +1267,58 @@ class PilotSection(FrameSection):
             subsymbols = np.tile(self.__pilot_subsymbols.raw, (1, num_repetitions))
             
         return Symbols(subsymbols[:, :num_symbols])
-            
-
-class SchmidlCoxPilotSection(PilotSection):
-    """Pilot Symbol Section of the Schmidl Cox Algorithm.
     
-    Refer to :footcite:t:`1997:schmidl` for a detailed description.
-    """
-    
-    __cached_num_subcarriers: int
-    __cached_oversampling_factor: int
-    __cached_pilot: Optional[np.ndarray]
-
-    def __init__(self, *args, **kwargs) -> None:
-
-        self.__cached_num_subcarriers = -1
-        self.__cached_oversampling_factor = -1
-        self.__cached_pilot = None
-        
-        FrameSection.__init__(self, *args, **kwargs)
-
-    @property
-    def num_samples(self) -> int:
-        
-        return 2 * self.frame.num_subcarriers * self.frame.oversampling_factor
-
     def modulate(self, *_: Any) -> np.ndarray:
         
         # Return the cached pilot signal if available and the relevant frame parameters haven't changed
         if self.__cached_pilot is not None and self.__cached_num_subcarriers == self.frame.num_subcarriers and self.__cached_oversampling_factor == self.frame.oversampling_factor:
             return self.__cached_pilot
         
+        pilot = self._pilot()
+        self.__cached_pilot = pilot
+        
+        return pilot
+    
+    def demodulate(self, *_: Any) -> Tuple[np.ndarray, ChannelStateInformation]:
+        
+        return np.empty(0, dtype=complex), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY)
+        
+    def _pilot(self) -> np.ndarray:
+        """Generate the samples for a pilot section in time domain.
+        
+        Returns:
+        
+            Complex base-band pilot section samples.
+        """
+        
         samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
+        pilot = ifft(self._pilot_sequence().raw[0, :], norm='ortho', n=samples_per_symbol)
+        return pilot
+
+
+class SchmidlCoxPilotSection(PilotSection):
+    """Pilot Symbol Section of the Schmidl Cox Algorithm.
+    
+    Refer to :footcite:t:`1997:schmidl` for a detailed description.
+    """
+
+    @property
+    def num_samples(self) -> int:
+        
+        return 2 * self.frame.num_subcarriers * self.frame.oversampling_factor
+
+    def _pilot(self) -> np.ndarray:
+
+        samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
+        num_symbols = int(1.5 * self.frame.num_subcarriers)
+        pilot_sequence = self._pilot_sequence(num_symbols).raw.flatten()
 
         pilot_frequencies = np.zeros((self.frame.num_subcarriers, 2), dtype=complex)
-        pilot_frequencies[0::4, 0] = 7 + 7j
-        pilot_frequencies[2::4, 0] = -7 + 7j
-        pilot_frequencies[0::2, 1] = 5 * np.exp(.5j * pi * np.arange(int(.5 * self.frame.num_subcarriers)))
-        pilot_frequencies[1::2, 1] = -5 * np.exp(.5j * pi * np.arange(int(np.ceil(.5 * self.frame.num_subcarriers))))
+        pilot_frequencies[0::2, 0] = pilot_sequence[self.frame.num_subcarriers:]
+        pilot_frequencies[:, 1] = pilot_sequence[:self.frame.num_subcarriers]
  
         pilot_symbols_time = ifft(pilot_frequencies, axis=0, norm='ortho', n=samples_per_symbol)
         pilot_samples = np.concatenate(pilot_symbols_time.T, axis=0)
-        
-        # Cache the pilot signal for faster use in later frame modulations
-        self.__cached_num_subcarriers = self.frame.num_subcarriers
-        self.__cached_oversampling_factor = self.frame.oversampling_factor
-        self.__cached_pilot = pilot_samples
         
         return pilot_samples
     
@@ -1342,7 +1363,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
         delay_powers[0] = 0.
         for d in range(0, num_delay_candidates):
 
-            delay_powers[1 + d] = np.linalg.norm(signal[:, d:d + half_symbol_length] * signal[:, d + half_symbol_length:d + 2 * half_symbol_length], ord='fro')
+            delay_powers[1 + d] = np.sum(abs(np.sum(signal[:, d:d + half_symbol_length].conj() * signal[:, d + half_symbol_length:d + 2 * half_symbol_length], axis=1)))
         
         num_samples = self.waveform_generator.samples_in_frame
         peaks, _ = find_peaks(delay_powers, distance=int(.8 * num_samples))
