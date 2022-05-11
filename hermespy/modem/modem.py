@@ -418,50 +418,38 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         # TODO: Not yet supported.
 
         # Synchronize all streams into frames
-        frames: List[List[Tuple[np.ndarray, ChannelStateInformation]]] = []
-        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(signal.samples,
-                                                                       csi.received_streams())):
-
-            frame = self.waveform_generator.synchronization.synchronize(rx_signal, stream_transform)
-            frames.append(frame)
-
-        frames = np.array(frames, dtype=object)
+        synchronized_frames = self.waveform_generator.synchronization.synchronize(signal.samples, csi)
 
         # Abort at this point if no frames have been detected
-        if frames.size < 1:
-            return signal, Symbols(np.empty(0, dtype=complex)), np.empty(0, dtype=complex)
-
-        # Demodulate the parallel frames arriving at each stream,
-        # then decode the (inverse) precoding over all stream frames
-        decoded_symbols = np.empty(0, dtype=complex)
-        for frame_streams in frames.transpose(1, 0, 2):
-
-            # Demodulate each frame separately
-            symbols: List[np.ndarray] = []
-            channel_states: List[ChannelStateInformation] = []
-            noises: List[np.ndarray] = []
-
-            for stream in frame_streams:
-
-                # Demodulate the frame into data symbols
-                s_symbols, s_channel_state, s_noise = self.waveform_generator.demodulate(*stream, noise)
-
-                symbols.append(s_symbols.raw)
-                channel_states.append(s_channel_state)
-                noises.append(s_noise)
-
-            frame_symbols = np.array(symbols, dtype=complex)
-            frame_channel_states = ChannelStateInformation.concatenate(channel_states,
-                                                                       ChannelStateDimension.RECEIVE_STREAMS)
-            frame_noises = np.array(noises, dtype=float)
-
-            decoded_frame_symbols = self.precoding.decode(frame_symbols,
-                                                          frame_channel_states,
-                                                          frame_noises)
-            decoded_symbols = np.append(decoded_symbols, decoded_frame_symbols)
+        if len(synchronized_frames) < 1:
+            return signal, Symbols(), np.empty(0, dtype=complex)
+        
+        # Demodulate signal frame by frame
+        decoded_raw_symbols = np.empty(0, dtype=complex)
+        for frame_samples, frame_csi in synchronized_frames:
+            
+            stream_symbols: List[np.ndarray] = []
+            stream_csis: List[ChannelStateInformation] = []
+            stream_noises: List[np.ndarray] = []
+            
+            # Demodulate each stream within each frame independently
+            for stream_samples, stream_csi in zip(frame_samples, frame_csi.received_streams()):
+                
+                symbols, csi, noise = self.waveform_generator.demodulate(stream_samples, stream_csi, noise)
+                stream_symbols.append(symbols.raw)
+                stream_csis.append(csi)
+                stream_noises.append(noise)
+                
+            frame_symbols = np.array(stream_symbols, dtype=complex)
+            frame_csi = ChannelStateInformation.concatenate(stream_csis,
+                                                            ChannelStateDimension.RECEIVE_STREAMS)
+            frame_noises = np.array(stream_noises, dtype=float)
+            
+            decoded_frame_symbols = self.precoding.decode(frame_symbols, frame_csi, frame_noises)
+            decoded_raw_symbols = np.append(decoded_raw_symbols, decoded_frame_symbols)
 
         # Convert decoded symbols to from array to symbols
-        decoded_symbols = Symbols(decoded_symbols)
+        decoded_symbols = Symbols(decoded_raw_symbols)
 
         # Map the symbols to code bits
         code_bits = self.waveform_generator.unmap(decoded_symbols)

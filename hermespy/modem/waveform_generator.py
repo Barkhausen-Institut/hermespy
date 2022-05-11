@@ -81,7 +81,7 @@ class Synchronization(Generic[WaveformType], ABC):
         Args:
 
             signal (np.ndarray):
-                Vector of complex base-band samples of a single input stream with `num_samples` entries.
+                Vector of complex base-band samples of with `num_streams`x`num_samples` entries.
 
             channel_state (ChannelStateInformation):
                 State of the wireless transmission channel over which `signal` has been propagated.
@@ -99,18 +99,19 @@ class Synchronization(Generic[WaveformType], ABC):
             RuntimeError:
                 If the synchronization routine is floating
         """
+        
+        # Expand signal dimensionalty if input is flat
+        if signal.ndim == 1:
+            signal = signal[np.newaxis, :]
 
         if self.__waveform_generator is None:
             raise RuntimeError("Trying to synchronize with a floating synchronization routine")
 
-        if len(signal) != channel_state.num_samples + channel_state.num_delay_taps - 1:
+        if signal.shape[1] != channel_state.num_samples + channel_state.num_delay_taps - 1:
             raise ValueError("Base-band signal and channel state contain a different amount of samples")
 
-        if channel_state.num_receive_streams != 1:
-            raise ValueError("Channel state during synchronization may only contain a single receive stream")
-
         samples_per_frame = self.__waveform_generator.samples_in_frame
-        num_frames = int(floor(len(signal) / samples_per_frame))
+        num_frames = int(floor(signal.shape[1] / samples_per_frame))
 
         # Slice signals and channel state information into frame-sized portions
         # Default synchronization does NOT account for possible delays,
@@ -118,7 +119,7 @@ class Synchronization(Generic[WaveformType], ABC):
         synchronized_frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
         for frame_idx in range(num_frames):
 
-            frame_samples = signal[frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
+            frame_samples = signal[:, frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
             frame_channel_state = channel_state[:, :,  frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame, :]
             synchronized_frames.append((frame_samples, frame_channel_state))
 
@@ -372,7 +373,7 @@ class WaveformGenerator(ABC):
             int: Number of bits per symbol
         """
 
-        return int(np.log2(self.__modulation_order))
+        return int(np.log2(self.modulation_order))
 
     @property
     @abstractmethod
@@ -466,13 +467,13 @@ class WaveformGenerator(ABC):
         ...
 
     @abstractmethod
-    def modulate(self, data_symbols: np.ndarray) -> Signal:
+    def modulate(self, data_symbols: Symbols) -> Signal:
         """Modulate a stream of data symbols to a base-band signal containing a single data frame.
 
         Args:
 
-            data_symbols (np.ndarray):
-                Vector of data symbols to be modulated.
+            data_symbols (Symbols):
+                Singular stream of data symbols to be modulated by this waveform.
 
         Returns:
             Signal: Signal model of a single modulate data frame.
@@ -637,7 +638,7 @@ class WaveformGenerator(ABC):
 
         state = {
             "oversampling_factor": node.__oversampling_factor,
-            "modulation_order": node.__modulation_order,
+            "modulation_order": node.modulation_order,
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
