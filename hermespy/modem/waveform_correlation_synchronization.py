@@ -108,6 +108,10 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
                     signal: np.ndarray,
                     channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
 
+        # Expand the dimensionality for flat signal streams
+        if signal.ndim == 1:
+            signal = signal[np.newaxis, :]
+
         # Query the pilot signal from the waveform generator
         pilot_sequence = self.waveform_generator.pilot_signal.samples.flatten()
 
@@ -115,7 +119,11 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         if len(pilot_sequence) < 1:
             raise RuntimeError("No pilot sequence configured, time-domain correlation synchronization impossible")
 
-        correlation = abs(correlate(signal, pilot_sequence, mode='full', method='fft'))
+        # Compute the correlation between each signal stream and the pilot sequence, sum up as a result
+        correlation = np.zeros(len(pilot_sequence) + signal.shape[1] - 1, dtype=float)
+        for stream in signal:
+            correlation += abs(correlate(stream, pilot_sequence, mode='full', method='fft'))
+
         correlation /= correlation.max()  # Normalize correlation
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
@@ -139,14 +147,13 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         frames = []
         for pilot_index in pilot_indices:
 
-            if pilot_index + frame_length <= int(1.05 * len(signal)):
+            if pilot_index + frame_length <= int(1.05 * signal.shape[1]):
 
-                signal_frame = signal[pilot_index:pilot_index + frame_length]
+                signal_frame = signal[:, pilot_index:pilot_index + frame_length]
                 csi_frame = channel_state[:, :, pilot_index:pilot_index + frame_length, :]
 
-                if len(signal_frame) < frame_length:
-
-                    signal_frame = np.append(signal_frame, np.zeros(frame_length - len(signal_frame), dtype=complex))
+                if signal_frame.shape[1] < frame_length:
+                    signal_frame = np.append(signal_frame, np.zeros((signal.shape[0], frame_length - signal_frame.shape[1]), dtype=complex))
 
                 frames.append((signal_frame, csi_frame))
 
