@@ -401,7 +401,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             csi = ChannelStateInformation.Ideal(signal.num_samples)
 
         # Pull signal and channel state from the registered device slot
-        noise = 0.  # ToDo: Re-implement noise
+        noise_variance = 0.  # ToDo: Re-implement noise
 
         num_samples = signal.num_samples
 
@@ -435,7 +435,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             # Demodulate each stream within each frame independently
             for stream_samples, stream_csi in zip(frame_samples, frame_csi.received_streams()):
                 
-                symbols, csi, noise = self.waveform_generator.demodulate(stream_samples, stream_csi, noise)
+                symbols, csi, noise = self.waveform_generator.demodulate(stream_samples, stream_csi, noise_variance)
                 stream_symbols.append(symbols.raw)
                 stream_csis.append(csi)
                 stream_noises.append(noise)
