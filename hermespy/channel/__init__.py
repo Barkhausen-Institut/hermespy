@@ -5,7 +5,7 @@ from .cluster_delay_line_indoor_office import IndoorOfficeLineOfSight, IndoorOff
 from .cluster_delay_line_rural_macrocells import RuralMacrocellsLineOfSight, RuralMacrocellsNoLineOfSight, RuralMacrocellsOutsideToInside
 from .cluster_delay_line_street_canyon import StreetCanyonLineOfSight, StreetCanyonNoLineOfSight, StreetCanyonOutsideToInside
 from .cluster_delay_line_urban_macrocells import UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, UrbanMacrocellsOutsideToInside
-from .cluster_delay_lines import ClusterDelayLine
+from .cluster_delay_lines import ClusterDelayLine, DelayNormalization
 from .multipath_fading_channel import MultipathFadingChannel
 from .multipath_fading_templates import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
 from .radar_channel import RadarChannel
@@ -39,6 +39,6 @@ __all__ = ['ChannelStateDimension', 'ChannelStateFormat', 'ChannelStateInformati
            'RuralMacrocellsLineOfSight', 'RuralMacrocellsNoLineOfSight', 'RuralMacrocellsOutsideToInside',
            'StreetCanyonLineOfSight', 'StreetCanyonNoLineOfSight', 'StreetCanyonOutsideToInside',
            'UrbanMacrocellsLineOfSight', 'UrbanMacrocellsNoLineOfSight', 'UrbanMacrocellsOutsideToInside',
-           'ClusterDelayLine',
+           'ClusterDelayLine', 'DelayNormalization',
            'MultipathFadingChannel', 'MultipathFading5GTDL', 'MultipathFadingCost256', 'MultipathFadingExponential',
            'QuadrigaChannel', 'QuadrigaInterface', 'RadarChannel']
