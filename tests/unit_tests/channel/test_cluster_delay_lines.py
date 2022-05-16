@@ -13,7 +13,7 @@ from numpy.testing import assert_array_equal
 from scipy.constants import pi, speed_of_light
 
 from hermespy.core import Signal
-from hermespy.channel.cluster_delay_lines import ClusterDelayLine
+from hermespy.channel.cluster_delay_lines import ClusterDelayLine, DelayNormalization
 from hermespy.simulation.antenna import IdealAntenna, UniformArray
 
 __author__ = "Jan Adler"
@@ -47,7 +47,7 @@ class TestClusterDelayLine(TestCase):
         self.receiver.position = np.array([100., 0., 0.])
         self.receiver.orientation = np.array([0., 0., 0.])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
-        self.receiver.velocity = np.array([10, 0., 0.], dtype=float)
+        self.receiver.velocity = np.zeros(3, dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
 
         self.transmitter = Mock()
@@ -213,6 +213,8 @@ class TestClusterDelayLine(TestCase):
         """A signal being propagated over the channel should be frequency shifted according to the doppler effect"""
 
         self.channel.num_clusters = 1
+        self.receiver.velocity = np.array([10., 0., 0.])
+
         sampling_rate = 1e2
         signal_frequency = .25 * sampling_rate
         signal = np.outer(np.ones(4, dtype=complex), np.exp(2j * pi * .25 * np.arange(200)))
@@ -226,6 +228,24 @@ class TestClusterDelayLine(TestCase):
         output_freq = np.fft.fft(shifted_signal[0].samples[0, :].flatten())
 
         self.assertAlmostEqual(expected_doppler_shift, (np.argmax(output_freq) - np.argmax(input_freq)) * frequency_resolution, places=0)
+
+    def test_time_of_flight_delay_normalization(self) -> None:
+        """Time of flight delay normalization should result in an impulse response padded by the appropriate number of samples"""
+
+        sampling_rate = 1e9
+        
+        self.channel.delay_normalization = DelayNormalization.ZERO
+        self.channel.set_seed(1)
+        zero_delay_response = self.channel.impulse_response(10, sampling_rate)
+
+        self.channel.delay_normalization = DelayNormalization.TOF
+        self.channel.set_seed(1)
+        tof_delay_response = self.channel.impulse_response(10, sampling_rate)
+
+        expected_num_tof_samples = int(np.linalg.norm(self.transmitter.position - self.receiver.position, 2) / speed_of_light * sampling_rate)
+        num_tof_samples = tof_delay_response.shape[3] - zero_delay_response.shape[3]
+
+        self.assertEqual(expected_num_tof_samples, num_tof_samples)
 
     def test_impulse_response_los(self):
 

@@ -32,6 +32,7 @@ positions and orientations, since the specular line of sight ray components are 
 
 from __future__ import annotations
 from abc import abstractmethod
+from enum import Enum
 from math import atan, ceil, sin, cos, sqrt
 from typing import Any, List
 
@@ -53,13 +54,29 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class DelayNormalization(Enum):
+    """Normalization routine applied to a set of sampled delays.
+
+    Configuration option to :class:.ClusterDelayLineBase models.
+    """
+
+    ZERO = 0
+    """Normalize the delays, so that the minimal delay is zero"""
+
+    TOF = 1
+    """The minimal delay is the time of flight between two devices"""
+
+    NONE = 2
+    """No delay normalization is applied.
+
+    Only relevant for debugging purposes.
+    """
+
+
 class ClusterDelayLineBase(Channel):
     
-    normalize_delays: bool
-    """
-    Normalize propagation delays so that the first tap equals to zero.
-    Enabled by default.
-    """
+    delay_normalization: DelayNormalization
+    """The delay normalization routine applied during channel sampling."""
 
     # Cluster scaling factors for the angle of arrival
     __azimuth_scaling_factors = np.array([[4, .779],
@@ -91,17 +108,16 @@ class ClusterDelayLineBase(Channel):
                                              [8, 9, 10, 11, 16, 17],
                                              [12, 13, 14, 15]]
 
-    def __init__(self, normalize_delays: bool = True, **kwargs) -> None:
+    def __init__(self, delay_normalization: DelayNormalization = DelayNormalization.ZERO, **kwargs) -> None:
         """
         Args:
         
-            normalize_delays (bool, optional):
-            
-                Normalize propagation delays so that the first tap equals to zero.
-                Enabled by default.
+            delay_normalization (DelayNormalization, optional):
+
+                The delay normalization routine applied during channel sampling.
         """
         
-        self.normalize_delays = normalize_delays
+        self.delay_normalization = delay_normalization
 
         Channel.__init__(self, **kwargs)
 
@@ -459,7 +475,7 @@ class ClusterDelayLineBase(Channel):
 
     def _cluster_delays(self,
                         delay_spread: float,
-                        rice_factor: float) -> np.ndarray:
+                        rice_factor: float) -> Tuple[np.ndarray, np.ndarray]:
         """Compute a single sample set of normalized cluster delays.
 
         A single cluster delay is referred to as :math:`\\tau_n` within the the standard.
@@ -474,26 +490,40 @@ class ClusterDelayLineBase(Channel):
 
         Returns:
 
-            np.ndarray:
-                Vector of cluster delays.
+            Tuple of
+                - DRaw delay samples
+                - True delays
         """
 
         # Generate delays according to the configured spread and scales
-        delays = - self.delay_scaling * delay_spread * np.log(self._rng.uniform(size=self.num_clusters))
+        raw_delays = - self.delay_scaling * delay_spread * np.log(self._rng.uniform(size=self.num_clusters))
+
+        # Sort the delays in ascending order
+        raw_delays.sort()
+
 
         # Normalize delays if the respective flag is enabled
-        if self.normalize_delays:
-            delays -= delays.min()
+        if self.delay_normalization == DelayNormalization.ZERO or self.delay_normalization == DelayNormalization.TOF:
             
-        # Sort the delays in ascending order
-        delays.sort()
+            raw_delays -= raw_delays[0]
+
+        # Scale delays, if required by the configuration
+        scaled_delays = raw_delays.copy()
 
         # In case of line of sight, scale the delays by the appropriate K-factor
         if self.line_of_sight:
-            rice_scale = .775 - .0433 * rice_factor + 2e-4 * rice_factor ** 2 + 17e-6 * rice_factor ** 3
-            delays /= rice_scale
 
-        return delays
+            rice_scale = .775 - .0433 * rice_factor + 2e-4 * rice_factor ** 2 + 17e-6 * rice_factor ** 3
+            scaled_delays /= rice_scale
+
+        # Account for the time of flight over the line of sight, if required
+        if self.delay_normalization == DelayNormalization.TOF:
+
+            time_of_flight = np.linalg.norm(self.transmitter.position - self.receiver.position, 2) / speed_of_light
+            scaled_delays += time_of_flight
+
+        # Return the raw and scaled delays, since they are both required for further processing
+        return raw_delays, scaled_delays
 
     def _cluster_powers(self,
                         delay_spread: float,
@@ -739,8 +769,8 @@ class ClusterDelayLineBase(Channel):
         num_clusters = self.num_clusters
         num_rays = 20
 
-        cluster_delays = self._cluster_delays(delay_spread, rice_factor)
-        cluster_powers = self._cluster_powers(delay_spread, cluster_delays, rice_factor)
+        raw_cluster_delays, cluster_delays = self._cluster_delays(delay_spread, rice_factor)
+        cluster_powers = self._cluster_powers(delay_spread, raw_cluster_delays, rice_factor)
 
         ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aod / pi)
         ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aoa / pi)
@@ -854,6 +884,7 @@ class ClusterDelayLineBase(Channel):
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples).flatten()
             impulse_response += np.multiply.outer(coefficients, resampling_matrix)
 
+        print(cluster_delays)
         return impulse_response
 
     @property
