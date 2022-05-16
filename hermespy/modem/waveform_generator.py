@@ -11,17 +11,16 @@ from math import floor
 from typing import Generic, Tuple, TYPE_CHECKING, Optional, Type, TypeVar, List
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node, ScalarNode
 
-from hermespy.core.channel_state_information import ChannelStateInformation
-from hermespy.core.signal_model import Signal
+from hermespy.core import ChannelStateInformation, Serializable, Signal
 from .symbols import Symbols
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
@@ -33,11 +32,14 @@ __status__ = "Prototype"
 WaveformType = TypeVar('WaveformType', bound='WaveformGenerator')
 
 
-class Synchronization(Generic[WaveformType], ABC):
+class Synchronization(Generic[WaveformType], ABC, Serializable):
     """Abstract base class for synchronization routines of waveform generators.
 
     Refer to :footcite:t:`2016:nasir` for an overview of the current state of the art.
     """
+
+    yaml_tag = u'Synchronization'
+    """YAML serialization tag"""
 
     __waveform_generator: Optional[WaveformType]       # Waveform generator this routine is attached to
 
@@ -57,7 +59,7 @@ class Synchronization(Generic[WaveformType], ABC):
 
         Returns:
             Optional[WaveformType]:
-                Handle to the waveform generator. None if the synchronization routine is floating.
+                Handle to tghe waveform generator. None if the synchronization routine is floating.
         """
 
         return self.__waveform_generator
@@ -66,8 +68,9 @@ class Synchronization(Generic[WaveformType], ABC):
     def waveform_generator(self, value: Optional[WaveformType]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
-        if self.__waveform_generator is not None:
-            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
+        # Un-register this synchronization routine from its previously assigned waveform
+        if self.__waveform_generator is not None and self.__waveform_generator.synchronization is self:
+            self.__waveform_generator.synchronization = Synchronization()
 
         self.__waveform_generator = value
 
@@ -124,6 +127,47 @@ class Synchronization(Generic[WaveformType], ABC):
             synchronized_frames.append((frame_samples, frame_channel_state))
 
         return synchronized_frames
+
+    @classmethod
+    def to_yaml(cls: Type[Synchronization], representer: SafeRepresenter, node: Synchronization) -> Node:
+        """Serialize an `Synchronization` object to YAML.
+
+        Args:
+            representer (Synchronization):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Synchronization):
+                The `Synchronization` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node
+        """
+
+        return representer.represent_scalar(cls.yaml_tag, None)
+
+    @classmethod
+    def from_yaml(cls: Type[Synchronization], constructor: SafeConstructor, node: Node) -> Synchronization:
+        """Recall a new `Synchronization` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Synchronization` serialization.
+
+        Returns:
+            Synchronization:
+                Newly created `Synchronization` instance.
+        """
+
+        # For scalar nodes, initialize the synchronization routine with default parameters
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        return cls.InitializationWrapper(constructor.construct_mapping(node))
 
 
 class ChannelEstimation(Generic[WaveformType], ABC):
@@ -639,6 +683,7 @@ class WaveformGenerator(ABC):
         state = {
             "oversampling_factor": node.__oversampling_factor,
             "modulation_order": node.modulation_order,
+            'synchronization': node.synchronization,
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
@@ -659,8 +704,7 @@ class WaveformGenerator(ABC):
                 Newly created `WaveformGenerator` instance.
         """
 
-        state = constructor.construct_mapping(node)
-        return cls(**state)
+        return cls.InitializationWrapper(constructor.construct_mapping(node))
 
 
 class PilotWaveformGenerator(WaveformGenerator, ABC):

@@ -1346,6 +1346,9 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
     Refer to :footcite:t:`1997:schmidl` for a detailed description.
     """
 
+    yaml_tag = u'SchmidlCox'
+    """YAML serialization tag"""
+
     def synchronize(self,
                     signal: np.ndarray,
                     channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
