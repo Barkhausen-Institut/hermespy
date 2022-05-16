@@ -31,6 +31,9 @@ PGT = TypeVar('PGT', bound=PilotWaveformGenerator)
 class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
     """Correlation-based clock synchronization for arbitrary communication waveforms."""
 
+    yaml_tag = u'PilotCorrelation'
+    """YAML serialization tag."""
+
     __threshold: float          # Correlation threshold at which a pilot signal is detected
     __guard_ratio: float        # Guard ratio of frame duration
 
@@ -158,3 +161,27 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
                 frames.append((signal_frame, csi_frame))
 
         return frames
+
+    @classmethod
+    def to_yaml(cls: Type[CorrelationSynchronization], representer: SafeRepresenter, node: CorrelationSynchronization) -> CorrelationSynchronization:
+        """Serialize an `CorrelationSynchronization` object to YAML.
+
+        Args:
+            representer (CorrelationSynchronization):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (CorrelationSynchronization):
+                The `CorrelationSynchronization` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node
+        """
+
+        state = {
+            'threshold': cls.threshold,
+            'guard_ratio': cls.guard_ratio,
+        }
+
+        return representer.represent_mapping(cls.yaml_tag, state)
