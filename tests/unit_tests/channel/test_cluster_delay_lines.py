@@ -12,6 +12,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.constants import pi, speed_of_light
 
+from hermespy.core import Signal
 from hermespy.channel.cluster_delay_lines import ClusterDelayLine
 from hermespy.simulation.antenna import IdealAntenna, UniformArray
 
@@ -46,7 +47,7 @@ class TestClusterDelayLine(TestCase):
         self.receiver.position = np.array([100., 0., 0.])
         self.receiver.orientation = np.array([0., 0., 0.])
         self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
+        self.receiver.velocity = np.array([10, 0., 0.], dtype=float)
         self.receiver.carrier_frequency = self.carrier_frequency
 
         self.transmitter = Mock()
@@ -56,7 +57,7 @@ class TestClusterDelayLine(TestCase):
         self.transmitter.orientation = np.array([0., 0., pi])
         self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
         self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
+        self.transmitter.carrier_frequency = self.carrier_frequency
 
         self.channel = ClusterDelayLine(delay_spread_mean=self.delay_spread_mean,
                                         delay_spread_std=self.delay_spread_std,
@@ -208,6 +209,23 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
         self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
 
+    def test_doppler_shift(self) -> None:
+        """A signal being propagated over the channel should be frequency shifted according to the doppler effect"""
+
+        self.channel.num_clusters = 1
+        sampling_rate = 1e2
+        signal_frequency = .25 * sampling_rate
+        signal = np.outer(np.ones(4, dtype=complex), np.exp(2j * pi * .25 * np.arange(200)))
+
+        expected_doppler_shift = np.linalg.norm(self.receiver.velocity - self.transmitter.velocity) * self.transmitter.carrier_frequency / speed_of_light
+        frequency_resolution = sampling_rate / 200
+
+        shifted_signal, _, _ = self.channel.propagate(Signal(signal, sampling_rate))
+
+        input_freq = np.fft.fft(signal[0, :])
+        output_freq = np.fft.fft(shifted_signal[0].samples[0, :].flatten())
+
+        self.assertAlmostEqual(expected_doppler_shift, (np.argmax(output_freq) - np.argmax(input_freq)) * frequency_resolution, places=0)
 
     def test_impulse_response_los(self):
 
