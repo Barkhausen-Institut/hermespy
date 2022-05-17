@@ -5,7 +5,7 @@ stages:
   - build
   - deploy
 
-test:
+unit-testing:
   stage: test
   before_script:
     - apt update
@@ -13,6 +13,24 @@ test:
     - pip install .[quadriga]
   script:
     - python -m unittest discover tests/unit_tests
+
+integration-testing:
+  stage: test
+  before_script:
+    - apt update
+    - apt-get install -y build-essential octave
+    - pip install .[quadriga]
+  script:
+    - python -m unittest discover tests/integration_tests
+
+integrity-testing:
+  stage: test
+  before_script:
+    - apt update
+    - apt-get install -y build-essential octave
+    - pip install .[quadriga]
+  script:
+    - python -m unittest discover tests/integrity_tests
 
 wheel-linux:
   stage: build
