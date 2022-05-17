@@ -884,7 +884,6 @@ class ClusterDelayLineBase(Channel):
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples).flatten()
             impulse_response += np.multiply.outer(coefficients, resampling_matrix)
 
-        print(cluster_delays)
         return impulse_response
 
     @property
