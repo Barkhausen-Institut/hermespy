@@ -5,6 +5,7 @@
 =====================================
 """
 
+from math import sin, cos
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -39,7 +40,7 @@ class TestClusterDelayLine(TestCase):
         self.delay_scaling = 3.8
         self.carrier_frequency = 1e9
 
-        self.antennas = UniformArray(IdealAntenna(), .5 * self.carrier_frequency / speed_of_light, (2, 2))
+        self.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (2, 2))
 
         self.receiver = Mock()
         self.receiver.num_antennas = self.antennas.num_antennas
@@ -227,7 +228,7 @@ class TestClusterDelayLine(TestCase):
         input_freq = np.fft.fft(signal[0, :])
         output_freq = np.fft.fft(shifted_signal[0].samples[0, :].flatten())
 
-        self.assertAlmostEqual(expected_doppler_shift, (np.argmax(output_freq) - np.argmax(input_freq)) * frequency_resolution, places=0)
+        self.assertAlmostEqual(expected_doppler_shift, (np.argmax(output_freq) - np.argmax(input_freq)) * frequency_resolution, delta=1)
 
     def test_time_of_flight_delay_normalization(self) -> None:
         """Time of flight delay normalization should result in an impulse response padded by the appropriate number of samples"""
@@ -280,3 +281,40 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(first_number, second_number)
         assert_array_equal(first_impulse_response, second_impulse_response)
         
+    def test_spatial_properties(self) -> None:
+        """Direction of arrival estimation should result in the correct angle estimation of impinging devices"""
+
+        self.channel.num_clusters = 1
+
+        self.transmitter.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (1,))
+        self.transmitter.orientation = np.zeros(3, dtype=float)
+        self.receiver.position = np.zeros(3, dtype=float)
+        self.receiver.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (8,8))
+
+        angle_candidates = [(.25 * pi, 0),
+                            (.25 * pi, .25 * pi), 
+                            (.25 * pi, .5 * pi), 
+                            (.5 * pi, 0),
+                            (.5 * pi, .25 * pi), 
+                            (.5 * pi, .5 * pi), 
+                            ]
+        range = 1e3
+      
+        steering_codebook = np.empty((8**2, len(angle_candidates)), dtype=complex)
+        for a, (zenith, azimuth) in enumerate(angle_candidates):
+            steering_codebook[:, a] = self.receiver.antennas.spherical_response(self.carrier_frequency, azimuth, zenith)
+
+
+        probing_signal = Signal(np.exp(2j * pi * .25 * np.arange(100)), sampling_rate=1e3, carrier_frequency=self.carrier_frequency)
+
+        for a, (zenith, azimuth) in enumerate(angle_candidates):
+
+            self.channel.set_seed(1)
+            self.transmitter.position = range * np.array([cos(azimuth) * sin(zenith),
+                                                          sin(azimuth) * sin(zenith),
+                                                          cos(zenith)], dtype=float)
+
+            received_signal, _, _ = self.channel.propagate(probing_signal)
+
+            beamformer = np.linalg.norm(steering_codebook.T.conj() @ received_signal[0].samples, 2, axis=1, keepdims=False)
+            self.assertEqual(a, np.argmax(beamformer))

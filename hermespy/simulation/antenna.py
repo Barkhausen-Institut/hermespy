@@ -615,7 +615,7 @@ class AntennaArrayBase(object):
 
         # Transform the distances to complex phases, i.e. the array response
         response = np.exp(-2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
-
+    
         # That's it
         return response
 
