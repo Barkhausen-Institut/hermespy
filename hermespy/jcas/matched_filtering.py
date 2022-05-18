@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Optional, Tuple
+from typing import Optional, Type, Tuple
 
 import numpy as np
 from scipy.constants import speed_of_light
 from scipy.signal import correlate
+from ruamel.yaml import SafeConstructor, MappingNode
 
-from hermespy.core.signal_model import Signal
-from hermespy.modem import Modem, Symbols
+from hermespy.core import Signal
+from hermespy.modem import Modem, Symbols, WaveformGenerator
 from hermespy.radar import Radar
 from hermespy.radar.radar import RadarCube
 
@@ -21,13 +22,21 @@ __status__ = "Prototype"
 
 
 class MatchedFilterJcas(Modem, Radar):
-    """Joint Communication and Sensing Operator."""
+    """Joint Communication and Sensing Operator.
+    
+    A combination of communication and sensing operations.
+    Senses the enviroment via a correlatiom-based time of flight estimation of transmitted waveforms.
+    """
+
+    yaml_tag = u'MatchedFilterJcas'
+    """YAML serialization tag."""
     
     __transmission: Optional[Signal]        # Most recent transmission
     __sampling_rate: Optional[float]        # The specific required sampling rate
     __max_range: float                      # Maximally detectable range
     
-    def __init__(self, max_range: float) -> None:
+    def __init__(self, 
+                 max_range: float) -> None:
         """
         Args:
         
@@ -149,3 +158,24 @@ class MatchedFilterJcas(Modem, Radar):
             raise ValueError("Maximum range must be greater than zero")
         
         self.__max_range = value
+
+    @classmethod
+    def from_yaml(cls: Type[MatchedFilterJcas], constructor: SafeConstructor, node: MappingNode) -> MatchedFilterJcas:
+        """Recall a new `MatchedFilterJcas` class instance from YAML.
+
+        Args:
+
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (MappingNode):
+                YAML node representing the `MatchedFilterJcas` serialization.
+
+        Returns:
+
+            MatchedFilterJcas:
+                Newly created serializable instance.
+        """
+
+        state = constructor.construct_mapping(node)
+        return cls.InitializationWrapper(state)
