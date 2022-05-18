@@ -7,7 +7,6 @@ Devices:
   - &device_alpha !<SimulatedDevice>
 
     carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
-    num_antennas: 1               # Device features a single physical antenna
 
 
 # Channel models between devices

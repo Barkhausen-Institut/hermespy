@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import List, Optional, Type, Union
 
 import numpy as np
-from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
+from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter, ScalarNode
 from scipy.constants import pi
 
 from hermespy.core import ChannelStateInformation, Device, FloatingError, RandomNode, Scenario, Serializable, Signal
@@ -43,14 +43,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
-    operator_separation: bool
-    """Separate operators during signal modeling."""
-
     __noise: Noise                          # Model of the hardware noise
     __scenario: Optional[Scenario]          # Scenario this device is attached to
     __sampling_rate: Optional[float]        # Sampling rate at which this device operate
     __carrier_frequency: float              # Center frequency of the mixed signal in rf-band
     __velocity: np.ndarray                  # Cartesian device velocity vector
+    __operator_separation: bool
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
@@ -236,6 +234,22 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         self.__velocity = value
 
+    @property
+    def operator_separation(self) -> bool:
+        """Separate operators during signal modeling.
+        
+        Returns:
+
+            Enabled flag.
+        """
+
+        return self.__operator_separation
+
+    @operator_separation.setter
+    def operator_separation(self, value: bool) -> None:
+
+        self.__operator_separation = value
+
     def transmit(self,
                  clear_cache: bool = True) -> List[Signal]:
 
@@ -393,13 +407,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 Newly created serializable instance.
         """
 
+        if isinstance(node, ScalarNode):
+            return cls()
+
         state = constructor.construct_mapping(node)
-
-        operator_separation = state.pop('operator_separation', None)
-
-        device = cls(**state)
-
-        if operator_separation is not None:
-            device.operator_separation = operator_separation
-
-        return device
+        return cls.InitializationWrapper(state)
