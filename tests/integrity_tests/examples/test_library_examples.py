@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from io import StringIO
-
-import ray as ray
 from unittest import TestCase
 from unittest.mock import Mock, patch, PropertyMock
+from warnings import catch_warnings, simplefilter
+
+import ray as ray
 
 from hermespy.core import MonteCarlo
 
@@ -18,10 +19,6 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-num_samples_mock = PropertyMock()
-num_samples_mock.return_value = 1
-
-
 class TestLibraryExamples(TestCase):
     """Test library example execution without exceptions"""
 
@@ -32,7 +29,10 @@ class TestLibraryExamples(TestCase):
     def setUpClass(cls) -> None:
 
         # Run ray in local mode
-        ray.init(local_mode=True)
+        with catch_warnings():
+
+            simplefilter("ignore")
+            ray.init(local_mode=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -68,7 +68,7 @@ class TestLibraryExamples(TestCase):
 
             num_samples.return_value = 1
             import _examples.library.getting_started_simulation
-            
+
         mock_figure.assert_called()
 
     @patch('matplotlib.pyplot.figure')
