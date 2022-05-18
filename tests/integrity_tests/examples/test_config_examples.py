@@ -4,11 +4,13 @@ from io import StringIO
 from unittest import TestCase
 from unittest.mock import Mock, patch, PropertyMock
 from tempfile import TemporaryDirectory
+from typing import Any, List, Optional
 from warnings import catch_warnings, simplefilter
 
 import ray as ray
 
 from hermespy.bin.hermes import hermes
+from hermespy.core.monte_carlo import MonteCarlo, GridDimension
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -18,6 +20,18 @@ __version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+def new_dimension_mock(cls: MonteCarlo,
+                       dimension: str,
+                       sample_points: List[Any],
+                       considered_object: Optional[Any] = None) -> GridDimension:
+
+    # Only take a single sample point into account to speed up simulations
+    dimension = GridDimension(cls.investigated_object, dimension, [sample_points[0]])
+    cls.add_dimension(dimension)
+
+    return dimension
 
 
 class TestConfigurationExamples(TestCase):
@@ -57,7 +71,7 @@ class TestConfigurationExamples(TestCase):
                 Path to the yaml configuration file.
         """
 
-        with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples, patch('sys.stdout') as stdout, patch('matplotlib.pyplot.figure') as figure:
+        with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples, patch('sys.stdout') as stdout, patch('matplotlib.pyplot.figure') as figure, patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock):
 
             num_samples.return_value = 1
             args = ['-p', path, '-o', self.tempdir.name]
