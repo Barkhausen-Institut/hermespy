@@ -92,6 +92,11 @@ class TestConfigurationExamples(TestCase):
 
         self.__run_yaml("_examples/settings/interference_ofdm_single_carrier")
 
+    def test_jcas(self) -> None:
+        """Test example settings for joint communications and sensing"""
+
+        self.__run_yaml("_examples/settings/jcas")
+
     def test_ofdm_5g(self) -> None:
         """Test example settings for 5G OFDM modulation"""
 
