@@ -50,8 +50,8 @@ Operators:
     device: *device_beta         # Device the modem is operating on
 
     # Spatial precoding with zero-forcing channel equalization
-    Precoding:
-      - !<ZF-Time>
+    # Precoding:
+    #   - !<ZF-Time>
 
     Waveform: !<OFDM>
 

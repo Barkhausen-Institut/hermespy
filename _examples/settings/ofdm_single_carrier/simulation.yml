@@ -44,8 +44,8 @@ Operators:
 
       - !<DFT>
       - !<SM>
-      - !<ZF-Space>
-      - !<ZF-Time>
+#      - !<ZF-Space>
+#      - !<ZF-Time>
 #      - !<MMSE-Space>
 #      - !<MMSE-Time>
 
