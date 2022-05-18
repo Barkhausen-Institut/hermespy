@@ -13,7 +13,7 @@ from scipy.constants import pi
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection
+from hermespy.modem.waveform_generator_ofdm import ChannelEstimation, FrameElement, ElementType, FrameSection
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -394,7 +394,16 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
     def test_reference_based_channel_estimation(self) -> None:
         """Reference-based channel estimation should properly estimate channel at reference points."""
 
-        pass
+        self.generator.channel_estimation_algorithm = ChannelEstimation.REFERENCE
+
+        expected_bits = self.rng.integers(0, 2, self.generator.bits_per_frame)
+        expected_symbols = self.generator.map(expected_bits)
+        signal = self.generator.modulate(expected_symbols)
+        expected_csi = ChannelStateInformation.Ideal(signal.num_samples)
+
+        symbols, csi, _ = self.generator.demodulate(signal.samples[0, :], expected_csi)
+
+        assert_array_almost_equal(np.ones(csi.state.shape, dtype=complex), csi.state)        
 
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a data frame should yield identical symbols."""

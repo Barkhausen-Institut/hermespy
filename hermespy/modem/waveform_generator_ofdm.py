@@ -16,7 +16,7 @@ from scipy.fft import fft, ifft
 from scipy.interpolate import griddata
 
 from ..core.factory import Serializable
-from ..core.channel_state_information import ChannelStateInformation, ChannelStateDimension
+from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from ..core.signal_model import Signal
 from .modem import Symbols, WaveformGenerator
 from .tools import PskQamMapping
@@ -885,7 +885,7 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
 
-    def __channel_estimation(self,
+    def  __channel_estimation(self,
                              symbol_grid: np.ndarray,
                              channel_state: ChannelStateInformation,
                              resource_mask: np.ndarray) -> ChannelStateInformation:
@@ -989,7 +989,8 @@ class WaveformGeneratorOfdm(WaveformGenerator, Serializable):
         # ToDo: Check with group what to do about missing values outside the convex hull
         interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method='nearest')
         channel_estimation[holes] = interpolated_holes
-        return channel_estimation[..., np.newaxis]   # Append an additional axis for multiple transmit antennas
+        return ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, channel_estimation.T.flatten()[None, None, :, None])
+
 
     @property
     def bits_per_frame(self) -> int:
