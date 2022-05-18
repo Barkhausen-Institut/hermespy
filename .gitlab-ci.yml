@@ -1,47 +1,48 @@
 image: python:3.9
 
 stages:
-  - test
   - build
+  - test
   - deploy
 
-unit-testing:
-  stage: test
+build-package:
+  stage: build
+  artifacts:
+    untracked: true
   before_script:
     - apt update
     - apt-get install -y build-essential octave
+  script:
+    - python -m venv env/
+    - source env/bin/activate
     - pip install .[quadriga]
+
+unit-testing:
+  stage: test
+  dependencies:
+    - build-package
+  before_script:
+    - source env/bin/activate
   script:
     - python -m unittest discover tests/unit_tests
 
 integration-testing:
   stage: test
+  dependencies:
+    - build-package
   before_script:
-    - apt update
-    - apt-get install -y build-essential octave
-    - pip install .[quadriga]
+    - source env/bin/activate
   script:
     - python -m unittest discover tests/integration_tests
 
 integrity-testing:
   stage: test
+  dependencies:
+    - build-package
   before_script:
-    - apt update
-    - apt-get install -y build-essential octave
-    - pip install .[quadriga]
+    - source env/bin/activate
   script:
     - python -m unittest discover tests/integrity_tests
-
-wheel-linux:
-  stage: build
-  only:
-    - master
-  before_script:
-    - apt update
-    - apt-get install -y build-essential
-    - mkdir wheel/
-  script:
-    - pip wheel -v . --wheel-dir wheel/
 
 pages:
   stage: deploy
