@@ -23,6 +23,7 @@ Unit Testing:
   dependencies:
     - Build Package
   before_script:
+    - apt update
     - apt-get install -y octave
     - source env/bin/activate
   script:
@@ -33,6 +34,7 @@ Integration Testing:
   dependencies:
     - Build Package
   before_script:
+    - apt update
     - apt-get install -y octave
     - source env/bin/activate
   script:
@@ -43,6 +45,7 @@ Integrity Testing:
   dependencies:
     - Build Package
   before_script:
+    - apt update
     - apt-get install -y octave
     - source env/bin/activate
   script:
