@@ -8,8 +8,12 @@ stages:
 build-package:
   stage: build
   artifacts:
+<<<<<<< HEAD
     paths:
       - env/
+=======
+    - env/
+>>>>>>> 044e5f5393021a064b7dbf5eb855670a60a0c4d1
   before_script:
     - apt update
     - apt-get install -y build-essential octave
