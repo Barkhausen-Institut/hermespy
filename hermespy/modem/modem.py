@@ -400,6 +400,10 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         if csi is None:
             csi = ChannelStateInformation.Ideal(signal.num_samples)
 
+        # Workaround for non-matching csi and signal model pairs
+        elif signal.num_samples > (csi.num_samples + csi.num_delay_taps - 1):
+            csi = ChannelStateInformation.Ideal(signal.num_samples)
+
         # Pull signal and channel state from the registered device slot
         noise = 0.  # ToDo: Re-implement noise
 
