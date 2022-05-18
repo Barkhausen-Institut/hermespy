@@ -5,8 +5,6 @@ Devices:
 
   - &device_alpha !<SimulatedDevice>
 
-    num_antennas: 1                # Device features a single physical antenna
-
 # Operators transmitting or receiving signals over the devices
 Operators:
 
