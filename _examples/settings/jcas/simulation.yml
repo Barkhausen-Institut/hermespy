@@ -20,10 +20,13 @@ Channels:
 
 
   # 5G TDL communication channel model
-  - !<5GTDL_0_1>
-    type: A             # Type of the TDL model. A-E are available
-    rms_delay: 1e-7     # Root mean square delay in seconds
+  #- !<5GTDL_0_1>
+  #  type: A             # Type of the TDL model. A-E are available
+  #  rms_delay: 1e-7     # Root mean square delay in seconds
 
+  # No self-intereference at the terminal
+  - !<Channel_1_1>
+    gain: 0.
 
 # Operators transmitting or receiving signals over the devices
 Operators:
@@ -47,8 +50,8 @@ Operators:
         filter_type: ROOT_RAISED_COSINE
 
       # Frame settings
-      num_preamble_symbols: 10
-      num_data_symbols: 1000
+      num_preamble_symbols: 16
+      num_data_symbols: 100
       pilot_rate: 1e6
       guard_interval: 1e-6
 
@@ -60,6 +63,9 @@ Operators:
     # Waveform configuration
     waveform_generator: !<PskQam>
 
+      channel_estimation: !<PskQamLS>
+      channel_equalization: !<PskQamZF>
+
       # Symbol settings
       symbol_rate: 100e6
       modulation_order: 16
@@ -70,8 +76,8 @@ Operators:
         filter_type: ROOT_RAISED_COSINE
 
       # Frame settings
-      num_preamble_symbols: 10
-      num_data_symbols: 1000
+      num_preamble_symbols: 16
+      num_data_symbols: 100
       pilot_rate: 1e6
       guard_interval: 1e-6
 
