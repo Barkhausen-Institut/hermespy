@@ -423,8 +423,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
         # Synchronize all streams into frames
         frames: List[List[Tuple[np.ndarray, ChannelStateInformation]]] = []
-        for stream_idx, (rx_signal, stream_transform) in enumerate(zip(signal.samples,
-                                                                       csi.received_streams())):
+        for rx_signal, stream_transform in zip(signal.samples, csi.received_streams()):
 
             frame = self.waveform_generator.synchronization.synchronize(rx_signal, stream_transform)
             frames.append(frame)
