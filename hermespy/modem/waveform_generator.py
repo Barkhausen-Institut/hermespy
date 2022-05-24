@@ -7,7 +7,7 @@ Communication Waveform Base
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from math import floor
+from math import ceil, floor
 from typing import Generic, Tuple, TYPE_CHECKING, Optional, Type, TypeVar, List
 
 import numpy as np
@@ -517,6 +517,20 @@ class WaveformGenerator(ABC):
             float: Bandwidth in Hz.
         """
         ...
+        
+    @property
+    def data_rate(self) -> float:
+        """Data rate theoretically achieved by this waveform configuration.
+        
+        Returns:
+        
+            Bits per second.
+        """
+        
+        time = self.frame_duration # ToDo: Consider guard interval
+        bits = self.bits_per_frame
+        
+        return bits / time
 
     @property
     def modem(self) -> Modem:
@@ -663,7 +677,7 @@ class WaveformGenerator(ABC):
 
 
 class PilotWaveformGenerator(WaveformGenerator, ABC):
-    """Abstract base class of communication waveform generators generating a pilot sequence."""
+    """Abstract base class of communication waveform generators generating a pilot signal."""
 
     @property
     @abstractmethod
@@ -674,3 +688,124 @@ class PilotWaveformGenerator(WaveformGenerator, ABC):
             Signal: The pilot sequence.
         """
         ...
+
+
+class PilotSymbolSequence(ABC):
+    """Abstract base class for pilot sequences."""
+
+    @property
+    @abstractmethod
+    def sequence(self) -> np.ndarray:
+        """The scalar sequence of pilot symbols.
+
+        For a configurable pilot section, this symbol sequence will be repeated accordingly.
+
+        Returns:
+            The symbol sequence.
+        """
+        ...
+
+
+class UniformPilotSymbolSequence(PilotSymbolSequence):
+    """A pilot symbol sequence containing identical symbols.
+
+    Only viable for testing purposes, since it makes the pilot sections easy to spot within the frame.
+    Not advisable to be used in production scenarios.
+    """
+
+    __pilot_symbol: complex     # The configured pilot symbol
+
+    def __init__(self, pilot_symbol: complex = 1. + 0.j) -> None:
+        """
+        Args:
+
+            pilot_symbol (complex):
+                The configured single pilot symbol.
+                `1.` by default.
+        """
+
+        self.__pilot_symbol = pilot_symbol
+
+    @property
+    def sequence(self) -> np.ndarray:
+
+        return np.array([self.__pilot_symbol], dtype=complex)
+
+
+class CustomPilotSymbolSequence(PilotSymbolSequence):
+    """A customized pilot symbol sequence.
+
+    The user may freely chose the pilot symbols from samples within the complex plane.
+    """
+
+    __pilot_symbols: complex     # The configured pilot symbols
+
+    def __init__(self, pilot_symbols: np.ndarray) -> None:
+        """
+        Args:
+
+            pilot_symbols (np.ndarray):
+                The configured pilot symbols
+        """
+
+        self.__pilot_symbols = pilot_symbols
+
+    @property
+    def sequence(self) -> np.ndarray:
+
+        return self.__pilot_symbols
+
+
+class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
+     
+    pilot_symbol_sequence: PilotSymbolSequence
+    """The configured pilot symbol sequence."""
+
+    repeat_pilot_symbol_sequence: bool
+    """Allow the repetition of pilot symbol sequences."""
+
+    def __init__(self,
+                 symbol_sequence: Optional[PilotSymbolSequence] = None,
+                 repeat_symbol_sequence: bool = True) -> None:
+        """
+         Args:
+
+            symbol_sequence (Optional[PilotSymbolSequence], optional):
+                The configured pilot symbol sequence.
+                Uniform by default.
+
+            repeat_symbol_sequence (bool, optional):
+                Allow the repetition of pilot symbol sequences.
+                Enabled by default.
+        """
+
+        self.pilot_symbol_sequence = UniformPilotSymbolSequence() if symbol_sequence is None else symbol_sequence
+        self.repeat_pilot_symbol_sequence = repeat_symbol_sequence
+
+    def pilot_symbols(self, num_symbols: int) -> np.ndarray:
+        """Sample a pilot symbol sequence.
+
+        Args:
+            num_symbols (int):
+                The expected number of symbols within the sequence.
+
+        Returns:
+            A pilot symbol sequence of length `num_symbols`.
+
+        Raises:
+
+            RuntimeError:
+                If a repetition of the symbol sequence is required but not allowed.
+        """
+
+        symbol_sequence = self.pilot_symbol_sequence.sequence
+        num_repetitions = int(ceil(num_symbols / len(symbol_sequence)))
+
+        if num_repetitions > 1:
+
+            if not self.repeat_pilot_symbol_sequence:
+                raise RuntimeError("Pilot symbol repetition required for sequence generation but not allowed")
+
+            symbol_sequence = np.tile(symbol_sequence, num_repetitions)
+
+        return symbol_sequence[:num_symbols]

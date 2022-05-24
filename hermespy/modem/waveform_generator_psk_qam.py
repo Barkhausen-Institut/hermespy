@@ -15,7 +15,7 @@ from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.core.device import FloatingError
 from hermespy.core.factory import Serializable
-from .waveform_generator import PilotWaveformGenerator, WaveformGenerator, Synchronization, \
+from .waveform_generator import PilotSymbolSequence, ConfigurablePilotWaveform, WaveformGenerator, Synchronization, \
     ChannelEstimation, ChannelEqualization
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
@@ -33,7 +33,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
+class WaveformGeneratorPskQam(ConfigurablePilotWaveform, Serializable):
     """This method provides a class for a generic PSK/QAM modem.
 
     The modem has the following characteristics:
@@ -80,6 +80,8 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
                  pilot_rate: float = 1e6,
                  guard_interval: float = 0.,
                  complex_modulation: bool = True,
+                 pilot_symbol_sequence: Optional[PilotSymbolSequence] = None,
+                 repeat_pilot_symbol_sequence: bool = True,
                  **kwargs: Any) -> None:
         """Waveform Generator PSK-QAM initialization.
 
@@ -112,6 +114,14 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
             pilot_rate (int, optional):
                 Pilot symbol rate.
 
+            pilot_ymbol_sequence (Optional[PilotSymbolSequence], optional):
+                The configured pilot symbol sequence.
+                Uniform by default.
+
+            repeat_pilot_symbol_sequence (bool, optional):
+                Allow the repetition of pilot symbol sequences.
+                Enabled by default.
+
             kwargs (Any):
                 Waveform generator base class initialization parameters.
         """
@@ -130,7 +140,8 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
         self._symbol_idx = None
         self._pulse_correlation_matrix = None
 
-        # Initialize base class
+        # Initialize base classes
+        ConfigurablePilotWaveform.__init__(self, symbol_sequence=pilot_symbol_sequence, repeat_symbol_sequence=repeat_pilot_symbol_sequence)
         WaveformGenerator.__init__(self, **kwargs)
 
         if tx_filter is None:
@@ -198,10 +209,10 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
     @symbol_rate.setter
     def symbol_rate(self, rate: float) -> None:
         """Modify rate of symbols.
-        
+       
         Args:
             rate: New symbol rate in Hz.
-            
+           
         Raises:
             ValueError: If symbol rate is smaller than zero.
         """
@@ -249,9 +260,9 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
     @property
     def pilot(self) -> Signal:
         
-        pilot = np.zeros(self.oversampling_factor * self.num_preamble_symbols, dtype=complex)
-        pilot[::self.oversampling_factor] = 1.
-        pilot = self.tx_filter.filter(pilot)
+        filter_delay = self.tx_filter.delay_in_samples
+        pilot = np.zeros(filter_delay + self.oversampling_factor * self.num_preamble_symbols, dtype=complex)
+        pilot[filter_delay::self.oversampling_factor] = self.pilot_symbols(self.num_preamble_symbols)
 
         return Signal(pilot, sampling_rate=self.sampling_rate)
 
@@ -267,7 +278,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
 
         # Set preamble symbols
         num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
-        frame[:num_preamble_samples:self.oversampling_factor] = 1.
+        frame[:num_preamble_samples:self.oversampling_factor] = self.pilot_symbols(self.num_preamble_symbols)
 
         # Set data symbols
         num_data_samples = self.oversampling_factor * self.__num_data_symbols
@@ -760,7 +771,7 @@ class PskQamLeastSquaresChannelEstimation(Serializable, PskQamChannelEstimation)
         preamble_symbols = signal.samples[0, preamble_start_idx:preamble_stop_idx:symbol_distance]
 
         # Reference preamble
-        reference = np.ones(num_preamble_symbols, dtype=complex)
+        reference = self.waveform_generator.pilot_symbols(num_preamble_symbols)
 
         # Compute channel weight.
         channel_weight = np.mean(preamble_symbols / reference)
@@ -814,3 +825,98 @@ class PskQamZeroForcingChannelEqualization(Serializable, PskQamChannelEqualizati
             stream /= csi.state[stream_idx, 0, :, 0]
 
         return signal
+
+
+class RootRaisedCosine(WaveformGeneratorPskQam):
+    """Root Raise Cosine Filter Modulation Scheme."""
+    
+    
+    def __init__(self, roll_off: float = .9, oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  roll_off=roll_off)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.ROOT_RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  roll_off=roll_off)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+        
+
+class RaisedCosine(WaveformGeneratorPskQam):
+    """Raise Cosine Filter Modulation Scheme."""
+    
+    
+    def __init__(self, roll_off: float = .9, oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  roll_off=roll_off)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  roll_off=roll_off)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+
+
+class RaisedCosine(WaveformGeneratorPskQam):
+    """Raise Cosine Filter Modulation Scheme."""
+    
+    
+    def __init__(self, roll_off: float = .9, oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  roll_off=roll_off)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.RAISED_COSINE,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  roll_off=roll_off)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+
+
+class Rectangular(WaveformGeneratorPskQam):
+    """Rectangular Filter Modulation Scheme."""
+    
+    
+    def __init__(self, bandwidth_factor: float = 1., oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.RECTANGULAR,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  bandwidth_factor=bandwidth_factor)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.RECTANGULAR,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  bandwidth_factor=bandwidth_factor)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
+
+
+class FMCW(WaveformGeneratorPskQam):
+    """Frequency Modulated Continuous Waveform Filter Modulation Scheme."""
+    
+    
+    def __init__(self, bandwidth_factor: float = 1., oversampling_factor: int = 1, *args, **kwargs) -> None:
+
+        tx_filter = ShapingFilter(ShapingFilter.FilterType.FMCW,
+                                  oversampling_factor,
+                                  is_matched=False,
+                                  bandwidth_factor=bandwidth_factor)
+
+        rx_filter = ShapingFilter(ShapingFilter.FilterType.FMCW,
+                                  oversampling_factor,
+                                  is_matched=True,
+                                  bandwidth_factor=bandwidth_factor)
+        
+        WaveformGeneratorPskQam.__init__(self, *args, tx_filter=tx_filter, rx_filter=rx_filter, oversampling_factor=oversampling_factor, **kwargs)
