@@ -357,7 +357,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 reference_device = receiver.reference_transmitter.device
                 reference_device_idx = self.scenario.devices.index(reference_device)
 
-                reference_csi = device_signals[reference_device_idx][1] if isinstance(device_signals[reference_device_idx], tuple) else None
+                reference_csi = device_signals[reference_device_idx][1] if isinstance(device_signals[reference_device_idx], (tuple, list, np.ndarray)) else None
 
                 if self.operator_separation:
 
