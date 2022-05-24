@@ -12,7 +12,7 @@ from scipy.constants import pi
 from math import floor
 
 from hermespy.channel import ChannelStateFormat, ChannelStateInformation
-from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence, CustomPilotSymbolSequence, ConfigurablePilotSymbolSequence
+from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence
 from hermespy.core.signal_model import Signal
 
 __author__ = "Jan Adler"
