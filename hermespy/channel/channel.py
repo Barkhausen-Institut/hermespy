@@ -427,6 +427,7 @@ class Channel(SerializableArray, RandomNode):
         """
 
         # The maximum delay in samples is modeled by the last impulse response dimension
+        num_signal_samples = signal.num_samples
         num_delay_samples = impulse_response.shape[3] - 1
         num_tx_streams = impulse_response.shape[2]
         num_rx_streams = impulse_response.shape[1]
@@ -438,8 +439,8 @@ class Channel(SerializableArray, RandomNode):
         for delay_index in range(num_delay_samples+1):
             for tx_idx, rx_idx in product(range(num_tx_streams), range(num_rx_streams)):
 
-                delayed_signal = impulse_response[:, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
-                propagated_samples[rx_idx, delay_index:delay_index+signal.num_samples] += delayed_signal
+                delayed_signal = impulse_response[:num_signal_samples, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
+                propagated_samples[rx_idx, delay_index:delay_index+num_signal_samples] += delayed_signal
 
         return Signal(propagated_samples, sampling_rate=signal.sampling_rate,
                       carrier_frequency=signal.carrier_frequency, delay=signal.delay+delay)

@@ -7,7 +7,12 @@ Devices:
   - &device_alpha !<SimulatedDevice>
 
     carrier_frequency: 865e6        # Center frequency of Rf-band emitted signal
-    num_antennas: 2                 # Device features a single physical antenna
+    
+    antennas: !<UniformArray>       # Uniform antenna array
+      
+      antenna: !<IdealAntenna>      # Assume ideal isotropic antennas
+      spacing: 10e-2                # Elements spaced 10cm apart
+      dimensions: [2, 1, 1]         # 2 elements within the array
 
 
 # Channel models between device models
@@ -39,8 +44,8 @@ Operators:
 
       - !<DFT>
       - !<SM>
-      - !<ZF-Space>
-      - !<ZF-Time>
+#      - !<ZF-Space>
+#      - !<ZF-Time>
 #      - !<MMSE-Space>
 #      - !<MMSE-Time>
 

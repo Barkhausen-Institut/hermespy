@@ -5,22 +5,26 @@ Devices:
 
   - &device_alpha !<SimulatedDevice>
 
+    # RF-Chain hardware model
+    rf_chain: !<RfChain>           
+
+      amplitude_imbalance: 1e-3     # I/Q amplitude imbalance
+      phase_offset: 1e-2            # I/Q phase imbalance
+      power_amplifier: !<Rapp>      # Power amplifier model 
+
+    # AD-Conversion hardware model
+    adc: !<ADC> 
+
+      quantizer_type: mid_riser
+      gain: !<AutomaticGainControl>
+
 # Operators transmitting or receiving signals over the devices
 Operators:
 
   # A single modem operating the device #0
   - &modem_alpha !<Modem>
 
-    device: *device_alpha          # Device the modem is operating on
-
-    # Bit encoding configuration before mapping to modulation symbols
-    Encoding:
-
-      # Repetition encoding, repeating bit sections for redundancy
-      - !<Repetition>
-
-        bit_block_size: 1000       # Block size
-        repetitions: 3             # Number of times the bits within the block get repeated
+    device: *device_alpha           # Device the modem is operating on
 
     # Waveform configuration
     Waveform: !<PskQam>
