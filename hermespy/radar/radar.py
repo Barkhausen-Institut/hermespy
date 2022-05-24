@@ -171,25 +171,37 @@ class RadarCube(object):
         self.range_bins = range_bins
 
     def plot_range(self,
-                   title: Optional[str] = None) -> plt.Figure:
+                   title: Optional[str] = None,
+                   axes: Optional[plt.Axes] = None) -> Optional[plt.Figure]:
         """Visualize the cube's range data.
 
         Args:
 
             title (str, optional):
                 Plot title.
+                
+            axes (Optional[plt.Axes], optional):
+                Matplotlib axes to plot the graph to.
+                If none are provided, a new figure is created.
 
         Returns:
-            plt.Figure:
+        
+            Optional[plt.Figure]:
+                The visualization figure.
+                `None` if axes were provided.
         """
 
         title = "Radar Range Profile" if title is None else title
+        figure: Optional[plt.Figure] = None
 
         # Collapse the cube into the range-dimension
         range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
 
-        figure, axes = plt.subplots()
-        figure.suptitle(title)
+        # Create a new figure if no axes were provided
+        if axes is None:
+            
+            figure, axes = plt.subplots()
+            figure.suptitle(title)
 
         axes.set_xlabel("Range [m]")
         axes.set_ylabel("Power")

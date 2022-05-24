@@ -106,6 +106,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.adc = AnalogDigitalConverter() if adc is None else adc
         self.noise = AWGN()
+        self.snr = float('inf')
         self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
@@ -275,9 +276,28 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Return result
         return transmissions
 
+    @property
+    def snr(self) -> float:
+        """Signal to noise ratio at the receiver side.
+        
+        Returns:
+
+            Linear ratio of signal to noise power.
+        """
+
+        return self.__snr 
+
+    @snr.setter
+    def snr(self, value: float) -> None:
+
+        if value <= 0:
+            raise ValueError("The linear signal to noise ratio must be greater than zero")
+
+        self.__snr = value
+
     def receive(self,
                 device_signals: Union[List[Signal], np.ndarray],
-                snr: float = float('inf'),
+                snr: Optional[float] = None,
                 snr_type: SNRType = SNRType.EBN0) -> Signal:
         """Receive signals at this device.
 
@@ -302,24 +322,26 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 Baseband signal sampled after hardware-modeling.
         """
 
+        # Default to the device's configured SNR if no snr argument was provided
+        snr = self.snr if snr is None else snr
+
         # Mix arriving signals
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
+        # Tranform list arguments to matrix arguments
         if isinstance(device_signals, list):
+            
+            propagation_matrix = np.empty(1, dtype=object)
+            propagation_matrix[0] = (device_signals, None)
+            device_signals = propagation_matrix
 
-            for signal in device_signals:
+        # Superimpose transmit signals
+        for signals, _ in device_signals:
 
-                if signal is not None:
+            if signals is not None:
+                for signal in signals:
                     mixed_signal.superimpose(signal)
-
-        elif isinstance(device_signals, np.ndarray):
-
-            for signals, _ in device_signals:
-
-                if signals is not None:
-                    for signal in signals:
-                        mixed_signal.superimpose(signal)
 
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(mixed_signal)
