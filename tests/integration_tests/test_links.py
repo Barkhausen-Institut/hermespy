@@ -24,22 +24,22 @@ class TestLinks(TestCase):
 
         # Configure a 2x2 link scenario
         antennas = UniformArray(IdealAntenna(), 5e-3, [2, 1, 1])
-        tx_device = SimulatedDevice(antennas=antennas)
-        rx_device = SimulatedDevice(antennas=antennas)
+        self.tx_device = SimulatedDevice(antennas=antennas)
+        self.rx_device = SimulatedDevice(antennas=antennas)
 
         scenario = Scenario()
-        scenario.add_device(tx_device)
-        scenario.add_device(rx_device)
+        scenario.add_device(self.tx_device)
+        scenario.add_device(self.rx_device)
 
         # Define a transmit operation on the first device
         self.tx_operator = Modem()
         self.tx_operator.precoding[0] = SpatialMultiplexing()
-        self.tx_operator.device = tx_device
+        self.tx_operator.device = self.tx_device
 
         # Define a receive operation on the second device
         self.rx_operator = Modem()
         self.rx_operator.precoding[0] = SpatialMultiplexing()
-        self.rx_operator.device = rx_device
+        self.rx_operator.device = self.rx_device
         self.rx_operator.reference_transmitter = self.tx_operator
 
         self.ber = BitErrorEvaluator(self.tx_operator, self.rx_operator)
@@ -53,9 +53,10 @@ class TestLinks(TestCase):
                 The channel over which to propagate the signal from transmitter to receiver.
         """
 
-        tx_signal, _, _ = self.tx_operator.transmit()
-        rx_signal, _, channel_state = channel.propagate(tx_signal)
-        self.rx_operator.device.receive(np.array([[rx_signal, channel_state]], dtype=object))
+        _ = self.tx_operator.transmit()
+        tx_signals = self.tx_device.transmit()
+        rx_signals, _, channel_state = channel.propagate(tx_signals)
+        self.rx_device.receive(np.array([[rx_signals, channel_state]], dtype=object))
         _ = self.rx_operator.receive()
 
     def test_ideal_channel_psk_qam(self) -> None:
@@ -64,7 +65,7 @@ class TestLinks(TestCase):
         self.tx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
         self.rx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
 
-        self.__propagate(Channel(self.tx_operator.device, self.rx_operator.device))
+        self.__propagate(Channel(self.tx_device, self.rx_device))
 
         self.assertEqual(0, self.ber.evaluate().to_scalar())
 
