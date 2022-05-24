@@ -44,8 +44,9 @@ class FMCWRadarSimulation(TestCase):
 
     def test_detection(self) -> None:
 
-        signal, = self.radar.transmit()
-        rx_signals, _, csi = self.channel.propagate(signal)
+        self.radar.transmit()
+        tx_signals = self.device.transmit()
+        rx_signals, _, csi = self.channel.propagate(tx_signals)
         self.device.receive(rx_signals)
         cube, = self.radar.receive()
 
