@@ -1188,7 +1188,7 @@ class MonteCarlo(Generic[MO]):
         self.__evaluators = [] if evaluators is None else evaluators
         self.num_samples = num_samples
         self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(.5 * num_samples)
-        self.num_actors = int(ray.available_resources()['CPU']) if num_actors <= 0 else num_actors
+        self.num_actors = int(ray.available_resources().get('CPU', 1)) if num_actors <= 0 else num_actors
         self.__console = Console() if console is None else console
         self.section_block_size = section_block_size
 
