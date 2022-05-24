@@ -7,10 +7,11 @@ __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['RfChain', 'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier',
+__all__ = ['RfChain', 
+           'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier',
            'CustomPowerAmplifier']

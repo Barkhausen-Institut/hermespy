@@ -640,7 +640,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
         state = constructor.construct_mapping(node)
         shaping_filter = state.pop('filter', None)
 
-        generator = cls(**state)
+        generator = cls.InitializationWrapper(state)
 
         if shaping_filter is not None:
 
@@ -707,7 +707,7 @@ class PskQamCorrelationSynchronization(CorrelationSynchronization[WaveformGenera
 
 class PskQamChannelEstimation(ChannelEstimation[WaveformGeneratorPskQam], ABC):
     """Channel estimation for Psk Qam waveforms."""
-
+    
     def __init__(self,
                  waveform_generator: Optional[WaveformGeneratorPskQam] = None,
                  *args: Any) -> None:
@@ -721,9 +721,12 @@ class PskQamChannelEstimation(ChannelEstimation[WaveformGeneratorPskQam], ABC):
         ChannelEstimation.__init__(self, waveform_generator)
 
 
-class PskQamLeastSquaresChannelEstimation(PskQamChannelEstimation):
+class PskQamLeastSquaresChannelEstimation(Serializable, PskQamChannelEstimation):
     """Least-Squares channel estimation for Psk Qam waveforms."""
 
+    yaml_tag = u'PskQamLS'
+    """YAML serialization tag"""
+    
     def __init__(self,
                  waveform_generator: Optional[WaveformGeneratorPskQam] = None,
                  *args: Any) -> None:
@@ -784,8 +787,11 @@ class PskQamChannelEqualization(ChannelEqualization[WaveformGeneratorPskQam], AB
         ChannelEqualization.__init__(self, waveform_generator)
 
 
-class PskQamZeroForcingChannelEqualization(PskQamChannelEqualization, ABC):
+class PskQamZeroForcingChannelEqualization(Serializable, PskQamChannelEqualization, ABC):
     """Zero-Forcing Channel estimation for Psk Qam waveforms."""
+    
+    yaml_tag = u'PskQamZF'
+    """YAML serialization tag"""
 
     def __init__(self,
                  waveform_generator: Optional[WaveformGeneratorPskQam] = None) -> None:

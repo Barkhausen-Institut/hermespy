@@ -110,32 +110,6 @@ class RfChain(Serializable):
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
-    @classmethod
-    def from_yaml(cls: Type[RfChain], constructor: SafeConstructor, node: Node) -> RfChain:
-        """Recall a new `RfChain` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `RfChain` serialization.
-
-        Returns:
-            RfChain:
-                Newly created `RfChain` instance.
-        """
-
-        state = constructor.construct_mapping(node, deep=True)
-        power_amplifier = state.pop('PowerAmplifier', None)
-
-        rf_chain = cls(**state)
-
-        if power_amplifier is not None:
-            rf_chain.power_amplifier = power_amplifier
-
-        return rf_chain
-
     def transmit(self, input_signal: Signal) -> Signal:
         """Returns the distorted version of signal in "input_signal".
 
@@ -160,12 +134,12 @@ class RfChain(Serializable):
 
         Args:
             input_signal (np.ndarray):
-                Signal to be detoriated as a matrix in shape `#no_antennas x #no_samples`.
+                Signal to be deteriorated as a matrix in shape `#no_antennas x #no_samples`.
                 `#no_antennas` depends if on receiver or transmitter side.
 
         Returns:
             np.ndarray:
-                Detoriated signal with the same shape as `input_signal`.
+                Deteriorated signal with the same shape as `input_signal`.
         """
         x = input_signal
         eps_delta = self.__phase_offset
