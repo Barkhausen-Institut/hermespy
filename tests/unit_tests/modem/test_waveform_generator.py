@@ -203,10 +203,10 @@ class TestWaveformGenerator(unittest.TestCase):
 class TestUniformPilotSymbolSequence(unittest.TestCase):
     """Test the uniform pilot symbol sequence."""
 
-    def test_uniform_sequence(self) -> None:
+    def test_sequence(self) -> None:
         """The generated sequence should be an array containing only the configured symbol."""
 
         expected_symbol = 1.234 - 1234j
         uniform_sequence = UniformPilotSymbolSequence(expected_symbol)
 
-        assert_array_equal(np.array([expected_symbol], dtype=complex), uniform_sequence.pilot_symbol_sequence)
+        assert_array_equal(np.array([expected_symbol], dtype=complex), uniform_sequence.sequence)
