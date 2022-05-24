@@ -9,11 +9,12 @@ from __future__ import annotations
 from typing import List, Optional, Type, Union
 
 import numpy as np
-from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter
+from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter, ScalarNode
 from scipy.constants import pi
 
-from hermespy.core import ChannelStateInformation, Device, FloatingError, RandomNode, Scenario, Serializable, Signal
+from hermespy.core import Device, FloatingError, RandomNode, Scenario, Serializable, Signal
 from hermespy.core.statistics import SNRType
+from .analog_digital_converter import AnalogDigitalConverter
 from .antenna import AntennaArrayBase, UniformArray, IdealAntenna
 from .noise import Noise, AWGN
 from .rf_chain.rf_chain import RfChain
@@ -43,6 +44,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
+    adc: AnalogDigitalConverter
+    """Model of receiver's ADC"""
+
     operator_separation: bool
     """Separate operators during signal modeling."""
 
@@ -51,11 +55,13 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     __sampling_rate: Optional[float]        # Sampling rate at which this device operate
     __carrier_frequency: float              # Center frequency of the mixed signal in rf-band
     __velocity: np.ndarray                  # Cartesian device velocity vector
+    __operator_separation: bool
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
                  antennas: Optional[AntennaArrayBase] = None,
                  rf_chain: Optional[RfChain] = None,
+                 adc: Optional[AnalogDigitalConverter] = None,
                  sampling_rate: Optional[float] = None,
                  carrier_frequency: float = 0.,
                  *args,
@@ -73,6 +79,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             rf_chain (RfChain, optional):
                 Model of the device's radio frequency amplification chain.
+
+            adc (AnalogDigitalConverter, optional):
+                Model of receiver's ADC converter.
 
             sampling_rate (float, optional):
                 Sampling rate at which this device operates.
@@ -95,6 +104,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         self.scenario = scenario
         self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
+        self.adc = AnalogDigitalConverter() if adc is None else adc
         self.noise = AWGN()
         self.operator_separation = False
         self.sampling_rate = sampling_rate
@@ -236,6 +246,22 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         self.__velocity = value
 
+    @property
+    def operator_separation(self) -> bool:
+        """Separate operators during signal modeling.
+        
+        Returns:
+
+            Enabled flag.
+        """
+
+        return self.__operator_separation
+
+    @operator_separation.setter
+    def operator_separation(self, value: bool) -> None:
+
+        self.__operator_separation = value
+
     def transmit(self,
                  clear_cache: bool = True) -> List[Signal]:
 
@@ -280,7 +306,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
-        if isinstance(device_signals, List):
+        if isinstance(device_signals, list):
 
             for signal in device_signals:
 
@@ -297,6 +323,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(mixed_signal)
+
+        baseband_signal = self.adc.convert(baseband_signal)
         
         # Cache received signal at receiver slots
         for receiver in self.receivers:
@@ -307,7 +335,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 reference_device = receiver.reference_transmitter.device
                 reference_device_idx = self.scenario.devices.index(reference_device)
 
-                reference_csi = device_signals[reference_device_idx][1]
+                reference_csi = device_signals[reference_device_idx][1] if isinstance(device_signals[reference_device_idx], tuple) else None
 
                 if self.operator_separation:
 
@@ -328,23 +356,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             # Cache reception
             receiver.cache_reception(receiver_signal, reference_csi)
-
-        return baseband_signal
-
-    def receive_signal(self,
-                       signal: Signal,
-                       channel_state: Optional[ChannelStateInformation] = None,
-                       snr: float = float('inf')) -> Signal:
-
-        baseband_signal = self.rf_chain.receive(signal)
-
-        # Cache received signal at receiver slots
-        for receiver in self.receivers:
-
-            noise_power = receiver.energy / snr
-            self.__noise.add(baseband_signal, noise_power)
-
-            receiver.cache_reception(baseband_signal, channel_state)
 
         return baseband_signal
 
@@ -393,13 +404,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 Newly created serializable instance.
         """
 
+        if isinstance(node, ScalarNode):
+            return cls()
+
         state = constructor.construct_mapping(node)
-
-        operator_separation = state.pop('operator_separation', None)
-
-        device = cls(**state)
-
-        if operator_separation is not None:
-            device.operator_separation = operator_separation
-
-        return device
+        return cls.InitializationWrapper(state)

@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 from hermespy.channel import Channel
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem import Modem, WaveformGeneratorPskQam, BitErrorEvaluator
+from hermespy.simulation.analog_digital_converter import AnalogDigitalConverter, GainControlType
 
 # Create two simulated devices acting as source and sink
 tx_device = SimulatedDevice()
 rx_device = SimulatedDevice()
+rx_device.analog_digital_converter = AnalogDigitalConverter(num_quantization_bits=10)
 
 # Define a transmit operation on the first device
 tx_operator = Modem()

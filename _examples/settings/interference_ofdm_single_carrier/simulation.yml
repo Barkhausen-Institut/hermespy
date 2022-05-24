@@ -1,36 +1,27 @@
 !<Simulation>
 
-max_num_drops: 10               # Maximum number of simulation runs
-min_num_drops: 5                # Minimum number of simulation runs
-confidence_level: .9
-confidence_margin: .1
-confidence_metric: BER
-
-noise_loop: [36, 32, 28, 24, 20, 16, 12, 8, 4, 0]  # dB
-snr_type: EBN0                  # SNR is defined as the ratio between bit energy and noise power
-
-calc_transmit_spectrum: true    # Calculate the average transmit spectrum over all drops
-calc_receive_spectrum: true     # Calculate the average receive spectrum over all drops
-spectrum_fft_size: 512          # Spectrum calculations should contain 512 frequency bins
-
+# Physical device models within the simulated scenario
 Devices:
 
   # First device
-  - SimulatedDevice
+  - &device_alpha !<SimulatedDevice>
 
     carrier_frequency: 3.1e9
     power: 10
 
   # Second device
-  - SimulatedDevice
+  - &device_beta !<SimulatedDevice>
 
     carrier_frequency: 3e9
     power: 1
 
+# Operators transmitting or receiving signals over the devices
 Operators:
 
-  # First device operator
-  - Modem 0 0
+  # A single modem operating the device #0
+  - &modem_alpha !<Modem>
+
+    device: *device_alpha         # Device the modem is operating on
 
     # Waveform configuration
     Waveform: !<PskQam>
@@ -53,12 +44,14 @@ Operators:
       pilot_rate: 1e6             # Rate of pilot chirp repetition in Hz
       guard_interval: 1e-6        # Pause between frame transmissions in seconds
 
-  # Second device operator
-  - Modem 1 1
+  # A single modem operating the device #1
+  - &modem_beta !<Modem>
+
+    device: *device_beta         # Device the modem is operating on
 
     # Spatial precoding with zero-forcing channel equalization
-    Precoding:
-      - ZF-Time
+    # Precoding:
+    #   - !<ZF-Time>
 
     Waveform: !<OFDM>
 
@@ -102,10 +95,45 @@ Operators:
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
       Structure:
 
-        - Symbol
+        - !<Symbol>
           num_repetitions: 16
           pattern: [0, 1, 1, 1, 2, 1, 1]
 
-        - Guard
+        - !<Guard>
           num_repetitions: 1
           duration: 2e-3
+
+
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_alpha
+    receiving_modem: *modem_alpha
+    confidence: .9
+    tolerance: .01
+    plot_scale: log
+
+  # Evaluate the bit errors of `modem_beta` communicating over `device_beta`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_beta
+    receiving_modem: *modem_beta
+    confidence: .9
+    tolerance: .01
+    plot_scale: log
+
+
+# Simulation parameters
+num_samples: 10                    # Number of samples per simulation grid section
+min_num_samples: 5                 # Minimum number of samples per simulation grid section before premature stopping
+snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+plot_results: True                 # Visualize the evaluations after the simulation has finished
+
+
+# Scenario parameters over which the Monte-Carlo simulation sweeps
+Dimensions:
+
+  snr: [36, 32, ..., 0] dB
