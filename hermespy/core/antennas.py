@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-================
-Antenna Modeling
-================
+=====================
+Antenna Configuration
+=====================
 """
 
 from __future__ import annotations
@@ -16,7 +16,9 @@ import matplotlib.tri as tri
 import numpy as np
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import Executable, FloatingError, Serializable, Signal
+from .executable import Executable
+from .factory import Serializable
+from .signal_model import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -80,7 +82,7 @@ class Antenna(Serializable):
         """
 
         if self.__array is None:
-            raise FloatingError("Error trying to access the position of a floating antenna")
+            raise RuntimeError("Error trying to access the position of a floating antenna")
 
         return self.__array.antenna_position(self)
 
@@ -88,7 +90,7 @@ class Antenna(Serializable):
     def pos(self, value: np.ndarray) -> None:
 
         if self.__array is None:
-            raise FloatingError("Error trying to access the position of a floating antenna")
+            raise RuntimeError("Error trying to access the position of a floating antenna")
 
         self.__array.set_antenna_position(self)
 

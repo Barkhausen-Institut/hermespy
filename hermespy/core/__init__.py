@@ -1,3 +1,4 @@
+from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .channel_state_information import ChannelStateInformation
 from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, \
     Transmitter, Receiver, Device, FloatingError
@@ -19,7 +20,14 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['ChannelStateInformation', 'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot',
-           'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError',
-           'MonteCarlo', 'Evaluator', 'Executable', 'Verbosity', 'Factory',
-           'Serializable', 'RandomNode', 'DuplexOperator', 'Scenario', 'Signal']
+__all__ = [
+    'Antenna', 'IdealAntenna', 'Dipole', 'PatchAntenna', 'AntennaArrayBase', 'AntennaArray', 'UniformArray',
+    'ChannelStateInformation',
+    'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot', 'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError',
+    'Executable', 'Verbosity',
+    'MonteCarlo', 'Evaluator', 
+    'Factory', 'Serializable',
+    'RandomNode',
+    'Scenario',
+    'Signal',
+]

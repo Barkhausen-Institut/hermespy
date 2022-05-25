@@ -11,10 +11,10 @@ from hermespy.core.device import Device, MixingOperator,  Operator, OperatorSlot
     TransmitterSlot
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.3"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -366,18 +366,18 @@ class TestDevice(TestCase):
         self.power = 1.5
         self.position = np.zeros(3)
         self.orientation = np.zeros(3)
-        self.topology = np.array([[1., 2., 3.], [4., 5., 6.]], dtype=float)
+        self.antennas = Mock()
 
         self.device = DeviceMock(power=self.power, position=self.position, orientation=self.orientation,
-                                 topology=self.topology)
+                                 antennas=self.antennas)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
 
+        self.assertIs(self.antennas, self.device.antennas)
         self.assertEqual(self.power, self.device.power)
         assert_array_equal(self.position, self.device.position)
         assert_array_equal(self.orientation, self.device.orientation)
-        assert_array_equal(self.topology, self.device.topology)
 
     def test_power_setget(self) -> None:
         """Power property getter should return setter argument."""
@@ -447,33 +447,6 @@ class TestDevice(TestCase):
 
         with self.assertRaises(ValueError):
             self.device.orientation = np.array([1, 2])
-
-    def test_topology_setget(self) -> None:
-        """Device topology property getter should return setter argument."""
-
-        topology = np.arange(9).reshape((3, 3))
-        self.device.topology = topology
-
-        assert_array_equal(topology, self.device.topology)
-
-    def test_topology_set_expansion(self) -> None:
-        """Topology property setter automatically expands input dimensions."""
-
-        topology = np.arange(3)
-        expected_topology = np.zeros((3, 3), dtype=float)
-        expected_topology[:, 0] = topology
-
-        self.device.topology = topology
-        assert_array_equal(expected_topology, self.device.topology)
-
-    def test_topology_validation(self) -> None:
-        """Topology property setter should raise ValueErrors on invalid arguments."""
-
-        with self.assertRaises(ValueError):
-            self.device.topology = np.empty(0)
-
-        with self.assertRaises(ValueError):
-            self.device.topology = np.array([[1, 2, 3, 4]])
 
     def test_max_frame_duration(self) -> None:
         """Maximum frame duration property should compute the correct duration."""
