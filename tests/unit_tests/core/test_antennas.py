@@ -6,8 +6,7 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import FloatingError
-from hermespy.simulation.antenna import IdealAntenna, UniformArray
+from hermespy.core import FloatingError, IdealAntenna, UniformArray
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -58,7 +57,7 @@ class TestIdealAntenna(TestCase):
     def test_pos_set_validation(self) -> None:
         """Setting the position of a floating antenna should raise an exception"""
 
-        with self.assertRaises(FloatingError):
+        with self.assertRaises(RuntimeError):
             self.antenna.pos = np.array([1, 2, 3])
 
     def test_transmit(self) -> None:

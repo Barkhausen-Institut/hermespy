@@ -15,7 +15,6 @@ from scipy.constants import pi
 from hermespy.core import Device, FloatingError, RandomNode, Scenario, Serializable, Signal
 from hermespy.core.statistics import SNRType
 from .analog_digital_converter import AnalogDigitalConverter
-from .antenna import AntennaArrayBase, UniformArray, IdealAntenna
 from .noise import Noise, AWGN
 from .rf_chain.rf_chain import RfChain
 
@@ -38,9 +37,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     yaml_tag = u'SimulatedDevice'
     """YAML serialization tag."""
 
-    antennas: AntennaArrayBase
-    """Model of the device's antenna array."""
-
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
@@ -59,7 +55,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
     def __init__(self,
                  scenario: Optional[Scenario] = None,
-                 antennas: Optional[AntennaArrayBase] = None,
                  rf_chain: Optional[RfChain] = None,
                  adc: Optional[AnalogDigitalConverter] = None,
                  sampling_rate: Optional[float] = None,
@@ -72,10 +67,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             scenario (Scenario, optional):
                 Scenario this device is attached to.
                 By default, the device is considered floating.
-
-            antennas (AntennaArrayBase, optional):
-                Model of the device's antenna array.
-                By default, a :class:`UniformArray` of ideal antennas is assumed.
 
             rf_chain (RfChain, optional):
                 Model of the device's radio frequency amplification chain.
@@ -102,7 +93,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         Device.__init__(self, *args, **kwargs)
 
         self.scenario = scenario
-        self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.adc = AnalogDigitalConverter() if adc is None else adc
         self.noise = AWGN()

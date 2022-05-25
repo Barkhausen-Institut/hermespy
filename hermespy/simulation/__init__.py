@@ -3,7 +3,6 @@ from .simulated_device import SimulatedDevice
 from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier, CustomPowerAmplifier
 from .analog_digital_converter import AnalogDigitalConverter, Gain, AutomaticGainControl
 from .noise import Noise
-from .antenna import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -20,5 +19,4 @@ __all__ = [
     'RfChain', 'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier', 'CustomPowerAmplifier',
     'AnalogDigitalConverter', 'Gain', 'AutomaticGainControl',
     'Noise',
-    'Antenna', 'IdealAntenna', 'Dipole', 'PatchAntenna', 'AntennaArrayBase', 'AntennaArray', 'UniformArray'
 ]

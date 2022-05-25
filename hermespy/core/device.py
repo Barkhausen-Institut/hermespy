@@ -121,7 +121,8 @@ from typing import Any, Generic, List, Optional, Tuple, TypeVar
 
 import numpy as np
 
-from ..tools.math import transform_coordinates
+from hermespy.tools.math import transform_coordinates
+from .antennas import UniformArray, IdealAntenna
 from .channel_state_information import ChannelStateInformation
 from .signal_model import Signal
 from .random_node import RandomNode
@@ -396,7 +397,7 @@ class Receiver(RandomNode, MixingOperator['ReceiverSlot']):
         self.__reference_transmitter = value
 
     @abstractmethod
-    def receive(self) -> Tuple[Signal, Any, ...]:
+    def receive(self) -> Tuple[Any, ...]:
         """Receive a signal.
 
         Pulls the required signal model and channel state information from the underlying device.
@@ -743,6 +744,9 @@ class Device(ABC, RandomNode):
 
     It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.
     """
+    
+    antennas: AntennaArrayBase
+    """Model of the device's antenna array."""
 
     transmitters: TransmitterSlot
     """Transmitters broadcasting signals over this device."""
@@ -756,13 +760,18 @@ class Device(ABC, RandomNode):
     __topology: np.ndarray                  # Antenna array topology of the device
 
     def __init__(self,
+                 antennas: Optional[AntennaArrayBase] = None,
                  power: float = 1.0,
-                 position: Optional[np.array] = None,
-                 orientation: Optional[np.array] = None,
+                 position: Optional[np.ndarray] = None,
+                 orientation: Optional[np.ndarray] = None,
                  topology: Optional[np.ndarray] = None,
                  seed: Optional[int] = None) -> None:
         """
         Args:
+        
+            antennas (AntennaArrayBase, optional):
+                Model of the device's antenna array.
+                By default, a :class:`UniformArray` of ideal antennas is assumed.
 
             power (float, optional):
                 Average power of the transmitted signals in Watts.
@@ -786,6 +795,7 @@ class Device(ABC, RandomNode):
 
         RandomNode.__init__(self, seed=seed)
 
+        self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
 
