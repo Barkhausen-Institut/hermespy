@@ -52,7 +52,8 @@ class RadarChannel(Channel):
 
     __target_range: float
     __radar_cross_section: float
-    __carrier_frequency: float
+    __target_azimuth: float
+    __target_zenith: float
     target_exists: bool
     __losses_db: float
     __velocity: float
@@ -60,6 +61,8 @@ class RadarChannel(Channel):
     def __init__(self,
                  target_range: float,
                  radar_cross_section: float,
+                 target_azimuth: float = 0.,
+                 target_zenith: float = 0.,
                  target_exists: bool = True,
                  losses_db: float = 0,
                  velocity: float = 0,
@@ -72,6 +75,14 @@ class RadarChannel(Channel):
 
             radar_cross_section (float):
                 Radar cross section (RCS) of the assumed single-point reflector in m**2
+
+            target_azimuth (float, optional):
+                Target location azimuth angle in radians, considering spherical coordinates.
+                Zero by default.
+                
+            target_zenith (float, optional):
+                Target location zenith angle in radians, considering spherical coordinates.
+                Zero by default.
 
             target_exists (bool, optional):
                 True if a target exists, False if there is only noise/clutter
@@ -95,6 +106,8 @@ class RadarChannel(Channel):
 
         self.target_range = target_range
         self.radar_cross_section = radar_cross_section
+        self.target_azimuth = target_azimuth
+        self.target_zenith = target_zenith
         self.target_exists = target_exists
         self.__losses_db = losses_db
         self.velocity = velocity
@@ -148,6 +161,39 @@ class RadarChannel(Channel):
             raise ValueError("Target range must be greater than or equal to zero")
 
         self.__radar_cross_section = value
+        
+    @property
+    def target_azimuth(self) -> float:
+        """Target position azimuth in spherical coordiantes.
+        
+        Returns:
+        
+            Azimuth angle in radians.
+        """
+        
+        return self.__target_azimuth
+    
+    @target_azimuth.setter
+    def target_azimuth(self, value: float) -> None:
+        
+        self.__target_azimuth = value
+        
+        
+    @property
+    def target_zenith(self) -> float:
+        """Target position zenith in spherical coordiantes.
+        
+        Returns:
+        
+            Zenith angle in radians.
+        """
+        
+        return self.__target_zenith
+    
+    @target_zenith.setter
+    def target_zenith(self, value: float) -> None:
+        
+        self.__target_zenith = value
 
     @property
     def losses_db(self) -> float:
@@ -178,17 +224,13 @@ class RadarChannel(Channel):
         if self.transmitter is None:
             raise FloatingError("Radar channel must be anchored to a transmitting device")
 
-        if self.num_inputs > 1 or self.num_outputs > 1:
-            raise RuntimeError("Multiple antennas are not supported")
-
         if self.transmitter.carrier_frequency <= 0.:
             raise RuntimeError("Radar channel does not support base-band transmissions")
 
         # Impulse response sample timestamps
         timestamps = np.arange(num_samples) / sampling_rate
 
-        # The assumed velocity is the magnitude of the transmitter's velocity vector
-        velocity = np.linalg.norm(self.transmitter.velocity)
+        velocity = self.velocity
 
         # Infer relevant parameters
         wavelength = speed_of_light / self.transmitter.carrier_frequency
@@ -211,8 +253,9 @@ class RadarChannel(Channel):
                         * db2lin(self.__losses_db))
 
         delay_taps = np.arange(max_delay_in_samples) / sampling_rate
-        tx_indices = np.arange(self.num_inputs)
-        rx_indices = np.arange(self.num_outputs)
+        
+        array_response = self.transmitter.antennas.spherical_response(self.transmitter.carrier_frequency, self.target_azimuth, self.target_zenith)
+        mimo_response = np.outer(array_response.conj(), array_response)
 
         for idx, timestamp in enumerate(timestamps):
 
@@ -224,7 +267,7 @@ class RadarChannel(Channel):
 
             # Note that this impulse response selection is technically incorrect,
             # since it is only feasible for planar arrays
-            impulse_response[idx, tx_indices, rx_indices, :] = interpolated_impulse_tap
+            impulse_response[idx, ::] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
 
         return impulse_response
 
