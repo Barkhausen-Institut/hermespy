@@ -14,8 +14,6 @@ from typing import Optional
 import numpy as np
 
 from hermespy.core import FloatingError, Operator, Signal, Receiver, Transmitter
-from hermespy.precoding import SymbolPrecoder
-
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

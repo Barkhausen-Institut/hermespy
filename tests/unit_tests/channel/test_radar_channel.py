@@ -37,6 +37,7 @@ class TestRadarChannel(unittest.TestCase):
         self.transmitter.carrier_frequency = 1e9
         self.transmitter.sampling_rate = 1e6
         self.transmitter.antennas.num_antennas = 1
+        self.transmitter.antennas.spherical_response.return_value = np.array([1.], dtype=complex)
         self.transmitter.velocity = np.zeros(3, dtype=float)
         self.receiver = self.transmitter
 
@@ -88,8 +89,8 @@ class TestRadarChannel(unittest.TestCase):
         """velocity getter should return setter argument."""
         new_velocity = 20
 
-        self.channel.velocity = new_velocity
-        self.assertEqual(new_velocity, self.channel.velocity)
+        self.channel.target_velocity = new_velocity
+        self.assertEqual(new_velocity, self.channel.target_velocity)
 
     def _create_impulse_train(self, interval_in_samples: int, number_of_pulses: int):
 
@@ -104,7 +105,7 @@ class TestRadarChannel(unittest.TestCase):
 
         return output_signal
 
-    def test_propagation_delay_integer_num_samples(self):
+    def test_propagation_delay_integer_num_samples(self) -> None:
         """
         Test if the received signal corresponds to the expected delayed version, given that the delay is a multiple
         of the sampling interval.
@@ -178,7 +179,7 @@ class TestRadarChannel(unittest.TestCase):
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         self.channel.target_range = expected_range
-        self.channel.velocity = velocity
+        self.channel.target_velocity = velocity
 
         output, _, _ = self.channel.propagate(Signal(input_signal, self.transmitter.sampling_rate))
 
@@ -214,8 +215,9 @@ class TestRadarChannel(unittest.TestCase):
         movement
         """
 
-        velocity = -100
-        self.transmitter.velocity = np.array([velocity, 0., 0.])
+        velocity = 100
+        self.transmitter.velocity = np.array([0., 0., .5 * velocity])
+        self.channel.target_velocity = .5 * velocity
 
         num_samples = 100000
         sinewave_frequency = .25 * self.transmitter.sampling_rate
@@ -224,9 +226,6 @@ class TestRadarChannel(unittest.TestCase):
         time = np.arange(num_samples) / self.transmitter.sampling_rate
 
         input_signal = np.sin(2 * np.pi * sinewave_frequency * time)
-
-        self.channel.velocity = velocity
-
         output, _, _ = self.channel.propagate(Signal(input_signal[np.newaxis, :], self.transmitter.sampling_rate))
 
         input_freq = np.fft.fft(input_signal)
@@ -237,7 +236,7 @@ class TestRadarChannel(unittest.TestCase):
         freq_in = np.argmax(np.abs(input_freq[:int(num_samples/2)])) * freq_resolution
         freq_out = np.argmax(np.abs(output_freq[:int(num_samples/2)])) * freq_resolution
 
-        self.assertAlmostEqual(freq_in - freq_out, doppler_shift, delta=np.abs(doppler_shift)*.01)
+        self.assertAlmostEqual(freq_out - freq_in, doppler_shift, delta=np.abs(doppler_shift)*.01)
 
     def test_no_echo(self):
         """

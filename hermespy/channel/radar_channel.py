@@ -6,6 +6,7 @@ Single-Target Radar Channel Modeling
 """
 
 from __future__ import annotations
+from math import cos, sin
 from typing import Type
 
 import numpy as np
@@ -56,7 +57,6 @@ class RadarChannel(Channel):
     __target_zenith: float
     target_exists: bool
     __losses_db: float
-    __velocity: float
 
     def __init__(self,
                  target_range: float,
@@ -65,7 +65,7 @@ class RadarChannel(Channel):
                  target_zenith: float = 0.,
                  target_exists: bool = True,
                  losses_db: float = 0,
-                 velocity: float = 0,
+                 target_velocity: float = 0,
                  **kwargs) -> None:
         """
         Args:
@@ -90,8 +90,8 @@ class RadarChannel(Channel):
             losses_db (float, optional):
                 Any additional atmospheric and/or cable losses, in dB (default = 0)
 
-            velocity (float, optional):
-                Radial velocity, in m/s (default = 0)
+            target_velocity (float, optional):
+                Radial target velocity, in m/s (default = 0)
 
         Raises:
             ValueError:
@@ -110,7 +110,7 @@ class RadarChannel(Channel):
         self.target_zenith = target_zenith
         self.target_exists = target_exists
         self.__losses_db = losses_db
-        self.velocity = velocity
+        self.target_velocity = target_velocity
 
     @property
     def target_range(self) -> float:
@@ -230,7 +230,12 @@ class RadarChannel(Channel):
         # Impulse response sample timestamps
         timestamps = np.arange(num_samples) / sampling_rate
 
-        velocity = self.velocity
+        # The overall perceived velocity is a sum of the target's radial velocity
+        # and the transmitter's velocity component pointing towards the target
+        target_normal = np.array([cos(self.target_azimuth) * sin(self.target_zenith), sin(self.target_azimuth) * sin(self.target_zenith), cos(self.target_zenith)], dtype=float)
+        transmitter_velocity_abs = np.linalg.norm(self.transmitter.velocity, 2)
+        transmitter_target_velocity = transmitter_velocity_abs * np.dot(target_normal, self.transmitter.velocity / transmitter_velocity_abs) if transmitter_velocity_abs > 0. else 0.
+        velocity = self.target_velocity + transmitter_target_velocity
 
         # Infer relevant parameters
         wavelength = speed_of_light / self.transmitter.carrier_frequency
@@ -259,7 +264,7 @@ class RadarChannel(Channel):
 
         for idx, timestamp in enumerate(timestamps):
 
-            echo_delay = self.delay + 2 * self.velocity * timestamp / speed_of_light
+            echo_delay = self.delay + 2 * self.target_velocity * timestamp / speed_of_light
             time = timestamp + np.arange(max_delay_in_samples) / sampling_rate
             echo_weights = power_factor * np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
 
@@ -294,7 +299,7 @@ class RadarChannel(Channel):
             'radar_cross_section': node.radar_cross_section,
             'gain': node.gain,
             'losses_db': node.losses_db,
-            'velocity': node.velocity,
+            'velocity': node.target_velocity,
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
