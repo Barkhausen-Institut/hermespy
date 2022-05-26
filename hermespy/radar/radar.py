@@ -56,11 +56,12 @@ from typing import Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..core.signal_model import Signal
-from ..core.device import DuplexOperator
+from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
+from hermespy.core import DuplexOperator, Signal
+
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
@@ -294,34 +295,129 @@ class Radar(DuplexOperator):
     """HermesPy representation of a mono-static radar sensing its environment."""
 
     waveform: Optional[RadarWaveform]
+    __transmit_beamformer: Optional[TransmitBeamformer]
+    __receive_beamformer: Optional[ReceiveBeamformer]
 
     def __init__(self) -> None:
 
         self.waveform = None
+        self.receive_beamformer = None
+        self.transmit_beamformer = None
 
         DuplexOperator.__init__(self)
+        
+    @property
+    def transmit_beamformer(self) -> Optional[TransmitBeamformer]:
+        """Beamforming applied during signal transmission.
+        
+        Returns:
+        
+            The beamformer.
+            `None`, if no beamformer is configured during transmission.
+        """
+        
+        return self.__transmit_beamformer
+    
+    @transmit_beamformer.setter
+    def transmit_beamformer(self, value: Optional[TransmitBeamformer]) -> None:
+        
+        if value is None:
+            
+            self.__transmit_beamformer = None
+            
+        else:
+            
+            value.operator = self
+            self.__transmit_beamformer = value
+            
+    @property
+    def receive_beamformer(self) -> Optional[ReceiveBeamformer]:
+        """Beamforming applied during signal transmission.
+        
+        Returns:
+        
+            The beamformer.
+            `None`, if no beamformer is configured during transmission.
+        """
+        
+        return self.__receive_beamformer
+    
+    @receive_beamformer.setter
+    def receive_beamformer(self, value: Optional[ReceiveBeamformer]) -> None:
+        
+        if value is None:
+            
+            self.__receive_beamformer = None
+            
+        else:
+            
+            value.operator = self
+            self.__receive_beamformer = value
 
     def transmit(self, duration: float = 0.) -> Tuple[Signal]:
 
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
+        
+        if not self.device:
+            raise RuntimeError("Error attempting to transmit over a floating radar operator")
 
         # Generate the radar waveform
-        transmitted_signal = self.waveform.ping()
+        signal = self.waveform.ping()
+        
+        # If the device has more than one antenna, a beamforming strategy is required
+        if self.device.antennas.num_antennas > 1:
+            
+            # If no beamformer is configured, only the first antenna will transmit the ping
+            if self.transmit_beamformer is None:
+                signal.append_streams(np.zeros((self.device.antennas.num_antennas - signal.num_streams, signal.num_samples), dtype=complex))
+                        
+            elif self.transmit_beamformer.num_transmit_input_streams != 1:
+                raise RuntimeError("Only transmit beamformers requiring a single input stream are supported by radar operators")
+            
+            elif self.transmit_beamformer.num_transmit_output_streams != self.device.antennas.num_antennas:
+                raise RuntimeError("Radar operator transmit beamformers are required to consider the full number of antennas")
+            
+            else:
+                signal = self.transmit_beamformer.transmit(signal)
 
         # Transmit signal over the occupied device slot (if the radar is attached to a device)
         if self._transmitter.attached:
-            self._transmitter.slot.add_transmission(self._transmitter, transmitted_signal)
+            self._transmitter.slot.add_transmission(self._transmitter, signal)
 
-        return transmitted_signal,
+        return signal,
 
     def receive(self) -> Tuple[RadarCube]:
+        
+        if not self.waveform:
+            raise RuntimeError("Radar waveform not specified")
+        
+        if not self.device:
+            raise RuntimeError("Error attempting to transmit over a floating radar operator")
 
         # Retrieve signal from receiver slot
         signal = self._receiver.signal.resample(self.waveform.sampling_rate)
 
+        # If the device has more than one antenna, a beamforming strategy is required
+        if self.device.antennas.num_antennas > 1:
+            
+            if self.receive_beamformer is None:
+                raise RuntimeError("Receiving over a device with more than one antenna requires a beamforming configuration")
+        
+            if self.receive_beamformer.num_receive_output_streams != 1:
+                raise RuntimeError("Only receive beamformers generating a single output stream are supported by radar operators")
+            
+            if self.receive_beamformer.num_receive_input_streams != self.device.antennas.num_antennas:
+                raise RuntimeError("Radar operator receive beamformers are required to consider the full number of antenna streams")
+            
+            beamformed_samples = self.receive_beamformer.receive(signal)[:, 0, :]
+            
+        else:
+            
+            beamformed_samples = signal.samples
+
         # Build the radar cube by generating a beam-forming line over all angles of interest
-        angles_of_interest = np.array([[0., 0.]], dtype=float)
+        angles_of_interest = np.array([[0., 0.]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.receive_focus
 
         range_bins = self.waveform.range_bins
         velocity_bins = self.waveform.velocity_bins
@@ -330,14 +426,13 @@ class Radar(DuplexOperator):
                               len(velocity_bins),
                               len(range_bins)), dtype=float)
 
-        for aoi_idx, aoi in enumerate(angles_of_interest):
-
-            # ToDo: Beamforming
+        for angle_idx, line in enumerate(beamformed_samples):
 
             # Process the single angular line by the waveform generator
-            line = self.waveform.estimate(signal)
+            line_signal = Signal(line, signal.sampling_rate, carrier_frequency=signal.carrier_frequency)
+            line_estimate = self.waveform.estimate(line_signal)
 
-            cube_data[aoi_idx, ::] = line
+            cube_data[angle_idx, ::] = line_estimate
 
         # Create radar cube object
         cube = RadarCube(cube_data, angles_of_interest, velocity_bins, range_bins)

@@ -122,7 +122,7 @@ from typing import Any, Generic, List, Optional, Tuple, TypeVar
 import numpy as np
 
 from hermespy.tools.math import transform_coordinates
-from .antennas import UniformArray, IdealAntenna
+from .antennas import AntennaArrayBase, UniformArray, IdealAntenna
 from .channel_state_information import ChannelStateInformation
 from .signal_model import Signal
 from .random_node import RandomNode
