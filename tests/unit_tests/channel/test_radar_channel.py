@@ -2,7 +2,7 @@
 """Test Radar Channel."""
 
 import unittest
-from unittest.mock import Mock
+from unittest.mock import patch, Mock
 
 import numpy as np
 from numpy.random import default_rng
@@ -10,7 +10,7 @@ from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi, speed_of_light
 
 from hermespy.channel import RadarChannel
-from hermespy.core.signal_model import Signal
+from hermespy.core import FloatingError, Signal
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -66,31 +66,74 @@ class TestRadarChannel(unittest.TestCase):
 
     def test_target_range_setget(self) -> None:
         """Target range property getter should return setter argument."""
+        
         new_range = 500
 
         self.channel.target_range = new_range
         self.assertEqual(new_range, self.channel.target_range)
+        
+    def test_target_range_validation(self) -> None:
+        """Target range property should raise ValueError on arguments smaller than zero"""
+
+        with self.assertRaises(ValueError):
+            
+            self.channel.target_range = -1.12345
+            
+        self.channel.target_range = 0.
 
     def test_target_exists_setget(self) -> None:
         """Target exists flag getter should return setter argument."""
+        
         new_target_exists = False
         self.channel.target_exists = new_target_exists
         self.assertEqual(new_target_exists, self.channel.target_exists)
 
     def test_radar_cross_section_get(self) -> None:
         """Radar cross section getter should return init param."""
+        
         self.assertEqual(self.radar_cross_section, self.channel.radar_cross_section)
 
+    def test_cross_section_validation(self) -> None:
+        """Radar cross section property should raise ValueError on arguments smaller than zero"""
+
+        with self.assertRaises(ValueError):
+            
+            self.channel.radar_cross_section = -1.12345
+            
+        self.channel.radar_cross_section = 0.
+
     def test_losses_db_get(self) -> None:
-        """losses getter should return init param."""
+        """Losses getter should return init param."""
+        
         self.assertEqual(self.losses_db, self.channel.losses_db)
 
     def test_velocity_setget(self) -> None:
-        """velocity getter should return setter argument."""
+        """Velocity getter should return setter argument."""
+        
         new_velocity = 20
 
         self.channel.target_velocity = new_velocity
         self.assertEqual(new_velocity, self.channel.target_velocity)
+       
+    def test_impulse_response_anchored_validation(self) -> None:
+        """Impulse response should raise FloatingError if not anchored to a device"""
+        
+        with patch.object(RadarChannel, 'transmitter', None), self.assertRaises(FloatingError):
+            _ = self.channel.impulse_response(0, 1.)
+            
+    def test_impulse_response_carrier_frequency_validation(self) -> None:
+        """Impulse response should raise RuntimeError if device carrier frequencies are smaller or equal to zero"""
+        
+        self.transmitter.carrier_frequency = 0.
+        
+        with self.assertRaises(RuntimeError):
+            _ = self.channel.impulse_response(0, 1.)
+        
+    def test_impulse_response_interference_validation(self) -> None:
+        """Impulse response should raise RuntimeError if not configured as a self-interference channel"""
+        
+        with patch.object(RadarChannel, 'receiver', None), self.assertRaises(RuntimeError):
+            _ = self.channel.impulse_response(0, 1.)
 
     def _create_impulse_train(self, interval_in_samples: int, number_of_pulses: int):
 
@@ -127,7 +170,7 @@ class TestRadarChannel(unittest.TestCase):
         expected_output = np.hstack((np.zeros((1, delay_in_samples)), input_signal)) * expected_amplitude
         assert_array_almost_equal(abs(expected_output), np.abs(output[0].samples[:, :expected_output.size]))
 
-    def test_propagation_delay_noninteger_num_samples(self):
+    def test_propagation_delay_noninteger_num_samples(self) -> None:
         """
         Test if the received signal corresponds to the expected delayed version, given that the delay falls in the
         middle of two sampling instants.
@@ -151,7 +194,7 @@ class TestRadarChannel(unittest.TestCase):
 
         assert_array_almost_equal(peaks, expected_amplitude * straddle_loss * np.ones(peaks.shape))
 
-    def test_propagation_delay_doppler(self):
+    def test_propagation_delay_doppler(self) -> None:
         """
         Test if the received signal corresponds to a frequency-shifted version of the transmitted signal with the
         expected Doppler shift
@@ -185,31 +228,7 @@ class TestRadarChannel(unittest.TestCase):
 
         assert_array_almost_equal(np.abs(output[0].samples[0, peaks_in_samples].flatten()), expected_straddle_amplitude)
 
-#    def test_propagation_leakage(self):
-#        """
-#        Test if the leakage between transmitter and receiver is correctly modelled
-#        """
-#        isolation_db = 10
-#
-#        samples_per_symbol = 800
-#        num_pulses = 20
-#
-#        input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
-#
-#        self.channel.init_drop()
-#        output_ideal_isolation = self.channel.propagate(input_signal)
-#
-#        self.channel.tx_rx_isolation_db = isolation_db
-#
-#        output = self.channel.propagate(input_signal)
-#
-#        self_interference = output - output_ideal_isolation
-#        norm_factor = db2lin(-self.channel.attenuation_db - isolation_db, conversion_type=DbConversionType.AMPLITUDE)
-#
-#        assert_array_almost_equal(np.abs(self_interference[0, :input_signal.size]),
-#                                             np.abs(input_signal[0, :]) * norm_factor)
-
-    def test_doppler_shift(self):
+    def test_doppler_shift(self) -> None:
         """
         Test if the received signal corresponds to the expected delayed version, given time variant delays on account of
         movement
@@ -238,7 +257,7 @@ class TestRadarChannel(unittest.TestCase):
 
         self.assertAlmostEqual(freq_out - freq_in, doppler_shift, delta=np.abs(doppler_shift)*.01)
 
-    def test_no_echo(self):
+    def test_no_echo(self) -> None:
         """
         Test if no echos are observed if target_exists is set to False
         """
@@ -251,3 +270,11 @@ class TestRadarChannel(unittest.TestCase):
         output, _, _ = self.channel.propagate(Signal(input_signal, self.transmitter.sampling_rate))
 
         assert_array_almost_equal(output[0].samples, np.zeros(output[0].samples.shape))
+
+    def test_to_yaml(self) -> None:
+        """Test YAML serialization"""
+        
+        representer = Mock()
+        _ = RadarChannel.to_yaml(representer, self.channel)
+        
+        representer.represent_mapping.assert_called()

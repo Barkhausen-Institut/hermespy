@@ -158,7 +158,7 @@ class RadarChannel(Channel):
         """
 
         if value < 0:
-            raise ValueError("Target range must be greater than or equal to zero")
+            raise ValueError("Radar cross section be greater than or equal to zero")
 
         self.__radar_cross_section = value
         
@@ -217,15 +217,15 @@ class RadarChannel(Channel):
                          num_samples: int,
                          sampling_rate: float) -> np.ndarray:
 
+        if self.transmitter is None:
+            raise FloatingError("Radar channel must be anchored to a transmitting device")
+        
+        if self.transmitter.carrier_frequency <= 0.:
+            raise RuntimeError("Radar channel does not support base-band transmissions")
+        
         # For the radar channel, only channels linking the same device are currently feasible
         if self.transmitter is not self.receiver:
             raise RuntimeError("Radar channels may only link the same devices")
-
-        if self.transmitter is None:
-            raise FloatingError("Radar channel must be anchored to a transmitting device")
-
-        if self.transmitter.carrier_frequency <= 0.:
-            raise RuntimeError("Radar channel does not support base-band transmissions")
 
         # Impulse response sample timestamps
         timestamps = np.arange(num_samples) / sampling_rate
