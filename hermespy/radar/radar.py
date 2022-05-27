@@ -277,12 +277,12 @@ class RadarWaveform(object):
         Returns:
             Signal: Model of the radar frame.
         """
-        ...
+        ...  # pragma: no cover
 
     @abstractmethod
     def estimate(self,
                  signal: Signal) -> np.ndarray:
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -292,7 +292,7 @@ class RadarWaveform(object):
         Returns:
             sampling_rate (float): Sampling rate in Hz.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -302,7 +302,7 @@ class RadarWaveform(object):
         Returns:
             np.ndarray: Ranges in m.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -312,7 +312,7 @@ class RadarWaveform(object):
         Returns:
             np.ndarray: Velocities in m/s.
         """
-        ...
+        ...  # pragma: no cover
 
 
 class Radar(DuplexOperator):
@@ -411,7 +411,9 @@ class Radar(DuplexOperator):
             
             # If no beamformer is configured, only the first antenna will transmit the ping
             if self.transmit_beamformer is None:
-                signal.append_streams(np.zeros((self.device.antennas.num_antennas - signal.num_streams, signal.num_samples), dtype=complex))
+
+                additional_streams = Signal(np.zeros((self.device.antennas.num_antennas - signal.num_streams, signal.num_samples), dtype=complex), signal.sampling_rate)
+                signal.append_streams(additional_streams)
                         
             elif self.transmit_beamformer.num_transmit_input_streams != 1:
                 raise RuntimeError("Only transmit beamformers requiring a single input stream are supported by radar operators")
