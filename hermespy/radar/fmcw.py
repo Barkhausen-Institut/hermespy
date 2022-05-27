@@ -103,7 +103,7 @@ class FMCW(RadarWaveform):
     @bandwidth.setter
     def bandwidth(self, value: float) -> None:
 
-        if value < 0.:
+        if value <= 0.:
             raise ValueError("Bandwidth must be greater than zero")
 
         self.__bandwidth = value
@@ -172,7 +172,7 @@ class FMCW(RadarWaveform):
             float: Maximum target velocity in m/s.
         """
 
-        raise NotImplementedError
+        raise NotImplementedError   #pragma no cover
 
     @property
     def slope(self) -> float:
