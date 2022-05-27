@@ -100,18 +100,9 @@ class PointDetection(object):
                 If `power` is smaller or equal to zero.
         """
 
-        if position.ndim != 3:
-            raise ValueError("Position must be a three-dimensional vector.")
-
-        if velocity.ndim != 3:
-            raise ValueError("Velocity must be a three-dimensional vector.")
-
-        if power <= 0.:
-            raise ValueError("Detected power must be greater than zero")
-
-        self.__position = position
-        self.__velocity = velocity
-        self.__power = power
+        self.position = position
+        self.velocity = velocity
+        self.power = power
 
     @property
     def position(self) -> np.ndarray:
@@ -119,19 +110,41 @@ class PointDetection(object):
 
         Returns:
             np.ndarray: Cartesian position in m.
+            
+        Raises:
+            ValueError: If position is not a three-dimensional vector.
         """
 
         return self.__position
-
+    
+    @position.setter
+    def position(self, value: np.ndarray) -> None:
+        
+        if value.ndim != 1 or len(value) != 3:
+            raise ValueError("Position must be a three-dimensional vector")
+        
+        self.__position = value
+        
     @property
     def velocity(self) -> np.ndarray:
         """Velocity of the detection.
 
         Returns:
             np.ndarray: Velocity vector in m/s.
+            
+        Raises:
+            ValueError: If velocity is not a three-dimensional vector.
         """
 
         return self.__velocity
+    
+    @velocity.setter
+    def velocity(self, value: np.ndarray) -> None:
+        
+        if value.ndim != 1 or len(value) != 3:
+            raise ValueError("Velocity must be a three-dimensional vector")
+        
+        self.__velocity = value
 
     @property
     def power(self) -> float:
@@ -139,9 +152,20 @@ class PointDetection(object):
 
         Returns:
             float: Power.
+            
+        Raises:
+            ValueError: If `power` is smaller or equal to zero.
         """
 
         return self.__power
+    
+    @power.setter
+    def power(self, value: float) -> None:
+        
+        if value <= 0.:
+            raise ValueError("Detected power must be greater than zero")
+        
+        self.__power = value
 
 
 class RadarCube(object):
@@ -353,6 +377,23 @@ class Radar(DuplexOperator):
             
             value.operator = self
             self.__receive_beamformer = value
+            
+    @property
+    def sampling_rate(self) -> float:
+
+        return self.waveform.sampling_rate
+
+    @property
+    def frame_duration(self) -> float:
+        
+        # ToDo: Support frame duration
+        return 1.
+
+    @property
+    def energy(self) -> float:
+
+         # ToDo: Support frame energy
+        return 1.0 
 
     def transmit(self, duration: float = 0.) -> Tuple[Signal]:
 
@@ -438,17 +479,3 @@ class Radar(DuplexOperator):
         cube = RadarCube(cube_data, angles_of_interest, velocity_bins, range_bins)
 
         return cube,
-
-    @property
-    def sampling_rate(self) -> float:
-
-        return self.waveform.sampling_rate
-
-    @property
-    def frame_duration(self) -> float:
-        pass
-
-    @property
-    def energy(self) -> float:
-
-        return 1.0  # ToDo: Implement

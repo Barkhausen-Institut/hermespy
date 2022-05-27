@@ -1,4 +1,4 @@
-from .radar import Radar, RadarCube, RadarWaveform
+from .radar import PointDetection, Radar, RadarCube, RadarWaveform
 from .fmcw import FMCW
 
 __author__ = "Jan Adler"
@@ -10,4 +10,7 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = ['Radar', 'RadarCube', 'RadarWaveform', 'FMCW']
+__all__ = [
+    'PointDetection', 'Radar', 'RadarCube', 'RadarWaveform',
+    'FMCW',
+]
