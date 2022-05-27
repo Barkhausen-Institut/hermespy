@@ -10,7 +10,7 @@ from matplotlib.figure import Figure
 
 from hermespy.core import Signal
 from hermespy.radar import PointDetection, Radar
-from hermespy.radar.radar import RadarCube
+from hermespy.radar.radar import RadarCube, RadarWaveform
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -106,8 +106,44 @@ class TestRadarCube(TestCase):
         
         figure = self.cube.plot_range_velocity()
         self.assertIsInstance(figure, Figure)
+
+
+class RadarWaveformMock(RadarWaveform):
+    """Mock implementation of a a radar waveform"""
+
+    def __init__(self) -> None:
+
+        self.num_samples = 10
+        self.rng = np.random.default_rng(42)
+
+    def ping(self) -> Signal:
+
+        return Signal(np.exp(2j * np.pi * self.rng.uniform(0, 1, size=(1, self.num_samples))), self.sampling_rate)
             
             
+    def estimate(self, signal: Signal) -> np.ndarray:
+
+        num_velocity_bins = len(self.velocity_bins)
+        num_range_bins = len(self.range_bins)
+
+        velocity_range_estimate = np.zeros((num_velocity_bins, num_range_bins), dtype=float)
+        velocity_range_estimate[int(.5 * num_velocity_bins), int(.5 * num_range_bins)] = 1.
+
+        return velocity_range_estimate
+
+    @property
+    def sampling_rate(self) -> float:
+        return 1.2345
+
+    @property
+    def range_bins(self) -> np.ndarray:
+        return np.arange(10)
+
+    @property
+    def velocity_bins(self) -> np.ndarray:
+        return np.arange(5)
+
+
 class TestRadar(TestCase):
     """Test the radar operator."""
     
@@ -115,17 +151,19 @@ class TestRadar(TestCase):
         
         self.rng = np.random.default_rng(42)
         
-        self.waveform = Mock()
-        self.waveform.sampling_rate = 1.234
-        self.waveform.ping.return_value = Signal(np.exp(2j * np.pi * self.rng.uniform(0, 1, size=(1, 20))), self.waveform.sampling_rate)
-        
+        self.waveform = RadarWaveformMock()
         self.device = Mock()
         self.device.antennas.num_antennas = 2
         
         self.radar = Radar()
         self.radar.waveform = self.waveform
         self.radar.device = self.device
-        
+        self.radar.receive_beamformer = Mock()
+        self.radar.receive_beamformer.num_receive_input_streams = 2
+        self.radar.receive_beamformer.num_receive_output_streams = 1
+        self.radar.receive_beamformer.receive.return_value = np.zeros((1, 1, 1), dtype=complex)
+        self.radar.receive_beamformer.receive_focus = np.zeros((1, 2), dtype=float)
+
     def test_transmit_beamfromer_setget(self) -> None:
         """Transmit beamformer property getter should return setter argument"""
         
@@ -176,3 +214,115 @@ class TestRadar(TestCase):
         
         with self.assertRaises(RuntimeError):
             _ = self.radar.transmit()
+
+    def test_transmit_beamformer_input_stream_validation(self) -> None:
+        """Transmitting should raise a RuntimeError if the configured beamformer is not supported"""
+
+        beamformer = Mock()
+        beamformer.num_transmit_input_streams = 2
+        self.radar.transmit_beamformer = beamformer
+
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.transmit()
+
+    def test_transmit_beamformer_output_stream_validation(self) -> None:
+        """Transmitting should raise a RuntimeError if the configured beamformer is not supported"""
+
+        beamformer = Mock()
+        beamformer.num_transmit_input_streams = 1
+        beamformer.num_transmit_output_streams = 1
+        self.radar.transmit_beamformer = beamformer
+
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.transmit()
+
+    def test_transmit_beamformer(self) -> None:
+        """Transmitting should result in the beamforming routine being envoked if configured accordingly"""
+
+        beamformer = Mock()
+        beamformer.num_transmit_input_streams = 1
+        beamformer.num_transmit_output_streams = 2
+        self.radar.transmit_beamformer = beamformer
+
+        _ = self.radar.transmit()
+
+        beamformer.transmit.assert_called()
+
+    def test_transmit_no_beamformer(self) -> None:
+        """Transmitting without a beamformer should infer the signal properly"""
+
+        signal, = self.radar.transmit()
+        self.assertEqual(self.device.antennas.num_antennas, signal.num_streams)
+
+
+    def test_receive_waveform_validation(self) -> None:
+        """Receiving should raise a RuntimeError if no waveform was configured"""
+        
+        self.radar.waveform = None
+        
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.receive()
+            
+    def test_receive_device_validation(self) -> None:
+        """Receiving should raise a RuntimeError if no device was configured"""
+        
+        self.radar.device = None
+        
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.receive()
+
+    def test_receive_no_beamformer_validation(self) -> None:
+        """Receiving without a configured beamformer should raise a RuntimeError"""
+
+        signal, = self.radar.transmit()
+        self.radar._receiver.cache_reception(signal)
+        self.radar.receive_beamformer = None
+
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.receive()
+
+    def test_receive_beamformer_output_streams_validation(self) -> None:
+        """Receiving should raise a RuntimeError if the configured beamformer is not supported"""
+
+        signal, = self.radar.transmit()
+        self.radar._receiver.cache_reception(signal)
+
+        beamformer = Mock()
+        beamformer.num_receive_output_streams = 2
+        self.radar.receive_beamformer = beamformer
+
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.receive()
+
+    def test_receive_beamformer_input_streams_validation(self) -> None:
+        """Receiving should raise a RuntimeError if the configured beamformer is not supported"""
+
+        signal, = self.radar.transmit()
+        self.radar._receiver.cache_reception(signal)
+
+        beamformer = Mock()
+        beamformer.num_receive_output_streams = 1
+        beamformer.num_receive_input_streams = 3
+        self.radar.receive_beamformer = beamformer
+
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.receive()
+
+    def test_receive_no_beamformer(self) -> None:
+        """Receiving without a beamformer should result in a valid radar cube"""
+
+        self.device.antennas.num_antennas = 1
+        self.radar._receiver.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
+        self.radar.receive_beamformer = None
+
+        cube, = self.radar.receive()
+        self.assertEqual(1, len(cube.angle_bins))
+
+    def test_receive_beamformer(self) -> None:
+        """Receiving with a beamformer should result in a valid radar cube"""
+
+        signal, = self.radar.transmit()
+        self.radar._receiver.cache_reception(signal)
+
+        cube, = self.radar.receive()
+        self.assertEqual(1, len(cube.angle_bins))
