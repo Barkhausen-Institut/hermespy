@@ -38,6 +38,8 @@ from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter,  SafeConstruct
 from ruamel.yaml.constructor import ConstructorError
 from scipy.constants import pi
 
+from hermespy.core import Serializable
+
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
@@ -48,7 +50,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PowerAmplifier:
+class PowerAmplifier(Serializable):
     """Base class of a power-amplifier model.
 
     Implements a distortion-less amplification model
@@ -200,7 +202,6 @@ class PowerAmplifier:
         if figure is not None:
             figure.tight_layout()
         
-    
     @classmethod
     def from_yaml(cls: Type[PowerAmplifier],
                   constructor: SafeConstructor,
@@ -225,7 +226,7 @@ class PowerAmplifier:
         state = SafeConstructor.construct_mapping(constructor, node, deep=False)
 
         # Compute saturation amplitude from different parameter combinations
-        saturation_amplitude = state.pop('saturation_amplitude', None)
+        saturation_amplitude = state.pop('saturation_amplitude', float('inf'))
         tx_power = state.pop('tx_power', None)
         power_backoff = state.pop('power_backoff', None)
 
@@ -241,7 +242,8 @@ class PowerAmplifier:
 
             saturation_amplitude = sqrt(tx_power * 10 ** (power_backoff / 10))
 
-        return cls(**state, saturation_amplitude=saturation_amplitude)
+        state['saturation_amplitude'] = saturation_amplitude
+        return cls.InitializationWrapper(state)
 
     @classmethod
     def to_yaml(cls: Type[PowerAmplifier], representer: SafeRepresenter, node: PowerAmplifier) -> MappingNode:

@@ -110,32 +110,6 @@ class RfChain(Serializable):
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
-    @classmethod
-    def from_yaml(cls: Type[RfChain], constructor: SafeConstructor, node: Node) -> RfChain:
-        """Recall a new `RfChain` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `RfChain` serialization.
-
-        Returns:
-            RfChain:
-                Newly created `RfChain` instance.
-        """
-
-        state = constructor.construct_mapping(node, deep=True)
-        power_amplifier = state.pop('PowerAmplifier', None)
-
-        rf_chain = cls(**state)
-
-        if power_amplifier is not None:
-            rf_chain.power_amplifier = power_amplifier
-
-        return rf_chain
-
     def transmit(self, input_signal: Signal) -> Signal:
         """Returns the distorted version of signal in "input_signal".
 
