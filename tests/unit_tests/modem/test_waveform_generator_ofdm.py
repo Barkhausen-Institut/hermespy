@@ -671,5 +671,3 @@ class TestSchmidlCoxSynchronization(TestCase):
             self.assertEqual(n, len(synchronization))
             for frame, (synchronized_frame, _) in zip(frames, synchronization):
                 assert_array_equal(frame, synchronized_frame)
-
-
