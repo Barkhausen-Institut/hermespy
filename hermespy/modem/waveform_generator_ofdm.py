@@ -13,8 +13,7 @@ from typing import List, Tuple, Optional, Type, Union, Any
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
-from scipy.constants import pi
-from scipy.fft import fft, ifft, fftshift
+from scipy.fft import fft, ifft
 from scipy.interpolate import griddata
 from scipy.signal import find_peaks
 
@@ -22,7 +21,7 @@ from ..core.factory import Serializable
 from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from ..core.signal_model import Signal
 from .modem import Symbols
-from .waveform_generator import PilotWaveformGenerator, Synchronization
+from .waveform_generator import PilotWaveformGenerator, Synchronization, WaveformGenerator
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 

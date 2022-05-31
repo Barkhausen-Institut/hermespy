@@ -438,7 +438,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             # Demodulate each stream within each frame independently
             for stream_samples, stream_csi in zip(frame_samples, frame_csi.received_streams()):
                 
-                symbols, csi, noise = self.waveform_generator.demodulate(stream_samples, stream_csi, noise_variance)
+                symbols, csi, noise = self.waveform_generator.demodulate(stream_samples, stream_csi, noise)
                 stream_symbols.append(symbols.raw)
                 stream_csis.append(csi)
                 stream_noises.append(noise)
