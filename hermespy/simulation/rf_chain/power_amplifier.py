@@ -137,7 +137,6 @@ class PowerAmplifier(Serializable):
 
         return distorted_signal
 
-    @abstractmethod
     def model(self, input_signal: np.ndarray) -> np.ndarray:
         """Model signal amplification characteristics.
 

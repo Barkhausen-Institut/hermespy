@@ -405,8 +405,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             csi = ChannelStateInformation.Ideal(signal.num_samples)
 
         # Pull signal and channel state from the registered device slot
-        noise = 0.  # ToDo: Re-implement noise
-
+        noise = signal.noise_power
         num_samples = signal.num_samples
 
         # Number of frames within the received samples
