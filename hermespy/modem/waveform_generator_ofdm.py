@@ -13,7 +13,7 @@ from typing import List, Tuple, Optional, Type, Union, Any
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
-from scipy.fft import fft, ifft
+from scipy.fft import fft, fftshift, ifft, ifftshift
 from scipy.interpolate import griddata
 from scipy.signal import find_peaks
 
@@ -385,28 +385,35 @@ class FrameSymbolSection(FrameSection, Serializable):
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
 
         # Collect resource masks
-        mask = self.resource_mask
+        mask = self.resource_mask[:, :self.num_subcarriers]
 
-        # Fill up the time-frequency grid exploiting the mask
-        grid = np.zeros((self.frame.num_subcarriers, self.num_words), dtype=complex)
+        # Generate the resource grid of the oversampled OFDM frame
+        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
+        grid = np.zeros((padded_num_subcarriers, self.num_words), dtype=complex)
+        
+        # Select the subgrid onto which to project this symbol section's resource configuration
+        subgrid_start_idx = int(.5 * (padded_num_subcarriers - self.num_subcarriers))
+        subgrid = grid[subgrid_start_idx:subgrid_start_idx+self.num_subcarriers, :]
 
         # Reference fields all currently carry the complex symbol 1+j0
         # ToDo: Implement reference symbol configurations
-        grid[mask[ElementType.REFERENCE.value]] = 1. + 0j
+        subgrid[mask[ElementType.REFERENCE.value]] = 1. + 0j
 
         # Data fields carry the supplied data symbols
-        grid.T[mask[ElementType.DATA.value].T] = symbols
+        subgrid.T[mask[ElementType.DATA.value].T] = symbols
 
         # NULL fields are just that... zero
-        grid[mask[ElementType.NULL.value]] = 0j
+        subgrid[mask[ElementType.NULL.value]] = 0j
         
-        # Append a row of zeros to account for the DC suppression
+        # Shift in order to suppress the dc component
+        # Note that for configurations without any oversampling the DC component will not be suppressed
         if self.frame.dc_suppression:
-            grid = np.append(np.zeros((1, self.num_words), dtype=complex), grid, axis=0)
+            
+            dc_index = int(.5 * padded_num_subcarriers)
+            grid[dc_index:, :] = np.roll(grid[dc_index:, :], 1, axis=0)
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
-        num_slot_samples = self.frame.num_subcarriers * self.frame.oversampling_factor
-        resource_signals = ifft(grid, n=num_slot_samples, axis=0, norm='ortho')
+        resource_signals = ifft(ifftshift(grid, axes=0), axis=0, norm='ortho')
 
         # Add the cyclic prefix to each time slot while simultaneously flatten the resource signals into time domain
         signals = []
@@ -415,7 +422,7 @@ class FrameSymbolSection(FrameSection, Serializable):
             pattern_idx = resource_idx % len(self.pattern)
             cp_ratio = self.frame.resources[self.pattern[pattern_idx]].cp_ratio
 
-            num_prefix_samples = int(num_slot_samples * cp_ratio)
+            num_prefix_samples = int(padded_num_subcarriers * cp_ratio)
 
             if num_prefix_samples > 0:
                 signals.append(resource_samples[-num_prefix_samples:])
@@ -429,7 +436,7 @@ class FrameSymbolSection(FrameSection, Serializable):
                    signal: np.ndarray,
                    channel_state: ChannelStateInformation) -> Tuple[np.ndarray, ChannelStateInformation]:
 
-        samples_per_slot = self.frame.num_subcarriers * self.frame.oversampling_factor
+        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
 
         # Remove the cyclic prefixes before transformation into time-domain
         sample_index = 0
@@ -442,30 +449,38 @@ class FrameSymbolSection(FrameSection, Serializable):
             pattern_idx = slot_idx % len(self.pattern)
             resource = self.frame.resources[self.pattern[pattern_idx]]
 
-            num_prefix_samples = int(samples_per_slot * resource.cp_ratio)
+            num_prefix_samples = int(padded_num_subcarriers * resource.cp_ratio)
             sample_index += num_prefix_samples
 
-            sample_indices = np.append(sample_indices, np.arange(sample_index, sample_index + samples_per_slot))
+            sample_indices = np.append(sample_indices, np.arange(sample_index, sample_index + padded_num_subcarriers))
             channel_sample_indices = np.append(channel_sample_indices, np.array(sample_index))
 
-            sample_index += samples_per_slot
+            sample_index += padded_num_subcarriers
 
-        slot_samples = signal[sample_indices].reshape((samples_per_slot, num_slots), order='F')
+        slot_samples = signal[sample_indices].reshape((padded_num_subcarriers, num_slots), order='F')
         slot_channel_state = channel_state[:, :, channel_sample_indices, :]\
             .to_frequency_selectivity(num_bins=self.frame.num_subcarriers)
 
         # Transform grid back to data symbols
-        transform = fft(slot_samples, n=samples_per_slot, axis=0, norm='ortho')
-        ofdm_grid = transform[1:1+self.frame.num_subcarriers, :] if self.frame.dc_suppression else transform[:self.frame.num_subcarriers, :]
-        
-        return ofdm_grid, slot_channel_state
+        grid = fftshift(fft(slot_samples, axis=0, norm='ortho'), axes=0)
+
+        # Account for the DC suppression
+        if self.frame.dc_suppression:
+
+            dc_index = int(.5 * padded_num_subcarriers)
+            grid[dc_index:, :] = np.roll(grid[dc_index:, :], -1, axis=0)
+            
+        # Extract the subgrid relevant to this section
+        subgrid_start_idx = int(.5 * (padded_num_subcarriers - self.num_subcarriers))
+        subgrid = grid[subgrid_start_idx:subgrid_start_idx+self.num_subcarriers, :]
+
+        return subgrid, slot_channel_state
 
     @property
     def resource_mask(self) -> np.ndarray:
 
         # Initialize the base mask as all false
-        num_subcarriers = self.frame.num_subcarriers
-        mask = np.zeros((len(ElementType), num_subcarriers, len(self.pattern)), dtype=bool)
+        mask = np.zeros((len(ElementType), self.num_subcarriers, len(self.pattern)), dtype=bool)
 
         for word_idx, resource_idx in enumerate(self.pattern):
 
@@ -908,9 +923,9 @@ class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
             section_symbol_grid, section_channel_state = section.demodulate(signal_section, channel_state_section)
             section_mask = section.resource_mask
 
-            symbol_grid[:, word_index:word_index+num_words] = section_symbol_grid
+            symbol_grid[:section_mask.shape[1], word_index:word_index+num_words] = section_symbol_grid
             section_channel_states.append(section_channel_state)
-            resource_mask[:, :, word_index:word_index+num_words] = section_mask
+            resource_mask[:, :section_mask.shape[1], word_index:word_index+num_words] = section_mask
 
             sample_index += num_samples
             word_index += num_words
