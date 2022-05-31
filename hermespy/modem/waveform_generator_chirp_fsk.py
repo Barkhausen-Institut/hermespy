@@ -40,9 +40,9 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
     # Modulation parameters
     symbol_type: np.dtype = int
     synchronization: ChirpFskSynchronization
-    __chirp_duration: float
-    __chirp_bandwidth: float
-    __freq_difference: float
+    __chirp_duration: float     # Duraiton of a single chirp in seconds
+    __chirp_bandwidth: float    # Frequency range over which a single chirp sweeps
+    __freq_difference: float    # Frequency offset between two adjecent chirp symbols
 
     # Frame parameters
     __num_pilot_chirps: int
@@ -50,12 +50,12 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
     __guard_interval: float
 
     def __init__(self,
-                 chirp_duration: float = None,
-                 chirp_bandwidth: float = None,
-                 freq_difference: float = None,
-                 num_pilot_chirps: int = None,
-                 num_data_chirps: int = None,
-                 guard_interval: float = None,
+                 chirp_duration: float = 10e-9,
+                 chirp_bandwidth: float = 1e9,
+                 freq_difference: Optional[float] = None,
+                 num_pilot_chirps: int = 14,
+                 num_data_chirps: int = 50,
+                 guard_interval: float = 0.,
                  **kwargs) -> None:
         """Frequency Shift Keying Waveform Generator object initialization.
 
@@ -66,6 +66,18 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
 
             chirp_bandwidth (float, optional):
                 Bandwidth of a single chirp in Hz.
+                
+            freq_difference (Optional[float], optional):
+                Frequency difference of two adjacent chirp symbols.
+                
+            num_pilot_chirps (int, optional):
+                Number of pilot symbols within a single frame.
+                
+            num_data_chirps (int, optional):
+                Number of data symbols within a single frame.
+                
+            guard_interval (float, optional):
+                Frame guard interval in seconds.
 
             kwargs:
                 Base waveform generator initialization arguments.
@@ -74,32 +86,14 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         # Init base class
         WaveformGenerator.__init__(self, **kwargs)
 
-        # Default parameters
+        # Configure waveform paramters
         self.synchronization = ChirpFskSynchronization()
-        self.__chirp_duration = 1e-6
-        self.__chirp_bandwidth = 10e6
-        self.__freq_difference = self.__chirp_bandwidth / self.modulation_order
-        self.__num_pilot_chirps = 0
-        self.__num_data_chirps = 20
-        self.__guard_interval = 0.0
-
-        if chirp_duration is not None:
-            self.chirp_duration = chirp_duration
-
-        if chirp_bandwidth is not None:
-            self.chirp_bandwidth = chirp_bandwidth
-
-        if freq_difference is not None:
-            self.freq_difference = freq_difference
-
-        if num_pilot_chirps is not None:
-            self.num_pilot_chirps = num_pilot_chirps
-
-        if num_data_chirps is not None:
-            self.num_data_chirps = num_data_chirps
-
-        if guard_interval is not None:
-            self.guard_interval = guard_interval
+        self.chirp_duration = chirp_duration
+        self.chirp_bandwidth = chirp_bandwidth
+        self.freq_difference = freq_difference
+        self.num_pilot_chirps = num_pilot_chirps
+        self.num_data_chirps = num_data_chirps
+        self.guard_interval = guard_interval
 
     @classmethod
     def to_yaml(cls: Type[WaveformGeneratorChirpFsk],
@@ -123,7 +117,6 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         state = {
             "chirp_duration": node.chirp_duration,
             "chirp_bandwidth": node.chirp_bandwidth,
-            "freq_difference": node.freq_difference,
             "num_pilot_chirps": node.num_pilot_chirps,
             "num_data_chirps": node.num_data_chirps,
             "guard_interval": node.guard_interval,
@@ -166,32 +159,25 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
 
     @property
     def chirp_duration(self) -> float:
-        """Access the chirp duration.
+        """Duration of a single chirp within a frame.
 
         Returns:
             float:
                 Chirp duration in seconds.
+                
+        Raises:
+            ValueError: If the duration is less or equal to zero.
         """
 
         return self.__chirp_duration
 
     @chirp_duration.setter
-    def chirp_duration(self, duration: float) -> None:
-        """Modify the chirp duration.
+    def chirp_duration(self, value: float) -> None:
 
-        Args:
-            duration (float):
-                The new duration in seconds.
-
-        Raises:
-            ValueError:
-                If the duration is less or equal to zero.
-        """
-
-        if duration < 0.0:
+        if value < 0.0:
             raise ValueError("Chirp duration must be greater than zero")
 
-        self.__chirp_duration = duration
+        self.__chirp_duration = value
         self._clear_cache()
 
     @property
@@ -226,37 +212,32 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
 
     @property
     def freq_difference(self) -> float:
-        """Access the frequency difference.
+        """The frequency offset between neighbouring chirp symbols.
 
         Returns:
             float:
                 The frequency difference in Hz.
-        """
-
-        return self.__freq_difference
-
-    @freq_difference.setter
-    def freq_difference(self, difference: float) -> None:
-        """Modify the frequency difference.
-
-        Args:
-            difference (float):
-                The new frequency difference in Hz.
-
+                
         Raises:
-            ValueError:
-                If the frequency `difference` is less or equal to zero.
-                If the frequency `difference` is larger or equal to the configured `chirp bandwidth`.
+            ValueError: If `freq_difference` is smaller or equal to zero.
         """
+        
+        if self.__freq_difference is None:
+            return self.chirp_bandwidth / self.modulation_order
+        
+        return self.__freq_difference
+    
+    @freq_difference.setter
+    def freq_difference(self, value: Optional[float]) -> None:
+        
+        if value is None:
+            self.__freq_difference = None
+            return
+        
+        if value <= 0.:
+            raise ValueError("Frequency difference must be greater than zero")
 
-        if difference <= 0.0:
-            raise ValueError("The frequency difference must be greater than zero")
-
-        if difference >= self.chirp_bandwidth:
-            raise ValueError("The frequency difference must be smaller than the configured chirp bandwidth")
-
-        self.__freq_difference = difference
-        self._clear_cache()
+        self.__freq_difference = value
 
     @property
     def num_pilot_chirps(self) -> int:
@@ -528,6 +509,12 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
     @property
     def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
+    
+    @WaveformGenerator.modulation_order.setter
+    def modulation_order(self, value: int) -> None:
+        
+        self._prototypes.cache_clear()
+        WaveformGenerator.modulation_order.fset(self, value)
 
     @lru_cache(maxsize=1, typed=True)
     def _prototypes(self) -> Tuple[np.array, float]:
@@ -592,7 +579,8 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
 
     def _clear_cache(self) -> None:
         """Clear cached properties because a parameter has changed."""
-        pass
+
+        self._prototypes.cache_clear()
 
 
 class ChirpFskSynchronization(Synchronization[WaveformGeneratorChirpFsk]):

@@ -7,11 +7,16 @@ from typing import Tuple
 
 import numpy as np
 import numpy.random as rnd
+from numpy.testing import assert_array_equal
 from scipy.constants import pi
 from math import floor
 
 from hermespy.channel import ChannelStateFormat, ChannelStateInformation
+<<<<<<< HEAD
+from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence
+=======
 from hermespy.modem.waveform_generator import Synchronization, WaveformGenerator
+>>>>>>> 24-ofdm-synchronization
 from hermespy.core.signal_model import Signal
 
 __author__ = "Jan Adler"
@@ -229,3 +234,15 @@ class TestWaveformGenerator(unittest.TestCase):
 
         self.assertIs(self.waveform_generator, modem.waveform_generator)
         self.assertIs(self.waveform_generator.modem, modem)
+
+
+class TestUniformPilotSymbolSequence(unittest.TestCase):
+    """Test the uniform pilot symbol sequence."""
+
+    def test_sequence(self) -> None:
+        """The generated sequence should be an array containing only the configured symbol."""
+
+        expected_symbol = 1.234 - 1234j
+        uniform_sequence = UniformPilotSymbolSequence(expected_symbol)
+
+        assert_array_equal(np.array([expected_symbol], dtype=complex), uniform_sequence.sequence)

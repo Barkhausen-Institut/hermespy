@@ -113,6 +113,7 @@ def rotation_matrix(orientation: np.ndarray) -> np.ndarray:
 
     return R
 
+
 def transform_vector(vector: np.ndarray,
                      position: np.ndarray,
                      orientation: np.ndarray) -> np.ndarray:
@@ -120,9 +121,18 @@ def transform_vector(vector: np.ndarray,
     R = rotation_matrix(orientation)
     return R @ vector + position
 
+
 def transform_coordinates(coordinates: np.ndarray,
                           position: np.ndarray,
                           orientation: np.ndarray) -> np.ndarray:
 
     R = rotation_matrix(orientation)
     return (R @ coordinates.T + position[:, np.newaxis]).T
+
+
+@jit(nopython=True)
+def rms_value(x: np.ndarray) -> float:
+    """Returns the root-mean-square value of a given input vector
+    """
+
+    return np.linalg.norm(x, 2) / np.sqrt(x.size)

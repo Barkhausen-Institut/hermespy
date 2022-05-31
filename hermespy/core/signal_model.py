@@ -7,6 +7,7 @@ Signal Modeling
 
 from __future__ import annotations
 from copy import deepcopy
+from ctypes import Union
 from math import ceil
 from typing import Optional, Type
 
@@ -363,7 +364,10 @@ class Signal:
 
     def plot(self,
              title: Optional[str] = None,
-             angle: bool = False) -> None:
+             angle: bool = False,
+             axes: Optional[np.ndarray] = None,
+             space: Union['time', 'frequency', 'both'] = 'both',
+             legend: bool = True) -> Optional[plt.figure]:
         """Plot the current signal in time- and frequency-domain.
 
         Args:
@@ -373,36 +377,73 @@ class Signal:
 
             angle (bool, optional):
                 Plot the angle of complex frequency bins.
+                
+            axes (Optional[np.ndarray], optional):
+                Axes to which the graphs should be plotted to.
+                If none are provided, the routine will create a new figure.
+                
+            space (Union['time', 'frequency', 'both'], optional):
+                Signal space to be plotted.
+                By default, both spaces are visualized.
+                
+        Returns:
+        
+            Optional[plt.figure]:
+                The created matplotlib figure.
+                `None`, if axes were provided.
         """
 
         title = "Signal Model" if title is None else title
-
+        figure: Optional[plt.figure] = None
+        axes = np.array([[axes]], dtype=object) if isinstance(axes, plt.Axes) else axes
+        
         with Executable.style_context():
 
-            fig, axes = plt.subplots(self.num_streams, 2, squeeze=False)
-            fig.suptitle(title)
+            # Create a new figure if no axes were provided
+            if axes is None:
+                
+                num_axes = 2 if space == 'both' else 1
+                
+                figure, axes = plt.subplots(self.num_streams, num_axes, squeeze=False)
+                figure.suptitle(title)
+                
 
+            # Generate timestamps for time-domain plotting
             timestamps = self.timestamps
+            
+            # Infer the axis indices to account for different plot 
+            time_axis_idx = 0
+            frequency_axis_idx = 1 if space == 'both' else 0
 
             for stream_idx, stream_samples in enumerate(self.__samples):
 
-                real = axes[stream_idx, 0].plot(timestamps, stream_samples.real, label='Real')
-                imag = axes[stream_idx, 0].plot(timestamps, stream_samples.imag, label='Imag')
-                axes[stream_idx, 0].set_xlabel('Time-Domain [s]')
-                axes[stream_idx, 0].legend(fancybox=True, shadow=True)
+                # Plot time space
+                if space in {'both', 'time'}:
+                    
+                    axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label='Real')
+                    axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label='Imag')
+                    axes[stream_idx, time_axis_idx].set_xlabel('Time-Domain [s]')
+                    
+                    if legend:
+                        axes[stream_idx, time_axis_idx].legend(loc="upper left", fancybox=True, shadow=True)
 
-                frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
-                bins = fftshift(fft(stream_samples))
+                # Plot frequency space
+                if space in {'both', 'frequency'}:
+                    
+                    frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
+                    bins = fftshift(fft(stream_samples))
 
-                axes[stream_idx, 1].plot(frequencies, np.abs(bins))
-                axes[stream_idx, 1].set_ylabel('Abs')
-                axes[stream_idx, 1].set_xlabel('Frequency-Domain [Hz]')
+                    axes[stream_idx, frequency_axis_idx].plot(frequencies, np.abs(bins))
+                    axes[stream_idx, frequency_axis_idx].set_ylabel('Abs')
+                    axes[stream_idx, frequency_axis_idx].set_xlabel('Frequency-Domain [Hz]')
 
-                if angle:
+                    if angle:
 
-                    phase = axes[stream_idx, 1].twinx()
-                    phase.plot(frequencies, np.angle(bins))
-                    phase.set_ylabel('Angle [Rad]')
+                        phase = axes[stream_idx, frequency_axis_idx].twinx()
+                        phase.plot(frequencies, np.angle(bins))
+                        phase.set_ylabel('Angle [Rad]')
+                    
+        return figure
 
     @staticmethod
     @jit(nopython=True)

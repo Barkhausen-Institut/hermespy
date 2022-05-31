@@ -44,9 +44,10 @@ class FMCWRadarSimulation(TestCase):
 
     def test_detection(self) -> None:
 
-        signal, = self.radar.transmit()
-        rx_signals, _, csi = self.channel.propagate(signal)
-        self.device.receive_signal(rx_signals[0], csi)
+        self.radar.transmit()
+        tx_signals = self.device.transmit()
+        rx_signals, _, csi = self.channel.propagate(tx_signals)
+        self.device.receive(rx_signals)
         cube, = self.radar.receive()
 
         expected_velocity_peak = 0

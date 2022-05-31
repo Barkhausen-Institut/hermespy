@@ -134,12 +134,12 @@ class RfChain(Serializable):
 
         Args:
             input_signal (np.ndarray):
-                Signal to be detoriated as a matrix in shape `#no_antennas x #no_samples`.
+                Signal to be deteriorated as a matrix in shape `#no_antennas x #no_samples`.
                 `#no_antennas` depends if on receiver or transmitter side.
 
         Returns:
             np.ndarray:
-                Detoriated signal with the same shape as `input_signal`.
+                Deteriorated signal with the same shape as `input_signal`.
         """
         x = input_signal
         eps_delta = self.__phase_offset
