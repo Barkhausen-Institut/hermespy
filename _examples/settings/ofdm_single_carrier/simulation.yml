@@ -49,7 +49,7 @@ Operators:
     Waveform: !<OFDM>
 
       # !<Symbol> modulation settings
-      modulation_order: 16          # Modulation order, in other words 2 bit per subcarrier and frame
+      modulation_order: 16          # Modulation order, in other words 4 bit per data resource element
       subcarrier_spacing: 15e3      # Spacing between the individual subcarrier center frequencies in Hz
       dc_suppression: False         # Ignore the DC component during the DFT
       num_subcarriers: 128          # Number of subcarriers per communiction frame
