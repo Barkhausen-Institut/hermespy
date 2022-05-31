@@ -6,13 +6,13 @@ Devices:
   # First device
   - &device_alpha !<SimulatedDevice>
 
-    carrier_frequency: 3.1e9
+    carrier_frequency: 3.5e9
     power: 10
 
   # Second device
   - &device_beta !<SimulatedDevice>
 
-    carrier_frequency: 3e9
+    carrier_frequency: 3.501e9
     power: 1
 
 # Operators transmitting or receiving signals over the devices
@@ -75,7 +75,7 @@ Operators:
         - repetitions: 1200
           cp_ratio: 0.0703125
           elements:
-            - type: REFERENCE
+            - type: DATA
               repetitions: 1
 
         - repetitions: 100

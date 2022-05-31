@@ -13,6 +13,12 @@ Devices:
       antenna: !<IdealAntenna>      # Assume ideal isotropic antennas
       spacing: 10e-2                # Elements spaced 10cm apart
       dimensions: [2, 1, 1]         # 2 elements within the array
+
+Channels:
+
+  - !<5GTDL_0_0>
+    type: E                         # Type of the TDL model. A-E are available
+    rms_delay: 1e-7                 # root mean square delay in seconds    
       
 # Operators transmitting or receiving signals over the devices
 Operators:
@@ -36,10 +42,13 @@ Operators:
     # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>
 
+      # Post-Processing settings
+      equalization: 
+
       # !<Symbol> modulation settings
-      modulation_order: 2           # Modulation order, in other words 2 bit per subcarrier and frame
+      modulation_order: 2           # Modulation order, in other words 1 / subcarrier / subsymbol
       subcarrier_spacing: 30e3      # Spacing between the individual subcarrier center frequencies in Hz
-      dc_suppression: False         # Ignore the DC component during the DFT
+      dc_suppression: False         # Do not ignore the DC component during the DFT
       num_subcarriers: 3300         # Number of subcarriers per communiction frame
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
