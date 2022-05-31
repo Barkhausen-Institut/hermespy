@@ -59,7 +59,7 @@ Operators:
       modulation_order: 16
       subcarrier_spacing: 15e3
       dc_suppression: False
-      num_subcarriers: 1200
+      num_subcarriers: 2048
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:

@@ -16,7 +16,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 from ..core.executable import Executable, Verbosity
 from ..core.device import Operator
-from ..channel import QuadrigaInterface, Channel, ChannelStateInformation
+from ..channel import QuadrigaInterface, Channel
 from ..core.factory import Serializable
 from ..core.monte_carlo import Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
 from ..core.scenario import Scenario

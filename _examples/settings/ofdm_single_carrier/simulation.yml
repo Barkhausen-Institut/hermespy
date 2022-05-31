@@ -44,10 +44,6 @@ Operators:
 
       - !<DFT>
       - !<SM>
-#      - !<ZF-Space>
-#      - !<ZF-Time>
-#      - !<MMSE-Space>
-#      - !<MMSE-Time>
 
     # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>
@@ -56,7 +52,7 @@ Operators:
       modulation_order: 16          # Modulation order, in other words 2 bit per subcarrier and frame
       subcarrier_spacing: 15e3      # Spacing between the individual subcarrier center frequencies in Hz
       dc_suppression: False         # Ignore the DC component during the DFT
-      num_subcarriers: 100          # Number of subcarriers per communiction frame
+      num_subcarriers: 128          # Number of subcarriers per communiction frame
       channel_estimation: IDEAL     # Ideal channel estimation routine
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration

@@ -840,7 +840,6 @@ class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
 
     def modulate(self, data_symbols: Symbols) -> Signal:
        
-        
         # Start the frame with a pilot section, if configured
         if self.pilot_section:
             output_signal = self.pilot_section.modulate()
