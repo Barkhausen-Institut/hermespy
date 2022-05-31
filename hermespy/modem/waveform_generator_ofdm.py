@@ -669,6 +669,7 @@ class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
         self.num_subcarriers = num_subcarriers
         self.dc_suppression = dc_suppression
         self.resources = [] if resources is None else resources
+        self.channel_equalization = OFDMChannelEqualization(self,)
         self.__pilot_section = None
 
         self.structure = []
@@ -1377,3 +1378,72 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
 
         return frames
     
+
+class OFDMChannelEqualization(ChannelEqualization[WaveformGeneratorOfdm], ABC):
+    """Channel estimation for OFDM waveforms."""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorOfdm] = None) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this equalization routine is attached to.
+        """
+
+        ChannelEqualization.__init__(self, waveform_generator)
+
+
+class OFDMZeroForcingChannelEqualization(Serializable, OFDMChannelEqualization, ABC):
+    """Zero-Forcing Channel estimation for Psk Qam waveforms."""
+    
+    yaml_tag = u'OFDM-ZF'
+    """YAML serialization tag"""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorOfdm] = None) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this equalization routine is attached to.
+        """
+
+        PskQamChannelEqualization.__init__(self, waveform_generator)
+
+    def equalize_channel(self,
+                         frame: np.ndarray,
+                         csi: ChannelStateInformation,
+                         snr: float = float('inf')) -> Signal:
+
+        
+        equalized_frame = frame / csi.state[0, 0, :, 0]
+        return equalized_frame
+
+
+class OFDMMinimumMeanSquareChannelEqualization(Serializable, OFDMChannelEqualization, ABC):
+    """Minimum-Mean-Square Channel estimation for Psk Qam waveforms."""
+    
+    yaml_tag = u'OFDM-MMSE'
+    """YAML serialization tag"""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorOfdm] = None) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this equalization routine is attached to.
+        """
+
+        PskQamChannelEqualization.__init__(self, waveform_generator)
+
+    def equalize_channel(self,
+                         signal: Signal,
+                         csi: ChannelStateInformation,
+                         snr: float = float('inf')) -> Signal:
+
+        signal = signal.copy()
+        signal.samples /= (csi.state[0, 0, :signal.num_samples, 0] + 1 / snr)
+        
+        return signal
