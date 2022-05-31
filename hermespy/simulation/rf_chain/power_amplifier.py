@@ -88,6 +88,8 @@ class PowerAmplifier(Serializable):
 
         self.saturation_amplitude = saturation_amplitude
         self.adjust_power = adjust_power
+        
+        Serializable.__init__(self)
 
     @property
     def saturation_amplitude(self) -> float:
@@ -166,7 +168,7 @@ class PowerAmplifier(Serializable):
                 In other words, the x-axis of the resulting characteristics plot.
                 
             axes (Optional[Tuple[plt.axes, plt.axes]], optional):
-                Axes to which to plot the charateristics.
+                Axes to which to plot the characteristics.
                 By default, a new figure is created.
         """
 
@@ -200,49 +202,6 @@ class PowerAmplifier(Serializable):
         
         if figure is not None:
             figure.tight_layout()
-        
-    @classmethod
-    def from_yaml(cls: Type[PowerAmplifier],
-                  constructor: SafeConstructor,
-                  node: Union[ScalarNode, MappingNode]) -> PowerAmplifier:
-        """Recall a new `PowerAmplifier` instance from YAML.
-
-        Args:
-            constructor (RoundTripConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Union[ScalarNode, MappingNode]):
-                YAML node representing the `PowerAmplifier` serialization.
-
-        Returns:
-            PowerAmplifier:
-                Newly created `PowerAmplifier` instance.
-            """
-
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        state = SafeConstructor.construct_mapping(constructor, node, deep=False)
-
-        # Compute saturation amplitude from different parameter combinations
-        saturation_amplitude = state.pop('saturation_amplitude', float('inf'))
-        tx_power = state.pop('tx_power', None)
-        power_backoff = state.pop('power_backoff', None)
-
-        if tx_power is not None or power_backoff is not None:
-
-            if saturation_amplitude is not None:
-                raise ConstructorError("Saturation_amplitude and (tx_power, power_backoff) are mutually exclusive "
-                                       "power amplifier model parameters")
-
-            if tx_power is None or power_backoff is None:
-                raise ConstructorError("Defining the saturation amplitude requires both tx_power and "
-                                       "power_backoff parameters")
-
-            saturation_amplitude = sqrt(tx_power * 10 ** (power_backoff / 10))
-
-        state['saturation_amplitude'] = saturation_amplitude
-        return cls.InitializationWrapper(state)
 
     @classmethod
     def to_yaml(cls: Type[PowerAmplifier], representer: SafeRepresenter, node: PowerAmplifier) -> MappingNode:

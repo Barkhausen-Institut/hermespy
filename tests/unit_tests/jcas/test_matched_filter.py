@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
+from scipy.constants import speed_of_light
 
 from hermespy.core import Signal, ChannelStateInformation
 from hermespy.modem import Symbols
@@ -27,7 +28,7 @@ class TestMatchedFilterJoint(TestCase):
         self.device.carrier_frequency = 0.
         self.waveform = Mock()
         self.waveform.frame_duration = 1e-5
-        self.waveform.sampling_rate = 5e5
+        self.waveform.sampling_rate = speed_of_light
         self.waveform.bits_per_frame = 0
         self.waveform.symbols_per_frame = 0
         self.waveform.samples_in_frame = 5
@@ -76,7 +77,7 @@ class TestMatchedFilterJoint(TestCase):
     def test_range_resolution_setget(self) -> None:
         """Range resolution property getter should return setter argument."""
         
-        range_resolution = 5.
+        range_resolution = 1e-3
         self.joint.range_resolution = range_resolution
         
         self.assertEqual(range_resolution, self.joint.range_resolution)

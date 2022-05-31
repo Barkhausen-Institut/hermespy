@@ -12,8 +12,9 @@ import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter, ScalarNode
 from scipy.constants import pi
 
-from hermespy.core import ChannelStateInformation, Device, FloatingError, RandomNode, Scenario, Serializable, Signal
+from hermespy.core import Device, FloatingError, RandomNode, Scenario, Serializable, Signal
 from hermespy.core.statistics import SNRType
+from .analog_digital_converter import AnalogDigitalConverter
 from .antenna import AntennaArrayBase, UniformArray, IdealAntenna
 from .noise import Noise, AWGN
 from .rf_chain.rf_chain import RfChain
@@ -50,6 +51,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
 
+    adc: AnalogDigitalConverter
+    """Model of receiver's ADC"""
+
     __noise: Noise                          # Model of the hardware noise
     __scenario: Optional[Scenario]          # Scenario this device is attached to
     __sampling_rate: Optional[float]        # Sampling rate at which this device operate
@@ -61,6 +65,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                  scenario: Optional[Scenario] = None,
                  antennas: Optional[AntennaArrayBase] = None,
                  rf_chain: Optional[RfChain] = None,
+                 adc: Optional[AnalogDigitalConverter] = None,
                  sampling_rate: Optional[float] = None,
                  carrier_frequency: float = 0.,
                  *args,
@@ -78,6 +83,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             rf_chain (RfChain, optional):
                 Model of the device's radio frequency amplification chain.
+
+            adc (AnalogDigitalConverter, optional):
+                Model of receiver's ADC converter.
 
             sampling_rate (float, optional):
                 Sampling rate at which this device operates.
@@ -100,7 +108,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         self.scenario = scenario
         self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
+        self.adc = AnalogDigitalConverter() if adc is None else adc
         self.noise = AWGN()
+        self.snr = float('inf')
         self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
@@ -270,9 +280,28 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Return result
         return transmissions
 
+    @property
+    def snr(self) -> float:
+        """Signal to noise ratio at the receiver side.
+        
+        Returns:
+
+            Linear ratio of signal to noise power.
+        """
+
+        return self.__snr 
+
+    @snr.setter
+    def snr(self, value: float) -> None:
+
+        if value <= 0:
+            raise ValueError("The linear signal to noise ratio must be greater than zero")
+
+        self.__snr = value
+
     def receive(self,
                 device_signals: Union[List[Signal], np.ndarray],
-                snr: float = float('inf'),
+                snr: Optional[float] = None,
                 snr_type: SNRType = SNRType.EBN0) -> Signal:
         """Receive signals at this device.
 
@@ -297,27 +326,31 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 Baseband signal sampled after hardware-modeling.
         """
 
+        # Default to the device's configured SNR if no snr argument was provided
+        snr = self.snr if snr is None else snr
+
         # Mix arriving signals
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
-        if isinstance(device_signals, List):
+        # Tranform list arguments to matrix arguments
+        if isinstance(device_signals, list):
+            
+            propagation_matrix = np.empty(1, dtype=object)
+            propagation_matrix[0] = (device_signals, None)
+            device_signals = propagation_matrix
 
-            for signal in device_signals:
+        # Superimpose transmit signals
+        for signals, _ in device_signals:
 
-                if signal is not None:
+            if signals is not None:
+                for signal in signals:
                     mixed_signal.superimpose(signal)
-
-        elif isinstance(device_signals, np.ndarray):
-
-            for signals, _ in device_signals:
-
-                if signals is not None:
-                    for signal in signals:
-                        mixed_signal.superimpose(signal)
 
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(mixed_signal)
+
+        baseband_signal = self.adc.convert(baseband_signal)
         
         # Cache received signal at receiver slots
         for receiver in self.receivers:
@@ -328,7 +361,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 reference_device = receiver.reference_transmitter.device
                 reference_device_idx = self.scenario.devices.index(reference_device)
 
-                reference_csi = device_signals[reference_device_idx][1]
+                reference_csi = device_signals[reference_device_idx][1] if isinstance(device_signals[reference_device_idx], (tuple, list, np.ndarray)) else None
 
                 if self.operator_separation:
 
@@ -349,23 +382,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             # Cache reception
             receiver.cache_reception(receiver_signal, reference_csi)
-
-        return baseband_signal
-
-    def receive_signal(self,
-                       signal: Signal,
-                       channel_state: Optional[ChannelStateInformation] = None,
-                       snr: float = float('inf')) -> Signal:
-
-        baseband_signal = self.rf_chain.receive(signal)
-
-        # Cache received signal at receiver slots
-        for receiver in self.receivers:
-
-            noise_power = receiver.energy / snr
-            self.__noise.add(baseband_signal, noise_power)
-
-            receiver.cache_reception(baseband_signal, channel_state)
 
         return baseband_signal
 
