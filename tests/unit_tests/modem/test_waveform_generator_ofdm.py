@@ -16,17 +16,13 @@ from scipy.fft import fft
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
-<<<<<<< HEAD
-from hermespy.modem.waveform_generator_ofdm import ChannelEstimation, FrameElement, ElementType, FrameSection
-=======
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, OFDMCorrelationSynchronization, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization
->>>>>>> 24-ofdm-synchronization
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, OFDMCorrelationSynchronization, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, ChannelEstimation
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.0"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -468,12 +464,12 @@ class TestPilotSection(TestCase):
         self.subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
         self.frame = WaveformGeneratorOfdm(oversampling_factor=4)
         
-        self.pilot_section = PilotSection(pilot_subsymbols=self.subsymbols, frame=self.frame)
+        self.pilot_section = PilotSection(pilot_elements=self.subsymbols, frame=self.frame)
         
     def test_init(self) -> None:
         """Initialization arguments should be properly stored as class attributes"""
         
-        self.assertIs(self.subsymbols, self.pilot_section.pilot_subsymbols)
+        self.assertIs(self.subsymbols, self.pilot_section.pilot_elements)
         self.assertIs(self.frame, self.pilot_section.frame)
         
     def test_num_samples(self) -> None:
@@ -484,26 +480,26 @@ class TestPilotSection(TestCase):
     def test_pilot_subsymbols_setget(self) -> None:
         """Pilot subsymbol getter should return setter argument"""
         
-        self.pilot_section.pilot_subsymbols = None
-        self.assertIs(None, self.pilot_section.pilot_subsymbols)
+        self.pilot_section.pilot_elements = None
+        self.assertIs(None, self.pilot_section.pilot_elements)
         
         expected_subsymbols = Symbols(np.array([-1., 1.]))
-        self.pilot_section.pilot_subsymbols = expected_subsymbols
-        self.assertIs(expected_subsymbols, self.pilot_section.pilot_subsymbols)
+        self.pilot_section.pilot_elements = expected_subsymbols
+        self.assertIs(expected_subsymbols, self.pilot_section.pilot_elements)
         
     def test_pilot_subsymbols_validation(self) -> None:
         """Pilot subsymbol setter should raise ValueErrors on invalid arguments"""
         
         with self.assertRaises(ValueError):
-            self.pilot_section.pilot_subsymbols = Symbols(np.array([[1], [1]]))
+            self.pilot_section.pilot_elements = Symbols(np.array([[1], [1]]))
             
         with self.assertRaises(ValueError):
-            self.pilot_section.pilot_subsymbols = Symbols()
+            self.pilot_section.pilot_elements = Symbols()
             
     def test_pseudorandom_pilot_sequence(self) -> None:
         """Unspecified subsymbols should result in the generation of constant valid pilot sequence"""
         
-        self.pilot_section.pilot_subsymbols = None
+        self.pilot_section.pilot_elements = None
         
         first_pilot_sequence = self.pilot_section._pilot_sequence(self.frame.num_subcarriers)
         second_pilot_sequence = self.pilot_section._pilot_sequence()
@@ -515,18 +511,18 @@ class TestPilotSection(TestCase):
     def test_configured_pilot_sequence(self) -> None:
         """Specified subsymbols should result in the generation of a valid pilot sequence"""
         
-        self.pilot_section.pilot_subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
+        self.pilot_section.pilot_elements = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
         pilot_sequence = self.pilot_section._pilot_sequence()
         
         self.assertEqual(1, pilot_sequence.num_streams)
         self.assertEqual(self.frame.num_subcarriers, pilot_sequence.num_symbols)
-        assert_array_equal(self.pilot_section.pilot_subsymbols.raw, pilot_sequence.raw[:, :4])
+        assert_array_equal(self.pilot_section.pilot_elements.raw, pilot_sequence.raw[:, :4])
         
     def test_modulate(self) -> None:
         """Modulation should return a valid pilot section"""
         
         expected_pilot_symbols = np.exp(2j * pi * self.rng.uniform(0, 1, self.frame.num_subcarriers))
-        self.pilot_section.pilot_subsymbols = Symbols(expected_pilot_symbols)
+        self.pilot_section.pilot_elements = Symbols(expected_pilot_symbols)
         
         pilot = self.pilot_section.modulate()
         pilot_symbols = fft(pilot, norm='ortho')[:self.frame.num_subcarriers]
@@ -546,7 +542,7 @@ class TestPilotSection(TestCase):
         """Pilot samples should be the inverse Fourier transform of subsymbols"""
         
         expected_pilot_symbols = np.exp(2j * pi * self.rng.uniform(0, 1, self.frame.num_subcarriers))
-        self.pilot_section.pilot_subsymbols = Symbols(expected_pilot_symbols)
+        self.pilot_section.pilot_elements = Symbols(expected_pilot_symbols)
         
         pilot = self.pilot_section._pilot()
         pilot_symbols = fft(pilot, norm='ortho')[:self.frame.num_subcarriers]

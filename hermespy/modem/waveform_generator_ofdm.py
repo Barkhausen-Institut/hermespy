@@ -22,7 +22,7 @@ from ..core.factory import Serializable
 from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from ..core.signal_model import Signal
 from .modem import Symbols
-from .waveform_generator import PilotWaveformGenerator, Synchronization
+from .waveform_generator import PilotWaveformGenerator, Synchronization, WaveformGenerator
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 
@@ -1174,19 +1174,19 @@ class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
 class PilotSection(FrameSection):
     """Pilot symbol section within an OFDM frame."""
     
-    __pilot_subsymbols: Optional[Symbols]
+    __pilot_elements: Optional[Symbols]
     __cached_num_subcarriers: int
     __cached_oversampling_factor: int
     __cached_pilot: Optional[np.ndarray]
 
     
     def __init__(self,
-                 pilot_subsymbols: Optional[Symbols] = None,
+                 pilot_elements: Optional[Symbols] = None,
                  frame: Optional[WaveformGeneratorOfdm] = None) -> None:
         """
         Args:
         
-            pilot_subsymbols (Optional[Symbols], optional):
+            pilot_elements (Optional[Symbols], optional):
                 Symbols with which the subcarriers within the pilot will be modulated.
                 By default, a pseudo-random sequence from the frame mapping will be generated.
 
@@ -1194,7 +1194,7 @@ class PilotSection(FrameSection):
                 The frame configuration this pilot section belongs to.
         """
         
-        self.__pilot_subsymbols = pilot_subsymbols
+        self.__pilot_elements = pilot_elements
         self.__cached_num_subcarriers = -1
         self.__cached_oversampling_factor = -1
         self.__cached_pilot = None
@@ -1207,7 +1207,7 @@ class PilotSection(FrameSection):
         return self.frame.num_subcarriers * self.frame.oversampling_factor
         
     @property
-    def pilot_subsymbols(self) -> Optional[Symbols]:
+    def pilot_elements(self) -> Optional[Symbols]:
         """Symbols with which the subcarriers within the pilot will be modulated.
         
         Returns:
@@ -1219,13 +1219,13 @@ class PilotSection(FrameSection):
             ValueError: If the configured symbols contains multiple streams.
         """
         
-        return self.__pilot_subsymbols
+        return self.__pilot_elements
     
-    @pilot_subsymbols.setter
-    def pilot_subsymbols(self, value: Optional[Symbols]) -> None:
+    @pilot_elements.setter
+    def pilot_elements(self, value: Optional[Symbols]) -> None:
         
         if value is None:
-            self.__pilot_subsymbols = None
+            self.__pilot_elements = None
             return
         
         if value.num_streams != 1:
@@ -1237,10 +1237,10 @@ class PilotSection(FrameSection):
         # Reset the cached pilot, since the subsymbols have changed
         self.__cached_pilot = None
         
-        self.__pilot_subsymbols = value
+        self.__pilot_elements = value
             
     def _pilot_sequence(self, num_symbols: int = None) -> Symbols:
-        """Generate a new sequence of pilot subsymbols.
+        """Generate a new sequence of pilot elements.
         
         Args:
         
@@ -1256,7 +1256,7 @@ class PilotSection(FrameSection):
         num_symbols = self.frame.num_subcarriers if num_symbols is None else num_symbols
         
         # Generate a pseudo-random symbol stream if no subsymbols are specified
-        if self.__pilot_subsymbols is None:
+        if self.__pilot_elements is None:
             
             rng = np.random.default_rng(42)
             num_bits = num_symbols * self.frame._mapping.bits_per_symbol
@@ -1264,8 +1264,8 @@ class PilotSection(FrameSection):
             
         else:
             
-            num_repetitions = int(ceil(num_symbols / self.__pilot_subsymbols.num_symbols))
-            subsymbols = np.tile(self.__pilot_subsymbols.raw, (1, num_repetitions))
+            num_repetitions = int(ceil(num_symbols / self.__pilot_elements.num_symbols))
+            subsymbols = np.tile(self.__pilot_elements.raw, (1, num_repetitions))
             
         return Symbols(subsymbols[:, :num_symbols])
     
