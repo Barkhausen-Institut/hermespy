@@ -240,7 +240,7 @@ class WaveformGeneratorPskQam(PilotWaveformGenerator, Serializable):
         WaveformGenerator.modulation_order.fset(self, value)
         
     @property
-    def pilot(self) -> Signal:
+    def pilot_signal(self) -> Signal:
         
         pilot = np.zeros(self.oversampling_factor * self.num_preamble_symbols, dtype=complex)
         pilot[::self.oversampling_factor] = 1.
