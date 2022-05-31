@@ -130,6 +130,7 @@ class PskQamMapping(object):
             symbols(numpy.ndarray):
                 Vector of N/log2(modulation_order) elements with modulated symbols.
         """
+        
         number_symbols = int(bits.size / self.bits_per_symbol)
         # bits in rows, symbols in columns
         bits = np.reshape(

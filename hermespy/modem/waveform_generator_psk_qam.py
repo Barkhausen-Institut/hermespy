@@ -258,7 +258,7 @@ class WaveformGeneratorPskQam(ConfigurablePilotWaveform, Serializable):
         WaveformGenerator.modulation_order.fset(self, value)
         
     @property
-    def pilot(self) -> Signal:
+    def pilot_signal(self) -> Signal:
         
         filter_delay = self.tx_filter.delay_in_samples
         pilot = np.zeros(filter_delay + self.oversampling_factor * self.num_preamble_symbols, dtype=complex)

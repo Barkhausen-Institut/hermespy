@@ -326,13 +326,21 @@ class TestPskQamCorrelationSynchronization(TestCase):
 
         for offset in [0, 1, 10, 15, 20]:
 
+<<<<<<< HEAD
             phased_samples = np.exp(2j * self.rng.uniform(0, pi)) * signal.samples[0, :]
             samples = np.append(np.zeros(offset, dtype=complex), phased_samples)
+=======
+            samples = np.append(np.zeros((1, offset), dtype=complex), signal.samples)
+>>>>>>> 24-ofdm-synchronization
 
             frames = self.synchronization.synchronize(samples, ChannelStateInformation.Ideal(signal.num_samples))
 
             self.assertEqual(len(frames), 1)
+<<<<<<< HEAD
             assert_array_equal(frames[0][0], phased_samples)
+=======
+            assert_array_equal(frames[0][0], signal.samples)
+>>>>>>> 24-ofdm-synchronization
 
     def test_phase_shift_synchronization(self) -> None:
         """Test synchronization with arbitrary sample offset and phase shift."""
@@ -340,8 +348,8 @@ class TestPskQamCorrelationSynchronization(TestCase):
         bits = self.rng.integers(0, 2, self.waveform.bits_per_frame)
         symbols = self.waveform.map(bits)
 
-        samples = self.waveform.modulate(symbols).samples[0, :] * np.exp(0.24567j * pi)
-        padded_samples = np.append(np.zeros(15, dtype=complex), samples)
+        samples = self.waveform.modulate(symbols).samples * np.exp(0.24567j * pi)
+        padded_samples = np.append(np.zeros((1, 15), dtype=complex), samples)
 
         frames = self.synchronization.synchronize(padded_samples, ChannelStateInformation.Ideal(len(padded_samples)))
 

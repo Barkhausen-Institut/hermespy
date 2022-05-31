@@ -433,7 +433,7 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         samples_in_chirp = self.samples_in_chirp
 
         # Add pilot samples
-        pilot_samples = self.pilot.samples.flatten()
+        pilot_samples = self.pilot_signal.samples.flatten()
         num_pilot_samples = len(pilot_samples)
         samples[:num_pilot_samples] = pilot_samples
         sample_idx += num_pilot_samples
@@ -559,7 +559,7 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         return self.oversampling_factor * self.__chirp_bandwidth
 
     @property
-    def pilot(self) -> Signal:
+    def pilot_signal(self) -> Signal:
         """Samples of the frame's pilot section.
 
         Returns:
