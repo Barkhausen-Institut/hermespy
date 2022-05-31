@@ -34,21 +34,24 @@ Operators:
     # Waveform configuration
     Waveform: !<PskQam>
 
-        # Symbol settings
-        symbol_rate: 100e6
-        modulation_order: 16
-        oversampling_factor: 4
+      # Symbol settings
+      symbol_rate: 100e6
+      modulation_order: 16
+      oversampling_factor: 4
 
-        # Filter settings
-        filter:
-          filter_type: FMCW
+      # Filter settings
+      filter:
+        filter_type: FMCW
 
-        # Frame settings
-        chirp_bandwidth: 100e6
-        num_preamble_symbols: 10
-        num_data_symbols: 1000
-        pilot_rate: 1e6
-        guard_interval: 1e-6
+      # Frame settings
+      chirp_bandwidth: 100e6
+      num_preamble_symbols: 10
+      num_data_symbols: 1000
+      pilot_rate: 1e6
+      guard_interval: 1e-6
+
+      # Post-Processing
+      channel_equalization: !<PskQamMMSE>
 
 # Performance indication evaluation configuration
 Evaluators:

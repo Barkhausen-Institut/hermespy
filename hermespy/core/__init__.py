@@ -1,4 +1,4 @@
-from .channel_state_information import ChannelStateInformation
+from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, \
     Transmitter, Receiver, Device, FloatingError
 from .executable import Executable, Verbosity
@@ -19,7 +19,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['ChannelStateInformation', 'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot',
+__all__ = ['ChannelStateFormat', 'ChannelStateInformation',
+           'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot',
            'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError',
            'MonteCarlo', 'Evaluator', 'Executable', 'Verbosity', 'Factory',
            'Serializable', 'RandomNode', 'DuplexOperator', 'Scenario', 'Signal']
