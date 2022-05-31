@@ -32,6 +32,13 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     """Representation of a device simulating hardware.
 
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
+    
+    
+    .. warning::
+    
+       When configuring simulated devices within simulation scenarios,
+       channel models may ignore spatial properties such as :func:`.position`, :func:`.orientation` or :func:`.velocity`.  
+       
     """
 
     yaml_tag = u'SimulatedDevice'
