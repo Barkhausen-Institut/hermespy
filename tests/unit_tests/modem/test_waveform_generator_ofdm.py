@@ -195,6 +195,7 @@ class TestFrameSymbolSection(TestCase):
 
         self.frame = Mock()
         self.frame.num_subcarriers = 20
+        self.frame.dc_suppression = False
         self.frame.oversampling_factor = 4
         self.frame.resources = [self.resource_a, self.resource_b]
         self.num_repetitions = 2
@@ -229,14 +230,29 @@ class TestFrameSymbolSection(TestCase):
 
         self.assertEqual(18, self.section.num_subcarriers)
 
-    def test_modulate_demodulate(self) -> None:
+    def test_modulate_demodulate_no_dc_suppression(self) -> None:
         """Modulating and subsequently de-modulating an OFDM symbol section should yield correct symbols."""
 
         expected_symbols = np.exp(2j * self.rnd.uniform(0, pi, self.section.num_symbols))
 
         modulated_signal = self.section.modulate(expected_symbols)
         channel_state = ChannelStateInformation.Ideal(num_samples=modulated_signal.shape[0])
-        ofdm_grid, channel_state_grid = self.section.demodulate(modulated_signal, channel_state)
+        ofdm_grid, _ = self.section.demodulate(modulated_signal, channel_state)
+
+        symbols = ofdm_grid.T[self.section.resource_mask[ElementType.DATA.value].T]
+        assert_array_almost_equal(expected_symbols, symbols)
+        
+    def test_modulate_demodulate_dc_suppression(self) -> None:
+        """Modulating and subsequently de-modulating an OFDM symbol section should yield correct symbols."""
+
+        self.frame.dc_suppression = True
+        expected_symbols = np.exp(2j * self.rnd.uniform(0, pi, self.section.num_symbols))
+
+        modulated_signal = self.section.modulate(expected_symbols)
+        self.assertAlmostEqual(0., abs(np.mean(modulated_signal)), places=2)
+        
+        channel_state = ChannelStateInformation.Ideal(num_samples=modulated_signal.shape[0])
+        ofdm_grid, _ = self.section.demodulate(modulated_signal, channel_state)
 
         symbols = ofdm_grid.T[self.section.resource_mask[ElementType.DATA.value].T]
         assert_array_almost_equal(expected_symbols, symbols)
