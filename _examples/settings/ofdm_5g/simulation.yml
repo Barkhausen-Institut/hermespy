@@ -18,7 +18,7 @@ Channels:
 
   - !<5GTDL_0_0>
     type: E                         # Type of the TDL model. A-E are available
-    rms_delay: 1e-7                 # root mean square delay in seconds    
+    rms_delay: 0. #1e-7                 # root mean square delay in seconds    
       
 # Operators transmitting or receiving signals over the devices
 Operators:
@@ -42,14 +42,14 @@ Operators:
     # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>
 
-      # Post-Processing settings
-      equalization: 
+      # Post-processing
+      channel_estimation: IDEAL
 
-      # !<Symbol> modulation settings
+      # Symbol modulation settings
       modulation_order: 2           # Modulation order, in other words 1 / subcarrier / subsymbol
       subcarrier_spacing: 30e3      # Spacing between the individual subcarrier center frequencies in Hz
       dc_suppression: False         # Do not ignore the DC component during the DFT
-      num_subcarriers: 3300         # Number of subcarriers per communiction frame
+      num_subcarriers: 4096         # Number of subcarriers per communiction frame
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
@@ -112,7 +112,7 @@ num_samples: 20                    # Number of samples per simulation grid secti
 min_num_samples: 5                 # Minimum number of samples per simulation grid section before premature stopping
 snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
-
+num_actors: 12                     # This simulation is quite memory demanding. It might be necessary to limit the number of actors.
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
