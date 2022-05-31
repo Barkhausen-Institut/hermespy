@@ -696,7 +696,7 @@ class PskQamSynchronization(Synchronization[WaveformGeneratorPskQam]):
         Synchronization.__init__(self, waveform_generator)
 
 
-class PskQamCorrelationSynchronization(Serializable, CorrelationSynchronization[WaveformGeneratorPskQam]):
+class PskQamCorrelationSynchronization(CorrelationSynchronization[WaveformGeneratorPskQam]):
     """Correlation-based clock-synchronization for PSK-QAM waveforms."""
     
     yaml_tag = u'PskQamCorrelationSynchronization'
