@@ -396,7 +396,7 @@ class Receiver(RandomNode, MixingOperator['ReceiverSlot']):
         self.__reference_transmitter = value
 
     @abstractmethod
-    def receive(self) -> Tuple[Signal, Any, ...]:
+    def receive(self) -> Tuple[Signal, ...]:
         """Receive a signal.
 
         Pulls the required signal model and channel state information from the underlying device.
