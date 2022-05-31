@@ -18,21 +18,11 @@ Channels:
     target_range: 1         # The target is located within a distance of 1m of the base station
     radar_cross_section: 5  # The target has a cross section of 5m2
 
-<<<<<<< HEAD
   # 5G TDL communication channel model
   - !<5GTDL_0_1>
-    type: A             # Type of the TDL model. A-E are available
+    type: A                 # Type of the TDL model. A-E are available
 
   # No self-interference at the terminal
-=======
-
-  # 5G TDL communication channel model
-  #- !<5GTDL_0_1>
-  #  type: A             # Type of the TDL model. A-E are available
-  #  rms_delay: 1e-7     # Root mean square delay in seconds
-
-  # No self-intereference at the terminal
->>>>>>> e280c96bbd2409b9edba884052732126f372ec9b
   - !<Channel_1_1>
     gain: 0.
 
@@ -67,11 +57,7 @@ Operators:
   # The terminal is operated by a communication modem
   - &terminal_operator !<Modem>
 
-<<<<<<< HEAD
     device: *terminal # Operator controls the terminal device
-=======
-    device: *terminal # Operater controls the terminal device
->>>>>>> e280c96bbd2409b9edba884052732126f372ec9b
 
     # Waveform configuration
     waveform_generator: !<PskQam>
@@ -86,16 +72,10 @@ Operators:
 
       # Filter settings
       filter:
-<<<<<<< HEAD
         filter_type: FMCW
 
       # Frame settings
       chirp_bandwidth: 100e6
-=======
-        filter_type: ROOT_RAISED_COSINE
-
-      # Frame settings
->>>>>>> e280c96bbd2409b9edba884052732126f372ec9b
       num_preamble_symbols: 16
       num_data_symbols: 100
       pilot_rate: 1e6

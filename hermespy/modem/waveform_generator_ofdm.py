@@ -399,6 +399,10 @@ class FrameSymbolSection(FrameSection, Serializable):
 
         # NULL fields are just that... zero
         grid[mask[ElementType.NULL.value]] = 0j
+        
+        # Append a row of zeros to account for the DC suppression
+        if self.frame.dc_suppression:
+            grid = np.append(np.zeros((1, self.num_words), dtype=complex), grid, axis=0)
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
         num_slot_samples = self.frame.num_subcarriers * self.frame.oversampling_factor
@@ -451,7 +455,9 @@ class FrameSymbolSection(FrameSection, Serializable):
             .to_frequency_selectivity(num_bins=self.frame.num_subcarriers)
 
         # Transform grid back to data symbols
-        ofdm_grid = fft(slot_samples, n=samples_per_slot, axis=0, norm='ortho')[:self.frame.num_subcarriers, :]
+        transform = fft(slot_samples, n=samples_per_slot, axis=0, norm='ortho')
+        ofdm_grid = transform[1:1+self.frame.num_subcarriers, :] if self.frame.dc_suppression else transform[:self.frame.num_subcarriers, :]
+        
         return ofdm_grid, slot_channel_state
 
     @property
@@ -1410,7 +1416,7 @@ class OFDMZeroForcingChannelEqualization(Serializable, OFDMChannelEqualization, 
                 The waveform generator this equalization routine is attached to.
         """
 
-        PskQamChannelEqualization.__init__(self, waveform_generator)
+        OFDMChannelEqualization.__init__(self, waveform_generator)
 
     def equalize_channel(self,
                          frame: np.ndarray,
@@ -1437,7 +1443,7 @@ class OFDMMinimumMeanSquareChannelEqualization(Serializable, OFDMChannelEqualiza
                 The waveform generator this equalization routine is attached to.
         """
 
-        PskQamChannelEqualization.__init__(self, waveform_generator)
+        OFDMChannelEqualization.__init__(self, waveform_generator)
 
     def equalize_channel(self,
                          signal: Signal,
