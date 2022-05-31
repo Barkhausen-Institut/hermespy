@@ -13,3 +13,4 @@ docssource/images/getting_started_errors_low_noise.png filter=lfs diff=lfs merge
 _examples/resources/leena.png filter=lfs diff=lfs merge=lfs -text
 _examples/resources/leena.raw filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
+*.svg filter=lfs diff=lfs merge=lfs -text
