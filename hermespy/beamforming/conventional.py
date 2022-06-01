@@ -48,7 +48,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     def num_receive_input_streams(self) -> int:
         
         # The conventional beamformer will allways consider all antennas streams
-        return self.operator.device.num_antennas
+        return self.operator.device.antennas.num_antennas
     
     @property
     def num_receive_output_streams(self) -> int:
@@ -67,7 +67,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     def num_transmit_output_streams(self) -> int:
         
         # The conventional beamformer will allways consider all antennas streams
-        return self.operator.device.num_antennas
+        return self.operator.device.antennas.num_antennas
     
     @property
     def num_transmit_input_streams(self) -> int:
@@ -98,11 +98,11 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
             with the first dimension being the number of angles and the second dimension the number of antennas.
         """
     
-        book = np.empty((angles.shape[0], self.operator.device.num_antennas), dtype=complex)
+        book = np.empty((angles.shape[0], self.operator.device.antennas.num_antennas), dtype=complex)
         for n, (azimuth, zenith) in enumerate(angles):
             book[n, :] = self.operator.device.antennas.spherical_response(carrier_frequency, azimuth, zenith).conj()
 
-        return book
+        return book / self.operator.device.antennas.num_antennas
 
     def _encode(self,
                 samples: np.ndarray,
@@ -121,10 +121,10 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
         return samples
     
     @staticmethod
-    @jit(nopython=True, parallel=True)
-    def _beamform(codebook: np.ndarray,
+    @jit(nopython=True)
+    def _beamform(codebook: np.ndarray, 
                   samples: np.ndarray,
-                  conjugate: bool = False) -> np.ndarray:
+                  conjugate: bool = False) -> np.ndarray: # pragma: no cover
     
         if conjugate:
             return codebook.conj() @ samples
