@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from io import StringIO
 from unittest import TestCase
-from unittest.mock import Mock, patch, PropertyMock
+from unittest.mock import patch, PropertyMock
 from tempfile import TemporaryDirectory
 from typing import Any, List, Optional
 from warnings import catch_warnings, simplefilter
