@@ -24,9 +24,13 @@ Modulation and Coding
     * Generic PSK/QAM/PAM modem with square pulses, (root)-raised-cosine filters or FMCW
     * Chirp FSK (a.k.a. chirp spread spectrum)
     * OFDM frame with arbitrary allocation of data and reference symbols in each resource element
-* multiple antennas and precoding
+
+* multiple antennas
     * Transmit diversity (Alamouti) with 2 or 4 tx antennas
     * Open-loop spatial multiplexing with linear receivers
+    * **beamforming**
+
+* precoding
     * DFT-spread for OFDM
     * Extended GFDM framework :footcite:p:`2018:nimr`
 
@@ -36,7 +40,10 @@ Modulation and Coding
     * Linear equalizers for non-orthogonal FMCW pulses in AWGN
     * Channel estimation for OFDM
     * Receiver diversity (SC or MRC)
+    * **Synchronization**
+    * **Matched-filter radar receiver**
     * **Radar detection for FMCW**
+    * **Threshold-based radar detector**
 
 Channel and Interference Model
 ------------------------------
@@ -48,7 +55,9 @@ Channel and Interference Model
 * Interface to `Quadriga <https://quadriga-channel-model.de/>`_ channel model (requires Matlab or Octave)
 * Interference among different modems, with arbitrary transmit powers for different transmitters
 * Support for transmitters using different carrier frequencies and bandwidths
-* **Single-target** radar channel model
+* Single-target radar channel model
+* **3GPP Clustered Delay Line Models**
+
 
 RF Chain
 --------
@@ -61,6 +70,7 @@ RF Chain
 
 * Random time offset
 * I/Q imbalance
+* **Quantization**
 
 Simulation
 ----------
@@ -88,6 +98,7 @@ Statistics
 * Power spectral density and time-frequency analysis
 * Time-domain waveform plots
 * Constellation plots
+* **Radar cube (range/Doppler/angle)**
 
 Known Limitations
 =================
@@ -100,19 +111,5 @@ Release Plan
 ============
 
 Full releases with a new set of features will be provided on a half-yearly basis, with software patches in between.
-For the next release in April 2022, the current plan is
-
-* **Modulation and coding**
-
-   * Radar Detection for FMCW and OFDM
-   * Beam-Forming
-
-* **Channel and interference model**
-
-   * 3GPP Clustered Delay Line Models
-
-* **RF chain**
-
-   * Phase Noise
 
 .. footbibliography::
