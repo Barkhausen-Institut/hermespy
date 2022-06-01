@@ -9,10 +9,10 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-from .beamformer import BeamformerBase, TransmitBeamformer, ReceiveBeamformer
+from .beamformer import BeamformerBase, FocusMode, TransmitBeamformer, ReceiveBeamformer
 from .conventional import ConventionalBeamformer
 
 __all__ = [
-    'BeamformerBase', 'TransmitBeamformer', 'ReceiveBeamformer',
+    'BeamformerBase', 'FocusMode', 'TransmitBeamformer', 'ReceiveBeamformer',
     'ConventionalBeamformer',
 ]

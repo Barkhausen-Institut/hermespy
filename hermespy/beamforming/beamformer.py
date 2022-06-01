@@ -9,7 +9,7 @@ This feature is currently highly experimental.
 
 from abc import ABC, abstractmethod, abstractproperty
 from enum import Enum
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy as np
 
@@ -23,14 +23,6 @@ __version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class BeamMode(Enum):
-    """Beamformer Mode."""
-
-    TX = 0
-    RX = 1
-    BOTH = 2
     
 
 class FocusMode(Enum):
@@ -111,7 +103,7 @@ class TransmitBeamformer(BeamformerBase, ABC):
         
             Number of input streams.
         """
-        ...
+        ...  # pragma no cover
         
     @abstractproperty
     def num_transmit_output_streams(self) -> int:
@@ -121,7 +113,7 @@ class TransmitBeamformer(BeamformerBase, ABC):
         
             Number of output streams.
         """
-        ...
+        ...  # pragma no cover
         
     @abstractproperty
     def num_transmit_focus_angles(self) -> int:
@@ -131,7 +123,7 @@ class TransmitBeamformer(BeamformerBase, ABC):
         
             Number of focus angles.
         """
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def _encode(self,
@@ -159,29 +151,34 @@ class TransmitBeamformer(BeamformerBase, ABC):
             zenith (float):
                 Zenith angle of departure in Radians.
         """
-        ...
+        ...  # pragma no cover
         
     @property
-    def transmit_focus(self) -> np.ndarray:
+    def transmit_focus(self) -> Tuple[np.ndarray, FocusMode]:
         """Focus points of the beamformer during transmission.
         
         Returns:
     
-            Numpy array of focus points elevation and azimuth angles.
+            - Numpy array of focus points elevation and azimuth angles
+            - Focus mode
         """
         
-        return self.__focus_points
+        return self.__focus_points, self.__focus_mode
     
-    @property
-    def transmit_focus_mode(self) -> FocusMode:
-        """Focus mode of the beamformer during transmission.
+    @transmit_focus.setter
+    def transmit_focus(self, value: Union[np.ndarray, Tuple[np.ndarray, FocusMode]]) -> None:
         
-        Returns:
+        if not isinstance(value, tuple):
+            value = (value, self.__focus_mode)
+            
+        if value[0].ndim != 2:
+            raise ValueError("Focus must be a two-dimensional array")
         
-            The focus mode.
-        """
-        
-        return self.__focus_mode
+        if value[0].shape[0] != self.num_transmit_focus_angles:
+            raise ValueError(f"Focus requires {self.num_transmit_focus_angles} points, but {value[0].shape[0]} were provided")
+            
+        self.__focus_points = value[0]
+        self.__focus_mode = value[1]
         
     def transmit(self, signal: Signal, focus: Optional[np.ndarray] = None) -> Signal:
         """Focus a signal model towards a certain target.
@@ -210,11 +207,10 @@ class TransmitBeamformer(BeamformerBase, ABC):
 
         carrier_frequency = signal.carrier_frequency
         samples = signal.samples.copy()
-        focus = self.transmit_focus if focus is None else focus
+        focus = self.transmit_focus[0] if focus is None else focus
     
         steered_samples = self._encode(samples, carrier_frequency, focus)
         return Signal(steered_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency)
-        
         
     
 class ReceiveBeamformer(ABC):
@@ -245,7 +241,7 @@ class ReceiveBeamformer(ABC):
         
             Number of input streams.
         """
-        ...
+        ...  # pragma no cover
         
     @abstractproperty
     def num_receive_output_streams(self) -> int:
@@ -255,7 +251,7 @@ class ReceiveBeamformer(ABC):
         
             Number of output streams.
         """
-        ...
+        ...  # pragma no cover
         
         
     @abstractproperty
@@ -266,7 +262,7 @@ class ReceiveBeamformer(ABC):
         
             Number of focus angles.
         """
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def _decode(self,
@@ -294,40 +290,34 @@ class ReceiveBeamformer(ABC):
             A three-dimensional numpy array with the first dimension representing the number of focus points,
             the second dimension the number of returned streams and the third dimension the amount of samples.
         """
-        ...
+        ...  # pragma no cover
         
     @property
-    def receive_focus(self) -> np.ndarray:
+    def receive_focus(self) -> Tuple[np.ndarray, FocusMode]:
         """Focus points of the beamformer during reception.
         
         Returns:
     
-            Numpy array of focus points elevation and azimuth angles.
+            - Numpy array of focus points elevation and azimuth angles
+            - Focus mode
         """
         
-        return self.__focus_points
+        return self.__focus_points, self.__focus_mode
     
     @receive_focus.setter
-    def receive_focus(self, value: np.ndarray) -> None:
+    def receive_focus(self, value: Union[np.ndarray, Tuple[np.ndarray, FocusMode]]) -> None:
         
-        if value.ndim != 2:
-            raise ValueError("Receive focus must be a two-dimensional array")
+        if not isinstance(value, tuple):
+            value = (value, self.__focus_mode)
+            
+        if value[0].ndim != 2:
+            raise ValueError("Focus must be a two-dimensional array")
         
-        #if value.shape[0] != self.num_receive_focus_angles:
-        #    raise ValueError(f"Receive focus must contain {self.num_receive_focus_angles} angle pairs")
-        
-        self.__focus_points = value
-    
-    @property
-    def receive_focus_mode(self) -> FocusMode:
-        """Focus mode of the beamformer during reception.
-        
-        Returns:
-        
-            The focus mode.
-        """
-        
-        return self.__focus_mode
+        if value[0].shape[0] != self.num_receive_focus_angles:
+            raise ValueError(f"Focus requires {self.num_receive_focus_angles} points, but {value[0].shape[0]} were provided")
+            
+        self.__focus_points = value[0]
+        self.__focus_mode = value[1]
     
     def receive(self,
                 signal: Signal,
@@ -362,8 +352,12 @@ class ReceiveBeamformer(ABC):
         if self.operator.device is None:
             raise FloatingError("Unable to steer a signal over a floating operator")
 
+        if signal.num_streams != self.num_receive_input_streams:
+            raise RuntimeError(f"The provided signal contains {signal.num_streams}, but the beamformer requires {self.num_receive_input_streams} streams")
+
         carrier_frequency = signal.carrier_frequency
         samples = signal.samples.copy()
-        focus_angles = self.receive_focus if focus_points is None else focus_points
+        focus_angles = self.receive_focus[0] if focus_points is None else focus_points
     
-        return self._decode(samples, carrier_frequency, focus_angles)
+        beamformed_samples = self._decode(samples, carrier_frequency, focus_angles)
+        return Signal(beamformed_samples, signal.sampling_rate)
