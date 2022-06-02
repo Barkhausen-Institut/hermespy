@@ -114,45 +114,45 @@
 <p>This module provides functionalities to transmit information in form of bits over a wireless link.</p>
 <div class="mermaid">
             classDiagram
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorOfdm
-  Serializable &lt;|-- StreamBitsSource
-  PskQamChannelEstimation &lt;|-- PskQamLeastSquaresChannelEstimation
-  PilotSymbolSequence &lt;|-- CustomPilotSymbolSequence
-  Serializable &lt;|-- Synchronization
-  PskQamChannelEqualization &lt;|-- PskQamZeroForcingChannelEqualization
-  PilotSymbolSequence &lt;|-- UniformPilotSymbolSequence
-  Serializable &lt;|-- FrameErrorEvaluator
   CorrelationSynchronization &lt;|-- PskQamCorrelationSynchronization
-  FrameSection &lt;|-- FrameSymbolSection
-  PilotWaveformGenerator &lt;|-- ConfigurablePilotWaveform
-  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
-  Serializable &lt;|-- FrameSymbolSection
-  Serializable &lt;|-- RandomBitsSource
   PskQamChannelEqualization &lt;|-- PskQamMinimumMeanSquareChannelEqualization
+  Serializable &lt;|-- StreamBitsSource
   CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
   Serializable &lt;|-- BlockErrorEvaluator
-  ConfigurablePilotWaveform &lt;|-- WaveformGeneratorPskQam
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
-  DuplexOperator &lt;|-- Modem
-  RandomNode &lt;|-- Modem
-  WaveformGenerator &lt;|-- PilotWaveformGenerator
-  Serializable &lt;|-- BitErrorEvaluator
   Serializable &lt;|-- WaveformGeneratorChirpFsk
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  FrameSection &lt;|-- FrameGuardSection
-  SerializableArray &lt;|-- Modem
-  Serializable &lt;|-- PskQamLeastSquaresChannelEstimation
-  BitsSource &lt;|-- StreamBitsSource
+  RandomNode &lt;|-- Modem
+  PilotSymbolSequence &lt;|-- CustomPilotSymbolSequence
   Serializable &lt;|-- WaveformGeneratorOfdm
-  Serializable &lt;|-- FrameGuardSection
-  Serializable &lt;|-- PskQamZeroForcingChannelEqualization
-  Serializable &lt;|-- WaveformGeneratorPskQam
-  Synchronization &lt;|-- ChirpFskSynchronization
-  CommunicationEvaluator &lt;|-- BitErrorEvaluator
-  Serializable &lt;|-- PskQamMinimumMeanSquareChannelEqualization
-  BitsSource &lt;|-- RandomBitsSource
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  DuplexOperator &lt;|-- Modem
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  FrameSection &lt;|-- FrameGuardSection
+  Serializable &lt;|-- FrameErrorEvaluator
   Serializable &lt;|-- ThroughputEvaluator
+  FrameSection &lt;|-- FrameSymbolSection
+  Serializable &lt;|-- FrameSymbolSection
+  Serializable &lt;|-- PskQamLeastSquaresChannelEstimation
+  Serializable &lt;|-- WaveformGeneratorPskQam
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  BitsSource &lt;|-- RandomBitsSource
+  Serializable &lt;|-- PskQamZeroForcingChannelEqualization
+  PilotSymbolSequence &lt;|-- UniformPilotSymbolSequence
+  Serializable &lt;|-- BitErrorEvaluator
+  PskQamChannelEstimation &lt;|-- PskQamLeastSquaresChannelEstimation
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
+  Synchronization &lt;|-- ChirpFskSynchronization
+  PskQamChannelEqualization &lt;|-- PskQamZeroForcingChannelEqualization
+  WaveformGenerator &lt;|-- PilotWaveformGenerator
+  SerializableArray &lt;|-- Modem
+  BitsSource &lt;|-- StreamBitsSource
+  Serializable &lt;|-- RandomBitsSource
+  Serializable &lt;|-- Synchronization
+  ConfigurablePilotWaveform &lt;|-- WaveformGeneratorPskQam
+  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorOfdm
+  Serializable &lt;|-- FrameGuardSection
+  Serializable &lt;|-- PskQamMinimumMeanSquareChannelEqualization
+  PilotWaveformGenerator &lt;|-- ConfigurablePilotWaveform
         </div><p>It consists of the base configuration classes for communication modems</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -185,7 +185,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fb12fd88b80>
+<jinja2.runtime.BlockReference object at 0x7fd9074f3730>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

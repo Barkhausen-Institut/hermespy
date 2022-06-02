@@ -111,23 +111,23 @@
 including noise and hardware modeling.</p>
 <div class="mermaid">
             classDiagram
-  Serializable &lt;|-- SimulatedDevice
-  PowerAmplifier &lt;|-- ClippingPowerAmplifier
-  Serializable &lt;|-- Gain
-  PowerAmplifier &lt;|-- RappPowerAmplifier
-  MonteCarlo &lt;|-- Simulation
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
   Device &lt;|-- SimulatedDevice
-  Serializable &lt;|-- Simulation
-  RandomNode &lt;|-- SimulatedDevice
-  Gain &lt;|-- AutomaticGainControl
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
   RandomNode &lt;|-- Noise
+  PowerAmplifier &lt;|-- RappPowerAmplifier
+  Executable &lt;|-- Simulation
   Serializable &lt;|-- AnalogDigitalConverter
   Scenario &lt;|-- SimulationScenario
-  Executable &lt;|-- Simulation
-  Serializable &lt;|-- PowerAmplifier
-  Serializable &lt;|-- RfChain
+  Gain &lt;|-- AutomaticGainControl
+  Serializable &lt;|-- Simulation
+  Serializable &lt;|-- Gain
   PowerAmplifier &lt;|-- CustomPowerAmplifier
+  MonteCarlo &lt;|-- Simulation
+  RandomNode &lt;|-- SimulatedDevice
+  Serializable &lt;|-- RfChain
+  Serializable &lt;|-- PowerAmplifier
+  PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  Serializable &lt;|-- SimulatedDevice
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -150,7 +150,7 @@ including noise and hardware modeling.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fb12f77ddc0>
+<jinja2.runtime.BlockReference object at 0x7fd906b031f0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

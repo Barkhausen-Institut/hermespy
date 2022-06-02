@@ -114,23 +114,23 @@
 <p>The core module of HermesPy provides all basic functionalities of the simulator.</p>
 <div class="mermaid">
             classDiagram
-  Serializable &lt;|-- UniformArray
-  Antenna &lt;|-- PatchAntenna
-  OperatorSlot &lt;|-- ReceiverSlot
-  Serializable &lt;|-- Antenna
-  Operator &lt;|-- MixingOperator
-  RandomNode &lt;|-- Scenario
-  MixingOperator &lt;|-- Transmitter
-  OperatorSlot &lt;|-- TransmitterSlot
-  RandomNode &lt;|-- Receiver
-  Serializable &lt;|-- AntennaArray
-  Antenna &lt;|-- Dipole
   Serializable &lt;|-- Executable
-  AntennaArrayBase &lt;|-- UniformArray
-  RandomNode &lt;|-- Device
-  MixingOperator &lt;|-- Receiver
-  RandomNode &lt;|-- Transmitter
+  Serializable &lt;|-- AntennaArray
+  Serializable &lt;|-- UniformArray
+  RandomNode &lt;|-- Scenario
+  Antenna &lt;|-- Dipole
+  OperatorSlot &lt;|-- TransmitterSlot
+  Operator &lt;|-- MixingOperator
+  OperatorSlot &lt;|-- ReceiverSlot
   Antenna &lt;|-- IdealAntenna
+  RandomNode &lt;|-- Device
+  AntennaArrayBase &lt;|-- UniformArray
+  Serializable &lt;|-- Antenna
+  RandomNode &lt;|-- Receiver
+  MixingOperator &lt;|-- Transmitter
+  RandomNode &lt;|-- Transmitter
+  Antenna &lt;|-- PatchAntenna
+  MixingOperator &lt;|-- Receiver
         </div><p>It is split into several interdependent sub-modules:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -158,7 +158,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fb12f30ff40>
+<jinja2.runtime.BlockReference object at 0x7fd9064785b0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

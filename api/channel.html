@@ -117,43 +117,43 @@
 the wireless transmission link between devices on a physical level.</p>
 <div class="mermaid">
             classDiagram
-  UrbanMicroCellsNoLineOfSight &lt;|-- StreetCanyonNoLineOfSight
-  Channel &lt;|-- MultipathFadingChannel
-  ClusterDelayLineBase &lt;|-- StreetCanyonLineOfSight
-  Channel &lt;|-- QuadrigaChannel
-  UrbanMicroCellsNoLineOfSight &lt;|-- StreetCanyonOutsideToInside
-  Serializable &lt;|-- StreetCanyonNoLineOfSight
+  Serializable &lt;|-- UrbanMacrocellsLineOfSight
   Serializable &lt;|-- IndoorOfficeLineOfSight
+  RandomNode &lt;|-- Channel
+  Serializable &lt;|-- IndoorOfficeNoLineOfSight
+  ClusterDelayLineBase &lt;|-- RuralMacrocellsNoLineOfSight
+  UrbanMacrocellsNoLineOfSightBase &lt;|-- UrbanMacrocellsOutsideToInside
+  Serializable &lt;|-- StreetCanyonNoLineOfSight
+  Channel &lt;|-- MultipathFadingChannel
+  MultipathFadingChannel &lt;|-- MultipathFadingExponential
   Serializable &lt;|-- StreetCanyonOutsideToInside
-  ClusterDelayLineBase &lt;|-- UrbanMacrocellsLineOfSight
-  ClusterDelayLineBase &lt;|-- RuralMacrocellsOutsideToInside
+  UrbanMacrocellsNoLineOfSightBase &lt;|-- UrbanMacrocellsNoLineOfSight
+  QuadrigaInterface &lt;|-- QuadrigaOctaveInterface
+  MultipathFadingChannel &lt;|-- MultipathFading5GTDL
+  Serializable &lt;|-- IndoorFactoryNoLineOfSight
+  Serializable &lt;|-- RuralMacrocellsNoLineOfSight
+  ClusterDelayLineBase &lt;|-- RuralMacrocellsLineOfSight
+  Serializable &lt;|-- UrbanMacrocellsOutsideToInside
+  Serializable &lt;|-- UrbanMacrocellsNoLineOfSight
+  ClusterDelayLineBase &lt;|-- StreetCanyonLineOfSight
+  ClusterDelayLineBase &lt;|-- ClusterDelayLine
   IndoorFactoryBase &lt;|-- IndoorFactoryNoLineOfSight
   Serializable &lt;|-- RuralMacrocellsLineOfSight
-  IndoorFactoryBase &lt;|-- IndoorFactoryLineOfSight
-  MultipathFadingChannel &lt;|-- MultipathFading5GTDL
-  UrbanMacrocellsNoLineOfSightBase &lt;|-- UrbanMacrocellsOutsideToInside
-  RandomNode &lt;|-- Channel
-  Serializable &lt;|-- ClusterDelayLine
-  ClusterDelayLineBase &lt;|-- IndoorOfficeNoLineOfSight
-  Serializable &lt;|-- RuralMacrocellsNoLineOfSight
-  UrbanMacrocellsNoLineOfSightBase &lt;|-- UrbanMacrocellsNoLineOfSight
-  MultipathFadingChannel &lt;|-- MultipathFadingCost256
-  Serializable &lt;|-- StreetCanyonLineOfSight
-  SerializableArray &lt;|-- Channel
-  Serializable &lt;|-- IndoorFactoryNoLineOfSight
+  ClusterDelayLineBase &lt;|-- RuralMacrocellsOutsideToInside
   Serializable &lt;|-- IndoorFactoryLineOfSight
-  ClusterDelayLineBase &lt;|-- IndoorOfficeLineOfSight
-  Serializable &lt;|-- UrbanMacrocellsOutsideToInside
-  Channel &lt;|-- RadarChannel
-  QuadrigaInterface &lt;|-- QuadrigaOctaveInterface
-  Serializable &lt;|-- UrbanMacrocellsLineOfSight
+  MultipathFadingChannel &lt;|-- MultipathFadingCost256
+  SerializableArray &lt;|-- Channel
+  Serializable &lt;|-- ClusterDelayLine
+  Serializable &lt;|-- StreetCanyonLineOfSight
   Serializable &lt;|-- RuralMacrocellsOutsideToInside
-  Serializable &lt;|-- UrbanMacrocellsNoLineOfSight
-  ClusterDelayLineBase &lt;|-- RuralMacrocellsLineOfSight
-  MultipathFadingChannel &lt;|-- MultipathFadingExponential
-  Serializable &lt;|-- IndoorOfficeNoLineOfSight
-  ClusterDelayLineBase &lt;|-- ClusterDelayLine
-  ClusterDelayLineBase &lt;|-- RuralMacrocellsNoLineOfSight
+  UrbanMicroCellsNoLineOfSight &lt;|-- StreetCanyonNoLineOfSight
+  ClusterDelayLineBase &lt;|-- UrbanMacrocellsLineOfSight
+  ClusterDelayLineBase &lt;|-- IndoorOfficeLineOfSight
+  ClusterDelayLineBase &lt;|-- IndoorOfficeNoLineOfSight
+  Channel &lt;|-- RadarChannel
+  UrbanMicroCellsNoLineOfSight &lt;|-- StreetCanyonOutsideToInside
+  IndoorFactoryBase &lt;|-- IndoorFactoryLineOfSight
+  Channel &lt;|-- QuadrigaChannel
         </div><p>The base class of all channel model implementations is defined within</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -193,7 +193,7 @@ the wireless transmission link between devices on a physical level.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fb1302e7e80>
+<jinja2.runtime.BlockReference object at 0x7fd90749aeb0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
