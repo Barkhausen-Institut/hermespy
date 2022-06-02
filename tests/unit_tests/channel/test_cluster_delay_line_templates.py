@@ -12,7 +12,7 @@ import numpy as np
 from numpy.random import default_rng
 from scipy.constants import pi
 
-from hermespy.simulation.antenna import IdealAntenna, UniformArray
+from hermespy.core import IdealAntenna, UniformArray
 from hermespy.channel import StreetCanyonLineOfSight, StreetCanyonNoLineOfSight,\
     StreetCanyonOutsideToInside, UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, \
     UrbanMacrocellsOutsideToInside, RuralMacrocellsLineOfSight, RuralMacrocellsNoLineOfSight, \

@@ -13,9 +13,8 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import Signal
+from hermespy.core import Signal, IdealAntenna, UniformArray
 from hermespy.channel.cluster_delay_lines import ClusterDelayLine, DelayNormalization
-from hermespy.simulation.antenna import IdealAntenna, UniformArray
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

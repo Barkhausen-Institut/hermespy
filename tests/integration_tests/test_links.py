@@ -2,9 +2,9 @@ from unittest import TestCase
 
 import numpy as np
 
-from hermespy.channel import Channel, MultipathFadingCost256
-from hermespy.core import Scenario
-from hermespy.simulation import SimulatedDevice, IdealAntenna, UniformArray
+from hermespy.channel import Channel
+from hermespy.core import Scenario, IdealAntenna, UniformArray
+from hermespy.simulation import SimulatedDevice
 from hermespy.modem import Modem, WaveformGeneratorPskQam, BitErrorEvaluator
 from hermespy.precoding import SpatialMultiplexing
 
