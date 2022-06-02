@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-===========
-Beamforming
-===========
+==========
+Beamformer
+==========
 
-This feature is currently highly experimental.
+Beamforming is split into the prototype classes :class:`.TransmitBeamformer` and :class:`.ReceiveBeamformer`
+for beamforming operations during signal transmission and reception, respectively.
+They are both derived from the base :class:`BeamformerBase`.
+This is due to the fact that some beamforming algorithms may be exclusive to transmission or reception use-cases.
+Should a beamformer be applicable during both transmission and reception both prototypes can be inherited.
+An example for such an implementation is the :class:`Conventional <.conventional.ConventionalBeamformer>` beamformer.
 """
 
 from abc import ABC, abstractmethod, abstractproperty
