@@ -142,7 +142,7 @@ class ReceiveBeamformerMock(ReceiveBeamformer):
         return 1
         
     def _decode(self, samples: np.ndarray, carrier_frequency: float, focus_angles: np.ndarray) -> np.ndarray:
-        return samples
+        return np.repeat(samples[np.newaxis, ::], focus_angles.shape[0], axis=0)
     
 
 class TestReceiveBeamformer(TestCase):
@@ -184,6 +184,23 @@ class TestReceiveBeamformer(TestCase):
         
         assert_array_equal(expected_points, points)
         self.assertEqual(expected_mode, mode)
+        
+    def test_probe_focus_point_validation(self) -> None:
+        """Focus point property setter should raise ValueErrors on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.beamformer.probe_focus_points = np.ones((2, 3))
+            
+        with self.assertRaises(ValueError):
+            self.beamformer.probe_focus_points = np.ones((2, 2))
+            
+    def test_probe_focus_setget(self) -> None:
+        """Probe focus getter should return setter argument"""
+        
+        expected_points = np.array([[1, 2]], dtype=complex)
+        self.beamformer.probe_focus_points = expected_points
+        
+        assert_array_equal(expected_points[np.newaxis, ::], self.beamformer.probe_focus_points)
 
     def test_receive_validation(self) -> None:
         """Receive routine should raise exceptions on invalid configurations"""
@@ -209,3 +226,29 @@ class TestReceiveBeamformer(TestCase):
         
         steered_signal = self.beamformer.receive(expected_signal, focus)
         assert_array_equal(expected_signal.samples, steered_signal.samples)
+
+    def test_probe_validation(self) -> None:
+        """Probe routine should raise exceptions on invalid configurations"""
+        
+        with self.assertRaises(RuntimeError):
+            self.beamformer.probe(Signal(np.zeros((1, 10), dtype=complex), 1.))
+            
+        self.operator.device = None
+        
+        with self.assertRaises(FloatingError):
+            self.beamformer.probe(Signal(np.zeros((2, 10), dtype=complex), 1.))
+            
+        self.beamformer.operator = None
+        
+        with self.assertRaises(FloatingError):
+            self.beamformer.probe(Signal(np.zeros((2, 10), dtype=complex), 1.))
+            
+    def test_probe(self) -> None:
+        """Probe routine should correctly envoke the encode subroutine"""
+        
+        expected_samples = np.ones((2, 10), dtype=complex)
+        expected_signal = Signal(expected_samples, 1.)
+        focus = np.ones((1, 2, self.beamformer.num_receive_focus_angles), dtype=float)
+        
+        steered_signal = self.beamformer.probe(expected_signal, focus)
+        assert_array_equal(expected_samples[np.newaxis, ::], steered_signal)
