@@ -1,6 +1,6 @@
 [bumpver]
 
-current_version = "3.0.0"
+current_version = "0.3.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bump to version {new_version}"
 commit = false

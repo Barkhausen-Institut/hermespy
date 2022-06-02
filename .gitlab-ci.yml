@@ -28,7 +28,7 @@ Build Package:
   script:
     - pip install -r requirements.txt
     - python setup.py bdist_wheel
-    - pip install dist/hermespy-3.0.0-py3-none-any.whl[test,quadriga,documentation]
+    - pip install dist/hermespy-0.3.0-py3-none-any.whl[test,quadriga,documentation]
 
 Unit Testing:
   stage: test
