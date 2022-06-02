@@ -12,11 +12,11 @@ from scipy.constants import pi
 from math import floor
 
 from hermespy.channel import ChannelStateFormat, ChannelStateInformation
-from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence
+from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence, Synchronization
 from hermespy.core.signal_model import Signal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.1.0"
@@ -87,28 +87,58 @@ class TestSynchronization(unittest.TestCase):
     def setUp(self) -> None:
 
         self.rng = np.random.default_rng(42)
+        self.synchronization = Synchronization()
         self.waveform_generator = WaveformGeneratorDummy()
+        self.waveform_generator.synchronization = self.synchronization
 
-        self.synchronization = self.waveform_generator.synchronization
 
     def test_init(self) -> None:
-        """Initialization parameters should be properly stored as object attributes."""
+        """Initialization parameters should be properly stored as object attributes"""
 
         self.assertIs(self.waveform_generator, self.synchronization.waveform_generator)
+
+    def test_waveform_generator_setget(self) -> None:
+        """Waveform generator property getter should return setter argument."""
+
+        expected_waveform = Mock()
+        self.synchronization.waveform_generator = expected_waveform
+
+        self.assertIs(expected_waveform, self.synchronization.waveform_generator)
+
+        self.synchronization.waveform_generator = None
+        self.assertIs(None, self.synchronization.waveform_generator)
 
     def test_synchronize(self) -> None:
         """Default synchronization should properly split signals into frame-sections."""
 
+        num_streams = 3
         num_frames = 5
         num_offset_samples = 2
         num_samples = num_frames * self.waveform_generator.samples_in_frame + num_offset_samples
 
-        signal = np.exp(2j * self.rng.uniform(0, pi, num_samples))
-        csi = ChannelStateInformation.Ideal(num_samples)
+        signal = np.exp(2j * self.rng.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rng.uniform(0, pi, (1, num_samples)))
+        csi = ChannelStateInformation.Ideal(num_samples, num_streams)
 
         frames = self.synchronization.synchronize(signal, csi)
         self.assertEqual(num_frames, len(frames))
 
+    def test_to_yaml(self) -> None:
+        """YAML serialization should result in a proper state representation"""
+
+        representer = Mock()
+        node = Synchronization.to_yaml(representer, self.synchronization)
+
+        representer.represent_scalar.assert_called()
+
+    def test_from_yaml(self) -> None:
+        """YAML deserialization should result in a correctly configured instance"""
+
+        constructor = Mock()
+        constructor.construct_mapping.return_value = {}
+        node = Mock()
+
+        instance = Synchronization.from_yaml(constructor, node)
+        self.assertIsInstance(instance, Synchronization)
 
 class TestWaveformGenerator(unittest.TestCase):
     """Test the communication waveform generator unit."""
@@ -156,12 +186,13 @@ class TestWaveformGenerator(unittest.TestCase):
     def test_synchronize(self) -> None:
         """Default synchronization routine should properly split signals into frame-sections."""
 
+        num_streams = 3
         num_samples_test = [50, 100, 150, 200]
 
         for num_samples in num_samples_test:
 
-            signal = np.exp(2j * self.rnd.uniform(0, pi, num_samples))
-            channel_state = ChannelStateInformation.Ideal(num_samples=num_samples)
+            signal = np.exp(2j * self.rnd.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rnd.uniform(0, pi, (1, num_samples)))
+            channel_state = ChannelStateInformation.Ideal(num_samples, num_streams)
 
             synchronized_frames = self.waveform_generator.synchronization.synchronize(signal, channel_state)
 
@@ -173,7 +204,8 @@ class TestWaveformGenerator(unittest.TestCase):
             # Frames and channel states should each contain the correct amount of samples
             for frame_signal, frame_channel_state in synchronized_frames:
 
-                self.assertEqual(self.waveform_generator.samples_in_frame, frame_signal.shape[0])
+                self.assertEqual(num_streams, frame_signal.shape[0])
+                self.assertEqual(self.waveform_generator.samples_in_frame, frame_signal.shape[1])
                 self.assertEqual(self.waveform_generator.samples_in_frame, frame_channel_state.num_samples)
 
     def test_synchronize_validation(self) -> None:

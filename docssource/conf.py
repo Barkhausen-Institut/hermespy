@@ -74,6 +74,7 @@ autodoc_default_options = {
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_logo = 'images/bi.svg'
 
 # Sphinx RTD dark mode
 default_dark_mode = True

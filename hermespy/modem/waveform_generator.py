@@ -11,17 +11,16 @@ from math import ceil, floor
 from typing import Generic, Tuple, TYPE_CHECKING, Optional, Type, TypeVar, List
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from ruamel.yaml import SafeConstructor, SafeRepresenter, Node, ScalarNode
 
-from hermespy.core.channel_state_information import ChannelStateInformation
-from hermespy.core.signal_model import Signal
+from hermespy.core import ChannelStateInformation, Serializable, Signal
 from .symbols import Symbols
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"
@@ -33,11 +32,14 @@ __status__ = "Prototype"
 WaveformType = TypeVar('WaveformType', bound='WaveformGenerator')
 
 
-class Synchronization(Generic[WaveformType], ABC):
+class Synchronization(Generic[WaveformType], ABC, Serializable):
     """Abstract base class for synchronization routines of waveform generators.
 
     Refer to :footcite:t:`2016:nasir` for an overview of the current state of the art.
     """
+
+    yaml_tag = u'Synchronization'
+    """YAML serialization tag"""
 
     __waveform_generator: Optional[WaveformType]       # Waveform generator this routine is attached to
 
@@ -57,7 +59,7 @@ class Synchronization(Generic[WaveformType], ABC):
 
         Returns:
             Optional[WaveformType]:
-                Handle to the waveform generator. None if the synchronization routine is floating.
+                Handle to tghe waveform generator. None if the synchronization routine is floating.
         """
 
         return self.__waveform_generator
@@ -66,8 +68,9 @@ class Synchronization(Generic[WaveformType], ABC):
     def waveform_generator(self, value: Optional[WaveformType]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
-        if self.__waveform_generator is not None:
-            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
+        # Un-register this synchronization routine from its previously assigned waveform
+        if self.__waveform_generator is not None and self.__waveform_generator.synchronization is self:
+            self.__waveform_generator.synchronization = Synchronization()
 
         self.__waveform_generator = value
 
@@ -81,7 +84,7 @@ class Synchronization(Generic[WaveformType], ABC):
         Args:
 
             signal (np.ndarray):
-                Vector of complex base-band samples of a single input stream with `num_samples` entries.
+                Vector of complex base-band samples of with `num_streams`x`num_samples` entries.
 
             channel_state (ChannelStateInformation):
                 State of the wireless transmission channel over which `signal` has been propagated.
@@ -99,18 +102,19 @@ class Synchronization(Generic[WaveformType], ABC):
             RuntimeError:
                 If the synchronization routine is floating
         """
+        
+        # Expand signal dimensionalty if input is flat
+        if signal.ndim == 1:
+            signal = signal[np.newaxis, :]
 
         if self.__waveform_generator is None:
             raise RuntimeError("Trying to synchronize with a floating synchronization routine")
 
-        if len(signal) != channel_state.num_samples + channel_state.num_delay_taps - 1:
+        if signal.shape[1] != channel_state.num_samples + channel_state.num_delay_taps - 1:
             raise ValueError("Base-band signal and channel state contain a different amount of samples")
 
-        if channel_state.num_receive_streams != 1:
-            raise ValueError("Channel state during synchronization may only contain a single receive stream")
-
         samples_per_frame = self.__waveform_generator.samples_in_frame
-        num_frames = int(floor(len(signal) / samples_per_frame))
+        num_frames = int(floor(signal.shape[1] / samples_per_frame))
 
         # Slice signals and channel state information into frame-sized portions
         # Default synchronization does NOT account for possible delays,
@@ -118,11 +122,52 @@ class Synchronization(Generic[WaveformType], ABC):
         synchronized_frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
         for frame_idx in range(num_frames):
 
-            frame_samples = signal[frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
+            frame_samples = signal[:, frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
             frame_channel_state = channel_state[:, :,  frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame, :]
             synchronized_frames.append((frame_samples, frame_channel_state))
 
         return synchronized_frames
+
+    @classmethod
+    def to_yaml(cls: Type[Synchronization], representer: SafeRepresenter, node: Synchronization) -> Node:
+        """Serialize an `Synchronization` object to YAML.
+
+        Args:
+            representer (Synchronization):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (Synchronization):
+                The `Synchronization` instance to be serialized.
+
+        Returns:
+            Node:
+                The serialized YAML node
+        """
+
+        return representer.represent_scalar(cls.yaml_tag, None)
+
+    @classmethod
+    def from_yaml(cls: Type[Synchronization], constructor: SafeConstructor, node: Node) -> Synchronization:
+        """Recall a new `Synchronization` instance from YAML.
+
+        Args:
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `Synchronization` serialization.
+
+        Returns:
+            Synchronization:
+                Newly created `Synchronization` instance.
+        """
+
+        # For scalar nodes, initialize the synchronization routine with default parameters
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        return cls.InitializationWrapper(constructor.construct_mapping(node))
 
 
 class ChannelEstimation(Generic[WaveformType], ABC):
@@ -372,7 +417,7 @@ class WaveformGenerator(ABC):
             int: Number of bits per symbol
         """
 
-        return int(np.log2(self.__modulation_order))
+        return int(np.log2(self.modulation_order))
 
     @property
     @abstractmethod
@@ -466,13 +511,13 @@ class WaveformGenerator(ABC):
         ...
 
     @abstractmethod
-    def modulate(self, data_symbols: np.ndarray) -> Signal:
+    def modulate(self, data_symbols: Symbols) -> Signal:
         """Modulate a stream of data symbols to a base-band signal containing a single data frame.
 
         Args:
 
-            data_symbols (np.ndarray):
-                Vector of data symbols to be modulated.
+            data_symbols (Symbols):
+                Singular stream of data symbols to be modulated by this waveform.
 
         Returns:
             Signal: Signal model of a single modulate data frame.
@@ -651,7 +696,8 @@ class WaveformGenerator(ABC):
 
         state = {
             "oversampling_factor": node.__oversampling_factor,
-            "modulation_order": node.__modulation_order,
+            "modulation_order": node.modulation_order,
+            'synchronization': node.synchronization,
         }
 
         return representer.represent_mapping(cls.yaml_tag, state)
@@ -672,8 +718,7 @@ class WaveformGenerator(ABC):
                 Newly created `WaveformGenerator` instance.
         """
 
-        state = constructor.construct_mapping(node)
-        return cls(**state)
+        return cls.InitializationWrapper(constructor.construct_mapping(node))
 
 
 class PilotWaveformGenerator(WaveformGenerator, ABC):
@@ -681,7 +726,7 @@ class PilotWaveformGenerator(WaveformGenerator, ABC):
 
     @property
     @abstractmethod
-    def pilot(self) -> Signal:
+    def pilot_signal(self) -> Signal:
         """Model of the pilot sequence within this communication waveform.
 
         Returns:

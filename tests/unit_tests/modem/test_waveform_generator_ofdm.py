@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
 """Test HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
-import unittest
+from itertools import product
+from multiprocessing.sharedctypes import Value
 from typing import Tuple
+from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from numpy.random import default_rng
 from scipy.constants import pi
+from scipy.fft import fft
 
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import WaveformGeneratorOfdm, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import ChannelEstimation, FrameElement, ElementType, FrameSection
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, OFDMCorrelationSynchronization, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, ChannelEstimation
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.0"
+__version__ = "0.2.7"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestFrameResource(unittest.TestCase):
+class TestFrameResource(TestCase):
     """Test a single OFDM frame resource."""
 
     def setUp(self) -> None:
@@ -135,7 +138,7 @@ class FrameSectionMock(FrameSection):
         pass
 
 
-class TestFrameSection(unittest.TestCase):
+class TestFrameSection(TestCase):
     """Test OFDM frame section."""
 
     def setUp(self) -> None:
@@ -169,7 +172,7 @@ class TestFrameSection(unittest.TestCase):
             self.section.num_repetitions = -1
 
 
-class TestFrameSymbolSection(unittest.TestCase):
+class TestFrameSymbolSection(TestCase):
     """Test OFDM frame symbol section."""
 
     def setUp(self) -> None:
@@ -250,7 +253,7 @@ class TestFrameSymbolSection(unittest.TestCase):
         self.assertEqual(modulated_signal.shape[0], expected_num_samples)
 
 
-class TestFrameGuardSection(unittest.TestCase):
+class TestFrameGuardSection(TestCase):
     """Test OFDM frame guard section."""
 
     def setUp(self) -> None:
@@ -310,7 +313,7 @@ class TestFrameGuardSection(unittest.TestCase):
         _ = self.section.demodulate(np.empty(0, dtype=complex), ChannelStateInformation.Ideal(0))
 
 
-class TestWaveformGeneratorOFDM(unittest.TestCase):
+class TestWaveformGeneratorOFDM(TestCase):
     """Test Orthogonal Frequency Division Multiplexing Waveform Generator."""
 
     def setUp(self) -> None:
@@ -373,6 +376,40 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
 
         self.assertIn(section, self.generator.structure)
         self.assertIs(self.generator, section.frame)
+        
+    def test_pilot_setget(self) -> None:
+        """Pilot property getter should return setter argument"""
+        
+        pilot = Mock()
+        self.generator.pilot_section = pilot
+        
+        self.assertIs(pilot, self.generator.pilot_section)
+        
+    def test_pilot_registration(self) -> None:
+        """Setting a pilot should register the respective frame as a reference"""
+
+        pilot = Mock()
+        self.generator.pilot_section = pilot
+        
+        self.assertIs(self.generator, pilot.frame)
+        
+    def test_pilot_signal(self) -> None:
+        """The pilot signal property should generate the correct pilot samples"""
+        
+        self.generator.pilot_section = None
+        empty_pilot_signal = self.generator.pilot_signal
+        
+        self.assertEqual(0, empty_pilot_signal.num_samples)
+        self.assertEqual(self.generator.sampling_rate, empty_pilot_signal.sampling_rate)
+
+        expected_samples = np.arange(100, dtype=complex)
+        pilot_mock = Mock()
+        pilot_mock.modulate.return_value = expected_samples
+        self.generator.pilot_section = pilot_mock
+        pilot_signal = self.generator.pilot_signal
+        
+        assert_array_equal(expected_samples[None, :], pilot_signal.samples)
+        self.assertEqual(self.generator.sampling_rate, pilot_signal.sampling_rate)
 
     def test_subcarrier_spacing_setget(self) -> None:
         """Subcarrier spacing property getter should return setter argument."""
@@ -416,3 +453,205 @@ class TestWaveformGeneratorOFDM(unittest.TestCase):
         symbols, _, _ = self.generator.demodulate(baseband_signal.samples[0, :], channel_state)
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
+
+
+class TestPilotSection(TestCase):
+    """Test the general base class for OFDM pilot sections."""
+    
+    def setUp(self) -> None:
+        
+        self.rng = default_rng(42)
+        self.subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=4)
+        
+        self.pilot_section = PilotSection(pilot_elements=self.subsymbols, frame=self.frame)
+        
+    def test_init(self) -> None:
+        """Initialization arguments should be properly stored as class attributes"""
+        
+        self.assertIs(self.subsymbols, self.pilot_section.pilot_elements)
+        self.assertIs(self.frame, self.pilot_section.frame)
+        
+    def test_num_samples(self) -> None:
+        """The number of samples property should compute the correct sample count"""
+        
+        self.assertEqual(4 * self.frame.num_subcarriers, self.pilot_section.num_samples)
+        
+    def test_pilot_subsymbols_setget(self) -> None:
+        """Pilot subsymbol getter should return setter argument"""
+        
+        self.pilot_section.pilot_elements = None
+        self.assertIs(None, self.pilot_section.pilot_elements)
+        
+        expected_subsymbols = Symbols(np.array([-1., 1.]))
+        self.pilot_section.pilot_elements = expected_subsymbols
+        self.assertIs(expected_subsymbols, self.pilot_section.pilot_elements)
+        
+    def test_pilot_subsymbols_validation(self) -> None:
+        """Pilot subsymbol setter should raise ValueErrors on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.pilot_section.pilot_elements = Symbols(np.array([[1], [1]]))
+            
+        with self.assertRaises(ValueError):
+            self.pilot_section.pilot_elements = Symbols()
+            
+    def test_pseudorandom_pilot_sequence(self) -> None:
+        """Unspecified subsymbols should result in the generation of constant valid pilot sequence"""
+        
+        self.pilot_section.pilot_elements = None
+        
+        first_pilot_sequence = self.pilot_section._pilot_sequence(self.frame.num_subcarriers)
+        second_pilot_sequence = self.pilot_section._pilot_sequence()
+        
+        self.assertEqual(1, first_pilot_sequence.num_streams)
+        self.assertEqual(self.frame.num_subcarriers, first_pilot_sequence.num_symbols)
+        assert_array_equal(first_pilot_sequence.raw, second_pilot_sequence.raw)
+        
+    def test_configured_pilot_sequence(self) -> None:
+        """Specified subsymbols should result in the generation of a valid pilot sequence"""
+        
+        self.pilot_section.pilot_elements = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
+        pilot_sequence = self.pilot_section._pilot_sequence()
+        
+        self.assertEqual(1, pilot_sequence.num_streams)
+        self.assertEqual(self.frame.num_subcarriers, pilot_sequence.num_symbols)
+        assert_array_equal(self.pilot_section.pilot_elements.raw, pilot_sequence.raw[:, :4])
+        
+    def test_modulate(self) -> None:
+        """Modulation should return a valid pilot section"""
+        
+        expected_pilot_symbols = np.exp(2j * pi * self.rng.uniform(0, 1, self.frame.num_subcarriers))
+        self.pilot_section.pilot_elements = Symbols(expected_pilot_symbols)
+        
+        pilot = self.pilot_section.modulate()
+        pilot_symbols = fft(pilot, norm='ortho')[:self.frame.num_subcarriers]
+        assert_array_almost_equal(expected_pilot_symbols, pilot_symbols)
+        
+        cached_pilot = self.pilot_section.modulate()
+        assert_array_equal(pilot, cached_pilot)
+        
+    def test_demodulate(self) -> None:
+        """Demodulation should always return an empty tuple"""
+        
+        symbols, csi = self.pilot_section.demodulate()
+        
+        self.assertEqual(0, len(symbols))
+        
+    def test_pilot(self) -> None:
+        """Pilot samples should be the inverse Fourier transform of subsymbols"""
+        
+        expected_pilot_symbols = np.exp(2j * pi * self.rng.uniform(0, 1, self.frame.num_subcarriers))
+        self.pilot_section.pilot_elements = Symbols(expected_pilot_symbols)
+        
+        pilot = self.pilot_section._pilot()
+        pilot_symbols = fft(pilot, norm='ortho')[:self.frame.num_subcarriers]
+        assert_array_almost_equal(expected_pilot_symbols, pilot_symbols)
+        
+
+class TestSchmidlCoxPilotSection(TestCase):
+    """Test the Schmidl Cox Algorithm Pilot section implementation."""
+    
+    def setUp(self) -> None:
+        
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=4)
+        self.pilot = SchmidlCoxPilotSection(frame=self.frame)
+        
+    def test_num_samples(self) -> None:
+        """Number of samples property should return two frame symbols worth of samples"""
+        
+        self.assertTrue(2 * self.frame.oversampling_factor * self.frame.num_subcarriers, self.pilot.num_samples)
+        
+    def test_pilot(self) -> None:
+        """A valid pilot section should be generated"""
+        
+        pilot = self.pilot.modulate()
+        self.assertEqual(self.pilot.num_samples, len(pilot), "Invalid number of samples generated")
+        
+        synchronization_symbol = pilot[:int(.5 * len(pilot))]
+        half_symbol_length = int(.5 * len(synchronization_symbol))
+        first_half_symbol = synchronization_symbol[:half_symbol_length]
+        second_half_symbol = synchronization_symbol[half_symbol_length:]
+        
+        assert_array_almost_equal(first_half_symbol, second_half_symbol, err_msg="Synchronization symbol not symmmetric")
+
+
+class TestCorrelationSynchronization(TestCase):
+    """Test OFDM Synchronization via pilot section correlation"""
+    
+    def setUp(self) -> None:
+
+        self.rng = default_rng(42)
+
+        test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1200)])
+        test_payload = FrameSymbolSection(num_repetitions=3, pattern=[0])
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=4, resources=[test_resource], structure=[test_payload])
+        self.frame.pilot_section = PilotSection()
+
+        self.synchronization = OFDMCorrelationSynchronization()
+        self.frame.synchronization = self.synchronization
+
+        self.num_streams = 3
+        self.delays_in_samples = [0, 9, 80]
+        self.num_frames = [1, 2, 3]
+        
+    def test_synchronize(self) -> None:
+        """Test the proper estimation of delays during correlation synchronization"""
+
+        for d, n in product(self.delays_in_samples, self.num_frames):
+
+            symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.frame.symbols_per_frame)))
+            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(Symbols(symbols[f, :])).samples for f in range(n)]
+            
+            signal = np.empty((self.num_streams, 0), dtype=complex)
+            for frame in frames:
+
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
+            
+            channel_state = ChannelStateInformation.Ideal(len(signal), self.num_streams)
+
+            synchronization = self.synchronization.synchronize(signal, channel_state)
+
+            self.assertEqual(n, len(synchronization))
+            for frame, (synchronized_frame, _) in zip(frames, synchronization):
+                assert_array_equal(frame, synchronized_frame)
+
+
+class TestSchmidlCoxSynchronization(TestCase):
+    """Test the Schmidl Cox Algorithm implementation."""
+
+    def setUp(self) -> None:
+
+        self.rng = default_rng(42)
+
+        test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1200)])
+        test_payload = FrameSymbolSection(num_repetitions=3, pattern=[0])
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=4, resources=[test_resource], structure=[test_payload])
+        self.frame.pilot_section = SchmidlCoxPilotSection()
+
+        self.synchronization = SchmidlCoxSynchronization(self.frame)
+
+        self.num_streams = 3
+        self.delays_in_samples = [0, 9, 80]
+        self.num_frames = [1, 2, 3]
+
+    def test_synchronize(self) -> None:
+        """Test the proper estimation of delays during Schmidl-Cox synchronization"""
+
+        for d, n in product(self.delays_in_samples, self.num_frames):
+
+            symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.frame.symbols_per_frame)))
+            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(Symbols(symbols[f, :])).samples for f in range(n)]
+            
+            signal = np.empty((self.num_streams, 0), dtype=complex)
+            for frame in frames:
+
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
+            
+            channel_state = ChannelStateInformation.Ideal(len(signal), self.num_streams)
+
+            synchronization = self.synchronization.synchronize(signal, channel_state)
+
+            self.assertEqual(n, len(synchronization))
+            for frame, (synchronized_frame, _) in zip(frames, synchronization):
+                assert_array_equal(frame, synchronized_frame)
