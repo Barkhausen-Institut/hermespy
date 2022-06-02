@@ -12,6 +12,15 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 from hermespy.core.factory import Serializable
 from hermespy.coding import Encoder, EncoderManager
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "3.0.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class StubEncoder(Encoder):
     """Encoder mock for testing only."""
