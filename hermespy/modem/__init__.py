@@ -1,6 +1,6 @@
 from .bits_source import RandomBitsSource, StreamBitsSource
 from .modem import Modem, Symbols
-from .waveform_generator import WaveformGenerator, Synchronization
+from .waveform_generator import WaveformGenerator, Synchronization, PilotWaveformGenerator, PilotSymbolSequence,  UniformPilotSymbolSequence, CustomPilotSymbolSequence, ConfigurablePilotWaveform
 from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSynchronization,\
     ChirpFskCorrelationSynchronization
 from .waveform_generator_psk_qam import WaveformGeneratorPskQam, PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization, PskQamMinimumMeanSquareChannelEqualization, PskQamCorrelationSynchronization
@@ -18,7 +18,9 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['RandomBitsSource', 'StreamBitsSource', 'Modem', 'Symbols', 'WaveformGenerator', 'WaveformGeneratorChirpFsk',
+__all__ = ['RandomBitsSource', 'StreamBitsSource', 'Modem', 'Symbols', 
+           'WaveformGenerator', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'ConfigurablePilotWaveform',
+           'WaveformGeneratorChirpFsk', 'ChirpFskSynchronization', 'ChirpFskCorrelationSynchronization',
            'WaveformGeneratorPskQam', 'PskQamLeastSquaresChannelEstimation', 'PskQamZeroForcingChannelEqualization', 'PskQamMinimumMeanSquareChannelEqualization', 'PskQamCorrelationSynchronization',
            'WaveformGeneratorOfdm', 'ShapingFilter', 'FrameGuardSection',
            'FrameSymbolSection', 'FrameResource', 'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator',

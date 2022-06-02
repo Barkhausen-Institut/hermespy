@@ -28,9 +28,9 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apt update
-        apt-get install -y build-essential octave
-        pip install .[quadriga]
+        sudo apt update
+        sudo apt-get install -y build-essential octave
+        pip install .[test,quadriga,documentation]
 
     - name: Run unit tests
       run: python -m unittest discover tests/unit_tests
@@ -54,10 +54,9 @@ jobs:
 
     - name: Install doc dependencies
       run: |
-        apt update
-        apt-get install -y build-essential
-        pip install -e .[quadriga]
-        pip install -r requirements_doc.txt
+        sudo apt update
+        sudo apt-get install -y build-essential octave
+        pip install -e .[test,quadriga,documentation]
 
     - name: Build documentation
       run: python -m setup build_sphinx
