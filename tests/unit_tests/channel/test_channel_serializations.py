@@ -14,6 +14,15 @@ from hermespy.channel.quadriga_channel import QuadrigaChannel
 from hermespy.core import Factory
 from tests.unit_tests.utils import yaml_str_contains_element
 
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "3.0.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class SyncOffset(unittest.TestCase):
     def setUp(self) -> None:

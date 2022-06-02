@@ -4,6 +4,15 @@ import numpy as np
 
 from hermespy.core.factory import Factory, SerializableArray
 
+__author__ = "Tobias Kronauer"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "3.0.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 def create_simulation_stream_header() -> str:
     return """"""
