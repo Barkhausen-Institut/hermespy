@@ -230,6 +230,7 @@ class ReceiveBeamformer(ABC):
           
         self.__focus_points = np.array([[0., 0.]], dtype=float)
         self.__focus_mode = FocusMode.SPHERICAL
+        self.probe_focus_points = np.zeros((1, self.num_receive_focus_angles, 2), dtype=float)
         
         BeamformerBase.__init__(self, operator=operator)
         
@@ -281,8 +282,8 @@ class ReceiveBeamformer(ABC):
         
             angles: (np.ndarray):
                 Spherical coordinate system angles of arrival in radians.
-                A two dimensional numpy array with the first dimension representing the number of angles,
-                and the second dimension of magnitude two containing the azimuth and zenith angle in radians, respectively.
+                A three-dimensional numpy array with the first dimension representing the number of angles,
+                and the third dimension containing the azimuth and zenith angle in radians, respectively.
         
         Returns:
         
@@ -322,7 +323,7 @@ class ReceiveBeamformer(ABC):
     def receive(self,
                 signal: Signal,
                 focus_points: Optional[np.ndarray] = None,
-                focus_mode: FocusMode = FocusMode.SPHERICAL) -> np.ndarray:
+                focus_mode: FocusMode = FocusMode.SPHERICAL) -> Signal:
         """Focus a signal model towards a certain target.
         
         Args:
@@ -341,9 +342,7 @@ class ReceiveBeamformer(ABC):
         
         Returns:
         
-            Stream samples of the focused signal towards all focus points.
-            A three-dimensional numpy array with the first dimension representing the number of focus points,
-            the second dimension the number of returned streams and the third dimension the amount of samples.
+            Signal focused towards the requested focus points.
         """
         
         if self.operator is None:
@@ -357,7 +356,65 @@ class ReceiveBeamformer(ABC):
 
         carrier_frequency = signal.carrier_frequency
         samples = signal.samples.copy()
-        focus_angles = self.receive_focus[0] if focus_points is None else focus_points
+        focus_angles = self.receive_focus[0][np.newaxis, ::] if focus_points is None else focus_points[np.newaxis, ::]
     
         beamformed_samples = self._decode(samples, carrier_frequency, focus_angles)
-        return Signal(beamformed_samples, signal.sampling_rate)
+        return Signal(beamformed_samples[0, ::], signal.sampling_rate)
+    
+    @property
+    def probe_focus_points(self) -> np.ndarray:
+        
+        return self.__probe_focus_points
+    
+    @probe_focus_points.setter
+    def probe_focus_points(self, value: np.ndarray) -> None:
+        
+        # Expand points by new dimension if only a single focus tuple was requested
+        if value.ndim == 2:
+            value = value[np.newaxis, ::]
+        
+        if value.ndim != 3:
+            raise RuntimeError("Probing focus points must be a three-dimensional array")
+        
+        if value.shape[1] != self.num_receive_focus_angles:
+            raise ValueError(f"Focus requires {self.num_receive_focus_angles} points, but {value.shape[1]} were provided")
+
+        self.__probe_focus_points = value
+
+    def probe(self,
+               signal: Signal,
+               focus_points: Optional[np.ndarray] = None) -> np.ndarray:
+        """Focus a signal model towards a certain directions of interest.
+        
+        Args:
+        
+            signal (Signal):
+                The signal to be steered.
+                
+            focus_points (np.ndarray, optional):
+                Focus point of the steered signal power.
+                Two-dimensional numpy array with the first dimension representing the number of points
+                and the second dimension representing the point values.
+        
+        Returns:
+        
+            Stream samples of the focused signal towards all focus points.
+            A three-dimensional numpy array with the first dimension representing the number of focus points,
+            the second dimension the number of returned streams and the third dimension the amount of samples.
+        """
+        
+        focus_points = self.probe_focus_points if focus_points is None else focus_points
+
+        if self.operator is None:
+            raise FloatingError("Unable to steer a signal over a floating beamformer")
+        
+        if self.operator.device is None:
+            raise FloatingError("Unable to steer a signal over a floating operator")
+
+        if signal.num_streams != self.num_receive_input_streams:
+            raise RuntimeError(f"The provided signal contains {signal.num_streams}, but the beamformer requires {self.num_receive_input_streams} streams")
+
+        carrier_frequency = signal.carrier_frequency
+        samples = signal.samples.copy()
+    
+        return self._decode(samples, carrier_frequency, focus_points)
