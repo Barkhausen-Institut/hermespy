@@ -6,9 +6,10 @@ Correlation-Based Waveform Synchronization
 """
 
 from __future__ import annotations
-from typing import Any, Generic, List, Tuple, TypeVar
+from typing import Any, Generic, List, Tuple, Type, TypeVar
 
 import numpy as np
+from ruamel.yaml import SafeRepresenter
 from scipy.signal import correlate, find_peaks
 
 from ..core.channel_state_information import ChannelStateInformation

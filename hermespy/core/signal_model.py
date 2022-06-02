@@ -52,13 +52,15 @@ class Signal:
     __samples: np.ndarray
     __sampling_rate: float
     __carrier_frequency: float
+    __noise_power: float
     delay: float
 
     def __init__(self,
                  samples: np.ndarray,
                  sampling_rate: float,
                  carrier_frequency: float = 0.,
-                 delay: float = 0.) -> None:
+                 delay: float = 0.,
+                 noise_power: float = 0.) -> None:
         """Signal model initialization.
 
         Args:
@@ -77,12 +79,17 @@ class Signal:
             delay (float, optional):
                 Delay of the signal in seconds.
                 Zero by default.
+                
+            noise_power (float, optional):
+                Power of the noise superimposed to this signal model.
+                Zero by default.
         """
 
         self.samples = samples.copy()
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.delay = delay
+        self.noise_power = noise_power
 
     @classmethod
     def empty(cls,
@@ -213,6 +220,29 @@ class Signal:
             raise ValueError("The carrier frequency of modeled signals must be greater or equal to zero")
 
         self.__carrier_frequency = value
+        
+    @property
+    def noise_power(self) -> float:
+        """Noise power of the superimposed noise signal.
+        
+        Returns:
+        
+            Noise power.
+            
+        Raises:
+        
+            ValueError: If the noise power is smaller than zero.
+        """
+        
+        return self.__noise_power
+    
+    @noise_power.setter
+    def noise_power(self, value: float) -> None:
+        
+        if value < 0.:
+            raise ValueError("Noise power must be greater or equal to zero")
+        
+        self.__noise_power = value
 
     @property
     def power(self) -> np.ndarray:
@@ -261,7 +291,7 @@ class Signal:
             samples = self.__samples.copy()
 
         # Create a new signal object from the resampled samples and return it as result
-        return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay)
+        return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay, noise_power=self.noise_power)
 
     def superimpose(self, added_signal: Signal) -> None:
         """Superimpose an additive signal model to this model.

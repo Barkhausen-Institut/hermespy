@@ -15,7 +15,7 @@ from hermespy.core.signal_model import Signal
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "3.0.0"
@@ -99,8 +99,12 @@ class AWGN(Noise):
 
         Noise.__init__(self, power=power, seed=seed)
 
-    def add(self, signal: Signal, power: Optional[float] = None) -> None:
+    def add(self,
+            signal: Signal,
+            power: Optional[float] = None) -> None:
 
         power = self.power if power is None else power
+        
         signal.samples += (self._rng.normal(0, power ** .5, signal.samples.shape) +
                            1j * self._rng.normal(0, power ** .5, signal.samples.shape)) / 2 ** .5
+        signal.noise_power += power

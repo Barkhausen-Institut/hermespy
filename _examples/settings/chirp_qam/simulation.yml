@@ -5,6 +5,15 @@ Devices:
 
   - &device_alpha !<SimulatedDevice>
 
+    # RF-Chain configuration
+    rf_chain: !<RfChain>
+
+      # Power amplifier model
+      power_amplifier: !<Rapp>
+
+        smoothness_factor: 1.     # Smoothness factor of Rapp's model
+
+
 # Operators transmitting or receiving signals over the devices
 Operators:
 
@@ -25,20 +34,24 @@ Operators:
     # Waveform configuration
     Waveform: !<PskQam>
 
-        # Symbol settings
-        symbol_rate: 100e6
-        modulation_order: 16
-        oversampling_factor: 4
+      # Symbol settings
+      symbol_rate: 100e6
+      modulation_order: 16
+      oversampling_factor: 4
 
-        # Filter settings
-        filter:
-          filter_type: ROOT_RAISED_COSINE
+      # Filter settings
+      filter:
+        filter_type: FMCW
 
-        # Frame settings
-        num_preamble_symbols: 10
-        num_data_symbols: 1000
-        pilot_rate: 1e6
-        guard_interval: 1e-6
+      # Frame settings
+      chirp_bandwidth: 100e6
+      num_preamble_symbols: 10
+      num_data_symbols: 1000
+      pilot_rate: 1e6
+      guard_interval: 1e-6
+
+      # Post-Processing
+      channel_equalization: !<PskQamMMSE>
 
 # Performance indication evaluation configuration
 Evaluators:
