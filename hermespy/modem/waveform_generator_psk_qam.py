@@ -12,14 +12,11 @@ from typing import Any, Tuple, Optional, Type
 import numpy as np
 from ruamel.yaml import MappingNode, SafeRepresenter, SafeConstructor
 
-from hermespy.core.channel_state_information import ChannelStateInformation
-from hermespy.core.device import FloatingError
-from hermespy.core.factory import Serializable
-from .waveform_generator import PilotSymbolSequence, ConfigurablePilotWaveform, WaveformGenerator, Synchronization, \
-    ChannelEstimation, ChannelEqualization
+from hermespy.core import ChannelStateInformation, FloatingError, Serializable, Signal
+from .waveform_generator import ConfigurablePilotWaveform, WaveformGenerator, Synchronization, \
+    ChannelEstimation, ChannelEqualization, PilotSymbolSequence
 from hermespy.modem.tools.shaping_filter import ShapingFilter
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
-from hermespy.core.signal_model import Signal
 from .symbols import Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
 
@@ -55,11 +52,7 @@ class WaveformGeneratorPskQam(ConfigurablePilotWaveform, Serializable):
     rx_filter: ShapingFilter
     __chirp_duration: float
     __chirp_bandwidth: float
-    __pulse_width: float  # ToDO: Check where pulse-width has to be used for initialization
-    __num_preamble_symbols: int
     __num_data_symbols: int
-    __num_postamble_symbols: int
-    __pilot_symbol_rate: float
     __guard_interval: float
     __mapping: PskQamMapping
     complex_modulation: bool
@@ -301,9 +294,12 @@ class WaveformGeneratorPskQam(ConfigurablePilotWaveform, Serializable):
                    channel_state: ChannelStateInformation,
                    noise_variance: float = 0.) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
 
-        # Filter the signal
-        filtered_signal = self.rx_filter.filter(baseband_signal)
+        # Filter the signal and csi
         filter_delay = self.tx_filter.delay_in_samples + self.rx_filter.delay_in_samples + 0
+        filtered_signal = self.rx_filter.filter(baseband_signal)
+        filter_states = np.zeros((channel_state.state.shape[0], channel_state.state.shape[1], filter_delay, channel_state.state.shape[3]), dtype=complex)
+        filter_states[:, :, :, 0] = 1.
+        channel_state.state = np.append(filter_states, channel_state.state, axis=2)
 
         # Extract preamble symbols
         num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
@@ -315,17 +311,18 @@ class WaveformGeneratorPskQam(ConfigurablePilotWaveform, Serializable):
         signal = Signal(filtered_signal, sampling_rate=self.sampling_rate)
 
         # Estimate the channel
-        csi = self.channel_estimation.estimate_channel(signal, channel_state)
+        estimated_csi = self.channel_estimation.estimate_channel(signal, channel_state)
 
         # Equalize the signal
-        equalized_signal = self.channel_equalization.equalize_channel(signal, csi)
+        snr = self.power / noise_variance if noise_variance > 0. else float('inf')
+        equalized_signal = self.channel_equalization.equalize_channel(signal, estimated_csi, snr)
 
         # Extract data symbols
         num_data_samples = self.oversampling_factor * self.__num_data_symbols
         data_start_idx = preamble_stop_idx
         data_stop_idx = data_start_idx + num_data_samples
         data = equalized_signal.samples[0, data_start_idx:data_stop_idx:self.oversampling_factor]
-        data_state = csi[:, :, data_start_idx:data_stop_idx:self.oversampling_factor, :]
+        data_state = estimated_csi[:, :, data_start_idx:data_stop_idx:self.oversampling_factor, :]
 
         # Extract postamble symbols
         # num_postamble_samples = self.oversampling_factor * self.num_postamble_symbols
@@ -334,7 +331,6 @@ class WaveformGeneratorPskQam(ConfigurablePilotWaveform, Serializable):
         # postamble = filtered_signal[postamble_start_idx:postamble_stop_idx:self.oversampling_factor]
 
         noise = np.repeat(noise_variance, len(data))
-
         return Symbols(data), data_state, noise
 
     @property
@@ -713,7 +709,8 @@ class PskQamSynchronization(Synchronization[WaveformGeneratorPskQam]):
 
 class PskQamCorrelationSynchronization(CorrelationSynchronization[WaveformGeneratorPskQam]):
     """Correlation-based clock-synchronization for PSK-QAM waveforms."""
-    ...
+    
+    yaml_tag = u'PskQamCorrelationSynchronization'
 
 
 class PskQamChannelEstimation(ChannelEstimation[WaveformGeneratorPskQam], ABC):
@@ -817,16 +814,41 @@ class PskQamZeroForcingChannelEqualization(Serializable, PskQamChannelEqualizati
 
     def equalize_channel(self,
                          signal: Signal,
-                         csi: ChannelStateInformation) -> Signal:
+                         csi: ChannelStateInformation,
+                         snr: float = float('inf')) -> Signal:
 
         signal = signal.copy()
-
-        for stream_idx, stream in enumerate(signal.samples):
-            stream /= csi.state[stream_idx, 0, :, 0]
+        signal.samples /= csi.state[0, 0, :signal.num_samples, 0]
 
         return signal
 
 
+class PskQamMinimumMeanSquareChannelEqualization(Serializable, PskQamChannelEqualization, ABC):
+    """Minimum-Mean-Square Channel estimation for Psk Qam waveforms."""
+    
+    yaml_tag = u'PskQamMMSE'
+    """YAML serialization tag"""
+
+    def __init__(self,
+                 waveform_generator: Optional[WaveformGeneratorPskQam] = None) -> None:
+        """
+        Args:
+
+            waveform_generator (WaveformGenerator, optional):
+                The waveform generator this equalization routine is attached to.
+        """
+
+        PskQamChannelEqualization.__init__(self, waveform_generator)
+
+    def equalize_channel(self,
+                         signal: Signal,
+                         csi: ChannelStateInformation,
+                         snr: float = float('inf')) -> Signal:
+
+        signal = signal.copy()
+        signal.samples /= (csi.state[0, 0, :signal.num_samples, 0] + 1 / snr)
+        
+        return signal
 class RootRaisedCosine(WaveformGeneratorPskQam):
     """Root Raise Cosine Filter Modulation Scheme."""
     

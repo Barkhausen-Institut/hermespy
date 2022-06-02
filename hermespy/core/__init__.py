@@ -1,5 +1,5 @@
 from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
-from .channel_state_information import ChannelStateInformation
+from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, \
     Transmitter, Receiver, Device, FloatingError
 from .executable import Executable, Verbosity
@@ -22,7 +22,7 @@ __status__ = "Prototype"
 
 __all__ = [
     'Antenna', 'IdealAntenna', 'Dipole', 'PatchAntenna', 'AntennaArrayBase', 'AntennaArray', 'UniformArray',
-    'ChannelStateInformation',
+    'ChannelStateFormat', 'ChannelStateInformation',
     'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot', 'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError',
     'Executable', 'Verbosity',
     'MonteCarlo', 'Evaluator', 

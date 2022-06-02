@@ -263,7 +263,8 @@ class ChannelEqualization(Generic[WaveformType], ABC):
 
     def equalize_channel(self,
                          signal: Signal,
-                         csi: ChannelStateInformation) -> Signal:
+                         csi: ChannelStateInformation,
+                         snr: float = float('inf')) -> Signal:
         """Equalize the wireless channel of a received communication frame.
 
         Args:
@@ -273,6 +274,10 @@ class ChannelEqualization(Generic[WaveformType], ABC):
 
             csi (ChannelStateInformation):
                 Channel state estimation
+
+            snr (float):
+                Assumed signal to noise ratio.
+                May be required by some routines, infinite by default.
 
         Returns:
             Signal:

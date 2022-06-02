@@ -12,9 +12,10 @@ import numpy as np
 from ruamel.yaml import SafeConstructor, MappingNode
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
+from ruamel.yaml import SafeConstructor, MappingNode
 
 from hermespy.core import Signal
-from hermespy.modem import Modem, Symbols, WaveformGenerator
+from hermespy.modem import Modem, Symbols
 from hermespy.radar import Radar
 from hermespy.radar.radar import RadarCube
 

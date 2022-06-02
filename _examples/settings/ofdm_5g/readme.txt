@@ -11,11 +11,3 @@ MIMO (SM) with 2x2 antennas is considered.
 
 A 5G-TDL channel model type E, with 100 ns rms delay spread is considered.
 Velocity is 10ms with carrier frequency 3GHz.
-
-Antenna correlation is considered following the Kronecker model.
-
-
-
-
-
-

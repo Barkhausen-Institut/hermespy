@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+==========================
+Image Transmission Example
+==========================
+
+Demonstrate link level routines by transmitting an image over the link in (approximately) real time.
+"""
+
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,10 +14,18 @@ import numpy as np
 from hermespy.modem import Modem, WaveformGeneratorPskQam
 from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchronization, \
     PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization
-from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskCorrelationSynchronization
 from hermespy.core.scenario import Scenario
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem.bits_source import StreamBitsSource
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.2.7"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 # Create a new HermesPy simulation scenario
@@ -17,11 +34,6 @@ scenario = Scenario[SimulatedDevice]()
 # Create a new simulated device
 device = SimulatedDevice()
 scenario.add_device(device)
-
-# waveform_generator = WaveformGeneratorChirpFsk(oversampling_factor=8)
-# waveform_generator.num_pilot_chirps = 20
-# waveform_generator.num_data_chirps = 80
-# waveform_generator.synchronization = ChirpFskCorrelationSynchronization()
 
 waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
 waveform_generator.num_preamble_symbols = 128

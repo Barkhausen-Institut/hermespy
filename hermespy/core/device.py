@@ -128,7 +128,7 @@ from .signal_model import Signal
 from .random_node import RandomNode
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "3.0.0"
