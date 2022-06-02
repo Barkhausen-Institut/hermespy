@@ -36,7 +36,7 @@ class TestMatchedFilterJoint(TestCase):
         self.waveform.unmap.return_value = np.empty(0, dtype=complex)
         self.waveform.modulate.return_value = Signal(np.ones((1, 5), dtype=complex), sampling_rate=self.waveform.sampling_rate)
         self.waveform.demodulate.return_value = Symbols(np.empty(0, dtype=complex)), ChannelStateInformation.Ideal(0, 1, 1), np.empty(0, dtype=float)
-        self.waveform.synchronization.synchronize.return_value = np.ones((1, 5), dtype=complex)
+        self.waveform.synchronization.synchronize.return_value = [(np.ones((1, 5), dtype=complex), ChannelStateInformation.Ideal(5))]
         
         self.range_resolution = 10
         
