@@ -48,18 +48,19 @@ setup(
         'console_scripts': ['hermes=hermespy.bin:hermes'],
     },
     install_requires=[
-        'matplotlib~=3.4.3',
+        'matplotlib~=3.5.1',
         'numpy~=1.21.5',
         'scipy~=1.7.1',
-        'pytest-mypy~=0.8.1',
-        'pytest-flake8~=1.0.7',
+        'pytest-mypy~=0.9.1',
+        'pytest-flake8~=1.1.1',
         'pybind11~=2.6.2',
-        'ray~=1.10.0',
+        'ray~=1.12.0',
         'ruamel.yaml~=0.17.17',
         'sparse~=0.13.0',
         'numba~=0.55.1',
         'sphinx~=4.3.1',
         'rich~=11.2.0',
+        'protobuf~=3.19.1',
     ],
     command_options={
         'build_sphinx': {
