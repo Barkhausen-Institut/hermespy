@@ -2,3 +2,22 @@ li {
     margin-top: 5px;
     margin-bottom: 5px;
 }
+
+html[data-theme="dark"] .pre {
+    color: whitesmoke;
+}
+
+html[data-theme="dark"] .sphinx-tabs-panel {
+    background: #2b2b2b;
+    border: 1px solid #1D5C87;
+}
+
+html[data-theme="dark"] .sphinx-tabs-tab[aria-selected="true"] {
+    background: #2b2b2b;
+    border: 1px solid #1D5C87;
+    border-bottom: 1px solid #1D5C87;
+}
+
+html[data-theme="dark"] div[role="tablist"] {
+    border-bottom: 1px solid #1D5C87;
+}
