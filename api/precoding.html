@@ -40,7 +40,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.0.0
+                0.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -115,25 +115,25 @@
 for spatial channel propagation.</p>
 <div class="mermaid">
             classDiagram
-  Serializable &lt;|-- SymbolPrecoding
-  MaximumRatioCombining &lt;|-- SpaceTimeBlockCoding
-  Serializable &lt;|-- SpatialMultiplexing
-  SymbolPrecoder &lt;|-- MMSETimeEqualizer
-  SymbolPrecoder &lt;|-- SpatialMultiplexing
-  Serializable &lt;|-- MMSETimeEqualizer
-  SymbolPrecoder &lt;|-- MaximumRatioCombining
   Serializable &lt;|-- MaximumRatioCombining
+  SymbolPrecoder &lt;|-- MaximumRatioCombining
   Serializable &lt;|-- DFT
   SymbolPrecoder &lt;|-- DFT
-  Serializable &lt;|-- SpaceTimeBlockCoding
-  SymbolPrecoder &lt;|-- ZFSpaceEqualizer
-  Serializable &lt;|-- ZFSpaceEqualizer
-  SymbolPrecoder &lt;|-- MMSESpaceEqualizer
-  Serializable &lt;|-- MMSESpaceEqualizer
+  Serializable &lt;|-- SymbolPrecoding
   Serializable &lt;|-- SingleCarrier
+  Serializable &lt;|-- SpatialMultiplexing
   SymbolPrecoder &lt;|-- SingleCarrier
   Serializable &lt;|-- ZFTimeEqualizer
+  SymbolPrecoder &lt;|-- SpatialMultiplexing
+  Serializable &lt;|-- MMSESpaceEqualizer
   SymbolPrecoder &lt;|-- ZFTimeEqualizer
+  SymbolPrecoder &lt;|-- MMSESpaceEqualizer
+  Serializable &lt;|-- ZFSpaceEqualizer
+  Serializable &lt;|-- SpaceTimeBlockCoding
+  Serializable &lt;|-- MMSETimeEqualizer
+  SymbolPrecoder &lt;|-- ZFSpaceEqualizer
+  MaximumRatioCombining &lt;|-- SpaceTimeBlockCoding
+  SymbolPrecoder &lt;|-- MMSETimeEqualizer
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
@@ -160,7 +160,7 @@ for spatial channel propagation.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fd90848dfd0>
+<jinja2.runtime.BlockReference object at 0x7fadcf447a30>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

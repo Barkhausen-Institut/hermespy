@@ -41,7 +41,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.0.0
+                0.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -118,19 +118,19 @@ Refer to the <a class="reference internal" href="core.monte_carlo.html"><span cl
 <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluators</span></code></a>.</p>
 <div class="mermaid">
             classDiagram
-  Evaluator &lt;|-- CommunicationEvaluator
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
-  Artifact &lt;|-- ThroughputArtifact
   ArtifactTemplate &lt;|-- FrameErrorArtifact
-  Serializable &lt;|-- FrameErrorEvaluator
-  CommunicationEvaluator &lt;|-- BitErrorEvaluator
-  ArtifactTemplate &lt;|-- BitErrorArtifact
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
   Serializable &lt;|-- BlockErrorEvaluator
-  Serializable &lt;|-- ThroughputEvaluator
-  ArtifactTemplate &lt;|-- BlockErrorArtifact
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  Serializable &lt;|-- FrameErrorEvaluator
   Serializable &lt;|-- BitErrorEvaluator
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  ArtifactTemplate &lt;|-- BitErrorArtifact
+  ArtifactTemplate &lt;|-- BlockErrorArtifact
+  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  Serializable &lt;|-- ThroughputEvaluator
+  Evaluator &lt;|-- CommunicationEvaluator
+  Artifact &lt;|-- ThroughputArtifact
         </div><p>The implemented <a class="reference internal" href="#hermespy.modem.evaluators.CommunicationEvaluator" title="hermespy.modem.evaluators.CommunicationEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationEvaluators</span></code></a> all inherit from the identically named common
 base which gets initialized by selecting the two <a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Modem</span></code></a> instances whose communication
 should be evaluated.
@@ -644,7 +644,7 @@ the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fd9072b0280>
+<jinja2.runtime.BlockReference object at 0x7fadd42e5fd0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

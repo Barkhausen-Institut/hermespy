@@ -41,7 +41,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.0.0
+                0.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -113,11 +113,11 @@
 transmitting modems.</p>
 <div class="mermaid">
             classDiagram
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
   PowerAmplifier &lt;|-- RappPowerAmplifier
-  PowerAmplifier &lt;|-- CustomPowerAmplifier
-  Serializable &lt;|-- PowerAmplifier
   PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  Serializable &lt;|-- PowerAmplifier
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
+  PowerAmplifier &lt;|-- CustomPowerAmplifier
         </div><p>Each power amplifier model instance implements an equation</p>
 <div class="math notranslate nohighlight">
 \[s'(t) = f\lbrace s(t), t \rbrace \in \mathbb{C}\]</div>
@@ -585,7 +585,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fd9066c89d0>
+<jinja2.runtime.BlockReference object at 0x7fadcd8bb9d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

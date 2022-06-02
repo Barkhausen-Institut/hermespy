@@ -40,7 +40,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.0.0
+                0.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -114,45 +114,45 @@
 <p>This module provides functionalities to transmit information in form of bits over a wireless link.</p>
 <div class="mermaid">
             classDiagram
-  CorrelationSynchronization &lt;|-- PskQamCorrelationSynchronization
-  PskQamChannelEqualization &lt;|-- PskQamMinimumMeanSquareChannelEqualization
-  Serializable &lt;|-- StreamBitsSource
-  CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
-  Serializable &lt;|-- BlockErrorEvaluator
-  Serializable &lt;|-- WaveformGeneratorChirpFsk
-  RandomNode &lt;|-- Modem
-  PilotSymbolSequence &lt;|-- CustomPilotSymbolSequence
-  Serializable &lt;|-- WaveformGeneratorOfdm
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  DuplexOperator &lt;|-- Modem
-  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
-  FrameSection &lt;|-- FrameGuardSection
-  Serializable &lt;|-- FrameErrorEvaluator
-  Serializable &lt;|-- ThroughputEvaluator
-  FrameSection &lt;|-- FrameSymbolSection
-  Serializable &lt;|-- FrameSymbolSection
   Serializable &lt;|-- PskQamLeastSquaresChannelEstimation
-  Serializable &lt;|-- WaveformGeneratorPskQam
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  Serializable &lt;|-- BlockErrorEvaluator
   BitsSource &lt;|-- RandomBitsSource
-  Serializable &lt;|-- PskQamZeroForcingChannelEqualization
-  PilotSymbolSequence &lt;|-- UniformPilotSymbolSequence
+  RandomNode &lt;|-- Modem
+  PilotWaveformGenerator &lt;|-- ConfigurablePilotWaveform
+  PskQamChannelEqualization &lt;|-- PskQamMinimumMeanSquareChannelEqualization
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
   Serializable &lt;|-- BitErrorEvaluator
-  PskQamChannelEstimation &lt;|-- PskQamLeastSquaresChannelEstimation
-  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
-  Synchronization &lt;|-- ChirpFskSynchronization
-  PskQamChannelEqualization &lt;|-- PskQamZeroForcingChannelEqualization
-  WaveformGenerator &lt;|-- PilotWaveformGenerator
-  SerializableArray &lt;|-- Modem
   BitsSource &lt;|-- StreamBitsSource
-  Serializable &lt;|-- RandomBitsSource
+  PilotWaveformGenerator &lt;|-- WaveformGeneratorChirpFsk
+  CorrelationSynchronization &lt;|-- ChirpFskCorrelationSynchronization
+  Serializable &lt;|-- WaveformGeneratorOfdm
+  SerializableArray &lt;|-- Modem
+  Serializable &lt;|-- PskQamMinimumMeanSquareChannelEqualization
   Serializable &lt;|-- Synchronization
   ConfigurablePilotWaveform &lt;|-- WaveformGeneratorPskQam
-  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  Serializable &lt;|-- FrameErrorEvaluator
+  CorrelationSynchronization &lt;|-- PskQamCorrelationSynchronization
+  PilotSymbolSequence &lt;|-- CustomPilotSymbolSequence
   PilotWaveformGenerator &lt;|-- WaveformGeneratorOfdm
+  PskQamChannelEqualization &lt;|-- PskQamZeroForcingChannelEqualization
+  Serializable &lt;|-- WaveformGeneratorPskQam
+  Serializable &lt;|-- RandomBitsSource
+  WaveformGenerator &lt;|-- PilotWaveformGenerator
+  PilotSymbolSequence &lt;|-- UniformPilotSymbolSequence
+  Serializable &lt;|-- StreamBitsSource
+  PskQamChannelEstimation &lt;|-- PskQamLeastSquaresChannelEstimation
+  FrameSection &lt;|-- FrameGuardSection
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  Serializable &lt;|-- PskQamZeroForcingChannelEqualization
   Serializable &lt;|-- FrameGuardSection
-  Serializable &lt;|-- PskQamMinimumMeanSquareChannelEqualization
-  PilotWaveformGenerator &lt;|-- ConfigurablePilotWaveform
+  FrameSection &lt;|-- FrameSymbolSection
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  Serializable &lt;|-- WaveformGeneratorChirpFsk
+  Synchronization &lt;|-- ChirpFskSynchronization
+  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  DuplexOperator &lt;|-- Modem
+  Serializable &lt;|-- ThroughputEvaluator
+  Serializable &lt;|-- FrameSymbolSection
         </div><p>It consists of the base configuration classes for communication modems</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -185,7 +185,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fd9074f3730>
+<jinja2.runtime.BlockReference object at 0x7fadd1665be0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

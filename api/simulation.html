@@ -40,7 +40,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                3.0.0
+                0.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -111,23 +111,23 @@
 including noise and hardware modeling.</p>
 <div class="mermaid">
             classDiagram
-  Device &lt;|-- SimulatedDevice
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
-  RandomNode &lt;|-- Noise
-  PowerAmplifier &lt;|-- RappPowerAmplifier
-  Executable &lt;|-- Simulation
-  Serializable &lt;|-- AnalogDigitalConverter
   Scenario &lt;|-- SimulationScenario
-  Gain &lt;|-- AutomaticGainControl
-  Serializable &lt;|-- Simulation
+  PowerAmplifier &lt;|-- RappPowerAmplifier
+  Serializable &lt;|-- SimulatedDevice
+  Serializable &lt;|-- RfChain
   Serializable &lt;|-- Gain
+  RandomNode &lt;|-- SimulatedDevice
+  PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  Serializable &lt;|-- PowerAmplifier
+  Device &lt;|-- SimulatedDevice
   PowerAmplifier &lt;|-- CustomPowerAmplifier
   MonteCarlo &lt;|-- Simulation
-  RandomNode &lt;|-- SimulatedDevice
-  Serializable &lt;|-- RfChain
-  Serializable &lt;|-- PowerAmplifier
-  PowerAmplifier &lt;|-- ClippingPowerAmplifier
-  Serializable &lt;|-- SimulatedDevice
+  Gain &lt;|-- AutomaticGainControl
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
+  RandomNode &lt;|-- Noise
+  Serializable &lt;|-- Simulation
+  Executable &lt;|-- Simulation
+  Serializable &lt;|-- AnalogDigitalConverter
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -150,7 +150,7 @@ including noise and hardware modeling.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fd906b031f0>
+<jinja2.runtime.BlockReference object at 0x7fadcde41e80>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
