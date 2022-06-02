@@ -2,7 +2,7 @@
 
 current_version = "3.0.0"
 version_pattern = "MAJOR.MINOR.PATCH"
-commit_message = "Bumb to version {new_version}"
+commit_message = "Bump to version {new_version}"
 commit = false
 tag = false
 push = false
@@ -13,6 +13,7 @@ push = false
 "README.md" = [ "{version}" ]
 "bumpver.toml" = [ 'current_version = "{version}"' ]
 "setup.py" = [ 'version="{version}"', "'version': ('setup.py', '{version}')" ]
+".gitlab-ci.yml" = [ 'hermespy-{version}-py3-none-any.whl' ]
 
 # Source files
 "hermespy/beamforming/*.py" = [ '__version__ = "{version}"' ]
