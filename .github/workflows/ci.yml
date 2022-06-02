@@ -54,8 +54,8 @@ jobs:
 
     - name: Install doc dependencies
       run: |
-        apt update
-        apt-get install -y build-essential
+        sudo apt update
+        sudo apt-get install -y build-essential
         pip install -e .[test,quadriga,documentation]
 
     - name: Build documentation
