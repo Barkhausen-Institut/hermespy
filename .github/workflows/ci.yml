@@ -28,8 +28,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apt update
-        apt-get install -y build-essential octave
+        sudo apt update
+        sudo apt-get install -y build-essential octave
         pip install .[quadriga]
 
     - name: Run unit tests
