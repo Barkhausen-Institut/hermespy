@@ -453,14 +453,14 @@ class Radar(DuplexOperator):
             if self.receive_beamformer.num_receive_input_streams != self.device.antennas.num_antennas:
                 raise RuntimeError("Radar operator receive beamformers are required to consider the full number of antenna streams")
             
-            beamformed_samples = self.receive_beamformer.receive(signal)[:, 0, :]
+            beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
             
         else:
             
             beamformed_samples = signal.samples
 
         # Build the radar cube by generating a beam-forming line over all angles of interest
-        angles_of_interest = np.array([[0., 0.]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.receive_focus
+        angles_of_interest = np.array([[0., 0.]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.probe_focus_points[:, 0, :]
 
         range_bins = self.waveform.range_bins
         velocity_bins = self.waveform.velocity_bins

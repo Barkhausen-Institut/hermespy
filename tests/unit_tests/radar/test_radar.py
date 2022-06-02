@@ -159,8 +159,8 @@ class TestRadar(TestCase):
         self.radar.receive_beamformer = Mock()
         self.radar.receive_beamformer.num_receive_input_streams = 2
         self.radar.receive_beamformer.num_receive_output_streams = 1
-        self.radar.receive_beamformer.receive.return_value = np.zeros((1, 1, 1), dtype=complex)
-        self.radar.receive_beamformer.receive_focus = np.zeros((1, 2), dtype=float)
+        self.radar.receive_beamformer.probe.return_value = np.zeros((1, 1, 1), dtype=complex)
+        self.radar.receive_beamformer.probe_focus_points = np.zeros((1, 1, 2), dtype=float)
 
     def test_transmit_beamfromer_setget(self) -> None:
         """Transmit beamformer property getter should return setter argument"""
