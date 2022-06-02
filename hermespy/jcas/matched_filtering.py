@@ -79,7 +79,7 @@ class MatchedFilterJcas(Modem, Radar):
             raise RuntimeError("Receiving from a matched filter joint must be preceeded by a transmission")
         
         # Receive information
-        modem_signal, symbols, bits = Modem.receive(self)
+        _, symbols, bits = Modem.receive(self)
         
         # Re-sample communication waveform
         signal = self._receiver.signal.resample(self.sampling_rate)

@@ -9,7 +9,7 @@ from scipy.constants import speed_of_light, pi
 from hermespy.core import Signal
 from hermespy.channel.cluster_delay_line_rural_macrocells import RuralMacrocellsLineOfSight
 from hermespy.simulation import Simulation
-from hermespy.simulation.antenna import IdealAntenna, UniformArray
+from hermespy.core import IdealAntenna, UniformArray
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

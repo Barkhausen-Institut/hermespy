@@ -10,6 +10,7 @@ from numpy import random as rnd
 from numpy.testing import assert_array_equal, assert_almost_equal
 
 from hermespy.coding import EncoderManager
+from hermespy.core import UniformArray, IdealAntenna, ChannelStateInformation, Signal
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.core.signal_model import Signal
 from hermespy.modem.modem import Modem
@@ -17,7 +18,6 @@ from hermespy.modem.symbols import Symbols
 from hermespy.modem.waveform_generator import WaveformGenerator
 from hermespy.precoding import SymbolPrecoding
 from hermespy.simulation import SimulatedDevice
-from hermespy.simulation.antenna import UniformArray, IdealAntenna
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
