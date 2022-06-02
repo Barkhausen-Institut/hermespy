@@ -55,7 +55,7 @@ jobs:
     - name: Install doc dependencies
       run: |
         sudo apt update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential octave
         pip install -e .[test,quadriga,documentation]
 
     - name: Build documentation
