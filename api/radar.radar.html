@@ -7,6 +7,7 @@
   <title>Radar Device Operation &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="radar.html">Radar Module</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Radar Device Operation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
@@ -173,6 +176,9 @@ TargetEstimation --- estimations
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>np.ndarray</p>
 </dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If position is not a three-dimensional vector.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -187,6 +193,9 @@ TargetEstimation --- estimations
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>np.ndarray</p>
 </dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If velocity is not a three-dimensional vector.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -200,6 +209,9 @@ TargetEstimation --- estimations
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>power</cite> is smaller or equal to zero.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -232,17 +244,22 @@ TargetEstimation --- estimations
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube.plot_range">
-<span class="sig-name descname"><span class="pre">plot_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.RadarCube.plot_range" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.RadarCube.plot_range" title="Permalink to this definition"></a></dt>
 <dd><p>Visualize the cube’s range data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</p></li>
+<li><p><strong>axes</strong> (<em>Optional</em><em>[</em><em>plt.Axes</em><em>]</em><em>, </em><em>optional</em>) – Matplotlib axes to plot the graph to.
+If none are provided, a new figure is created.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>The visualization figure.
+<cite>None</cite> if axes were provided.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>plt.Figure</p>
+<dd class="field-odd"><p>Optional[plt.Figure]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -259,11 +276,8 @@ TargetEstimation --- estimations
 Enabled by default.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>plt.Figure</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>plt.Figure</p>
 </dd>
 </dl>
 </dd></dl>
@@ -353,22 +367,32 @@ Enabled by default.</p></li>
 <span class="sig-name descname"><span class="pre">waveform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform" title="hermespy.radar.radar.RadarWaveform"><span class="pre">RadarWaveform</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.waveform" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.transmit">
-<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.Radar.transmit" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.transmit_beamformer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_beamformer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer" title="hermespy.beamforming.beamformer.TransmitBeamformer"><span class="pre">hermespy.beamforming.beamformer.TransmitBeamformer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.transmit_beamformer" title="Permalink to this definition"></a></dt>
+<dd><p>Beamforming applied during signal transmission.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer" title="hermespy.beamforming.beamformer.TransmitBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitBeamformer</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The beamformer.
+<cite>None</cite>, if no beamformer is configured during transmission.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.receive">
-<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.Radar.receive" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.receive_beamformer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive_beamformer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer" title="hermespy.beamforming.beamformer.ReceiveBeamformer"><span class="pre">hermespy.beamforming.beamformer.ReceiveBeamformer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.receive_beamformer" title="Permalink to this definition"></a></dt>
+<dd><p>Beamforming applied during signal transmission.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hermespy.radar.radar.RadarCube" title="hermespy.radar.radar.RadarCube"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarCube</span></code></a>]</p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer" title="hermespy.beamforming.beamformer.ReceiveBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveBeamformer</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The beamformer.
+<cite>None</cite>, if no beamformer is configured during transmission.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -407,6 +431,26 @@ Enabled by default.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.Radar.transmit" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.receive">
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.Radar.receive" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hermespy.radar.radar.RadarCube" title="hermespy.radar.radar.RadarCube"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarCube</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -422,7 +466,7 @@ Enabled by default.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d415250>
+<jinja2.runtime.BlockReference object at 0x7fb135438d60>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

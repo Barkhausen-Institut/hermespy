@@ -7,6 +7,7 @@
   <title>HermesPy API &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -111,6 +114,7 @@ The subpackages may have interdependencies, but in general, the root of dependen
 <li class="toctree-l2"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coding.html">Channel Coding Module</a><ul>
@@ -125,6 +129,12 @@ The subpackages may have interdependencies, but in general, the root of dependen
 <li class="toctree-l2"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
 <li class="toctree-l2"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
 </ul>
@@ -156,6 +166,11 @@ The subpackages may have interdependencies, but in general, the root of dependen
 <li class="toctree-l2"><a class="reference internal" href="precoding.spatial_multiplexing.html">Zero-Forcing Equalization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.ratio_combining.html">Maximum Ratio Combining</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.space_time_block_coding.html">Space-Time Block Coding</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.html">Beamforming Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamforming</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="radar.html">Radar Module</a><ul>
@@ -195,7 +210,7 @@ The subpackages may have interdependencies, but in general, the root of dependen
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d9fb340>
+<jinja2.runtime.BlockReference object at 0x7fb1304f62e0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

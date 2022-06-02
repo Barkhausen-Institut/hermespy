@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3GPP Cluster Delay Line Indoor Factory Model &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="3GPP Cluster Delay Line Indoor Office Model" href="channel.cluster_delay_line_indoor_office.html" />
+    <link rel="prev" title="3GPP Cluster Delay Line Model" href="channel.cluster_delay_lines.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="channel.html">Channel Modeling Module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">HermesPy API</a> &raquo;</li>
+          <li><a href="channel.html">Channel Modeling Module</a> &raquo;</li>
+      <li>3GPP Cluster Delay Line Indoor Factory Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/channel.cluster_delay_line_indoor_factory.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="module-hermespy.channel.cluster_delay_line_indoor_factory"></span><section id="gpp-cluster-delay-line-indoor-factory-model">
+<h1>3GPP Cluster Delay Line Indoor Factory Model<a class="headerlink" href="#gpp-cluster-delay-line-indoor-factory-model" title="Permalink to this headline"></a></h1>
+<p>Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IndoorFactoryBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">volume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_lines.ClusterDelayLineBase</span></code></a></p>
+<p>Indoor Factory Cluster Delay Line Model Base.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<em>float</em>) – Hall volume in m3.</p></li>
+<li><p><strong>surface</strong> (<em>float</em>) – Total surface hall area in m2 (walls/floor/ceiling).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.volume">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">volume</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.volume" title="Permalink to this definition"></a></dt>
+<dd><p>Hall volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Volume in m3.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – For volumes smaller or equal to zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.surface">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">surface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.surface" title="Permalink to this definition"></a></dt>
+<dd><p>Hall surface area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Surface area in m2.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – For surfaces areas smaller or equal to zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IndoorFactoryLineOfSight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">volume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase" title="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<p>Parameter Preset for the 3GPP Cluster Indoor-Factory Model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<em>float</em>) – Hall volume in m3.</p></li>
+<li><p><strong>surface</strong> (<em>float</em>) – Total surface hall area in m2 (walls/floor/ceiling).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IndoorFactoryLOS'</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.line_of_sight">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">line_of_sight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.line_of_sight" title="Permalink to this definition"></a></dt>
+<dd><p>Does this model assume direct line of sight between the two devices?</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(LOS\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Line of sight indicator.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cluster delay spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster delay spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aod_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aod_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aoa_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aoa_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zoa_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zoa_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in degrees</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZOD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_offset">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_offset" title="Permalink to this definition"></a></dt>
+<dd><p>Offset between Zenith Angle-of-Arrival and Angle-of-Departure.</p>
+<p>The offset is referred to as <span class="math notranslate nohighlight">\(\mu_{\mathrm{offset,ZOD}}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The offset in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.rice_factor_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.rice_factor_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the rice factor distribution.</p>
+<p>The rice factor realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\mu_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor mean in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.rice_factor_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.rice_factor_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the rice factor distribution.</p>
+<p>The rice factor realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\sigma_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_scaling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_scaling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_scaling" title="Permalink to this definition"></a></dt>
+<dd><p>Delay scaling proportionality factor</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(r_{\tau}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Scaling factor.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If scaling factor is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cross_polarization_power_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cross_polarization_power_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cross-polarization power.</p>
+<p>The cross-polarization power and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean power in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cross_polarization_power_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cross_polarization_power_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cross-polarization power.</p>
+<p>The cross-polarization power and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Power standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.num_clusters">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_clusters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.num_clusters" title="Permalink to this definition"></a></dt>
+<dd><p>Number of clusters.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(M\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of clusters.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.num_rays">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_rays</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.num_rays" title="Permalink to this definition"></a></dt>
+<dd><p>Number of rays per cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(N\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of rays.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_delay_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_delay_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_delay_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Delay spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{DS}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_aod_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aod_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_aod_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Departure spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASD}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_aoa_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_aoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_zoa_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_zoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_zoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Zenith Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ZSA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_shadowing_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_shadowing_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_shadowing_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster shadowing.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(\zeta\)</span> within the the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Cluster shadowing standard deviation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IndoorFactoryNoLineOfSight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">volume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase" title="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<p>Parameter Preset for the 3GPP Cluster Indoor-Factory Model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>volume</strong> (<em>float</em>) – Hall volume in m3.</p></li>
+<li><p><strong>surface</strong> (<em>float</em>) – Total surface hall area in m2 (walls/floor/ceiling).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IndoorFactoryNLOS'</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.line_of_sight">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">line_of_sight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.line_of_sight" title="Permalink to this definition"></a></dt>
+<dd><p>Does this model assume direct line of sight between the two devices?</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(LOS\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Line of sight indicator.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cluster delay spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster delay spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aod_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aod_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aoa_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aoa_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zoa_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zoa_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in degrees</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZOD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_offset">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_offset" title="Permalink to this definition"></a></dt>
+<dd><p>Offset between Zenith Angle-of-Arrival and Angle-of-Departure.</p>
+<p>The offset is referred to as <span class="math notranslate nohighlight">\(\mu_{\mathrm{offset,ZOD}}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The offset in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.rice_factor_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.rice_factor_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the rice factor distribution.</p>
+<p>The rice factor realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\mu_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor mean in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.rice_factor_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.rice_factor_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the rice factor distribution.</p>
+<p>The rice factor realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\sigma_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_scaling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_scaling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_scaling" title="Permalink to this definition"></a></dt>
+<dd><p>Delay scaling proportionality factor</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(r_{\tau}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Scaling factor.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If scaling factor is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cross_polarization_power_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cross_polarization_power_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cross-polarization power.</p>
+<p>The cross-polarization power and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean power in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cross_polarization_power_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cross_polarization_power_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cross-polarization power.</p>
+<p>The cross-polarization power and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Power standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.num_clusters">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_clusters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.num_clusters" title="Permalink to this definition"></a></dt>
+<dd><p>Number of clusters.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(M\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of clusters.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.num_rays">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_rays</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.num_rays" title="Permalink to this definition"></a></dt>
+<dd><p>Number of rays per cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(N\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of rays.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_delay_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_delay_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_delay_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Delay spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{DS}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_aod_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aod_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_aod_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Departure spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASD}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_aoa_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_aoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_zoa_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_zoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_zoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Zenith Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ZSA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_shadowing_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_shadowing_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_shadowing_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster shadowing.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(\zeta\)</span> within the the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Cluster shadowing standard deviation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="channel.cluster_delay_lines.html" class="btn btn-neutral float-left" title="3GPP Cluster Delay Line Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="channel.cluster_delay_line_indoor_office.html" class="btn btn-neutral float-right" title="3GPP Cluster Delay Line Indoor Office Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7fb130502730>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

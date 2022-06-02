@@ -7,6 +7,7 @@
   <title>Simulation Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Simulation Module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -108,17 +111,23 @@
 including noise and hardware modeling.</p>
 <div class="mermaid">
             classDiagram
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
-  PowerAmplifier &lt;|-- ClippingPowerAmplifier
-  Device &lt;|-- SimulatedDevice
-  Serializable &lt;|-- RfChain
-  PowerAmplifier &lt;|-- RappPowerAmplifier
-  RandomNode &lt;|-- Noise
-  Serializable &lt;|-- Simulation
-  PowerAmplifier &lt;|-- CustomPowerAmplifier
   Serializable &lt;|-- SimulatedDevice
-  Executable &lt;|-- Simulation
+  PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  Serializable &lt;|-- Gain
+  PowerAmplifier &lt;|-- RappPowerAmplifier
   MonteCarlo &lt;|-- Simulation
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
+  Device &lt;|-- SimulatedDevice
+  Serializable &lt;|-- Simulation
+  RandomNode &lt;|-- SimulatedDevice
+  Gain &lt;|-- AutomaticGainControl
+  RandomNode &lt;|-- Noise
+  Serializable &lt;|-- AnalogDigitalConverter
+  Scenario &lt;|-- SimulationScenario
+  Executable &lt;|-- Simulation
+  Serializable &lt;|-- PowerAmplifier
+  Serializable &lt;|-- RfChain
+  PowerAmplifier &lt;|-- CustomPowerAmplifier
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -141,7 +150,7 @@ including noise and hardware modeling.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d3c57f0>
+<jinja2.runtime.BlockReference object at 0x7fb12f77ddc0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

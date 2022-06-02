@@ -7,6 +7,7 @@
   <title>Coding Pipeline &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -37,9 +38,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -68,6 +70,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -169,6 +172,12 @@ encoding blocks of <span class="math notranslate nohighlight">\(K_n\)</span> bit
 <dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.yaml_tag">
 <span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Encoder'</span></em><a class="headerlink" href="#hermespy.coding.coding.Encoder.yaml_tag" title="Permalink to this definition"></a></dt>
 <dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.coding.coding.Encoder.enabled">
+<span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.coding.coding.Encoder.enabled" title="Permalink to this definition"></a></dt>
+<dd><p>Enable flag for the encoding within its managed pipeline.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -289,7 +298,7 @@ Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.coding.coding.EncoderManager">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EncoderManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_truncating</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.coding.coding.EncoderManager" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a></p>
 <p>Configuration managing a channel coding pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -507,7 +516,7 @@ Referred to as <span class="math notranslate nohighlight">\(L\)</span> within th
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016deb9c40>
+<jinja2.runtime.BlockReference object at 0x7fb12f552ac0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

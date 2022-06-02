@@ -7,6 +7,7 @@
   <title>Signal Modeling &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -63,6 +65,7 @@
 <li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Signal Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
@@ -70,6 +73,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -110,7 +114,7 @@
 <h1>Signal Modeling<a class="headerlink" href="#signal-modeling" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.signal_model.Signal">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.signal_model.Signal" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.signal_model.Signal" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class of signal models in HermesPy.</p>
 <dl class="py attribute">
@@ -170,6 +174,8 @@ M is the number of individual streams, T the number of available samples.</p></l
 i.e. the central frequency in Hz.
 Zero by default.</p></li>
 <li><p><strong>delay</strong> (<em>float</em><em>, </em><em>optional</em>) – Delay of the signal in seconds.
+Zero by default.</p></li>
+<li><p><strong>noise_power</strong> (<em>float</em><em>, </em><em>optional</em>) – Power of the noise superimposed to this signal model.
 Zero by default.</p></li>
 </ul>
 </dd>
@@ -270,6 +276,23 @@ where M is the number of individual streams and T the number of samples.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.signal_model.Signal.noise_power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.signal_model.Signal.noise_power" title="Permalink to this definition"></a></dt>
+<dd><p>Noise power of the superimposed noise signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Noise power.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the noise power is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.signal_model.Signal.power">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.signal_model.Signal.power" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the power of the modeled signal.</p>
@@ -352,17 +375,25 @@ Mixes <cite>added_signal</cite> according to the carrier-frequency distance.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.signal_model.Signal.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.signal_model.Signal.plot" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'both'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.signal_model.Signal.plot" title="Permalink to this definition"></a></dt>
 <dd><p>Plot the current signal in time- and frequency-domain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Figure title.</p></li>
 <li><p><strong>angle</strong> (<em>bool</em><em>, </em><em>optional</em>) – Plot the angle of complex frequency bins.</p></li>
+<li><p><strong>axes</strong> (<em>Optional</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>optional</em>) – Axes to which the graphs should be plotted to.
+If none are provided, the routine will create a new figure.</p></li>
+<li><p><strong>space</strong> (<em>Union</em><em>[</em><em>'time'</em><em>, </em><em>'frequency'</em><em>, </em><em>'both'</em><em>]</em><em>, </em><em>optional</em>) – Signal space to be plotted.
+By default, both spaces are visualized.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The created matplotlib figure.
+<cite>None</cite>, if axes were provided.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Optional[plt.figure]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -469,7 +500,7 @@ Will contain double the samples in time-domain.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016cbd47f0>
+<jinja2.runtime.BlockReference object at 0x7fb12f98eb20>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

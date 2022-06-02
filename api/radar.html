@@ -7,6 +7,7 @@
   <title>Radar Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -27,7 +28,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Radar Device Operation" href="radar.radar.html" />
-    <link rel="prev" title="Space-Time Block Coding" href="precoding.space_time_block_coding.html" /> 
+    <link rel="prev" title="Conventional Beamforming" href="beamforming.conventional.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Radar Module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
@@ -105,8 +108,8 @@
 devices.</p>
 <div align="center" class="mermaid align-center">
             classDiagram
-  DuplexOperator &lt;|-- Radar
   RadarWaveform &lt;|-- FMCW
+  DuplexOperator &lt;|-- Radar
         </div>
         <p>It consists of the</p>
 <div class="toctree-wrapper compound">
@@ -126,14 +129,14 @@ devices.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="precoding.space_time_block_coding.html" class="btn btn-neutral float-left" title="Space-Time Block Coding" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="beamforming.conventional.html" class="btn btn-neutral float-left" title="Conventional Beamforming" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="radar.radar.html" class="btn btn-neutral float-right" title="Radar Device Operation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d316b80>
+<jinja2.runtime.BlockReference object at 0x7fb12fafc0d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

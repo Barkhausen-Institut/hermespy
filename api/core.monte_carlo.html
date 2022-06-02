@@ -7,6 +7,7 @@
   <title>PyMonte &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -37,9 +38,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -64,6 +66,7 @@
 <li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
@@ -71,6 +74,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -616,7 +620,7 @@ Evaluators used to process the investigated object sample state.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloActor.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_section</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.run" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_section</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the simulation actor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1004,12 +1008,13 @@ but may be an attribute or sub-attribute of the investigated object.</p></li>
 </dd></dl>
 
 </section>
-<p id="id5"><dl class="footnote brackets">
+<div class="docutils container" id="id5">
+<dl class="footnote brackets">
 <dt class="label" id="footcite-2014-bayer"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>)</span></dt>
 <dd><p>Christian Bayer, Håkon Hoel, Erik von Schwerin, and Raúl Tempone. On Non-Asymptotic Optimal Stopping Criteria in Monte Carlo Simulations. <em>SIAM Journal on Scientific Computing</em>, 36(2):A869–A885, 2014. <a class="reference external" href="https://doi.org/10.1137/130911433">doi:10.1137/130911433</a>.</p>
 </dd>
 </dl>
-</p>
+</div>
 
 
            </div>
@@ -1022,7 +1027,7 @@ but may be an attribute or sub-attribute of the investigated object.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016cd43df0>
+<jinja2.runtime.BlockReference object at 0x7fb12f8a1610>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

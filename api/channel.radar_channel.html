@@ -7,6 +7,7 @@
   <title>Single-Target Radar Channel Modeling &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -27,7 +28,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Quadriga Channel Model" href="channel.quadriga.html" />
-    <link rel="prev" title="Multipath Fading Standard Templates" href="channel.multipath_fading_templates.html" /> 
+    <link rel="prev" title="3GPP Urban Macrocells Model" href="channel.cluster_delay_line_urban_macrocells.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,12 @@
 <li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Single-Target Radar Channel Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
 </ul>
@@ -67,6 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -107,7 +116,7 @@
 <h1>Single-Target Radar Channel Modeling<a class="headerlink" href="#single-target-radar-channel-modeling" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_cross_section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losses_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_cross_section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_azimuth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_zenith</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losses_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_velocity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="channel.channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.channel.Channel</span></code></a></p>
 <p>Model of a monostatic radar channel in base-band.</p>
 <p>The radar channel is currently implemented as a single-point reflector.
@@ -126,9 +135,13 @@ Only a radial velocity is considered.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target_range</strong> (<em>float</em>) – Distance from transmitter to target object</p></li>
 <li><p><strong>radar_cross_section</strong> (<em>float</em>) – Radar cross section (RCS) of the assumed single-point reflector in m**2</p></li>
+<li><p><strong>target_azimuth</strong> (<em>float</em><em>, </em><em>optional</em>) – Target location azimuth angle in radians, considering spherical coordinates.
+Zero by default.</p></li>
+<li><p><strong>target_zenith</strong> (<em>float</em><em>, </em><em>optional</em>) – Target location zenith angle in radians, considering spherical coordinates.
+Zero by default.</p></li>
 <li><p><strong>target_exists</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if a target exists, False if there is only noise/clutter</p></li>
 <li><p><strong>losses_db</strong> (<em>float</em><em>, </em><em>optional</em>) – Any additional atmospheric and/or cable losses, in dB (default = 0)</p></li>
-<li><p><strong>velocity</strong> (<em>float</em><em>, </em><em>optional</em>) – Radial velocity, in m/s (default = 0)</p></li>
+<li><p><strong>target_velocity</strong> (<em>float</em><em>, </em><em>optional</em>) – Radial target velocity, in m/s (default = 0)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
@@ -178,6 +191,34 @@ Only a radial velocity is considered.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.target_azimuth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target_azimuth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.target_azimuth" title="Permalink to this definition"></a></dt>
+<dd><p>Target position azimuth in spherical coordiantes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Azimuth angle in radians.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.target_zenith">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target_zenith</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.target_zenith" title="Permalink to this definition"></a></dt>
+<dd><p>Target position zenith in spherical coordiantes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Zenith angle in radians.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -263,14 +304,14 @@ The representer gets passed down the serialization tree to each node.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="channel.multipath_fading_templates.html" class="btn btn-neutral float-left" title="Multipath Fading Standard Templates" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="channel.cluster_delay_line_urban_macrocells.html" class="btn btn-neutral float-left" title="3GPP Urban Macrocells Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="channel.quadriga.html" class="btn btn-neutral float-right" title="Quadriga Channel Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d5ef970>
+<jinja2.runtime.BlockReference object at 0x7fb12f8237f0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

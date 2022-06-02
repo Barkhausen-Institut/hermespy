@@ -7,6 +7,7 @@
   <title>Physical Devices &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -64,6 +66,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -103,6 +106,290 @@
   <span class="target" id="module-hermespy.hardware_loop.physical_device"></span><section id="physical-devices">
 <h1>Physical Devices<a class="headerlink" href="#physical-devices" title="Permalink to this headline"></a></h1>
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SilentTransmitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SilentTransmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SilentTransmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Transmitter</span></code></a></p>
+<p>Silent transmitter mock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p></li>
+<li><p><strong>*args</strong> – Operator base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – Operator base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SilentTransmitter.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SilentTransmitter.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate which this operator continuous signals into discrete samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>rate (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SilentTransmitter.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SilentTransmitter.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Transmit a signal.</p>
+<p>Registers the signal samples to be transmitted by the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of the transmitted signal.
+If not specified, the duration will be inferred by the transmitter.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of transmitted signal as well as additional information.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SilentTransmitter.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SilentTransmitter.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PowerReceiver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PowerReceiver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PowerReceiver" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Receiver</span></code></a></p>
+<p>Noise receiver mock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p></li>
+<li><p><strong>*args</strong> – Operator base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – Operator base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PowerReceiver.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PowerReceiver.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate which this operator continuous signals into discrete samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>rate (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PowerReceiver.energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PowerReceiver.energy" title="Permalink to this definition"></a></dt>
+<dd><p>Average energy of the received signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Energy.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PowerReceiver.receive">
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PowerReceiver.receive" title="Permalink to this definition"></a></dt>
+<dd><p>Receive a signal.</p>
+<p>Pulls the required signal model and channel state information from the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tuple of received signal as well as additional information.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PowerReceiver.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PowerReceiver.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalTransmitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SignalTransmitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalTransmitter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Transmitter</span></code></a></p>
+<p>Silent transmitter mock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p></li>
+<li><p><strong>*args</strong> – Operator base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – Operator base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalTransmitter.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalTransmitter.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate which this operator continuous signals into discrete samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>rate (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalTransmitter.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalTransmitter.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Transmit a signal.</p>
+<p>Registers the signal samples to be transmitted by the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of the transmitted signal.
+If not specified, the duration will be inferred by the transmitter.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of transmitted signal as well as additional information.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalTransmitter.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalTransmitter.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalReceiver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SignalReceiver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalReceiver" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Receiver</span></code></a></p>
+<p>Noise receiver mock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p></li>
+<li><p><strong>*args</strong> – Operator base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – Operator base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalReceiver.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalReceiver.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate which this operator continuous signals into discrete samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>rate (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalReceiver.energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalReceiver.energy" title="Permalink to this definition"></a></dt>
+<dd><p>Average energy of the received signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Energy.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalReceiver.receive">
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalReceiver.receive" title="Permalink to this definition"></a></dt>
+<dd><p>Receive a signal.</p>
+<p>Pulls the required signal model and channel state information from the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tuple of received signal as well as additional information.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, Any, …]</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.SignalReceiver.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.SignalReceiver.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PhysicalDevice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Device</span></code></a></p>
@@ -115,6 +402,20 @@
 </ul>
 </dd>
 </dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.calibration_delay">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calibration_delay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.calibration_delay" title="Permalink to this definition"></a></dt>
+<dd><p>Delay compensation of the device calibration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay compensation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.trigger">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trigger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.trigger" title="Permalink to this definition"></a></dt>
@@ -122,6 +423,24 @@
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Transmit signal over this device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>clear_cache</strong> (<em>bool</em><em>, </em><em>optional</em>) – Clear the cache of operator signals to be transmitted.
+Enabled by default.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Signal emitted by this device.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -160,16 +479,65 @@
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.transmitters">
-<span class="sig-name descname"><span class="pre">transmitters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">TransmitterSlot</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.transmitters" title="Permalink to this definition"></a></dt>
-<dd><p>Transmitters broadcasting signals over this device.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.estimate_noise_power">
+<span class="sig-name descname"><span class="pre">estimate_noise_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.estimate_noise_power" title="Permalink to this definition"></a></dt>
+<dd><p>Estimate the power of the noise floor within the hardware.</p>
+<p>Receives <cite>num_samples</cite> without any transmissions and estimates the power over them.
+Note that any interference in this case will be interpreted as noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of received samples.
+1000 by default.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Estimated noise power at each respective receive channel,
+i.e. the variance of the unbiased received samples.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.receivers">
-<span class="sig-name descname"><span class="pre">receivers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ReceiverSlot</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.receivers" title="Permalink to this definition"></a></dt>
-<dd><p>Receivers capturing signals from this device</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.calibrate">
+<span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_delay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.calibrate" title="Permalink to this definition"></a></dt>
+<dd><p>Calibrate the hardware.</p>
+<p>Currently the calibration will only compensate possible time-delays.
+Ideally, the transmit and receive channels of the device should be connected by a patch cable.
+WARNING: An attenuator element may be required! Be careful!!!!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_delay</strong> (<em>float</em>) – The maximum expected delay which the calibration should compensate for in seconds.</p></li>
+<li><p><strong>calibration_file</strong> (<em>str</em>) – Location of the calibration dump within the filesystem.</p></li>
+<li><p><strong>num_iterations</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of calibration iterations.
+Default is 10.</p></li>
+<li><p><strong>wait</strong> (<em>float</em><em>, </em><em>optional</em>) – Idle time between iteration transmissions in seconds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A figure of information regarding the calibration.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>plt.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device.PhysicalDevice.load_calibration">
+<span class="sig-name descname"><span class="pre">load_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calibration_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device.PhysicalDevice.load_calibration" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a dumped calibration from the filesystem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>calibration_file</strong> (<em>str</em>) – Location of the calibration dump.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -187,7 +555,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016cbb8ac0>
+<jinja2.runtime.BlockReference object at 0x7fb12f6bbd90>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

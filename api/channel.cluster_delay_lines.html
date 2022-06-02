@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3GPP Cluster Delay Line Model &mdash; HermesPy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="3GPP Cluster Delay Line Indoor Factory Model" href="channel.cluster_delay_line_indoor_factory.html" />
+    <link rel="prev" title="Multipath Fading Standard Templates" href="channel.multipath_fading_templates.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="channel.html">Channel Modeling Module</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api.html">HermesPy API</a> &raquo;</li>
+          <li><a href="channel.html">Channel Modeling Module</a> &raquo;</li>
+      <li>3GPP Cluster Delay Line Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/channel.cluster_delay_lines.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="module-hermespy.channel.cluster_delay_lines"></span><section id="gpp-cluster-delay-line-model">
+<h1>3GPP Cluster Delay Line Model<a class="headerlink" href="#gpp-cluster-delay-line-model" title="Permalink to this headline"></a></h1>
+<p>Within this module, HermesPy implements the 3GPP standard for cluster delay line models
+as defined in <em>Study on channel model for frequencies from 0.5 to 100 GHz</em><a class="footnote-reference brackets" href="#footcite-3gpp-tr38901" id="id1">1</a>.
+For a comprehensive description of all the parameters involved, please refer to the standard document.</p>
+<p>The abstract base class <a class="reference internal" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDelayLineBase</span></code></a> defines all required parameters as abstrat properties
+and is required to be implemented by each specific cluster delay line model.
+HermesPy features the full customizable model <a class="reference internal" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine" title="hermespy.channel.cluster_delay_lines.ClusterDelayLine"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDelayLine</span></code></a> as well as
+implementations describing standard-compliant benchmark scenarios</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 20%" />
+<col style="width: 21%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>Line Of Sight</p></th>
+<th class="head"><p>No Line Of Sight</p></th>
+<th class="head"><p>Outside To Inside</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html"><span class="doc">Indoor Factory</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorFactoryLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorFactoryNoLineOfSight</span></code></a></p></td>
+<td><p><em>Undefined</em></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html"><span class="doc">Indoor Office</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorOfficeLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorOfficeNoLineOfSight</span></code></a></p></td>
+<td><p><em>Undefined</em></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html"><span class="doc">Rural Macrocells</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight" title="hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuralMacrocellsLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight" title="hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuralMacrocellsNoLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside" title="hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuralMacrocellsOutsideToInside</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html"><span class="doc">Street Canyhon</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight" title="hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreetCanyonLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight" title="hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreetCanyonNoLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside" title="hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreetCanyonOutsideToInside</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html"><span class="doc">Urban Macrocells</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight</span></code></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+<p>with pre-defined parameters.
+In general, the HermesPy cluster delay line implementation mixes deterministic with
+statistical information:
+<a class="reference internal" href="simulation.simulated_device.html"><span class="doc">Devices</span></a> linked by cluster delay line models are required to specify their assumed
+positions and orientations, since the specular line of sight ray components are deterministic.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DelayNormalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Normalization routine applied to a set of sampled delays.</p>
+<p>Configuration option to :class:.ClusterDelayLineBase models.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization.ZERO">
+<span class="sig-name descname"><span class="pre">ZERO</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization.ZERO" title="Permalink to this definition"></a></dt>
+<dd><p>Normalize the delays, so that the minimal delay is zero</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization.TOF">
+<span class="sig-name descname"><span class="pre">TOF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization.TOF" title="Permalink to this definition"></a></dt>
+<dd><p>The minimal delay is the time of flight between two devices</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization.NONE" title="Permalink to this definition"></a></dt>
+<dd><p>No delay normalization is applied.</p>
+<p>Only relevant for debugging purposes.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClusterDelayLineBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delay_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DelayNormalization.ZERO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="channel.channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.channel.Channel</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>delay_normalization</strong> (<a class="reference internal" href="#hermespy.channel.cluster_delay_lines.DelayNormalization" title="hermespy.channel.cluster_delay_lines.DelayNormalization"><em>DelayNormalization</em></a><em>, </em><em>optional</em>) – The delay normalization routine applied during channel sampling.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_normalization">
+<span class="sig-name descname"><span class="pre">delay_normalization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.channel.cluster_delay_lines.DelayNormalization" title="hermespy.channel.cluster_delay_lines.DelayNormalization"><span class="pre">DelayNormalization</span></a></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_normalization" title="Permalink to this definition"></a></dt>
+<dd><p>The delay normalization routine applied during channel sampling.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.line_of_sight">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">line_of_sight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.line_of_sight" title="Permalink to this definition"></a></dt>
+<dd><p>Does this model assume direct line of sight between the two devices?</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(LOS\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Line of sight indicator.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_mean">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cluster delay spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster delay spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_mean">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_mean">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_mean">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_mean">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in degrees</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZOD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_offset">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_offset" title="Permalink to this definition"></a></dt>
+<dd><p>Offset between Zenith Angle-of-Arrival and Angle-of-Departure.</p>
+<p>The offset is referred to as <span class="math notranslate nohighlight">\(\mu_{\mathrm{offset,ZOD}}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The offset in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_mean">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the rice factor distribution.</p>
+<p>The rice factor realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\mu_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor mean in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the rice factor distribution.</p>
+<p>The rice factor realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\sigma_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_scaling">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_scaling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_scaling" title="Permalink to this definition"></a></dt>
+<dd><p>Delay scaling proportionality factor</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(r_{\tau}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Scaling factor.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If scaling factor is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_mean">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cross-polarization power.</p>
+<p>The cross-polarization power and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean power in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cross-polarization power.</p>
+<p>The cross-polarization power and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Power standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_clusters">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_clusters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_clusters" title="Permalink to this definition"></a></dt>
+<dd><p>Number of clusters.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(M\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of clusters.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_rays">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_rays</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_rays" title="Permalink to this definition"></a></dt>
+<dd><p>Number of rays per cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(N\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of rays.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_delay_spread">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_delay_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_delay_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Delay spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{DS}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aod_spread">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aod_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aod_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Departure spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASD}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aoa_spread">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_zoa_spread">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_zoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_zoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Zenith Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ZSA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_shadowing_std">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_shadowing_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_shadowing_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster shadowing.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(\zeta\)</span> within the the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Cluster shadowing standard deviation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.impulse_response">
+<span class="sig-name descname"><span class="pre">impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.impulse_response" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a new channel impulse response.</p>
+<p>Note that this is the core routine from which <cite>propagate</cite> will create the channel state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_samples</strong> (<em>int</em>) – Number of samples within the impulse response.</p></li>
+<li><p><strong>sampling_rate</strong> (<em>float</em>) – The rate at which the delay taps will be sampled, i.e. the delay resolution.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Impulse response in all <cite>number_rx_antennas</cite> x <cite>number_tx_antennas</cite>.
+4-dimensional array of size <cite>T x number_rx_antennas x number_tx_antennas x (L+1)</cite>
+where <cite>L</cite> is the maximum path delay (in samples). For the ideal
+channel in the base class, <cite>L = 0</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClusterDelayLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_of_sight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.38</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aod_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aod_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.41</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aoa_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.73</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aoa_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.28</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoa_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.73</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoa_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.34</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zod_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zod_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zod_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rice_factor_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rice_factor_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_polarization_power_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_polarization_power_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_clusters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_delay_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_aod_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_aoa_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">17.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_zoa_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_shadowing_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_lines.ClusterDelayLineBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<p>3GPP Cluster Delay Line Channel Model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_clusters</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of generated clusters per channel sample.</p></li>
+<li><p><strong>delay_spread</strong> (<em>float</em><em>, </em><em>optional</em>) – Root-Mean-Square spread of the cluster delay in seconds.</p></li>
+<li><p><strong>delay_scaling</strong> (<em>float</em><em>, </em><em>optional</em>) – Delay distribution proportionality factor.</p></li>
+<li><p><strong>rice_factor_mean</strong> (<em>float</em><em>, </em><em>optional</em>) – Mean of the rice factor K.</p></li>
+<li><p><strong>rice_factor_std</strong> (<em>float</em><em>, </em><em>optional</em>) – Standard deviation of the rice factor K.</p></li>
+<li><p><strong>cluster_shadowing_std</strong> (<em>float</em><em>, </em><em>optional</em>) – Cluster shadowing standard deviation in dB.</p></li>
+<li><p><strong>line_of_sight</strong> (<em>bool</em><em>, </em><em>optional</em>) – Is this model a line-of-sight model?</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ClusterDelayLine'</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.line_of_sight">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">line_of_sight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.line_of_sight" title="Permalink to this definition"></a></dt>
+<dd><p>Does this model assume direct line of sight between the two devices?</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(LOS\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Line of sight indicator.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cluster delay spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster delay spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Azimuth Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Azimuth Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Arriaval spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in seconds</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Arrival spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean angle spread in degrees</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the Zenith Angle-of-Departure spread.</p>
+<p>The spread realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZOD}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread standard deviation in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_offset">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_offset" title="Permalink to this definition"></a></dt>
+<dd><p>Offset between Zenith Angle-of-Arrival and Angle-of-Departure.</p>
+<p>The offset is referred to as <span class="math notranslate nohighlight">\(\mu_{\mathrm{offset,ZOD}}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The offset in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the rice factor distribution.</p>
+<p>The rice factor realization and its mean are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\mu_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor mean in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the rice factor distribution.</p>
+<p>The rice factor realization and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\sigma_K\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Rice factor standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_scaling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_scaling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_scaling" title="Permalink to this definition"></a></dt>
+<dd><p>Delay scaling proportionality factor</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(r_{\tau}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Scaling factor.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If scaling factor is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_mean">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_mean" title="Permalink to this definition"></a></dt>
+<dd><p>Mean of the cross-polarization power.</p>
+<p>The cross-polarization power and its mean are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Mean power in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cross-polarization power.</p>
+<p>The cross-polarization power and its standard deviation are referred to as
+<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Power standard deviation in dB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_clusters">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_clusters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_clusters" title="Permalink to this definition"></a></dt>
+<dd><p>Number of clusters.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(M\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of clusters.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_rays">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_rays</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_rays" title="Permalink to this definition"></a></dt>
+<dd><p>Number of rays per cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(N\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of rays.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_delay_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_delay_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_delay_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Delay spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{DS}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Delay spread in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aod_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aod_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aod_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Departure spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASD}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aoa_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Azimuth Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_zoa_spread">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_zoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_zoa_spread" title="Permalink to this definition"></a></dt>
+<dd><p>Zenith Angle-of-Arrival spread within an individual cluster.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(c_{ZSA}\)</span> within the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Angle spread in degrees.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_shadowing_std">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_shadowing_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_shadowing_std" title="Permalink to this definition"></a></dt>
+<dd><p>Standard deviation of the cluster shadowing.</p>
+<p>Referred to as <span class="math notranslate nohighlight">\(\zeta\)</span> within the the standard.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Cluster shadowing standard deviation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the deviation is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<div class="docutils container" id="id2">
+<dl class="footnote brackets">
+<dt class="label" id="footcite-3gpp-tr38901"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2020. version 16.1.0 Release 16. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf</a>.</p>
+</dd>
+</dl>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="channel.multipath_fading_templates.html" class="btn btn-neutral float-left" title="Multipath Fading Standard Templates" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="channel.cluster_delay_line_indoor_factory.html" class="btn btn-neutral float-right" title="3GPP Cluster Delay Line Indoor Factory Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7fb12fad2670>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

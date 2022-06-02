@@ -7,6 +7,7 @@
   <title>Installation &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
@@ -37,9 +38,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="index.html" class="icon icon-home"> HermesPy
+            <img src="_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -187,6 +189,10 @@ command line interface:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>setx PATH <span class="s2">&quot;%PATH%;&lt;path-to-octave-cli&gt;&quot;</span>
 </pre></div>
 </div>
+<p>When installing HermesPy from the distributed <a class="reference external" href="https://pypi.org/project/hermespy/">package</a>, the Quadriga source code needs to be installed manually.
+Download the latest version of <a class="reference external" href="https://quadriga-channel-model.de/">Quadriga</a> and extract the zip archive in a location of your choice.
+Afterwards, set the environment variable <cite>HERMES_QUADRIGA</cite> to point to the <cite>quadriga_src</cite> directory.
+This will point Hermes to search for the Quadriga files within the specified location during simulation runtime.</p>
 </section>
 </section>
 
@@ -201,7 +207,7 @@ command line interface:</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016cfd5460>
+<jinja2.runtime.BlockReference object at 0x7fb12fb57e20>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

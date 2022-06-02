@@ -7,6 +7,7 @@
   <title>Hardware Radio Frequency Chain Modeling &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation Module</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -161,26 +164,6 @@ None if the object state is default.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.rf_chain.RfChain.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.rf_chain.RfChain.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new <cite>RfChain</cite> instance from YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>RfChain</cite> serialization.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Newly created <cite>RfChain</cite> instance.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.simulation.rf_chain.rf_chain.RfChain" title="hermespy.simulation.rf_chain.rf_chain.RfChain">RfChain</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.rf_chain.RfChain.transmit">
 <span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.rf_chain.RfChain.transmit" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the distorted version of signal in “input_signal”.</p>
@@ -199,11 +182,11 @@ None if the object state is default.</p>
 <p>Notation taken from <a class="reference external" href="https://en.wikipedia.org/wiki/IQ_imbalance">https://en.wikipedia.org/wiki/IQ_imbalance</a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Signal to be detoriated as a matrix in shape <cite>#no_antennas x #no_samples</cite>.
+<dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Signal to be deteriorated as a matrix in shape <cite>#no_antennas x #no_samples</cite>.
 <cite>#no_antennas</cite> depends if on receiver or transmitter side.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Detoriated signal with the same shape as <cite>input_signal</cite>.</p>
+<dd class="field-even"><p>Deteriorated signal with the same shape as <cite>input_signal</cite>.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>np.ndarray</p>
@@ -240,12 +223,13 @@ None if the object state is default.</p>
 </dd></dl>
 
 </section>
-<p id="id2"><dl class="footnote brackets">
+<div class="docutils container" id="id2">
+<dl class="footnote brackets">
 <dt class="label" id="footcite-2018-kiayni"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>Adnan Kiayani, Muhammad Zeeshan Waheed, Lauri Anttila, Mahmoud Abdelaziz, Dani Korpi, Ville Syrjälä, Marko Kosunen, Kari Stadius, Jussi Ryynänen, and Mikko Valkama. Adaptive nonlinear rf cancellation for improved isolation in simultaneous transmit–receive systems. <em>IEEE Transactions on Microwave Theory and Techniques</em>, 66(5):2299–2312, 2018. <a class="reference external" href="https://doi.org/10.1109/TMTT.2017.2786729">doi:10.1109/TMTT.2017.2786729</a>.</p>
 </dd>
 </dl>
-</p>
+</div>
 
 
            </div>
@@ -258,7 +242,7 @@ None if the object state is default.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d2884c0>
+<jinja2.runtime.BlockReference object at 0x7fb12f42eb20>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -6,6 +6,7 @@
   <title>Index &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
@@ -34,9 +35,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="index.html" class="icon icon-home"> HermesPy
+            <img src="_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -172,6 +174,8 @@
       </ul></li>
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.active">active (Channel property)</a>
 </li>
+      <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.adc">adc (SimulatedDevice attribute)</a>
+</li>
       <li><a href="api/simulation.noise.html#hermespy.simulation.noise.noise.AWGN.add">add() (AWGN method)</a>
 
       <ul>
@@ -184,6 +188,8 @@
         <li><a href="api/core.device.html#hermespy.core.device.UnsupportedSlot.add">(UnsupportedSlot method)</a>
 </li>
       </ul></li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArray.add_antenna">add_antenna() (AntennaArray method)</a>
+</li>
       <li><a href="api/core.scenario.html#hermespy.core.scenario.Scenario.add_device">add_device() (Scenario method)</a>
 
       <ul>
@@ -214,8 +220,6 @@
         <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power">(RappPowerAmplifier attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/core.executable.html#hermespy.core.executable.Verbosity.ALL">ALL (Verbosity attribute)</a>
 </li>
       <li><a href="api/coding.coding.html#hermespy.coding.coding.EncoderManager.allow_padding">allow_padding (EncoderManager attribute)</a>
@@ -232,6 +236,150 @@
 </li>
       <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarCube.angle_bins">angle_bins (RadarCube attribute)</a>
 </li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna">Antenna (class in hermespy.core.antennas)</a>
+</li>
+      <li><a href="api/core.device.html#hermespy.core.device.Device.antenna_positions">antenna_positions (Device property)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArray">AntennaArray (class in hermespy.core.antennas)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase">AntennaArrayBase (class in hermespy.core.antennas)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArray.antennas">antennas (AntennaArray property)</a>
+
+      <ul>
+        <li><a href="api/core.device.html#hermespy.core.device.Device.antennas">(Device attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_mean">aoa_spread_mean (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_mean">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aoa_spread_mean">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aoa_spread_mean">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.aoa_spread_mean">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.aoa_spread_mean">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.aoa_spread_mean">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.aoa_spread_mean">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.aoa_spread_mean">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.aoa_spread_mean">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.aoa_spread_mean">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.aoa_spread_mean">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aoa_spread_mean">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aoa_spread_mean">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aoa_spread_mean">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_std">aoa_spread_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aoa_spread_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aoa_spread_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.aoa_spread_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.aoa_spread_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.aoa_spread_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.aoa_spread_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.aoa_spread_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.aoa_spread_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.aoa_spread_std">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.aoa_spread_std">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aoa_spread_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aoa_spread_std">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aoa_spread_std">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_mean">aod_spread_mean (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_mean">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aod_spread_mean">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aod_spread_mean">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.aod_spread_mean">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.aod_spread_mean">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.aod_spread_mean">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.aod_spread_mean">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.aod_spread_mean">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.aod_spread_mean">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.aod_spread_mean">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.aod_spread_mean">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aod_spread_mean">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aod_spread_mean">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aod_spread_mean">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_std">aod_spread_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.aod_spread_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.aod_spread_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.aod_spread_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.aod_spread_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.aod_spread_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.aod_spread_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.aod_spread_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.aod_spread_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.aod_spread_std">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.aod_spread_std">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aod_spread_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aod_spread_std">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aod_spread_std">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.append">append() (ChannelStateInformation method)</a>
 </li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.append_linear">append_linear() (ChannelStateInformation method)</a>
@@ -239,6 +387,8 @@
       <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.append_samples">append_samples() (Signal method)</a>
 </li>
       <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.append_streams">append_streams() (Signal method)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.array">array (Antenna property)</a>
 </li>
       <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.arriving_channels">arriving_channels() (SimulationScenario method)</a>
 </li>
@@ -280,6 +430,8 @@
         <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.bandwidth">(WaveformGeneratorPskQam property)</a>
 </li>
       </ul></li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.BeamformerBase">BeamformerBase (class in hermespy.beamforming.beamformer)</a>
+</li>
       <li>
     bin.hermes
 
@@ -357,6 +509,10 @@
 </li>
       <li><a href="api/core.device.html#hermespy.core.device.Receiver.cache_reception">cache_reception() (Receiver method)</a>
 </li>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.calibrate">calibrate() (PhysicalDevice method)</a>
+</li>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.calibration_delay">calibration_delay (PhysicalDevice property)</a>
+</li>
       <li><a href="api/core.device.html#hermespy.core.device.Device.carrier_frequency">carrier_frequency (Device property)</a>
 
       <ul>
@@ -369,6 +525,10 @@
         <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.carrier_frequency">(SimulatedDevice property)</a>
 </li>
       </ul></li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode.CARTESIAN">CARTESIAN (FocusMode attribute)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase.cartesian_response">cartesian_response() (AntennaArrayBase method)</a>
+</li>
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel">Channel (class in hermespy.channel.channel)</a>
 </li>
       <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.channel">channel() (SimulationScenario method)</a>
@@ -415,13 +575,179 @@
 </li>
       <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFskSynchronization">ChirpFskSynchronization (class in hermespy.modem.waveform_generator_chirp_fsk)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirps_in_frame">chirps_in_frame (WaveformGeneratorChirpFsk property)</a>
 </li>
       <li><a href="api/core.factory.html#hermespy.core.factory.Factory.clean">clean (Factory property)</a>
 </li>
+      <li><a href="api/core.device.html#hermespy.core.device.TransmitterSlot.clear_cache">clear_cache() (TransmitterSlot method)</a>
+</li>
       <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier">ClippingPowerAmplifier (class in hermespy.simulation.rf_chain.power_amplifier)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aoa_spread">cluster_aoa_spread (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aoa_spread">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_aoa_spread">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_aoa_spread">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.cluster_aoa_spread">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.cluster_aoa_spread">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.cluster_aoa_spread">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.cluster_aoa_spread">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.cluster_aoa_spread">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.cluster_aoa_spread">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.cluster_aoa_spread">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.cluster_aoa_spread">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_aoa_spread">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_aoa_spread">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_aoa_spread">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aod_spread">cluster_aod_spread (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aod_spread">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_aod_spread">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_aod_spread">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.cluster_aod_spread">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.cluster_aod_spread">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.cluster_aod_spread">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.cluster_aod_spread">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.cluster_aod_spread">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.cluster_aod_spread">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.cluster_aod_spread">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.cluster_aod_spread">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_aod_spread">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_aod_spread">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_aod_spread">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_delay_spread">cluster_delay_spread (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_delay_spread">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_delay_spread">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_delay_spread">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.cluster_delay_spread">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.cluster_delay_spread">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.cluster_delay_spread">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.cluster_delay_spread">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.cluster_delay_spread">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.cluster_delay_spread">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.cluster_delay_spread">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.cluster_delay_spread">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_delay_spread">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_delay_spread">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_delay_spread">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_shadowing_std">cluster_shadowing_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_shadowing_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_shadowing_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_shadowing_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.cluster_shadowing_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.cluster_shadowing_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.cluster_shadowing_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.cluster_shadowing_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.cluster_shadowing_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.cluster_shadowing_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.cluster_shadowing_std">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.cluster_shadowing_std">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_shadowing_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_shadowing_std">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_shadowing_std">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_zoa_spread">cluster_zoa_spread (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_zoa_spread">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cluster_zoa_spread">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cluster_zoa_spread">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.cluster_zoa_spread">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.cluster_zoa_spread">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.cluster_zoa_spread">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.cluster_zoa_spread">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.cluster_zoa_spread">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.cluster_zoa_spread">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.cluster_zoa_spread">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.cluster_zoa_spread">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_zoa_spread">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_zoa_spread">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_zoa_spread">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine">ClusterDelayLine (class in hermespy.channel.cluster_delay_lines)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase">ClusterDelayLineBase (class in hermespy.channel.cluster_delay_lines)</a>
 </li>
       <li><a href="api/coding.block_interleaver.html#hermespy.coding.block_interleaver.BlockInterleaver.code_block_size">code_block_size (BlockInterleaver property)</a>
 
@@ -441,8 +767,18 @@
       </ul></li>
       <li><a href="api/modem.evaluators.html#hermespy.modem.evaluators.CommunicationEvaluator">CommunicationEvaluator (class in hermespy.modem.evaluators)</a>
 </li>
-      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.complex_modulation">complex_modulation (WaveformGeneratorPskQam attribute)</a>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.FMCW.complex_modulation">complex_modulation (FMCW attribute)</a>
+
+      <ul>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RaisedCosine.complex_modulation">(RaisedCosine attribute)</a>
 </li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.Rectangular.complex_modulation">(Rectangular attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RootRaisedCosine.complex_modulation">(RootRaisedCosine attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.complex_modulation">(WaveformGeneratorPskQam attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.concatenate">concatenate() (ChannelStateInformation static method)</a>
 </li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator.confidence">confidence (Evaluator property)</a>
@@ -450,6 +786,8 @@
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator.confidence_level">confidence_level() (Evaluator method)</a>
 </li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.GridSection.confidences">confidences (GridSection property)</a>
+</li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform">ConfigurablePilotWaveform (class in hermespy.modem.waveform_generator)</a>
 </li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension.configure_point">configure_point() (GridDimension method)</a>
 </li>
@@ -461,6 +799,8 @@
         <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo.console">(MonteCarlo property)</a>
 </li>
       </ul></li>
+      <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer">ConventionalBeamformer (class in hermespy.beamforming.conventional)</a>
+</li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.GridSection.coordinates">coordinates (GridSection property)</a>
 </li>
       <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.copy">copy() (Signal method)</a>
@@ -473,7 +813,73 @@
 </li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameResource.cp_ratio">cp_ratio (FrameResource property)</a>
 </li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_mean">cross_polarization_power_mean (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_mean">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cross_polarization_power_mean">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cross_polarization_power_mean">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.cross_polarization_power_mean">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.cross_polarization_power_mean">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.cross_polarization_power_mean">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.cross_polarization_power_mean">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.cross_polarization_power_mean">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.cross_polarization_power_mean">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.cross_polarization_power_mean">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.cross_polarization_power_mean">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cross_polarization_power_mean">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cross_polarization_power_mean">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cross_polarization_power_mean">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_std">cross_polarization_power_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.cross_polarization_power_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.cross_polarization_power_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.cross_polarization_power_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.cross_polarization_power_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.cross_polarization_power_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.cross_polarization_power_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.cross_polarization_power_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.cross_polarization_power_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.cross_polarization_power_std">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.cross_polarization_power_std">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cross_polarization_power_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cross_polarization_power_std">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cross_polarization_power_std">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
       <li><a href="api/core.device.html#hermespy.core.device.Receiver.csi">csi (Receiver property)</a>
+</li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.CustomPilotSymbolSequence">CustomPilotSymbolSequence (class in hermespy.modem.waveform_generator)</a>
 </li>
       <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier">CustomPowerAmplifier (class in hermespy.simulation.rf_chain.power_amplifier)</a>
 </li>
@@ -490,6 +896,8 @@
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType.DATA">DATA (ElementType attribute)</a>
 </li>
       <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarCube.data">data (RadarCube attribute)</a>
+</li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.data_rate">data_rate (WaveformGenerator property)</a>
 </li>
       <li><a href="api/tools.math.html#tools.math.db2lin">db2lin() (in module tools.math)</a>
 </li>
@@ -543,11 +951,139 @@
         <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.delay">(Signal attribute)</a>, <a href="api/core.signal_model.html#id0">[1]</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_normalization">delay_normalization (ClusterDelayLineBase attribute)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.delay_normalization">(IndoorOfficeLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.delay_normalization">(IndoorOfficeNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.delay_normalization">(RuralMacrocellsLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.delay_normalization">(RuralMacrocellsNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.delay_normalization">(RuralMacrocellsOutsideToInside attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.delay_normalization">(StreetCanyonLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.delay_normalization">(StreetCanyonNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.delay_normalization">(StreetCanyonOutsideToInside attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_normalization">(UrbanMacrocellsLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_normalization">(UrbanMacrocellsNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.delay_normalization">(UrbanMacrocellsNoLineOfSightBase attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_normalization">(UrbanMacrocellsOutsideToInside attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.UrbanMicroCellsNoLineOfSight.delay_normalization">(UrbanMicroCellsNoLineOfSight attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/tools.resampling.html#tools.resampling.delay_resampling_matrix">delay_resampling_matrix() (in module tools.resampling)</a>
 </li>
       <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.delay_resolution_error">delay_resolution_error (MultipathFadingChannel attribute)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_scaling">delay_scaling (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_scaling">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_scaling">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_scaling">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.delay_scaling">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.delay_scaling">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.delay_scaling">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.delay_scaling">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.delay_scaling">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.delay_scaling">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.delay_scaling">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.delay_scaling">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_scaling">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_scaling">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_scaling">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_mean">delay_spread_mean (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_mean">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_spread_mean">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_spread_mean">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.delay_spread_mean">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.delay_spread_mean">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.delay_spread_mean">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.delay_spread_mean">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.delay_spread_mean">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.delay_spread_mean">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.delay_spread_mean">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.delay_spread_mean">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_spread_mean">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_spread_mean">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_spread_mean">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_std">delay_spread_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.delay_spread_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.delay_spread_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.delay_spread_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.delay_spread_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.delay_spread_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.delay_spread_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.delay_spread_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.delay_spread_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.delay_spread_std">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.delay_spread_std">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_spread_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_spread_std">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_spread_std">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.DelayNormalization">DelayNormalization (class in hermespy.channel.cluster_delay_lines)</a>
 </li>
       <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.delays">delays (MultipathFadingChannel property)</a>
 </li>
@@ -557,6 +1093,10 @@
         <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSection.demodulate">(FrameSection method)</a>
 </li>
         <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection.demodulate">(FrameSymbolSection method)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection.demodulate">(PilotSection method)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection.demodulate">(SchmidlCoxPilotSection method)</a>
 </li>
         <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.demodulate">(WaveformGenerator method)</a>
 </li>
@@ -572,10 +1112,12 @@
       <li><a href="api/core.device.html#hermespy.core.device.Device">Device (class in hermespy.core.device)</a>
 </li>
       <li><a href="api/core.device.html#hermespy.core.device.DuplexOperator.device">device (DuplexOperator property)</a>
+</li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode.DEVICE">DEVICE (FocusMode attribute)</a>
+</li>
+      <li><a href="api/core.device.html#hermespy.core.device.Operator.device">device (Operator property)</a>
 
       <ul>
-        <li><a href="api/core.device.html#hermespy.core.device.Operator.device">(Operator property)</a>
-</li>
         <li><a href="api/core.device.html#hermespy.core.device.OperatorSlot.device">(OperatorSlot property)</a>
 </li>
       </ul></li>
@@ -586,6 +1128,10 @@
       <li><a href="api/core.device.html#hermespy.core.device.DeviceType">DeviceType (in module hermespy.core.device)</a>
 </li>
       <li><a href="api/precoding.dft.html#hermespy.precoding.precoder_dft.DFT">DFT (class in hermespy.precoding.precoder_dft)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.UniformArray.dimensions">dimensions (UniformArray property)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Dipole">Dipole (class in hermespy.core.antennas)</a>
 </li>
       <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.doppler_frequency">doppler_frequency (MultipathFadingChannel property)</a>
 </li>
@@ -618,6 +1164,8 @@
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType">ElementType (class in hermespy.modem.waveform_generator_ofdm)</a>
 </li>
       <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.empty">empty() (Signal class method)</a>
+</li>
+      <li><a href="api/coding.coding.html#hermespy.coding.coding.Encoder.enabled">enabled (Encoder attribute)</a>
 </li>
       <li><a href="api/coding.block_interleaver.html#hermespy.coding.block_interleaver.BlockInterleaver.encode">encode() (BlockInterleaver method)</a>
 
@@ -659,12 +1207,12 @@
 </li>
       <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.encoder_manager">encoder_manager (Modem property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/coding.coding.html#hermespy.coding.coding.EncoderManager">EncoderManager (class in hermespy.coding.coding)</a>
 </li>
       <li><a href="api/coding.coding.html#hermespy.coding.coding.EncoderManager.encoders">encoders (EncoderManager property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/core.device.html#hermespy.core.device.DuplexOperator.energy">energy (DuplexOperator property)</a>
 
       <ul>
@@ -672,14 +1220,24 @@
 </li>
         <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.energy">(Modem property)</a>
 </li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.energy">(PowerReceiver property)</a>
+</li>
         <li><a href="api/radar.radar.html#hermespy.radar.radar.Radar.energy">(Radar property)</a>
 </li>
         <li><a href="api/core.device.html#hermespy.core.device.Receiver.energy">(Receiver property)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver.energy">(SignalReceiver property)</a>
 </li>
       </ul></li>
       <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel">equalize_channel() (ChannelEqualization method)</a>
 
       <ul>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization.equalize_channel">(OFDMMinimumMeanSquareChannelEqualization method)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization.equalize_channel">(OFDMZeroForcingChannelEqualization method)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamMinimumMeanSquareChannelEqualization.equalize_channel">(PskQamMinimumMeanSquareChannelEqualization method)</a>
+</li>
         <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamZeroForcingChannelEqualization.equalize_channel">(PskQamZeroForcingChannelEqualization method)</a>
 </li>
       </ul></li>
@@ -697,6 +1255,8 @@
         <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamLeastSquaresChannelEstimation.estimate_channel">(PskQamLeastSquaresChannelEstimation method)</a>
 </li>
       </ul></li>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.estimate_noise_power">estimate_noise_power() (PhysicalDevice method)</a>
+</li>
       <li><a href="api/modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator.evaluate">evaluate() (BitErrorEvaluator method)</a>
 
       <ul>
@@ -727,7 +1287,13 @@
 </li>
       <li><a href="api/core.device.html#hermespy.core.device.FloatingError">FloatingError</a>
 </li>
-      <li><a href="api/radar.fmcw.html#hermespy.radar.fmcw.FMCW">FMCW (class in hermespy.radar.fmcw)</a>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.FMCW">FMCW (class in hermespy.modem.waveform_generator_psk_qam)</a>
+
+      <ul>
+        <li><a href="api/radar.fmcw.html#hermespy.radar.fmcw.FMCW">(class in hermespy.radar.fmcw)</a>
+</li>
+      </ul></li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode">FocusMode (class in hermespy.beamforming.beamformer)</a>
 </li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSection.frame">frame (FrameSection attribute)</a>
 </li>
@@ -742,7 +1308,15 @@
 </li>
         <li><a href="api/core.device.html#hermespy.core.device.Operator.frame_duration">(Operator property)</a>
 </li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.frame_duration">(PowerReceiver property)</a>
+</li>
         <li><a href="api/radar.radar.html#hermespy.radar.radar.Radar.frame_duration">(Radar property)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver.frame_duration">(SignalReceiver property)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter.frame_duration">(SignalTransmitter property)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter.frame_duration">(SilentTransmitter property)</a>
 </li>
         <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.frame_duration">(WaveformGenerator property)</a>
 </li>
@@ -773,14 +1347,14 @@
 </li>
       <li><a href="api/core.factory.html#hermespy.core.factory.Factory.from_folder">from_folder() (Factory method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.from_interleaved">from_interleaved() (Signal class method)</a>
 </li>
       <li><a href="api/core.factory.html#hermespy.core.factory.Factory.from_path">from_path() (Factory method)</a>
 </li>
       <li><a href="api/core.factory.html#hermespy.core.factory.Factory.from_str">from_str() (Factory method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/core.factory.html#hermespy.core.factory.Factory.from_stream">from_stream() (Factory method)</a>
 </li>
       <li><a href="api/precoding.dft.html#hermespy.precoding.precoder_dft.DFT.from_yaml">from_yaml() (DFT class method)</a>
@@ -806,13 +1380,9 @@
 </li>
         <li><a href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.from_yaml">(MultipathFadingExponential class method)</a>
 </li>
-        <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.from_yaml">(PowerAmplifier class method)</a>
-</li>
         <li><a href="api/channel.quadriga.html#hermespy.channel.quadriga_channel.QuadrigaChannel.from_yaml">(QuadrigaChannel class method)</a>
 </li>
         <li><a href="api/core.random_node.html#hermespy.core.random_node.RandomNode.from_yaml">(RandomNode class method)</a>
-</li>
-        <li><a href="api/simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.from_yaml">(RfChain class method)</a>
 </li>
         <li><a href="api/core.factory.html#hermespy.core.factory.Serializable.from_yaml">(Serializable class method)</a>
 </li>
@@ -825,6 +1395,8 @@
         <li><a href="api/precoding.precoder.html#hermespy.precoding.symbol_precoder.SymbolPrecoder.from_yaml">(SymbolPrecoder class method)</a>
 </li>
         <li><a href="api/precoding.precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding.from_yaml">(SymbolPrecoding class method)</a>
+</li>
+        <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization.from_yaml">(Synchronization class method)</a>
 </li>
         <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.from_yaml">(WaveformGenerator class method)</a>
 </li>
@@ -892,10 +1464,66 @@
       <li><a href="api/bin.hermes.html#bin.hermes.hermes">hermes() (in module bin.hermes)</a>
 </li>
       <li>
+    hermespy.beamforming.beamformer
+
+      <ul>
+        <li><a href="api/beamforming.beamformer.html#module-hermespy.beamforming.beamformer">module</a>
+</li>
+      </ul></li>
+      <li>
+    hermespy.beamforming.conventional
+
+      <ul>
+        <li><a href="api/beamforming.conventional.html#module-hermespy.beamforming.conventional">module</a>
+</li>
+      </ul></li>
+      <li>
     hermespy.channel.channel
 
       <ul>
         <li><a href="api/channel.channel.html#module-hermespy.channel.channel">module</a>
+</li>
+      </ul></li>
+      <li>
+    hermespy.channel.cluster_delay_line_indoor_factory
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#module-hermespy.channel.cluster_delay_line_indoor_factory">module</a>
+</li>
+      </ul></li>
+      <li>
+    hermespy.channel.cluster_delay_line_indoor_office
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#module-hermespy.channel.cluster_delay_line_indoor_office">module</a>
+</li>
+      </ul></li>
+      <li>
+    hermespy.channel.cluster_delay_line_rural_macrocells
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#module-hermespy.channel.cluster_delay_line_rural_macrocells">module</a>
+</li>
+      </ul></li>
+      <li>
+    hermespy.channel.cluster_delay_line_street_canyon
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#module-hermespy.channel.cluster_delay_line_street_canyon">module</a>
+</li>
+      </ul></li>
+      <li>
+    hermespy.channel.cluster_delay_line_urban_macrocells
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#module-hermespy.channel.cluster_delay_line_urban_macrocells">module</a>
+</li>
+      </ul></li>
+      <li>
+    hermespy.channel.cluster_delay_lines
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#module-hermespy.channel.cluster_delay_lines">module</a>
 </li>
       </ul></li>
       <li>
@@ -962,6 +1590,13 @@
 </li>
       </ul></li>
       <li>
+    hermespy.core.antennas
+
+      <ul>
+        <li><a href="api/core.antennas.html#module-hermespy.core.antennas">module</a>
+</li>
+      </ul></li>
+      <li>
     hermespy.core.channel_state_information
 
       <ul>
@@ -1017,6 +1652,8 @@
         <li><a href="api/core.signal_model.html#module-hermespy.core.signal_model">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hermespy.hardware_loop.hardware_loop
 
@@ -1045,8 +1682,6 @@
         <li><a href="api/modem.evaluators.html#module-hermespy.modem.evaluators">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     hermespy.modem.modem
 
@@ -1207,6 +1842,10 @@
         <li><a href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.HILLY">(MultipathFadingCost256.TYPE attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode.HORIZONTAL">HORIZONTAL (FocusMode attribute)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase.horizontal_response">horizontal_response() (AntennaArrayBase method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1223,11 +1862,15 @@
 </li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ChannelEstimation.IDEAL_PREAMBLE">IDEAL_PREAMBLE (ChannelEstimation attribute)</a>
 </li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.IdealAntenna">IdealAntenna (class in hermespy.core.antennas)</a>
+</li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateFormat.IMPULSE_RESPONSE">IMPULSE_RESPONSE (ChannelStateFormat attribute)</a>
 </li>
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.impulse_response">impulse_response() (Channel method)</a>
 
       <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.impulse_response">(ClusterDelayLineBase method)</a>
+</li>
         <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.impulse_response">(MultipathFadingChannel method)</a>
 </li>
         <li><a href="api/channel.quadriga.html#hermespy.channel.quadriga_channel.QuadrigaChannel.impulse_response">(QuadrigaChannel method)</a>
@@ -1235,14 +1878,30 @@
         <li><a href="api/channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel.impulse_response">(RadarChannel method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.impulse_response_interpolation">impulse_response_interpolation (Channel attribute)</a>
 
       <ul>
-        <li><a href="api/channel.quadriga.html#hermespy.channel.quadriga_channel.QuadrigaChannel.impulse_response_interpolation">(QuadrigaChannel attribute)</a>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.impulse_response_interpolation">(StreetCanyonNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.impulse_response_interpolation">(StreetCanyonOutsideToInside attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.impulse_response_interpolation">(UrbanMacrocellsNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.impulse_response_interpolation">(UrbanMacrocellsOutsideToInside attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase">IndoorFactoryBase (class in hermespy.channel.cluster_delay_line_indoor_factory)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight">IndoorFactoryLineOfSight (class in hermespy.channel.cluster_delay_line_indoor_factory)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight">IndoorFactoryNoLineOfSight (class in hermespy.channel.cluster_delay_line_indoor_factory)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight">IndoorOfficeLineOfSight (class in hermespy.channel.cluster_delay_line_indoor_office)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight">IndoorOfficeNoLineOfSight (class in hermespy.channel.cluster_delay_line_indoor_office)</a>
+</li>
       <li><a href="api/core.executable.html#hermespy.core.executable.Verbosity.INFO">INFO (Verbosity attribute)</a>
 </li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateDimension.INFORMATION">INFORMATION (ChannelStateDimension attribute)</a>
@@ -1267,12 +1926,46 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/tools.math.html#tools.math.lin2db">lin2db() (in module tools.math)</a>
 </li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.line_of_sight">line_of_sight (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.line_of_sight">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.line_of_sight">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.line_of_sight">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.line_of_sight">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.line_of_sight">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.line_of_sight">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.line_of_sight">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.line_of_sight">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.line_of_sight">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.line_of_sight">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.line_of_sight">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.line_of_sight">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.line_of_sight">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.line_of_sight">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.linear">linear (ChannelStateInformation property)</a>
 </li>
       <li><a href="api/core.factory.html#hermespy.core.factory.Factory.load">load() (Factory method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.load_calibration">load_calibration() (PhysicalDevice method)</a>
+</li>
       <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_angle">los_angle (MultipathFadingChannel property)</a>
 </li>
       <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.los_doppler_frequency">los_doppler_frequency (MultipathFadingChannel property)</a>
@@ -1364,6 +2057,8 @@
 </li>
         <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection.modulate">(FrameSymbolSection method)</a>
 </li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection.modulate">(PilotSection method)</a>
+</li>
         <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.modulate">(WaveformGenerator method)</a>
 </li>
         <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulate">(WaveformGeneratorChirpFsk method)</a>
@@ -1376,6 +2071,8 @@
       <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.modulation_order">modulation_order (WaveformGenerator property)</a>
 
       <ul>
+        <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulation_order">(WaveformGeneratorChirpFsk property)</a>
+</li>
         <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.modulation_order">(WaveformGeneratorPskQam property)</a>
 </li>
       </ul></li>
@@ -1385,7 +2082,23 @@
       <ul>
         <li><a href="api/bin.hermes.html#module-bin.hermes">bin.hermes</a>
 </li>
+        <li><a href="api/beamforming.beamformer.html#module-hermespy.beamforming.beamformer">hermespy.beamforming.beamformer</a>
+</li>
+        <li><a href="api/beamforming.conventional.html#module-hermespy.beamforming.conventional">hermespy.beamforming.conventional</a>
+</li>
         <li><a href="api/channel.channel.html#module-hermespy.channel.channel">hermespy.channel.channel</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#module-hermespy.channel.cluster_delay_line_indoor_factory">hermespy.channel.cluster_delay_line_indoor_factory</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#module-hermespy.channel.cluster_delay_line_indoor_office">hermespy.channel.cluster_delay_line_indoor_office</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#module-hermespy.channel.cluster_delay_line_rural_macrocells">hermespy.channel.cluster_delay_line_rural_macrocells</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#module-hermespy.channel.cluster_delay_line_street_canyon">hermespy.channel.cluster_delay_line_street_canyon</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#module-hermespy.channel.cluster_delay_line_urban_macrocells">hermespy.channel.cluster_delay_line_urban_macrocells</a>
+</li>
+        <li><a href="api/channel.cluster_delay_lines.html#module-hermespy.channel.cluster_delay_lines">hermespy.channel.cluster_delay_lines</a>
 </li>
         <li><a href="api/channel.multipath_fading_channel.html#module-hermespy.channel.multipath_fading_channel">hermespy.channel.multipath_fading_channel</a>
 </li>
@@ -1404,6 +2117,8 @@
         <li><a href="api/coding.repetition.html#module-hermespy.coding.repetition_encoder">hermespy.coding.repetition_encoder</a>
 </li>
         <li><a href="api/coding.scrambler.html#module-hermespy.coding.scrambler">hermespy.coding.scrambler</a>
+</li>
+        <li><a href="api/core.antennas.html#module-hermespy.core.antennas">hermespy.core.antennas</a>
 </li>
         <li><a href="api/core.channel_state_information.html#module-hermespy.core.channel_state_information">hermespy.core.channel_state_information</a>
 </li>
@@ -1514,20 +2229,66 @@
 </li>
       <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.noise">noise (SimulatedDevice property)</a>
 </li>
+      <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.noise_power">noise_power (Signal property)</a>
+</li>
       <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.non_los_gains">non_los_gains (MultipathFadingChannel attribute)</a>
 </li>
-      <li><a href="api/core.executable.html#hermespy.core.executable.Verbosity.NONE">NONE (Verbosity attribute)</a>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.DelayNormalization.NONE">NONE (DelayNormalization attribute)</a>
+
+      <ul>
+        <li><a href="api/core.executable.html#hermespy.core.executable.Verbosity.NONE">(Verbosity attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType.NULL">NULL (ElementType attribute)</a>
 </li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo.num_actors">num_actors (MonteCarlo property)</a>
 </li>
-      <li><a href="api/core.device.html#hermespy.core.device.Device.num_antennas">num_antennas (Device property)</a>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArray.num_antennas">num_antennas (AntennaArray property)</a>
+
+      <ul>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase.num_antennas">(AntennaArrayBase property)</a>
 </li>
+        <li><a href="api/core.device.html#hermespy.core.device.Device.num_antennas">(Device property)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.UniformArray.num_antennas">(UniformArray property)</a>
+</li>
+      </ul></li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloSample.num_artifacts">num_artifacts (MonteCarloSample property)</a>
 </li>
       <li><a href="api/radar.fmcw.html#hermespy.radar.fmcw.FMCW.num_chirps">num_chirps (FMCW property)</a>
 </li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_clusters">num_clusters (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_clusters">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.num_clusters">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.num_clusters">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.num_clusters">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.num_clusters">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.num_clusters">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.num_clusters">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.num_clusters">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.num_clusters">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.num_clusters">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.num_clusters">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.num_clusters">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.num_clusters">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.num_clusters">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
       <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.num_data_bits_per_frame">num_data_bits_per_frame (Modem property)</a>
 </li>
       <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.num_data_chirps">num_data_chirps (WaveformGeneratorChirpFsk property)</a>
@@ -1590,14 +2351,64 @@
         <li><a href="api/precoding.spatial_multiplexing.html#hermespy.precoding.zero_forcing_equalizer.ZFTimeEqualizer.num_output_streams">(ZFTimeEqualizer property)</a>, <a href="api/precoding.zero_forcing_equalizer.html#hermespy.precoding.zero_forcing_equalizer.ZFTimeEqualizer.num_output_streams">[1]</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.num_outputs">num_outputs (Channel property)</a>
 </li>
       <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.num_pilot_chirps">num_pilot_chirps (WaveformGeneratorChirpFsk property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.num_pilot_samples">num_pilot_samples (WaveformGeneratorPskQam property)</a>
 </li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_rays">num_rays (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_rays">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.num_rays">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.num_rays">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.num_rays">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.num_rays">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.num_rays">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.num_rays">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.num_rays">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.num_rays">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.num_rays">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.num_rays">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.num_rays">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.num_rays">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.num_rays">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_focus_angles">num_receive_focus_angles (ConventionalBeamformer property)</a>
+
+      <ul>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_angles">(ReceiveBeamformer property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_input_streams">num_receive_input_streams (ConventionalBeamformer property)</a>
+
+      <ul>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_input_streams">(ReceiveBeamformer property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_output_streams">num_receive_output_streams (ConventionalBeamformer property)</a>
+
+      <ul>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_output_streams">(ReceiveBeamformer property)</a>
+</li>
+      </ul></li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.num_receive_streams">num_receive_streams (ChannelStateInformation property)</a>
 </li>
       <li><a href="api/core.scenario.html#hermespy.core.scenario.Scenario.num_receivers">num_receivers (Scenario property)</a>
@@ -1628,6 +2439,10 @@
         <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.GridSection.num_samples">(GridSection property)</a>
 </li>
         <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo.num_samples">(MonteCarlo property)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection.num_samples">(PilotSection property)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection.num_samples">(SchmidlCoxPilotSection property)</a>
 </li>
         <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.num_samples">(Signal property)</a>
 </li>
@@ -1664,6 +2479,24 @@
         <li><a href="api/modem.symbols.html#hermespy.modem.symbols.Symbols.num_symbols">(Symbols property)</a>
 </li>
       </ul></li>
+      <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer.num_transmit_focus_angles">num_transmit_focus_angles (ConventionalBeamformer property)</a>
+
+      <ul>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_angles">(TransmitBeamformer property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer.num_transmit_input_streams">num_transmit_input_streams (ConventionalBeamformer property)</a>
+
+      <ul>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_input_streams">(TransmitBeamformer property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer.num_transmit_output_streams">num_transmit_output_streams (ConventionalBeamformer property)</a>
+
+      <ul>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_output_streams">(TransmitBeamformer property)</a>
+</li>
+      </ul></li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.num_transmit_streams">num_transmit_streams (ChannelStateInformation property)</a>
 </li>
       <li><a href="api/core.scenario.html#hermespy.core.scenario.Scenario.num_transmitters">num_transmitters (Scenario property)</a>
@@ -1680,22 +2513,38 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization">OFDMChannelEqualization (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization">OFDMCorrelationSynchronization (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization">OFDMMinimumMeanSquareChannelEqualization (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization">OFDMSynchronization (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization">OFDMZeroForcingChannelEqualization (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.BeamformerBase.operator">operator (BeamformerBase property)</a>
+</li>
       <li><a href="api/core.device.html#hermespy.core.device.Operator">Operator (class in hermespy.core.device)</a>
-</li>
-      <li><a href="api/core.device.html#hermespy.core.device.OperatorSlot.operator_index">operator_index() (OperatorSlot method)</a>
-</li>
-      <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.operator_separation">operator_separation (SimulatedDevice attribute)</a>
-</li>
-      <li><a href="api/core.scenario.html#hermespy.core.scenario.Scenario.operators">operators (Scenario property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/core.device.html#hermespy.core.device.OperatorSlot.operator_index">operator_index() (OperatorSlot method)</a>
+</li>
+      <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.operator_separation">operator_separation (SimulatedDevice property)</a>
+</li>
+      <li><a href="api/core.scenario.html#hermespy.core.scenario.Scenario.operators">operators (Scenario property)</a>
+</li>
       <li><a href="api/core.device.html#hermespy.core.device.OperatorSlot">OperatorSlot (class in hermespy.core.device)</a>
 </li>
       <li><a href="api/core.device.html#hermespy.core.device.OperatorType">OperatorType (in module hermespy.core.device)</a>
 </li>
       <li><a href="api/core.device.html#hermespy.core.device.Device.orientation">orientation (Device property)</a>
+
+      <ul>
+        <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.orientation">(SimulatedDevice property)</a>
 </li>
+      </ul></li>
       <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.oversampling_factor">oversampling_factor (WaveformGenerator property)</a>
 </li>
   </ul></td>
@@ -1704,6 +2553,8 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.PatchAntenna">PatchAntenna (class in hermespy.core.antennas)</a>
+</li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection.pattern">pattern (FrameSymbolSection attribute)</a>
 </li>
       <li><a href="api/modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.PGT">PGT (in module hermespy.modem.waveform_correlation_synchronization)</a>
@@ -1716,15 +2567,39 @@
 </li>
       <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice">PhysicalDevice (class in hermespy.hardware_loop.physical_device)</a>
 </li>
-      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot">pilot (PilotWaveformGenerator property)</a>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection.pilot_elements">pilot_elements (PilotSection property)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.pilot_rate">pilot_rate (WaveformGeneratorPskQam property)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.pilot_section">pilot_section (WaveformGeneratorOfdm property)</a>
+</li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot_signal">pilot_signal (PilotWaveformGenerator property)</a>
 
       <ul>
-        <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot">(WaveformGeneratorChirpFsk property)</a>
+        <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot_signal">(WaveformGeneratorChirpFsk property)</a>
 </li>
-        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.pilot">(WaveformGeneratorPskQam property)</a>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.pilot_signal">(WaveformGeneratorOfdm property)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.pilot_signal">(WaveformGeneratorPskQam property)</a>
 </li>
       </ul></li>
-      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.pilot_rate">pilot_rate (WaveformGeneratorPskQam property)</a>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbol_sequence">pilot_symbol_sequence (ConfigurablePilotWaveform attribute)</a>
+
+      <ul>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.FMCW.pilot_symbol_sequence">(FMCW attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RaisedCosine.pilot_symbol_sequence">(RaisedCosine attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.Rectangular.pilot_symbol_sequence">(Rectangular attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RootRaisedCosine.pilot_symbol_sequence">(RootRaisedCosine attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbols">pilot_symbols() (ConfigurablePilotWaveform method)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection">PilotSection (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotSymbolSequence">PilotSymbolSequence (class in hermespy.modem.waveform_generator)</a>
 </li>
       <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator">PilotWaveformGenerator (class in hermespy.modem.waveform_generator)</a>
 </li>
@@ -1748,6 +2623,10 @@
       </ul></li>
       <li><a href="api/modem.symbols.html#hermespy.modem.symbols.Symbols.plot_constellation">plot_constellation() (Symbols method)</a>
 </li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.plot_gain">plot_gain() (Antenna method)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.plot_polarization">plot_polarization() (Antenna method)</a>
+</li>
       <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarCube.plot_range">plot_range() (RadarCube method)</a>
 </li>
       <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarCube.plot_range_velocity">plot_range_velocity() (RadarCube method)</a>
@@ -1760,10 +2639,30 @@
         <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension.plot_scale">(GridDimension property)</a>
 </li>
       </ul></li>
-      <li><a href="api/radar.radar.html#hermespy.radar.radar.PointDetection">PointDetection (class in hermespy.radar.radar)</a>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase.plot_topology">plot_topology() (AntennaArrayBase method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/radar.radar.html#hermespy.radar.radar.PointDetection">PointDetection (class in hermespy.radar.radar)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.polarization">polarization() (Antenna method)</a>
+
+      <ul>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArray.polarization">(AntennaArray method)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase.polarization">(AntennaArrayBase method)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.Dipole.polarization">(Dipole method)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.IdealAntenna.polarization">(IdealAntenna method)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.PatchAntenna.polarization">(PatchAntenna method)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.UniformArray.polarization">(UniformArray method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.pos">pos (Antenna property)</a>
+</li>
       <li><a href="api/core.device.html#hermespy.core.device.Device.position">position (Device property)</a>
 
       <ul>
@@ -1796,12 +2695,18 @@
 </li>
       <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier">PowerAmplifier (class in hermespy.simulation.rf_chain.power_amplifier)</a>
 </li>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver">PowerReceiver (class in hermespy.hardware_loop.physical_device)</a>
+</li>
       <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.precoding">precoding (Modem property)</a>
 
       <ul>
         <li><a href="api/precoding.precoder.html#hermespy.precoding.symbol_precoder.SymbolPrecoder.precoding">(SymbolPrecoder property)</a>
 </li>
       </ul></li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.probe">probe() (ReceiveBeamformer method)</a>
+</li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.probe_focus_points">probe_focus_points (ReceiveBeamformer property)</a>
+</li>
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.propagate">propagate() (Channel method)</a>
 </li>
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.Propagate">Propagate() (Channel static method)</a>
@@ -1817,6 +2722,8 @@
       <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamCorrelationSynchronization">PskQamCorrelationSynchronization (class in hermespy.modem.waveform_generator_psk_qam)</a>
 </li>
       <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamLeastSquaresChannelEstimation">PskQamLeastSquaresChannelEstimation (class in hermespy.modem.waveform_generator_psk_qam)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamMinimumMeanSquareChannelEqualization">PskQamMinimumMeanSquareChannelEqualization (class in hermespy.modem.waveform_generator_psk_qam)</a>
 </li>
       <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamSynchronization">PskQamSynchronization (class in hermespy.modem.waveform_generator_psk_qam)</a>
 </li>
@@ -1845,6 +2752,8 @@
       <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarCube">RadarCube (class in hermespy.radar.radar)</a>
 </li>
       <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarWaveform">RadarWaveform (class in hermespy.radar.radar)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RaisedCosine">RaisedCosine (class in hermespy.modem.waveform_generator_psk_qam)</a>
 </li>
       <li><a href="api/core.random_node.html#hermespy.core.random_node.RandomNode.random_mother">random_mother (RandomNode property)</a>
 </li>
@@ -1878,31 +2787,41 @@
       </ul></li>
       <li><a href="api/modem.symbols.html#hermespy.modem.symbols.Symbols.raw">raw (Symbols property)</a>
 </li>
-      <li><a href="api/core.device.html#hermespy.core.device.DuplexOperator.receive">receive() (DuplexOperator method)</a>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.receive">receive() (Antenna method)</a>
 
       <ul>
+        <li><a href="api/core.device.html#hermespy.core.device.DuplexOperator.receive">(DuplexOperator method)</a>
+</li>
         <li><a href="api/core.device.html#hermespy.core.device.DuplexReceiver.receive">(DuplexReceiver method)</a>
 </li>
         <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.receive">(Modem method)</a>
 </li>
         <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.receive">(PhysicalDevice method)</a>
 </li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.receive">(PowerReceiver method)</a>
+</li>
         <li><a href="api/radar.radar.html#hermespy.radar.radar.Radar.receive">(Radar method)</a>
+</li>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.receive">(ReceiveBeamformer method)</a>
 </li>
         <li><a href="api/core.device.html#hermespy.core.device.Receiver.receive">(Receiver method)</a>
 </li>
         <li><a href="api/simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.receive">(RfChain method)</a>
 </li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver.receive">(SignalReceiver method)</a>
+</li>
         <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.receive">(SimulatedDevice method)</a>
 </li>
       </ul></li>
+      <li><a href="api/radar.radar.html#hermespy.radar.radar.Radar.receive_beamformer">receive_beamformer (Radar property)</a>
+</li>
       <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.receive_devices">receive_devices() (SimulationRunner method)</a>
 </li>
-      <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.receive_operators">receive_operators() (SimulationRunner method)</a>
-</li>
-      <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.receive_signal">receive_signal() (SimulatedDevice method)</a>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus">receive_focus (ReceiveBeamformer property)</a>
 </li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateDimension.RECEIVE_STREAMS">RECEIVE_STREAMS (ChannelStateDimension attribute)</a>
+</li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer">ReceiveBeamformer (class in hermespy.beamforming.beamformer)</a>
 </li>
       <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.received_bits">received_bits (Modem property)</a>
 </li>
@@ -1917,16 +2836,14 @@
       <li><a href="api/core.device.html#hermespy.core.device.Device.receivers">receivers (Device attribute)</a>
 
       <ul>
-        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.receivers">(PhysicalDevice attribute)</a>
-</li>
         <li><a href="api/core.scenario.html#hermespy.core.scenario.Scenario.receivers">(Scenario property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/core.device.html#hermespy.core.device.ReceiverSlot">ReceiverSlot (class in hermespy.core.device)</a>
 </li>
       <li><a href="api/modem.evaluators.html#hermespy.modem.evaluators.CommunicationEvaluator.receiving_modem">receiving_modem (CommunicationEvaluator property)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.Rectangular">Rectangular (class in hermespy.modem.waveform_generator_psk_qam)</a>
 </li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ChannelEstimation.REFERENCE">REFERENCE (ChannelEstimation attribute)</a>
 
@@ -1956,6 +2873,22 @@
 </li>
       <li><a href="api/core.device.html#hermespy.core.device.OperatorSlot.remove">remove() (OperatorSlot method)</a>
 </li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArray.remove_antenna">remove_antenna() (AntennaArray method)</a>
+</li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.repeat_pilot_symbol_sequence">repeat_pilot_symbol_sequence (ConfigurablePilotWaveform attribute)</a>
+
+      <ul>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.FMCW.repeat_pilot_symbol_sequence">(FMCW attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RaisedCosine.repeat_pilot_symbol_sequence">(RaisedCosine attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.Rectangular.repeat_pilot_symbol_sequence">(Rectangular attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RootRaisedCosine.repeat_pilot_symbol_sequence">(RootRaisedCosine attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/coding.repetition.html#hermespy.coding.repetition_encoder.RepetitionEncoder">RepetitionEncoder (class in hermespy.coding.repetition_encoder)</a>
 </li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameElement.repetitions">repetitions (FrameElement attribute)</a>
@@ -1994,7 +2927,77 @@
 </li>
       <li><a href="api/simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain">RfChain (class in hermespy.simulation.rf_chain.rf_chain)</a>
 </li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_mean">rice_factor_mean (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_mean">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.rice_factor_mean">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.rice_factor_mean">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.rice_factor_mean">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.rice_factor_mean">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.rice_factor_mean">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.rice_factor_mean">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.rice_factor_mean">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.rice_factor_mean">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.rice_factor_mean">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.rice_factor_mean">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.rice_factor_mean">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.rice_factor_mean">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.rice_factor_mean">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_std">rice_factor_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.rice_factor_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.rice_factor_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.rice_factor_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.rice_factor_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.rice_factor_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.rice_factor_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.rice_factor_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.rice_factor_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.rice_factor_std">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.rice_factor_std">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.rice_factor_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.rice_factor_std">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.rice_factor_std">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
       <li><a href="api/channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel.rice_factors">rice_factors (MultipathFadingChannel property)</a>
+</li>
+      <li><a href="api/tools.math.html#tools.math.rms_value">rms_value() (in module tools.math)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RootRaisedCosine">RootRaisedCosine (class in hermespy.modem.waveform_generator_psk_qam)</a>
+</li>
+      <li><a href="api/tools.math.html#tools.math.rotation_matrix">rotation_matrix() (in module tools.math)</a>
 </li>
       <li><a href="api/core.executable.html#hermespy.core.executable.Executable.run">run() (Executable method)</a>
 
@@ -2008,8 +3011,24 @@
       </ul></li>
       <li><a href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.RURAL">RURAL (MultipathFadingCost256.TYPE attribute)</a>
 </li>
-      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.rx_filter">rx_filter (WaveformGeneratorPskQam attribute)</a>
+      <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight">RuralMacrocellsLineOfSight (class in hermespy.channel.cluster_delay_line_rural_macrocells)</a>
 </li>
+      <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight">RuralMacrocellsNoLineOfSight (class in hermespy.channel.cluster_delay_line_rural_macrocells)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside">RuralMacrocellsOutsideToInside (class in hermespy.channel.cluster_delay_line_rural_macrocells)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.FMCW.rx_filter">rx_filter (FMCW attribute)</a>
+
+      <ul>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RaisedCosine.rx_filter">(RaisedCosine attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.Rectangular.rx_filter">(Rectangular attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RootRaisedCosine.rx_filter">(RootRaisedCosine attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.rx_filter">(WaveformGeneratorPskQam attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -2059,11 +3078,19 @@
 </li>
         <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.sampling_rate">(Modem property)</a>
 </li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.sampling_rate">(PowerReceiver property)</a>
+</li>
         <li><a href="api/radar.radar.html#hermespy.radar.radar.Radar.sampling_rate">(Radar property)</a>
 </li>
         <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarWaveform.sampling_rate">(RadarWaveform property)</a>
 </li>
         <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.sampling_rate">(Signal property)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver.sampling_rate">(SignalReceiver property)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter.sampling_rate">(SignalTransmitter property)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter.sampling_rate">(SilentTransmitter property)</a>
 </li>
         <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.sampling_rate">(SimulatedDevice property)</a>
 </li>
@@ -2090,6 +3117,10 @@
         <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.Simulation.scenario">(Simulation property)</a>
 </li>
       </ul></li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection">SchmidlCoxPilotSection (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
+      <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization">SchmidlCoxSynchronization (class in hermespy.modem.waveform_generator_ofdm)</a>
+</li>
       <li><a href="api/coding.scrambler.html#hermespy.coding.scrambler.Scrambler3GPP">Scrambler3GPP (class in hermespy.coding.scrambler)</a>
 </li>
       <li><a href="api/coding.scrambler.html#hermespy.coding.scrambler.Scrambler80211a">Scrambler80211a (class in hermespy.coding.scrambler)</a>
@@ -2102,6 +3133,14 @@
 </li>
       <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.send">send() (PowerAmplifier method)</a>
 </li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.CustomPilotSymbolSequence.sequence">sequence (CustomPilotSymbolSequence property)</a>
+
+      <ul>
+        <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotSymbolSequence.sequence">(PilotSymbolSequence property)</a>
+</li>
+        <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.UniformPilotSymbolSequence.sequence">(UniformPilotSymbolSequence property)</a>
+</li>
+      </ul></li>
       <li><a href="api/core.factory.html#hermespy.core.factory.Serializable">Serializable (class in hermespy.core.factory)</a>
 </li>
       <li><a href="api/core.factory.html#hermespy.core.factory.SerializableArray">SerializableArray (class in hermespy.core.factory)</a>
@@ -2116,9 +3155,15 @@
 </li>
       <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal">Signal (class in hermespy.core.signal_model)</a>
 </li>
+      <li><a href="api/core.device.html#hermespy.core.device.Receiver.signal">signal (Receiver property)</a>
+</li>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver">SignalReceiver (class in hermespy.hardware_loop.physical_device)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/core.device.html#hermespy.core.device.Receiver.signal">signal (Receiver property)</a>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter">SignalTransmitter (class in hermespy.hardware_loop.physical_device)</a>
+</li>
+      <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter">SilentTransmitter (class in hermespy.hardware_loop.physical_device)</a>
 </li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo.simulate">simulate() (MonteCarlo method)</a>
 </li>
@@ -2150,9 +3195,11 @@
 </li>
       <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.smoothness_factor">smoothness_factor (RappPowerAmplifier property)</a>
 </li>
-      <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.Simulation.snr">snr (Simulation property)</a>
+      <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.snr">snr (SimulatedDevice property)</a>
 
       <ul>
+        <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.Simulation.snr">(Simulation property)</a>
+</li>
         <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.snr">(SimulationScenario property)</a>
 </li>
       </ul></li>
@@ -2160,11 +3207,23 @@
 </li>
       <li><a href="api/precoding.space_time_block_coding.html#hermespy.precoding.space_time_block_coding.SpaceTimeBlockCoding">SpaceTimeBlockCoding (class in hermespy.precoding.space_time_block_coding)</a>
 </li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.UniformArray.spacing">spacing (UniformArray property)</a>
+</li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode.SPHERICAL">SPHERICAL (FocusMode attribute)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase.spherical_response">spherical_response() (AntennaArrayBase method)</a>
+</li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.state">state (ChannelStateInformation property)</a>
 </li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation.state_format">state_format (ChannelStateInformation property)</a>
 </li>
       <li><a href="api/modem.bits_source.html#hermespy.modem.bits_source.StreamBitsSource">StreamBitsSource (class in hermespy.modem.bits_source)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight">StreetCanyonLineOfSight (class in hermespy.channel.cluster_delay_line_street_canyon)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight">StreetCanyonNoLineOfSight (class in hermespy.channel.cluster_delay_line_street_canyon)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside">StreetCanyonOutsideToInside (class in hermespy.channel.cluster_delay_line_street_canyon)</a>
 </li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.structure">structure (WaveformGeneratorOfdm attribute)</a>, <a href="api/modem.waveform_generator_ofdm.html#id2">[1]</a>
 </li>
@@ -2175,6 +3234,8 @@
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.subcarrier_spacing">subcarrier_spacing (WaveformGeneratorOfdm property)</a>
 </li>
       <li><a href="api/core.signal_model.html#hermespy.core.signal_model.Signal.superimpose">superimpose() (Signal method)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.surface">surface (IndoorFactoryBase property)</a>
 </li>
       <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.symbol_energy">symbol_energy (WaveformGenerator property)</a>
 
@@ -2223,6 +3284,8 @@
       <li><a href="api/modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.synchronize">synchronize() (CorrelationSynchronization method)</a>
 
       <ul>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization.synchronize">(SchmidlCoxSynchronization method)</a>
+</li>
         <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization.synchronize">(Synchronization method)</a>
 </li>
       </ul></li>
@@ -2232,9 +3295,13 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel.target_azimuth">target_azimuth (RadarChannel property)</a>
+</li>
       <li><a href="api/channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel.target_exists">target_exists (RadarChannel attribute)</a>
 </li>
       <li><a href="api/channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel.target_range">target_range (RadarChannel property)</a>
+</li>
+      <li><a href="api/channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel.target_zenith">target_zenith (RadarChannel property)</a>
 </li>
       <li><a href="api/modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.threshold">threshold (CorrelationSynchronization property)</a>
 </li>
@@ -2289,6 +3356,8 @@
       <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.to_yaml">to_yaml() (Channel class method)</a>
 
       <ul>
+        <li><a href="api/modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.to_yaml">(CorrelationSynchronization class method)</a>
+</li>
         <li><a href="api/precoding.dft.html#hermespy.precoding.precoder_dft.DFT.to_yaml">(DFT class method)</a>
 </li>
         <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameGuardSection.to_yaml">(FrameGuardSection class method)</a>
@@ -2337,6 +3406,8 @@
 </li>
         <li><a href="api/precoding.precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding.to_yaml">(SymbolPrecoding class method)</a>
 </li>
+        <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization.to_yaml">(Synchronization class method)</a>
+</li>
         <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.to_yaml">(WaveformGenerator class method)</a>
 </li>
         <li><a href="api/modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.to_yaml">(WaveformGeneratorChirpFsk class method)</a>
@@ -2352,6 +3423,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.DelayNormalization.TOF">TOF (DelayNormalization attribute)</a>
+</li>
       <li><a href="api/core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator.tolerance">tolerance (Evaluator property)</a>
 </li>
       <li>
@@ -2368,31 +3441,61 @@
         <li><a href="api/tools.resampling.html#module-tools.resampling">module</a>
 </li>
       </ul></li>
-      <li><a href="api/core.device.html#hermespy.core.device.Device.topology">topology (Device property)</a>
-</li>
-      <li><a href="api/core.device.html#hermespy.core.device.Device.transmit">transmit() (Device method)</a>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArray.topology">topology (AntennaArray property)</a>
 
       <ul>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.AntennaArrayBase.topology">(AntennaArrayBase property)</a>
+</li>
+        <li><a href="api/core.device.html#hermespy.core.device.Device.topology">(Device property)</a>
+</li>
+        <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.topology">(SimulatedDevice property)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.UniformArray.topology">(UniformArray property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/tools.math.html#tools.math.transform_coordinates">transform_coordinates() (in module tools.math)</a>
+</li>
+      <li><a href="api/tools.math.html#tools.math.transform_vector">transform_vector() (in module tools.math)</a>
+</li>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.transmit">transmit() (Antenna method)</a>
+
+      <ul>
+        <li><a href="api/core.device.html#hermespy.core.device.Device.transmit">(Device method)</a>
+</li>
         <li><a href="api/core.device.html#hermespy.core.device.DuplexOperator.transmit">(DuplexOperator method)</a>
 </li>
         <li><a href="api/core.device.html#hermespy.core.device.DuplexTransmitter.transmit">(DuplexTransmitter method)</a>
 </li>
         <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.transmit">(Modem method)</a>
 </li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.transmit">(PhysicalDevice method)</a>
+</li>
         <li><a href="api/radar.radar.html#hermespy.radar.radar.Radar.transmit">(Radar method)</a>
 </li>
         <li><a href="api/simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.transmit">(RfChain method)</a>
 </li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter.transmit">(SignalTransmitter method)</a>
+</li>
+        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter.transmit">(SilentTransmitter method)</a>
+</li>
         <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.transmit">(SimulatedDevice method)</a>
+</li>
+        <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer.transmit">(TransmitBeamformer method)</a>
 </li>
         <li><a href="api/core.device.html#hermespy.core.device.Transmitter.transmit">(Transmitter method)</a>
 </li>
       </ul></li>
+      <li><a href="api/radar.radar.html#hermespy.radar.radar.Radar.transmit_beamformer">transmit_beamformer (Radar property)</a>
+</li>
       <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.transmit_devices">transmit_devices() (SimulationRunner method)</a>
+</li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus">transmit_focus (TransmitBeamformer property)</a>
 </li>
       <li><a href="api/simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.transmit_operators">transmit_operators() (SimulationRunner method)</a>
 </li>
       <li><a href="api/core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateDimension.TRANSMIT_STREAMS">TRANSMIT_STREAMS (ChannelStateDimension attribute)</a>
+</li>
+      <li><a href="api/beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer">TransmitBeamformer (class in hermespy.beamforming.beamformer)</a>
 </li>
       <li><a href="api/modem.modem.html#hermespy.modem.modem.Modem.transmitted_bits">transmitted_bits (Modem property)</a>
 </li>
@@ -2405,8 +3508,6 @@
       <li><a href="api/core.device.html#hermespy.core.device.Device.transmitters">transmitters (Device attribute)</a>
 
       <ul>
-        <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.transmitters">(PhysicalDevice attribute)</a>
-</li>
         <li><a href="api/core.scenario.html#hermespy.core.scenario.Scenario.transmitters">(Scenario property)</a>
 </li>
       </ul></li>
@@ -2416,8 +3517,18 @@
 </li>
       <li><a href="api/hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.trigger">trigger() (PhysicalDevice method)</a>
 </li>
-      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.tx_filter">tx_filter (WaveformGeneratorPskQam attribute)</a>
+      <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.FMCW.tx_filter">tx_filter (FMCW attribute)</a>
+
+      <ul>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RaisedCosine.tx_filter">(RaisedCosine attribute)</a>
 </li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.Rectangular.tx_filter">(Rectangular attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.RootRaisedCosine.tx_filter">(RootRaisedCosine attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.WaveformGeneratorPskQam.tx_filter">(WaveformGeneratorPskQam attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameElement.type">type (FrameElement attribute)</a>
 </li>
   </ul></td>
@@ -2426,6 +3537,10 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.UniformArray">UniformArray (class in hermespy.core.antennas)</a>
+</li>
+      <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.UniformPilotSymbolSequence">UniformPilotSymbolSequence (class in hermespy.modem.waveform_generator)</a>
+</li>
       <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.unmap">unmap() (WaveformGenerator method)</a>
 
       <ul>
@@ -2441,6 +3556,16 @@
       <li><a href="api/core.device.html#hermespy.core.device.UnsupportedSlot">UnsupportedSlot (class in hermespy.core.device)</a>
 </li>
       <li><a href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingCost256.TYPE.URBAN">URBAN (MultipathFadingCost256.TYPE attribute)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight">UrbanMacrocellsLineOfSight (class in hermespy.channel.cluster_delay_line_urban_macrocells)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight">UrbanMacrocellsNoLineOfSight (class in hermespy.channel.cluster_delay_line_urban_macrocells)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase">UrbanMacrocellsNoLineOfSightBase (class in hermespy.channel.cluster_delay_line_urban_macrocells)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside">UrbanMacrocellsOutsideToInside (class in hermespy.channel.cluster_delay_line_urban_macrocells)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.UrbanMicroCellsNoLineOfSight">UrbanMicroCellsNoLineOfSight (class in hermespy.channel.cluster_delay_line_street_canyon)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -2458,8 +3583,6 @@
         <li><a href="api/simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.velocity">(SimulatedDevice property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/radar.fmcw.html#hermespy.radar.fmcw.FMCW.velocity_bins">velocity_bins (FMCW property)</a>
 
       <ul>
@@ -2468,9 +3591,13 @@
         <li><a href="api/radar.radar.html#hermespy.radar.radar.RadarWaveform.velocity_bins">(RadarWaveform property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/core.executable.html#hermespy.core.executable.Verbosity">Verbosity (class in hermespy.core.executable)</a>
 </li>
       <li><a href="api/core.executable.html#hermespy.core.executable.Executable.verbosity">verbosity (Executable property)</a>
+</li>
+      <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.volume">volume (IndoorFactoryBase property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -2526,9 +3653,11 @@
         <li><a href="api/channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel.yaml_matrix">(RadarChannel attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator.yaml_tag">yaml_tag (BitErrorEvaluator attribute)</a>
+      <li><a href="api/core.antennas.html#hermespy.core.antennas.Antenna.yaml_tag">yaml_tag (Antenna attribute)</a>
 
       <ul>
+        <li><a href="api/modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator.yaml_tag">(BitErrorEvaluator attribute)</a>
+</li>
         <li><a href="api/modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluator.yaml_tag">(BlockErrorEvaluator attribute)</a>
 </li>
         <li><a href="api/coding.block_interleaver.html#hermespy.coding.block_interleaver.BlockInterleaver.yaml_tag">(BlockInterleaver attribute)</a>
@@ -2536,6 +3665,12 @@
         <li><a href="api/channel.channel.html#hermespy.channel.channel.Channel.yaml_tag">(Channel attribute)</a>
 </li>
         <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.yaml_tag">(ClippingPowerAmplifier attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.yaml_tag">(ClusterDelayLine attribute)</a>
+</li>
+        <li><a href="api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer.yaml_tag">(ConventionalBeamformer attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.yaml_tag">(CorrelationSynchronization attribute)</a>
 </li>
         <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.yaml_tag">(CustomPowerAmplifier attribute)</a>
 </li>
@@ -2557,6 +3692,14 @@
 </li>
         <li><a href="api/hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.yaml_tag">(HardwareLoop attribute)</a>
 </li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.yaml_tag">(IndoorFactoryLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.yaml_tag">(IndoorFactoryNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.yaml_tag">(IndoorOfficeLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.yaml_tag">(IndoorOfficeNoLineOfSight attribute)</a>
+</li>
         <li><a href="api/precoding.ratio_combining.html#hermespy.precoding.ratio_combining.MaximumRatioCombining.yaml_tag">(MaximumRatioCombining attribute)</a>
 </li>
         <li><a href="api/precoding.mean_square_equalizer.html#hermespy.precoding.mean_square_equalizer.MMSESpaceEqualizer.yaml_tag">(MMSESpaceEqualizer attribute)</a>
@@ -2573,7 +3716,19 @@
 </li>
         <li><a href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingExponential.yaml_tag">(MultipathFadingExponential attribute)</a>
 </li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization.yaml_tag">(OFDMMinimumMeanSquareChannelEqualization attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization.yaml_tag">(OFDMZeroForcingChannelEqualization attribute)</a>
+</li>
         <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag">(PowerAmplifier attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamCorrelationSynchronization.yaml_tag">(PskQamCorrelationSynchronization attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamLeastSquaresChannelEstimation.yaml_tag">(PskQamLeastSquaresChannelEstimation attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamMinimumMeanSquareChannelEqualization.yaml_tag">(PskQamMinimumMeanSquareChannelEqualization attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_psk_qam.html#hermespy.modem.waveform_generator_psk_qam.PskQamZeroForcingChannelEqualization.yaml_tag">(PskQamZeroForcingChannelEqualization attribute)</a>
 </li>
         <li><a href="api/channel.quadriga.html#hermespy.channel.quadriga_channel.QuadrigaChannel.yaml_tag">(QuadrigaChannel attribute)</a>
 </li>
@@ -2589,7 +3744,15 @@
 </li>
         <li><a href="api/simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.yaml_tag">(RfChain attribute)</a>
 </li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.yaml_tag">(RuralMacrocellsLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.yaml_tag">(RuralMacrocellsNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.yaml_tag">(RuralMacrocellsOutsideToInside attribute)</a>
+</li>
         <li><a href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag">(SalehPowerAmplifier attribute)</a>
+</li>
+        <li><a href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization.yaml_tag">(SchmidlCoxSynchronization attribute)</a>
 </li>
         <li><a href="api/coding.scrambler.html#hermespy.coding.scrambler.Scrambler3GPP.yaml_tag">(Scrambler3GPP attribute)</a>
 </li>
@@ -2605,11 +3768,27 @@
 </li>
         <li><a href="api/precoding.space_time_block_coding.html#hermespy.precoding.space_time_block_coding.SpaceTimeBlockCoding.yaml_tag">(SpaceTimeBlockCoding attribute)</a>
 </li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.yaml_tag">(StreetCanyonLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.yaml_tag">(StreetCanyonNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.yaml_tag">(StreetCanyonOutsideToInside attribute)</a>
+</li>
         <li><a href="api/precoding.precoder.html#hermespy.precoding.symbol_precoder.SymbolPrecoder.yaml_tag">(SymbolPrecoder attribute)</a>
 </li>
         <li><a href="api/precoding.precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding.yaml_tag">(SymbolPrecoding attribute)</a>
 </li>
+        <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization.yaml_tag">(Synchronization attribute)</a>
+</li>
         <li><a href="api/modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluator.yaml_tag">(ThroughputEvaluator attribute)</a>
+</li>
+        <li><a href="api/core.antennas.html#hermespy.core.antennas.UniformArray.yaml_tag">(UniformArray attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.yaml_tag">(UrbanMacrocellsLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.yaml_tag">(UrbanMacrocellsNoLineOfSight attribute)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.yaml_tag">(UrbanMacrocellsOutsideToInside attribute)</a>
 </li>
         <li><a href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator.yaml_tag">(WaveformGenerator attribute)</a>
 </li>
@@ -2630,12 +3809,162 @@
 <h2 id="Z">Z</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.DelayNormalization.ZERO">ZERO (DelayNormalization attribute)</a>
+</li>
       <li><a href="api/precoding.spatial_multiplexing.html#hermespy.precoding.zero_forcing_equalizer.ZFSpaceEqualizer">ZFSpaceEqualizer (class in hermespy.precoding.zero_forcing_equalizer)</a>, <a href="api/precoding.zero_forcing_equalizer.html#hermespy.precoding.zero_forcing_equalizer.ZFSpaceEqualizer">[1]</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/precoding.spatial_multiplexing.html#hermespy.precoding.zero_forcing_equalizer.ZFTimeEqualizer">ZFTimeEqualizer (class in hermespy.precoding.zero_forcing_equalizer)</a>, <a href="api/precoding.zero_forcing_equalizer.html#hermespy.precoding.zero_forcing_equalizer.ZFTimeEqualizer">[1]</a>
 </li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_mean">zoa_spread_mean (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_mean">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zoa_spread_mean">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zoa_spread_mean">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.zoa_spread_mean">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.zoa_spread_mean">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.zoa_spread_mean">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.zoa_spread_mean">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.zoa_spread_mean">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.zoa_spread_mean">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.zoa_spread_mean">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.zoa_spread_mean">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zoa_spread_mean">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.zoa_spread_mean">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.zoa_spread_mean">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_std">zoa_spread_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zoa_spread_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zoa_spread_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.zoa_spread_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.zoa_spread_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.zoa_spread_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.zoa_spread_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.zoa_spread_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.zoa_spread_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.zoa_spread_std">(StreetCanyonNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.zoa_spread_std">(StreetCanyonOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zoa_spread_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.zoa_spread_std">(UrbanMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.zoa_spread_std">(UrbanMacrocellsOutsideToInside property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_offset">zod_offset (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_offset">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_offset">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_offset">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.zod_offset">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.zod_offset">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.zod_offset">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.zod_offset">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.zod_offset">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.zod_offset">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zod_offset">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.zod_offset">(UrbanMacrocellsNoLineOfSightBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.UrbanMicroCellsNoLineOfSight.zod_offset">(UrbanMicroCellsNoLineOfSight property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_mean">zod_spread_mean (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_mean">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_spread_mean">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_spread_mean">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.zod_spread_mean">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.zod_spread_mean">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.zod_spread_mean">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.zod_spread_mean">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.zod_spread_mean">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.zod_spread_mean">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zod_spread_mean">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.zod_spread_mean">(UrbanMacrocellsNoLineOfSightBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.UrbanMicroCellsNoLineOfSight.zod_spread_mean">(UrbanMicroCellsNoLineOfSight property)</a>
+</li>
+      </ul></li>
+      <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_std">zod_spread_std (ClusterDelayLine property)</a>
+
+      <ul>
+        <li><a href="api/channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_std">(ClusterDelayLineBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.zod_spread_std">(IndoorFactoryLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.zod_spread_std">(IndoorFactoryNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.zod_spread_std">(IndoorOfficeLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.zod_spread_std">(IndoorOfficeNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.zod_spread_std">(RuralMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.zod_spread_std">(RuralMacrocellsNoLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.zod_spread_std">(RuralMacrocellsOutsideToInside property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.zod_spread_std">(StreetCanyonLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zod_spread_std">(UrbanMacrocellsLineOfSight property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.zod_spread_std">(UrbanMacrocellsNoLineOfSightBase property)</a>
+</li>
+        <li><a href="api/channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.UrbanMicroCellsNoLineOfSight.zod_spread_std">(UrbanMicroCellsNoLineOfSight property)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -2648,7 +3977,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016ccce370>
+<jinja2.runtime.BlockReference object at 0x7fb12f7359d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -7,6 +7,7 @@
   <title>Communication Symbols &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,6 +73,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -178,15 +181,20 @@ the second dimension the number of symbols per stream.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.symbols.Symbols.plot_constellation">
-<span class="sig-name descname"><span class="pre">plot_constellation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.symbols.Symbols.plot_constellation" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_constellation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.symbols.Symbols.plot_constellation" title="Permalink to this definition"></a></dt>
 <dd><p>Plot the symbol constellation.</p>
 <p>Essentially projects the time-series of symbols onto a single complex plane.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Handle to the created matplotlib.pyplot figure object.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>axes</strong> (<em>Optional</em><em>[</em><em>plt.axes.Axes</em><em>]</em><em>, </em><em>optional</em>) – The axes to plot the graph to.
+By default, a new matplotlib figure is created.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Figure</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the created matplotlib.pyplot figure object.
+None if the axes were provided.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Optional[plt.Figure]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -206,7 +214,7 @@ the second dimension the number of symbols per stream.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016ccdd040>
+<jinja2.runtime.BlockReference object at 0x7fb1312d65b0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -7,6 +7,7 @@
   <title>Chirp Frequency Shift Keying &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,6 +73,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -111,7 +114,7 @@
 <h1>Chirp Frequency Shift Keying<a class="headerlink" href="#chirp-frequency-shift-keying" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WaveformGeneratorChirpFsk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chirp_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirp_bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_difference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pilot_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WaveformGeneratorChirpFsk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chirp_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirp_bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_difference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pilot_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotWaveformGenerator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
 <p>Implements a chirp FSK waveform generator.</p>
 <p>Frequency Shift Keying Waveform Generator object initialization.</p>
@@ -120,6 +123,10 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>chirp_duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of a single chirp in seconds.</p></li>
 <li><p><strong>chirp_bandwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – Bandwidth of a single chirp in Hz.</p></li>
+<li><p><strong>freq_difference</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Frequency difference of two adjacent chirp symbols.</p></li>
+<li><p><strong>num_pilot_chirps</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of pilot symbols within a single frame.</p></li>
+<li><p><strong>num_data_chirps</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of data symbols within a single frame.</p></li>
+<li><p><strong>guard_interval</strong> (<em>float</em><em>, </em><em>optional</em>) – Frame guard interval in seconds.</p></li>
 <li><p><strong>kwargs</strong> – Base waveform generator initialization arguments.</p></li>
 </ul>
 </dd>
@@ -194,13 +201,16 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_duration">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_duration" title="Permalink to this definition"></a></dt>
-<dd><p>Access the chirp duration.</p>
+<dd><p>Duration of a single chirp within a frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Chirp duration in seconds.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the duration is less or equal to zero.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -222,13 +232,16 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.freq_difference">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">freq_difference</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.freq_difference" title="Permalink to this definition"></a></dt>
-<dd><p>Access the frequency difference.</p>
+<dd><p>The frequency offset between neighbouring chirp symbols.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>The frequency difference in Hz.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>freq_difference</cite> is smaller or equal to zero.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -426,7 +439,7 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 <dd><p>Modulate a stream of data symbols to a base-band signal containing a single data frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_symbols</strong> (<em>np.ndarray</em>) – Vector of data symbols to be modulated.</p>
+<dd class="field-odd"><p><strong>data_symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Singular stream of data symbols to be modulated by this waveform.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Signal model of a single modulate data frame.</p>
@@ -506,6 +519,20 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulation_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modulation_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulation_order" title="Permalink to this definition"></a></dt>
+<dd><p>Access the modulation order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The modulation order.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.sampling_rate">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.sampling_rate" title="Permalink to this definition"></a></dt>
 <dd><p>Rate at which the waveform generator signal is internally sampled.</p>
@@ -520,8 +547,8 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot_signal">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot_signal" title="Permalink to this definition"></a></dt>
 <dd><p>Samples of the frame’s pilot section.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -576,7 +603,7 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d9c2430>
+<jinja2.runtime.BlockReference object at 0x7fb1316676d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

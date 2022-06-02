@@ -7,6 +7,7 @@
   <title>Channel Modeling Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,12 @@
 <li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
 </ul>
@@ -67,6 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -108,25 +117,65 @@
 the wireless transmission link between devices on a physical level.</p>
 <div class="mermaid">
             classDiagram
-  RandomNode &lt;|-- Channel
-  SerializableArray &lt;|-- Channel
-  MultipathFadingChannel &lt;|-- MultipathFadingCost256
-  MultipathFadingChannel &lt;|-- MultipathFadingExponential
+  UrbanMicroCellsNoLineOfSight &lt;|-- StreetCanyonNoLineOfSight
   Channel &lt;|-- MultipathFadingChannel
+  ClusterDelayLineBase &lt;|-- StreetCanyonLineOfSight
   Channel &lt;|-- QuadrigaChannel
-  Channel &lt;|-- RadarChannel
+  UrbanMicroCellsNoLineOfSight &lt;|-- StreetCanyonOutsideToInside
+  Serializable &lt;|-- StreetCanyonNoLineOfSight
+  Serializable &lt;|-- IndoorOfficeLineOfSight
+  Serializable &lt;|-- StreetCanyonOutsideToInside
+  ClusterDelayLineBase &lt;|-- UrbanMacrocellsLineOfSight
+  ClusterDelayLineBase &lt;|-- RuralMacrocellsOutsideToInside
+  IndoorFactoryBase &lt;|-- IndoorFactoryNoLineOfSight
+  Serializable &lt;|-- RuralMacrocellsLineOfSight
+  IndoorFactoryBase &lt;|-- IndoorFactoryLineOfSight
   MultipathFadingChannel &lt;|-- MultipathFading5GTDL
+  UrbanMacrocellsNoLineOfSightBase &lt;|-- UrbanMacrocellsOutsideToInside
+  RandomNode &lt;|-- Channel
+  Serializable &lt;|-- ClusterDelayLine
+  ClusterDelayLineBase &lt;|-- IndoorOfficeNoLineOfSight
+  Serializable &lt;|-- RuralMacrocellsNoLineOfSight
+  UrbanMacrocellsNoLineOfSightBase &lt;|-- UrbanMacrocellsNoLineOfSight
+  MultipathFadingChannel &lt;|-- MultipathFadingCost256
+  Serializable &lt;|-- StreetCanyonLineOfSight
+  SerializableArray &lt;|-- Channel
+  Serializable &lt;|-- IndoorFactoryNoLineOfSight
+  Serializable &lt;|-- IndoorFactoryLineOfSight
+  ClusterDelayLineBase &lt;|-- IndoorOfficeLineOfSight
+  Serializable &lt;|-- UrbanMacrocellsOutsideToInside
+  Channel &lt;|-- RadarChannel
+  QuadrigaInterface &lt;|-- QuadrigaOctaveInterface
+  Serializable &lt;|-- UrbanMacrocellsLineOfSight
+  Serializable &lt;|-- RuralMacrocellsOutsideToInside
+  Serializable &lt;|-- UrbanMacrocellsNoLineOfSight
+  ClusterDelayLineBase &lt;|-- RuralMacrocellsLineOfSight
+  MultipathFadingChannel &lt;|-- MultipathFadingExponential
+  Serializable &lt;|-- IndoorOfficeNoLineOfSight
+  ClusterDelayLineBase &lt;|-- ClusterDelayLine
+  ClusterDelayLineBase &lt;|-- RuralMacrocellsNoLineOfSight
         </div><p>The base class of all channel model implementations is defined within</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
 </ul>
 </div>
-<p>The following statistical / spatial channel models are currently supported:</p>
+<p>The following statistical channel models are currently supported:</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+</ul>
+</div>
+<p>The following spatial channel models are currently supported:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
 </ul>
@@ -144,7 +193,7 @@ the wireless transmission link between devices on a physical level.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016da2adf0>
+<jinja2.runtime.BlockReference object at 0x7fb1302e7e80>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

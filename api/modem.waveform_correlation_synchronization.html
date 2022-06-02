@@ -7,6 +7,7 @@
   <title>Correlation-Based Waveform Synchronization &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,6 +73,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -130,6 +133,12 @@
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PilotCorrelation'</span></em><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.threshold">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.threshold" title="Permalink to this definition"></a></dt>
@@ -174,7 +183,7 @@ the following samples for a span relative to the configured frame duration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of a single input stream with <cite>num_samples</cite> entries.</p></li>
+<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of with <cite>num_streams`x`num_samples</cite> entries.</p></li>
 <li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – State of the wireless transmission channel over which <cite>signal</cite> has been propagated.</p></li>
 </ul>
 </dd>
@@ -194,6 +203,27 @@ the following samples for a span relative to the configured frame duration.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize an <cite>CorrelationSynchronization</cite> object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<a class="reference internal" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" title="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><em>CorrelationSynchronization</em></a>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" title="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><em>CorrelationSynchronization</em></a>) – The <cite>CorrelationSynchronization</cite> instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -209,7 +239,7 @@ the following samples for a span relative to the configured frame duration.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016ccb92e0>
+<jinja2.runtime.BlockReference object at 0x7fb1300c1a30>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

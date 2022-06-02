@@ -7,6 +7,7 @@
   <title>Orthogonal Frequency Division Multiplexing &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,6 +73,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -714,7 +717,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WaveformGeneratorOfdm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_estimation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ChannelEstimation.IDEAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subcarrier_spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_subcarriers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dc_suppression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformGenerator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotWaveformGenerator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
 <p>Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.</p>
 <dl class="simple">
 <dt>The following features are supported:</dt><dd><ul class="simple">
@@ -851,6 +854,35 @@ will be zero-padded.</p></li>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.pilot_section">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_section</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.FrameSection" title="hermespy.modem.waveform_generator_ofdm.FrameSection"><span class="pre">hermespy.modem.waveform_generator_ofdm.FrameSection</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.pilot_section" title="Permalink to this definition"></a></dt>
+<dd><p>Static pilot section transmitted at the beginning of each OFDM frame.</p>
+<p>Required for time-domain synchronization and equalization of carrier frequency offsets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.FrameSection" title="hermespy.modem.waveform_generator_ofdm.FrameSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrameSection</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>FrameSection of the pilot symbols, <cite>None</cite> if no pilot is configured.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.pilot_signal">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.pilot_signal" title="Permalink to this definition"></a></dt>
+<dd><p>Model of the pilot sequence within this communication waveform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The pilot sequence.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.channel_estimation_algorithm">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channel_estimation_algorithm</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.ChannelEstimation" title="hermespy.modem.waveform_generator_ofdm.ChannelEstimation"><span class="pre">hermespy.modem.waveform_generator_ofdm.ChannelEstimation</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.channel_estimation_algorithm" title="Permalink to this definition"></a></dt>
 <dd><p>Used channel estimation algorithm.</p>
@@ -915,15 +947,13 @@ will be zero-padded.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.frame_duration">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.frame_duration" title="Permalink to this definition"></a></dt>
-<dd><p>“duration = 0.</p>
-<dl class="simple">
-<dt>for section in self.structure:</dt><dd><p>duration += section.duration</p>
-</dd>
-</dl>
-<p>return duration</p>
+<dd><p>Length of one data frame in seconds.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame length in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -983,7 +1013,7 @@ In general, L is greater or equal to K.</p>
 <dd><p>Modulate a stream of data symbols to a base-band signal containing a single data frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_symbols</strong> (<em>np.ndarray</em>) – Vector of data symbols to be modulated.</p>
+<dd class="field-odd"><p><strong>data_symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Singular stream of data symbols to be modulated by this waveform.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Signal model of a single modulate data frame.</p>
@@ -1102,7 +1132,7 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.power">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm.power" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the theoretical average symbol (unitless) power,</p>
-<p>Power of baseband_signal x[k] is defined as sum_{k=1}^N{<a href="#id7"><span class="problematic" id="id8">|x[k]|</span></a>}^2 / N
+<p>Power of baseband_signal x[k] is defined as sum_{k=1}^N{<a href="#id10"><span class="problematic" id="id11">|x[k]|</span></a>}^2 / N
 Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -1183,7 +1213,318 @@ The representer gets passed down the serialization tree to each node.</p></li>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.PilotSection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PilotSection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pilot_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.PilotSection" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.FrameSection" title="hermespy.modem.waveform_generator_ofdm.FrameSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.FrameSection</span></code></a></p>
+<p>Pilot symbol section within an OFDM frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pilot_elements</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a><em>]</em><em>, </em><em>optional</em>) – Symbols with which the subcarriers within the pilot will be modulated.
+By default, a pseudo-random sequence from the frame mapping will be generated.</p></li>
+<li><p><strong>frame</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm" title="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm"><em>WaveformGeneratorOfdm</em></a><em>]</em><em>, </em><em>optional</em>) – The frame configuration this pilot section belongs to.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.PilotSection.num_samples">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.PilotSection.num_samples" title="Permalink to this definition"></a></dt>
+<dd><p>Number of samples within this OFDM time-section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of samples</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.PilotSection.pilot_elements">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_elements</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">hermespy.modem.symbols.Symbols</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.PilotSection.pilot_elements" title="Permalink to this definition"></a></dt>
+<dd><p>Symbols with which the subcarriers within the pilot will be modulated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A stream of symbols. <cite>None</cite>, if no subsymbols where specified.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the configured symbols contains multiple streams.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.PilotSection.modulate">
+<span class="sig-name descname"><span class="pre">modulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.PilotSection.modulate" title="Permalink to this definition"></a></dt>
+<dd><p>Modulate this section into a complex base-band signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>symbols</strong> (<em>np.ndarray</em>) – The complex data symbols encoded in this OFDM section.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The modulated signal vector.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.PilotSection.demodulate">
+<span class="sig-name descname"><span class="pre">demodulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.PilotSection.demodulate" title="Permalink to this definition"></a></dt>
+<dd><p>Demodulate a time section of a complex OFDM base-band signal into data symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex-valued base-band samples.</p></li>
+<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Section symbol grid and channel response grid.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(np.ndarray, channel_state)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SchmidlCoxPilotSection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pilot_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.PilotSection" title="hermespy.modem.waveform_generator_ofdm.PilotSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.PilotSection</span></code></a></p>
+<p>Pilot Symbol Section of the Schmidl Cox Algorithm.</p>
+<p>Refer to Schmidl and Cox<a class="footnote-reference brackets" href="#footcite-1997-schmidl" id="id7">1</a> for a detailed description.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pilot_elements</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a><em>]</em><em>, </em><em>optional</em>) – Symbols with which the subcarriers within the pilot will be modulated.
+By default, a pseudo-random sequence from the frame mapping will be generated.</p></li>
+<li><p><strong>frame</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm" title="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm"><em>WaveformGeneratorOfdm</em></a><em>]</em><em>, </em><em>optional</em>) – The frame configuration this pilot section belongs to.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection.num_samples">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection.num_samples" title="Permalink to this definition"></a></dt>
+<dd><p>Number of samples within this OFDM time-section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of samples</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection.demodulate">
+<span class="sig-name descname"><span class="pre">demodulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection.demodulate" title="Permalink to this definition"></a></dt>
+<dd><p>Demodulate a time section of a complex OFDM base-band signal into data symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex-valued base-band samples.</p></li>
+<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Section symbol grid and channel response grid.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(np.ndarray, channel_state)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OFDMSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.Synchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm" title="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm</span></code></a>]</p>
+<p>Synchronization Routine for OFDM Waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this synchronization routine is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OFDMCorrelationSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" title="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm" title="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm</span></code></a>]</p>
+<p>Correlation-Based Pilot Detection and Synchronization for OFDM Waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Correlation threshold at which a pilot signal is detected.</p></li>
+<li><p><strong>guard_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Guard ratio of frame duration.</p></li>
+<li><p><strong>*args</strong> – Synchronization base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SchmidlCoxSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization" title="hermespy.modem.waveform_generator_ofdm.OFDMSynchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.OFDMSynchronization</span></code></a></p>
+<p>Schmidl-Cox Algorithm for OFDM Waveform Time Synchronization and Carrier Frequency Offset Equzalization.</p>
+<p>Applying the synchronization routine requires the respective waveform to have a <a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection" title="hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">SchmidlCoxPilotSection</span></code></a> pilot
+symbol section configured.</p>
+<p>Refer to Schmidl and Cox<a class="footnote-reference brackets" href="#footcite-1997-schmidl" id="id8">1</a> for a detailed description.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this synchronization routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SchmidlCox'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization.synchronize">
+<span class="sig-name descname"><span class="pre">synchronize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization.synchronize" title="Permalink to this definition"></a></dt>
+<dd><p>Simulates time-synchronization at the receiver-side.</p>
+<p>Sorts base-band signal-sections into frames in time-domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of with <cite>num_streams`x`num_samples</cite> entries.</p></li>
+<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – State of the wireless transmission channel over which <cite>signal</cite> has been propagated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of <cite>signal</cite> samples and channel transformations sorted into frames</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[Tuple[np.ndarray, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>]]</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the number of received streams in <cite>channel_state</cite> does not equal one.
+    If the length of <cite>signal</cite> and the number of samples in <cite>channel_state</cite> are not identical.</p></li>
+<li><p><strong>RuntimeError</strong> – If the synchronization routine is floating</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OFDMChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization" title="hermespy.modem.waveform_generator.ChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.ChannelEqualization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm" title="hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.WaveformGeneratorOfdm</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Channel estimation for OFDM waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OFDMZeroForcingChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a>, <a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization" title="hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Zero-Forcing Channel estimation for Psk Qam waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'OFDM-ZF'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization.equalize_channel">
+<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
+<dd><p>Equalize the wireless channel of a received communication frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Signal model of the communication frame waveform.</p></li>
+<li><p><strong>csi</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state estimation</p></li>
+<li><p><strong>snr</strong> (<em>float</em>) – Assumed signal to noise ratio.
+May be required by some routines, infinite by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The equalized signal model.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OFDMMinimumMeanSquareChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a>, <a class="reference internal" href="#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization" title="hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Minimum-Mean-Square Channel estimation for Psk Qam waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'OFDM-MMSE'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization.equalize_channel">
+<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
+<dd><p>Equalize the wireless channel of a received communication frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Signal model of the communication frame waveform.</p></li>
+<li><p><strong>csi</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state estimation</p></li>
+<li><p><strong>snr</strong> (<em>float</em>) – Assumed signal to noise ratio.
+May be required by some routines, infinite by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The equalized signal model.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
+<div class="docutils container" id="id9">
+<dl class="footnote brackets">
+<dt class="label" id="footcite-1997-schmidl"><span class="brackets">1</span><span class="fn-backref">(<a href="#id7">1</a>,<a href="#id8">2</a>)</span></dt>
+<dd><p>T.M. Schmidl and D.C. Cox. Robust frequency and timing synchronization for ofdm. <em>IEEE Transactions on Communications</em>, 45(12):1613–1621, 1997. <a class="reference external" href="https://doi.org/10.1109/26.650240">doi:10.1109/26.650240</a>.</p>
+</dd>
+</dl>
+</div>
 
 
            </div>
@@ -1196,7 +1537,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016cd34430>
+<jinja2.runtime.BlockReference object at 0x7fb12fbf7d00>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

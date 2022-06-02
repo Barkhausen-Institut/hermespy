@@ -7,6 +7,7 @@
   <title>Channel Coding Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -27,7 +28,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Coding Pipeline" href="coding.coding.html" />
-    <link rel="prev" title="Channel State Information Model" href="core.channel_state_information.html" /> 
+    <link rel="prev" title="Antenna Configuration" href="core.antennas.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -67,6 +69,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -108,11 +111,11 @@
 of operations on the bit level of communication signal processing chains.</p>
 <div class="mermaid">
             classDiagram
+  Encoder &lt;|-- Scrambler80211a
   Encoder &lt;|-- CyclicRedundancyCheck
+  Encoder &lt;|-- RepetitionEncoder
   Encoder &lt;|-- Scrambler3GPP
   Encoder &lt;|-- BlockInterleaver
-  Encoder &lt;|-- Scrambler80211a
-  Encoder &lt;|-- RepetitionEncoder
         </div><p>It consists of the basic pipeline description</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -134,14 +137,14 @@ of operations on the bit level of communication signal processing chains.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="core.channel_state_information.html" class="btn btn-neutral float-left" title="Channel State Information Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="core.antennas.html" class="btn btn-neutral float-left" title="Antenna Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="coding.coding.html" class="btn btn-neutral float-right" title="Coding Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d6761f0>
+<jinja2.runtime.BlockReference object at 0x7fb12f6fd2e0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

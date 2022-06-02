@@ -7,6 +7,7 @@
   <title>Device Modeling &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -63,6 +65,7 @@
 <li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
@@ -70,6 +73,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -719,6 +723,17 @@ If not specified, the duration will be inferred by the transmitter.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.device.TransmitterSlot.clear_cache">
+<span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.TransmitterSlot.clear_cache" title="Permalink to this definition"></a></dt>
+<dd><p>Clear the cached transmission of all registered transmit operators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -778,13 +793,15 @@ If not specified, the duration will be inferred by the transmitter.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.device.Device">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Device" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">antennas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.device.Device" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a></p>
 <p>Physical device representation within HermesPy.</p>
 <p>It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>antennas</strong> (<a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArrayBase" title="hermespy.core.antennas.AntennaArrayBase"><em>AntennaArrayBase</em></a><em>, </em><em>optional</em>) – Model of the device’s antenna array.
+By default, a <code class="xref py py-class docutils literal notranslate"><span class="pre">UniformArray</span></code> of ideal antennas is assumed.</p></li>
 <li><p><strong>power</strong> (<em>float</em><em>, </em><em>optional</em>) – Average power of the transmitted signals in Watts.
 1.0 Watt by default.</p></li>
 <li><p><strong>position</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Position of the device within its scenario in cartesian coordinates.
@@ -797,6 +814,12 @@ By default, a single ideal omnidirectional antenna is assumed.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.antennas">
+<span class="sig-name descname"><span class="pre">antennas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArrayBase" title="hermespy.core.antennas.AntennaArrayBase"><span class="pre">AntennaArrayBase</span></a></em><a class="headerlink" href="#hermespy.core.device.Device.antennas" title="Permalink to this definition"></a></dt>
+<dd><p>Model of the device’s antenna array.</p>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.device.Device.transmitters">
 <span class="sig-name descname"><span class="pre">transmitters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.device.TransmitterSlot" title="hermespy.core.device.TransmitterSlot"><span class="pre">TransmitterSlot</span></a></em><a class="headerlink" href="#hermespy.core.device.Device.transmitters" title="Permalink to this definition"></a></dt>
@@ -892,6 +915,20 @@ within the device’s local coordinate system.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.device.Device.antenna_positions">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">antenna_positions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.device.Device.antenna_positions" title="Permalink to this definition"></a></dt>
+<dd><p>Global positions of the antenna array elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Matrix of dimension <cite>num_antennas x 3</cite>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1254,7 +1291,7 @@ By default, returns the duplex’s transmit operator.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d1bcf40>
+<jinja2.runtime.BlockReference object at 0x7fb12f7bd3a0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

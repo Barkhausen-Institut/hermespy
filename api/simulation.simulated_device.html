@@ -7,6 +7,7 @@
   <title>Simulated Devices &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation Module</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -107,19 +110,22 @@
 <h1>Simulated Devices<a class="headerlink" href="#simulated-devices" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimulatedDevice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_antennas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rf_chain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Device</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimulatedDevice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rf_chain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Device</span></code></a>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
 <p>Representation of a device simulating hardware.</p>
 <p>Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When configuring simulated devices within simulation scenarios,
+channel models may ignore spatial properties such as <code class="xref py py-func docutils literal notranslate"><span class="pre">position()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">orientation()</span></code> or <code class="xref py py-func docutils literal notranslate"><span class="pre">velocity()</span></code>.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>scenario</strong> (<a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><em>Scenario</em></a><em>, </em><em>optional</em>) – Scenario this device is attached to.
 By default, the device is considered floating.</p></li>
-<li><p><strong>num_antennas</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of antennas.
-The information is used to initialize the simulated device as a Uniform Linear Array with
-half-wavelength antenna spacing.</p></li>
 <li><p><strong>rf_chain</strong> (<a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain" title="hermespy.simulation.rf_chain.rf_chain.RfChain"><em>RfChain</em></a><em>, </em><em>optional</em>) – Model of the device’s radio frequency amplification chain.</p></li>
+<li><p><strong>adc</strong> (<em>AnalogDigitalConverter</em><em>, </em><em>optional</em>) – Model of receiver’s ADC converter.</p></li>
 <li><p><strong>sampling_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Sampling rate at which this device operates.
 By default, the sampling rate of the first operator is assumed.</p></li>
 <li><p><strong>carrier_frequency</strong> (<em>float</em><em>, </em><em>optional</em>) – Center frequency of the mixed signal in rf-band in Hz.
@@ -137,14 +143,32 @@ Zero by default.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.rf_chain">
-<span class="sig-name descname"><span class="pre">rf_chain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">RfChain</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.rf_chain" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">rf_chain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain" title="hermespy.simulation.rf_chain.rf_chain.RfChain"><span class="pre">RfChain</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.rf_chain" title="Permalink to this definition"></a></dt>
 <dd><p>Model of the device’s radio-frequency chain.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.operator_separation">
-<span class="sig-name descname"><span class="pre">operator_separation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.operator_separation" title="Permalink to this definition"></a></dt>
-<dd><p>Separate operators during signal modeling.</p>
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.adc">
+<span class="sig-name descname"><span class="pre">adc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AnalogDigitalConverter</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.adc" title="Permalink to this definition"></a></dt>
+<dd><p>Model of receiver’s ADC</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.orientation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orientation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.orientation" title="Permalink to this definition"></a></dt>
+<dd><p>Orientation of the device within its scenario as a quaternion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The modem orientation as a normalized quaternion.
+<cite>None</cite> if the position is considered to be unknown.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>orientation (Optional[np.array])</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>orientation</cite> is not a valid quaternion.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -163,6 +187,26 @@ Zero by default.</p></li>
 <li><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the device is currently floating.</p></li>
 <li><p><strong>RuntimeError</strong> – Trying to overwrite the scenario of an already attached device.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.topology">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.topology" title="Permalink to this definition"></a></dt>
+<dd><p>Antenna array topology.</p>
+<p>The topology is represented by an <cite>Mx3</cite> numpy array,
+where the first dimension M is the number of antennas and the second dimension their cartesian position
+within the device’s local coordinate system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A matrix of <cite>Mx3</cite> entries describing the sensor array topology.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>topology (np.ndarray)</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the first dimension <cite>topology</cite> is smaller than 1 or its second dimension is larger than 3.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -252,6 +296,20 @@ Zero by default.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.operator_separation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">operator_separation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.operator_separation" title="Permalink to this definition"></a></dt>
+<dd><p>Separate operators during signal modeling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Enabled flag.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.transmit">
 <span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.transmit" title="Permalink to this definition"></a></dt>
@@ -270,14 +328,31 @@ Enabled by default.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.snr">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">snr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.snr" title="Permalink to this definition"></a></dt>
+<dd><p>Signal to noise ratio at the receiver side.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Linear ratio of signal to noise power.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.receive">
-<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SNRType.EBN0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.receive" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SNRType.EBN0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.receive" title="Permalink to this definition"></a></dt>
 <dd><p>Receive signals at this device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>device_signals</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – List of signal models arriving at the device.</p></li>
+<li><p><strong>device_signals</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – List of signal models arriving at the device.
+May also be a two-dimensional numpy object array where the first dimension indicates the link
+and the second dimension contains the transmitted signal as the first element and the link channel
+as the second element.</p></li>
 <li><p><strong>snr</strong> (<em>float</em><em>, </em><em>optional</em>) – Signal to noise power ratio.
 Infinite by default, meaning no noise will be added to the received signals.</p></li>
 <li><p><strong>snr_type</strong> (<em>SNRType</em><em>, </em><em>optional</em>) – Type of signal to noise ratio.</p></li>
@@ -288,16 +363,6 @@ Infinite by default, meaning no noise will be added to the received signals.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>baseband_signal (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.receive_signal">
-<span class="sig-name descname"><span class="pre">receive_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.receive_signal" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -358,7 +423,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016debf0a0>
+<jinja2.runtime.BlockReference object at 0x7fb12f3107f0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

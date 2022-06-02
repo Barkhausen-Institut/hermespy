@@ -7,6 +7,7 @@
   <title>Power Amplifier Modeling &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -37,9 +38,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -61,6 +63,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation Module</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
@@ -110,19 +113,25 @@
 transmitting modems.</p>
 <div class="mermaid">
             classDiagram
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
   PowerAmplifier &lt;|-- ClippingPowerAmplifier
   PowerAmplifier &lt;|-- RappPowerAmplifier
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
+  Serializable &lt;|-- PowerAmplifier
   PowerAmplifier &lt;|-- CustomPowerAmplifier
         </div><p>Each power amplifier model instance implements an equation</p>
 <div class="math notranslate nohighlight">
 \[s'(t) = f\lbrace s(t), t \rbrace \in \mathbb{C}\]</div>
 <p>distorting complex-valued signal samples <span class="math notranslate nohighlight">\(s(t) \in \mathbb{C}\)</span> feeding into the power amplifier.
-For time-invariant (i.e. memoryless) models <span class="math notranslate nohighlight">\(f\lbrace s(t), t \rbrace = f\lbrace s(t) \rbrace\)</span>.</p>
+For time-invariant (i.e. memoryless) models <span class="math notranslate nohighlight">\(f\lbrace s(t), t \rbrace = f\lbrace s(t) \rbrace\)</span>.
+The following figure visualizes the gain characteristics for the implemented amplification models for a saturation point <span class="math notranslate nohighlight">\(s_\mathrm{sat} = 1\)</span>.</p>
+<p>(<a class="reference external" href="../scripts/plot_pa_characteristics.py">Source code</a>, <a class="reference external" href="../scripts/plot_pa_characteristics.png">png</a>, <a class="reference external" href="../scripts/plot_pa_characteristics.hires.png">hires.png</a>, <a class="reference external" href="../scripts/plot_pa_characteristics.pdf">pdf</a>)</p>
+<figure class="align-center">
+<img alt="../_images/plot_pa_characteristics.png" class="plot-directive" src="../_images/plot_pa_characteristics.png" />
+</figure>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saturation_amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
 <p>Base class of a power-amplifier model.</p>
 <p>Implements a distortion-less amplification model</p>
 <div class="math notranslate nohighlight">
@@ -187,7 +196,7 @@ For time-invariant (i.e. memoryless) models <span class="math notranslate nohigh
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model" title="Permalink to this definition"></a></dt>
 <dd><p>Model signal amplification characteristics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -204,36 +213,20 @@ For time-invariant (i.e. memoryless) models <span class="math notranslate nohigh
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot" title="Permalink to this definition"></a></dt>
 <dd><p>Plot the power amplifier distortion characteristics.</p>
 <p>Generates a matplotlib plot depicting the phase/amplitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>samples</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Sample points at which to evaluate the characteristics.
-In other words, the x-axis of the resulting characteristics plot.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Sample points at which to evaluate the characteristics.
+In other words, the x-axis of the resulting characteristics plot.</p></li>
+<li><p><strong>axes</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><em>plt.axes</em><em>, </em><em>plt.axes</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Axes to which to plot the characteristics.
+By default, a new figure is created.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new <cite>PowerAmplifier</cite> instance from YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>RoundTripConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>Union</em><em>[</em><em>ScalarNode</em><em>, </em><em>MappingNode</em><em>]</em>) – YAML node representing the <cite>PowerAmplifier</cite> serialization.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Newly created <cite>PowerAmplifier</cite> instance.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier">PowerAmplifier</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -570,7 +563,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 </section>
-<p id="id3"><dl class="footnote brackets">
+<div class="docutils container" id="id3">
+<dl class="footnote brackets">
 <dt class="label" id="footcite-1991-rapp"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
 </dd>
@@ -578,7 +572,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dd><p>A.A.M. Saleh. Frequency-independent and frequency-dependent nonlinear models of TWT amplifiers. <em>IEEE Transactions on Communications</em>, 29(11):1715–1720, November 1981. <a class="reference external" href="https://doi.org/10.1109/TCOM.1981.1094911">doi:10.1109/TCOM.1981.1094911</a>.</p>
 </dd>
 </dl>
-</p>
+</div>
 
 
            </div>
@@ -591,7 +585,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d454160>
+<jinja2.runtime.BlockReference object at 0x7fb12f908df0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

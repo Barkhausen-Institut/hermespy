@@ -7,6 +7,7 @@
   <title>Multipath Fading &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,12 @@
 <li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Multipath Fading</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
 </ul>
@@ -67,6 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -549,7 +558,8 @@ initialized by the <cite>scenario</cite> YAML constructor.</p>
 </dd></dl>
 
 </section>
-<p id="id4"><dl class="footnote brackets">
+<div class="docutils container" id="id4">
+<dl class="footnote brackets">
 <dt class="label" id="footcite-2006-xiao"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>Chengshan Xiao, Yahong Rosa Zheng, and Norman C. Beaulieu. Novel sum-of-sinusoids simulation models for rayleigh and rician fading channels. <em>IEEE Transactions on Wireless Communications</em>, 5(12):3667–3679, 2006. <a class="reference external" href="https://doi.org/10.1109/TWC.2006.256990">doi:10.1109/TWC.2006.256990</a>.</p>
 </dd>
@@ -557,7 +567,7 @@ initialized by the <cite>scenario</cite> YAML constructor.</p>
 <dd><p>Kai Yu, M. Bengtsson, B. Ottersten, D. McNamara, P. Karlsson, and M. Beach. A wideband statistical model for nlos indoor mimo channels. In <em>Vehicular Technology Conference. IEEE 55th Vehicular Technology Conference. VTC Spring 2002 (Cat. No.02CH37367)</em>, volume 1, 370–374 vol.1. 2002. <a class="reference external" href="https://doi.org/10.1109/VTC.2002.1002729">doi:10.1109/VTC.2002.1002729</a>.</p>
 </dd>
 </dl>
-</p>
+</div>
 
 
            </div>
@@ -570,7 +580,7 @@ initialized by the <cite>scenario</cite> YAML constructor.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d639a60>
+<jinja2.runtime.BlockReference object at 0x7fb12fa12910>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

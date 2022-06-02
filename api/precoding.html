@@ -7,6 +7,7 @@
   <title>Precoding Module &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,6 +73,7 @@
 <li class="toctree-l3"><a class="reference internal" href="precoding.space_time_block_coding.html">Space-Time Block Coding</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -112,25 +115,25 @@
 for spatial channel propagation.</p>
 <div class="mermaid">
             classDiagram
-  SymbolPrecoder &lt;|-- ZFTimeEqualizer
-  SymbolPrecoder &lt;|-- SpatialMultiplexing
-  Serializable &lt;|-- ZFSpaceEqualizer
-  Serializable &lt;|-- SpaceTimeBlockCoding
-  Serializable &lt;|-- MMSESpaceEqualizer
-  Serializable &lt;|-- MMSETimeEqualizer
-  SymbolPrecoder &lt;|-- MaximumRatioCombining
-  MaximumRatioCombining &lt;|-- SpaceTimeBlockCoding
-  Serializable &lt;|-- SpatialMultiplexing
-  Serializable &lt;|-- SymbolPrecoding
-  Serializable &lt;|-- ZFTimeEqualizer
-  SymbolPrecoder &lt;|-- DFT
-  SymbolPrecoder &lt;|-- SingleCarrier
   SymbolPrecoder &lt;|-- ZFSpaceEqualizer
-  Serializable &lt;|-- MaximumRatioCombining
-  SymbolPrecoder &lt;|-- MMSETimeEqualizer
-  SymbolPrecoder &lt;|-- MMSESpaceEqualizer
   Serializable &lt;|-- DFT
+  MaximumRatioCombining &lt;|-- SpaceTimeBlockCoding
+  SymbolPrecoder &lt;|-- MMSETimeEqualizer
+  SymbolPrecoder &lt;|-- MaximumRatioCombining
+  SymbolPrecoder &lt;|-- SpatialMultiplexing
+  SymbolPrecoder &lt;|-- ZFTimeEqualizer
+  SymbolPrecoder &lt;|-- MMSESpaceEqualizer
+  Serializable &lt;|-- ZFSpaceEqualizer
+  SymbolPrecoder &lt;|-- SingleCarrier
+  Serializable &lt;|-- MMSETimeEqualizer
+  Serializable &lt;|-- MaximumRatioCombining
+  Serializable &lt;|-- SpatialMultiplexing
+  Serializable &lt;|-- ZFTimeEqualizer
+  Serializable &lt;|-- MMSESpaceEqualizer
   Serializable &lt;|-- SingleCarrier
+  Serializable &lt;|-- SymbolPrecoding
+  SymbolPrecoder &lt;|-- DFT
+  Serializable &lt;|-- SpaceTimeBlockCoding
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
@@ -157,7 +160,7 @@ for spatial channel propagation.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016d7d25b0>
+<jinja2.runtime.BlockReference object at 0x7fb12fd38c70>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

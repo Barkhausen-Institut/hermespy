@@ -7,6 +7,7 @@
   <title>Simulation &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -60,6 +62,7 @@
 <li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation Module</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Simulation</a></li>
@@ -363,29 +366,6 @@ respective channel state information.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationRunner.receive_operators">
-<span class="sig-name descname"><span class="pre">receive_operators</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drop_run_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulation.SimulationRunner.receive_operators" title="Permalink to this definition"></a></dt>
-<dd><p>Generate signals received by all receivers registered with this scenario.</p>
-<p>This routine superimposes propagated signals at the receiver-inputs,
-introduces additive thermal noise and mixes according to carrier frequency configurations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>drop_run_flag</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Mask that says if signals are to be created for specific snr.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A list of M tuples containing the received noisy base-band signals, the channel impulse response
-as well as the noise variance for each receiving modem, respectively.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[Tuple[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>, float]]</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the number of <cite>arriving_signals</cite> does not equal the number of registered receive modems.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -540,7 +520,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016dbc5910>
+<jinja2.runtime.BlockReference object at 0x7fb12f8f2550>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

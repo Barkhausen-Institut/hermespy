@@ -7,6 +7,7 @@
   <title>Communication Waveform Base &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -36,9 +37,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,6 +73,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -112,7 +115,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Synchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformType</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformType</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
 <p>Abstract base class for synchronization routines of waveform generators.</p>
 <p>Refer to Nasir <em>et al.</em><a class="footnote-reference brackets" href="#footcite-2016-nasir" id="id1">1</a> for an overview of the current state of the art.</p>
 <dl class="field-list simple">
@@ -120,13 +123,19 @@
 <dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this synchronization routine is attached to.</p>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Synchronization'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.waveform_generator">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">hermespy.modem.waveform_generator.WaveformType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.waveform_generator" title="Permalink to this definition"></a></dt>
 <dd><p>Waveform generator this synchronization routine is attached to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Handle to the waveform generator. None if the synchronization routine is floating.</p>
+<dd class="field-odd"><p>Handle to tghe waveform generator. None if the synchronization routine is floating.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>Optional[WaveformType]</p>
@@ -142,7 +151,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of a single input stream with <cite>num_samples</cite> entries.</p></li>
+<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of with <cite>num_streams`x`num_samples</cite> entries.</p></li>
 <li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – State of the wireless transmission channel over which <cite>signal</cite> has been propagated.</p></li>
 </ul>
 </dd>
@@ -158,6 +167,47 @@
     If the length of <cite>signal</cite> and the number of samples in <cite>channel_state</cite> are not identical.</p></li>
 <li><p><strong>RuntimeError</strong> – If the synchronization routine is floating</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize an <cite>Synchronization</cite> object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><em>Synchronization</em></a>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><em>Synchronization</em></a>) – The <cite>Synchronization</cite> instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>Synchronization</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>Synchronization</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>Synchronization</cite> instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization">Synchronization</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -237,13 +287,15 @@ May be required for some routines.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel">
-<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
 <dd><p>Equalize the wireless channel of a received communication frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Signal model of the communication frame waveform.</p></li>
 <li><p><strong>csi</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state estimation</p></li>
+<li><p><strong>snr</strong> (<em>float</em>) – Assumed signal to noise ratio.
+May be required by some routines, infinite by default.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -284,7 +336,8 @@ Must be a non-negative power of two.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.symbol_type">
 <span class="sig-name descname"><span class="pre">symbol_type</span></span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbol_type" title="Permalink to this definition"></a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">complex</span></code></p>
+<dd><p>Symbol type.</p>
+<p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">complex</span></code></p>
 </dd></dl>
 
 <dl class="py property">
@@ -468,7 +521,7 @@ In general, L is greater or equal to K.</p>
 <dd><p>Modulate a stream of data symbols to a base-band signal containing a single data frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data_symbols</strong> (<em>np.ndarray</em>) – Vector of data symbols to be modulated.</p>
+<dd class="field-odd"><p><strong>data_symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Singular stream of data symbols to be modulated by this waveform.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Signal model of a single modulate data frame.</p>
@@ -512,6 +565,20 @@ The demodulated data symbols, their channel estimates and their noise variance.<
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.data_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.data_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Data rate theoretically achieved by this waveform configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Bits per second.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -636,7 +703,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotWaveformGenerator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PilotWaveformGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oversampling_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformGenerator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
-<p>Abstract base class of communication waveform generators generating a pilot sequence.</p>
+<p>Abstract base class of communication waveform generators generating a pilot signal.</p>
 <p>Waveform Generator initialization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -650,8 +717,8 @@ Must be a non-negative power of two.</p></li>
 </dd>
 </dl>
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot_signal">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot_signal" title="Permalink to this definition"></a></dt>
 <dd><p>Model of the pilot sequence within this communication waveform.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -665,13 +732,142 @@ Must be a non-negative power of two.</p></li>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotSymbolSequence">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PilotSymbolSequence</span></span><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract base class for pilot sequences.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotSymbolSequence.sequence">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
+<dd><p>The scalar sequence of pilot symbols.</p>
+<p>For a configurable pilot section, this symbol sequence will be repeated accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The symbol sequence.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.UniformPilotSymbolSequence">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniformPilotSymbolSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pilot_symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">0j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.UniformPilotSymbolSequence" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotSymbolSequence</span></code></a></p>
+<p>A pilot symbol sequence containing identical symbols.</p>
+<p>Only viable for testing purposes, since it makes the pilot sections easy to spot within the frame.
+Not advisable to be used in production scenarios.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pilot_symbol</strong> (<em>complex</em>) – The configured single pilot symbol.
+<cite>1.</cite> by default.</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.UniformPilotSymbolSequence.sequence">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.UniformPilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
+<dd><p>The scalar sequence of pilot symbols.</p>
+<p>For a configurable pilot section, this symbol sequence will be repeated accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The symbol sequence.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.CustomPilotSymbolSequence">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CustomPilotSymbolSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pilot_symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotSymbolSequence</span></code></a></p>
+<p>A customized pilot symbol sequence.</p>
+<p>The user may freely chose the pilot symbols from samples within the complex plane.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pilot_symbols</strong> (<em>np.ndarray</em>) – The configured pilot symbols</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.CustomPilotSymbolSequence.sequence">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
+<dd><p>The scalar sequence of pilot symbols.</p>
+<p>For a configurable pilot section, this symbol sequence will be repeated accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The symbol sequence.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ConfigurablePilotWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConfigurablePilotWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol_sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat_symbol_sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotWaveformGenerator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>symbol_sequence</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><em>PilotSymbolSequence</em></a><em>]</em><em>, </em><em>optional</em>) – The configured pilot symbol sequence.
+Uniform by default.</p></li>
+<li><p><strong>repeat_symbol_sequence</strong> (<em>bool</em><em>, </em><em>optional</em>) – Allow the repetition of pilot symbol sequences.
+Enabled by default.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbol_sequence">
+<span class="sig-name descname"><span class="pre">pilot_symbol_sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><span class="pre">hermespy.modem.waveform_generator.PilotSymbolSequence</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbol_sequence" title="Permalink to this definition"></a></dt>
+<dd><p>The configured pilot symbol sequence.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ConfigurablePilotWaveform.repeat_pilot_symbol_sequence">
+<span class="sig-name descname"><span class="pre">repeat_pilot_symbol_sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.repeat_pilot_symbol_sequence" title="Permalink to this definition"></a></dt>
+<dd><p>Allow the repetition of pilot symbol sequences.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbols">
+<span class="sig-name descname"><span class="pre">pilot_symbols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a pilot symbol sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>num_symbols</strong> (<em>int</em>) – The expected number of symbols within the sequence.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A pilot symbol sequence of length <cite>num_symbols</cite>.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If a repetition of the symbol sequence is required but not allowed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<p id="id6"><dl class="footnote brackets">
+<div class="docutils container" id="id6">
+<dl class="footnote brackets">
 <dt class="label" id="footcite-2016-nasir"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>Ali A. Nasir, Salman Durrani, Hani Mehrpouyan, Steven D. Blostein, and Rodney A. Kennedy. Timing and carrier synchronization in wireless communication systems: a survey and classification of research in the last 5 years. <em>EURASIP Journal on Wireless Communications and Networking</em>, 2016(1):180, 2016. <a class="reference external" href="https://doi.org/10.1186/s13638-016-0670-9">doi:10.1186/s13638-016-0670-9</a>.</p>
 </dd>
 </dl>
-</p>
+</div>
 
 
            </div>
@@ -684,7 +880,7 @@ Must be a non-negative power of two.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016e2dc9d0>
+<jinja2.runtime.BlockReference object at 0x7fb1302b3400>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

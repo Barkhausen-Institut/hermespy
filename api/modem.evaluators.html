@@ -7,6 +7,7 @@
   <title>Communication Evaluators &mdash; HermesPy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
       <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
@@ -37,9 +38,10 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
             <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.2.7
+                3.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -72,6 +74,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
@@ -115,19 +118,19 @@ Refer to the <a class="reference internal" href="core.monte_carlo.html"><span cl
 <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluators</span></code></a>.</p>
 <div class="mermaid">
             classDiagram
-  Serializable &lt;|-- BitErrorEvaluator
-  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
-  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
   FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  ArtifactTemplate &lt;|-- FrameErrorArtifact
+  Serializable &lt;|-- BitErrorEvaluator
+  Evaluator &lt;|-- CommunicationEvaluator
+  Serializable &lt;|-- BlockErrorEvaluator
   CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  Artifact &lt;|-- ThroughputArtifact
   Serializable &lt;|-- FrameErrorEvaluator
   ArtifactTemplate &lt;|-- BlockErrorArtifact
-  Artifact &lt;|-- ThroughputArtifact
-  Evaluator &lt;|-- CommunicationEvaluator
   Serializable &lt;|-- ThroughputEvaluator
-  Serializable &lt;|-- BlockErrorEvaluator
   ArtifactTemplate &lt;|-- BitErrorArtifact
-  ArtifactTemplate &lt;|-- FrameErrorArtifact
         </div><p>The implemented <a class="reference internal" href="#hermespy.modem.evaluators.CommunicationEvaluator" title="hermespy.modem.evaluators.CommunicationEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationEvaluators</span></code></a> all inherit from the identically named common
 base which gets initialized by selecting the two <a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Modem</span></code></a> instances whose communication
 should be evaluated.
@@ -379,7 +382,7 @@ the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.evaluators.BlockErrorEvaluator.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.evaluators.BlockErrorEvaluator.evaluate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.evaluators.BlockErrorEvaluator.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluate the state of an investigated object.</p>
 <p>Implements the process of extracting an arbitrary performance indicator, represented by
 the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.</p>
@@ -477,7 +480,7 @@ the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.evaluators.FrameErrorEvaluator.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.evaluators.FrameErrorEvaluator.evaluate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.evaluators.FrameErrorEvaluator.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluate the state of an investigated object.</p>
 <p>Implements the process of extracting an arbitrary performance indicator, represented by
 the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.</p>
@@ -579,7 +582,7 @@ the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.evaluators.ThroughputEvaluator.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.evaluators.ThroughputEvaluator.evaluate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.evaluators.ThroughputEvaluator.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluate the state of an investigated object.</p>
 <p>Implements the process of extracting an arbitrary performance indicator, represented by
 the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.</p>
@@ -641,7 +644,7 @@ the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f016c8b66d0>
+<jinja2.runtime.BlockReference object at 0x7fb12fd52250>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
