@@ -51,13 +51,13 @@ class TestConventionalBeamformer(TestCase):
     def test_encode_decode(self) -> None:
         """Encoding and decoding towards identical angles should recover the signal"""
         
-        focus_angles = [np.array([[0., 0.]])]
+        focus_angles = [np.array([[[0., 0.]]])]
         expected_samples = np.exp(2j * pi * self.rng.uniform(0, 1, (1, 5)))
         carrier_frequency = 1e9
         
         for focus_angle in focus_angles:
             
-            encoded_samples = self.beamformer._encode(expected_samples, carrier_frequency, focus_angle)
+            encoded_samples = self.beamformer._encode(expected_samples, carrier_frequency, focus_angle[0, :])
             decoded_samples = self.beamformer._decode(encoded_samples, carrier_frequency, focus_angle)
             
             assert_array_almost_equal(expected_samples, decoded_samples[0, ::])

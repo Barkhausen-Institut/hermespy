@@ -137,7 +137,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
                 carrier_frequency: float,
                 angles: np.ndarray) -> np.ndarray:
 
-        codebook = self._codebook(carrier_frequency, angles)
+        codebook = self._codebook(carrier_frequency, angles[:, 0, :])
         beamformed_samples = self._beamform(codebook, samples, True)
         
         return beamformed_samples[:, np.newaxis, :]

@@ -52,17 +52,17 @@ class FMCWRadarSimulation(TestCase):
     def test_beamforming(self) -> None:
         """The radar channel target located should be estimated correctly by the beamformer"""
         
-        self.radar.receive_beamformer.receive_focus = .25 * pi * np.array([[0., 0.],
-                                                                           [0., 1.],
-                                                                           [1., 1.],
-                                                                           [2., 1.],
-                                                                           [3., 1.],
-                                                                           [4., 1.],
-                                                                           [5., 1.],
-                                                                           [6., 1.],
-                                                                           [7., 1.]])
+        self.radar.receive_beamformer.probe_focus_points = .25 * pi * np.array([[[0., 0.]],
+                                                                                [[0., 1.]],
+                                                                                [[1., 1.]],
+                                                                                [[2., 1.]],
+                                                                                [[3., 1.]],
+                                                                                [[4., 1.]],
+                                                                                [[5., 1.]],
+                                                                                [[6., 1.]],
+                                                                                [[7., 1.]]])
         
-        for angle_index, (azimuth, zenith) in enumerate(self.radar.receive_beamformer.receive_focus):
+        for angle_index, (azimuth, zenith) in enumerate(self.radar.receive_beamformer.probe_focus_points[:, 0, :]):
             
             # Configure the channel
             self.channel.target_azimuth = azimuth
