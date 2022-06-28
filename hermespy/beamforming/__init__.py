@@ -11,8 +11,10 @@ __status__ = "Prototype"
 
 from .beamformer import BeamformerBase, FocusMode, TransmitBeamformer, ReceiveBeamformer
 from .conventional import ConventionalBeamformer
+from .capon import CaponBeamformer
 
 __all__ = [
     'BeamformerBase', 'FocusMode', 'TransmitBeamformer', 'ReceiveBeamformer',
     'ConventionalBeamformer',
+    'CaponBeamformer',
 ]

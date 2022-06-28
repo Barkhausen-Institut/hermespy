@@ -22,6 +22,11 @@ __status__ = "Prototype"
 
 class DeviceMock(Device):
     """Mock of the device base class."""
+    
+    def __init__(self, *args, **kwargs) -> None:
+
+        self.__carrier_frequency = 1e9
+        Device.__init__(self, *args, **kwargs)
 
     @property
     def velocity(self) -> np.ndarray:
@@ -33,7 +38,11 @@ class DeviceMock(Device):
 
     @property
     def carrier_frequency(self) -> float:
-        return 0.
+        return self.__carrier_frequency
+    
+    @carrier_frequency.setter
+    def carrier_frequency(self, value: float) -> float:
+        self.__carrier_frequency = value
 
 
 class TestOperator(TestCase):
@@ -460,3 +469,20 @@ class TestDevice(TestCase):
         self.device.receivers.add(receiver)
 
         self.assertEqual(10, self.device.max_frame_duration)
+        
+    def test_wavelength_validation(self) -> None:
+        """Device wavelength property setter should raise ValueError on invalid arguments."""
+        
+        with self.assertRaises(ValueError):
+            self.device.wavelength = -1.
+            
+        with self.assertRaises(ValueError):
+            self.device.wavelength = 0.
+            
+    def test_wavelength_setget(self) -> None:
+        """Wavelength property getter should return setter argument"""
+        
+        expected_wavelength = 1.234
+        self.device.wavelength = expected_wavelength
+        
+        self.assertAlmostEqual(expected_wavelength, self.device.wavelength)
