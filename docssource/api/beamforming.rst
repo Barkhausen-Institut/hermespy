@@ -18,3 +18,4 @@ Within this package, this process is referred to as :func:`probing <hermespy.bea
 
    beamforming.beamformer
    beamforming.conventional
+   beamforming.capon
