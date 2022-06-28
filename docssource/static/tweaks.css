@@ -21,3 +21,7 @@ html[data-theme="dark"] .sphinx-tabs-tab[aria-selected="true"] {
 html[data-theme="dark"] div[role="tablist"] {
     border-bottom: 1px solid #1D5C87;
 }
+
+p {
+    text-align: justify;
+}
