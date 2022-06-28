@@ -34,10 +34,13 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    'sphinx_autodoc_typehints',
+    'sphinx_copybutton',                        # Copy script examples directly
+    'sphinx_autodoc_typehints',                 # Type hinting support for the autodoc extension
     'sphinx_rtd_dark_mode',                     # Dark theme
     'sphinx_tabs.tabs',                         # Multiple tabs
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
+    'nbsphinx',                                 # Integrate jupyter notebooks
+    'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
 ]
 
 autoclass_content = "both"
@@ -66,6 +69,15 @@ autodoc_default_options = {
     'show-inheritance': True,
     'exclude-members': '__weakref__'
 }
+
+nbsphinx_prolog = """
+
+.. note::
+
+   This static document was automatically created from the output of a jupyter notebook.
+   
+   Execute and modify the notebook online `here <https://colab.research.google.com/github/Barkhausen-Institut/hermespy/blob/main/docssource/{{ env.docname }}.ipynb>`_.
+"""
 
 
 # -- Options for HTML output -------------------------------------------------

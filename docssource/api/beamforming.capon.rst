@@ -1,5 +1,4 @@
-.. automodule:: hermespy.beamforming.beamformer
+.. automodule:: hermespy.beamforming.capon
    :private-members: _decode
-
-
+   
 .. footbibliography::

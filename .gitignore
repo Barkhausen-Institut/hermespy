@@ -8,9 +8,11 @@ results/
 .idea/
 env*/
 matlab_env/
+.ipynb_checkpoints/
 
 # IDE specific
 .vscode/
+*.code-workspace
 
 # python-specific
 
