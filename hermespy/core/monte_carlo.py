@@ -98,14 +98,16 @@ from __future__ import annotations
 from abc import abstractmethod
 from functools import reduce
 from math import exp, sqrt
+from sys import maxsize
 from time import perf_counter
-from typing import Any, Callable, Generic, List, Optional, Set, Type, TypeVar, Tuple, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Set, Type, TypeVar, Tuple, Union
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import ray
+from ray.exceptions import RaySystemError, RayActorError
 from ray.util import ActorPool
 from rich.console import Console, Group
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
@@ -160,8 +162,7 @@ class Artifact(object):
         Returns:
             str: String representation.
         """
-
-        return "?"
+        ...  # pragma no cover
 
     @abstractmethod
     def to_scalar(self) -> Optional[float]:
@@ -174,8 +175,7 @@ class Artifact(object):
                 Scalar floating-point representation.
                 `None` if a conversion to scalar is impossible.
         """
-
-        return None
+        ...  # pragma no cover
 
 
 class ArtifactTemplate(Generic[AT], Artifact):
@@ -216,7 +216,7 @@ class ArtifactTemplate(Generic[AT], Artifact):
         return self.artifact
 
 
-class Evaluator(Generic[MO]):
+class Evaluator():
     """Evaluation routine for investigated object states, extracting performance indicators of interest.
 
     Evaluators represent the process of extracting arbitrary performance indicator samples :math:`X_m` in the form of
@@ -262,23 +262,17 @@ class Evaluator(Generic[MO]):
         self.plot_scale = 'linear'
 
     @abstractmethod
-    def evaluate(self, investigated_object: MO) -> Artifact:
+    def evaluate(self) -> Artifact:
         """Evaluate the state of an investigated object.
 
         Implements the process of extracting an arbitrary performance indicator, represented by
         the returned :class:`.Artifact` :math:`X_m`.
-
-        Args:
-
-            investigated_object (MO):
-                Investigated object, configured to an independent random state.
-
         Returns:
 
             Artifact:
                 Artifact :math:`X_m` resulting from the evaluation.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
@@ -290,7 +284,7 @@ class Evaluator(Generic[MO]):
         Returns:
             str: String representation
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
@@ -302,7 +296,7 @@ class Evaluator(Generic[MO]):
         Returns:
             str: String representation
         """
-        ...
+        ...  # pragma no cover
 
     @property
     def confidence(self) -> float:
@@ -430,6 +424,9 @@ class Evaluator(Generic[MO]):
             return 0.
 
         n = len(scalars)
+        # For less than two samples 
+        if n < 2:
+            return 0.
 
         # Compute unbiased samples
         sample_mean = np.mean(scalars)
@@ -438,9 +435,9 @@ class Evaluator(Generic[MO]):
         # Compute moments
         sigma_moment = sqrt(np.sum(unbiased_samples ** 2) / n)
 
-        # A sigma moment of 0 indicates zero variance within the samples, therefore minimal confidence?
+        # A sigma moment of 0 indicates zero variance within the samples, therefore maximal confidence?
         if sigma_moment == 0.:
-            return .0
+            return 1.
 
         beta_bar_moment = np.sum(np.abs(unbiased_samples) ** 3) / (n * sigma_moment ** 3)
         beta_hat_moment = np.sum(unbiased_samples ** 3) / (n * sigma_moment ** 3)
@@ -452,16 +449,18 @@ class Evaluator(Generic[MO]):
         sigma_tolerance_squared = sigma_tolerance ** 2
         kappa_term = 4 * (2 / (n - 1) + kappa_moment / n)
 
-        confidence_bound = 2 * ((1 - self._scalar_cdf(sigma_tolerance)) +
-                                min(self.__C_0, self.__C_1 * (1 + abs(sigma_tolerance)) ** -3)
-                                * beta_bar_moment / sample_sqrt * min(1., kappa_term))
+        confidence_bound = (
+            2 * (1 - self._scalar_cdf(sigma_tolerance)) +
+            2 * min(self.__C_0, self.__C_1 / (1 + abs(sigma_tolerance)) ** 3) * beta_bar_moment / sample_sqrt * min(1., kappa_term)
+        )
 
+        # This is necessary to preventa math overflow from the exponential denominator
         if kappa_term < 1. and sigma_tolerance_squared < 1418.:
 
             confidence_bound += ((1 - kappa_term) * abs(sigma_tolerance_squared - 1) * abs(beta_hat_moment) /
                                  (exp(.5 * sigma_tolerance_squared) * 3 * sqrt(2 * pi * n) * sigma_moment ** 3))
 
-        return 1. - confidence_bound
+        return 1. - min(1., confidence_bound)
 
 
 class MonteCarloSample(object):
@@ -672,13 +671,10 @@ class MonteCarloActor(Generic[MO]):
 
     __investigated_object: MO                       # Copy of the object to be investigated
     __grid: List[GridDimension]                     # Simulation grid dimensions
-    __configuration_lambdas: List[Callable]         # Configuration lambdas to configure grid parameters
     __evaluators: List[Evaluator[MO]]               # Evaluators used to process the investigated object sample state
-    __section_block_size: int = 10                  # Number of samples per section block
 
     def __init__(self,
-                 argument_tuple: Tuple[MO, List[GridDimension], List[Evaluator[MO]]],
-                 section_block_size: int = 10) -> None:
+                 argument_tuple: Tuple[MO, List[GridDimension], List[Evaluator[MO]]]) -> None:
         """
         Args:
 
@@ -694,12 +690,14 @@ class MonteCarloActor(Generic[MO]):
         investigated_object = argument_tuple[0]
         grid = argument_tuple[1]
         evaluators = argument_tuple[2]
-        self.__section_block_size = section_block_size
 
         self.__investigated_object = investigated_object  # deepcopy(investigated_object)
         self.__grid = grid
         self.__evaluators = evaluators
-
+        self.__stage_identifiers = self.stage_identifiers()
+        self.__stage_executors = self.stage_executors()
+        self.__num_stages = len(self.__stage_executors)
+        
     @property
     def _investigated_object(self) -> MO:
         """State of the Investigated Object.
@@ -708,49 +706,100 @@ class MonteCarloActor(Generic[MO]):
             Mo: Investigated object.
         """
 
-        return self.__investigated_object
+        return self.__investigated_object  # pragma no cover
 
     def run(self,
-            grid_section: Tuple[int, ...]) -> List[MonteCarloSample]:
+            program: List[Tuple[int, ...]]) -> List[MonteCarloSample]:
         """Run the simulation actor.
 
         Args:
-
-            grid_section (Tuple[int, ...]):
-                Sample point index of each grid dimension.
-
+        
+            program (List[Tuple[int, ...]]):
+                A list of simulation grid section indices for which to collect samples.
+                
         Returns:
-            MonteCarloSample:
-                The generated sample object.
+            A list of generated :class:`MonteCarloSample`s.
+            Contains the same number of entries as `program`.
         """
 
         samples: List[MonteCarloSample] = []
-        for sample_index in range(self.__section_block_size):
-
-            # Configure the object under investigation
-            for (grid_dimension, parameter_idx) in zip(self.__grid, grid_section):
-                grid_dimension.configure_point(parameter_idx)
-
-            # Sample the investigated object
-            sampled_object = self.sample()
-
-            # Evaluate the sample
-            evaluations = [evaluator.evaluate(sampled_object) for evaluator in self.__evaluators]
-
-            # Save generated sample
-            samples.append(MonteCarloSample(grid_section, sample_index, evaluations))
-
-        # Return results
+        
+        # Intially, re-configure the full grid
+        recent_section_indices = np.array(program[0], dtype=int)
+        for d, i in enumerate(recent_section_indices):
+                self.__grid[d].configure_point(i)
+        
+        # Run through the program steps
+        for section_indices in program:
+                    
+            # Detect the grid dimensions where sections changed, i.e. which require re-configuration
+            section_indices = np.asarray(section_indices, dtype=int)
+            reconfigured_dimensions = np.argwhere(section_indices != recent_section_indices).flatten()
+            
+            # Reconfigure the dimensions
+            # Not that for the first grid_section this has already been done
+            for d in reconfigured_dimensions:
+                self.__grid[d].configure_point(section_indices[d])
+                    
+            # Detect the first and last impacted simulation stage depending on the reconfigured dimensions
+            first_impact = self.__num_stages
+            last_impact = 0
+            for d in reconfigured_dimensions:
+                
+                grid_dimension = self.__grid[d]
+                
+                if grid_dimension.first_impact != None and grid_dimension.first_impact in self.__stage_identifiers:
+                    first_impact = min(first_impact, self.__stage_identifiers.index(grid_dimension.first_impact))
+                    
+                if grid_dimension.last_impact != None and grid_dimension.last_impact in self.__stage_identifiers:
+                    last_impact = max(last_impact, self.__stage_identifiers.index(grid_dimension.last_impact))
+                    
+            # if first_impact >= self.__num_stages:
+            #     first_impact = 0
+            #     
+            # if last_impact <= 0:
+            #     last_impact = self.__num_stages - 1
+                
+            # Execute impacted simulation stages
+            # Note that for the first grid_section all stages are executed
+            for stage in self.__stage_executors[first_impact:1 + last_impact]:
+                stage()
+                
+            # Collect evaluation artifacts
+            artifacts = [evaluator.evaluate() for evaluator in self.__evaluators]
+            
+            # Save the samples
+            samples.append(MonteCarloSample(tuple(section_indices), 0, artifacts))
+            
+            # Update the recent section for the next iteration
+            recent_section_indices = section_indices
+            
         return samples
-
+    
+    @staticmethod
     @abstractmethod
-    def sample(self) -> MO:
-        """Generate a sample of the investigated object.
+    def stage_identifiers() -> List[str]:
+        """List of simulation stage identifiers.
+        
+        Simulations stages will be executed in the order specified here.
+        
+        Returns:
+        
+            List of function identifiers for simulation stage execution routines.
+        """
+        ...  # pragma no cover
+        
+    @abstractmethod
+    def stage_executors(self) -> List[Callable]:
+        """List of simulation stage execution callbacks.
+        
+        Simulations stages will be executed in the order specified here.
 
         Returns:
-            MO: The resulting sample.
+        
+            List of function callbacks for simulation stage execution routines.
         """
-        ...
+        ...  # pragma no cover
 
 
 class MonteCarloResult(Generic[MO]):
@@ -957,15 +1006,17 @@ class MonteCarloResult(Generic[MO]):
 class GridDimension(object):
     """Single axis within the simulation grid."""
 
-    __considered_object: Any
+    __considered_objects: Tuple[Any, ...]
     __dimension: str
     __sample_points: List[Any]
     __title: Optional[str]
-    __setter_lambda: Callable
+    __setter_lambdas: Tuple[Callable, ...]
     __plot_scale: str
+    __first_impact: Optional[str]
+    __last_impact: Optional[str]
 
     def __init__(self,
-                 considered_object: Any,
+                 considered_objects: Union[Any, Tuple[Any, ...]],
                  dimension: str,
                  sample_points: List[Any],
                  title: Optional[str] = None,
@@ -973,8 +1024,8 @@ class GridDimension(object):
         """
         Args:
 
-            considered_object (Any):
-                The considered object of this grid section.
+            considered_objects (Union[Any, Tuple[Any, ...]]):
+                The considered objects of this grid section.
 
             dimension (str):
                 Path to the attribute.
@@ -994,29 +1045,60 @@ class GridDimension(object):
             ValueError:
                 If the selected `dimension` does not exist within the `considered_object`.
         """
-
-        # Make sure the dimension exists
-        try:
-            _ = reduce(lambda obj, attr: getattr(obj, attr), dimension.split('.'), considered_object)
-
-        except AttributeError:
-            raise ValueError("Dimension '" + dimension + "' does not exist within the investigated object")
-
-        if len(sample_points) < 1:
-            raise ValueError("A simulation grid dimension must have at least one sample point")
-
-        self.__considered_object = considered_object
+        
+        self.__considered_objects = considered_objects if isinstance(considered_objects, tuple) else (considered_objects,)
+        
+        property_path = dimension.split('.')
+        object_path = property_path[:-1]
+        property_name = property_path[-1]
+        
+        self.plot_scale = 'linear' if plot_scale is None else plot_scale
+        self.__setter_lambdas= tuple()
         self.__dimension = dimension
         self.__sample_points = sample_points
         self.__title = title
-        self.__setter_lambda = self.__create_setter_lambda(considered_object, dimension)
-        self.plot_scale = 'linear' if plot_scale is None else plot_scale
+        self.__first_impact = None
+        self.__last_impact = None
+        
+        for considered_object in self.__considered_objects:
+
+            # Make sure the dimension exists
+            try:
+                
+                dimension_object = reduce(lambda obj, attr: getattr(obj, attr), object_path, considered_object)
+                dimension_class = type(dimension_object)
+                dimension_property = getattr(dimension_class, property_name)
+
+            except AttributeError:
+                raise ValueError("Dimension '" + dimension + "' does not exist within the investigated object")
+
+            if len(sample_points) < 1:
+                raise ValueError("A simulation grid dimension must have at least one sample point")
+
+            # Update impacts if the dimension is registered as a PyMonte simulation dimension
+            if RegisteredDimension.is_registered(dimension_property):
+                
+                dimension_property: RegisteredDimension
+                first_impact = dimension_property.first_impact
+                last_impact = dimension_property.last_impact
+                
+                if self.__first_impact and first_impact != self.__first_impact:
+                    raise ValueError('Diverging impacts on multi-object grid dimension initialization')
+
+                if self.__last_impact and last_impact != self.__last_impact:
+                    raise ValueError('Diverging impacts on multi-object grid dimension initialization')
+
+                self.__first_impact = first_impact
+                self.__last_impact = last_impact
+
+            self.__considered_objects  += (considered_object,)
+            self.__setter_lambdas += (self.__create_setter_lambda(considered_object, dimension),)
 
     @property
-    def considered_object(self) -> Any:
-        """Considered object of this grid section."""
+    def considered_objects(self) -> Tuple[Any, ...]:
+        """Considered objects of this grid section."""
 
-        return self.__considered_object
+        return self.__considered_objects
 
     @property
     def sample_points(self) -> List[Any]:
@@ -1059,7 +1141,32 @@ class GridDimension(object):
         if point_index < 0 or point_index >= len(self.__sample_points):
             raise ValueError(f"Index {point_index} is out of the range for grid dimension '{self.title}'")
 
-        self.__setter_lambda(self.__sample_points[point_index])
+        for setter_lambda in self.__setter_lambdas:
+            setter_lambda(self.__sample_points[point_index])
+        
+    @property
+    def first_impact(self) -> Optional[str]:
+        """Index of the first impacted simulation pipeline stage.
+        
+        Returns:
+        
+            Pipeline stage index.
+            `None`, if the stage is unknown.
+        """
+        
+        return self.__first_impact
+    
+    @property
+    def last_impact(self) -> Optional[str]:
+        """Index of the last impacted simulation pipeline stage.
+        
+        Returns:
+        
+            Pipeline stage index.
+            `None`, if the stage is unknown.
+        """
+        
+        return self.__last_impact
 
     @property
     def title(self) -> str:
@@ -1128,10 +1235,90 @@ class GridDimension(object):
         # Implicitly we assume that every non-callable reference is an attribute
         return lambda args: setattr(object_reference, stages[-1], args)
 
+    
+class RegisteredDimension(property):
+    """Register a class property getter as a PyMonte simulation dimension.
+    
+    Registered properties may specify their simulation stage impacts and therefore significantly
+    increase simulation runtime in cases where computationally demanding section re-calculations
+    can be reduced. 
+    """
+    
+    __first_impact: Optional[str]
+    __last_impact: Optional[str]
+    
+    def __init__(self,
+                 *args,
+                 first_impact: Optional[str] = None,
+                 last_impact: Optional[str] = None) -> None:
+        """
+        Args:
+
+            getter (Callable):
+                A callable getter function.
+
+            first_impact (str, optional):
+                Name of the first simulation stage within the simulation pipeline
+                which is impacted by manipulating this property.
+                If not specified, the initial stage is assumed.
+                
+            last_impact (str, optional):
+                Name of the last simulation stage within the simulation pipeline
+                which is impacted by manipulating this property.
+                If not specified, the final stage is assumed.
+        """
+
+        self.__first_impact = first_impact
+        self.__last_impact = last_impact
+        
+        property.__init__(self, *args)
+
+    @classmethod
+    def is_registered(cls, object: Any) -> bool:
+        """Check if any object is a registered PyMonte simulation dimension.
+        
+        Args:
+        
+            object (Any):
+                The object in question.
+                
+        Returns:
+        
+            A boolean indicator.
+        """
+        
+        return isinstance(object, cls)
+    
+    def setter(self,
+               first_impact: Optional[str] = None,
+               last_impact: Optional[str] = None) -> RegisteredDimension:
+        
+        return lambda fset: RegisteredDimension(self.fget, fset, self.fdel, first_impact=first_impact, last_impact=last_impact)
+    
+    def deleter(self, *_) -> RegisteredDimension:
+        
+        raise RuntimeError("Deleters aren't supported for PyMonte dimensions")
+        
+    @property
+    def first_impact(self) -> Optional[str]:
+        
+        return self.__first_impact
+    
+    @property
+    def last_impact(self) -> Optional[str]:
+        
+        return self.__last_impact
+    
+
+def dimension(getter: Callable) -> RegisteredDimension:
+    """Decorator to initialize a property as a registered PyMonte dimension."""
+    
+    return RegisteredDimension(getter)
+
 
 class MonteCarlo(Generic[MO]):
     """Grid of parameters over which to iterate the simulation."""
-
+    
     __num_samples: int                          # Maximum number of samples per grid element
     __min_num_samples: int                      # Minimum number of samples per grid element
     __num_actors: int                           # Number of dedicated actors spawned during simulation
@@ -1204,12 +1391,22 @@ class MonteCarlo(Generic[MO]):
         Returns:
             np.ndarray: Generated samples.
         """
+        
+        # Sort dimensions after impact in descending order
+        def sort(dimension: GridDimension) -> int:
+            
+            if dimension.first_impact not in actor.stage_identifiers():
+                return 0
+            
+            return actor.stage_identifiers().index(dimension.first_impact)
+            
+        self.__dimensions.sort(key=sort)
 
         # Generate start timestamp
         start_time = perf_counter()
 
         # Print meta-information and greeting
-        self.console.log(f"Launched simulation campaign with {self.__num_actors} dedicated actors")
+        self.console.log(f"Launched simulation campaign with {self.num_actors} dedicated actors")
 
         max_num_samples = self.num_samples
         dimension_str = f"{max_num_samples}"
@@ -1242,7 +1439,7 @@ class MonteCarlo(Generic[MO]):
 
             # Generate the actor pool
             actor_pool = ActorPool([actor.remote((self.__investigated_object, self.__dimensions, self.__evaluators))
-                                    for _ in range(self.__num_actors)])
+                                    for _ in range(self.num_actors)])
 
             # Generate section sample containers and meta-information
             grid_task_count = np.zeros([dimension.num_sample_points for dimension in self.__dimensions], dtype=int)
@@ -1256,7 +1453,7 @@ class MonteCarlo(Generic[MO]):
 
             # Submit initial actor tasks
             task_overhead = 2  # A little overhead in task submission might speed things up? Not clear atm.
-            for _ in range(self.__num_actors + task_overhead):
+            for _ in range(self.num_actors + task_overhead):
                 _ = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
 
         # Initialize results table
@@ -1274,30 +1471,42 @@ class MonteCarlo(Generic[MO]):
             # Keep executing until all samples are computed
             result_index = 0
             while actor_pool.has_next():
+                
+                try:
 
-                # Retrieve result from pool
-                samples: List[MonteCarloSample] = actor_pool.get_next_unordered(timeout=None)
+                    # Retrieve result from pool
+                    samples: List[MonteCarloSample] = actor_pool.get_next_unordered(timeout=None)
 
-                # Decrease task counter
-                grid_task_count[samples[0].grid_section] -= 1
-
+                except RaySystemError as e:
+                    
+                    self.console.log(e, style="red")
+                    continue
+                
+                except RayActorError as e:
+                    
+                    self.console.log(e, style="red")
+                    continue
+                
                 # Queue next task and retrieve progress
-                num_samples = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
+                absolute_progress = self.__queue_next(actor_pool, grid, grid_active_mask, grid_task_count)
+                
+                #if absolute_progress > max_num_samples:
+                #    raise RuntimeError("Impossible!")
 
                 # Save result
-                grid_section: GridSection = grid[samples[0].grid_section]
-                grid_section.add_samples(samples)
-
-                # Check for stopping criteria
-                if grid_section.num_samples >= self.min_num_samples:
-
-                    confident: bool = sum(np.invert(grid_section.confidences)) == 0.
-                    if confident:
-                        grid_active_mask[samples[0].grid_section] = False
-
-                # Print sample information by updating the table
                 for sample in samples:
+                    
+                    grid_section = grid[sample.grid_section]
+                    grid_section.add_samples(sample)
 
+                    # Check for stopping criteria
+                    if grid_section.num_samples >= self.min_num_samples:
+
+                        confident: bool = sum(np.invert(grid_section.confidences)) == 0.
+                        if confident:
+                            grid_active_mask[samples[0].grid_section] = False
+
+                    # Print sample information by updating the table
                     results_row: List[str] = []
 
                     for dimension, section_idx in zip(self.__dimensions, sample.grid_section):
@@ -1326,7 +1535,9 @@ class MonteCarlo(Generic[MO]):
                     results_table.add_row(*result)
 
                 status_group.renderables[1] = results_table
-                progress.update(task1, completed=num_samples)
+
+                # Visualize progress bar
+                progress.update(task1, completed=absolute_progress)
 
         # Measure elapsed time
         stop_time = perf_counter()
@@ -1338,67 +1549,38 @@ class MonteCarlo(Generic[MO]):
 
         return MonteCarloResult[MO](self.__dimensions, self.__evaluators, grid, performance_time)
 
-    def __next_section(self,
-                       grid: np.ndarray,
-                       grid_active_mask: np.ndarray,
-                       grid_task_count: np.ndarray) -> Tuple[Optional[Tuple[int, ...]], float]:
-        """Calculate grid section and sample indices given a global sample index.
-
-        Args:
-
-            grid (np.ndarray):
-                Simulation result grid.
-
-            grid_active_mask (np.ndarray):
-                Activity mask.
-
-            grid_task_count (np.ndarray):
-                Count of already submitted tasks within the sections.
-
-        Returns:
-
-            Optional[Tuple[int, ...]]:
-                Coordinates of the next section to be queued for sampling.
-                `None` if we are done!
-        """
-
-        num_processed_samples = 0
-        flat_grid = grid.flatten()
-        grid_section: GridSection
-        section_coordinates = None
-        for grid_section in flat_grid:
-
-            section_coordinates = grid_section.coordinates
-
-            # The grid section has already been marked inactive? Skip!
-            # The grid section has already the maximum amount of tasks queued? Skip!
-            if (not grid_active_mask[section_coordinates] or
-                    grid_section.num_samples + grid_task_count[section_coordinates] >= self.num_samples):
-
-                num_processed_samples += (self.num_samples -
-                                          grid_task_count[section_coordinates] * self.section_block_size)
-                section_coordinates = None
-                continue
-
-            num_processed_samples += grid_section.num_samples
-            break
-
-        return section_coordinates, num_processed_samples
-
     def __queue_next(self,
                      pool: ActorPool,
                      grid: np.ndarray,
                      grid_active_mask: np.ndarray,
                      grid_task_count: np.ndarray) -> float:
 
-        next_section, progress = self.__next_section(grid, grid_active_mask, grid_task_count)
+        # Query active sections and respective task counts
+        active_sections = grid[grid_active_mask]
+        active_sections_task_count = grid_task_count[grid_active_mask]
+        
+        program: List[Tuple[int, ...]] = []
+        for section, task_count in zip(active_sections.flat[:self.section_block_size], active_sections_task_count.flat[:self.section_block_size]):
+            
+            program.append(section.coordinates)
+            
+            task_count += 1
+            grid_task_count[section.coordinates] = task_count
+            
+            if task_count >= self.num_samples:
+                grid_active_mask[section.coordinates] = False
+                break
+            
+            # ToDo: Enhance routine to always submit section_block_size amount of indices per program
+            
+        if len(program) > 0:
+            pool.submit(lambda a, p: a.run.remote(p), program)
+            
+        collected_num_samples = len(grid[~grid_active_mask].flat) * self.num_samples
+        for active_section in active_sections.flat:
+            collected_num_samples += active_section.num_samples
 
-        if next_section is not None:
-
-            pool.submit(lambda a, s: a.run.remote(s), next_section)
-            grid_task_count[next_section] += 1
-
-        return progress
+        return collected_num_samples
 
     @property
     def investigated_object(self) -> Any:
@@ -1409,7 +1591,7 @@ class MonteCarlo(Generic[MO]):
     def new_dimension(self,
                       dimension: str,
                       sample_points: List[Any],
-                      considered_object: Optional[Any] = None) -> GridDimension:
+                      *args: Tuple[Any]) -> GridDimension:
 
         """Add a dimension to the simulation grid.
 
@@ -1424,8 +1606,8 @@ class MonteCarlo(Generic[MO]):
                 List points at which the dimension will be sampled into a grid.
                 The type of points must be identical to the grid arguments / type.
 
-            considered_object (Any, optional):
-                The object the dimension belongs to.
+            *args (Tuple[Any], optional):
+                References to the object the imension belongs to.
                 Resolved to the investigated object by default,
                 but may be an attribute or sub-attribute of the investigated object.
 
@@ -1433,8 +1615,8 @@ class MonteCarlo(Generic[MO]):
             The newly created dimension object.
         """
 
-        considered_object = self.__investigated_object if considered_object is None else considered_object
-        dimension = GridDimension(considered_object, dimension, sample_points)
+        considered_objects = (self.__investigated_object,) if len(args) < 1 else args
+        dimension = GridDimension(considered_objects, dimension, sample_points)
         self.add_dimension(dimension)
 
         return dimension
