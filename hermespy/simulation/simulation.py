@@ -6,7 +6,7 @@ Simulation
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Type, Optional, Union, Tuple
+from typing import Any, Callable, Dict, List, Type, Optional, Union, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +18,7 @@ from ..core.executable import Executable, Verbosity
 from ..core.device import Operator
 from ..channel import QuadrigaInterface, Channel
 from ..core.factory import Serializable
-from ..core.monte_carlo import Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
+from ..core.monte_carlo import dimension, Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
 from ..core.scenario import Scenario
 from ..core.signal_model import Signal
 from ..core.statistics import SNRType
@@ -38,17 +38,29 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
     __channels: np.ndarray      # Channel matrix linking devices
     __snr: Optional[float]      # Signal to noise ratio at the receiver-side
+    __snr_type: SNRType         # Global global type of signal to noise ratio.
 
     def __init__(self,
-                 seed: Optional[int] = None) -> None:
+                 seed: Optional[int] = None,
+                 snr: float = float('inf'),
+                 snr_type: Union[str, SNRType] = SNRType.EBN0) -> None:
         """
         Args:
 
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
+                
+            snr (float, optional):
+                The assumed linear signal to noise ratio.
+                Infinite by default, i.e. no added noise during reception.
+
+            snr_type (Union[str, SNRType], optional):
+                The signal to noise ratio metric to be used.
         """
 
         Scenario.__init__(self, seed=seed)
+        self.snr = snr
+        self.snr_type = snr_type
         self.__channels = np.ndarray((0, 0), dtype=object)
 
     def new_device(self) -> SimulatedDevice:
@@ -238,7 +250,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             channel.random_mother = self
             channel.scenario = self
 
-    @property
+    @dimension
     def snr(self) -> Optional[float]:
         """Ratio of signal energy to noise power at the receiver-side.
 
@@ -253,7 +265,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr
 
-    @snr.setter
+    @snr.setter(first_impact='receive_devices')
     def snr(self, value: Optional[float]) -> None:
         """Set ratio of signal energy to noise power at the receiver-side"""
 
@@ -267,6 +279,31 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 raise ValueError("Signal to noise ratio must be greater than zero")
 
             self.__snr = value
+            
+    @property
+    def snr_type(self) -> SNRType:
+        """Type of signal-to-noise ratio.
+
+        Returns:
+            SNRType: The SNR type.
+        """
+
+        return self.__snr_type
+
+    @snr_type.setter
+    def snr_type(self, snr_type: Union[str, SNRType]) -> None:
+        """Modify the type of signal-to-noise ratio.
+
+        Args:
+            snr_type (Union[str, SNRType]):
+                The new type of signal to noise ratio, string or enum representation.
+        """
+
+        if isinstance(snr_type, str):
+            snr_type = SNRType[snr_type]
+
+        self.__snr_type = snr_type
+
 
 
 SimulationResult: Type[MonteCarloResult[SimulationScenario]]
@@ -276,6 +313,8 @@ SimulationResult: Type[MonteCarloResult[SimulationScenario]]
 class SimulationRunner(object):
 
     __scenario: SimulationScenario      # Scenario to be run
+    __recent_device_transmissions: Optional[List[Signal]]
+    __recent_propagation: Optional[np.ndarray]
 
     def __init__(self,
                  scenario: SimulationScenario) -> None:
@@ -287,73 +326,35 @@ class SimulationRunner(object):
         """
 
         self.__scenario = scenario
+        self.__recent_device_transmissions = None
+        self.__recent_propagation = None
 
-    def transmit_operators(self,
-                           drop_duration: Optional[float] = None) -> None:
-        """Generate base-band signal models emitted by all registered transmitting operators.
+    def transmit_operators(self) -> None:
+        """Generate base-band signal models emitted by all registered transmitting operators."""
 
-        Args:
+        for transmitter in self.__scenario.transmitters:
+            _ = transmitter.transmit()
 
-            drop_duration (float, optional):
-                Length of simulated transmission in seconds.
+    def transmit_devices(self) -> None:
+        """Generate radio-frequency band signal models emitted by devices"""
 
-        Raises:
-
-            ValueError:
-                On invalid `drop_duration`s.
-
-            ValueError
-                If `data_bits` does not contain data for each transmitting modem.
-        """
-
-        # Infer drop duration from scenario if not provided
-        drop_duration = self.__scenario.drop_duration if drop_duration is None else drop_duration
-
-        if drop_duration <= 0.0:
-            raise ValueError("Drop duration must be greater or equal to zero")
-
-        for transmitter_idx, transmitter in enumerate(self.__scenario.transmitters):
-            transmitter.transmit()
-
-    def transmit_devices(self) -> List[List[Signal]]:
-        """Generate radio-frequency band signal models emitted by devices.
-
-        Returns:
-            List[List[Signal]]:
-                List of signal models emitted by transmitting devices.
-        """
-
-        return [device.transmit() for device in self.__scenario.devices]
-
-    def propagate(self,
-                  transmitted_signals: Optional[List[List[Optional[Signal]]]]) -> np.ndarray:
+        device_transmissions = [device.transmit(clear_cache=False) for device in self.__scenario.devices]
+        self.__recent_device_transmissions = device_transmissions
+            
+    def propagate(self) -> None:
         """Propagate the signals generated by registered transmitters over the channel model.
 
         Signals receiving at each receive modem are a superposition of all transmit signals impinging
         onto the receive modem over activated channels.
 
         The signal stream matrices contain the number of antennas on the first dimension and the number of
-        signal samples on the second dimension
-
-        Args:
-
-            transmitted_signals (List[List[Optional[np.ndarray]]]):
-                Signal models transmitted by each  registered device.
-
-        Returns:
-
-            np.ndarray:
-                A square matrix of dimension `num_devices` containing tuples of propagated signals as well as the
-                respective channel state information.
-
-        Raises:
-
-            ValueError:
-                If the number of `transmitted_signals` does not equal the number of devices.
+        signal samples on the second dimension.
         """
 
+        transmitted_signals = self.__recent_device_transmissions
+        
         if transmitted_signals is None:
-            transmitted_signals = [device.transmit() for device in self.__scenario.devices]
+            raise RuntimeError("Propagation simulation stage called without prior device transmission")
 
         if len(transmitted_signals) != self.__scenario.num_devices:
             raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match "
@@ -375,39 +376,29 @@ class SimulationRunner(object):
                 propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi)
                 propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
 
-        return propagation_matrix
+        # Cache the recent propagation
+        self.__recent_propagation = propagation_matrix
 
-    def receive_devices(self,
-                        propagation_matrix: np.ndarray) -> List[Signal]:
-        """Generate base-band signal models received by devices.
-
-        Args:
-
-            propagation_matrix (np.ndarray):
-                Matrix of signals and channel states impinging onto devices.
-
-        Returns:
-            received_signals(List[Signal]):
-                Signals received by the devices.
-
-        Raises:
-
-            ValueError:
-                If the length of `propagation_matrix` does not equal the number of devices within this scenario.
-        """
+    def receive_devices(self) -> None:
+        """Generate base-band signal models received by devices."""
+        
+        propagation_matrix = self.__recent_propagation
+        
+        if propagation_matrix is None:
+            raise RuntimeError("Receive device simulation stage called without prior channel propagation")
 
         if len(propagation_matrix) != self.__scenario.num_devices:
             raise ValueError(f"Number of arriving signals ({len(propagation_matrix)}) does not match "
                              f"the number of receiving devices ({self.__scenario.num_devices})")
 
-        received_signals: List[Signal] = []
         for device, impinging_signals in zip(self.__scenario.devices, propagation_matrix):
+            _ = device.receive(device_signals=impinging_signals, snr=self.__scenario.snr)
 
-            baseband_signal = device.receive(device_signals=impinging_signals, snr=self.__scenario.snr)
-            received_signals.append(baseband_signal)
+    def receive_operators(self) -> None:
+        """Demodulate base-band signal models received by all registered receiving operators."""
 
-        return received_signals
-
+        for operator in self.__scenario.receivers:
+            _ = operator.receive()
 
 @remote(num_cpus=1)
 class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
@@ -422,25 +413,13 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
 
         MonteCarloActor.__init__(self, argument_tuple)
         SimulationRunner.__init__(self, self._investigated_object)
-
-    def sample(self) -> SimulationScenario:
-
-        # Generate base-band signals, data symbols and data bits generated by each operator
-        self.transmit_operators()
-
-        # Generate radio-frequency band signals emitted by each device
-        transmitted_device_signals = self.transmit_devices()
-
-        # Simulate propagation over channel model
-        propagation_matrix = self.propagate(transmitted_device_signals)
-
-        # Simulate signal reception and mixing at the receiver-side of devices
-        received_device_signals = self.receive_devices(propagation_matrix)
-
-        # Generate base-band signals, data symbols and data bits generated by each operator
-        [receiver.receive() for receiver in self._investigated_object.receivers]
-
-        return self._investigated_object
+        
+    @staticmethod
+    def stage_identifiers() -> List[str]:
+        return ['transmit_operators', 'transmit_devices', 'propagate', 'receive_devices', 'receive_operators']
+    
+    def stage_executors(self) -> List[Callable]:
+        return [self.transmit_operators, self.transmit_devices, self.propagate, self.receive_devices, self.receive_operators]
 
 
 class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
@@ -449,9 +428,6 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
     yaml_tag = u'Simulation'
     """YAML serialization tag."""
 
-    snr_type: SNRType
-    """Global type of signal to noise ratio."""
-
     plot_results: bool
     """Plot results after simulation runs"""
 
@@ -459,19 +435,16 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
     """Dump results to files after simulation runs."""
 
     __scenario: SimulationScenario
-    __channels: np.ndarray
-    __operators: List[Operator]
-    __snr: Optional[float]
 
     def __init__(self,
                  num_samples: int = 100,
                  drop_duration: float = 0.,
                  plot_results: bool = False,
                  dump_results: bool = True,
-                 snr_type: Union[str, SNRType] = SNRType.EBN0,
                  results_dir: Optional[str] = None,
                  verbosity: Union[str, Verbosity] = Verbosity.INFO,
-                 seed: Optional[int] = None) -> None:
+                 seed: Optional[int] = None,
+                 *args, **kwargs) -> None:
         """Args:
 
             drop_duration(float, optional):
@@ -485,9 +458,6 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
                 Dump results to files after simulation runs.
                 Enabled by default.
 
-            snr_type (Union[str, SNRType]):
-                The signal to noise ratio metric to be used.
-
             results_dir (str, optional):
                 Directory in which all simulation artifacts will be dropped.
 
@@ -500,13 +470,10 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
 
         Executable.__init__(self, results_dir, verbosity)
 
-        self.__scenario = SimulationScenario(seed=seed)
+        self.__scenario = SimulationScenario(seed=seed, *args, **kwargs)
         self.plot_results = plot_results
         self.dump_results = dump_results
         self.drop_duration = drop_duration
-        self.snr_type = snr_type
-        self.snr = None
-        self.__operators: List[Operator] = []
 
         MonteCarlo.__init__(self, investigated_object=self.__scenario, num_samples=num_samples, console=self.console)
 
@@ -555,49 +522,6 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
 
         # Return result object
         return result
-
-    @property
-    def snr_type(self) -> SNRType:
-        """Type of signal-to-noise ratio.
-
-        Returns:
-            SNRType: The SNR type.
-        """
-
-        return self.__snr_type
-
-    @snr_type.setter
-    def snr_type(self, snr_type: Union[str, SNRType]) -> None:
-        """Modify the type of signal-to-noise ratio.
-
-        Args:
-            snr_type (Union[str, SNRType]):
-                The new type of signal to noise ratio, string or enum representation.
-        """
-
-        if isinstance(snr_type, str):
-            snr_type = SNRType[snr_type]
-
-        self.__snr_type = snr_type
-
-    @property
-    def snr(self) -> Optional[float]:
-        """Ratio of signal energy to noise power at the receiver-side.
-
-        Returns:
-            Optional[float]:
-                Linear signal energy to noise power ratio.
-                `None` if not specified.
-
-        Raises:
-            ValueError: On ratios smaller or equal to zero.
-        """
-
-        return self.scenario.snr
-
-    @snr.setter
-    def snr(self, value: Optional[float]) -> None:
-        self.scenario.snr = value
 
     @classmethod
     def to_yaml(cls: Type[Simulation],
@@ -676,10 +600,6 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
             input_device_idx = channel_position[1]
 
             simulation.scenario.set_channel(output_device_idx, input_device_idx, channel)
-
-        # Register operators
-        for operator in operators:
-            simulation.__operators.append(operator)
 
         # Register evaluators
         for evaluator in evaluators:
