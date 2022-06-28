@@ -66,7 +66,7 @@ setup(
         'pytest-mypy~=0.9.1',
         'pytest-flake8~=1.1.1',
         'pybind11~=2.6.2',
-        'ray~=1.12.0',
+        'ray~=1.13.0',
         'ruamel.yaml~=0.17.17',
         'sparse~=0.13.0',
         'numba~=0.55.1',
