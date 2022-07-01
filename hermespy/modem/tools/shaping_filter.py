@@ -149,7 +149,7 @@ class ShapingFilter:
         """
 
         # Convolve over a vector by default
-        if input_signal.ndim == 1:
+        if input_signal.ndim < 2:
             return np.convolve(input_signal, self.impulse_response)
         
         else:

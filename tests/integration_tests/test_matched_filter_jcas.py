@@ -1,12 +1,13 @@
 from unittest import TestCase
 
+import numpy as np
 from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 
 
 from hermespy.channel import RadarChannel
 from hermespy.jcas import MatchedFilterJcas
-from hermespy.modem import WaveformGeneratorPskQam, ShapingFilter
+from hermespy.modem import WaveformGeneratorPskQam, ShapingFilter, CustomPilotSymbolSequence
 from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchronization, PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization
 from hermespy.simulation import SimulatedDevice
 
@@ -61,6 +62,7 @@ class TestPskQamMatchedFilterJcas(TestCase):
         self.operator.device = self.device
         self.operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=self.oversampling_factor, num_preamble_symbols=20, num_data_symbols=100,
                                                                    tx_filter=self.tx_filter, rx_filter=self.rx_filter)
+        self.operator.waveform_generator.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1, -1, 1j, -1j]))
         self.operator.waveform_generator.synchronization = PskQamCorrelationSynchronization()
         self.operator.waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
         self.operator.waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
@@ -68,16 +70,18 @@ class TestPskQamMatchedFilterJcas(TestCase):
     def test_jcas(self) -> None:
         """The target distance should be properly estimated while transmitting information."""
         
-        # Generate transmitted signal
-        tx_signal, tx_symbols, tx_bits = self.operator.transmit()
-        rf_signals = self.device.transmit()
-        
-        # Propagate signal over the radar channel
-        propagetd_signals, _, _ = self.channel.propagate(rf_signals)
-        self.device.receive(propagetd_signals)
-        
-        # Receive signal
-        rx_signal, rx_symbols, rx_bits, radar_cube = self.operator.receive()
-        
-        # The bits should be recovered correctly
-        assert_array_equal(tx_bits, rx_bits)
+        for _ in range(5):
+            
+            # Generate transmitted signal
+            tx_signal, tx_symbols, tx_bits = self.operator.transmit()
+            rf_signals = self.device.transmit()
+            
+            # Propagate signal over the radar channel
+            propagetd_signals, _, _ = self.channel.propagate(rf_signals)
+            self.device.receive(propagetd_signals)
+            
+            # Receive signal
+            rx_signal, rx_symbols, rx_bits, radar_cube = self.operator.receive()
+            
+            # The bits should be recovered correctly
+            assert_array_equal(tx_bits, rx_bits)
