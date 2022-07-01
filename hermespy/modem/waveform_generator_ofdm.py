@@ -930,8 +930,12 @@ class WaveformGeneratorOfdm(PilotWaveformGenerator, Serializable):
             sample_index += num_samples
             word_index += num_words
 
-        ideal_channel_state = ChannelStateInformation.concatenate(section_channel_states,
-                                                                  dimension=ChannelStateDimension.SAMPLES)
+        if len(section_channel_states) > 0:
+            ideal_channel_state = ChannelStateInformation.concatenate(section_channel_states,
+                                                                    dimension=ChannelStateDimension.SAMPLES)
+
+        else:
+            ideal_channel_state = ChannelStateInformation.Ideal(0, 1, 1)
 
         # Estimate the channel given the recovered OFDM resources and convert it back to linear transformation matrices
         # Since we handle frequency bins here, the CSI transformations are diagonal over the last two dimensions
@@ -1198,7 +1202,6 @@ class PilotSection(FrameSection):
     __cached_num_subcarriers: int
     __cached_oversampling_factor: int
     __cached_pilot: Optional[np.ndarray]
-
     
     def __init__(self,
                  pilot_elements: Optional[Symbols] = None,
@@ -1278,7 +1281,7 @@ class PilotSection(FrameSection):
         # Generate a pseudo-random symbol stream if no subsymbols are specified
         if self.__pilot_elements is None:
             
-            rng = np.random.default_rng(42)
+            rng = np.random.default_rng(50)
             num_bits = num_symbols * self.frame._mapping.bits_per_symbol
             subsymbols = self.frame._mapping.get_symbols(rng.integers(0, 2, num_bits))[None, :]
             
@@ -1311,9 +1314,27 @@ class PilotSection(FrameSection):
         
             Complex base-band pilot section samples.
         """
+
+        # Generate the resource grid of the oversampled OFDM frame
+        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
+        grid = np.zeros(padded_num_subcarriers, dtype=complex)
         
-        samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
-        pilot = ifft(self._pilot_sequence().raw[0, :], norm='ortho', n=samples_per_symbol)
+        # Select the subgrid onto which to project this symbol section's resource configuration
+        subgrid_start_idx = int(.5 * (padded_num_subcarriers - self.frame.num_subcarriers))
+
+        # Set grid symbols
+        grid[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers] = self._pilot_sequence().raw[0, :]
+
+        # Shift in order to suppress the dc component
+        # Note that for configurations without any oversampling the DC component will not be suppressed
+        if self.frame.dc_suppression:
+            
+            dc_index = int(.5 * padded_num_subcarriers)
+            grid[dc_index:] = np.roll(grid[dc_index:], 1)
+
+        # By convention, the length of each time slot is the inverse of the sub-carrier spacing
+        pilot = ifft(ifftshift(grid), norm='ortho')
+        
         return pilot
 
 
@@ -1331,14 +1352,15 @@ class SchmidlCoxPilotSection(PilotSection):
     def _pilot(self) -> np.ndarray:
 
         samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
-        num_symbols = int(1.5 * self.frame.num_subcarriers)
-        pilot_sequence = self._pilot_sequence(num_symbols).raw.flatten()
+        pilot_sequence = self._pilot_sequence(int(.5 * self.frame.num_subcarriers) + self.frame.num_subcarriers).raw.flatten()
 
-        pilot_frequencies = np.zeros((self.frame.num_subcarriers, 2), dtype=complex)
-        pilot_frequencies[0::2, 0] = pilot_sequence[self.frame.num_subcarriers:]
-        pilot_frequencies[:, 1] = pilot_sequence[:self.frame.num_subcarriers]
- 
-        pilot_symbols_time = ifft(pilot_frequencies, axis=0, norm='ortho', n=samples_per_symbol)
+        pilot_frequencies = np.zeros((samples_per_symbol, 2), dtype=complex)
+
+        subgrid_start_idx = int(.5 * (samples_per_symbol - self.frame.num_subcarriers))
+        pilot_frequencies[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers:2, 0] = pilot_sequence[:int(.5 * self.frame.num_subcarriers)]
+        pilot_frequencies[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers, 1] = pilot_sequence[int(.5 * self.frame.num_subcarriers):]
+
+        pilot_symbols_time = ifft(ifftshift(pilot_frequencies, axes=0), axis=0, norm='ortho', n=samples_per_symbol)
         pilot_samples = np.concatenate(pilot_symbols_time.T, axis=0)
         
         return pilot_samples
@@ -1382,20 +1404,21 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
             
         half_symbol_length = int(.5 * symbol_length)
 
-        num_delay_candidates = signal.shape[-1] - symbol_length
-        delay_powers = np.empty(1 + num_delay_candidates, dtype=float)
-        delay_powers[0] = 0.
-        for d in range(0, num_delay_candidates):
+        num_delay_candidates = 1 + signal.shape[-1] - symbol_length
+        delay_powers = np.empty(num_delay_candidates, dtype=float)
+        delay_powers[0] = 0.    # In order to be able to detect a peak on the first sample
+        for d in range(0, num_delay_candidates - 1):
 
             delay_powers[1 + d] = np.sum(abs(np.sum(signal[:, d:d + half_symbol_length].conj() * signal[:, d + half_symbol_length:d + 2 * half_symbol_length], axis=1)))
         
         num_samples = self.waveform_generator.samples_in_frame
         peaks, _ = find_peaks(delay_powers, distance=int(.8 * num_samples))
-        frame_indices = peaks - 1
+        frame_indices = peaks - 3
 
         frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
         for frame_idx in frame_indices:
 
+            franme_idx = max(0, frame_idx)
             frames.append((signal[:, frame_idx:frame_idx + num_samples], channel_state[:, :, frame_idx:frame_idx + num_samples, :]))
 
         return frames

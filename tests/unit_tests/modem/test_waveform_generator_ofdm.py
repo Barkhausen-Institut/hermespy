@@ -11,7 +11,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from numpy.random import default_rng
 from scipy.constants import pi
-from scipy.fft import fft
+from scipy.fft import fft, fftshift
 
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
@@ -541,9 +541,6 @@ class TestPilotSection(TestCase):
         self.pilot_section.pilot_elements = Symbols(expected_pilot_symbols)
         
         pilot = self.pilot_section.modulate()
-        pilot_symbols = fft(pilot, norm='ortho')[:self.frame.num_subcarriers]
-        assert_array_almost_equal(expected_pilot_symbols, pilot_symbols)
-        
         cached_pilot = self.pilot_section.modulate()
         assert_array_equal(pilot, cached_pilot)
         
@@ -559,11 +556,18 @@ class TestPilotSection(TestCase):
         
         expected_pilot_symbols = np.exp(2j * pi * self.rng.uniform(0, 1, self.frame.num_subcarriers))
         self.pilot_section.pilot_elements = Symbols(expected_pilot_symbols)
-        
+    
         pilot = self.pilot_section._pilot()
-        pilot_symbols = fft(pilot, norm='ortho')[:self.frame.num_subcarriers]
+
+        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
+        subgrid_start_idx = int(.5 * (padded_num_subcarriers - self.frame.num_subcarriers))
+        dc_index = int(.5 * padded_num_subcarriers)
+        pilot_symbols = fftshift(fft(pilot, norm='ortho'))
+        pilot_symbols[dc_index:] = np.roll(pilot_symbols[dc_index:], -1)
+        pilot_symbols = pilot_symbols[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers]
+
         assert_array_almost_equal(expected_pilot_symbols, pilot_symbols)
-        
+
 
 class TestSchmidlCoxPilotSection(TestCase):
     """Test the Schmidl Cox Algorithm Pilot section implementation."""
@@ -583,7 +587,8 @@ class TestSchmidlCoxPilotSection(TestCase):
         
         pilot = self.pilot.modulate()
         self.assertEqual(self.pilot.num_samples, len(pilot), "Invalid number of samples generated")
-        
+        self.assertEqual(2 * self.frame.num_subcarriers * self.frame.oversampling_factor, len(pilot))
+
         synchronization_symbol = pilot[:int(.5 * len(pilot))]
         half_symbol_length = int(.5 * len(synchronization_symbol))
         first_half_symbol = synchronization_symbol[:half_symbol_length]
@@ -638,12 +643,13 @@ class TestSchmidlCoxSynchronization(TestCase):
 
     def setUp(self) -> None:
 
-        self.rng = default_rng(42)
+        self.rng = default_rng(90)
 
         test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1200)])
         test_payload = FrameSymbolSection(num_repetitions=3, pattern=[0])
-        self.frame = WaveformGeneratorOfdm(oversampling_factor=4, resources=[test_resource], structure=[test_payload])
+        self.frame = WaveformGeneratorOfdm(oversampling_factor=1, resources=[test_resource], structure=[test_payload])
         self.frame.pilot_section = SchmidlCoxPilotSection()
+        self.frame.dc_suppression = False
 
         self.synchronization = SchmidlCoxSynchronization(self.frame)
 
