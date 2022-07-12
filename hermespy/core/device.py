@@ -118,8 +118,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from itertools import chain
 from typing import Any, Generic, List, Optional, Tuple, TypeVar
+import wave
 
 import numpy as np
+from scipy.constants import speed_of_light
 
 from hermespy.tools.math import transform_coordinates
 from .antennas import AntennaArrayBase, UniformArray, IdealAntenna
@@ -990,6 +992,30 @@ class Device(ABC, RandomNode):
             ValueError: On negative carrier frequencies.
         """
         ...
+        
+    @property
+    def wavelength(self) -> float:
+        """Central wavelength of the device's emmissions in the RF-band.
+        
+        Returns:
+        
+            wavelength (float):
+                Wavelength in m.
+                
+        Raises:
+            ValueError:
+                On wavelengths smaller or equal to zero.
+        """
+        
+        return speed_of_light / self.carrier_frequency
+    
+    @wavelength.setter
+    def wavelength(self, value: float) -> None:
+        
+        if value <= 0.:
+            raise ValueError("Device wavelength must be greater than zero")
+        
+        self.carrier_frequency = speed_of_light / value
 
     @property
     @abstractmethod

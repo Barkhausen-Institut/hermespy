@@ -15,7 +15,7 @@ cache:
 
 before_script:
   - apt update
-  - apt-get install -y build-essential octave
+  - apt-get install -y build-essential octave pandoc
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
