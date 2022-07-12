@@ -127,6 +127,7 @@ class TestWaveformGeneratorPskQam(TestCase):
         self.generator.rx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
         self.generator.tx_filter = ShapingFilter(ShapingFilter.FilterType.NONE, self.oversampling_factor)
 
+        expected_symbols = Symbols(np.array([1j]))
         expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.generator.symbols_per_frame)) *
                                    np.arange(1, 1 + self.generator.symbols_per_frame))
 
