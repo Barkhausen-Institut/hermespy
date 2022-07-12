@@ -337,7 +337,20 @@ class WaveformGeneratorPskQam(ConfigurablePilotWaveform, Serializable):
     def bandwidth(self) -> float:
 
         # The bandwidth is assumed to be identical to the QAM chirp bandwidth
-        return self.__chirp_bandwidth
+        return 2 * self.symbol_rate
+
+    @bandwidth.setter
+    def bandwidth(self, value: float) -> None:
+        """
+        Raises:
+
+            ValueError: If the bandwidth is smaller or equal to zero.
+        """
+
+        if value <= 0.:
+            raise ValueError("Bandwidth must be greater than zero")
+
+        self.symbol_rate = .5 * value
 
     def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
         """Equalize the received data symbols
@@ -849,6 +862,7 @@ class PskQamMinimumMeanSquareChannelEqualization(Serializable, PskQamChannelEqua
         signal.samples /= (csi.state[0, 0, :signal.num_samples, 0] + 1 / snr)
         
         return signal
+
 class RootRaisedCosine(WaveformGeneratorPskQam):
     """Root Raise Cosine Filter Modulation Scheme."""
     
