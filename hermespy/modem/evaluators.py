@@ -71,7 +71,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class CommunicationEvaluator(Evaluator[Scenario], ABC):
+class CommunicationEvaluator(Evaluator, ABC):
     """Base class for evaluating communication processes between two modems."""
 
     __transmitting_modem: Modem     # Handle to the transmitting modem

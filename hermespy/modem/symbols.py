@@ -7,7 +7,7 @@ Communication Symbols
 
 from __future__ import annotations
 from copy import deepcopy
-from typing import Optional, Union
+from typing import Optional, Union, Iterable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,16 +28,17 @@ class Symbols(object):
     __symbols: np.ndarray       # Internal symbol storage
 
     def __init__(self,
-                 symbols: Optional[np.ndarray] = None) -> None:
+                 symbols: Optional[Union[Iterable, np.ndarray]] = None) -> None:
         """
         Args:
 
-            symbols (np.ndarray, optional):
+            symbols (Union[Iterable, numpy.ndarray], optional):
                 Raw symbol array. The first dimension denotes the number of streams,
                 the second dimension the number of symbols per stream.
         """
 
         symbols = np.empty((1, 0), dtype=complex) if symbols is None else symbols
+        symbols = np.array(symbols) if not isinstance(symbols, np.ndarray) else symbols
 
         # Make sure the initialization is a valid symbol sequence
         if symbols.ndim > 2:

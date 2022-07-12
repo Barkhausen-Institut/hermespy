@@ -70,9 +70,11 @@ class TestConfigurationExamples(TestCase):
                 Path to the yaml configuration file.
         """
 
-        with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples, patch('sys.stdout') as stdout, patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure') as figure:
+        with patch('hermespy.simulation.Simulation.num_samples', spec=property) as num_samples, patch('hermespy.simulation.Simulation.num_actors', spec=property) as num_actors, patch('sys.stdout') as stdout, patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure') as figure:
 
             num_samples.return_value = 1
+            num_actors.return_value = 1
+            
             args = ['-p', path, '-o', self.tempdir.name]
             hermes(args)
     

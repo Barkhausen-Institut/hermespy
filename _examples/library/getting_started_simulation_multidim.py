@@ -9,22 +9,35 @@ from hermespy.coding import RepetitionEncoder
 # Create a new HermesPy simulation scenario
 simulation = Simulation()
 
-# Create a new simulated device
-device = simulation.scenario.new_device()
+# Create two devices representing base station and terminal
+# in a downlink scenario
+base_station = simulation.scenario.new_device()
+terminal = simulation.scenario.new_device()
 
-# Add a modem at the simulated device
-modem = Modem()
-modem.waveform_generator = WaveformGeneratorPskQam()
-modem.device = device
-modem.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
+# Disable device self-interference by setting the gain 
+# of the respective self-inteference channels to zero
+simulation.scenario.channel(base_station, base_station).gain = 0.
+simulation.scenario.channel(terminal, terminal).gain = 0.
+
+# Configure a transmitting modem at the base station
+transmitter = Modem()
+transmitter.waveform_generator = WaveformGeneratorPskQam()
+transmitter.device = base_station
+transmitter.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
+
+# Configure a receiving modem at the terminal
+receiver = Modem()
+receiver.waveform_generator = WaveformGeneratorPskQam()
+receiver.device = terminal
+receiver.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
 
 # Configure simulation evaluators
-simulation.add_evaluator(BitErrorEvaluator(modem, modem))
-simulation.add_evaluator(ThroughputEvaluator(modem, modem))
+simulation.add_evaluator(BitErrorEvaluator(transmitter, receiver))
+simulation.add_evaluator(ThroughputEvaluator(transmitter, receiver))
 
 # Configure simulation sweep dimensions
 snr_dimension = simulation.new_dimension('snr', [10, 8, 6, 4, 2, 1, 0.5, 0.25, .125, .0625])
-rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], modem.encoder_manager[0])
+rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], transmitter.encoder_manager[0], receiver.encoder_manager[0])
 snr_dimension.title = 'SNR'
 rep_dimension.title = 'Code Repetitions'
 
