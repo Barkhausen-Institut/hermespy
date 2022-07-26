@@ -36,19 +36,15 @@ Operators:
     max_range: 10         # Maximal detectable range of the range estimation in m
 
     # Waveform configuration
-    waveform_generator: !<PskQam>
+    waveform_generator: !<SC-FMCW>
 
       # Symbol settings
       symbol_rate: 100e6
       modulation_order: 16
       oversampling_factor: 4
 
-      # Filter settings
-      filter:
-        filter_type: FMCW
-
       # Frame settings
-      chirp_bandwidth: 100e6
+      bandwidth: 100e6
       num_preamble_symbols: 16
       num_data_symbols: 100
       pilot_rate: 1e6
@@ -60,25 +56,21 @@ Operators:
     device: *terminal # Operator controls the terminal device
 
     # Waveform configuration
-    waveform_generator: !<PskQam>
+    waveform_generator: !<SC-FMCW>
 
-      channel_estimation: !<PskQamLS>
-      channel_equalization: !<PskQamZF>
+      channel_estimation: !<SC-LS>
+      channel_equalization: !<SC-ZF>
 
       # Symbol settings
       symbol_rate: 100e6
       modulation_order: 16
       oversampling_factor: 4
 
-      # Filter settings
-      filter:
-        filter_type: FMCW
-
       # Frame settings
-      chirp_bandwidth: 100e6
+      bandwidth: 100e6
       num_preamble_symbols: 16
       num_data_symbols: 100
-      pilot_rate: 1e6
+      pilot_rate: 10
       guard_interval: 1e-6
 
 
