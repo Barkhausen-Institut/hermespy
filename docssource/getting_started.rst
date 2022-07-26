@@ -408,7 +408,7 @@ It should consist of:
 
 This scenario is represented by the following *simulation.yml* file:
 
-.. literalinclude:: /../_examples/settings/chirp_qam/simulation.yml
+.. literalinclude:: /../_examples/settings/chirp_qam.yml
    :language: yaml
    :linenos:
 
