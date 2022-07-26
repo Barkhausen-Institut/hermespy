@@ -754,11 +754,11 @@ class MonteCarloActor(Generic[MO]):
                 if grid_dimension.last_impact != None and grid_dimension.last_impact in self.__stage_identifiers:
                     last_impact = max(last_impact, self.__stage_identifiers.index(grid_dimension.last_impact))
                     
-            # if first_impact >= self.__num_stages:
-            #     first_impact = 0
-            #     
-            # if last_impact <= 0:
-            #     last_impact = self.__num_stages - 1
+            if first_impact >= self.__num_stages:
+                first_impact = 0
+               
+            if last_impact <= 0:
+                last_impact = self.__num_stages - 1
                 
             # Execute impacted simulation stages
             # Note that for the first grid_section all stages are executed

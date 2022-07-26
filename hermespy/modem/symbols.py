@@ -12,6 +12,8 @@ from typing import Optional, Union, Iterable
 import matplotlib.pyplot as plt
 import numpy as np
 
+from hermespy.core import Executable
+
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
@@ -145,8 +147,11 @@ class Symbols(object):
 
         # Create a new figure and the respective axes if none were provided
         if axes is None:
-            figure, axes = plt.subplots()
-            figure.suptitle("Symbol Constellation")
+            
+            with Executable.style_context():
+            
+                figure, axes = plt.subplots()
+                figure.suptitle("Symbol Constellation")
 
         axes.scatter(symbols.real, symbols.imag)
         axes.set(ylabel="Imag")

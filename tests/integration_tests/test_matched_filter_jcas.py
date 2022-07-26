@@ -7,7 +7,7 @@ from numpy.random import default_rng
 
 from hermespy.channel import RadarChannel
 from hermespy.jcas import MatchedFilterJcas
-from hermespy.modem import WaveformGeneratorPskQam, ShapingFilter, CustomPilotSymbolSequence
+from hermespy.modem import RootRaisedCosineWaveform, CustomPilotSymbolSequence
 from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchronization, PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization
 from hermespy.simulation import SimulatedDevice
 
@@ -37,31 +37,11 @@ class TestPskQamMatchedFilterJcas(TestCase):
                                     receiver=self.device,
                                     radar_cross_section=1.)
         
-        self.filter_type = 'ROOT_RAISED_COSINE'
         self.oversampling_factor = 16
-        self.modulation_order = 16
-        self.guard_interval = 1e-3
-        self.filter_length_in_symbols = 16
-        self.roll_off_factor = .9
 
-        self.tx_filter = ShapingFilter(filter_type=self.filter_type,
-                                       samples_per_symbol=self.oversampling_factor,
-                                       is_matched=False,
-                                       length_in_symbols=self.filter_length_in_symbols,
-                                       roll_off=self.roll_off_factor,
-                                       bandwidth_factor=1.)
-
-        self.rx_filter = ShapingFilter(filter_type=self.filter_type,
-                                       samples_per_symbol=self.oversampling_factor,
-                                       is_matched=True,
-                                       length_in_symbols=self.filter_length_in_symbols,
-                                       roll_off=self.roll_off_factor,
-                                       bandwidth_factor=1.)
-        
         self.operator = MatchedFilterJcas(self.max_range)
         self.operator.device = self.device
-        self.operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=self.oversampling_factor, num_preamble_symbols=20, num_data_symbols=100,
-                                                                   tx_filter=self.tx_filter, rx_filter=self.rx_filter)
+        self.operator.waveform_generator = RootRaisedCosineWaveform(oversampling_factor=self.oversampling_factor, num_preamble_symbols=20, num_data_symbols=100)
         self.operator.waveform_generator.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1, -1, 1j, -1j]))
         self.operator.waveform_generator.synchronization = PskQamCorrelationSynchronization()
         self.operator.waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
