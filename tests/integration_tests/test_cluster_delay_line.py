@@ -70,13 +70,4 @@ class TestClusterDelayLine(TestCase):
             dictionary[:, i] = self.device_a.antennas.spherical_response(self.frequency, aoa, zoa)
 
         beamformer = np.linalg.norm(dictionary.T @ samples, axis=1, keepdims=False).reshape((num_angle_candidates, num_angle_candidates))
-        
-        import matplotlib.pyplot as plt
-        
-        fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-        X, Y = np.meshgrid(azimuth_angles, zenith_angles)
-        ax.pcolormesh(X, Y, beamformer.T, shading='nearest')
-        ax.plot(azimuth_angles, zenith_angles, color='k', ls='none')
-        ax.grid()
-        #plt.show()
         return

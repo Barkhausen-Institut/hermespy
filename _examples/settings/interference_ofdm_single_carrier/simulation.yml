@@ -24,23 +24,16 @@ Operators:
     device: *device_alpha         # Device the modem is operating on
 
     # Waveform configuration
-    Waveform: !<PskQam>
+    Waveform: !<SC-RootRaisedCosine>
 
       # Symbol settings
       symbol_rate: 1e6            # Rate of symbol repetition in Hz
       modulation_order: 64        # Modulation order, in other words 8 bit per data chirp
-      chirp_bandwidth: 1e7        # Bandwidth of each dedicated chirp in Hz
-      chirp_duration: 1e-6        # Duration each dedicated chirp in s
-
-      # Filter settings
-      filter:
-        filter_type: ROOT_RAISED_COSINE
-        bandwidth_factor: .5
-        roll_off: .5
+      roll_off: .5                # Roll-Off factor of the pulse filter
 
       # Frame settings
-      num_preamble_symbols: 50    # Number of preamble chirps before data
-      num_data_symbols: 50        # Number of data chirps
+      num_preamble_symbols: 10    # Number of preamble chirps before data
+      num_data_symbols: 90        # Number of data chirps
       pilot_rate: 1e6             # Rate of pilot chirp repetition in Hz
       guard_interval: 1e-6        # Pause between frame transmissions in seconds
 

@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
 
 from hermespy.simulation.simulation import Simulation
-from hermespy.modem.modem import Modem
-from hermespy.modem.evaluators import BitErrorEvaluator, ThroughputEvaluator
-from hermespy.modem.waveform_generator_psk_qam import WaveformGeneratorPskQam
+from hermespy.modem import Modem, BitErrorEvaluator, ThroughputEvaluator, RootRaisedCosineWaveform
 from hermespy.coding import RepetitionEncoder
 
 # Create a new HermesPy simulation scenario
@@ -21,13 +19,13 @@ simulation.scenario.channel(terminal, terminal).gain = 0.
 
 # Configure a transmitting modem at the base station
 transmitter = Modem()
-transmitter.waveform_generator = WaveformGeneratorPskQam()
+transmitter.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=100, oversampling_factor=8, roll_off=.9)
 transmitter.device = base_station
 transmitter.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
 
 # Configure a receiving modem at the terminal
 receiver = Modem()
-receiver.waveform_generator = WaveformGeneratorPskQam()
+receiver.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=100, oversampling_factor=8, roll_off=.9)
 receiver.device = terminal
 receiver.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
 

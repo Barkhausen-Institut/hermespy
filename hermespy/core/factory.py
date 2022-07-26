@@ -69,6 +69,15 @@ class Serializable(metaclass=ABCMeta):
 
     yaml_tag: Optional[str] = None
     """YAML serialization tag."""
+    
+    @staticmethod
+    def _arg_signature() -> Set[str]:
+        """Argument signature.
+        
+        Returns: Additional arguments not inferable from the init signature.
+        """
+        
+        return {}
 
     @classmethod
     def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
@@ -133,6 +142,7 @@ class Serializable(metaclass=ABCMeta):
 
         # Extract initialization signature
         init_signature = list(signature(cls.__init__).parameters.keys())
+        arg_signature = cls._arg_signature()
         init_signature.remove('self')
 
         # Extract settable class properties
@@ -152,7 +162,7 @@ class Serializable(metaclass=ABCMeta):
 
         for configuration_key in list(configuration.keys()):
 
-            if configuration_key in init_signature:
+            if configuration_key in init_signature or configuration_key in arg_signature:
 
                 init_parameters[configuration_key] = configuration.pop(configuration_key)
                 continue

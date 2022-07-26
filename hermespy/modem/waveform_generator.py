@@ -294,9 +294,6 @@ class WaveformGenerator(ABC):
     Implementations for specific technologies should inherit from this class.
     """
 
-    yaml_tag: str = "Waveform"
-    """YAML serialization tag."""
-
     symbol_type: np.dtype = complex
     """Symbol type."""
 
