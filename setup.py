@@ -73,11 +73,7 @@ setup(
         'sphinx~=4.5.0',
         'rich~=11.2.0',
         'protobuf~=3.19.1',
-<<<<<<< HEAD
         'redis~=4.3.3',
-=======
-        'redis~=4.3.4',
->>>>>>> master
     ],
     command_options={
         'build_sphinx': {
