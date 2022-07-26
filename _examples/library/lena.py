@@ -11,10 +11,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from hermespy.modem import Modem, WaveformGeneratorPskQam
-from hermespy.modem.waveform_generator_psk_qam import PskQamCorrelationSynchronization, \
-    PskQamLeastSquaresChannelEstimation, PskQamZeroForcingChannelEqualization
+from hermespy.modem import Modem, RootRaisedCosineWaveform, SingleCarrierCorrelationSynchronization, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 from hermespy.core.scenario import Scenario
+from hermespy.modem.waveform_single_carrier import SingleCarrierSynchronization
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem.bits_source import StreamBitsSource
 
@@ -35,13 +34,13 @@ scenario = Scenario[SimulatedDevice]()
 device = SimulatedDevice()
 scenario.add_device(device)
 
-waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
 waveform_generator.num_preamble_symbols = 128
 waveform_generator.num_data_symbols = 1024
 waveform_generator.modulation_order = 4
-waveform_generator.synchronization = PskQamCorrelationSynchronization()
-waveform_generator.channel_estimation = PskQamLeastSquaresChannelEstimation()
-waveform_generator.channel_equalization = PskQamZeroForcingChannelEqualization()
+waveform_generator.synchronization = SingleCarrierSynchronization()
+waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
+waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
 device.sampling_rate = waveform_generator.sampling_rate
 

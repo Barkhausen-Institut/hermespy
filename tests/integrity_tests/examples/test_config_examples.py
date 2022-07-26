@@ -49,11 +49,13 @@ class TestConfigurationExamples(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
 
-        # Run ray in local mode
-        with catch_warnings():
+        if not ray.is_initialized():
 
-            simplefilter("ignore")
-            ray.init(local_mode=True)
+            # Run ray in local mode
+            with catch_warnings():
+
+                simplefilter("ignore")
+                ray.init(local_mode=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -87,6 +89,11 @@ class TestConfigurationExamples(TestCase):
         """Test example settings for chirp QAM modulation"""
 
         self.__run_yaml("_examples/settings/chirp_qam")
+        
+    def test_hardware_model(self) -> None:
+        """Test example settings for hardware simulation"""
+
+        self.__run_yaml("_examples/settings/hardware_model")
 
     def test_interference_ofdm_sc(self) -> None:
         """Test example settings for single carrier OFDM interference"""

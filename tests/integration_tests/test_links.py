@@ -5,7 +5,7 @@ import numpy as np
 from hermespy.channel import Channel
 from hermespy.core import Scenario, IdealAntenna, UniformArray
 from hermespy.simulation import SimulatedDevice
-from hermespy.modem import Modem, WaveformGeneratorPskQam, BitErrorEvaluator
+from hermespy.modem import Modem, RootRaisedCosineWaveform, BitErrorEvaluator
 from hermespy.precoding import SpatialMultiplexing
 
 __author__ = "Jan Adler"
@@ -62,8 +62,8 @@ class TestLinks(TestCase):
     def test_ideal_channel_psk_qam(self) -> None:
         """Verify a valid MIMO link over an ideal channel with PSK/QAM modulation"""
 
-        self.tx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
-        self.rx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+        self.tx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
+        self.rx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
 
         self.__propagate(Channel(self.tx_device, self.rx_device))
 
@@ -72,8 +72,8 @@ class TestLinks(TestCase):
     # def test_cost256_psk_qam(self) -> None:
     #     """Verify a valid MIMO link over a 3GPP COST256 TDL channel with PSK/QAM modulation"""
     # 
-    #     self.tx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
-    #     self.rx_operator.waveform_generator = WaveformGeneratorPskQam(oversampling_factor=8)
+    #     self.tx_operator.waveform_generator = RootRaisedCosineWaveform(oversampling_factor=8)
+    #     self.rx_operator.waveform_generator = RootRaisedCosineWaveform(oversampling_factor=8)
     # 
     #     self.__propagate(MultipathFadingCost256(MultipathFadingCost256.TYPE.URBAN, transmitter=self.tx_operator.device, receiver=self.rx_operator.device))
     #     self.assertEqual(0, self.ber.evaluate().to_scalar())

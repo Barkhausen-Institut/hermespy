@@ -27,16 +27,12 @@ Operators:
     device: *device_alpha           # Device the modem is operating on
 
     # Waveform configuration
-    Waveform: !<PskQam>
+    Waveform: !<SC-RootRaisedCosine>
 
         # Symbol settings
         symbol_rate: 100e6
         modulation_order: 16
         oversampling_factor: 4
-
-        # Filter settings
-        filter:
-          filter_type: ROOT_RAISED_COSINE
 
         # Frame settings
         num_preamble_symbols: 10
