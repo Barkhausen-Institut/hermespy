@@ -1,3 +1,8 @@
+# This simulation configuration demonstrates the HermesPy concept of operator separation.
+#
+# Operator separation allows for the performance comparison of two communication waveforms
+# over identical channels, hardware models and additional noises.
+
 !<Simulation>
 
 # Physical device models within the simulated scenario
@@ -7,6 +12,7 @@ Devices:
   - &device_alpha !<SimulatedDevice>
 
     carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
+    operator_separation: True     # Enable separation of operator streams at transmit
 
 
 # Channel models between devices
@@ -22,8 +28,23 @@ Channels:
 # Operators transmitting or receiving signals over the devices
 Operators:
 
-  # A single modem operating the device #0
+  # First modem operating the device alpha
   - &modem_alpha !<Modem>
+
+    device: *device_alpha          # Device the modem is operating on
+
+    Waveform: !<ChirpFsk>         # Configuration of the waveform emitted by this transmitter
+
+      chirp_bandwidth: 500e3      # Bandwidth of each dedicated chirp in Hz
+      chirp_duration: .512e-3     # Duration each dedicated chirp in s
+      freq_difference: 1953.125   # Frequency offset between each modulated data symbol
+      num_data_chirps: 20         # Number of chirps generated per data frame
+      modulation_order: 256       # Modulation order, in other words 16 bit per data chirp
+
+      guard_interval: 0.          # Pause between frame transmissions in seconds
+
+  # Second modem operating the device alpha
+  - &modem_beta !<Modem>
 
     device: *device_alpha          # Device the modem is operating on
 
@@ -59,12 +80,13 @@ Evaluators:
     tolerance: .01
     plot_scale: log
 
-  # Evaluate throughput of `modem_alpha` communicating over `device_alpha`
-  - !<ThroughputEvaluator>
+  # Evaluate the bit errors of `modem_beta` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
 
-    transmitting_modem: *modem_alpha
-    receiving_modem: *modem_alpha
-    confidence: 0.
+    transmitting_modem: *modem_beta
+    receiving_modem: *modem_beta
+    confidence: .9
+    tolerance: .01
     plot_scale: log
 
 

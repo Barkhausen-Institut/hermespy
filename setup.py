@@ -40,7 +40,7 @@ setup(
     exclude_package_data={
         '': ['3rdparty', 'tests'],
     },
-    extras_require={"test": ['pytest', 'coverage'],
+    extras_require={"test": ['pytest~=7.1.2', 'coverage~=6.4.1'],
                     "quadriga": ["oct2py"],
                     "documentation": [
                         'sphinx-autodoc-typehints',
@@ -73,7 +73,11 @@ setup(
         'sphinx~=4.5.0',
         'rich~=11.2.0',
         'protobuf~=3.19.1',
+<<<<<<< HEAD
+        'redis~=4.3.3',
+=======
         'redis~=4.3.4',
+>>>>>>> master
     ],
     command_options={
         'build_sphinx': {
