@@ -1,3 +1,11 @@
+# In this example we simulate the effects of a non-ideal
+# Radio-Frequency chain and analog-to-digital conversion on the bit error rate performance
+# of a single-carrier communication system.
+# We consider I/Q imbalance, a power amplifier following Rapp's model and an adc with
+# mid-riser quantization and automatic gain control.
+# 
+# The performance is evaluated for a signal-to-noise ratio between zero and 20 dB.
+
 !<Simulation>
 
 # Physical device models within the simulated scenario
