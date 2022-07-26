@@ -60,7 +60,7 @@ class TestConfigurationExamples(TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
 
-        # Shut down ray 
+        # Shut down ray
         ray.shutdown()
 
     def __run_yaml(self, path: str) -> None:
@@ -75,47 +75,44 @@ class TestConfigurationExamples(TestCase):
         with patch('hermespy.simulation.Simulation.num_samples', spec=property) as num_samples, patch('hermespy.simulation.Simulation.num_actors', spec=property) as num_actors, patch('sys.stdout') as stdout, patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure') as figure:
 
             num_samples.return_value = 1
-            num_actors.return_value = 1
-            
-            args = ['-p', path, '-o', self.tempdir.name]
-            hermes(args)
+            hermes([path, '-o', self.tempdir.name])
     
     def test_chirp_fsk_lora(self) -> None:
         """Test example settings for chirp FSK modulation"""
 
-        self.__run_yaml("_examples/settings/chirp_fsk_lora")
+        self.__run_yaml("_examples/settings/chirp_fsk_lora.yml")
 
     def test_chirp_qam(self) -> None:
         """Test example settings for chirp QAM modulation"""
 
-        self.__run_yaml("_examples/settings/chirp_qam")
+        self.__run_yaml("_examples/settings/chirp_qam.yml")
         
     def test_hardware_model(self) -> None:
         """Test example settings for hardware simulation"""
 
-        self.__run_yaml("_examples/settings/hardware_model")
+        self.__run_yaml("_examples/settings/hardware_model.yml")
 
     def test_interference_ofdm_sc(self) -> None:
         """Test example settings for single carrier OFDM interference"""
 
-        self.__run_yaml("_examples/settings/interference_ofdm_single_carrier")
+        self.__run_yaml("_examples/settings/interference_ofdm_single_carrier.yml")
 
     def test_jcas(self) -> None:
         """Test example settings for joint communications and sensing"""
 
-        self.__run_yaml("_examples/settings/jcas")
+        self.__run_yaml("_examples/settings/jcas.yml")
 
     def test_ofdm_5g(self) -> None:
         """Test example settings for 5G OFDM modulation"""
 
-        self.__run_yaml("_examples/settings/ofdm_5g")
+        self.__run_yaml("_examples/settings/ofdm_5g.yml")
 
     def test_ofdm_single_carrier(self) -> None:
         """Test example settings for single carrier OFDM modulation"""
 
-        self.__run_yaml("_examples/settings/ofdm_single_carrier")
+        self.__run_yaml("_examples/settings/ofdm_single_carrier.yml")
 
     def test_operator_separation(self) -> None:
         """Test example settings for operator separation"""
 
-        self.__run_yaml("_examples/settings/operator_separation")
+        self.__run_yaml("_examples/settings/operator_separation.yml")
