@@ -23,13 +23,13 @@ rx_operator.device = rx_device
 channel = Channel(tx_operator.device, rx_operator.device)
 
 # Simulate the signal transmission over the channel
-tx_signal, _, tx_bits = tx_operator.transmit()
-rx_signal, _, channel_state = channel.propagate(tx_signal)
+transmission = tx_operator.transmit()
+rx_signal, _, channel_state = channel.propagate(tx_device.transmit())
 rx_device.receive(rx_signal)
-_, rx_symbols, rx_bits = rx_operator.receive()
+reception = rx_operator.receive()
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation
 evaluator = BitErrorEvaluator(tx_operator, rx_operator)
 evaluator.evaluate().plot()
-rx_symbols.plot_constellation()
+reception.symbols.plot_constellation()
 plt.show()

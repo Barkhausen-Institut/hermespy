@@ -14,8 +14,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from hermespy.core import ChannelStateInformation, Executable, FloatingError, Serializable, Signal
+from hermespy.core.channel_state_information import ChannelStateFormat
 from .waveform_generator import ConfigurablePilotWaveform, WaveformGenerator, Synchronization, \
-    ChannelEstimation, ChannelEqualization, PilotSymbolSequence
+    ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
@@ -230,97 +231,56 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         return Signal(np.convolve(pilot_symbols, self._transmit_filter()), sampling_rate=self.sampling_rate)
 
-    def map(self, data_bits: np.ndarray) -> Symbols:
-        return Symbols(self.__mapping.get_symbols(data_bits))
+    def map(self, bits: np.ndarray) -> Symbols:
+        
+        # Generate pilot and data symbol sequences
+        pilot_symbols = self.pilot_symbols(self.num_preamble_symbols + self._num_pilot_symbols + self.num_postamble_symbols)
+        data_symbols = self.__mapping.get_symbols(bits)
 
-    def unmap(self, data_symbols: Symbols) -> np.ndarray:
-        return self.__mapping.detect_bits(data_symbols.raw)
+        # Build the symbol frame
+        symbols = np.empty(self.symbols_per_frame, dtype=complex)
+        
+        # Assign preamble symbols within the frame
+        symbols[:self.num_preamble_symbols] = pilot_symbols[:self.num_preamble_symbols]
+        
+        # Assign postamble symbols within the frame
+        symbols[self.num_preamble_symbols+self._num_payload_symbols:] = pilot_symbols[self.num_preamble_symbols + self._num_pilot_symbols:]
+        
+        # Assign payload symbols as a mixture of data and pilot symbols
+        payload_symbol_slice = symbols[self.num_preamble_symbols:self.num_preamble_symbols+self._num_payload_symbols]
+        payload_symbol_slice[self._data_symbol_indices] = data_symbols
+        payload_symbol_slice[self._pilot_symbol_indices] = pilot_symbols[self.num_preamble_symbols:self.num_preamble_symbols + self._num_pilot_symbols:]
+        
+        return Symbols(symbols[np.newaxis, np.newaxis, :])
 
-    def modulate(self, data_symbols: Symbols) -> Signal:
+    def unmap(self, symbols: Symbols) -> np.ndarray:
+        
+        payload = symbols.raw[:, :, self.num_preamble_symbols:self.num_preamble_symbols + self._num_payload_symbols].flatten()
+        data_symbols = payload[self._data_symbol_indices]
+        
+        return self.__mapping.detect_bits(data_symbols)
+
+    def modulate(self, symbols: Symbols) -> Signal:
 
         frame = np.zeros(1 + (self._num_frame_symbols - 1) * self.oversampling_factor, dtype=complex)
-
-        # Query the pilot symbols
-        pilot_symbols = self.pilot_symbols(self.num_preamble_symbols + self._num_pilot_symbols + self.num_postamble_symbols)
-
-        # Set preamble symbols
-        num_preamble_samples = self.oversampling_factor * self.num_preamble_symbols
-        frame[:num_preamble_samples:self.oversampling_factor] = pilot_symbols[:self.num_preamble_symbols]
-
-        # Set payload symbols
-        # num_payload_samples = self.oversampling_factor * self._num_payload_symbols
-        payload_start = num_preamble_samples
-        payload_stop = payload_start + self._num_payload_symbols * self.oversampling_factor
-        payload_slice = frame[payload_start:payload_stop:self.oversampling_factor]
-        payload_slice[self._data_symbol_indices] = data_symbols.raw
-        payload_slice[self._pilot_symbol_indices] = pilot_symbols[self.num_preamble_symbols:]
-
-        # Set postamble symbols
-        num_postamble_samples = self.oversampling_factor * self.num_postamble_symbols
-        postamble_start_idx = payload_stop
-        postamble_stop_idx = postamble_start_idx + num_postamble_samples
-        frame[postamble_start_idx:postamble_stop_idx:self.oversampling_factor] = pilot_symbols[self.num_preamble_symbols + self._num_pilot_symbols::]
+        frame[::self.oversampling_factor] = symbols.raw.flatten()
 
         # Generate waveforms by treating the frame as a comb and convolving with the impulse response
         output_signal = np.convolve(frame, self._transmit_filter())
         return Signal(output_signal, self.sampling_rate)
 
-    def demodulate(self,
-                   baseband_signal: np.ndarray,
-                   channel_state: ChannelStateInformation,
-                   noise_variance: float = 0.) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
+    def demodulate(self, signal: np.ndarray) -> Symbols:
 
         # Query filters
         filter_delay = self._filter_delay
 
         # Filter the signal and csi
-        filtered_signal = np.convolve(baseband_signal, self._receive_filter())
-        filter_states = np.zeros((channel_state.state.shape[0], channel_state.state.shape[1], filter_delay, channel_state.state.shape[3]), dtype=complex)
-        filter_states[:, :, :, 0] = 1.
-        channel_state.state = np.append(filter_states, channel_state.state, axis=2)
-
-        # Extract frame symbols
-        preamble_start_idx = filter_delay
-        preamble_stop_idx = preamble_start_idx + self.oversampling_factor * self.num_preamble_symbols
-        # preamble = filtered_signal[preamble_start_idx:preamble_stop_idx:self.oversampling_factor]
+        filtered_signal = np.convolve(signal, self._receive_filter())
         
-        payload_symbols = filtered_signal[preamble_stop_idx:preamble_stop_idx + self.oversampling_factor * self._num_payload_symbols:self.oversampling_factor]
-        pilot_symbols = payload_symbols[self._pilot_symbol_indices] if self._num_pilot_symbols > 0 else np.empty(0, dtype=complex)
-        data_symbols = payload_symbols[self._data_symbol_indices] if self._num_payload_symbols >0 else np.empty(0, dtype=complex)
-        channel_state.state = channel_state.state[:, :, preamble_stop_idx:self.oversampling_factor * self._num_payload_symbols:self.oversampling_factor, :]
-
-        snr = self.power / noise_variance if noise_variance > 0. else float('inf')
-
-        # Apply equalization routines
-        equalized_data_symbols = self._equalize(data_symbols, channel_state, noise_variance)
-
-        return Symbols(data_symbols), channel_state, np.repeat(noise_variance, len(data_symbols))
-
-        # Estimate the channel
-        estimated_csi = self.channel_estimation.estimate_channel(signal, channel_state)
-
-        # Re-build signal model
-        signal = Signal(filtered_signal, sampling_rate=self.sampling_rate)
-
-
-        # Equalize the signal
-        snr = self.power / noise_variance if noise_variance > 0. else float('inf')
-        equalized_signal = self.channel_equalization.equalize_channel(signal, estimated_csi, snr)
-
-        # Extract data symbols
-        num_data_samples = self.oversampling_factor * self.__num_data_symbols
-        data_start_idx = preamble_stop_idx
-        data_stop_idx = data_start_idx + num_data_samples
-        data = equalized_signal.samples[0, data_start_idx:data_stop_idx:self.oversampling_factor]
-        data_state = estimated_csi[:, :, data_start_idx:data_stop_idx:self.oversampling_factor, :]
-
-        # Extract postamble symbols
-        # num_postamble_samples = self.oversampling_factor * self.num_postamble_symbols
-        # postamble_start_idx = data_stop_idx
-        # postamble_stop_idx = postamble_start_idx + num_postamble_samples
-        # postamble = filtered_signal[postamble_start_idx:postamble_stop_idx:self.oversampling_factor]
-
-        noise = np.repeat(noise_variance, len(data))
+        num_symbols = self.num_preamble_symbols + self.num_postamble_symbols + self._num_payload_symbols
+        symbols = filtered_signal[filter_delay:filter_delay + num_symbols * self.oversampling_factor:self.oversampling_factor]
+        
+        return Symbols(symbols[np.newaxis, np.newaxis, :])
 
     def _equalize(self,
                   data_symbols: np.ndarray,
@@ -589,7 +549,8 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @property
     def symbols_per_frame(self) -> int:
-        return self.__num_data_symbols
+        
+        return self.num_preamble_symbols + self._num_payload_symbols + self.num_postamble_symbols
 
     @property
     def bit_energy(self) -> float:
@@ -683,7 +644,18 @@ class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWave
         """
 
         ChannelEstimation.__init__(self, waveform_generator)
-
+        
+class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleCarrierWaveform]):
+    
+    def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
+        
+        filter_characteristics = self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
+        csi = self._csi().state[:, :, :, [0]]
+        filtered_state = np.apply_along_axis(lambda c: np.convolve(c, filter_characteristics), axis=2, arr=csi)
+        
+        delay = self.waveform_generator._filter_delay
+        demodulated_state = filtered_state[:, :, delay:delay+self.waveform_generator.symbols_per_frame*self.waveform_generator.oversampling_factor:self.waveform_generator.oversampling_factor, [0]]
+        return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, demodulated_state)
 
 class SingleCarrierLeastSquaresChannelEstimation(Serializable, SingleCarrierChannelEstimation):
     """Least-Squares channel estimation for Psk Qam waveforms."""
@@ -703,36 +675,40 @@ class SingleCarrierLeastSquaresChannelEstimation(Serializable, SingleCarrierChan
 
         SingleCarrierChannelEstimation.__init__(self, waveform_generator)
 
-    def estimate_channel(self,
-                         signal: Signal,
-                         csi: Optional[ChannelStateInformation] = None) -> ChannelStateInformation:
+    def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
 
         if self.waveform_generator is None:
             raise FloatingError("Error trying to fetch the pilot section of a floating channel estimator")
 
-        # Extract preamble symbols
-        filter_delay = self.waveform_generator._filter_delay
-
-        # Extract preamble symbols
-        symbol_distance = self.waveform_generator.oversampling_factor
-        num_preamble_samples = symbol_distance * self.waveform_generator.num_preamble_symbols
-        preamble_start_idx = filter_delay
-        preamble_stop_idx = preamble_start_idx + num_preamble_samples
-
+        # Query required waveform information
         num_preamble_symbols = self.waveform_generator.num_preamble_symbols
-        preamble_symbols = signal.samples[0, preamble_start_idx:preamble_stop_idx:symbol_distance]
+        num_postamble_symbols = self.waveform_generator.num_postamble_symbols
+        num_payload_symbols = self.waveform_generator._num_payload_symbols
+        num_pilot_symbols = self.waveform_generator._num_pilot_symbols
+        pilot_symbol_indices = self.waveform_generator._pilot_symbol_indices
+        transmitted_reference_symbols = self.waveform_generator.pilot_symbols(num_preamble_symbols + num_pilot_symbols + num_postamble_symbols)
 
-        # Reference preamble
-        reference = self.waveform_generator.pilot_symbols(num_preamble_symbols)
+        # Extract reference symbols
+        preamble_symbols = symbols.raw[:, 0, :num_preamble_symbols]
+        pilot_symbols = symbols.raw[:, 0, num_preamble_symbols:num_preamble_symbols + num_payload_symbols][:, pilot_symbol_indices]
+        postamble_symbols = symbols.raw[:, 0, num_preamble_symbols + num_payload_symbols:]
+        received_reference_symbols = np.concatenate((preamble_symbols, pilot_symbols, postamble_symbols), axis=1)
+        
+        # Estimate the channel over all reference symbols
+        channel_estimation_stems = received_reference_symbols / transmitted_reference_symbols
+        channel_estimation_stem_indices = np.concatenate((
+            np.arange(num_preamble_symbols),
+            pilot_symbol_indices + num_preamble_symbols, 
+            np.arange(num_postamble_symbols) + num_preamble_symbols + num_payload_symbols
+        ))
+        
+        # Interpolate to the whole channel estimation
+        channel_estimation_indices = np.arange(self.waveform_generator.symbols_per_frame)
+        channel_estimation = np.empty((symbols.num_streams, symbols.num_symbols), dtype=complex)
+        for s, stems in enumerate(channel_estimation_stems):
+            channel_estimation[s, :] = np.interp(channel_estimation_indices, channel_estimation_stem_indices, stems)
 
-        # Compute channel weight.
-        channel_weight = np.mean(preamble_symbols / reference)
-
-        # Re-construct csi
-        csi = ChannelStateInformation.Ideal(signal.num_samples, signal.num_streams)
-        csi.state *= channel_weight
-
-        return csi
+        return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, channel_estimation[:, np.newaxis, :, np.newaxis])
 
 
 class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrierWaveform], ABC):
@@ -768,15 +744,24 @@ class SingleCarrierZeroForcingChannelEqualization(Serializable, SingleCarrierCha
         SingleCarrierChannelEqualization.__init__(self, waveform_generator)
 
     def equalize_channel(self,
-                         signal: Signal,
-                         csi: ChannelStateInformation,
-                         snr: float = float('inf')) -> Signal:
+                         frame: Symbols,
+                         csi: ChannelStateInformation) -> Symbols:
+        
+        # If no information about transmitted streams is available, assume orthogonal channels
+        if csi.num_transmit_streams < 2:
+            
+            equalized_symbols = Symbols(frame.raw / csi.state[:, 0, :frame.num_symbols, 0])
+            return equalized_symbols
 
-        signal = signal.copy()
-        signal.samples /= csi.state[0, 0, :signal.num_samples, 0]
-
-        return signal
-
+        # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
+        equalized_symbols = np.empty((frame.num_streams, frame.num_symbols), dtype=complex)
+        for s, (symbols, state) in enumerate(zip(frame.raw[:, 0, :].T, csi.state[:, :, :frame.num_symbols, 0].transpose((2, 0, 1)))):
+            
+            equalization = np.linalg.pinv(state)
+            equalized_symbols[:, s] = equalization @ symbols
+            
+        return Symbols(equalized_symbols[:, np.newaxis, :])
+            
 
 class SingleCarrierMinimumMeanSquareChannelEqualization(Serializable, SingleCarrierChannelEqualization, ABC):
     """Minimum-Mean-Square Channel estimation for Psk Qam waveforms."""
@@ -796,14 +781,27 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(Serializable, SingleCarr
         SingleCarrierChannelEqualization.__init__(self, waveform_generator)
 
     def equalize_channel(self,
-                         signal: Signal,
-                         csi: ChannelStateInformation,
-                         snr: float = float('inf')) -> Signal:
-
-        signal = signal.copy()
-        signal.samples /= (csi.state[0, 0, :signal.num_samples, 0] + 1 / snr)
+                         frame: Symbols,
+                         csi: ChannelStateInformation) -> Symbols:
         
-        return signal
+        # Query SNR from the device
+        snr = self.waveform_generator.modem.device.snr
+        
+        # If no information about transmitted streams is available, assume orthogonal channels
+        if csi.num_transmit_streams < 2:
+            
+            equalized_symbols = Symbols(frame.raw / (csi.state[:, 0, :frame.num_symbols, 0] + 1 / snr))
+            return equalized_symbols
+
+        # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
+        equalized_symbols = np.empty(frame.raw.shape, dtype=complex)
+        for s, (symbols, state) in enumerate(zip(frame.raw.T, csi.state[:, :, :frame.num_symbols, 0].transpose((2, 0, 1)))):
+            
+            # ToDo: Introduce noise term here
+            equalization = np.linalg.pinv(state)
+            equalized_symbols[:, s] = equalization @ symbols
+            
+        return Symbols(equalized_symbols)
 
 
 class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
@@ -945,7 +943,7 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
        from hermespy.modem import RaisedCosineWaveform
    
    
-       waveform = RaisedCosineWaveform(oversampling_factor=16)
+       waveform = RaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter()
        plt.show()
 
@@ -956,7 +954,7 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
        from hermespy.modem import RaisedCosineWaveform
    
    
-       waveform = RaisedCosineWaveform(oversampling_factor=16)
+       waveform = RaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter_correlation()
        plt.show()
     """
@@ -1003,7 +1001,7 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
        from hermespy.modem import RootRaisedCosineWaveform
    
    
-       waveform = RootRaisedCosineWaveform(oversampling_factor=16)
+       waveform = RootRaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter()
        plt.show()
 
@@ -1014,7 +1012,7 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
        from hermespy.modem import RootRaisedCosineWaveform
    
    
-       waveform = RootRaisedCosineWaveform(oversampling_factor=16)
+       waveform = RootRaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter_correlation()
        plt.show()
     """
@@ -1059,7 +1057,7 @@ class RectangularWaveform(Serializable, FilteredSingleCarrierWaveform):
        from hermespy.modem import RectangularWaveform
    
    
-       waveform = RectangularWaveform(oversampling_factor=16)
+       waveform = RectangularWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter()
        plt.show()
 
@@ -1070,7 +1068,7 @@ class RectangularWaveform(Serializable, FilteredSingleCarrierWaveform):
        from hermespy.modem import RectangularWaveform
    
    
-       waveform = RectangularWaveform(oversampling_factor=16)
+       waveform = RectangularWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter_correlation()
        plt.show()
     """
@@ -1141,7 +1139,7 @@ class FMCWWaveform(Serializable, FilteredSingleCarrierWaveform):
        from hermespy.modem import FMCWWaveform
    
    
-       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6)
+       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter()
        plt.show()
 
@@ -1152,7 +1150,7 @@ class FMCWWaveform(Serializable, FilteredSingleCarrierWaveform):
        from hermespy.modem import FMCWWaveform
    
    
-       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6)
+       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
        waveform.plot_filter_correlation()
        plt.show()
     """

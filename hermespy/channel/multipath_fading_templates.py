@@ -7,7 +7,7 @@ Multipath Fading Standard Templates
 
 from __future__ import annotations
 import numpy as np
-from enum import Enum
+from enum import IntEnum
 from typing import Any, Optional, Type
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 
@@ -26,7 +26,7 @@ __status__ = "Prototype"
 class MultipathFadingCost256(MultipathFadingChannel):
     """COST256 Multipath Fading Channel models."""
 
-    class TYPE(Enum):
+    class TYPE(IntEnum):
         """Supported model types."""
 
         URBAN = 0
@@ -38,7 +38,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
     __model_type: TYPE
 
     def __init__(self,
-                 model_type: TYPE = TYPE.URBAN,
+                 model_type: MultipathFadingCost256.TYPE = 0,
                  los_angle: Optional[float] = None,
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
@@ -94,7 +94,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
         else:
             raise ValueError("Requested model type not supported")
 
-        self.__model_type = model_type
+        self.__model_type = self.TYPE(model_type)
 
         # Convert power and normalize
         power_profile = 10 ** (power_db / 10)
@@ -191,7 +191,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
 class MultipathFading5GTDL(MultipathFadingChannel):
     """5G TDL Multipath Fading Channel models."""
 
-    class TYPE(Enum):
+    class TYPE(IntEnum):
         """Supported model types."""
 
         A = 0
@@ -206,7 +206,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
     __rms_delay: float
 
     def __init__(self,
-                 model_type: TYPE = 0,
+                 model_type: MultipathFading5GTDL.TYPE = 0,
                  rms_delay: float = 0.0,
                  doppler_frequency: Optional[float] = None,
                  los_doppler_frequency: Optional[float] = None,
@@ -300,7 +300,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         else:
             raise ValueError("Requested model type not supported")
 
-        self.__model_type = model_type
+        self.__model_type = self.TYPE(model_type)
 
         # Convert power and normalize
         power_profile = 10 ** (power_db / 10)

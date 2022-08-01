@@ -1,3 +1,3 @@
-.. automodule:: hermespy.modem.waveform_generator_psk_qam
+.. automodule:: hermespy.modem.waveform_single_carrier
 
 .. footbibliography::

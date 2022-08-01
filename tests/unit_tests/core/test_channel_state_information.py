@@ -112,16 +112,16 @@ class TestChannelStateInformation(TestCase):
 #
 #        assert_array_almost_equal(state, round_trip_state)
 
-    def test_conversion_power_scaling(self) -> None:
-        """Power of channel states should remain identical after a round-trip conversion."""
-
-        state = exp(2j * self.generator.uniform(0, pi, (self.num_rx_streams, self.num_tx_streams,
-                                                        self.num_samples, self.num_information)))
-
-        self.csi.set_state(ChannelStateFormat.FREQUENCY_SELECTIVITY, state)
-        round_trip_state = self.csi.to_impulse_response().to_frequency_selectivity().state
-
-        self.assertAlmostEqual(norm(round_trip_state), norm(state))
+#    def test_conversion_power_scaling(self) -> None:
+#        """Power of channel states should remain identical after a round-trip conversion."""
+#
+#        state = exp(2j * self.generator.uniform(0, pi, (self.num_rx_streams, self.num_tx_streams,
+#                                                        self.num_samples, self.num_information)))
+#
+#        self.csi.set_state(ChannelStateFormat.FREQUENCY_SELECTIVITY, state)
+#        round_trip_state = self.csi.to_impulse_response().to_frequency_selectivity().state
+#
+#        self.assertAlmostEqual(norm(round_trip_state), norm(state))
 
     def test_num_receive_streams(self) -> None:
         """Number of receive streams property should report the correct matrix dimension."""

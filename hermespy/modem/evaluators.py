@@ -163,8 +163,8 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     def evaluate(self, investigated_object: Optional[Scenario] = None) -> BitErrorArtifact:
 
         # Retrieve transmitted and received bits
-        transmitted_bits = self.transmitting_modem.transmitted_bits
-        received_bits = self.receiving_modem.received_bits
+        transmitted_bits = self.transmitting_modem.transmission.bits
+        received_bits = self.receiving_modem.reception.bits
 
         # Pad bit sequences (if required)
         num_bits = max(len(received_bits), len(transmitted_bits))
@@ -289,9 +289,12 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     def evaluate(self, investigated_object: Optional[Scenario] = None) -> FrameErrorArtifact:
 
         # Retrieve transmitted and received bits
-        transmitted_bits = self.transmitting_modem.transmitted_bits
-        received_bits = self.receiving_modem.received_bits
+        transmitted_bits = self.transmitting_modem.transmission.bits
+        received_bits = self.receiving_modem.reception.bits
         frame_size = self.receiving_modem.num_data_bits_per_frame
+        
+        if frame_size < 1:
+            return FrameErrorArtifact(np.empty(0, dtype=np.unit8))
 
         # Pad bit sequences (if required)
         received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % frame_size))

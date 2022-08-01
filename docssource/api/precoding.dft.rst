@@ -1,3 +1,3 @@
-.. automodule:: hermespy.precoding.precoder_dft
+.. automodule:: hermespy.precoding.dft
 
 .. footbibliography::
