@@ -87,6 +87,7 @@ nbsphinx_prolog = """
 #
 html_theme = 'sphinx_rtd_theme'
 html_logo = 'images/bi.svg'
+html_title = 'HermesPy Documentation'
 
 # Sphinx RTD dark mode
 default_dark_mode = True

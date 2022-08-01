@@ -11,7 +11,7 @@ from scipy import stats
 from scipy.special import comb
 
 from hermespy.core import Scenario, Transmitter, Receiver
-from hermespy.modem import WaveformGenerator, WaveformGeneratorChirpFsk, FilteredSingleCarrierWaveform
+from hermespy.modem import WaveformGenerator, ChirpFSKWaveform, FilteredSingleCarrierWaveform
 from hermespy.channel import Channel, MultipathFadingChannel
 
 __author__ = "Andre Noll Barreto"
@@ -59,7 +59,7 @@ class TheoreticalResults:
         """
 
         # Generate theory callback axes
-        self.__waveform_generators = [WaveformGeneratorChirpFsk, FilteredSingleCarrierWaveform]
+        self.__waveform_generators = [ChirpFSKWaveform, FilteredSingleCarrierWaveform]
         self.__channels = [MultipathFadingChannel, Channel]
 
         # Generate theory callback lookup table

@@ -36,26 +36,13 @@ class TestSpatialMultiplexing(unittest.TestCase):
         self.precoding.required_inputs = lambda precoder: 1
         self.precoder.precoding = self.precoding
 
-    def test_encode_decode_circular(self) -> None:
-        """Encoding and subsequently decoding a data stream should lead to identical symbols."""
-
-        input_stream = self.generator.random((1, 400))
-        channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                self.generator.random((4, 1, 100, 1)))
-        stream_noise = self.generator.random((4, 100))
-
-        encoded_stream = self.precoder.encode(input_stream)
-        decoded_stream, decoded_responses, _ = self.precoder.decode(encoded_stream, channel_state, stream_noise)
-
-        assert_array_equal(input_stream, decoded_stream)
-
     def test_num_input_streams(self) -> None:
         """The number of input streams is always one."""
 
         for num_outputs in [1, 5, 10]:
 
             self.precoding.required_outputs = lambda precoder: num_outputs
-            self.assertEqual(1, self.precoder.num_input_streams)
+            self.assertEqual(num_outputs, self.precoder.num_input_streams)
 
     def test_num_output_streams(self) -> None:
         """The number of output streams should always be equal to the number of required output streams."""
@@ -71,4 +58,4 @@ class TestSpatialMultiplexing(unittest.TestCase):
         for num_outputs in [1, 5, 10]:
 
             self.precoding.required_outputs = lambda precoder: num_outputs
-            self.assertEqual(1/num_outputs, float(self.precoder.rate))
+            self.assertEqual(1, float(self.precoder.rate))

@@ -80,12 +80,9 @@ class TestCorellationSynchronization(TestCase):
         self.synchronization.waveform_generator = waveform_generator
 
         shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.samples, axis=1)
-        shifted_csi = ChannelStateInformation.Ideal(30)
 
-        frames = self.synchronization.synchronize(shifted_sequence, shifted_csi)
-
-        self.assertEqual(1, len(frames))
-        assert_array_equal(pilot_sequence.samples, frames[0][0])
+        pilot_indices = self.synchronization.synchronize(shifted_sequence)
+        self.assertCountEqual([10], pilot_indices)
 
     def test_to_yaml(self) -> None:
         """YAML serialization should result in a proper state representation"""

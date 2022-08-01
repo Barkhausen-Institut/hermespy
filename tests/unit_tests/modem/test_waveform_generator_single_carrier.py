@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation Testing."""
+"""Waveform Generation for Phase-Shift-Keying Quadrature Amplitude Modulation Testing"""
 
 from unittest import TestCase
 from unittest.mock import Mock
@@ -11,6 +11,7 @@ from scipy.constants import pi
 
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.modem import FilteredSingleCarrierWaveform, Symbols, RaisedCosineWaveform, RootRaisedCosineWaveform, RectangularWaveform, FMCWWaveform, SingleCarrierCorrelationSynchronization
+from hermespy.modem.waveform_single_carrier import SingleCarrierLeastSquaresChannelEstimation
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -111,16 +112,15 @@ class FilteredSingleCarrierWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a symbol stream should yield identical symbols"""
 
-        expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.waveform.symbols_per_frame)))
+        expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, (1, 1, self.waveform.symbols_per_frame))))
 
         baseband_signal = self.waveform.modulate(expected_symbols)
-        channel_state = ChannelStateInformation.Ideal(num_samples=baseband_signal.num_samples)
-        symbols, _, _ = self.waveform.demodulate(baseband_signal.samples[0, :], channel_state)
+        symbols = self.waveform.demodulate(baseband_signal.samples[0, :])
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
         
     def test_guard_interval_setget(self) -> None:
-        """Guard interval property getter should return setter argument."""
+        """Guard interval property getter should return setter argument"""
         
         guard_interval = 1.23
         self.waveform.guard_interval = 1.23
@@ -148,7 +148,7 @@ class FilteredSingleCarrierWaveform(TestCase):
         self.assertEqual(pilot_rate, self.waveform.pilot_rate)
 
     def test_pilot_rate_validation(self) -> None:
-        """Pilot rate property should raise ValueError on arguments smaller than zero."""
+        """Pilot rate property should raise ValueError on arguments smaller than zero"""
 
         with self.assertRaises(ValueError):
             self.waveform.pilot_rate = -1
@@ -160,7 +160,7 @@ class FilteredSingleCarrierWaveform(TestCase):
             self.fail()
 
     def test_samples_in_frame(self) -> None:
-        """Samples in frame property should compute the correct sample count."""
+        """Samples in frame property should compute the correct sample count"""
 
         symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, self.waveform.symbols_per_frame)))
         signal = self.waveform.modulate(symbols)
@@ -168,7 +168,7 @@ class FilteredSingleCarrierWaveform(TestCase):
         self.assertEqual(signal.num_samples, self.waveform.samples_in_frame)
             
     def test_num_data_symbols_setget(self) -> None:
-        """Number of pilot symbols property getter should return setter argument."""
+        """Number of pilot symbols property getter should return setter argument"""
 
         num_data_symbols = 1.23
         self.waveform.num_data_symbols = 1.23
@@ -176,7 +176,7 @@ class FilteredSingleCarrierWaveform(TestCase):
         self.assertEqual(num_data_symbols, self.waveform.num_data_symbols)
 
     def test_num_data_symbols_validation(self) -> None:
-        """Number of pilot symbols property setter should raise ValueError on arguments smaller than zero."""
+        """Number of pilot symbols property setter should raise ValueError on arguments smaller than zero"""
 
         with self.assertRaises(ValueError):
             self.waveform.num_data_symbols = -1
@@ -189,30 +189,31 @@ class FilteredSingleCarrierWaveform(TestCase):
             self.fail()
 
     def test_bits_per_frame(self) -> None:
-        """Bits per frame property should compute correct amount of data bits per frame."""
+        """Bits per frame property should compute correct amount of data bits per frame"""
 
         signal = (self.rng.normal(0, 1.0, self.waveform.samples_in_frame) +
                   1j * self.rng.normal(0, 1.0, self.waveform.samples_in_frame))
-        channel_state = ChannelStateInformation.Ideal(self.waveform.samples_in_frame)
 
-        data_symbols, _, _ = self.waveform.demodulate(signal, channel_state)
-        bits = self.waveform.unmap(data_symbols)
+        symbols = self.waveform.demodulate(signal)
+        bits = self.waveform.unmap(symbols)
 
         self.assertEqual(len(bits), self.waveform.bits_per_frame)
 
     def test_symbols_per_frame(self) -> None:
-        """Symbols per frame property should compute correct amount of symbols per frame."""
+        """Symbols per frame property should compute correct amount of symbols per frame"""
 
         signal = (self.rng.normal(0, 1.0, self.waveform.samples_in_frame) +
                   1j * self.rng.normal(0, 1.0, self.waveform.samples_in_frame))
-        channel_state = ChannelStateInformation.Ideal(self.waveform.samples_in_frame)
+        umapped_symbols = self.waveform.demodulate(signal)
+        
+        bits = self.rng.integers(0, 2, self.waveform.bits_per_frame)
+        mapped_symbols = self.waveform.map(bits)
 
-        symbols, _, _ = self.waveform.demodulate(signal, channel_state)
-
-        self.assertEqual(len(symbols.raw.flatten()), self.waveform.symbols_per_frame)
+        self.assertEqual(len(umapped_symbols.raw.flatten()), self.waveform.symbols_per_frame)
+        self.assertEqual(len(mapped_symbols.raw.flatten()), self.waveform.symbols_per_frame)
 
     def test_bit_energy(self) -> None:
-        """Bit energy property should compute correct bit energy."""
+        """Bit energy property should compute correct bit energy"""
 
         self.waveform.pilot_rate = 0.
         self.waveform.guard_interval = 0.
@@ -225,7 +226,7 @@ class FilteredSingleCarrierWaveform(TestCase):
         self.assertAlmostEqual(energy, self.waveform.bit_energy, places=2)
 
     def test_symbol_energy(self) -> None:
-        """Symbol energy property should compute correct symbol energy."""
+        """Symbol energy property should compute correct symbol energy"""
 
         self.waveform.pilot_rate = 0.
         self.waveform.guard_interval = 0.
@@ -238,7 +239,7 @@ class FilteredSingleCarrierWaveform(TestCase):
         self.assertAlmostEqual(energy, self.waveform.symbol_energy, places=1)
 
     def test_power(self) -> None:
-        """Power property should compute correct bit power."""
+        """Power property should compute correct bit power"""
 
         self.waveform.pilot_rate = 0.
         self.waveform.guard_interval = 0.
@@ -251,13 +252,13 @@ class FilteredSingleCarrierWaveform(TestCase):
         self.assertAlmostEqual(energy, self.waveform.power, places=2)
 
     def test_sampling_rate(self) -> None:
-        """Sampling rate property should compute correct sampling rate."""
+        """Sampling rate property should compute correct sampling rate"""
 
         self.assertEqual(self.oversampling_factor * self.symbol_rate, self.waveform.sampling_rate)
 
 
-class TestPskQamCorrelationSynchronization(TestCase):
-    """Test the correlation-based synchronization routine."""
+class TestSingleCarrierCorrelationSynchronization(TestCase):
+    """Test the correlation-based synchronization routine"""
 
     def setUp(self) -> None:
 
@@ -268,7 +269,7 @@ class TestPskQamCorrelationSynchronization(TestCase):
         self.waveform.guard_interval = 0.
 
     def test_delay_synchronization(self) -> None:
-        """Test synchronization with arbitrary sample offset."""
+        """Test synchronization with arbitrary sample offset"""
 
         bits = self.rng.integers(0, 2, self.waveform.bits_per_frame)
         symbols = self.waveform.map(bits)
@@ -279,13 +280,11 @@ class TestPskQamCorrelationSynchronization(TestCase):
 
             samples = np.append(np.zeros((1, offset), dtype=complex), signal.samples)
 
-            frames = self.synchronization.synchronize(samples, ChannelStateInformation.Ideal(signal.num_samples))
-
-            self.assertEqual(len(frames), 1)
-            assert_array_equal(frames[0][0], signal.samples)
+            pilot_indices = self.synchronization.synchronize(samples)
+            self.assertCountEqual([offset], pilot_indices)
 
     def test_phase_shift_synchronization(self) -> None:
-        """Test synchronization with arbitrary sample offset and phase shift."""
+        """Test synchronization with arbitrary sample offset and phase shift"""
 
         bits = self.rng.integers(0, 2, self.waveform.bits_per_frame)
         symbols = self.waveform.map(bits)
@@ -293,10 +292,33 @@ class TestPskQamCorrelationSynchronization(TestCase):
         samples = self.waveform.modulate(symbols).samples * np.exp(0.24567j * pi)
         padded_samples = np.append(np.zeros((1, 15), dtype=complex), samples)
 
-        frames = self.synchronization.synchronize(padded_samples, ChannelStateInformation.Ideal(len(padded_samples)))
+        pilot_indices = self.synchronization.synchronize(padded_samples,)
+        self.assertCountEqual([15], pilot_indices)
 
-        self.assertEqual(len(frames), 1)
-        assert_array_almost_equal(frames[0][0], samples)
+
+class TestSingleCarrierChannelEstimation(TestCase):
+    """Test channel estimation of single carrier waveforms"""
+    
+    def setUp(self) -> None:
+        
+        self.rng = default_rng(42)
+        
+        self.waveform = MockSingleCarrierWaveform(symbol_rate=1e6,
+                                                  num_preamble_symbols=3,
+                                                  num_postamble_symbols=3,
+                                                  num_data_symbols=100,
+                                                  pilot_rate=10)
+        
+        self.symbols = self.waveform.map(self.rng.uniform(0, 2, self.waveform.bits_per_frame))
+        
+    def test_least_squares(self) -> None:
+        """Least squares channel estimation"""
+        
+        estimation = SingleCarrierLeastSquaresChannelEstimation()
+        self.waveform.channel_estimation = estimation
+        
+        csi = estimation.estimate_channel(self.symbols)
+        self.assertEqual(self.waveform.symbols_per_frame, csi.num_samples)
 
 
 class TestRootRaisedCosineWaveform(TestCase):
@@ -325,12 +347,13 @@ class TestRootRaisedCosineWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Test the successful modulation and demodulation of data symbols"""
 
-        data_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_data_symbols)))
+        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 1, self.waveform.symbols_per_frame))))
 
-        modulation = self.waveform.modulate(data_symbols)
-        demodulation, _, _ = self.waveform.demodulate(modulation.samples[0, :], ChannelStateInformation.Ideal(modulation.num_samples))
+        waveform = self.waveform.modulate(expected_symbols)
+        symboles = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(data_symbols.raw, demodulation.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+
 
 class TestRaisedCosineWaveform(TestCase):
     """Test the Root-Raised-Cosine pulse shape for single carrier modulation"""
@@ -358,12 +381,12 @@ class TestRaisedCosineWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Test the successful modulation and demodulation of data symbols"""
 
-        data_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_data_symbols)))
+        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, self.waveform.symbols_per_frame)))
 
-        modulation = self.waveform.modulate(data_symbols)
-        demodulation, _, _ = self.waveform.demodulate(modulation.samples[0, :], ChannelStateInformation.Ideal(modulation.num_samples))
+        waveform = self.waveform.modulate(expected_symbols)
+        symboles = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(data_symbols.raw, demodulation.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
 
 
 class TestRectangularWaveform(TestCase):
@@ -390,12 +413,12 @@ class TestRectangularWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Test the successful modulation and demodulation of data symbols"""
 
-        data_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_data_symbols)))
+        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 1, self.waveform.symbols_per_frame))))
 
-        modulation = self.waveform.modulate(data_symbols)
-        demodulation, _, _ = self.waveform.demodulate(modulation.samples[0, :], ChannelStateInformation.Ideal(modulation.num_samples))
+        waveform = self.waveform.modulate(expected_symbols)
+        symboles = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(data_symbols.raw, demodulation.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
 
 
 class TestFMCWWaveform(TestCase):
@@ -422,9 +445,9 @@ class TestFMCWWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Test the successful modulation and demodulation of data symbols"""
 
-        data_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_data_symbols)))
+        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 1, self.waveform.symbols_per_frame))))
 
-        modulation = self.waveform.modulate(data_symbols)
-        demodulation, _, _ = self.waveform.demodulate(modulation.samples[0, :], ChannelStateInformation.Ideal(modulation.num_samples))
+        waveform = self.waveform.modulate(expected_symbols)
+        symboles = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(data_symbols.raw, demodulation.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)

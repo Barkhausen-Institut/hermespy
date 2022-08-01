@@ -6,12 +6,11 @@ Maximum Ratio Combining
 """
 
 from __future__ import annotations
-from typing import Type, Tuple
+from typing import Tuple
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 
-from . import SymbolPrecoder
+from .symbol_precoding import SymbolPrecoder
 from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"

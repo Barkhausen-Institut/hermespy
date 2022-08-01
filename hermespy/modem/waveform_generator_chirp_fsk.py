@@ -31,15 +31,15 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
-    """ Implements a chirp FSK waveform generator."""
+class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
+    """Chirp Frequency Shift Keying communication waveforms."""
 
     # YAML tag
     yaml_tag = u'ChirpFsk'
 
     # Modulation parameters
     symbol_type: np.dtype = int
-    synchronization: ChirpFskSynchronization
+    synchronization: ChirpFSKSynchronization
     __chirp_duration: float     # Duraiton of a single chirp in seconds
     __chirp_bandwidth: float    # Frequency range over which a single chirp sweeps
     __freq_difference: float    # Frequency offset between two adjecent chirp symbols
@@ -87,7 +87,7 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         WaveformGenerator.__init__(self, **kwargs)
 
         # Configure waveform paramters
-        self.synchronization = ChirpFskSynchronization()
+        self.synchronization = ChirpFSKSynchronization()
         self.chirp_duration = chirp_duration
         self.chirp_bandwidth = chirp_bandwidth
         self.freq_difference = freq_difference
@@ -96,9 +96,9 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         self.guard_interval = guard_interval
 
     @classmethod
-    def to_yaml(cls: Type[WaveformGeneratorChirpFsk],
+    def to_yaml(cls: Type[ChirpFSKWaveform],
                 representer: SafeRepresenter,
-                node: WaveformGeneratorChirpFsk) -> Node:
+                node: ChirpFSKWaveform) -> Node:
         """Serialize an `WaveformGenerator` object to YAML.
 
         Args:
@@ -107,7 +107,7 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
                 The representer gets passed down the serialization tree to each node.
 
             node (WaveformGenerator):
-                The `WaveformGeneratorChirpFsk` instance to be serialized.
+                The `ChirpFSKWaveform` instance to be serialized.
 
         Returns:
             Node:
@@ -126,26 +126,6 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         mapping.value.extend(WaveformGenerator.to_yaml(representer, node).value)
 
         return mapping
-
-    @classmethod
-    def from_yaml(cls: Type[WaveformGeneratorChirpFsk], constructor: SafeConstructor, node: Node)\
-            -> WaveformGeneratorChirpFsk:
-        """Recall a new `WaveformGeneratorChirpFsk` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `WaveformGeneratorChirpFsk` serialization.
-
-        Returns:
-            WaveformGenerator:
-                Newly created `WaveformGeneratorChirpFsk` instance.
-        """
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)
 
     @property
     def frame_duration(self) -> float:
@@ -422,9 +402,9 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
     def map(self, data_bits: np.ndarray) -> Symbols:
 
         offset = self._calculate_frequency_offsets(data_bits)
-        return Symbols(offset)
+        return Symbols(offset[np.newaxis, np.newaxis, :])
 
-    def modulate(self, data_symbols: Symbols) -> Signal:
+    def modulate(self, symbols: Symbols) -> Signal:
 
         prototypes, _ = self._prototypes()
         samples = np.empty(self.samples_in_frame, dtype=complex)
@@ -439,17 +419,14 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         sample_idx += num_pilot_samples
 
         # Modulate data symbols
-        for symbol in data_symbols.raw[0, :]:
+        for symbol in symbols.raw[0, ::].flat:
 
-            samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[symbol, :]
+            samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[int(symbol.real), :]
             sample_idx += samples_in_chirp
 
         return Signal(samples, self.sampling_rate)
 
-    def demodulate(self,
-                   baseband_signal: np.ndarray,
-                   channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
+    def demodulate(self, baseband_signal: np.ndarray) -> Symbols:
 
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
@@ -463,19 +440,14 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
 
         # ToDo: Unfortunately the demodulation-scheme is non-linear. Is there a better way?
         symbols = np.argmax(symbol_metrics, axis=1)
-        channel_state = ChannelStateInformation.Ideal(len(symbols),
-                                                      channel_state.num_transmit_streams,
-                                                      channel_state.num_receive_streams)
-        noises = np.repeat(noise_variance, self.num_data_chirps)
+        return Symbols(symbols[np.newaxis, np.newaxis, :])
 
-        return Symbols(symbols), channel_state, noises
-
-    def unmap(self, data_symbols: Symbols) -> np.ndarray:
+    def unmap(self, symbols: Symbols) -> np.ndarray:
 
         bits_per_symbol = self.bits_per_symbol
-        bits = np.empty(data_symbols.num_symbols * self.bits_per_symbol)
+        bits = np.empty(symbols.num_symbols * self.bits_per_symbol)
 
-        for s, symbol in enumerate(data_symbols.raw[0, :]):
+        for s, symbol in enumerate(symbols.raw[0, ::].flat):
 
             symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
             bits[s*bits_per_symbol:(s+1)*bits_per_symbol] = symbol_bits
@@ -515,6 +487,11 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         
         self._prototypes.cache_clear()
         WaveformGenerator.modulation_order.fset(self, value)
+        
+    @property
+    def symbol_precoding_support(self) -> bool:
+        
+        return False
 
     @lru_cache(maxsize=1, typed=True)
     def _prototypes(self) -> Tuple[np.array, float]:
@@ -583,11 +560,11 @@ class WaveformGeneratorChirpFsk(PilotWaveformGenerator, Serializable):
         self._prototypes.cache_clear()
 
 
-class ChirpFskSynchronization(Synchronization[WaveformGeneratorChirpFsk]):
+class ChirpFSKSynchronization(Synchronization[ChirpFSKWaveform]):
     """Synchronization for chirp-based frequency shift keying communication waveforms."""
 
     def __init__(self,
-                 waveform_generator: Optional[WaveformGeneratorChirpFsk] = None) -> None:
+                 waveform_generator: Optional[ChirpFSKWaveform] = None) -> None:
         """
         Args:
 
@@ -598,6 +575,6 @@ class ChirpFskSynchronization(Synchronization[WaveformGeneratorChirpFsk]):
         Synchronization.__init__(self, waveform_generator)
 
 
-class ChirpFskCorrelationSynchronization(CorrelationSynchronization[WaveformGeneratorChirpFsk]):
+class ChirpFSKCorrelationSynchronization(CorrelationSynchronization[ChirpFSKWaveform]):
     """Correlation-based clock-synchronization for Chirp-FSK waveforms."""
     ...

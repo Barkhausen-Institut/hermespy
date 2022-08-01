@@ -238,8 +238,8 @@ class ChannelStateInformation:
             else:
                 self.__num_frequency_bins = num_bins
 
-            self.__state = fft(self.__state, axis=3, n=num_bins)
-            self.__state = self.__state.reshape((self.num_receive_streams, self.num_transmit_streams, -1, 1))
+            self.__state = fft(self.__state[:, :, ::num_bins, :], axis=3, n=num_bins)
+            #self.__state = self.__state.reshape((self.num_receive_streams, self.num_transmit_streams, -1, 1))
 
             self.__state_format = ChannelStateFormat.FREQUENCY_SELECTIVITY
 

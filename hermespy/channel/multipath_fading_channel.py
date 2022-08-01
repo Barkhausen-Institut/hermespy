@@ -64,20 +64,6 @@ class MultipathFadingChannel(Channel):
     of the channel, and is given by 'sampling_rate' samples/second.
     `tx_cov_matrix` and `rx_cov_matrix` are covariance matrices for transmitter
     and receiver.
-
-    Attributes:
-        __delays (np.ndarray): Delay per propagation case in seconds.
-        __power_profile (np.ndarray): Power per propagation case.
-        __rice_factors (np.ndarray): Rice factor per propagation case.
-        __max_delay (float): Maximum propagation delay in seconds.
-        __num_resolvable paths (int): Number of resolvable paths within the multipath model.
-        __num_sinusoids (int): Number of sinusoids components per sample sequence.
-        __los_angle (Optional[float]): Line of sight angle of arrival.
-        los_gains (np.array): Path gains for line of sight component in sample sequence, derived from rice factor
-        non_los_gains (np.array): Path gains for non-line of sight in sample sequence, derived from rice factor
-        __doppler_frequency (float): Doppler frequency in Hz.
-        __los_doppler_frequency (Optional[float]): Optional doppler frequency for the line of sight component.
-        interpolate_signals (bool): Interpolate signals during time-delay modeling. Disabled by default.
     """
 
     yaml_tag = u'MultipathFading'

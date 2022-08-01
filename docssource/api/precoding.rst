@@ -12,9 +12,7 @@ for spatial channel propagation.
 .. toctree::
 
    precoding.precoding
-   precoding.precoder
-   precoding.mean_square_equalizer
-   precoding.zero_forcing_equalizer
+   precoding.symbol_precoding
    precoding.dft
    precoding.single_carrier
    precoding.spatial_multiplexing

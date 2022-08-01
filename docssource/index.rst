@@ -45,6 +45,7 @@ HermesPy may be used in one of two modes of operation:
    installation
    getting_started
    tutorials
+   examples/examples
    api/api
    references
    developer_hints

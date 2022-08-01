@@ -49,11 +49,11 @@ Operators:
     Waveform: !<OFDM>
 
       # !<Symbol> modulation settings
-      modulation_order: 16          # Modulation order, in other words 4 bit per data resource element
-      subcarrier_spacing: 15e3      # Spacing between the individual subcarrier center frequencies in Hz
-      dc_suppression: False         # Consider the DC component during the DFT
-      num_subcarriers: 128          # Number of subcarriers per communication frame
-      channel_estimation: IDEAL     # Ideal channel estimation routine
+      modulation_order: 16                  # Modulation order, in other words 4 bit per data resource element
+      subcarrier_spacing: 15e3              # Spacing between the individual subcarrier center frequencies in Hz
+      dc_suppression: False                 # Consider the DC component during the DFT
+      num_subcarriers: 128                  # Number of subcarriers per communication frame
+      channel_estimation: !<OFDM-Ideal>     # Ideal channel estimation routine
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:
