@@ -108,9 +108,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
 
         self.__guard_ratio = value
 
-    def synchronize(self,
-                    signal: np.ndarray,
-                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
+    def synchronize(self, signal: np.ndarray) -> List[int]:
 
         # Expand the dimensionality for flat signal streams
         if signal.ndim == 1:
@@ -146,22 +144,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
             pilot_indices -= pilot_length
         
         pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
-
-        # Sort inidices into frame lengths
-        frames = []
-        for pilot_index in pilot_indices:
-
-            if pilot_index + frame_length <= int(1.05 * signal.shape[1]):
-
-                signal_frame = signal[:, pilot_index:pilot_index + frame_length]
-                csi_frame = channel_state[:, :, pilot_index:pilot_index + frame_length, :]
-
-                if signal_frame.shape[1] < frame_length:
-                    signal_frame = np.append(signal_frame, np.zeros((signal.shape[0], frame_length - signal_frame.shape[1]), dtype=complex))
-
-                frames.append((signal_frame, csi_frame))
-
-        return frames
+        return pilot_indices.tolist()
 
     @classmethod
     def to_yaml(cls: Type[CorrelationSynchronization], representer: SafeRepresenter, node: CorrelationSynchronization) -> CorrelationSynchronization:

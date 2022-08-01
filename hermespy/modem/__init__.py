@@ -1,10 +1,11 @@
 from .bits_source import RandomBitsSource, StreamBitsSource
-from .modem import Modem, Symbols
+from .symbols import Symbol, Symbols, StatedSymbols
+from .modem import Modem, CommunicationReception, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame
 from .waveform_generator import WaveformGenerator, Synchronization, PilotWaveformGenerator, PilotSymbolSequence,  UniformPilotSymbolSequence, CustomPilotSymbolSequence, ConfigurablePilotWaveform
-from .waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSynchronization,\
-    ChirpFskCorrelationSynchronization
-from .waveform_single_carrier import FilteredSingleCarrierWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierMinimumMeanSquareChannelEqualization, SingleCarrierCorrelationSynchronization, RaisedCosineWaveform, RootRaisedCosineWaveform, FMCWWaveform, RectangularWaveform
-from .waveform_generator_ofdm import WaveformGeneratorOfdm, FrameGuardSection, FrameSymbolSection, FrameResource, PilotSection, SchmidlCoxPilotSection
+from .waveform_generator_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization,\
+    ChirpFSKCorrelationSynchronization
+from .waveform_single_carrier import FilteredSingleCarrierWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierMinimumMeanSquareChannelEqualization, SingleCarrierCorrelationSynchronization, RaisedCosineWaveform, RootRaisedCosineWaveform, FMCWWaveform, RectangularWaveform, SingleCarrierIdealChannelEstimation
+from .waveform_generator_ofdm import OFDMWaveform, FrameGuardSection, FrameSymbolSection, FrameResource, PilotSection, SchmidlCoxPilotSection, FrameElement, ElementType, OFDMCorrelationSynchronization, SchmidlCoxSynchronization, OFDMMinimumMeanSquareChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation
 from .evaluators import BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from .tools import PskQamMapping
 
@@ -19,12 +20,14 @@ __status__ = "Prototype"
 
 
 __all__ = [
-    'RandomBitsSource', 'StreamBitsSource', 'Modem', 'Symbols',
-    'WaveformGenerator', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'ConfigurablePilotWaveform',
-    'WaveformGeneratorChirpFsk', 'ChirpFskSynchronization', 'ChirpFskCorrelationSynchronization',
-    'FilteredSingleCarrierWaveform', 'SingleCarrierLeastSquaresChannelEstimation', 'SingleCarrierZeroForcingChannelEqualization', 'SingleCarrierMinimumMeanSquareChannelEqualization', 'SingleCarrierCorrelationSynchronization', 'RaisedCosineWaveform', 'RootRaisedCosineWaveform', 'FMCWWaveform', 'RectangularWaveform',
-    'WaveformGeneratorOfdm', 'PilotSection', 'SchmidlCoxPilotSection',
-    'FrameSymbolSection', 'FrameGuardSection', 'FrameResource', 'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator',
+    'RandomBitsSource', 'StreamBitsSource',
+    'Symbol', 'Symbols', 'StatedSymbols',
+    'Modem', 'CommunicationReception', 'CommunicationReceptionFrame', 'CommunicationTransmission', 'CommunicationTransmissionFrame',
+    'WaveformGenerator', 'Synchronization', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'ConfigurablePilotWaveform',
+    'ChirpFSKWaveform', 'ChirpFSKSynchronization', 'ChirpFSKCorrelationSynchronization',
+    'FilteredSingleCarrierWaveform', 'SingleCarrierLeastSquaresChannelEstimation', 'SingleCarrierZeroForcingChannelEqualization', 'SingleCarrierMinimumMeanSquareChannelEqualization', 'SingleCarrierCorrelationSynchronization', 'RaisedCosineWaveform', 'RootRaisedCosineWaveform', 'FMCWWaveform', 'RectangularWaveform', 'SingleCarrierIdealChannelEstimation',
+    'OFDMWaveform', 'PilotSection', 'SchmidlCoxPilotSection','FrameSymbolSection', 'FrameGuardSection', 'FrameResource', 'FrameElement', 'ElementType', 'OFDMCorrelationSynchronization', 'SchmidlCoxSynchronization', 'OFDMMinimumMeanSquareChannelEqualization', 'OFDMZeroForcingChannelEqualization', 'OFDMIdealChannelEstimation', 'OFDMLeastSquaresChannelEstimation'
+    'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator',
     'FrameErrorEvaluator', 'ThroughputEvaluator',
     'PskQamMapping',
 ]

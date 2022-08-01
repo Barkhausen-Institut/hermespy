@@ -56,14 +56,12 @@ Operators:
     # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>
 
-      # Post-processing
-      channel_estimation: IDEAL
-
       # Symbol modulation settings
-      modulation_order: 2           # Modulation order, in other words 1 / subcarrier / subsymbol
-      subcarrier_spacing: 30e3      # Spacing between the individual subcarrier center frequencies in Hz
-      dc_suppression: False         # Do not ignore the DC component during the DFT
-      num_subcarriers: 4096         # Number of subcarriers per communiction frame
+      modulation_order: 2               # Modulation order, in other words 1 / subcarrier / subsymbol
+      subcarrier_spacing: 30e3          # Spacing between the individual subcarrier center frequencies in Hz
+      dc_suppression: False             # Do not ignore the DC component during the DFT
+      num_subcarriers: 4096             # Number of subcarriers per communiction frame
+      channel_estimation: !<OFDM-Ideal> # Assume ideal channel state information at the receiver
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:

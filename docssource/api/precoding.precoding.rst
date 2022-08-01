@@ -1,3 +1,3 @@
-.. automodule:: hermespy.precoding.symbol_precoding
+.. automodule:: hermespy.precoding.precoding
 
 .. footbibliography::

@@ -13,7 +13,7 @@ from numpy import argmax
 
 from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.core.factory import Serializable
-from .symbol_precoder import SymbolPrecoder
+from .symbol_precoding import SymbolPrecoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

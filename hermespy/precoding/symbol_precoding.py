@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-=======================
-Precoding Configuration
-=======================
+================
+Symbol Precoding
+================
 """
 
 from __future__ import annotations
-from typing import Optional, List, Type, TYPE_CHECKING, Union
-from fractions import Fraction
+from abc import ABC, abstractmethod
+from typing import  TYPE_CHECKING
 
 import numpy as np
 import matplotlib.pyplot as plt
-from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 
 from hermespy.core.factory import Serializable
-from hermespy.channel import ChannelStateInformation
+from .precoding import Precoder, Precoding
 
 if TYPE_CHECKING:
-    from hermespy.modem import Modem
-    from .symbol_precoder import SymbolPrecoder
+    from hermespy.modem import Modem, StatedSymbols
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -30,31 +28,65 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SymbolPrecoding(Serializable):
+class SymbolPrecoder(Precoder, ABC):
+    """Abstract base class for signal processing algorithms operating on complex data symbols streams.
+
+    A symbol precoder represents one coding step of a full symbol precoding configuration.
+    It features the `encoding` and `decoding` routines, meant to encode and decode multidimensional symbol streams
+    during transmission and reception, respectively.
+    """
+
+    @abstractmethod
+    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
+        """Encode a data stream before transmission.
+
+        This operation may modify the number of streams as well as the number of data symbols per stream.
+
+        Args:
+            
+            symbols (Symbols):
+                Symbols to be encoded.
+
+        Returns: Encoded symbols.
+
+        Raises:
+        
+            NotImplementedError: If an encoding operation is not supported.
+        """
+        ...  # pragma no cover
+
+    @abstractmethod
+    def decode(self, symbols: StatedSymbols) -> StatedSymbols:
+        """Decode a data stream before reception.
+
+        This operation may modify the number of streams as well as the number of data symbols per stream.
+
+        Args:
+            
+            symbols (Symbols):
+                Symbols to be decoded.
+
+        Returns: Decoded symbols.
+
+        Raises:
+        
+            NotImplementedError: If an encoding operation is not supported.
+        """
+        ...  # pragma no cover
+
+
+class SymbolPrecoding(Serializable, Precoding[SymbolPrecoder]):
     """Channel SymbolPrecoding configuration for wireless transmission of modulated data symbols.
 
     Symbol precoding may occur as an intermediate step between bit-mapping and base-band symbol modulations.
     In order to account for the possibility of multiple antenna data-streams,
     waveform generators may access the `SymbolPrecoding` configuration to encode one-dimensional symbol
     streams into multi-dimensional symbol streams during transmission and subsequently decode during reception.
-
-    Attributes:
-
-        __modem (Optional[Modem]):
-            Communication modem (transmitter or receiver) this precoding configuration is attached to.
-
-        __symbol_precoders (List[SymbolPrecoder]):
-            List of individual precoding steps.
-            The full precoding results from a sequential execution of each precoding step.
-
-        debug (bool):
-            Debug flag.
-            If enabled, the precoding will visualize the individual precoding steps after decoding.
     """
 
-    yaml_tag = u'Precoding'
-    __modem: Optional[Modem]
-    __symbol_precoders: List[SymbolPrecoder]
+    yaml_tag = u'Symbol-Precoding'
+    """YAML serialization tag."""
+
     debug: bool
 
     def __init__(self,
@@ -62,143 +94,59 @@ class SymbolPrecoding(Serializable):
         """Symbol Precoding object initialization.
 
         Args:
+        
             modem (Modem, Optional):
                 The modem this `SymbolPrecoding` configuration is attached to.
         """
 
-        self.modem = modem
-        self.__symbol_precoders = []
         self.debug = False
+        Precoding.__init__(self, modem=modem)
 
-    @classmethod
-    def to_yaml(cls: Type[SymbolPrecoding], representer: SafeRepresenter, node: SymbolPrecoding) -> Node:
-        """Serialize a `SymbolPrecoding` configuration to YAML.
+    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
+        """Encode a data stream before transmission.
 
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (SymbolPrecoding):
-                The `SymbolPrecoding` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-                None if the object state is default.
-        """
-
-        if len(node.__symbol_precoders) < 1:
-            return representer.represent_none(None)
-
-        return representer.represent_sequence(cls.yaml_tag, node.__symbol_precoders)
-
-    @classmethod
-    def from_yaml(cls: Type[SymbolPrecoding], constructor: SafeConstructor, node: Node) -> SymbolPrecoding:
-        """Recall a new `SymbolPrecoding` instance from YAML.
+        This operation may modify the number of streams as well as the number of data symbols per stream.
 
         Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
+            
+            symbols (Symbols): Symbols to be encoded.
 
-            node (Node):
-                YAML node representing the `SymbolPrecoding` serialization.
-
-        Returns:
-            SymbolPrecoding:
-                Newly created `SymbolPrecoding` instance.
-        """
-
-        state = constructor.construct_sequence(node, deep=True)
-        symbol_precoding = cls()
-
-        symbol_precoding.__symbol_precoders = state
-
-        for precoder in symbol_precoding.__symbol_precoders:
-            precoder.precoding = symbol_precoding
-
-        return symbol_precoding
-
-    @property
-    def modem(self) -> Modem:
-        """Access the modem this SymbolPrecoding configuration is attached to.
-
-        Returns:
-            Modem:
-                Handle to the modem object.
+        Returns: Encoded symbols.
 
         Raises:
-            RuntimeError: If the SymbolPrecoding configuration is floating.
+        
+            NotImplementedError: If an encoding operation is not supported.
         """
 
-        if self.__modem is None:
-            raise RuntimeError("Trying to access the modem of a floating SymbolPrecoding configuration")
+        # Iteratively apply each encoding step
+        encoded_symbols = symbols.copy()
+        for precoder in self:
+            encoded_symbols = precoder.encode(encoded_symbols)
 
-        return self.__modem
+        return encoded_symbols
 
-    @modem.setter
-    def modem(self, modem: Modem) -> None:
-        """Modify the modem this SymbolPrecoding configuration is attached to.
+    def decode(self, symbols: StatedSymbols) -> StatedSymbols:
+        """Decode a data stream before reception.
 
-        Args:
-            modem (Modem):
-                Handle to the modem object.
-        """
-
-        # if modem is not None and self.__modem is not modem:
-        #    raise RuntimeError("Re-attaching a precoder is not permitted")
-
-        self.__modem = modem
-
-    def encode(self, output_stream: np.ndarray) -> np.ndarray:
-        """Encode a data symbol stream before transmission.
+        This operation may modify the number of streams as well as the number of data symbols per stream.
 
         Args:
-            output_stream (np.ndarray):
-                Stream of modulated data symbols feeding into the `Precoder`.
+            
+            symbols (Symbols):
+                Symbols to be decoded.
 
-        Returns:
-            np.ndarray:
-                The encoded data streams.
-        """
-
-        # Prepare the stream
-        stream = output_stream
-        if stream.ndim == 1:
-            stream = stream[np.newaxis, :]
-
-        for precoder in self.__symbol_precoders:
-            stream = precoder.encode(stream)
-
-        return stream
-
-    def decode(self,
-               input_stream: np.ndarray,
-               channel_states: ChannelStateInformation,
-               stream_noises: Union[float, np.ndarray]) -> np.array:
-        """Decode a data symbol stream after reception.
-
-        Args:
-
-            input_stream (np.ndarray):
-                The data streams feeding into the `Precoder` to be decoded.
-                The first matrix dimension is the number of streams,
-                the second dimension the number of discrete samples within each respective stream.
-
-            channel_states (ChannelStateInformation):
-                The channel state estimates for each input symbol within `input_stream`.
-
-            stream_noises (Union[float, np.ndarray]):
-                The noise variances for each data symbol within `input_stream`.
-                Identical dimensionality to `input_stream`.
-
-        Returns:
-            np.array:
-                The decoded data symbols
+        Returns: Decoded symbols.
 
         Raises:
-            ValueError: If dimensions of `stream_responses`, `stream_noises` and `input_streams` do not match.
+        
+            NotImplementedError: If an encoding operation is not supported.
         """
+        
+        decoded_symbols = symbols.copy()
+        for precoder in reversed(self):
+            decoded_symbols = precoder.decode(decoded_symbols)
+            
+        return decoded_symbols
 
         if input_stream.shape[0] != channel_states.num_receive_streams:
             raise ValueError("Input streams and channel states must have identical number of streams")
@@ -243,111 +191,4 @@ class SymbolPrecoding(Serializable):
         if self.debug:
             plt.show()
 
-        # Make sure the output stream is one-dimensional
-        # A multi-dimensional output stream indicates a invalid precoding configuration
-        if symbols_iteration.shape[0] > 1:
-            raise RuntimeError("More than one stream resulting from precoding decoding, the configuration is invalid")
-
-        return symbols_iteration.flatten()
-
-    def required_outputs(self, precoder: SymbolPrecoder) -> int:
-        """Query the number output streams of a given precoder within a transmitter.
-
-        Args:
-            precoder (Precoder): Handle to the precoder in question.
-
-        Returns:
-            int: Number of streams
-
-        Raises:
-            ValueError: If the precoder is not registered with this configuration.
-        """
-
-        if precoder not in self.__symbol_precoders:
-            raise ValueError("Precoder not found in SymbolPrecoding configuration")
-
-        precoder_index = self.__symbol_precoders.index(precoder)
-
-        if precoder_index >= len(self.__symbol_precoders) - 1:
-             return self.__modem.device.num_antennas
-
-        return self.__symbol_precoders[precoder_index + 1].num_input_streams
-
-    def required_inputs(self, precoder: SymbolPrecoder) -> int:
-        """Query the number input streams of a given precoder within a receiver.
-
-        Args:
-            precoder (Precoder): Handle to the precoder in question.
-
-        Returns:
-            int: Number of streams
-
-        Raises:
-            ValueError: If the precoder is not registered with this configuration.
-        """
-
-        if precoder not in self.__symbol_precoders:
-            raise ValueError("Precoder not found in SymbolPrecoding configuration")
-
-        precoder_index = self.__symbol_precoders.index(precoder)
-
-        if precoder_index <= 0:
-            return 1
-
-        return self.__symbol_precoders[precoder_index - 1].num_output_streams
-
-    @property
-    def rate(self) -> Fraction:
-        """Rate between input symbol slots and output symbol slots.
-
-        For example, a rate of one indicates that no symbols are getting added or removed during precoding.
-
-        Return:
-            Fraction: The precoding rate.
-        """
-
-        r = Fraction(1, 1)
-        for symbol_precoder in self.__symbol_precoders:
-            r *= symbol_precoder.rate
-
-        return r
-
-    def __getitem__(self, index: int) -> SymbolPrecoder:
-        """Access a precoder at a given index.
-
-        Args:
-            index (int):
-                Precoder index.
-
-        Raises:
-            ValueError: If the given index is out of bounds.
-        """
-
-        return self.__symbol_precoders[index]
-
-    def __setitem__(self, index: int, precoder: SymbolPrecoder) -> None:
-        """Register a precoder within the configuration chain.
-
-        This function automatically register the `SymbolPrecoding` instance to the `Precoder`.
-
-        Args:
-            index (int): Position at which to register the precoder.
-                Set to -1 to insert at the beginning of the chain.
-            precoder (Precoder): The precoder object to be added.
-        """
-
-        if index < 0:
-            self.__symbol_precoders.insert(0, precoder)
-
-        elif index == len(self.__symbol_precoders):
-            self.__symbol_precoders.append(precoder)
-
-        else:
-            self.__symbol_precoders[index] = precoder
-
-        precoder.precoding = self
-
-    def __len__(self):
-        """Length of the precoding is the number of precoding steps."""
-
-        return len(self.__symbol_precoders)
+        return symbols_iteration
