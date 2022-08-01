@@ -8,7 +8,7 @@ Communication Waveform Base
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil, floor
-from typing import Generic, Tuple, TYPE_CHECKING, Optional, Type, TypeVar, List
+from typing import Generic, TYPE_CHECKING, Optional, Type, TypeVar, List
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node, ScalarNode
@@ -74,9 +74,7 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
 
         self.__waveform_generator = value
 
-    def synchronize(self,
-                    signal: np.ndarray,
-                    channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
+    def synchronize(self, signal: np.ndarray) -> List[int]:
         """Simulates time-synchronization at the receiver-side.
 
         Sorts base-band signal-sections into frames in time-domain.
@@ -86,47 +84,22 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
             signal (np.ndarray):
                 Vector of complex base-band samples of with `num_streams`x`num_samples` entries.
 
-            channel_state (ChannelStateInformation):
-                State of the wireless transmission channel over which `signal` has been propagated.
-
         Returns:
-            List[Tuple[np.ndarray, ChannelStateInformation]]:
-                Tuple of `signal` samples and channel transformations sorted into frames
+        
+            List of time indices indicating the first samples of frames detected in `signal`.
 
         Raises:
 
-            ValueError:
-                If the number of received streams in `channel_state` does not equal one.
-                If the length of `signal` and the number of samples in `channel_state` are not identical.
-
-            RuntimeError:
-                If the synchronization routine is floating
+            RuntimeError: If the synchronization routine is floating
         """
-        
-        # Expand signal dimensionalty if input is flat
-        if signal.ndim == 1:
-            signal = signal[np.newaxis, :]
 
         if self.__waveform_generator is None:
             raise RuntimeError("Trying to synchronize with a floating synchronization routine")
-
-        if signal.shape[1] != channel_state.num_samples + channel_state.num_delay_taps - 1:
-            raise ValueError("Base-band signal and channel state contain a different amount of samples")
-
+        
         samples_per_frame = self.__waveform_generator.samples_in_frame
-        num_frames = int(floor(signal.shape[1] / samples_per_frame))
-
-        # Slice signals and channel state information into frame-sized portions
-        # Default synchronization does NOT account for possible delays,
-        # i.e. assume the the first base-band signal's sample to also be the first frame's initial sample
-        synchronized_frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
-        for frame_idx in range(num_frames):
-
-            frame_samples = signal[:, frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame]
-            frame_channel_state = channel_state[:, :,  frame_idx*samples_per_frame:(1+frame_idx)*samples_per_frame, :]
-            synchronized_frames.append((frame_samples, frame_channel_state))
-
-        return synchronized_frames
+        num_frames = int(signal.shape[1] / samples_per_frame)
+        
+        return np.arange(num_frames).tolist()
 
     @classmethod
     def to_yaml(cls: Type[Synchronization], representer: SafeRepresenter, node: Synchronization) -> Node:
@@ -204,29 +177,51 @@ class ChannelEstimation(Generic[WaveformType], ABC):
         self.__waveform_generator = value
 
     def estimate_channel(self,
-                         signal: Signal,
-                         csi: Optional[ChannelStateInformation] = None) -> ChannelStateInformation:
+                         symbols: Symbols) -> ChannelStateInformation:
         """Estimate the wireless channel of a received communication frame.
 
         Args:
 
-            signal (Signal):
-                Signal model of the communication frame waveform.
+            symbols (Symbols):
+                Demodulated communication symbols.
 
-            csi (ChannelStateInformation, optional):
-                Ideal channel state information.
-                May be required for some routines.
+        Returns:
 
-        Raises:
-            ValueError:
-                If `csi` is required but not provided.
+            The estimated channel state.
         """
 
-        if csi is None:
-            raise ValueError("Ideal channel estimation requires prior channel state information")
-
-        return csi
+        return ChannelStateInformation.Ideal(symbols.num_symbols, symbols.num_streams)
     
+
+class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformType]):
+    """Channel estimation accessing the ideal channel state informaion.
+    
+    This type of channel estimation is only available during simulation runtime.
+    """
+    
+    def _csi(self) -> ChannelStateInformation:
+        """Query the ideal channel state information.
+        
+        Returns: Ideal channel state information of the most recent reception.
+        
+        Raises:
+        
+            RuntimeError: If the estimation routine is not attached.
+            RuntimeError: If no channel state is available.
+        """
+        
+        if self.waveform_generator is None:
+            raise RuntimeError("Ideal channel state estimation routine floating")
+
+        if self.waveform_generator.modem.device is None:
+            raise RuntimeError("Operating modem floating")
+        
+        csi = self.waveform_generator.modem._receiver.csi    
+        if csi is None:
+            raise RuntimeError("No ideal channel state information available")
+        
+        return csi    
+
 
 class ChannelEqualization(Generic[WaveformType], ABC):
     """Abstract base class for channel equalization routines of waveform generators."""
@@ -262,30 +257,23 @@ class ChannelEqualization(Generic[WaveformType], ABC):
         self.__waveform_generator = value
 
     def equalize_channel(self,
-                         signal: Signal,
-                         csi: ChannelStateInformation,
-                         snr: float = float('inf')) -> Signal:
+                         frame: Symbols,
+                         csi: ChannelStateInformation) -> Symbols:
         """Equalize the wireless channel of a received communication frame.
 
         Args:
 
-            signal (Signal):
-                Signal model of the communication frame waveform.
+            frame (Symbols):
+                Symbols of the received communication frame.
 
             csi (ChannelStateInformation):
-                Channel state estimation
+                Channel state estimation.
 
-            snr (float):
-                Assumed signal to noise ratio.
-                May be required by some routines, infinite by default.
-
-        Returns:
-            Signal:
-                The equalized signal model.
+        Returns: The equalize symbols
         """
         
         # The default routine performs no equalization
-        return signal
+        return frame
 
 
 class WaveformGenerator(ABC):
@@ -456,33 +444,33 @@ class WaveformGenerator(ABC):
     def bit_energy(self) -> float:
         """Returns the theoretical average (discrete-time) bit energy of the modulated baseband_signal.
 
-        Energy of baseband_signal x[k] is defined as \\sum{|x[k]}^2
+        Energy of baseband_signal :math:`x[k]` is defined as :math:`\\sum{|x[k]}^2`
         Only data bits are considered, i.e., reference, guard intervals are ignored.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
     def symbol_energy(self) -> float:
         """The theoretical average symbol (discrete-time) energy of the modulated baseband_signal.
 
-        Energy of baseband_signal x[k] is defined as \\sum{|x[k]}^2
+        Energy of baseband_signal :math:`x[k]` is defined as :math:`\\sum{|x[k]}^2`
         Only data bits are considered, i.e., reference, guard intervals are ignored.
 
         Returns:
             The average symbol energy in UNIT.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
     def power(self) -> float:
         """Returns the theoretical average symbol (unitless) power,
 
-        Power of baseband_signal x[k] is defined as \\sum_{k=1}^N{|x[k]|}^2 / N
+        Power of baseband_signal :math:`x[k]` is defined as :math:`\\sum_{k=1}^N{|x[k]|}^2 / N`
         Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate
         """
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def map(self, data_bits: np.ndarray) -> Symbols:
@@ -495,7 +483,7 @@ class WaveformGenerator(ABC):
         Returns:
             Symbols: Mapped data symbols.
         """
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def unmap(self, symbols: Symbols) -> np.ndarray:
@@ -510,7 +498,7 @@ class WaveformGenerator(ABC):
                 Vector containing the resulting sequence of L data bits
                 In general, L is greater or equal to K.
         """
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def modulate(self, data_symbols: Symbols) -> Signal:
@@ -524,15 +512,12 @@ class WaveformGenerator(ABC):
         Returns:
             Signal: Signal model of a single modulate data frame.
         """
-        ...
+        ...  # pragma no cover
 
     # Hint: Channel propagation occurs here
 
     @abstractmethod
-    def demodulate(self,
-                   signal: np.ndarray,
-                   channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[Symbols, ChannelStateInformation, np.ndarray]:
+    def demodulate(self, signal: np.ndarray) -> Symbols:
         """Demodulate a base-band signal stream to data symbols.
 
         Args:
@@ -540,18 +525,21 @@ class WaveformGenerator(ABC):
             signal (np.ndarray):
                 Vector of complex-valued base-band samples of a single communication frame.
 
-            channel_state (ChannelStateInformation):
-                Channel state information of a single communication frame.
-
-            noise_variance (float):
-                Variance of the thermal noise introduced during reception.
-
         Returns:
-            (np.ndarray, ChannelStateInformation, np.ndarray):
-                Tuple of 3 vectors of equal-length first dimension `num_symbols`.
-                The demodulated data symbols, their channel estimates and their noise variance.
+
+            The demodulated communication symbols
         """
-        ...
+        ...  # pragma no cover
+        
+    def estimate_channel(self, frame: Symbols) -> ChannelStateInformation:
+        
+        return self.channel_estimation.estimate_channel(frame)
+    
+    def equalize_symbols(self,
+                         frame: Symbols,
+                         channel_state: ChannelStateInformation) -> Symbols:
+        
+        return self.channel_equalization.equalize_channel(frame, channel_state)
 
     @property
     @abstractmethod
@@ -563,7 +551,7 @@ class WaveformGenerator(ABC):
         Returns:
             float: Bandwidth in Hz.
         """
-        ...
+        ...  # pragma no cover
         
     @property
     def data_rate(self) -> float:
@@ -574,7 +562,7 @@ class WaveformGenerator(ABC):
             Bits per second.
         """
         
-        time = self.frame_duration # ToDo: Consider guard interval
+        time = self.frame_duration  # ToDo: Consider guard interval
         bits = self.bits_per_frame
         
         return bits / time
@@ -678,6 +666,15 @@ class WaveformGenerator(ABC):
             float: Sampling rate in Hz.
         """
         ...
+        
+    @property
+    def symbol_precoding_support(self) -> bool:
+        """Flag indicating if this waveforms supports symbol precodings.
+        
+        Returns: Boolean support flag.
+        """
+        
+        return True
 
     @classmethod
     def to_yaml(cls: Type[WaveformGenerator], representer: SafeRepresenter, node: WaveformGenerator) -> Node:
@@ -734,7 +731,7 @@ class PilotWaveformGenerator(WaveformGenerator, ABC):
         Returns:
             Signal: The pilot sequence.
         """
-        ...
+        ...  # pragma no cover
 
 
 class PilotSymbolSequence(ABC):
@@ -750,7 +747,7 @@ class PilotSymbolSequence(ABC):
         Returns:
             The symbol sequence.
         """
-        ...
+        ...  # pragma no cover
 
 
 class UniformPilotSymbolSequence(PilotSymbolSequence):

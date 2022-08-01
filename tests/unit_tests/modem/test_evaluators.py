@@ -48,8 +48,9 @@ class TestThroughputEvaluator(TestCase):
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper throughput rate."""
 
-        self.transmitter.transmitted_bits = self.rng.integers(0, 2, self.num_frames * self.bits_per_frame)
-        self.receiver.received_bits = self.transmitter.transmitted_bits.copy()
+        transmitted_bits = self.rng.integers(0, 2, self.num_frames * self.bits_per_frame)
+        self.transmitter.transmission.bits = transmitted_bits.copy()
+        self.receiver.reception.bits = transmitted_bits.copy()
 
         # Assert throughput without any frame errors
         expected_throughput = self.bits_per_frame / self.frame_duration
@@ -57,7 +58,7 @@ class TestThroughputEvaluator(TestCase):
         self.assertAlmostEqual(expected_throughput, throughput.to_scalar())
 
         # Assert throughput with frame errors
-        self.receiver.received_bits[0:int(.5*self.bits_per_frame)] = 1.
+        self.receiver.reception.bits[0:int(.5*self.bits_per_frame)] = 1.
         expected_throughput = (self.num_frames - 1) * self.bits_per_frame / (self.num_frames * self.frame_duration)
         throughput = self.evaluator.evaluate(Mock())
         self.assertEqual(expected_throughput, throughput.to_scalar())

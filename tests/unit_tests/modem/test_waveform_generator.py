@@ -3,7 +3,6 @@
 
 import unittest
 from unittest.mock import Mock
-from typing import Tuple
 
 import numpy as np
 import numpy.random as rnd
@@ -12,8 +11,8 @@ from scipy.constants import pi
 from math import floor
 
 from hermespy.channel import ChannelStateFormat, ChannelStateInformation
-from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence, Synchronization
-from hermespy.core.signal_model import Signal
+from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence, Synchronization, Symbols
+from hermespy.core import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -25,60 +24,67 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class WaveformGeneratorDummy(WaveformGenerator):
-    """Dummy of the abstract waveform generator base class for testing."""
+class MockWaveformGenerator(WaveformGenerator):
+    """Mock communication waveform for modem testing."""
 
-    def __init__(self, **kwargs) -> None:
-        """Waveform Generator Dummy object initialization."""
-
-        WaveformGenerator.__init__(self, **kwargs)
+    symbol_rate = 1e4
 
     @property
     def samples_in_frame(self) -> int:
-        return 20
-
+        
+        return self.oversampling_factor * self.symbols_per_frame
+    
     @property
     def bits_per_frame(self) -> int:
-        return 8
-
+        
+        return self.symbols_per_frame * 1
+    
     @property
     def symbols_per_frame(self) -> int:
-        return 1
-
+        
+        return 100
+    
     @property
     def bit_energy(self) -> float:
-        return 1/8
-
+    
+        return 1.
+    
     @property
     def symbol_energy(self) -> float:
-        return 1.0
-
+        
+        return 1.
+    
     @property
     def power(self) -> float:
-        return 1.0
+        
+        return 1.
+    
+    def map(self, data_bits: np.ndarray) -> Symbols:
+        
+        return Symbols(data_bits[np.newaxis, np.newaxis, :])
+    
+    def unmap(self, symbols: Symbols) -> np.ndarray:
+        
+        return symbols.raw.real.flatten()
+    
+    def modulate(self, data_symbols: Symbols) -> Signal:
+        
+        return Signal(data_symbols.raw.flatten().repeat(self.oversampling_factor), self.sampling_rate)
 
-    def map(self, data_bits: np.ndarray) -> np.ndarray:
-        return data_bits
-
-    def unmap(self, data_symbols: np.ndarray) -> np.ndarray:
-        return data_symbols
-
-    def modulate(self, data_symbols: np.ndarray) -> Signal:
-        return Signal(data_symbols, self.sampling_rate)
-
-    def demodulate(self,
-                   signal: np.ndarray,
-                   channel_state: ChannelStateInformation,
-                   noise_variance: float) -> Tuple[np.ndarray, ChannelStateInformation, np.ndarray]:
-        return signal, channel_state, np.tile(np.array([noise_variance]), signal.shape)
-
+    def demodulate(self, signal: np.ndarray) -> Symbols:
+        
+        symbols = Symbols(signal[np.newaxis, np.newaxis, :self.oversampling_factor * self.symbols_per_frame:self.oversampling_factor])
+        return symbols
+    
     @property
     def bandwidth(self) -> float:
-        return 100e3
-
+        
+        return self.sampling_rate
+    
     @property
     def sampling_rate(self) -> float:
-        return self.bandwidth * self.oversampling_factor
+        
+        return self.symbol_rate * self.oversampling_factor
 
 
 class TestSynchronization(unittest.TestCase):
@@ -88,7 +94,7 @@ class TestSynchronization(unittest.TestCase):
 
         self.rng = np.random.default_rng(42)
         self.synchronization = Synchronization()
-        self.waveform_generator = WaveformGeneratorDummy()
+        self.waveform_generator = MockWaveformGenerator()
         self.waveform_generator.synchronization = self.synchronization
 
 
@@ -117,9 +123,7 @@ class TestSynchronization(unittest.TestCase):
         num_samples = num_frames * self.waveform_generator.samples_in_frame + num_offset_samples
 
         signal = np.exp(2j * self.rng.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rng.uniform(0, pi, (1, num_samples)))
-        csi = ChannelStateInformation.Ideal(num_samples, num_streams)
-
-        frames = self.synchronization.synchronize(signal, csi)
+        frames = self.synchronization.synchronize(signal)
         self.assertEqual(num_frames, len(frames))
 
     def test_to_yaml(self) -> None:
@@ -148,7 +152,7 @@ class TestWaveformGenerator(unittest.TestCase):
         self.rnd = rnd.default_rng(42)
         self.modem = Mock()
 
-        self.waveform_generator = WaveformGeneratorDummy(modem=self.modem)
+        self.waveform_generator = MockWaveformGenerator(modem=self.modem)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as attributes."""
@@ -192,21 +196,13 @@ class TestWaveformGenerator(unittest.TestCase):
         for num_samples in num_samples_test:
 
             signal = np.exp(2j * self.rnd.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rnd.uniform(0, pi, (1, num_samples)))
-            channel_state = ChannelStateInformation.Ideal(num_samples, num_streams)
 
-            synchronized_frames = self.waveform_generator.synchronization.synchronize(signal, channel_state)
+            synchronized_frames = self.waveform_generator.synchronization.synchronize(signal)
 
             # Number of frames is the number of frames that fit into the samples
             num_frames = len(synchronized_frames)
             expected_num_frames = int(floor(num_samples / self.waveform_generator.samples_in_frame))
             self.assertEqual(expected_num_frames, num_frames)
-
-            # Frames and channel states should each contain the correct amount of samples
-            for frame_signal, frame_channel_state in synchronized_frames:
-
-                self.assertEqual(num_streams, frame_signal.shape[0])
-                self.assertEqual(self.waveform_generator.samples_in_frame, frame_signal.shape[1])
-                self.assertEqual(self.waveform_generator.samples_in_frame, frame_channel_state.num_samples)
 
     def test_synchronize_validation(self) -> None:
         """Synchronization should raise a ValueError if the signal shape does match the stream response shape."""

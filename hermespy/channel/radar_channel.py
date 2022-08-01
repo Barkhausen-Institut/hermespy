@@ -178,7 +178,6 @@ class RadarChannel(Channel):
         
         self.__target_azimuth = value
         
-        
     @property
     def target_zenith(self) -> float:
         """Target position zenith in spherical coordiantes.

@@ -305,11 +305,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         self.__snr_type = snr_type
 
 
-
-SimulationResult: Type[MonteCarloResult[SimulationScenario]]
-"""Result Container of a Full Simulation Campaign."""
-
-
 class SimulationRunner(object):
 
     __scenario: SimulationScenario      # Scenario to be run
@@ -489,7 +484,7 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
 
         return self.__scenario
 
-    def run(self) -> SimulationResult:
+    def run(self) -> MonteCarloResult[SimulationScenario]:
 
         # Print indicator that the simulation is starting
         self.console.print()  # Just an empty line
