@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from hermespy.simulation.simulation import Simulation
 from hermespy.modem import Modem, BitErrorEvaluator, ThroughputEvaluator, RootRaisedCosineWaveform
-from hermespy.coding import RepetitionEncoder
+from hermespy.fec import RepetitionEncoder
 
 # Create a new HermesPy simulation scenario
 simulation = Simulation()
@@ -12,7 +12,7 @@ simulation = Simulation()
 base_station = simulation.scenario.new_device()
 terminal = simulation.scenario.new_device()
 
-# Disable device self-interference by setting the gain 
+# Disable device self-interference by setting the gain
 # of the respective self-inteference channels to zero
 simulation.scenario.channel(base_station, base_station).gain = 0.
 simulation.scenario.channel(terminal, terminal).gain = 0.

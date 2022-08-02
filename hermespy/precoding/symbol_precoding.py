@@ -7,7 +7,7 @@ Symbol Precoding
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import  TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -147,48 +147,3 @@ class SymbolPrecoding(Serializable, Precoding[SymbolPrecoder]):
             decoded_symbols = precoder.decode(decoded_symbols)
             
         return decoded_symbols
-
-        if input_stream.shape[0] != channel_states.num_receive_streams:
-            raise ValueError("Input streams and channel states must have identical number of streams")
-
-        # if input_stream.shape[1] != channel_states.num_symbols:
-        #     raise ValueError("Input streams and channel states must have identical number of symbols")
-
-        # If only a nuclear noise variance is provided, expand it to an array
-        if isinstance(stream_noises, float) or isinstance(stream_noises, int):
-            stream_noises = np.array([[stream_noises]], dtype=float).repeat(input_stream.shape[0], axis=0)\
-                .repeat(input_stream.shape[1], axis=1)
-
-        symbols_iteration = input_stream.copy()
-        channel_state_iteration = channel_states
-        noises_iteration = stream_noises.copy()
-
-        if self.debug:
-            fig, ax = plt.subplots(3, 1+len(self.__symbol_precoders), squeeze=False)
-
-            ax[0, 0].set_title("Input")
-            ax[0, 0].set_ylabel("Signal")
-            ax[0, 0].plot(abs(symbols_iteration.flatten()))
-            ax[1, 0].set_ylabel("CSI")
-            ax[1, 0].plot(abs(channel_state_iteration.state.sum(axis=1).sum(axis=2).flatten()))
-            ax[2, 0].set_ylabel("Noise")
-            ax[2, 0].plot(abs(noises_iteration.flatten()))
-            i = 0
-
-        # Recursion through all precoders, each one may update the stream as well as the responses
-        for precoder in reversed(self.__symbol_precoders):
-            symbols_iteration, channel_state_iteration, noises_iteration = precoder.decode(symbols_iteration,
-                                                                                           channel_state_iteration,
-                                                                                           noises_iteration)
-
-            if self.debug:
-                i += 1
-                ax[0, i].set_title(precoder.__class__.__name__)
-                ax[0, i].plot(abs(symbols_iteration.flatten()))
-                ax[1, i].plot(abs(channel_state_iteration.state.sum(axis=1).sum(axis=2).flatten()))
-                ax[2, i].plot(abs(noises_iteration.flatten()))
-
-        if self.debug:
-            plt.show()
-
-        return symbols_iteration

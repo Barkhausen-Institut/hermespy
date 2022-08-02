@@ -216,11 +216,11 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         if self.waveform_generator.modem.device is None:
             raise RuntimeError("Operating modem floating")
         
-        csi = self.waveform_generator.modem._receiver.csi    
+        csi = self.waveform_generator.modem._receiver.csi
         if csi is None:
             raise RuntimeError("No ideal channel state information available")
         
-        return csi    
+        return csi
 
 
 class ChannelEqualization(Generic[WaveformType], ABC):

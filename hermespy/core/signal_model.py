@@ -44,9 +44,6 @@ class Signal:
         __carrier_frequency (float):
             Carrier-frequency of the modeled signal in the radio-frequency band,
             i.e. the central frequency in Hz.
-
-        delay (float):
-            Delay of the signal in seconds.
     """
 
     __samples: np.ndarray

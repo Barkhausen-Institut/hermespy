@@ -57,7 +57,7 @@ the HermesPy source code can be copied to any system by executing
 
 .. code-block:: bash
 
-   git clone <this-repo>
+   git clone --recursive <this-repo>
    cd hermespy/
 
 within a terminal.
@@ -66,8 +66,7 @@ within a terminal.
 Some submodules of HermesPy are provided as C++ implementations with Python bindings for improved performance.
 Therefore, building the package from source requires your system to have a
 build chain detectable by `CMake`_ installed and configured.
-For Windows users, we recommend downloading and installing either the `Visual Studio Build Tools`_
-or `MinGW`_ as a free open-source alternative.
+For Windows users, we recommend downloading and installing the `Visual Studio Build Tools`_.
 
 
 Build and install the package contained within the repository by executing the following commands within a terminal:
@@ -142,4 +141,3 @@ This will point Hermes to search for the Quadriga files within the specified loc
 .. _oct2py: https://pypi.org/project/oct2py/
 .. _CMake: https://cmake.org/
 .. _Visual Studio Build Tools: https://visualstudio.microsoft.com/de/downloads/#build-tools-for-visual-studio-2022
-.. _MinGW: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer/mingw-w64-install.exe/download

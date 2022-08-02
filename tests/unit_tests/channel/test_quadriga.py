@@ -23,7 +23,7 @@ class TestQuadrigaChannel(TestCase):
 
     def setUp(self) -> None:
         
-        path_quadriga_src = path.join(path.split(__file__)[0], 'res', 'quadriga_src')
+        path_quadriga_src = path.join(path.dirname(__file__), '..', '..', '..', 'submodules', 'quadriga', 'quadriga_src')
         self.interface = QuadrigaInterface(path_quadriga_src=path_quadriga_src)
                                            
         self.sampling_rate = 1e6
