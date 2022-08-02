@@ -20,6 +20,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         lfs: true
+        submodules: recursive
 
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
@@ -33,7 +34,7 @@ jobs:
         pip install .[test,quadriga,documentation]
 
     - name: Run unit tests
-      run: python -m unittest discover tests/unit_tests
+      run: python tests/test_install.py unit_tests
       
 
   Documentation:
@@ -46,6 +47,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         lfs: true
+        submodules: recursive
 
     - name: Setup python 3.9
       uses: actions/setup-python@v2

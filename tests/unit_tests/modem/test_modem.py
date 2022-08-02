@@ -8,7 +8,7 @@ import numpy as np
 from numpy import random as rnd
 from numpy.testing import assert_array_equal, assert_almost_equal
 
-from hermespy.coding import EncoderManager
+from hermespy.fec import EncoderManager
 from hermespy.core import UniformArray, IdealAntenna
 from hermespy.modem.modem import Modem, CommunicationReception
 from hermespy.precoding import SymbolPrecoding

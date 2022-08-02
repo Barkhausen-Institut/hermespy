@@ -1,3 +1,3 @@
-.. automodule:: tools.resampling
+.. automodule:: hermespy.tools.resampling
 
 .. footbibliography::

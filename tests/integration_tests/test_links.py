@@ -13,7 +13,7 @@ from hermespy.modem import Modem, BitErrorEvaluator, RootRaisedCosineWaveform, \
     OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
 from hermespy.precoding import DFT
     
-from hermespy.coding import RepetitionEncoder
+from hermespy.fec import RepetitionEncoder
 from hermespy.precoding import SpatialMultiplexing
 
 __author__ = "Jan Adler"

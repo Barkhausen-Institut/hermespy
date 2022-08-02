@@ -12,7 +12,7 @@ from hermespy.channel.multipath_fading_templates import (
     MultipathFadingCost256)
 from hermespy.channel.quadriga_channel import QuadrigaChannel
 from hermespy.core import Factory
-from tests.unit_tests.utils import yaml_str_contains_element
+from ..utils import yaml_str_contains_element
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

@@ -787,7 +787,7 @@ class MonteCarloActor(Generic[MO]):
         
             List of function identifiers for simulation stage execution routines.
         """
-        ...  # pragma no cover
+        raise NotImplementedError("This method should not have been called")  # pragma no cover
         
     @abstractmethod
     def stage_executors(self) -> List[Callable]:
@@ -799,7 +799,7 @@ class MonteCarloActor(Generic[MO]):
         
             List of function callbacks for simulation stage execution routines.
         """
-        ...  # pragma no cover
+        raise NotImplementedError("This method should not have been called")  # pragma no cover
 
 
 class MonteCarloResult(Generic[MO]):

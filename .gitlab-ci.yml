@@ -2,7 +2,8 @@ image: python:3.9
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
+  GIT_SUBMODULE_STRATEGY: recursive
+  
 stages:
   - build
   - test
@@ -22,34 +23,30 @@ before_script:
 
 Build Package:
   stage: build
-  artifacts:
-    paths:
-      - dist/*.whl
   script:
-    - pip install -r requirements.txt
-    - python setup.py bdist_wheel
-    - pip install dist/hermespy-0.3.0-py3-none-any.whl[test,quadriga,documentation]
+    - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+    - pip install .[test,quadriga,documentation]
 
 Unit Testing:
   stage: test
   dependencies:
     - Build Package
   script:
-    - python -m unittest discover tests/unit_tests
+    - python tests/test_install.py unit_tests
 
 Integration Testing:
   stage: test
   dependencies:
     - Build Package
   script:
-    - python -m unittest discover tests/integration_tests
+    - python tests/test_install.py integration_tests
 
 Integrity Testing:
   stage: test
   dependencies:
     - Build Package
   script:
-    - python -m unittest discover tests/integrity_tests
+    - python tests/test_install.py integrity_tests
 
 pages:
   stage: deploy
