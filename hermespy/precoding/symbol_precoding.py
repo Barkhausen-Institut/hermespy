@@ -87,8 +87,6 @@ class SymbolPrecoding(Serializable, Precoding[SymbolPrecoder]):
     yaml_tag = u'Symbol-Precoding'
     """YAML serialization tag."""
 
-    debug: bool
-
     def __init__(self,
                  modem: Modem = None) -> None:
         """Symbol Precoding object initialization.
@@ -99,7 +97,6 @@ class SymbolPrecoding(Serializable, Precoding[SymbolPrecoder]):
                 The modem this `SymbolPrecoding` configuration is attached to.
         """
 
-        self.debug = False
         Precoding.__init__(self, modem=modem)
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:

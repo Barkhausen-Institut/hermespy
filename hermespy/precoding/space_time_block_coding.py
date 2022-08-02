@@ -10,6 +10,7 @@ from typing import Type, Tuple
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from hermespy.core.channel_state_information import ChannelStateInformation
 
 from hermespy.core.factory import Serializable
 from.ratio_combining import MaximumRatioCombining
@@ -55,18 +56,14 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
         input_data = symbol_stream[0, :]
 
         if num_tx_streams == 2:
-
-            output = np.zeros((2, number_of_symbols), dtype=complex)
-
-            # alamouti precoding
-            even_idx = np.arange(0, number_of_symbols, 2)
-            odd_idx = even_idx + 1
-
+            
+            if number_of_symbols % 2 != 0:
+                raise ValueError("Alamouti encoding must contain an even amount of data symbols")
+        
+            output = np.empty((2, number_of_symbols), dtype=complex)
             output[0, :] = input_data
-            output[1, even_idx] = -np.conj(input_data[odd_idx])
-            output[1, odd_idx] = np.conj(input_data[even_idx])
-
-            output = output / np.sqrt(2)
+            output[1, 0::2] = -input_data[1::2].conj()
+            output[1, 1::2] = input_data[0::2].conj()
 
         elif num_tx_streams == 4:
             output = np.empty((4, number_of_symbols), dtype=complex)
@@ -110,7 +107,7 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
 
     def __decode_stbc_2_rx_antennas(self,
                                     symbol_streams: np.ndarray,
-                                    stream_responses: np.ndarray,
+                                    channel: ChannelStateInformation,
                                     stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Decode data for STBC with 2 antenna streams
 
@@ -126,37 +123,25 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
                 output: Decoded data with size 1 x N.
                 channel_estimation_out: updated channel estimation with size 1 x N.
         """
+        
+        if symbol_streams.shape[1] % 2 != 0:
+            raise ValueError("Alamouti decoding must contain an even amount of data symbols")
+        
+        # The considered channel is the channel mean over the duration of two symbols,
+        # ince the Alamouti scheme assumes a coherent channel over this duration
+        channel_state = np.mean(np.reshape(channel.state[0, :2, :, 0], (2, -1, 2)), -1, keepdims=False)
+        # Alternatively: channel_state = channel.state[0, :2, 0::2, 0]
+        
+        # Curiously, only the signal arriving at the first antenna is relevant
+        # (But the channel state at the second antenna is still required)
+        symbols = symbol_streams[0, :]
+        weight_norms = np.sum(np.abs(channel_state) ** 2, axis=0, keepdims=False)
 
-        number_of_rx_antennas = symbol_streams.shape[0]
-        number_of_symbols = symbol_streams.shape[1]
-        symbol_streams_out = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
-        stream_responses_out = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
+        decoded_symbols = np.empty(len(symbols), dtype=complex)
+        decoded_symbols[0::2] = (channel_state[0].conj() * symbols[0::2] + channel_state[1] * symbols[1::2].conj()) / weight_norms
+        decoded_symbols[1::2] = (channel_state[0].conj() * symbols[1::2] - channel_state[1] * symbols[0::2].conj()) / weight_norms
 
-        channel = stream_responses / np.sqrt(2)
-
-        even_idx = np.arange(0, number_of_symbols, 2)
-        odd_idx = even_idx + 1
-
-        y_even = (np.conj(channel[0, even_idx]) * symbol_streams[:, even_idx] +
-                  channel[1, odd_idx] * np.conj(symbol_streams[:, odd_idx]))
-        y_odd = (-channel[1, even_idx] * np.conj(symbol_streams[:, even_idx]) +
-                 np.conj(channel[0, odd_idx]) * symbol_streams[:, odd_idx])
-
-        # ToDo: This way of norming things does not seem correct to me.
-        # Why would we only normalize over the even indices?
-        norm = np.sqrt(np.abs(channel[0, even_idx]) ** 2 + np.abs(channel[1, even_idx]) ** 2)
-
-        symbol_streams_out[:, even_idx] = y_even / norm
-        symbol_streams_out[:, odd_idx] = y_odd / norm
-
-        # the channel coefficient is the norm
-        stream_responses_out[:, even_idx] = norm
-        stream_responses_out[:, odd_idx] = norm
-
-        # ToDo: Noise changes
-        noise_estimation_out = np.zeros(symbol_streams_out.shape, dtype=float)
-
-        return MaximumRatioCombining.decode(self, symbol_streams_out, stream_responses_out, noise_estimation_out)
+        return decoded_symbols[np.newaxis, :], channel, stream_noises
 
     def __decode_stbc_4_rx_antennas(self,
                                     input_data: np.ndarray,

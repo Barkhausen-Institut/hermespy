@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from typing import Callable, List
-from warnings import catch_warnings, simplefilter
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -11,7 +10,7 @@ import numpy as np
 from numpy.random import default_rng
 from scipy.stats import norm, truncnorm
 
-from hermespy.core.monte_carlo import GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, \
+from hermespy.core.monte_carlo import ActorRunResult, Evaluation, EvaluationTemplate, EvaluationResult, ScalarEvaluationResult, GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, \
     Evaluator, ArtifactTemplate, MO, Artifact, GridDimension, RegisteredDimension, dimension
 
 __author__ = "Jan Adler"
@@ -22,6 +21,13 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class EvaluationMock(EvaluationTemplate[float]):
+    
+    def artifact(self) -> ArtifactTemplate[float]:
+        
+        return ArtifactTemplate[float](self.evaluation)
 
 
 class TestArtifactTemplate(TestCase):
@@ -54,7 +60,7 @@ class TestArtifactTemplate(TestCase):
 
 class EvaluatorMock(Evaluator):
 
-    def evaluate(self) -> Artifact:
+    def evaluate(self) -> Evaluation:
         return Mock()
 
     @property
@@ -65,6 +71,8 @@ class EvaluatorMock(Evaluator):
     def title(self) -> str:
         return "??"
 
+    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+        return Mock()
 
 class TestEvaluator(TestCase):
     """Test base class for all evaluators."""
@@ -148,67 +156,68 @@ class TestEvaluator(TestCase):
         self.evaluator.plot_scale = plot_scale
 
         self.assertEqual(plot_scale, self.evaluator.plot_scale)
-        
-    def test_confidence_level_validation(self) -> None:
-        """Confidence level should raise a ValueError on invalid arguments"""
-        
-        with self.assertRaises(ValueError):
-            _ = self.evaluator.confidence_level(self.rng.random((5, 4)))
 
-    def test_confidence_level_no_tolerance(self) -> None:
-        """With a tolerance of zero the confidence should always be zero as well"""
-
-        scalars = self.rng.normal(size=10)
-        self.evaluator.tolerance = 0.
-        
-        self.assertEqual(0., self.evaluator.confidence_level(scalars))
-        
-    def test_confidence_level_no_variance(self) -> None:
-        """The confidence without sample variance should always be one"""
-
-        scalars = np.ones(5)   
-        self.assertEqual(1., self.evaluator.confidence_level(scalars))
-
-    def test_confidence_level_normal(self) -> None:
-        """Test the confidence level estimation for a normal distribution prior assumption"""
-        
-        scalars = self.rng.normal(10, size=100)
-        
-        with patch('hermespy.core.Evaluator._scalar_cdf') as cdf:
-            cdf.side_effect = lambda x: norm.cdf(x)
-            
-            self.evaluator.tolerance = .1
-            confidence_level_low_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
-            
-            self.evaluator.tolerance = .5
-            confidence_level_high_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
-            
-            cdf.assert_called()
-            self.assertTrue(np.any(confidence_level_low_tolerance <= confidence_level_high_tolerance))
-
-    def test_confidence_level_bounded_normal(self) -> None:
-        """Test the confidence level estimation for a bounded normal distribution prior assumption"""
-        
-        mu = .5
-        lower = 0.
-        upper = 1.
-        scale = .1
-        dist = truncnorm((lower - mu) / scale, (upper - mu) / scale, loc=mu, scale=scale)
-        prior_dist = truncnorm(lower, upper, loc=0., scale=1.)
-        
-        scalars = dist.rvs(200)
-        
-        with patch('hermespy.core.Evaluator._scalar_cdf') as cdf:
-            cdf.side_effect = lambda x: prior_dist.cdf(x)
-            
-            self.evaluator.tolerance = .01
-            confidence_level_low_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
-            
-            self.evaluator.tolerance = .5
-            confidence_level_high_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
-            
-            cdf.assert_called()
-            self.assertTrue(np.any(confidence_level_low_tolerance <= confidence_level_high_tolerance))
+# ToDo: Move confidence testing to GridSection     
+#    def test_confidence_level_validation(self) -> None:
+#        """Confidence level should raise a ValueError on invalid arguments"""
+#        
+#        with self.assertRaises(ValueError):
+#            _ = self.evaluator.confidence_level(self.rng.random((5, 4)))
+#
+#    def test_confidence_level_no_tolerance(self) -> None:
+#        """With a tolerance of zero the confidence should always be zero as well"""
+#
+#        scalars = self.rng.normal(size=10)
+#        self.evaluator.tolerance = 0.
+#        
+#        self.assertEqual(0., self.evaluator.confidence_level(scalars))
+#        
+#    def test_confidence_level_no_variance(self) -> None:
+#        """The confidence without sample variance should always be one"""
+#
+#        scalars = np.ones(5)   
+#        self.assertEqual(1., self.evaluator.confidence_level(scalars))
+#
+#    def test_confidence_level_normal(self) -> None:
+#        """Test the confidence level estimation for a normal distribution prior assumption"""
+#        
+#        scalars = self.rng.normal(10, size=100)
+#        
+#        with patch('hermespy.core.Evaluator._scalar_cdf') as cdf:
+#            cdf.side_effect = lambda x: norm.cdf(x)
+#            
+#            self.evaluator.tolerance = .1
+#            confidence_level_low_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
+#            
+#            self.evaluator.tolerance = .5
+#            confidence_level_high_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
+#            
+#            cdf.assert_called()
+#            self.assertTrue(np.any(confidence_level_low_tolerance <= confidence_level_high_tolerance))
+#
+#    def test_confidence_level_bounded_normal(self) -> None:
+#        """Test the confidence level estimation for a bounded normal distribution prior assumption"""
+#        
+#        mu = .5
+#        lower = 0.
+#        upper = 1.
+#        scale = .1
+#        dist = truncnorm((lower - mu) / scale, (upper - mu) / scale, loc=mu, scale=scale)
+#        prior_dist = truncnorm(lower, upper, loc=0., scale=1.)
+#        
+#        scalars = dist.rvs(200)
+#        
+#        with patch('hermespy.core.Evaluator._scalar_cdf') as cdf:
+#            cdf.side_effect = lambda x: prior_dist.cdf(x)
+#            
+#            self.evaluator.tolerance = .01
+#            confidence_level_low_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
+#            
+#            self.evaluator.tolerance = .5
+#            confidence_level_high_tolerance = np.array([self.evaluator.confidence_level(scalars[:s]) for s in range(0, len(scalars))], dtype=float)
+#            
+#            cdf.assert_called()
+#            self.assertTrue(np.any(confidence_level_low_tolerance <= confidence_level_high_tolerance))
 
 
 class TestObjectMock(object):
@@ -256,11 +265,12 @@ class SumEvaluator(Evaluator):
     def __init__(self, investigated_object: TestObjectMock) -> None:
         
         self.__investigated_object = investigated_object
+        Evaluator.__init__(self)
 
-    def evaluate(self) -> ArtifactTemplate[float]:
+    def evaluate(self) -> EvaluationMock:
 
         summed = self.__investigated_object.property_a + self.__investigated_object.property_b + self.__investigated_object.property_c
-        return ArtifactTemplate[float](summed)
+        return EvaluationMock(summed)
 
     @property
     def abbreviation(self) -> str:
@@ -269,6 +279,10 @@ class SumEvaluator(Evaluator):
     @property
     def title(self) -> str:
         return "Sum Evaluator"
+    
+    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+        
+        return ScalarEvaluationResult(grid, artifacts)
 
 
 class ProductEvaluator(Evaluator):
@@ -279,11 +293,12 @@ class ProductEvaluator(Evaluator):
     def __init__(self, investigated_object: TestObjectMock) -> None:
         
         self.__investigated_object = investigated_object
+        Evaluator.__init__(self)
         
-    def evaluate(self) -> ArtifactTemplate[float]:
+    def evaluate(self) -> EvaluationMock:
 
         product = self.__investigated_object.property_a * self.__investigated_object.property_b * self.__investigated_object.property_c
-        return ArtifactTemplate[float](product)
+        return EvaluationMock(product)
 
     @property
     def abbreviation(self) -> str:
@@ -292,7 +307,10 @@ class ProductEvaluator(Evaluator):
     @property
     def title(self) -> str:
         return "Product Evaluator"
-
+    
+    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+        
+        return ScalarEvaluationResult(grid, artifacts)
 
 class TestMonteCarloSample(TestCase):
     """Test the Monte Carlo sample class."""
@@ -316,7 +334,7 @@ class TestMonteCarloSample(TestCase):
 
         self.assertCountEqual(self.grid_section, self.sample.grid_section)
         self.assertEqual(self.sample_index, self.sample.sample_index)
-        self.assertListEqual(self.evaluation_artifacts, self.sample.artifacts)
+        self.assertCountEqual(self.evaluation_artifacts, self.sample.artifacts)
         self.assertEqual(len(self.evaluation_artifacts), self.sample.num_artifacts)
         
     def test_artifact_scalars(self) -> None:
@@ -336,43 +354,38 @@ class TestGridSection(TestCase):
     def setUp(self) -> None:
         
         self.coordiantes = (0, 4, 2)
-        self.evaluators = [EvaluatorMock(), EvaluatorMock()]
-        
-        self.section = GridSection(self.coordiantes, self.evaluators)
+        self.num_evaluators = 2
+        self.investigated_object = TestObjectMock()
+        self.evaluators = [SumEvaluator(self.investigated_object), ProductEvaluator(self.investigated_object)]
+
+        self.section = GridSection(self.coordiantes, self.num_evaluators)
     
     def test_init(self) -> None:
         """Initialization parameters shuld be properly stored as class attributes"""
         
         self.assertEqual(self.coordiantes, self.section.coordinates)
-        self.assertEqual(len(self.evaluators), self.section.num_evaluators)
         
     def test_num_samples(self) -> None:
         """Number of samples property should return the correct amount of samples"""
 
         self.assertEqual(0, self.section.num_samples)
-        
-    def test_add_samples_valdation(self) -> None:
-        """Adding samples should raise a ValueError on an invalid number of artifacts"""
-                
-        with self.assertRaises(ValueError):
-            self.section.add_samples(MonteCarloSample((0, 4, 2), 0, [Mock()]))
-            
+              
     def test_add_samples(self) -> None:
         """Adding samples should correctly update the confidences"""
         
         artifacts = []
-        for _ in range(self.section.num_evaluators):
+        for _ in range(self.num_evaluators):
             
             artifact = Mock()
             artifact.to_scalar.return_value = 0.
             artifacts.append(artifact)
         
         sample = MonteCarloSample((0, 4, 2), 0, artifacts)
-        self.section.add_samples(sample)
+        self.section.add_samples(sample, self.evaluators)
         
         self.assertCountEqual([False, False], self.section.confidences)
-        self.assertEqual(2, len(self.section.scalars))
-  
+        self.assertEqual(1, self.section.num_samples)
+
 
 @ray.remote(num_cpus=1)
 class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
@@ -405,6 +418,39 @@ class TestMonteCarloActor(TestCase):
         
         ray.shutdown()
 
+
+@ray.remote(num_cpus=1)
+class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
+    """Mock of a Monte Carlo Actor."""
+    
+    def init_stage(self) -> None:
+        return
+    
+    def exit_stage(self) -> None:
+        return
+
+    @staticmethod
+    def stage_identifiers() -> List[str]:
+        return ['init_stage', 'exit_stage']
+    
+    def stage_executors(self) -> List[Callable]:
+        return [self.init_stage, self.exit_stage]
+
+         
+class TestMonteCarloActor(TestCase):
+    """Test the Monte Carlo actor."""
+    
+    @classmethod
+    def setUpClass(cls) -> None:
+
+        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True)
+            
+    @classmethod
+    def tearDownClass(cls) -> None:
+
+        # Shut down ray 
+        ray.shutdown()
+
     def setUp(self) -> None:
         
         self.investigated_object = TestObjectMock()
@@ -421,8 +467,8 @@ class TestMonteCarloActor(TestCase):
 
             program = [(sample_idx,), (1 + sample_idx,)]
 
-            samples = ray.get(self.actor.run.remote(program))
-            self.assertEqual(2, len(samples))
+            result: ActorRunResult = ray.get(self.actor.run.remote(program))
+            self.assertEqual(2, len(result.samples))
 
 
 class TestMonteCarloResult(TestCase):
@@ -551,7 +597,7 @@ class TestMonteCarlo(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
 
-        ray.init(local_mode=True, num_cpus=1)
+        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True)
 
     @classmethod
     def tearDownClass(cls) -> None:

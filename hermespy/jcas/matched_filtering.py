@@ -6,7 +6,7 @@ Matched Filter JCAS
 """
 
 from __future__ import annotations
-from typing import Optional, Type, Tuple
+from typing import Optional, Type
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, MappingNode
@@ -16,7 +16,7 @@ from ruamel.yaml import SafeConstructor, MappingNode
 
 from hermespy.core import Signal
 from hermespy.modem import Modem, CommunicationTransmission, CommunicationReception
-from hermespy.radar import Radar, RadarTransmission, RadarReception
+from hermespy.radar import Radar, RadarTransmission, RadarReception, RadarCube
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -46,7 +46,7 @@ class JCASReception(CommunicationReception, RadarReception):
                  radar: RadarReception) -> None:
         
         CommunicationReception.__init__(self, signal=communication.signal, frames=communication.frames)
-        RadarReception.__init__(self, radar.signal, radar.data, radar.angle_bins, radar.velocity_bins, radar.range_bins)
+        RadarReception.__init__(self, radar.signal, radar.cube, radar.cloud)
 
 
 class MatchedFilterJcas(Modem, Radar):
@@ -113,12 +113,18 @@ class MatchedFilterJcas(Modem, Radar):
         #num_appended_zeros = max(0, num_samples - resampled_signal.num_samples)
         #correlation = np.append(correlation, np.zeros(num_appended_zeros))
 
+        # Create the cube object
         angle_bins = np.array([0.])
         velocity_bins = np.array([0.])
-        range_bins = .5 * lags * resolution
-        cube_data = np.array([[correlation]], dtype=float)
-        radar_reception = RadarReception(signal, cube_data, angle_bins, velocity_bins, range_bins)
+        range_bins = .5 * lags[:num_propagated_samples] * resolution
+        cube_data = np.array([[correlation[:num_propagated_samples]]], dtype=float)
+        cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins)
 
+        #Infer the point cloud, if a detector has been configured
+        cloud = None if self.detector is None else self.detector.detect(cube)
+        self._Radar__cloud = cloud
+
+        radar_reception = RadarReception(signal, cube, cloud)
         return JCASReception(communication_reception, radar_reception)
         
     @property

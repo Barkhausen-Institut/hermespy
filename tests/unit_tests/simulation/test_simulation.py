@@ -4,10 +4,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-import numpy as np
-from numpy.testing import assert_array_equal
 import ray
-from hermespy.core.signal_model import Signal
 
 from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
 
