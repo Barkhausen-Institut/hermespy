@@ -198,7 +198,7 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
 
 from hermespy.channel import ChannelStateInformation
-from hermespy.coding import EncoderManager, Encoder
+from hermespy.fec import EncoderManager, Encoder
 from hermespy.core import DuplexOperator, RandomNode, Transmission, Reception, Signal
 from hermespy.core.factory import SerializableArray
 from hermespy.precoding import SymbolPrecoding, SymbolPrecoder
@@ -443,7 +443,6 @@ class CommunicationReception(Reception):
             
         return concatenated_bits
 
-
     @cached_property
     def symbols(self) -> Symbols:
         
@@ -539,7 +538,6 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         code_bits_per_mimo_frame = int(self.waveform_generator.bits_per_frame * self.precoding.num_input_streams)
         data_bits_per_mimo_frame = self.encoder_manager.required_num_data_bits(code_bits_per_mimo_frame)
         
-
         signal = Signal.empty(self.sampling_rate, self.num_streams)
         
         # Abort if no frame is to be transmitted within the current duration
@@ -575,7 +573,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
                                                          encoded_bits=encoded_bits,
                                                          symbols=symbols,
                                                          encoded_symbols=encoded_symbols,
-                                                         timestamp=n*frame_duration))
+                                                         timestamp=n * frame_duration))
 
         # Save the transmitted information
         transmission = CommunicationTransmission(signal, frames)
@@ -733,7 +731,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             frames.append(CommunicationReceptionFrame(signal=frame_signal,
                                                       symbols=symbols,
                                                       decoded_symbols=decoded_symbols,
-                                                      timestamp=frame_index*signal.sampling_rate,
+                                                      timestamp=frame_index * signal.sampling_rate,
                                                       equalized_symbols=equalized_symbols,
                                                       encoded_bits=encoded_bits,
                                                       decoded_bits=decoded_bits,

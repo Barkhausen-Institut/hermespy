@@ -1,3 +1,3 @@
-.. automodule:: bin.hermes
+.. automodule:: hermespy.bin.hermes
 
 .. footbibliography::

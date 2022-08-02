@@ -128,7 +128,7 @@ Each processing step is represented by a customizable or interchangeable class s
 The :doc:`Communication Modem</api/modem.modem>` operator class currently considers
 
 * :doc:`Bit Sources</api/modem.bits_source>` as the source of data bits to be transmitted
-* :doc:`Channel Codings</api/coding.coding>` as the channel coding configuration
+* :doc:`Channel Codings</api/fec.coding>` as the channel coding configuration
 * :doc:`Waveform Generators</api/modem.waveform_generator>` as the transmit waveform configuration
 * :doc:`Channel Precodings</api/precoding.precoding>` as the channel precoding configuration
 
@@ -328,11 +328,11 @@ Executing the script will launch a full simulation run and a rendered result
 
 of the bit error rate graph.
 
-Now, a typical approach to reduce the bit errors is the introduction of :doc:`Channel Coding<api/coding>`
+Now, a typical approach to reduce the bit errors is the introduction of :doc:`Channel Coding<api/fec>`
 schemes for error correction.
 They introduce redundancy within the transmitted bit stream during transmission
 and exploit said redundancy at the receiver to correct errors.
-One of the most basic error-correcting channel codes is the :doc:`Repetition Encoder<api/coding.repetition>`,
+One of the most basic error-correcting channel codes is the :doc:`Repetition Encoder<api/fec.repetition>`,
 which simply repeats bits to be transmitted and decodes by majority voting after reception.
 In theory, the more repetitions per transmitted data frame, the higher the error correction capabilites.
 But the more redundancy is introduced, the lower the actual information throughput becomes.

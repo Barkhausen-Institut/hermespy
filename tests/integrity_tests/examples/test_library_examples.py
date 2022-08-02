@@ -27,18 +27,21 @@ class TestLibraryExamples(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        
+        if not ray.is_initialized():
 
-        # Run ray in local mode
-        with catch_warnings():
+            # Run ray in local mode
+            with catch_warnings():
 
-            simplefilter("ignore")
-            ray.init(local_mode=True)
+                simplefilter("ignore")
+                ray.init(local_mode=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
 
+        ...
         # Shut down ray 
-        ray.shutdown()
+        #ray.shutdown()
 
     @patch('matplotlib.pyplot.figure')
     def test_getting_started_link(self, mock_figure) -> None:

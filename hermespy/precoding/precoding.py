@@ -154,15 +154,10 @@ class Precoding(Generic[PrecoderType]):
         __precoders (List[Precoder]):
             List of individual precoding steps.
             The full precoding results from a sequential execution of each precoding step.
-
-        debug (bool):
-            Debug flag.
-            If enabled, the precoding will visualize the individual precoding steps after decoding.
     """
 
     __modem: Optional[Modem]
     __precoders: List[PrecoderType]
-    debug: bool
 
     def __init__(self,
                  modem: Modem = None) -> None:
@@ -175,7 +170,6 @@ class Precoding(Generic[PrecoderType]):
 
         self.modem = modem
         self.__precoders = []
-        self.debug = False
 
     @classmethod
     def to_yaml(cls: Type[Precoding], representer: SafeRepresenter, node: Precoding) -> Node:

@@ -398,16 +398,11 @@ class TestMonteCarloActor(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
 
-        # Run ray in local mode
-        with catch_warnings():
-
-            simplefilter("ignore")
-            ray.init(local_mode=True)
+        ray.init(local_mode=True, num_cpus=1)
             
     @classmethod
-    def tearDownClass(cls) -> None:
-
-        # Shut down ray 
+    def tearDownClass(cls):
+        
         ray.shutdown()
 
     def setUp(self) -> None:
@@ -556,11 +551,7 @@ class TestMonteCarlo(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
 
-        # Run ray in local mode
-        with catch_warnings():
-
-            simplefilter("ignore")
-            ray.init(local_mode=True)
+        ray.init(local_mode=True, num_cpus=1)
 
     @classmethod
     def tearDownClass(cls) -> None:

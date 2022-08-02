@@ -14,14 +14,14 @@ from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from ..core.executable import Executable, Verbosity
-from ..core.device import Operator
-from ..channel import QuadrigaInterface, Channel
-from ..core.factory import Serializable
-from ..core.monte_carlo import dimension, Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
-from ..core.scenario import Scenario
-from ..core.signal_model import Signal
-from ..core.statistics import SNRType
+from hermespy.core.executable import Executable, Verbosity
+from hermespy.core.device import Operator
+from hermespy.channel import QuadrigaInterface, Channel
+from hermespy.core.factory import Serializable
+from hermespy.core.monte_carlo import dimension, Evaluator, MonteCarlo, MonteCarloActor, MonteCarloResult
+from hermespy.core.scenario import Scenario
+from hermespy.core.signal_model import Signal
+from hermespy.core.statistics import SNRType
 from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"

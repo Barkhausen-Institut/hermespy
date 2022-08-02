@@ -48,7 +48,7 @@ class TestConfigurationExamples(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-
+        
         if not ray.is_initialized():
 
             # Run ray in local mode
@@ -60,8 +60,9 @@ class TestConfigurationExamples(TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
 
-        # Shut down ray
-        ray.shutdown()
+        ...
+        # Shut down ray 
+        # ray.shutdown()
 
     def __run_yaml(self, path: str) -> None:
         """Run a yaml simulation and test for proper execution.
