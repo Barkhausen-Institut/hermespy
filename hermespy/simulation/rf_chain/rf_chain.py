@@ -63,6 +63,13 @@ class RfChain(Serializable):
 
     @property
     def amplitude_imbalance(self) -> float:
+        """I/Q amplitude imbalance.
+        
+        Raises:
+        
+            ValueError: If the imbalance is less than -1 or more than one.
+        """
+        
         return self.__amplitude_imbalance
 
     @amplitude_imbalance.setter
@@ -74,7 +81,17 @@ class RfChain(Serializable):
 
     @property
     def phase_offset(self) -> float:
+        """I/Q phase offset.
+        
+        Returns: Phase offset in radians.
+        """
+        
         return self.__phase_offset
+    
+    @phase_offset.setter
+    def phase_offset(self, value: float) -> None:
+    
+        self.__phase_offset = value
 
     @classmethod
     def to_yaml(cls: Type[RfChain], representer: SafeRepresenter, node: RfChain) -> Node:

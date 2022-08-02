@@ -24,7 +24,7 @@ Devices:
 Channels:
 
   # Single target radar channel
-  - !<RadarChannel_0_0>
+  - &radar_channel !<RadarChannel_0_0>
     target_range: 1         # The target is located within a distance of 1m of the base station
     radar_cross_section: 5  # The target has a cross section of 5m2
 
@@ -59,6 +59,10 @@ Operators:
       num_data_symbols: 100
       pilot_rate: 1e6
       guard_interval: 1e-6
+
+    # Radar detection configuration
+    detector: !<Threshold>
+      min_power: 2e-2
 
   # The terminal is operated by a communication modem
   - &terminal_operator !<Modem>
@@ -95,6 +99,12 @@ Evaluators:
     confidence: .9
     tolerance: .01
     plot_scale: log
+
+  # Evaluate the probability of detection
+  - !<ROC>
+    receiving_radar: *base_station_operator
+    receiving_radar_null_hypothesis: *base_station_operator
+    radar_channel: *radar_channel
 
 
 # Simulation parameters

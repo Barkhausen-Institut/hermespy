@@ -107,24 +107,7 @@ class TestMatchedFilterJoint(TestCase):
         self.joint._receiver.cache_reception(delay_offset)
         
         reception = self.joint.receive()
-        self.assertTrue(10, reception.data.argmax)
-
-    def test_range_resolution_setget(self) -> None:
-        """Maximum range property getter should return setter argument."""
-        
-        range_resolution = 5.
-        self.joint.range_resolution = range_resolution
-        
-        self.assertEquals(range_resolution, self.joint.range_resolution)
-        
-    def test_range_resolution_validation(self) -> None:
-        """Maximum range property setter should raise ValueError on non-positive arguments."""
-        
-        with self.assertRaises(ValueError):
-            self.joint.range_resolution = -1.
-            
-        with self.assertRaises(ValueError):
-            self.joint.range_resolution = 0.
+        self.assertTrue(10, reception.cube.data.argmax)
             
     def test_range_resolution_setget(self) -> None:
         """Range resolution property getter should return setter argument."""

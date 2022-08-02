@@ -15,6 +15,9 @@ It consists of the
 .. toctree::
 
    radar.radar
+   radar.cube
+   radar.detection
+   radar.evaluation
 
 as well as the specific waveform implementations
 

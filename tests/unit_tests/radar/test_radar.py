@@ -40,23 +40,6 @@ class TestPointDetection(TestCase):
         assert_array_equal(self.velocity, self.point.velocity)
         self.assertEqual(self.power, self.point.power)
         
-    def test_position_validation(self) -> None:
-        """Position property setter should raise a ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.point.position = np.array([1, 2])
-            
-    def test_velocity_validation(self) -> None:
-        """Velocity property setter should raise a ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.point.velocity = np.array([1, 2])
-            
-    def test_power_validation(self) -> None:
-        """Power property setter should raise a valueError on arguments smaller or equal to zero"""
-        
-        with self.assertRaises(ValueError):
-            self.point.power = -1.
 
 
 class TestRadarCube(TestCase):
@@ -313,8 +296,8 @@ class TestRadar(TestCase):
         self.radar._receiver.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
         self.radar.receive_beamformer = None
 
-        cube = self.radar.receive()
-        self.assertEqual(1, len(cube.angle_bins))
+        reception = self.radar.receive()
+        self.assertEqual(1, len(reception.cube.angle_bins))
 
     def test_receive_beamformer(self) -> None:
         """Receiving with a beamformer should result in a valid radar cube"""
@@ -322,5 +305,5 @@ class TestRadar(TestCase):
         transmission = self.radar.transmit()
         self.radar._receiver.cache_reception(transmission.signal)
 
-        cube = self.radar.receive()
-        self.assertEqual(1, len(cube.angle_bins))
+        reception = self.radar.receive()
+        self.assertEqual(1, len(reception.cube.angle_bins))

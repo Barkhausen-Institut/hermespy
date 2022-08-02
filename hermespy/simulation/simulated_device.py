@@ -279,7 +279,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             Linear ratio of signal to noise power.
         """
 
-        return self.__snr 
+        return self.__snr
 
     @snr.setter
     def snr(self, value: float) -> None:

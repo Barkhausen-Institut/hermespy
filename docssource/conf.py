@@ -11,10 +11,15 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import sys
+from sys import path, argv
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../hermespy')))
+# Remove the source directory from path lookup to prevent aliasing
+repository = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+for dir in path:
+    if dir.lower() == repository:
+        path.remove(dir)
+        
 # -- Project information -----------------------------------------------------
 
 project = 'HermesPy'
