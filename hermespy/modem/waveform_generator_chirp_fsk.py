@@ -375,14 +375,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @property
     def symbol_energy(self) -> float:
-        """The theoretical average symbol (discrete-time) energy of the modulated signal.
-
-        Energy of signal x[k] is defined as \\sum{|x[k]}^2
-        Only data bits are considered, i.e., reference, guard intervals are ignored.
-
-        Returns:
-            The average symbol energy in UNIT.
-        """
 
         _, energy = self._prototypes()
         return energy

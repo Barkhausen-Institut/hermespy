@@ -12,8 +12,8 @@ The subpackages may have interdependencies, but in general, the root of dependen
    :glob:
 
    core
-   coding
    channel
+   fec
    hardware_loop
    modem
    precoding

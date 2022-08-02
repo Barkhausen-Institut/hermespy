@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 from numpy.testing import assert_array_equal
+import ray
 from hermespy.core.signal_model import Signal
 
 from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
@@ -246,6 +247,16 @@ class TestSimulation(TestCase):
     def setUp(self) -> None:
 
         self.simulation = Simulation()
+        
+    @classmethod
+    def setUpClass(cls) -> None:
+
+        ray.init(local_mode=True, num_cpus=1)
+            
+    @classmethod
+    def tearDownClass(cls):
+        
+        ray.shutdown()
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
