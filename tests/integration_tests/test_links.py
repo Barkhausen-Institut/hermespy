@@ -89,7 +89,7 @@ class TestSISOLinks(TestCase):
         
         self.__propagate(Channel(self.tx_device, self.rx_device))
 
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_single_carrier(self) -> None:
         """Verify a valid SISO link over a tapped delay line channel with single carrier modulation"""
@@ -105,7 +105,7 @@ class TestSISOLinks(TestCase):
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device)) #, doppler_frequency=1e6))
 
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_channel_chirp_fsk(self) -> None:
         """Verify a valid SISO link over an ideal channel with chirp frequency shift keying modulation"""
@@ -121,7 +121,7 @@ class TestSISOLinks(TestCase):
         
         self.__propagate(Channel(self.tx_device, self.rx_device))
 
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_chirp_fsk(self) -> None:
         """Verify a valid SISO link over a tapped delay line channel with chirp frequency shift keying modulation"""
@@ -135,7 +135,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_channel_ofdm(self) -> None:
         """Verify a valid SISO link over an ideal channel ofdm modulation"""
@@ -155,7 +155,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OFDM modulation,
@@ -178,7 +178,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OFDM modulation,
@@ -201,7 +201,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
 
 
 class TestMIMOLinks(TestCase):
@@ -266,7 +266,7 @@ class TestMIMOLinks(TestCase):
         
         self.__propagate(Channel(self.tx_device, self.rx_device))
 
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_single_carrier(self) -> None:
         """Verify a valid MIMO link over a tapped delay line channel with single carrier modulation"""
@@ -282,7 +282,7 @@ class TestMIMOLinks(TestCase):
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device)) #, doppler_frequency=1e6))
 
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_channel_ofdm(self) -> None:
         """Verify a valid MIMO link over an ideal channel OFDM modulation"""
@@ -302,7 +302,7 @@ class TestMIMOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_ofdm(self) -> None:
         """Verify a valid MIMO link over a tapped delay line channel OFDM modulation"""
@@ -322,7 +322,7 @@ class TestMIMOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device)) #, doppler_frequency=1e6))
-        self.assertEqual(0, self.ber.evaluate().to_scalar())
+        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
 
     # def test_cost256_psk_qam(self) -> None:
     #     """Verify a valid MIMO link over a 3GPP COST256 TDL channel with PSK/QAM modulation"""
@@ -331,4 +331,4 @@ class TestMIMOLinks(TestCase):
     #     self.rx_operator.waveform_generator = RootRaisedCosineWaveform(oversampling_factor=8)
     # 
     #     self.__propagate(MultipathFadingCost256(MultipathFadingCost256.TYPE.URBAN, transmitter=self.tx_operator.device, receiver=self.rx_operator.device))
-    #     self.assertEqual(0, self.ber.evaluate().to_scalar())
+    #     self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())

@@ -854,7 +854,7 @@ class Device(ABC, RandomNode):
         """Position of the device within its scenario in cartesian coordinates.
 
         Returns:
-            position (Optional[np.array]):
+            position (Optional[np.ndarray]):
                 The device's position.
                 `None` if the position is considered to be unknown.
 

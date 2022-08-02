@@ -158,8 +158,8 @@ class Channel(SerializableArray, RandomNode):
     def transmitter(self, value: SimulatedDevice) -> None:
         """Set the device transmitting into this channel."""
 
-        if self.__transmitter is not None:
-            raise RuntimeError("Overwriting a transmitter configuration is not supported")
+        # if self.__transmitter is not None:
+        #    raise RuntimeError("Overwriting a transmitter configuration is not supported")
 
         self.__transmitter = value
 
@@ -180,8 +180,8 @@ class Channel(SerializableArray, RandomNode):
     def receiver(self, value: SimulatedDevice) -> None:
         """Set the device receiving from this channel."""
 
-        if self.__receiver is not None:
-            raise RuntimeError("Overwriting a receiver configuration is not supported")
+        # if self.__receiver is not None:
+        #    raise RuntimeError("Overwriting a receiver configuration is not supported")
 
         self.__receiver = value
 

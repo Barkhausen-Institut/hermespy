@@ -51,13 +51,15 @@ Radar Device Operation
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
 from hermespy.core import DuplexOperator, Signal, Transmission, Reception
+from .cube import RadarCube
+from .detection import RadarDetector, RadarPointCloud
 
 
 __author__ = "Jan Adler"
@@ -68,203 +70,6 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class PointDetection(object):
-    """A single radar point detection."""
-
-    __position: np.ndarray      # Cartesian position of the detection in m
-    __velocity: np.ndarray      # Velocity of the detection in m/s
-    __power: float              # Power of the detection
-
-    def __init__(self,
-                 position: np.ndarray,
-                 velocity: np.ndarray,
-                 power: float) -> None:
-        """
-        Args:
-
-            position (np.ndarray):
-                Cartesian position of the detection in cartesian coordinates.
-
-            velocity (np.ndarray):
-                Velocity vector of the detection in m/s
-
-            power (float):
-                Power of the detection.
-
-        Raises:
-            ValueError:
-                If `position` is not three-dimensional.
-                If `velocity` is not three-dimensional.
-                If `power` is smaller or equal to zero.
-        """
-
-        self.position = position
-        self.velocity = velocity
-        self.power = power
-
-    @property
-    def position(self) -> np.ndarray:
-        """Position of the detection.
-
-        Returns:
-            np.ndarray: Cartesian position in m.
-            
-        Raises:
-            ValueError: If position is not a three-dimensional vector.
-        """
-
-        return self.__position
-    
-    @position.setter
-    def position(self, value: np.ndarray) -> None:
-        
-        if value.ndim != 1 or len(value) != 3:
-            raise ValueError("Position must be a three-dimensional vector")
-        
-        self.__position = value
-        
-    @property
-    def velocity(self) -> np.ndarray:
-        """Velocity of the detection.
-
-        Returns:
-            np.ndarray: Velocity vector in m/s.
-            
-        Raises:
-            ValueError: If velocity is not a three-dimensional vector.
-        """
-
-        return self.__velocity
-    
-    @velocity.setter
-    def velocity(self, value: np.ndarray) -> None:
-        
-        if value.ndim != 1 or len(value) != 3:
-            raise ValueError("Velocity must be a three-dimensional vector")
-        
-        self.__velocity = value
-
-    @property
-    def power(self) -> float:
-        """Detected power.
-
-        Returns:
-            float: Power.
-            
-        Raises:
-            ValueError: If `power` is smaller or equal to zero.
-        """
-
-        return self.__power
-    
-    @power.setter
-    def power(self, value: float) -> None:
-        
-        if value <= 0.:
-            raise ValueError("Detected power must be greater than zero")
-        
-        self.__power = value
-
-
-class RadarCube(object):
-
-    data: np.ndarray
-    angle_bins: np.ndarray
-    velocity_bins: np.ndarray
-    range_bins: np.ndarray
-
-    def __init__(self,
-                 data: np.ndarray,
-                 angle_bins: np.ndarray,
-                 velocity_bins: np.ndarray,
-                 range_bins: np.ndarray) -> None:
-        
-        if data.shape[0] != len(angle_bins):
-            raise ValueError("Data cube angle dimension does not match angle bins")
-        
-        if data.shape[1] != len(velocity_bins):
-            raise ValueError("Data cube velocity dimension does not match velocity bins")
-
-        if data.shape[2] != len(range_bins):
-            raise ValueError("Data cube range dimension does not match range bins")
-
-        self.data = data
-        self.angle_bins = angle_bins
-        self.velocity_bins = velocity_bins
-        self.range_bins = range_bins
-
-    def plot_range(self,
-                   title: Optional[str] = None,
-                   axes: Optional[plt.Axes] = None) -> Optional[plt.Figure]:
-        """Visualize the cube's range data.
-
-        Args:
-
-            title (str, optional):
-                Plot title.
-                
-            axes (Optional[plt.Axes], optional):
-                Matplotlib axes to plot the graph to.
-                If none are provided, a new figure is created.
-
-        Returns:
-        
-            Optional[plt.Figure]:
-                The visualization figure.
-                `None` if axes were provided.
-        """
-
-        title = "Radar Range Profile" if title is None else title
-        figure: Optional[plt.Figure] = None
-
-        # Collapse the cube into the range-dimension
-        range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
-
-        # Create a new figure if no axes were provided
-        if axes is None:
-            
-            figure, axes = plt.subplots()
-            figure.suptitle(title)
-
-        axes.set_xlabel("Range [m]")
-        axes.set_ylabel("Power")
-        axes.plot(self.range_bins, range_profile)
-
-        return figure
-
-    def plot_range_velocity(self,
-                            title: Optional[str] = None,
-                            interpolate: bool = True) -> plt.Figure:
-        """Visualize the cube's range-velocity profile.
-
-        Args:
-
-            title (str, optional):
-                Plot title.
-
-            interpolate (bool, optional):
-                Interpolate the axis for a square profile plot.
-                Enabled by default.
-
-        Returns:
-            plt.Figure:
-        """
-
-        title = "Radar Range-Velocity Profile" if title is None else title
-
-        # Collapse the cube into the range-dimension
-        range_velocity_profile = np.sum(self.data, axis=0, keepdims=False)
-
-        figure, axes = plt.subplots()
-        figure.suptitle(title)
-
-        axes.set_xlabel("Range [m]")
-        axes.set_ylabel("Velocity [m/s]")
-        axes.imshow(range_velocity_profile, aspect='auto')
-
-        return figure
 
 
 class RadarWaveform(object):
@@ -338,31 +143,49 @@ class RadarReception(Reception, RadarCube):
     signal: Signal
     """Received radar base-band waveform."""
     
+    cube: RadarCube
+    """Processed raw radar data."""
+    
+    cloud: Optional[RadarPointCloud]
+    """Radar point cloud."""
+    
     def __init__(self,
                  signal: Signal,
-                 *args, **kwargs) -> None:
+                 cube: RadarCube,
+                 cloud: Optional[RadarPointCloud] = None) -> None:
         """
         Args:
         
             signal (Signal): Received radar waveform.
+            cube (RadarCube): Processed raw radar data.
+            cloud (RadarPointCloud, optional): Radar point cloud.
         """
         
         self.signal = signal
-        RadarCube.__init__(self, *args, **kwargs)
-        
+        self.cube = cube
+        self.cloud = cloud
+
 
 class Radar(DuplexOperator):
     """HermesPy representation of a mono-static radar sensing its environment."""
 
-    waveform: Optional[RadarWaveform]
     __transmit_beamformer: Optional[TransmitBeamformer]
     __receive_beamformer: Optional[ReceiveBeamformer]
+    __waveform: Optional[RadarWaveform]
+    __detector: Optional[RadarDetector]
+    __cloud: Optional[RadarPointCloud]
+    __cube: Optional[RadarCube]
+
 
     def __init__(self) -> None:
 
         self.waveform = None
         self.receive_beamformer = None
         self.transmit_beamformer = None
+        self.__waveform = None
+        self.__cloud = None
+        self.__cube = None
+        self.detector = None
 
         DuplexOperator.__init__(self)
         
@@ -430,10 +253,68 @@ class Radar(DuplexOperator):
 
          # ToDo: Support frame energy
         return 1.0 
+    
+    @property
+    def waveform(self) -> Optional[RadarWaveform]:
+        """The waveform to be emitted by this radar.
+        
+        Returns:
+        
+            The configured waveform.
+            `None` if the waveform is undefined.
+        """
+        
+        return self.__waveform
+    
+    @waveform.setter
+    def waveform(self, value: Optional[RadarWaveform]) -> None:
+        
+        self.__waveform = value
+        
+    @property
+    def detector(self) -> Optional[RadarDetector]:
+        """The detector configured to process the resulting radar cube.
+        
+        Returns:
+        
+            The configured detector.
+            `None` if the detector is undefined.
+        """
+        
+        return self.__detector
+    
+    @detector.setter
+    def detector(self, value: Optional[RadarDetector]) -> None:
+        
+        self.__detector = value
+        
+    @property
+    def cloud(self) -> Optional[RadarPointCloud]:
+        """The resulting point cloud of the most recent reception.
+        
+        Returns:
+        
+            Point cloud object.
+            `None` if no detection algorithm was configured.
+        """
+        
+        return self.__cloud
+
+    @property
+    def cube(self) -> Optional[RadarCube]:
+        """The resulting radar cube of the most recent reception.
+
+        Returns:
+
+           Radar cube object.
+            `None` if no detection algorithm was configured.
+        """
+
+        return self.__cube
 
     def transmit(self, duration: float = 0.) -> RadarTransmission:
 
-        if not self.waveform:
+        if not self.__waveform:
             raise RuntimeError("Radar waveform not specified")
         
         if not self.device:
@@ -475,7 +356,7 @@ class Radar(DuplexOperator):
             raise RuntimeError("Error attempting to transmit over a floating radar operator")
 
         # Retrieve signal from receiver slot
-        signal = self._receiver.signal.resample(self.waveform.sampling_rate)
+        signal = self._receiver.signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:
@@ -498,8 +379,8 @@ class Radar(DuplexOperator):
         # Build the radar cube by generating a beam-forming line over all angles of interest
         angles_of_interest = np.array([[0., 0.]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.probe_focus_points[:, 0, :]
 
-        range_bins = self.waveform.range_bins
-        velocity_bins = self.waveform.velocity_bins
+        range_bins = self.__waveform.range_bins
+        velocity_bins = self.__waveform.velocity_bins
 
         cube_data = np.empty((len(angles_of_interest),
                               len(velocity_bins),
@@ -514,4 +395,11 @@ class Radar(DuplexOperator):
             cube_data[angle_idx, ::] = line_estimate
 
         # Create radar cube object
-        return RadarReception(signal, cube_data, angles_of_interest, velocity_bins, range_bins)
+        cube = RadarCube(cube_data, angles_of_interest, velocity_bins, range_bins)
+        self.__cube = cube
+
+        # Infer the point cloud, if a detector has been configured
+        cloud = None if self.detector is None else self.detector.detect(cube)
+        self.__cloud = cloud
+
+        return RadarReception(signal, cube, cloud)

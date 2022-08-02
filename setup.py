@@ -72,7 +72,7 @@ setup(
         'numba~=0.55.1',
         'sphinx~=4.5.0',
         'rich~=11.2.0',
-#        'redis~=4.3.4',
+        'ZODB~=5.7.0',
     ],
     command_options={
         'build_sphinx': {

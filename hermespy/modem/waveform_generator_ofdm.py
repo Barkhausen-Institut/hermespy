@@ -673,8 +673,13 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         if structure is not None:
             for section in structure:
                 self.add_section(section)
-
-        self._mapping = PskQamMapping(self.modulation_order)
+        
+        
+    @WaveformGenerator.modulation_order.setter
+    def modulation_order(self, value: int) -> None:
+        
+        WaveformGenerator.modulation_order.fset(self, value)
+        self._mapping = PskQamMapping(value)
 
     def add_resource(self, resource: FrameResource) -> None:
         """Add a OFDM frequency resource to the waveform.

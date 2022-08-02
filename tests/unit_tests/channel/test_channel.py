@@ -80,12 +80,6 @@ class TestChannel(unittest.TestCase):
 
         self.assertIs(self.transmitter, channel.transmitter, "Transmitter property set/get produced unexpected result")
 
-    def test_transmitter_validation(self) -> None:
-        """Transmitter property setter must raise exception if already configured."""
-
-        with self.assertRaises(RuntimeError):
-            self.channel.transmitter = Mock()
-
     def test_receiver_setget(self) -> None:
         """Receiver property getter must return setter parameter."""
 
@@ -93,12 +87,6 @@ class TestChannel(unittest.TestCase):
         channel.receiver = self.receiver
 
         self.assertIs(self.receiver, channel.receiver, "Receiver property set/get produced unexpected result")
-
-    def test_receiver_validation(self) -> None:
-        """Receiver property setter must raise exception if already configured."""
-
-        with self.assertRaises(RuntimeError):
-            self.channel.receiver = Mock()
 
     def test_sync_offset_low_setget(self) -> None:
         """Synchronization offset lower bound property getter should return setter argument."""

@@ -43,7 +43,6 @@ class FMCWRadarSimulation(TestCase):
         self.radar.receive_beamformer = self.beamformer
 
         self.radar.device = self.device
-        self.device.sampling_rate = self.radar.sampling_rate
 
         self.channel = RadarChannel(target_range=.5*self.waveform.max_range,
                                     radar_cross_section=1.)
@@ -75,22 +74,22 @@ class FMCWRadarSimulation(TestCase):
             self.device.receive(rx_signals)
             reception = self.radar.receive()
             
-            directive_powers = np.linalg.norm(reception.data, axis=(1, 2))
+            directive_powers = np.linalg.norm(reception.cube.data, axis=(1, 2))
             self.assertEqual(angle_index, directive_powers.argmax())
             
     def test_detection(self) -> None:
 
         self.radar.transmit()
         tx_signals = self.device.transmit()
-        rx_signals, _, csi = self.channel.propagate(tx_signals)
+        rx_signals, _, _ = self.channel.propagate(tx_signals)
         self.device.receive(rx_signals)
         reception = self.radar.receive()
 
         expected_velocity_peak = 0
         expected_range_peak = int(self.channel.target_range / self.waveform.range_resolution)
 
-        range_profile = np.sum(reception.data, axis=(0, 1))
-        velocity_profile = np.sum(reception.data, axis=(0, 2))
+        range_profile = np.sum(reception.cube.data, axis=(0, 1))
+        velocity_profile = np.sum(reception.cube.data, axis=(0, 2))
 
         self.assertEqual(expected_range_peak, np.argmax(range_profile))
         self.assertEqual(expected_velocity_peak, np.argmax(velocity_profile))
