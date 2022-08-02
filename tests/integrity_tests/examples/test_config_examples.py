@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import patch, PropertyMock
+from unittest.mock import MagicMock, patch, PropertyMock
 from tempfile import TemporaryDirectory
 from typing import Any, List, Optional
 from warnings import catch_warnings, simplefilter
@@ -19,6 +19,17 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+monte_carlo_init = MonteCarlo.__init__
+
+def init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
+    
+    args = list(args)
+    args[1] = 1
+    kwargs['num_actors'] = 1
+    
+    monte_carlo_init(cls, *args, **kwargs)
 
 
 def new_dimension_mock(cls: MonteCarlo,
@@ -49,20 +60,13 @@ class TestConfigurationExamples(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         
-        if not ray.is_initialized():
-
-            # Run ray in local mode
-            with catch_warnings():
-
-                simplefilter("ignore")
-                ray.init(local_mode=True)
+        ray.init(local_mode=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
 
-        ...
         # Shut down ray 
-        # ray.shutdown()
+        ray.shutdown()
 
     def __run_yaml(self, path: str) -> None:
         """Run a yaml simulation and test for proper execution.
@@ -73,9 +77,8 @@ class TestConfigurationExamples(TestCase):
                 Path to the yaml configuration file.
         """
 
-        with patch('hermespy.simulation.Simulation.num_samples', spec=property) as num_samples, patch('hermespy.simulation.Simulation.num_actors', spec=property) as num_actors, patch('sys.stdout') as stdout, patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure') as figure:
+        with patch.object(MonteCarlo, '__init__', new=init_mock), patch('sys.stdout'), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
 
-            num_samples.return_value = 1
             hermes([path, '-o', self.tempdir.name])
     
     def test_chirp_fsk_lora(self) -> None:

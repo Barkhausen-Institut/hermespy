@@ -127,7 +127,10 @@ class TestRappPowerAmplifier(unittest.TestCase):
         """Smoothness factor property setter should raise ValueError on arguments smaller than one."""
 
         with self.assertRaises(ValueError):
-            self.pa.smoothness_factor = 0.5
+            self.pa.smoothness_factor = 0.
+            
+        with self.assertRaises(ValueError):
+            self.pa.smoothness_factor = -1.
 
         try:
             self.pa.smoothness_factor = 1.0

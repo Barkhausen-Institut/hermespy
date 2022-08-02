@@ -200,3 +200,13 @@ class FMCW(RadarWaveform):
     def __frame_prototype(self) -> np.ndarray:
 
         return np.tile(self.__chirp_prototype(), self.num_chirps)
+
+    @property
+    def num_frame_samples(self) -> None:
+        """Number of samples generated per FMCW frame.
+        
+        Returns:
+            The number of samples.
+        """
+        
+        return int(self.bandwidth / self.slope * self.sampling_rate) * self.num_chirps

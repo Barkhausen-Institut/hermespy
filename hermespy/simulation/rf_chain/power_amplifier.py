@@ -296,7 +296,7 @@ class RappPowerAmplifier(PowerAmplifier):
                 PowerAmplifier base class initialization arguments.
         """
 
-        self.__smoothness_factor = smoothness_factor
+        self.smoothness_factor = smoothness_factor
 
         # Initialize base class
         PowerAmplifier.__init__(self, **kwargs)
@@ -320,15 +320,15 @@ class RappPowerAmplifier(PowerAmplifier):
     def smoothness_factor(self, value: float) -> None:
         """Set smoothness factor of the amplification saturation characteristics."""
 
-        if value < 1.:
-            raise ValueError("Smoothness factor must be greater or equal to one.")
+        if value <= 0.:
+            raise ValueError("Smoothness factor must be greater than zero.")
 
         self.__smoothness_factor = value
 
     def model(self, input_signal: np.ndarray) -> np.ndarray:
 
         p = self.smoothness_factor
-        gain = (1 + (np.abs(input_signal) / self.saturation_amplitude) ** (2 * p)) ** (-1 / 2 / p)
+        gain = (1 + (np.abs(input_signal) / self.saturation_amplitude) ** (2 * p)) ** (-1 / (2 * p))
 
         return input_signal * gain
 

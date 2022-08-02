@@ -21,7 +21,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestPskQamMatchedFilterJcas(TestCase):
+class TestSCMatchedFilterJcas(TestCase):
     """Test matched filter sensing for psk/qam waveforms."""
     
     def setUp(self) -> None:
