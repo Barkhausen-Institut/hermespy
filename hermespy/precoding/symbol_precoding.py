@@ -44,7 +44,7 @@ class SymbolPrecoder(Precoder, ABC):
 
         Args:
             
-            symbols (Symbols):
+            symbols (StatedSymbols):
                 Symbols to be encoded.
 
         Returns: Encoded symbols.

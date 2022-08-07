@@ -15,7 +15,7 @@ matlab_env/
 *.code-workspace
 
 # python-specific
-
+*.so
 *.pyc
 .python-version
 

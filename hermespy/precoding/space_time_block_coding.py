@@ -10,9 +10,9 @@ from typing import Type, Tuple
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
-from hermespy.core.channel_state_information import ChannelStateInformation
 
 from hermespy.core.factory import Serializable
+from hermespy.modem import StatedSymbols
 from.ratio_combining import MaximumRatioCombining
 
 __author__ = "Tobias Kronauer"
@@ -38,84 +38,80 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
 
         MaximumRatioCombining.__init__(self)
 
-    def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
+    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
         """Encode data into multiple antennas with space-time/frequency block codes
 
         Currently STBCs with 2 or 4 transmit antennas are supported,
         following 3GPP TS 36.211, Sec, 6.3.3.3)
 
         Args:
-            symbol_stream(np.array): Input signal with K symbols.
+            symbols (StatedSymbols): Input signal featuring :math:`K` blocks.
 
-        Returns:
-            output (np.array): Encoded data with size N_tx x K symbols
+        Returns: Encoded data with size :math:`N_tx \\times K` symbols
         """
+        
+        if symbols.num_streams != 1:
+            raise ValueError("Space-Time block codings require a single symbol input stream")
 
-        number_of_symbols = symbol_stream.shape[1]
         num_tx_streams = self.required_num_output_streams
-        input_data = symbol_stream[0, :]
+        input_data = symbols.raw[0, :, :]
 
         if num_tx_streams == 2:
             
-            if number_of_symbols % 2 != 0:
+            if symbols.num_blocks % 2 != 0:
                 raise ValueError("Alamouti encoding must contain an even amount of data symbols")
         
-            output = np.empty((2, number_of_symbols), dtype=complex)
-            output[0, :] = input_data
-            output[1, 0::2] = -input_data[1::2].conj()
-            output[1, 1::2] = input_data[0::2].conj()
+            output = np.empty((2, symbols.num_blocks, symbols.num_symbols), dtype=complex)
+            output[0, :, :] = input_data
+            output[1, 0::2, :] = -input_data[1::2, :].conj()
+            output[1, 1::2, :] = input_data[0::2, :].conj()
 
         elif num_tx_streams == 4:
-            output = np.empty((4, number_of_symbols), dtype=complex)
+            
+            output = np.empty((4, symbols.num_blocks, symbols.num_symbols), dtype=complex)
 
-            idx0 = np.arange(0, number_of_symbols, 4)
+            idx0 = np.arange(0, symbols.num_blocks, 4)
             idx1 = idx0 + 1
             idx2 = idx0 + 2
             idx3 = idx0 + 3
 
-            output[0, idx0] = input_data[idx0]
-            output[0, idx1] = input_data[idx1]
-            output[1, idx2] = input_data[idx2]
-            output[1, idx3] = input_data[idx3]
-            output[2, idx0] = -np.conj(input_data[idx1])
-            output[2, idx1] = np.conj(input_data[idx0])
-            output[3, idx2] = -np.conj(input_data[idx3])
-            output[3, idx3] = np.conj(input_data[idx2])
+            output[0, idx0, :] = input_data[idx0, :]
+            output[0, idx1, :] = input_data[idx1, :]
+            output[1, idx2, :] = input_data[idx2, :]
+            output[1, idx3, :] = input_data[idx3, :]
+            output[2, idx0, :] = -np.conj(input_data[idx1, :])
+            output[2, idx1, :] = np.conj(input_data[idx0, :])
+            output[3, idx2, :] = -np.conj(input_data[idx3, :])
+            output[3, idx3, :] = np.conj(input_data[idx2, :])
 
             output = output / np.sqrt(2)
         else:
             raise ValueError(f"Number of transmit streams ({num_tx_streams}) "
                              "not supported in space-time/frequency code")
 
-        return output
+        state = np.ones((output.shape[0], 1, output.shape[1], output.shape[2]), dtype=complex)
+        return StatedSymbols(output, state)
 
     def decode(self,
-               symbol_streams: np.ndarray,
-               stream_responses: np.ndarray,
-               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+               symbols: StatedSymbols) -> StatedSymbols:
 
-        num_rx_streams = symbol_streams.shape[0]
+        if symbols.num_streams == 2:
+            return self.__decode_stbc_2_rx_antennas(symbols)
 
-        if num_rx_streams == 2:
-            return self.__decode_stbc_2_rx_antennas(symbol_streams, stream_responses, stream_noises)
+        if symbols.num_streams == 4:
+            return self.__decode_stbc_4_rx_antennas(symbols)
 
-        if num_rx_streams == 4:
-            return self.__decode_stbc_4_rx_antennas(symbol_streams, stream_responses, stream_noises)
-
-        raise ValueError(f"Number of receive streams ({num_rx_streams}) "
+        raise ValueError(f"Number of receive streams ({symbols.num_streams}) "
                          "not supported in space-time/frequency code")
 
-    def __decode_stbc_2_rx_antennas(self,
-                                    symbol_streams: np.ndarray,
-                                    channel: ChannelStateInformation,
-                                    stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def __decode_stbc_2_rx_antennas(self, symbols: StatedSymbols) -> StatedSymbols:
         """Decode data for STBC with 2 antenna streams
 
         Received signal with equal noise power is assumed, the decoded signal has same noise level as input.
         If more than 2 receive antennas are employed, then MRC is applied on the STBC decoding output of all antennas.
 
         Args:
-            symbol_streams(np.ndarray): Input signal with N_rx x N symbols.
+            symbols (StatedSymbols): Input signal with N_rx x N symbols.
             stream_responses(np.ndarray): Channel estimation with N_rx x N_tx x N symbols.
 
         Returns:
@@ -124,24 +120,26 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
                 channel_estimation_out: updated channel estimation with size 1 x N.
         """
         
-        if symbol_streams.shape[1] % 2 != 0:
-            raise ValueError("Alamouti decoding must contain an even amount of data symbols")
+        if symbols.num_blocks % 2 != 0:
+            raise ValueError("Alamouti decoding must contain an even amount of data symbols blocks")
         
         # The considered channel is the channel mean over the duration of two symbols,
-        # ince the Alamouti scheme assumes a coherent channel over this duration
-        channel_state = np.mean(np.reshape(channel.state[0, :2, :, 0], (2, -1, 2)), -1, keepdims=False)
+        # since the Alamouti scheme assumes a coherent channel over this duration
+        # channel_state = np.mean(np.reshape(symbols.state[0, :2, :, 0], (2, -1, 2)), -1, keepdims=False)
         # Alternatively: channel_state = channel.state[0, :2, 0::2, 0]
+
+        channel_state = symbols.states[0, :2, :, :]
+        weight_norms = np.sum(np.abs(channel_state) ** 2, axis=0, keepdims=False)
         
-        # Curiously, only the signal arriving at the first antenna is relevant
-        # (But the channel state at the second antenna is still required)
-        symbols = symbol_streams[0, :]
+        # Only the signal arriving at the first antenna is relevant
         weight_norms = np.sum(np.abs(channel_state) ** 2, axis=0, keepdims=False)
 
-        decoded_symbols = np.empty(len(symbols), dtype=complex)
-        decoded_symbols[0::2] = (channel_state[0].conj() * symbols[0::2] + channel_state[1] * symbols[1::2].conj()) / weight_norms
-        decoded_symbols[1::2] = (channel_state[0].conj() * symbols[1::2] - channel_state[1] * symbols[0::2].conj()) / weight_norms
+        decoded_symbols = np.empty((symbols.num_blocks, symbols.num_symbols), dtype=complex)
+        decoded_symbols[0::2, :] = (channel_state[0, 0::2, :].conj() * symbols.raw[0, 0::2, :] + channel_state[1, 1::2, :] * symbols.raw[0, 1::2, :].conj())
+        decoded_symbols[1::2, :] = (channel_state[0, 1::2, :].conj() * symbols.raw[0, 1::2, :] - channel_state[1, 0::2, :] * symbols.raw[0, 0::2, :].conj())
+        decoded_symbols /= weight_norms
 
-        return decoded_symbols[np.newaxis, :], channel, stream_noises
+        return StatedSymbols(decoded_symbols[np.newaxis, :, :], np.ones((1, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex))
 
     def __decode_stbc_4_rx_antennas(self,
                                     input_data: np.ndarray,
