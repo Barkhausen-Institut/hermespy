@@ -8,13 +8,15 @@ Communication Waveform Base
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil, floor
-from typing import Generic, TYPE_CHECKING, Optional, Type, TypeVar, List
+from sre_parse import State
+from typing import Generic, TYPE_CHECKING, Optional, Tuple, Type, TypeVar, List
 
 import numpy as np
+from numba import jit
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node, ScalarNode
 
 from hermespy.core import ChannelStateInformation, Serializable, Signal
-from .symbols import Symbols
+from .symbols import StatedSymbols, Symbols
 
 if TYPE_CHECKING:
     from hermespy.modem import Modem
@@ -177,7 +179,7 @@ class ChannelEstimation(Generic[WaveformType], ABC):
         self.__waveform_generator = value
 
     def estimate_channel(self,
-                         symbols: Symbols) -> ChannelStateInformation:
+                         symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
         """Estimate the wireless channel of a received communication frame.
 
         Args:
@@ -185,13 +187,12 @@ class ChannelEstimation(Generic[WaveformType], ABC):
             symbols (Symbols):
                 Demodulated communication symbols.
 
-        Returns:
-
-            The estimated channel state.
+        Returns: The symbols and their respective channel states.
         """
 
-        return ChannelStateInformation.Ideal(symbols.num_symbols, symbols.num_streams)
-    
+        state = np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)
+        return StatedSymbols(symbols.raw, state), state
+
 
 class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformType]):
     """Channel estimation accessing the ideal channel state informaion.
@@ -256,25 +257,67 @@ class ChannelEqualization(Generic[WaveformType], ABC):
 
         self.__waveform_generator = value
 
-    def equalize_channel(self,
-                         frame: Symbols,
-                         csi: ChannelStateInformation) -> Symbols:
+    def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
         """Equalize the wireless channel of a received communication frame.
 
         Args:
 
-            frame (Symbols):
-                Symbols of the received communication frame.
+            frame (Symbols): Symbols and channel state of the received communication frame.
 
-            csi (ChannelStateInformation):
-                Channel state estimation.
-
-        Returns: The equalize symbols
+        Returns: The equalize symbols.
         """
         
         # The default routine performs no equalization
-        return frame
+        return stated_symbols
+    
 
+class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[WaveformType], Serializable, ):
+    """Zero-Forcing channel equalization for arbitrary waveforms."""
+    
+    yaml_tag = u'ZeroForcing'
+    """YAML serialization tag"""
+
+    def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
+        
+        equalized_raw_symbols = ZeroForcingChannelEqualization.__equalize_channel(stated_symbols.raw, stated_symbols.states)
+        return Symbols(equalized_raw_symbols)
+        
+        """# If no information about transmitted streams is available, assume orthogonal channels
+        if stated_symbols.num_transmit_streams < 2:
+            
+            equalized_symbols = Symbols(
+            return equalized_symbols
+
+        # Default behaviour for MIMO systems is to use the pseudo-inverse for equalization
+        equalized_symbols = np.empty((stated_symbols.num_streams, stated_symbols.num_blocks, stated_symbols.num_symbols), dtype=complex)
+        for b, s in product(range(stated_symbols.num_blocks, stated_symbols.num_symbols)):
+            
+            equalization = np.linalg.pinv(stated_symbols.state[:, :, b, s])
+            equalized_symbols[:, s] = equalization @ symbols
+            
+        return Symbols(equalized_symbols[:, np.newaxis, :])"""
+    
+    @staticmethod
+    @jit(nopython=True, parallel=True)
+    def __equalize_channel(symbols: np.ndarray, states: np.ndarray) -> np.ndarray:
+
+        # If no information about transmitted streams is available, assume orthogonal channels
+        if symbols.shape[0] < 2:
+            
+            equalized_symbols = symbols / states[:, 0, :, :]
+            
+        else:
+            
+            equalized_symbols = np.empty(symbols.shape, dtype=np.complex128)
+            
+            for b in range(symbols.shape[1]):
+                for s in range(symbols.shape[2]):
+                    
+                    equalization = np.linalg.pinv(states[:, :, b, s])
+                    equalized_symbols[:, b, s] = np.dot(equalization, symbols[:, b, s])
+
+        return equalized_symbols
+        
 
 class WaveformGenerator(ABC):
     """Implements an abstract waveform generator.
@@ -531,15 +574,13 @@ class WaveformGenerator(ABC):
         """
         ...  # pragma no cover
         
-    def estimate_channel(self, frame: Symbols) -> ChannelStateInformation:
+    def estimate_channel(self, frame: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
         
         return self.channel_estimation.estimate_channel(frame)
     
-    def equalize_symbols(self,
-                         frame: Symbols,
-                         channel_state: ChannelStateInformation) -> Symbols:
+    def equalize_symbols(self, symbols: StatedSymbols) -> Symbols:
         
-        return self.channel_equalization.equalize_channel(frame, channel_state)
+        return self.channel_equalization.equalize_channel(symbols)
 
     @property
     @abstractmethod

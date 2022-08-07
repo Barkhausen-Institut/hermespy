@@ -19,11 +19,13 @@ from scipy.fft import fft, fftshift, ifft, ifftshift
 from scipy.interpolate import griddata
 from scipy.signal import find_peaks
 
+from hermespy.modem.symbols import StatedSymbols
+
 from ..core.factory import Serializable
 from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from ..core.signal_model import Signal
 from .modem import Symbols
-from .waveform_generator import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, PilotWaveformGenerator, Synchronization, WaveformGenerator
+from .waveform_generator import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, PilotWaveformGenerator, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 
@@ -1484,10 +1486,10 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         self.reference_position = reference_position
         IdealChannelEstimation.__init__(self, *args, **kwargs)
     
-    def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
+    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
         
-        csi = self._csi() #[:, :, :self.waveform_generator.samples_in_frame:self.waveform_generator.num_subcarriers]
-        return csi.to_frequency_selectivity(self.waveform_generator.num_subcarriers)
+        csi = self._csi().to_frequency_selectivity(self.waveform_generator.num_subcarriers)
+        return StatedSymbols(symbols.raw, csi.state[:, :, :symbols.num_blocks, :]), csi
 
 
 class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform]):
@@ -1513,7 +1515,7 @@ class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform]):
         # ToDo: Check with group what to do about missing values outside the convex hull
         interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method='nearest')
         channel_estimation[0, 0, holes[1], holes[0]] = interpolated_holes
-        return ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, channel_estimation)
+        return StatedSymbols(symbols.raw, channel_estimation), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, channel_estimation)
 
 
 class OFDMChannelEqualization(ChannelEqualization[OFDMWaveform], ABC):
@@ -1531,36 +1533,11 @@ class OFDMChannelEqualization(ChannelEqualization[OFDMWaveform], ABC):
         ChannelEqualization.__init__(self, waveform_generator)
 
 
-class OFDMZeroForcingChannelEqualization(Serializable, OFDMChannelEqualization, ABC):
-    """Zero-Forcing Channel estimation for Psk Qam waveforms."""
+class OFDMZeroForcingChannelEqualization(ZeroForcingChannelEqualization[OFDMWaveform]):
+    """Zero-Forcing channel equalization for OFDM waveforms."""
     
     yaml_tag = u'OFDM-ZF'
     """YAML serialization tag"""
-
-    def __init__(self,
-                 waveform_generator: Optional[OFDMWaveform] = None) -> None:
-        """
-        Args:
-
-            waveform_generator (WaveformGenerator, optional):
-                The waveform generator this equalization routine is attached to.
-        """
-
-        OFDMChannelEqualization.__init__(self, waveform_generator)
-        
-    def equalize_channel(self,
-                         frame: Symbols,
-                         csi: ChannelStateInformation) -> Signal:
-
-        # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
-        equalized_symbols = np.empty(frame.raw.shape, dtype=complex)
-        for b, (symbol_block, state_block) in enumerate(zip(frame.raw.transpose((1, 2, 0)), csi.state.transpose((2, 3, 1, 0)))):
-            for s, (symbol, state) in enumerate(zip(symbol_block, state_block)):
-                
-                equalization = np.linalg.pinv(state)
-                equalized_symbols[:, b, s] = symbol @ equalization
-            
-        return Symbols(equalized_symbols)
 
 
 class OFDMMinimumMeanSquareChannelEqualization(Serializable, OFDMChannelEqualization, ABC):

@@ -9,7 +9,6 @@ from numpy.random import default_rng
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
 
-from hermespy.core.channel_state_information import ChannelStateInformation
 from hermespy.modem import FilteredSingleCarrierWaveform, Symbols, RaisedCosineWaveform, RootRaisedCosineWaveform, RectangularWaveform, FMCWWaveform, SingleCarrierCorrelationSynchronization
 from hermespy.modem.waveform_single_carrier import SingleCarrierLeastSquaresChannelEstimation
 
@@ -112,7 +111,7 @@ class FilteredSingleCarrierWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a symbol stream should yield identical symbols"""
 
-        expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, (1, 1, self.waveform.symbols_per_frame))))
+        expected_symbols = Symbols(np.exp(2j * self.rng.uniform(0, pi, (1, self.waveform.symbols_per_frame, 1))))
 
         baseband_signal = self.waveform.modulate(expected_symbols)
         symbols = self.waveform.demodulate(baseband_signal.samples[0, :])
@@ -317,7 +316,7 @@ class TestSingleCarrierChannelEstimation(TestCase):
         estimation = SingleCarrierLeastSquaresChannelEstimation()
         self.waveform.channel_estimation = estimation
         
-        csi = estimation.estimate_channel(self.symbols)
+        stated_symbols, csi = estimation.estimate_channel(self.symbols)
         self.assertEqual(self.waveform.symbols_per_frame, csi.num_samples)
 
 
@@ -347,12 +346,12 @@ class TestRootRaisedCosineWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Test the successful modulation and demodulation of data symbols"""
 
-        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 1, self.waveform.symbols_per_frame))))
+        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, self.waveform.symbols_per_frame, 1))))
 
         waveform = self.waveform.modulate(expected_symbols)
-        symboles = self.waveform.demodulate(waveform.samples[0, :])
+        symbols = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
 
 
 class TestRaisedCosineWaveform(TestCase):
@@ -413,7 +412,7 @@ class TestRectangularWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Test the successful modulation and demodulation of data symbols"""
 
-        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 1, self.waveform.symbols_per_frame))))
+        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, self.waveform.symbols_per_frame, 1))))
 
         waveform = self.waveform.modulate(expected_symbols)
         symboles = self.waveform.demodulate(waveform.samples[0, :])
@@ -445,7 +444,7 @@ class TestFMCWWaveform(TestCase):
     def test_modulate_demodulate(self) -> None:
         """Test the successful modulation and demodulation of data symbols"""
 
-        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 1, self.waveform.symbols_per_frame))))
+        expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, self.waveform.symbols_per_frame, 1))))
 
         waveform = self.waveform.modulate(expected_symbols)
         symboles = self.waveform.demodulate(waveform.samples[0, :])

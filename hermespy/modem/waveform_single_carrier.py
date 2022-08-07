@@ -8,7 +8,8 @@ Filtered Single Carrier Waveforms
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Tuple, Optional, Set
+from itertools import product
+from typing import Any, Optional, Set
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,9 +17,9 @@ import numpy as np
 from hermespy.core import ChannelStateInformation, Executable, FloatingError, Serializable, Signal
 from hermespy.core.channel_state_information import ChannelStateFormat
 from .waveform_generator import ConfigurablePilotWaveform, WaveformGenerator, Synchronization, \
-    ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation
+    ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
-from .symbols import Symbols
+from .symbols import StatedSymbols, Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
 
 __author__ = "Andre Noll Barreto"
@@ -251,12 +252,12 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         payload_symbol_slice[self._data_symbol_indices] = data_symbols
         payload_symbol_slice[self._pilot_symbol_indices] = pilot_symbols[self.num_preamble_symbols:self.num_preamble_symbols + self._num_pilot_symbols:]
         
-        return Symbols(symbols[np.newaxis, np.newaxis, :])
+        return Symbols(symbols[np.newaxis, :, np.newaxis])
 
     def unmap(self, symbols: Symbols) -> np.ndarray:
         
-        payload = symbols.raw[:, :, self.num_preamble_symbols:self.num_preamble_symbols + self._num_payload_symbols].flatten()
-        data_symbols = payload[self._data_symbol_indices]
+        payload = symbols.raw[:, self.num_preamble_symbols:self.num_preamble_symbols + self._num_payload_symbols, :]
+        data_symbols = payload[:, self._data_symbol_indices, :].flatten()
         
         return self.__mapping.detect_bits(data_symbols)
 
@@ -280,14 +281,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         num_symbols = self.num_preamble_symbols + self.num_postamble_symbols + self._num_payload_symbols
         symbols = filtered_signal[filter_delay:filter_delay + num_symbols * self.oversampling_factor:self.oversampling_factor]
         
-        return Symbols(symbols[np.newaxis, np.newaxis, :])
-
-    def _equalize(self,
-                  data_symbols: np.ndarray,
-                  csi: ChannelStateInformation,
-                  noise: np.ndarray) -> np.ndarray:
-
-        return data_symbols
+        return Symbols(symbols[np.newaxis, :, np.newaxis])
 
     def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
         """Equalize the received data symbols
@@ -647,7 +641,7 @@ class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWave
         
 class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleCarrierWaveform]):
     
-    def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
+    def estimate_channel(self, symbols: Symbols) -> StatedSymbols:
         
         filter_characteristics = self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
         csi = self._csi().state[:, :, :, [0]]
@@ -655,7 +649,7 @@ class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleC
         
         delay = self.waveform_generator._filter_delay
         demodulated_state = filtered_state[:, :, delay:delay+self.waveform_generator.symbols_per_frame*self.waveform_generator.oversampling_factor:self.waveform_generator.oversampling_factor, [0]]
-        return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, demodulated_state)
+        return StatedSymbols(symbols.raw, demodulated_state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, demodulated_state)
 
 class SingleCarrierLeastSquaresChannelEstimation(Serializable, SingleCarrierChannelEstimation):
     """Least-Squares channel estimation for Psk Qam waveforms."""
@@ -675,7 +669,7 @@ class SingleCarrierLeastSquaresChannelEstimation(Serializable, SingleCarrierChan
 
         SingleCarrierChannelEstimation.__init__(self, waveform_generator)
 
-    def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
+    def estimate_channel(self, symbols: Symbols) -> StatedSymbols:
 
         if self.waveform_generator is None:
             raise FloatingError("Error trying to fetch the pilot section of a floating channel estimator")
@@ -689,9 +683,9 @@ class SingleCarrierLeastSquaresChannelEstimation(Serializable, SingleCarrierChan
         transmitted_reference_symbols = self.waveform_generator.pilot_symbols(num_preamble_symbols + num_pilot_symbols + num_postamble_symbols)
 
         # Extract reference symbols
-        preamble_symbols = symbols.raw[:, 0, :num_preamble_symbols]
-        pilot_symbols = symbols.raw[:, 0, num_preamble_symbols:num_preamble_symbols + num_payload_symbols][:, pilot_symbol_indices]
-        postamble_symbols = symbols.raw[:, 0, num_preamble_symbols + num_payload_symbols:]
+        preamble_symbols = symbols.raw[:, :num_preamble_symbols, 0]
+        pilot_symbols = symbols.raw[:, num_preamble_symbols:num_preamble_symbols + num_payload_symbols, 0][:, pilot_symbol_indices]
+        postamble_symbols = symbols.raw[:, num_preamble_symbols + num_payload_symbols:, 0]
         received_reference_symbols = np.concatenate((preamble_symbols, pilot_symbols, postamble_symbols), axis=1)
         
         # Estimate the channel over all reference symbols
@@ -704,11 +698,11 @@ class SingleCarrierLeastSquaresChannelEstimation(Serializable, SingleCarrierChan
         
         # Interpolate to the whole channel estimation
         channel_estimation_indices = np.arange(self.waveform_generator.symbols_per_frame)
-        channel_estimation = np.empty((symbols.num_streams, symbols.num_symbols), dtype=complex)
+        channel_estimation = np.empty((symbols.num_streams, symbols.num_blocks), dtype=complex)
         for s, stems in enumerate(channel_estimation_stems):
             channel_estimation[s, :] = np.interp(channel_estimation_indices, channel_estimation_stem_indices, stems)
 
-        return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, channel_estimation[:, np.newaxis, :, np.newaxis])
+        return StatedSymbols(symbols.raw, channel_estimation[:, np.newaxis, :, np.newaxis]), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, channel_estimation[:, np.newaxis, :, np.newaxis])
 
 
 class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrierWaveform], ABC):
@@ -726,42 +720,12 @@ class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrier
         ChannelEqualization.__init__(self, waveform_generator)
 
 
-class SingleCarrierZeroForcingChannelEqualization(Serializable, SingleCarrierChannelEqualization, ABC):
+class SingleCarrierZeroForcingChannelEqualization(ZeroForcingChannelEqualization[FilteredSingleCarrierWaveform]):
     """Zero-Forcing Channel estimation for Psk Qam waveforms."""
     
     yaml_tag = u'SC-ZF'
     """YAML serialization tag"""
 
-    def __init__(self,
-                 waveform_generator: Optional[FilteredSingleCarrierWaveform] = None) -> None:
-        """
-        Args:
-
-            waveform_generator (WaveformGenerator, optional):
-                The waveform generator this equalization routine is attached to.
-        """
-
-        SingleCarrierChannelEqualization.__init__(self, waveform_generator)
-
-    def equalize_channel(self,
-                         frame: Symbols,
-                         csi: ChannelStateInformation) -> Symbols:
-        
-        # If no information about transmitted streams is available, assume orthogonal channels
-        if csi.num_transmit_streams < 2:
-            
-            equalized_symbols = Symbols(frame.raw / csi.state[:, 0, :frame.num_symbols, 0])
-            return equalized_symbols
-
-        # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
-        equalized_symbols = np.empty((frame.num_streams, frame.num_symbols), dtype=complex)
-        for s, (symbols, state) in enumerate(zip(frame.raw[:, 0, :].T, csi.state[:, :, :frame.num_symbols, 0].transpose((2, 0, 1)))):
-            
-            equalization = np.linalg.pinv(state)
-            equalized_symbols[:, s] = equalization @ symbols
-            
-        return Symbols(equalized_symbols[:, np.newaxis, :])
-            
 
 class SingleCarrierMinimumMeanSquareChannelEqualization(Serializable, SingleCarrierChannelEqualization, ABC):
     """Minimum-Mean-Square Channel estimation for Psk Qam waveforms."""

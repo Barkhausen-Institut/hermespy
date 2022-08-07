@@ -7,7 +7,7 @@ from hermespy.core import Scenario, IdealAntenna, UniformArray
 from hermespy.modem.waveform_generator_chirp_fsk import ChirpFSKCorrelationSynchronization, ChirpFSKWaveform
 from hermespy.modem.waveform_generator_ofdm import OFDMIdealChannelEstimation, OFDMZeroForcingChannelEqualization
 from hermespy.simulation import SimulatedDevice
-from hermespy.modem import Modem, BitErrorEvaluator, RootRaisedCosineWaveform, \
+from hermespy.modem import Modem, BitErrorEvaluator, RootRaisedCosineWaveform, ZeroForcingChannelEqualization, \
     SingleCarrierCorrelationSynchronization, SingleCarrierZeroForcingChannelEqualization, SingleCarrierIdealChannelEstimation, \
     ChirpFSKWaveform, ChirpFSKCorrelationSynchronization, \
     OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
