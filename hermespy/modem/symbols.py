@@ -308,4 +308,70 @@ class Symbols(object):
 
 class StatedSymbols(Symbols):
     """A time-series of communication symbols and channel states located somewhere on the complex plane."""
-    ...
+
+    __states: np.ndarray  # Symbol states, four-dimensional array
+    
+    def __init__(self,
+                 symbols: Optional[Union[Iterable, np.ndarray]],
+                 states: Optional[np.ndarray]) -> None:
+        """
+        Args:
+
+            symbols (Union[Iterable, numpy.ndarray]):
+                A three-dimensional array of complex-valued communication symbols.
+                The first dimension denotes the number of streams,
+                the second dimension the number of symbol blocks per stream,
+                the the dimension the number of symbols per block.
+                
+            states (np.ndarray):
+                Four-dimensional numpy array with the first two dimensions indicating the
+                MIMO receive and transmit streams, respectively and the last two dimensions
+                indicating the number of symbol blocks and symbols per block.
+        """
+        
+        Symbols.__init__(self, symbols)
+        self.states = states
+    
+    @property
+    def states(self) -> np.ndarray:
+        """Symbol state information.
+        
+        Four-dimensional numpy array with the first two dimensions indicating the
+        MIMO receive and transmit streams, respectively and the last two dimensions
+        indicating the number of symbol blocks and symbols per block.
+        
+        Raises:
+        
+            ValueError: If the state array is not four-dimensional.
+            ValueError: If the state dimensions don't match the symbol dimensions.
+        """
+        
+        return self.__states
+    
+    @states.setter
+    def states(self, value: np.ndarray) -> None:
+        
+        if value.ndim != 4:
+            raise ValueError("State must be a four-dimensional numpy array")
+        
+        if value.shape[0] != self.num_streams:
+            raise ValueError(f"Number of received streams don't match, expected {self.num_streams} instead of {value.shape[0]}")
+    
+        
+        if value.shape[2] != self.num_blocks:
+            raise ValueError(f"Number of received blocks don't match, expected {self.num_blocks} instead of {value.shape[2]}")
+        
+        
+        if value.shape[3] != self.num_symbols:
+            raise ValueError(f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}")
+    
+        self.__states = value.copy()
+    
+    @property
+    def num_transmit_streams(self) -> int:
+        """Number of impinging transmit streams.
+        
+        Returns: Number of streams.
+        """
+        
+        return self.__states.shape[1]

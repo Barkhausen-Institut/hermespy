@@ -76,7 +76,7 @@ class Precoder(ABC):
             int:
                 The number of symbol streams.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
@@ -87,7 +87,7 @@ class Precoder(ABC):
             int:
                 The number of symbol streams.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     def required_num_output_streams(self) -> int:
