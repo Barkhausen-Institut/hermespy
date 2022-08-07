@@ -23,6 +23,8 @@ import numpy as np
 from scipy.constants import pi
 
 from hermespy.core import Executable, FloatingError, IdealAntenna,  Operator, Receiver, Signal, Transmitter, UniformArray
+from hermespy.precoding import ReceiveStreamDecoder, TransmitStreamEncoder
+from hermespy.precoding.precoding import Precoding
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -85,7 +87,7 @@ class BeamformerBase(ABC):
         self.__operator = value
     
     
-class TransmitBeamformer(BeamformerBase, ABC):
+class TransmitBeamformer(BeamformerBase, TransmitStreamEncoder, ABC):
     """Base class for beam steering precodings during signal transmissions."""
     
     __focus_points: np.ndarray
@@ -134,6 +136,19 @@ class TransmitBeamformer(BeamformerBase, ABC):
             Number of focus angles.
         """
         ...  # pragma no cover
+        
+    def encode_streams(self, streams: Signal) -> Signal:
+
+        if streams.num_streams != self.num_transmit_input_streams:
+            raise ValueError("Stream encoding configuration invalid, number of provided streams don't match the beamformer requirements")
+
+        return self.transmit(streams)
+    
+    @TransmitStreamEncoder.precoding.setter
+    def precoding(self, precoding: Precoding) -> None:
+        
+        self.operator = precoding.modem
+        TransmitStreamEncoder.precoding.fset(self, precoding)
 
     @abstractmethod
     def _encode(self,
@@ -223,7 +238,7 @@ class TransmitBeamformer(BeamformerBase, ABC):
         return Signal(steered_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency)
         
     
-class ReceiveBeamformer(ABC):
+class ReceiveBeamformer(ReceiveStreamDecoder, ABC):
     """Base class for beam steering precodings during signal receptions.
     
     The beamformer is characterised by its required number of input streams :math:`N`,
@@ -292,6 +307,19 @@ class ReceiveBeamformer(ABC):
             Number of focus angles :math:`F`.
         """
         ...  # pragma no cover
+        
+    def decode_streams(self, streams: Signal) -> Signal:
+
+        if streams.num_streams != self.num_receive_input_streams:
+            raise ValueError("Stream decoding configuration invalid, number of provided streams don't match the beamformer requirements")
+
+        return self.receive(streams)
+    
+    @ReceiveStreamDecoder.precoding.setter
+    def precoding(self, precoding: Precoding) -> None:
+        
+        self.operator = precoding.modem
+        ReceiveStreamDecoder.precoding.fset(self, precoding)
 
     @abstractmethod
     def _decode(self,

@@ -11,14 +11,16 @@ binding to both the transmitter and receiver slot of :class:`hermespy.core.devic
 In other words, they both transmit and receive complex waveforms over the devices.
 It acts as a managing container for 5 signal processing step abstractions:
 
-================================ =======================================
-Processing Step                  Description
-================================ =======================================
-:class:`.BitsSource`             Source of data bits to be transmitted
-:class:`.EncoderManager`         Channel coding pipeline configuration
-:class:`.WaveformGenerator`      Communication waveform configuration
-:class:`.StreamCoding`           Precoding configuration
-================================ =======================================
+================================================= =======================================
+Processing Step                                   Description
+================================================= =======================================
+:class:`.BitsSource`                              Source of data bits to be transmitted
+:class:`hermespy.fec.EncoderManager`              Forward error correction configuration
+:class:`.WaveformGenerator`                       Communication waveform configuration
+:class:`hermespy.precoding.SymbolPrecoding`       Symbol precoding configuration
+:class:`hermespy.precoding.TransmitStreamCoding`  Transmit MIMO configuration
+:class:`hermespy.precoding.ReceiveStreamCoding`   Receive MIMO configuration
+================================================= =======================================
 
 .. mermaid::
    :caption: Modem Signal Processing Chain
@@ -201,13 +203,13 @@ from hermespy.channel import ChannelStateInformation
 from hermespy.fec import EncoderManager, Encoder
 from hermespy.core import DuplexOperator, RandomNode, Transmission, Reception, Signal
 from hermespy.core.factory import SerializableArray
-from hermespy.precoding import SymbolPrecoding, SymbolPrecoder
+from hermespy.precoding import SymbolPrecoding, SymbolPrecoder, ReceiveStreamCoding, TransmitStreamCoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import Symbols
 from .waveform_generator import WaveformGenerator
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -337,6 +339,9 @@ class CommunicationReceptionFrame(object):
     signal: Signal
     """Communication base-band waveform."""
     
+    decoded_signal: Signal
+    """Communication base-band waveform after MIMO stream decoding."""
+    
     symbols: Symbols
     """Received communication symbols."""
 
@@ -360,6 +365,7 @@ class CommunicationReceptionFrame(object):
 
     def __init__(self,
                  signal: Signal,
+                 decoded_signal: Signal,
                  symbols: Symbols,
                  decoded_symbols: Symbols,
                  timestamp: float,
@@ -369,6 +375,7 @@ class CommunicationReceptionFrame(object):
                  csi: ChannelStateInformation) -> None:
         
         self.signal = signal
+        self.decoded_signal = decoded_signal
         self.symbols = symbols
         self.decoded_symbols = decoded_symbols
         self.timestamp = timestamp
@@ -504,6 +511,8 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
         self.__encoder_manager = EncoderManager()
         self.__precoding = SymbolPrecoding(modem=self)
+        self.__transmit_stream_coding = TransmitStreamCoding(modem=self)
+        self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
         self.__waveform_generator = None
         self.__cached_transmission = None
         self.__cached_reception = None
@@ -565,9 +574,12 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
             # Modulate to base-band signal representation
             frame_signal = self.__modulate(encoded_symbols)
+            
+            # Apply the stream transmit coding configuration
+            encoded_frame_signal = self.__transmit_stream_coding.encode(frame_signal)
 
             # Save results
-            signal.append_samples(frame_signal)
+            signal.append_samples(encoded_frame_signal)
             frames.append(CommunicationTransmissionFrame(signal=frame_signal,
                                                          bits=data_bits,
                                                          encoded_bits=encoded_bits,
@@ -708,18 +720,21 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         frames: List[CommunicationReceptionFrame] = []
         for frame_index, frame_signal in zip(frame_start_indices, synchronized_signals):
         
+            # Apply the stream transmit decoding configuration
+            decoded_frame_signal = self.__receive_stream_coding.decode(frame_signal)
+        
             # Demodulate raw symbols for each frame independtly
-            symbols = self.__demodulate(frame_signal)
+            symbols = self.__demodulate(decoded_frame_signal)
             
             # Estimate the channel from each frame demodulation
-            channel_estimate = self.waveform_generator.estimate_channel(symbols)
-            self.__cached_channel_state = channel_estimate
+            stated_symbols, channel_estimate = self.waveform_generator.estimate_channel(symbols)
+            self.__cached_channel_state = stated_symbols.states
 
             # Decode the pre-equalization symbol precoding stage
-            decoded_symbols = self.precoding.decode(symbols)
+            decoded_symbols = self.precoding.decode(stated_symbols)
             
             # Equalize the received symbols for each frame given the estimated channel state
-            equalized_symbols = self.waveform_generator.equalize_symbols(decoded_symbols, channel_estimate)
+            equalized_symbols = self.waveform_generator.equalize_symbols(decoded_symbols)
             
             # Unmap equalized symbols to information bits
             encoded_bits = self.__unmap(equalized_symbols)
@@ -729,6 +744,7 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
             
             # Store the received information
             frames.append(CommunicationReceptionFrame(signal=frame_signal,
+                                                      decoded_signal=decoded_frame_signal,
                                                       symbols=symbols,
                                                       decoded_symbols=decoded_symbols,
                                                       timestamp=frame_index * signal.sampling_rate,
@@ -809,6 +825,24 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
 
         self.__encoder_manager = new_manager
         new_manager.modem = self
+        
+    @property
+    def transmit_stream_coding(self) -> TransmitStreamCoding:
+        """Stream MIMO coding configuration during signal transmission.
+        
+        Returns: Handle to the coding configuration.
+        """
+        
+        return self.__transmit_stream_coding
+    
+    @property
+    def receive_stream_coding(self) -> ReceiveStreamCoding:
+        """Stream MIMO coding configuration during signal reception.
+        
+        Returns: Handle to the coding configuration.
+        """
+        
+        return self.__receive_stream_coding
 
     @property
     def waveform_generator(self) -> WaveformGenerator:

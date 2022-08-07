@@ -1,7 +1,7 @@
 from .bits_source import RandomBitsSource, StreamBitsSource
 from .symbols import Symbol, Symbols, StatedSymbols
 from .modem import Modem, CommunicationReception, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame
-from .waveform_generator import WaveformGenerator, Synchronization, PilotWaveformGenerator, PilotSymbolSequence,  UniformPilotSymbolSequence, CustomPilotSymbolSequence, ConfigurablePilotWaveform
+from .waveform_generator import WaveformGenerator, Synchronization, PilotWaveformGenerator, PilotSymbolSequence,  UniformPilotSymbolSequence, CustomPilotSymbolSequence, ConfigurablePilotWaveform, ChannelEqualization, ZeroForcingChannelEqualization
 from .waveform_generator_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization,\
     ChirpFSKCorrelationSynchronization
 from .waveform_single_carrier import FilteredSingleCarrierWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierMinimumMeanSquareChannelEqualization, SingleCarrierCorrelationSynchronization, RaisedCosineWaveform, RootRaisedCosineWaveform, FMCWWaveform, RectangularWaveform, SingleCarrierIdealChannelEstimation
@@ -23,7 +23,7 @@ __all__ = [
     'RandomBitsSource', 'StreamBitsSource',
     'Symbol', 'Symbols', 'StatedSymbols',
     'Modem', 'CommunicationReception', 'CommunicationReceptionFrame', 'CommunicationTransmission', 'CommunicationTransmissionFrame',
-    'WaveformGenerator', 'Synchronization', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'ConfigurablePilotWaveform',
+    'WaveformGenerator', 'Synchronization', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'ConfigurablePilotWaveform', 'ChannelEqualization', 'ZeroForcingChannelEqualization',
     'ChirpFSKWaveform', 'ChirpFSKSynchronization', 'ChirpFSKCorrelationSynchronization',
     'FilteredSingleCarrierWaveform', 'SingleCarrierLeastSquaresChannelEstimation', 'SingleCarrierZeroForcingChannelEqualization', 'SingleCarrierMinimumMeanSquareChannelEqualization', 'SingleCarrierCorrelationSynchronization', 'RaisedCosineWaveform', 'RootRaisedCosineWaveform', 'FMCWWaveform', 'RectangularWaveform', 'SingleCarrierIdealChannelEstimation',
     'OFDMWaveform', 'PilotSection', 'SchmidlCoxPilotSection','FrameSymbolSection', 'FrameGuardSection', 'FrameResource', 'FrameElement', 'ElementType', 'OFDMCorrelationSynchronization', 'SchmidlCoxSynchronization', 'OFDMMinimumMeanSquareChannelEqualization', 'OFDMZeroForcingChannelEqualization', 'OFDMIdealChannelEstimation', 'OFDMLeastSquaresChannelEstimation'
