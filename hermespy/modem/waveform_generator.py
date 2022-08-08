@@ -297,8 +297,8 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
             
         return Symbols(equalized_symbols[:, np.newaxis, :])"""
     
-    @staticmethod
-    @jit(nopython=True, parallel=True)
+    # @staticmethod
+    # @jit(nopython=True, parallel=True)
     def __equalize_channel(symbols: np.ndarray, states: np.ndarray) -> np.ndarray:
 
         # If no information about transmitted streams is available, assume orthogonal channels

@@ -48,10 +48,12 @@ class TransmitStreamEncoder(Precoder, ABC):
         """
         ...  # pragma no cover
         
+    @property
     def num_input_streams(self) -> int:
         
         return self.num_transmit_input_streams
     
+    @property
     def num_output_streams(self) -> int:
         
         return self.num_transmit_output_streams
@@ -90,10 +92,12 @@ class ReceiveStreamDecoder(Precoder, ABC):
         """
         ...  # pragma no cover
         
+    @property
     def num_input_streams(self) -> int:
         
         return self.num_receive_output_streams
     
+    @property
     def num_output_streams(self) -> int:
         
         return self.num_input_streams
