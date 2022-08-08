@@ -547,7 +547,17 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         code_bits_per_mimo_frame = int(self.waveform_generator.bits_per_frame * self.precoding.num_input_streams)
         data_bits_per_mimo_frame = self.encoder_manager.required_num_data_bits(code_bits_per_mimo_frame)
         
-        signal = Signal.empty(self.sampling_rate, self.num_streams)
+        
+        if len(self.transmit_stream_coding) > 0:
+            num_output_streams = self.transmit_stream_coding.num_output_streams
+            
+        elif len(self.precoding) > 0:
+            num_output_streams = self.precoding.num_output_streams
+            
+        else:
+            num_output_streams = 1
+        
+        signal = Signal.empty(self.sampling_rate, num_output_streams)
         
         # Abort if no frame is to be transmitted within the current duration
         if num_mimo_frames < 1:

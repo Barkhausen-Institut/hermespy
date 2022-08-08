@@ -324,6 +324,18 @@ class Precoding(Generic[PrecoderType]):
             return 1
         
         return self.__precoders[0].num_input_streams
+    
+    @property
+    def num_output_streams(self) -> int:
+        """Number of output streams resulting from the precoding.
+        
+        Returns: Number of outputs
+        """
+        
+        if len(self.__precoders) < 1:
+            return 1
+        
+        return self.__precoders[-1].num_output_streams
 
     def __getitem__(self, index: int) -> PrecoderType:
         """Access a precoder at a given index.
