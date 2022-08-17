@@ -48,7 +48,7 @@ Install from Source
 
 Cloning the HermesPy source code and manually building / installing its package is the recommended way
 for developers who plan on extending the HermesPy source code.
-Additionally, it can also be applied by users who, for any reason, are unable to install HermesPy from
+Additionally, this mathod can also be applied by users as a fall-back who, for any reason, are unable to install HermesPy from
 the index.
 
 Before cloning, make sure to have the `LFS`_ extension to `Git`_ installed.
@@ -95,13 +95,26 @@ Executing these statements sequentially results in the following actions:
 Note that if you plan on utilizing HermesPy within an already existing Python environment,
 you may omit step one and replace `<envname>` by the title of the existing environment.
 
-**If you plan to alter the source code in any way, we recommend appending the editable flag**
+**If you plan to alter the source code in any way, we recommend installing the package as editable.**
+As a result, all combined binaries and source files will remain within the repository directory during installation.
 
-.. code-block:: bash
+.. tabs::
 
-   pip install -e .
+   .. code-tab:: batch Windows
 
-**during installation.**
+      conda create -n <envname> python=3.9
+      conda activate <envname>
+      conda install pip
+      pip install -e .[develop]
+      python -m setup develop
+
+   .. code-tab:: bash Linux
+
+      python -m venv env
+      . env/bin/activate
+      pip install -e .[develop]
+      python -m setup develop
+
 
 Install Quadriga
 ----------------
