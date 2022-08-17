@@ -53,6 +53,13 @@ setup(
             'ipywidgets',
             'scikit-build',
         ],
+        "develop": [
+            "pybind11",
+            "scikit-build",
+            "cmake",
+            "sphinx",
+            "wheel",
+        ]
     },
     zip_safe=False,
     python_requires=">=3.9",
