@@ -85,9 +85,12 @@ class TestMatchedFilterJoint(TestCase):
     
     def setUp(self) -> None:
         
+        self.rng = np.random.default_rng(42)
+        
         self.device = Mock()
         self.device.num_antennas = 1
         self.device.carrier_frequency = 0.
+        self.device._rng = self.rng
         self.waveform = MockWaveformGenerator()
         
         self.range_resolution = 10
