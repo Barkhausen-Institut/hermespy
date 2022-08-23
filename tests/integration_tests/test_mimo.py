@@ -21,25 +21,26 @@ class TestMIMOLink(TestCase):
         self.carrier_frequency = 60e9
         self.wavelength = speed_of_light / self.carrier_frequency
         
-        self.tx_device = SimulatedDevice()
+        self.tx_device = SimulatedDevice(seed=42)
         self.tx_device.position = np.array([0, 0, 0])
         self.tx_device.orientation = np.array([0, 0, 0])
         self.tx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [2, 2])
 
-        self.rx_device = SimulatedDevice()
-        self.rx_device = SimulatedDevice()
+        self.rx_device = SimulatedDevice(seed=66)
         self.rx_device.position = np.array([0, 0, 1000])
         self.rx_device.orientation = np.array([pi, 0, 0])
         self.rx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [3, 3])
 
-        self.channel = RuralMacrocellsLineOfSight(transmitter=self.tx_device, receiver=self.rx_device)
+        self.channel = RuralMacrocellsLineOfSight(transmitter=self.tx_device, receiver=self.rx_device, seed=42)
         
         self.tx_modem = Modem()
-        self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=50, pilot_rate=5, oversampling_factor=4)
+        self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=50, 
+                                                                    pilot_rate=5, oversampling_factor=4, modulation_order=4)
         self.tx_modem.device = self.tx_device
         
         self.rx_modem = Modem()
-        self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=50, pilot_rate=5, oversampling_factor=4)
+        self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=50,
+                                                                    pilot_rate=5, oversampling_factor=4, modulation_order=4)
         self.rx_modem.device = self.rx_device
         #self.rx_modem.waveform_generator.synchronization = SingleCarrierCorrelationSynchronization()
         self.rx_modem.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()

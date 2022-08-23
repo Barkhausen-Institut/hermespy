@@ -55,10 +55,10 @@ class TestThroughputEvaluator(TestCase):
         # Assert throughput without any frame errors
         expected_throughput = self.bits_per_frame / self.frame_duration
         throughput = self.evaluator.evaluate()
-        self.assertAlmostEqual(expected_throughput, throughput.to_scalar())
+        self.assertAlmostEqual(expected_throughput, throughput.artifact().to_scalar())
 
         # Assert throughput with frame errors
         self.receiver.reception.bits[0:int(.5*self.bits_per_frame)] = 1.
         expected_throughput = (self.num_frames - 1) * self.bits_per_frame / (self.num_frames * self.frame_duration)
         throughput = self.evaluator.evaluate()
-        self.assertEqual(expected_throughput, throughput.to_scalar())
+        self.assertEqual(expected_throughput, throughput.artifact().to_scalar())
