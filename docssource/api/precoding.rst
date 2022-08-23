@@ -13,6 +13,7 @@ for spatial channel propagation.
 
    precoding.precoding
    precoding.symbol_precoding
+   precoding.stream_precoding
    precoding.dft
    precoding.single_carrier
    precoding.spatial_multiplexing

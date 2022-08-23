@@ -159,7 +159,7 @@ class Antenna(Serializable):
                 Vertical and horizontal polarization components of the antenna response.
         """
 
-        ...
+        ...  # pragma no cover
 
     def plot_polarization(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna polarization depending on the angles of interest.
@@ -374,8 +374,25 @@ class AntennaArrayBase(object):
         Returns:
             int: Number of antenna elements.
         """
-
-        ...
+        ...  # pragma no cover
+        
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of transmitting antenna elements within this array.
+        
+        Returns: Number of transmitting elements.
+        """
+        
+        return self.num_antennas
+        
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of receiving antenna elements within this array.
+        
+        Returns: Number of receiving elements.
+        """
+        
+        return self.num_antennas
 
     @property
     @abstractmethod
@@ -391,7 +408,7 @@ class AntennaArrayBase(object):
                 math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
         """
 
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def polarization(self,
@@ -414,7 +431,7 @@ class AntennaArrayBase(object):
                 math:`M \\times 2` topology matrix, where :math:`M` is the number of antenna elements.
         """
 
-        ...
+        ...  # pragma no cover
 
     def plot_topology(self) -> plt.Figure:
         """Plot a scatter representation of the array topology.
@@ -643,7 +660,7 @@ class UniformArray(AntennaArrayBase, Serializable):
             spacing (float):
                 Spacing between the antenna elements in m.
 
-            dimensions (Tuple[int, ...]):
+            dimensions (Tuple[int, ...  # pragma no cover]):
                 The number of antennas in x-, y-, and z-dimension.
         """
 
