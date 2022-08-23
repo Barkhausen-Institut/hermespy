@@ -124,7 +124,7 @@ class CommunicationEvaluator(Evaluator, ABC):
 
 
 class BitErrorArtifact(ArtifactTemplate[float]):
-    """Artifact of a block error evaluation between two modems exchanging information."""
+    """Artifact of a bit error evaluation between two modems exchanging information."""
 
     def to_scalar(self) -> float:
 
@@ -132,6 +132,7 @@ class BitErrorArtifact(ArtifactTemplate[float]):
 
 
 class BitErrorEvaluation(EvaluationTemplate[np.ndarray]):
+    """Bit error evaluation of a single communication process between modems."""
 
     def plot(self) -> List[plt.Figure]:
 
@@ -204,12 +205,34 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         return uniform.cdf(scalar)
 
 
-class BlockErrorArtifact(ArtifactTemplate[np.ndarray]):
+class BlockErrorArtifact(ArtifactTemplate[float]):
     """Artifact of a block error evaluation between two modems exchanging information."""
 
     def to_scalar(self) -> float:
 
-        return np.sum(self.artifact) / len(self.artifact)
+        return self.artifact
+    
+    
+class BlockErrorEvaluation(EvaluationTemplate[np.ndarray]):
+    """Block error evaluation of a single communication process between modems."""
+
+    def plot(self) -> List[plt.Figure]:
+
+        with Executable.style_context():
+
+            figure, axes = plt.subplots()
+            figure.suptitle("Block Error Evaluation")
+
+            axes.stem(self.evaluation)
+            axes.set_xlabel("Block Index")
+            axes.set_ylabel("Block Error Indicator")
+
+            return [figure]
+
+    def artifact(self) -> BitErrorArtifact:
+
+        bler = np.mean(self.evaluation)
+        return BlockErrorArtifact(bler)
 
 
 class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
@@ -234,11 +257,11 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
         self.plot_scale = 'log'  # Plot logarithmically by default
 
-    def evaluate(self) -> BlockErrorArtifact:
+    def evaluate(self) -> BlockErrorEvaluation:
 
         # Retrieve transmitted and received bits
-        transmitted_bits = self.transmitting_modem.transmitted_bits
-        received_bits = self.receiving_modem.received_bits
+        transmitted_bits = self.transmitting_modem.transmission.bits
+        received_bits = self.receiving_modem.reception.bits
         block_size = self.receiving_modem.encoder_manager.bit_block_size
 
         # Pad bit sequences (if required)
@@ -257,7 +280,7 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         bit_errors = np.abs(transmitted_bits - received_bits)
         block_errors = (bit_errors.reshape((-1, block_size)).sum(axis=1) > 0)
 
-        return BlockErrorArtifact(block_errors)
+        return BlockErrorEvaluation(block_errors)
 
     @property
     def title(self) -> str:
@@ -269,13 +292,39 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
 
         return "BLER"
 
+    @staticmethod
+    def _scalar_cdf(scalar: float) -> float:
+        return uniform.cdf(scalar)
 
-class FrameErrorArtifact(ArtifactTemplate[np.ndarray]):
+
+class FrameErrorArtifact(ArtifactTemplate[float]):
     """Artifact of a frame error evaluation between two modems exchanging information."""
 
     def to_scalar(self) -> float:
 
-        return np.sum(self.artifact) / len(self.artifact)
+        return self.artifact
+    
+    
+class FrameErrorEvaluation(EvaluationTemplate[np.ndarray]):
+    """Frame error evaluation of a single communication process between modems."""
+
+    def plot(self) -> List[plt.Figure]:
+
+        with Executable.style_context():
+
+            figure, axes = plt.subplots()
+            figure.suptitle("Frame Error Evaluation")
+
+            axes.stem(self.evaluation)
+            axes.set_xlabel("Frame Index")
+            axes.set_ylabel("Frame Error Indicator")
+
+            return [figure]
+
+    def artifact(self) -> FrameErrorArtifact:
+
+        bler = np.mean(self.evaluation)
+        return FrameErrorArtifact(bler)
 
 
 class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
@@ -300,7 +349,7 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
         self.plot_scale = 'log'  # Plot logarithmically by default
 
-    def evaluate(self) -> FrameErrorArtifact:
+    def evaluate(self) -> FrameErrorEvaluation:
 
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmission.bits
@@ -326,7 +375,7 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         bit_errors = np.abs(transmitted_bits - received_bits)
         frame_errors = (bit_errors.reshape((-1, frame_size)).sum(axis=1) > 0)
 
-        return FrameErrorArtifact(frame_errors)
+        return FrameErrorEvaluation(frame_errors)
 
     @property
     def title(self) -> str:
@@ -338,13 +387,24 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
 
         return "FER"
 
-
-class ThroughputArtifact(Artifact):
+    @staticmethod
+    def _scalar_cdf(scalar: float) -> float:
+        return uniform.cdf(scalar)
+    
+    
+class ThroughputArtifact(ArtifactTemplate[float]):
     """Artifact of a throughput evaluation between two modems exchanging information."""
+
+    def to_scalar(self) -> float:
+
+        return self.artifact
+    
+
+class ThroughputEvaluation(EvaluationTemplate[np.ndarray]):
+    """Throughput evaluation between two modems exchanging information."""
 
     __bits_per_frame: int           # Number of bits per communication frame
     __frame_duration: float         # Duration of a single communication frame in seconds
-    __frame_errors: np.ndarray      # Frame error indicators
 
     def __init__(self,
                  bits_per_frame: int,
@@ -362,21 +422,22 @@ class ThroughputArtifact(Artifact):
             frame_errors (np.ndarray):
                 Frame error indicators
         """
+        
+        EvaluationTemplate.__init__(self, frame_errors)
 
         self.__bits_per_frame = bits_per_frame
         self.__frame_duration = frame_duration
-        self.__frame_errors = frame_errors
 
     def __str__(self) -> str:
         return f"{self.to_scalar():.3f}"
 
-    def to_scalar(self) -> float:
+    def artifact(self) -> ThroughputArtifact:
 
-        num_frames = len(self.__frame_errors)
-        num_correct_frames = np.sum(np.invert(self.__frame_errors))
+        num_frames = len(self.evaluation)
+        num_correct_frames = np.sum(np.invert(self.evaluation))
         throughput = num_correct_frames * self.__bits_per_frame / (num_frames * self.__frame_duration)
 
-        return throughput
+        return ThroughputArtifact(throughput)
 
 
 class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
@@ -400,16 +461,16 @@ class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
 
         FrameErrorEvaluator.__init__(self, transmitting_modem, receiving_modem)
 
-    def evaluate(self) -> ThroughputArtifact:
+    def evaluate(self) -> ThroughputEvaluation:
 
         # Get the frame errors
-        frame_errors = FrameErrorEvaluator.evaluate(self).artifact.flatten()
+        frame_errors = FrameErrorEvaluator.evaluate(self).evaluation.flatten()
 
         # Transform frame errors to data throughput
         bits_per_frame = self.receiving_modem.num_data_bits_per_frame
         frame_duration = self.receiving_modem.frame_duration
 
-        return ThroughputArtifact(bits_per_frame, frame_duration, frame_errors)
+        return ThroughputEvaluation(bits_per_frame, frame_duration, frame_errors)
 
     @property
     def title(self) -> str:
