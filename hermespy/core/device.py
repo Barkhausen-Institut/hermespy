@@ -1084,6 +1084,8 @@ class Device(ABC, RandomNode):
                               num_samples=0, carrier_frequency=self.carrier_frequency)
 
         for transmitted_signal in self.transmitters.get_transmissions(clear_cache):
+            
+            transmitted_signal.carrier_frequency = self.carrier_frequency
             signal.superimpose(transmitted_signal)
 
         # Trigger actual hardware transmission here.

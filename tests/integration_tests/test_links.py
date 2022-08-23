@@ -255,8 +255,8 @@ class TestMIMOLinks(TestCase):
     def test_ideal_channel_single_carrier(self) -> None:
         """Verify a valid MIMO link over an ideal channel with single carrier modulation"""
 
-        tx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=4, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
-        rx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=4, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
+        tx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=12, num_data_symbols=40, oversampling_factor=8)
+        rx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=12, num_data_symbols=40, oversampling_factor=8)
         rx_waveform.synchronization = SingleCarrierCorrelationSynchronization()
         rx_waveform.channel_estimation = SingleCarrierIdealChannelEstimation()
         rx_waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
