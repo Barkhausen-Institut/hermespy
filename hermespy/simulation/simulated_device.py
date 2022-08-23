@@ -12,7 +12,7 @@ import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter, ScalarNode
 from scipy.constants import pi
 
-from hermespy.core import Device, FloatingError, RandomNode, Scenario, Serializable, Signal
+from hermespy.core import Device, FloatingError, RandomNode, Scenario, Serializable, Signal, device
 from hermespy.core.statistics import SNRType
 from .analog_digital_converter import AnalogDigitalConverter
 from .noise import Noise, AWGN
@@ -290,14 +290,14 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         self.__snr = value
 
     def receive(self,
-                device_signals: Union[List[Signal], np.ndarray],
+                device_signals: Union[List[Signal], Signal, np.ndarray],
                 snr: Optional[float] = None,
                 snr_type: SNRType = SNRType.EBN0) -> Signal:
         """Receive signals at this device.
 
         Args:
 
-            device_signals (Union[List[Signal], np.ndarray]):
+            device_signals (Union[List[Signal], Signal, np.ndarray]):
                 List of signal models arriving at the device.
                 May also be a two-dimensional numpy object array where the first dimension indicates the link
                 and the second dimension contains the transmitted signal as the first element and the link channel
@@ -323,8 +323,14 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
+        if isinstance(device_signals, Signal):
+            
+            propagation_matrix = np.empty(1, dtype=object)
+            propagation_matrix[0] = ([device_signals], None)
+            device_signals = propagation_matrix
+
         # Tranform list arguments to matrix arguments
-        if isinstance(device_signals, list):
+        elif isinstance(device_signals, list):
             
             propagation_matrix = np.empty(1, dtype=object)
             propagation_matrix[0] = (device_signals, None)

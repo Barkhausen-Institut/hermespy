@@ -201,7 +201,7 @@ from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
 
 from hermespy.channel import ChannelStateInformation
 from hermespy.fec import EncoderManager, Encoder
-from hermespy.core import DuplexOperator, RandomNode, Transmission, Reception, Signal
+from hermespy.core import DuplexOperator, RandomNode, Transmission, Reception, Signal, Device
 from hermespy.core.factory import SerializableArray
 from hermespy.precoding import SymbolPrecoding, SymbolPrecoder, ReceiveStreamCoding, TransmitStreamCoding
 from .bits_source import BitsSource, RandomBitsSource
@@ -522,6 +522,12 @@ class Modem(RandomNode, DuplexOperator, SerializableArray):
         self.encoder_manager = EncoderManager() if encoding is None else encoding
         self.precoding = SymbolPrecoding(modem=self) if precoding is None else precoding
         self.waveform_generator = waveform
+        
+    @DuplexOperator.device.setter
+    def device(self, value: Device) -> None:
+    
+        DuplexOperator.device.fset(self, value)
+        self.random_mother = value
 
     def transmit(self,
                  duration: float = -1.) -> CommunicationTransmission:
