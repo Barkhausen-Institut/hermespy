@@ -16,6 +16,8 @@ import numpy as np
 from numba import jit, complex128
 from scipy.constants import pi
 from scipy.fft import fft, fftshift, fftfreq
+from scipy.signal import butter, sosfilt, sosfilt_zi, firwin
+from scipy.ndimage import convolve1d
 
 from .executable import Executable
 
@@ -33,6 +35,9 @@ class Signal:
     """Base class of signal models in HermesPy.
 
     Attributes:
+    
+        filter_order (int):
+            Order of the filters applied during resampling and supoperosition mixing.
 
         __samples (np.ndarray):
             An MxT matrix containing uniformly sampled base-band samples of the modeled signal.
@@ -46,6 +51,7 @@ class Signal:
             i.e. the central frequency in Hz.
     """
 
+    filter_order = 10
     __samples: np.ndarray
     __sampling_rate: float
     __carrier_frequency: float
@@ -261,12 +267,19 @@ class Signal:
 
         return deepcopy(self)
 
-    def resample(self, sampling_rate: float) -> Signal:
+    def resample(self,
+                 sampling_rate: float,
+                 aliasing_filter: bool = True) -> Signal:
         """Resample the modeled signal to a different sampling rate.
 
         Args:
+        
             sampling_rate (float):
                 Sampling rate of the new signal model in Hz.
+                
+            aliasing_filter (bool, optional):
+                Apply an anti-aliasing filter during downsampling.
+                Enabled by default.
 
         Returns:
             Signal:
@@ -281,7 +294,18 @@ class Signal:
 
         # Resample the internal samples
         if self.__sampling_rate != sampling_rate:
-            samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
+            
+            # Apply an anti-aliasing filter if the respective flag is enabled
+            if self.__sampling_rate > sampling_rate and aliasing_filter:
+            
+                filter_coefficients = butter(self.filter_order, sampling_rate / self.__sampling_rate, btype='low', output='sos')
+                filter_init = np.repeat(sosfilt_zi(filter_coefficients)[:, np.newaxis, :], self.num_streams, axis=1)
+                filtered_samples, _ = sosfilt(filter_coefficients, self.__samples, axis=1, zi=filter_init)
+                
+            else:
+                filtered_samples = self.__samples
+            
+            samples = Signal.__resample(filtered_samples, self.__sampling_rate, sampling_rate)
 
         # Skip resampling if both sampling rates are identical
         else:
@@ -290,13 +314,25 @@ class Signal:
         # Create a new signal object from the resampled samples and return it as result
         return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay, noise_power=self.noise_power)
 
-    def superimpose(self, added_signal: Signal) -> None:
+    def superimpose(self,
+                    added_signal: Signal,
+                    aliasing_filter: bool = True) -> None:
         """Superimpose an additive signal model to this model.
 
         Internally re-samples `added_signal` to this model's sampling rate, if required.
         Mixes `added_signal` according to the carrier-frequency distance.
 
+        Args:
+        
+            added_signal (Signal):
+                Model of the signal to be superimposed.
+                
+            aliasing_filter (bool, optional):
+                Apply an anti-aliasing filter during mixing.
+                Enabled by default.
+                
         Raises:
+        
             ValueError: If `added_signal` contains a different number of streams than this signal model.
             NotImplementedError: If the delays if this signal and `added_signal` differ.
         """
@@ -307,18 +343,36 @@ class Signal:
         if self.delay != added_signal.delay:
             raise NotImplementedError("Superimposing signal models of differing delay is not yet supported")
 
-        # Resample the added signal
-        resampled_added_signal = added_signal.resample(self.__sampling_rate)
+        # Apply an aliasing filter to the added signal
+        frequency_distance = added_signal.carrier_frequency - self.carrier_frequency
+        filter_center_frequency = .5 * frequency_distance
+        filter_bandwidth = .5 * (added_signal.sampling_rate + self.sampling_rate) - abs(frequency_distance)
 
-        # Extend the samples matrix if required
-        if self.num_samples < resampled_added_signal.num_samples:
-            self.__samples = np.append(self.__samples, np.zeros((self.num_streams,
-                                                                 resampled_added_signal.num_samples - self.num_samples),
-                                                                dtype=complex), axis=1)
+        if filter_bandwidth <= 0.:
+            return
+        
+        if aliasing_filter and filter_bandwidth < self.sampling_rate:
+            
+            filter_coefficients = firwin(1 + self.filter_order, .5 * filter_bandwidth, width=.5 * filter_bandwidth, fs=added_signal.sampling_rate).astype(complex)
+            filter_coefficients *= np.exp(2j * np.pi * (filter_center_frequency - added_signal.carrier_frequency) / added_signal.sampling_rate * np.arange(1 + self.filter_order))
+            
+            added_samples = convolve1d(added_signal.samples, filter_coefficients, axis=1)
+
+        else:
+            added_samples = added_signal.samples
+
+        # Resample the added signal if the respective sampling rates don't match
+        if self.sampling_rate != added_signal.sampling_rate:
+            resampled_added_samples = self.__resample(added_samples, added_signal.sampling_rate, self.sampling_rate)
+
+        else:
+            resampled_added_samples = added_samples
+            
+        if self.num_samples < resampled_added_samples.shape[1]:
+            self.__samples = np.append(self.__samples, np.zeros((self.num_streams, resampled_added_samples.shape[1] - self.num_samples), dtype=complex), axis=1)
 
         # Mix the added signal onto this signal's samples according to the carrier frequency distance
-        frequency_distance = resampled_added_signal.carrier_frequency - self.carrier_frequency
-        self.__mix(self.__samples, resampled_added_signal.samples, self.__sampling_rate, frequency_distance)
+        self.__mix(self.__samples, resampled_added_samples, self.__sampling_rate, frequency_distance)
 
     @staticmethod
     @jit(nopython=True)
@@ -341,13 +395,14 @@ class Signal:
             frequency_distance (float):
                 Distance between the carrier frequencies of `target_samples` and `added_samples` in Hz.
         """
+        
+        num_added_samples = added_samples.shape[1]
 
         # ToDo: Reminder, mixing like this currently does not account for possible delays.
-        num_samples = added_samples.shape[1]
-        mix_sinusoid = np.exp(2j * pi * np.arange(num_samples) * frequency_distance / sampling_rate)
+        mix_sinusoid = np.exp(2j * pi * np.arange(num_added_samples) * frequency_distance / sampling_rate)
 
         for stream_idx in range(added_samples.shape[0]):
-            target_samples[stream_idx, :num_samples] += added_samples[stream_idx, :] * mix_sinusoid
+            target_samples[stream_idx, :num_added_samples] += added_samples[stream_idx, :] * mix_sinusoid
 
     @property
     def timestamps(self) -> np.ndarray:
