@@ -17,6 +17,8 @@ from hermespy.core.statistics import SNRType
 from .analog_digital_converter import AnalogDigitalConverter
 from .noise import Noise, AWGN
 from .rf_chain.rf_chain import RfChain
+from .isolation import Isolation, PerfectIsolation
+from .coupling import Coupling, PerfectCoupling
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -49,6 +51,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
     adc: AnalogDigitalConverter
     """Model of receiver's ADC"""
+    
+    __isolation: Isolation
+    """Model of the device's transmit-receive isolations"""
+    
+    __coupling: Coupling
+    """Model of the device's antenna array mutual coupling"""
 
     __noise: Noise                          # Model of the hardware noise
     __scenario: Optional[Scenario]          # Scenario this device is attached to
@@ -61,6 +69,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                  scenario: Optional[Scenario] = None,
                  rf_chain: Optional[RfChain] = None,
                  adc: Optional[AnalogDigitalConverter] = None,
+                 isolation: Optional[Isolation] = None,
+                 coupling: Optional[Coupling] = None,
                  sampling_rate: Optional[float] = None,
                  carrier_frequency: float = 0.,
                  *args,
@@ -77,6 +87,14 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             adc (AnalogDigitalConverter, optional):
                 Model of receiver's ADC converter.
+                
+            isolation (Isolation, optional):
+                Model of the device's transmit-receive isolations.
+                By default, perfect isolation is assumed.
+                
+            coupling (Coupling, optional):
+                Model of the device's antenna array mutual coupling.
+                By default, ideal coupling behaviour is assumed.
 
             sampling_rate (float, optional):
                 Sampling rate at which this device operates.
@@ -99,6 +117,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.adc = AnalogDigitalConverter() if adc is None else adc
+        self.isolation = PerfectIsolation() if isolation is None else isolation
+        self.coupling = PerfectCoupling() if coupling is None else coupling
         self.noise = AWGN()
         self.snr = float('inf')
         self.operator_separation = False
@@ -176,6 +196,36 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         self.__noise = value
         self.__noise.random_mother = self
+        
+    @property
+    def isolation(self) -> Isolation:
+        """Model of the device's transmit-receive isolation.
+        
+        Returns: Handle to the isolation model.
+        """
+        
+        return self.__isolation
+    
+    @isolation.setter
+    def isolation(self, value: Isolation) -> None:
+        
+        self.__isolation = value
+        value.device = self
+         
+    @property
+    def coupling(self) -> Coupling:
+        """Model of the device's antenna array mutual coupling behaviour.
+        
+        Returns: Handle to the coupling model.
+        """
+        
+        return self.__coupling
+    
+    @coupling.setter
+    def coupling(self, value: Coupling) -> None:
+        
+        self.__coupling = value
+        value.device = self
 
     @property
     def sampling_rate(self) -> float:
@@ -266,9 +316,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         # Simulate rf-chain
         transmissions = [self.rf_chain.transmit(signal) for signal in signals]
+        
+        # Simulate mutual coupling behaviour
+        coupled_transmission = [self.coupling.transmit(signal) for signal in transmissions]
 
         # Return result
-        return transmissions
+        return coupled_transmission
 
     @property
     def snr(self) -> float:
@@ -292,7 +345,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     def receive(self,
                 device_signals: Union[List[Signal], Signal, np.ndarray],
                 snr: Optional[float] = None,
-                snr_type: SNRType = SNRType.EBN0) -> Signal:
+                snr_type: SNRType = SNRType.EBN0,
+                leaking_signal: Optional[Signal] = None) -> Signal:
         """Receive signals at this device.
 
         Args:
@@ -309,6 +363,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             snr_type (SNRType, optional):
                 Type of signal to noise ratio.
+                
+            leaking_signal(Signal, optional):
+                Signal leaking from transmit to receive chains.
 
         Returns:
 
@@ -342,9 +399,18 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             if signals is not None:
                 for signal in signals:
                     mixed_signal.superimpose(signal)
+                    
+        # Model mutual coupling behaviour
+        coupled_signal = self.coupling.receive(mixed_signal)
+                    
+        # Add leaked signal if provided
+        if leaking_signal is not None:
+            
+            modeled_leakage = self.__isolation.leak(leaking_signal)
+            coupled_signal.superimpose(modeled_leakage)
 
         # Model radio-frequency chain during transmission
-        baseband_signal = self.rf_chain.receive(mixed_signal)
+        baseband_signal = self.rf_chain.receive(coupled_signal)
 
         baseband_signal = self.adc.convert(baseband_signal)
         
