@@ -1027,10 +1027,16 @@ class MonteCarloActor(Generic[MO]):
                     
                     grid_dimension = self.__grid[d]
                     
-                    if grid_dimension.first_impact != None and grid_dimension.first_impact in self.__stage_identifiers:
+                    if grid_dimension.first_impact is None:
+                        first_impact = 0
+                    
+                    elif grid_dimension.first_impact in self.__stage_identifiers:
                         first_impact = min(first_impact, self.__stage_identifiers.index(grid_dimension.first_impact))
                         
-                    if grid_dimension.last_impact != None and grid_dimension.last_impact in self.__stage_identifiers:
+                    if grid_dimension.last_impact is None:
+                        last_impact = self.__num_stages - 1
+                        
+                    elif grid_dimension.last_impact in self.__stage_identifiers:
                         last_impact = max(last_impact, self.__stage_identifiers.index(grid_dimension.last_impact))
                         
                 if first_impact >= self.__num_stages:
