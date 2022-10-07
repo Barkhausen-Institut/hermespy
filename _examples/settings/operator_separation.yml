@@ -19,7 +19,8 @@ Devices:
 Channels:
 
   # Rayleigh fading between transmitter n = 0 and receiver m = 1
-  - !<MultipathFading_0_0>
+  - !<MultipathFading>
+    devices: [*device_alpha, *device_alpha]
     delays: [ 0 ]           # Delay of the channel in seconds
     power_profile: [ 0 ]    # Channel gain in dB
     rice_factors: [ .inf ]
@@ -49,7 +50,7 @@ Operators:
     device: *device_alpha          # Device the modem is operating on
 
     # Bit encoding configuration before mapping to modulation symbols
-    Encoding:
+    Encoding: !<Encoding>
 
       # Repetition encoding, repeating bit sections for redundancy
       - !<Repetition>

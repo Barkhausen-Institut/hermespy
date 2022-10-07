@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 
 # Import required HermesPy modules
-from hermespy.channel import Channel
 from hermespy.simulation import Simulation
-from hermespy.modem import Modem, RootRaisedCosineWaveform, BitErrorEvaluator
+from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator
 
 # Create a new HermesPy simulation scenario
 simulation = Simulation()
@@ -12,7 +11,7 @@ simulation = Simulation()
 device = simulation.scenario.new_device()
 
 # Configure device operator
-operator = Modem()
+operator = DuplexModem()
 operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
 operator.device = device
 

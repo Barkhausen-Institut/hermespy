@@ -945,12 +945,14 @@ class MonteCarloActor(Generic[MO]):
     The result of each individual simulation task is a simulation sample.
     """
 
+    catch_exceptions: bool                          # Catch exceptions during run.
     __investigated_object: MO                       # Copy of the object to be investigated
     __grid: List[GridDimension]                     # Simulation grid dimensions
     __evaluators: List[Evaluator[MO]]               # Evaluators used to process the investigated object sample state
 
     def __init__(self,
-                 argument_tuple: Tuple[MO, List[GridDimension], List[Evaluator[MO]]]) -> None:
+                 argument_tuple: Tuple[MO, List[GridDimension], List[Evaluator[MO]]],
+                 catch_exceptions: bool = True) -> None:
         """
         Args:
 
@@ -958,15 +960,17 @@ class MonteCarloActor(Generic[MO]):
                 Object to be investigated during the simulation runtime.
                 Dimensions over which the simulation will iterate.
                 Evaluators used to process the investigated object sample state.
-
-            section_block_size (int):
-                Number of samples generated per section block.
+                
+            catch_exceptions (bool, optional):
+                Catch exceptions during run.
+                Enabled by default.
         """
 
         investigated_object = argument_tuple[0]
         grid = argument_tuple[1]
         evaluators = argument_tuple[2]
 
+        self.catch_exceptions = catch_exceptions
         self.__investigated_object = investigated_object  # deepcopy(investigated_object)
         self.__grid = grid
         self.__evaluators = evaluators
@@ -1061,7 +1065,11 @@ class MonteCarloActor(Generic[MO]):
                 
         except Exception as e:
             
-            result.message = str(e)
+            if self.catch_exceptions:
+                result.message = str(e)
+                
+            else:
+                raise e
             
         return result
     
@@ -1581,6 +1589,7 @@ class MonteCarlo(Generic[MO]):
     __database_caching: bool                    # Cache simulation results in a database during runtime
     __cpus_per_actor: int                       # Number of CPUs reserved for a single actor
     runtime_env: bool
+    catch_exceptions: bool                      # Catch exceptions occuring during simulation runtime
 
     def __init__(self,
                  investigated_object: MO,
@@ -1594,7 +1603,8 @@ class MonteCarlo(Generic[MO]):
                  database_caching: bool = False,
                  ray_address: Optional[str] = None,
                  cpus_per_actor: int = 1,
-                 runtime_env: bool = False) -> None:
+                 runtime_env: bool = False,
+                 catch_exceptions: bool = True) -> None:
         """
         Args:
             investigated_object (MO):
@@ -1638,6 +1648,10 @@ class MonteCarlo(Generic[MO]):
             runtime_env (bool, optional):
                 Create a virtual environment on each host.
                 Disabled by default.
+                
+            catch_exceptions (bool, optional):
+                Catch exceptions occuring during simulation runtime.
+                Enabled by default.
         """
         
         self.runtime_env = runtime_env
@@ -1668,6 +1682,7 @@ class MonteCarlo(Generic[MO]):
         self.__database_caching = database_caching
         self.cpus_per_actor = cpus_per_actor
         self.num_actors = num_actors
+        self.catch_exceptions = catch_exceptions
 
     def simulate(self,
                  actor: Type[MonteCarloActor]) -> MonteCarloResult[MO]:
@@ -1753,7 +1768,8 @@ class MonteCarlo(Generic[MO]):
         with (self.console.status("Launching Actor Pool...", spinner='dots') if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext()):
 
             # Generate the actor pool
-            actor_pool = ActorPool([actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators))
+            actor_pool = ActorPool([actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators),
+                                                                                       self.catch_exceptions)
                                     for _ in range(self.num_actors)])
 
             # Generate section sample containers and meta-information

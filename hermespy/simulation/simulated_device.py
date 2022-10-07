@@ -418,11 +418,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         for receiver in self.receivers:
 
             # Collect the reference channel if a reference transmitter has been specified
-            if receiver.reference_transmitter is not None and self.attached:
+            if receiver.reference is not None and self.attached:
 
-                reference_device = receiver.reference_transmitter.device
-                reference_device_idx = self.scenario.devices.index(reference_device)
-
+                reference_device_idx = self.scenario.devices.index(receiver.reference)
                 reference_csi = device_signals[reference_device_idx][1] if isinstance(device_signals[reference_device_idx], (tuple, list, np.ndarray)) else None
 
                 if self.operator_separation:

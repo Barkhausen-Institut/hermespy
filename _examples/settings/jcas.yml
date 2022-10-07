@@ -24,16 +24,19 @@ Devices:
 Channels:
 
   # Single target radar channel
-  - &radar_channel !<RadarChannel_0_0>
+  - &radar_channel !<RadarChannel>
+    devices: [*base_station, *base_station]
     target_range: 1         # The target is located within a distance of 1m of the base station
     radar_cross_section: 5  # The target has a cross section of 5m2
 
   # 5G TDL communication channel model
-  - !<5GTDL_0_1>
+  - !<5GTDL>
+    devices: [*base_station, *terminal]
     type: A                 # Type of the TDL model. A-E are available
 
   # No self-interference at the terminal
-  - !<Channel_1_1>
+  - !<Channel>
+    devices: [*terminal, *terminal]
     gain: 0.
 
 # Operators transmitting or receiving signals over the devices
@@ -67,7 +70,7 @@ Operators:
   # The terminal is operated by a communication modem
   - &terminal_operator !<Modem>
 
-    device: *terminal # Operator controls the terminal device
+    device: *terminal         # Operator controls the terminal device
 
     # Waveform configuration
     waveform_generator: !<SC-FMCW>
@@ -99,12 +102,6 @@ Evaluators:
     confidence: .9
     tolerance: .01
     plot_scale: log
-
-  # Evaluate the probability of detection
-  - !<ROC>
-    receiving_radar: *base_station_operator
-    receiving_radar_null_hypothesis: *base_station_operator
-    radar_channel: *radar_channel
 
 
 # Simulation parameters

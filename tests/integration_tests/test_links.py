@@ -4,10 +4,11 @@ import numpy as np
 
 from hermespy.channel import Channel, MultipathFading5GTDL
 from hermespy.core import Scenario, IdealAntenna, UniformArray
+from hermespy.modem.waveform_generator import CustomPilotSymbolSequence
 from hermespy.modem.waveform_generator_chirp_fsk import ChirpFSKCorrelationSynchronization, ChirpFSKWaveform
 from hermespy.modem.waveform_generator_ofdm import OFDMIdealChannelEstimation, OFDMZeroForcingChannelEqualization
 from hermespy.simulation import SimulatedDevice
-from hermespy.modem import Modem, BitErrorEvaluator, RootRaisedCosineWaveform, ZeroForcingChannelEqualization, \
+from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, RootRaisedCosineWaveform, ZeroForcingChannelEqualization, \
     SingleCarrierCorrelationSynchronization, SingleCarrierZeroForcingChannelEqualization, SingleCarrierIdealChannelEstimation, \
     ChirpFSKWaveform, ChirpFSKCorrelationSynchronization, \
     OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
@@ -40,19 +41,19 @@ class TestSISOLinks(TestCase):
         scenario.add_device(self.rx_device)
 
         # Define a transmit operation on the first device
-        self.tx_operator = Modem()
+        self.tx_operator = TransmittingModem()
         self.tx_operator.precoding[0] = SpatialMultiplexing()
-        self.tx_operator.device = self.tx_device
-        self.tx_operator.encoder_manager.add_encoder(RepetitionEncoder())
         self.tx_operator.precoding[1] = DFT()
+        self.tx_operator.encoder_manager.add_encoder(RepetitionEncoder())
+        self.tx_device.transmitters.add(self.tx_operator)
 
         # Define a receive operation on the second device
-        self.rx_operator = Modem()
+        self.rx_operator = ReceivingModem()
         self.rx_operator.precoding[0] = SpatialMultiplexing()
-        self.rx_operator.device = self.rx_device
-        self.rx_operator.reference_transmitter = self.tx_operator
-        self.rx_operator.encoder_manager.add_encoder(RepetitionEncoder())
         self.rx_operator.precoding[1] = DFT()
+        self.rx_operator.encoder_manager.add_encoder(RepetitionEncoder())
+        self.rx_device.receivers.add(self.rx_operator)
+        self.rx_operator.reference = self.tx_device
         
         self.ber = BitErrorEvaluator(self.tx_operator, self.rx_operator)
 
@@ -66,6 +67,8 @@ class TestSISOLinks(TestCase):
         """
         
         channel.set_seed(42)
+        self.tx_operator.set_seed(42)
+        self.rx_operator.set_seed(42)
 
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()
@@ -79,8 +82,9 @@ class TestSISOLinks(TestCase):
         """Verify a valid SISO link over an ideal channel with single carrier modulation"""
 
         tx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=4, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
+        
         rx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=4, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
-        #rx_waveform.synchronization = SingleCarrierCorrelationSynchronization()
+        rx_waveform.synchronization = SingleCarrierCorrelationSynchronization()
         rx_waveform.channel_estimation = SingleCarrierIdealChannelEstimation()
         rx_waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
@@ -88,15 +92,15 @@ class TestSISOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(Channel(self.tx_device, self.rx_device))
-
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_single_carrier(self) -> None:
         """Verify a valid SISO link over a tapped delay line channel with single carrier modulation"""
 
         tx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=4, num_data_symbols=40, pilot_rate=10, oversampling_factor=8, roll_off=.9)
+        
         rx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=4, num_data_symbols=40, pilot_rate=10, oversampling_factor=8, roll_off=.9)
-        #rx_waveform.synchronization = SingleCarrierCorrelationSynchronization()
+        rx_waveform.synchronization = SingleCarrierCorrelationSynchronization()
         rx_waveform.channel_estimation = SingleCarrierIdealChannelEstimation()
         rx_waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
@@ -104,8 +108,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device)) #, doppler_frequency=1e6))
-
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_channel_chirp_fsk(self) -> None:
         """Verify a valid SISO link over an ideal channel with chirp frequency shift keying modulation"""
@@ -120,8 +123,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(Channel(self.tx_device, self.rx_device))
-
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_chirp_fsk(self) -> None:
         """Verify a valid SISO link over a tapped delay line channel with chirp frequency shift keying modulation"""
@@ -135,7 +137,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_channel_ofdm(self) -> None:
         """Verify a valid SISO link over an ideal channel ofdm modulation"""
@@ -155,7 +157,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OFDM modulation,
@@ -178,8 +180,7 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
-        
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())        
     def test_tdl_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
@@ -201,8 +202,8 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
-
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
+    
 
 class TestMIMOLinks(TestCase):
     """Test integration of simulation workflow on the link level"""
@@ -219,18 +220,18 @@ class TestMIMOLinks(TestCase):
         scenario.add_device(self.rx_device)
 
         # Define a transmit operation on the first device
-        self.tx_operator = Modem()
+        self.tx_operator = TransmittingModem()
         self.tx_operator.precoding[0] = SpatialMultiplexing()
-        self.tx_operator.device = self.tx_device
         self.tx_operator.encoder_manager.add_encoder(RepetitionEncoder())
+        self.tx_device.transmitters.add(self.tx_operator)
 
         # Define a receive operation on the second device
-        self.rx_operator = Modem()
+        self.rx_operator = ReceivingModem()
         self.rx_operator.precoding[0] = SpatialMultiplexing()
-        self.rx_operator.device = self.rx_device
-        self.rx_operator.reference_transmitter = self.tx_operator
+        self.rx_operator.reference = self.tx_device
         self.rx_operator.encoder_manager.add_encoder(RepetitionEncoder())
-
+        self.rx_device.receivers.add(self.rx_operator)
+        
         self.ber = BitErrorEvaluator(self.tx_operator, self.rx_operator)
 
     def __propagate(self, channel: Channel) -> None:
@@ -243,6 +244,8 @@ class TestMIMOLinks(TestCase):
         """
         
         channel.set_seed(42)
+        self.tx_operator.set_seed(42)
+        self.rx_operator.set_seed(42)
 
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()
@@ -255,8 +258,12 @@ class TestMIMOLinks(TestCase):
     def test_ideal_channel_single_carrier(self) -> None:
         """Verify a valid MIMO link over an ideal channel with single carrier modulation"""
 
-        tx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=12, num_data_symbols=40, oversampling_factor=8)
-        rx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=12, num_data_symbols=40, oversampling_factor=8)
+        tx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=16, num_data_symbols=40, oversampling_factor=8)
+        tx_waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1., -.1, 1j, -1j]))
+        
+        rx_waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=16, num_data_symbols=40, oversampling_factor=8)
+        rx_waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1., -.1, 1j, -1j]))
+
         rx_waveform.synchronization = SingleCarrierCorrelationSynchronization()
         rx_waveform.channel_estimation = SingleCarrierIdealChannelEstimation()
         rx_waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
@@ -265,8 +272,7 @@ class TestMIMOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(Channel(self.tx_device, self.rx_device))
-
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_single_carrier(self) -> None:
         """Verify a valid MIMO link over a tapped delay line channel with single carrier modulation"""
@@ -281,8 +287,8 @@ class TestMIMOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device)) #, doppler_frequency=1e6))
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
 
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_channel_ofdm(self) -> None:
         """Verify a valid MIMO link over an ideal channel OFDM modulation"""
@@ -302,7 +308,7 @@ class TestMIMOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_ofdm(self) -> None:
         """Verify a valid MIMO link over a tapped delay line channel OFDM modulation"""
@@ -322,7 +328,7 @@ class TestMIMOLinks(TestCase):
         self.rx_operator.waveform_generator = rx_waveform
         
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device)) #, doppler_frequency=1e6))
-        self.assertEqual(0, self.ber.evaluate().artifact().to_scalar())
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
 
     # def test_cost256_psk_qam(self) -> None:
     #     """Verify a valid MIMO link over a 3GPP COST256 TDL channel with PSK/QAM modulation"""

@@ -26,14 +26,19 @@ Devices:
       
       antenna: !<IdealAntenna>      # Assume ideal isotropic antennas
       spacing: 10e-2                # Elements spaced 10cm apart
-      dimensions: [2, 1, 1]         # 2 elements within the array
+      dimensions: [1, 1, 1]         # 2 elements within the array
 
+
+# Specify channel models interconnecting devices 
 Channels:
 
-  - !<5GTDL_0_0>
+  # 5G TDL model at the self-interference channel of device_alpha
+  - !<5GTDL>
+    devices: [*device_alpha, *device_alpha]
     type: E                         # Type of the TDL model. A-E are available
     rms_delay: 0. #1e-7                 # root mean square delay in seconds    
       
+
 # Operators transmitting or receiving signals over the devices
 Operators:
 
@@ -41,6 +46,7 @@ Operators:
   - &modem_alpha !<Modem>
 
     device: *device_alpha          # Device the modem is operating on
+    reference: *device_alpha       # Reference device to which the channel is estimated
 
     # Bit encoding configuration before mapping to modulation symbols
     #Encoding:
@@ -49,9 +55,10 @@ Operators:
     #    block_size: 256
     #    rate: [1, 2]
 
-    # Stream encoding configuration
-    Precoding:
-      - !<SM>
+    # MIMO configuration on the symbol level
+    precoding: !<SymbolCoding>
+
+      - !<SM>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>
@@ -62,6 +69,7 @@ Operators:
       dc_suppression: False             # Do not ignore the DC component during the DFT
       num_subcarriers: 4096             # Number of subcarriers per communiction frame
       channel_estimation: !<OFDM-Ideal> # Assume ideal channel state information at the receiver
+      channel_equalization: !<OFDM-ZF>  # Least-squares channel equalization
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       Resources:

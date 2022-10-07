@@ -3,24 +3,24 @@ import matplotlib.pyplot as plt
 # Import required HermesPy modules
 from hermespy.channel import Channel
 from hermespy.simulation import SimulatedDevice
-from hermespy.modem import Modem, RootRaisedCosineWaveform, BitErrorEvaluator
+from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform, BitErrorEvaluator
 
 # Create two simulated devices acting as source and sink
 tx_device = SimulatedDevice()
 rx_device = SimulatedDevice()
 
 # Define a transmit operation on the first device
-tx_operator = Modem()
+tx_operator = TransmittingModem()
 tx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
-tx_operator.device = tx_device
+tx_device.transmitters.add(tx_operator)
 
 # Define a receive operation on the second device
-rx_operator = Modem()
+rx_operator = ReceivingModem()
 rx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
-rx_operator.device = rx_device
+rx_device.receivers.add(rx_operator)
 
 # Simulate a channel between the two devices
-channel = Channel(tx_operator.device, rx_operator.device)
+channel = Channel(tx_device, rx_device)
 
 # Simulate the signal transmission over the channel
 transmission = tx_operator.transmit()

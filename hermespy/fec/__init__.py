@@ -1,9 +1,19 @@
 from .coding import Encoder, EncoderManager
 from .block_interleaver import BlockInterleaver
 from .cyclic_redundancy_check import CyclicRedundancyCheck
-from .aff3ct import BCHCoding, LDPCCoding, PolarSCCoding, PolarSCLCoding, ReedSolomonCoding, RSCCoding, TurboCoding
 from .repetition_encoder import RepetitionEncoder
 from .scrambler import Scrambler3GPP, Scrambler80211a
+
+
+# Attempt to import the C++ bindings of aff3ct.
+# They are treated as an optional feature.
+try:
+
+    from .aff3ct import BCHCoding, LDPCCoding, PolarSCCoding, PolarSCLCoding, ReedSolomonCoding, RSCCoding, TurboCoding
+
+except ModuleNotFoundError as _:
+    ...
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

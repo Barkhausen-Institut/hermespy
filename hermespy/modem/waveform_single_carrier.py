@@ -8,7 +8,6 @@ Filtered Single Carrier Waveforms
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from itertools import product
 from typing import Any, Optional, Set
 
 import matplotlib.pyplot as plt
@@ -638,8 +637,13 @@ class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWave
         """
 
         ChannelEstimation.__init__(self, waveform_generator)
-        
-class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleCarrierWaveform]):
+
+
+class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleCarrierWaveform], Serializable):
+    """Ideal channel estimation for single carrier waveforms"""
+    
+    yaml_tag = u'SC-Ideal'
+    """YAML serialization tag"""
     
     def estimate_channel(self, symbols: Symbols) -> StatedSymbols:
         
@@ -650,6 +654,7 @@ class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleC
         delay = self.waveform_generator._filter_delay
         demodulated_state = filtered_state[:, :, delay:delay+self.waveform_generator.symbols_per_frame*self.waveform_generator.oversampling_factor:self.waveform_generator.oversampling_factor, [0]]
         return StatedSymbols(symbols.raw, demodulated_state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, demodulated_state)
+
 
 class SingleCarrierLeastSquaresChannelEstimation(Serializable, SingleCarrierChannelEstimation):
     """Least-Squares channel estimation for Psk Qam waveforms."""
@@ -745,11 +750,11 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(Serializable, SingleCarr
         SingleCarrierChannelEqualization.__init__(self, waveform_generator)
 
     def equalize_channel(self,
-                         frame: Symbols,
-                         csi: ChannelStateInformation) -> Symbols:
+                         frame: Symbols) -> Symbols:
         
-        # Query SNR from the device
-        snr = self.waveform_generator.modem.device.snr
+        # Query SNR and cached CSI from the device
+        snr = self.waveform_generator.modem.receiving_device.snr
+        csi = self.waveform_generator.modem.csi
         
         # If no information about transmitted streams is available, assume orthogonal channels
         if csi.num_transmit_streams < 2:

@@ -7,7 +7,7 @@ from scipy.constants import speed_of_light, pi
 
 from hermespy.beamforming import ConventionalBeamformer
 from hermespy.core.antennas import UniformArray, IdealAntenna, Signal
-from hermespy.modem import  Modem, ChannelEqualization, CommunicationReception, CommunicationTransmission
+from hermespy.modem import  TransmittingModem, ReceivingModem, ChannelEqualization, CommunicationReception, CommunicationTransmission
 from hermespy.modem.waveform_single_carrier import RootRaisedCosineWaveform, SingleCarrierCorrelationSynchronization, SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 from hermespy.precoding.space_time_block_coding import SpaceTimeBlockCoding
 from hermespy.simulation import SimulatedDevice
@@ -33,19 +33,21 @@ class TestMIMOLink(TestCase):
 
         self.channel = RuralMacrocellsLineOfSight(transmitter=self.tx_device, receiver=self.rx_device, seed=42)
         
-        self.tx_modem = Modem()
+        self.tx_modem = TransmittingModem()
         self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=50, 
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)
-        self.tx_modem.device = self.tx_device
         
-        self.rx_modem = Modem()
+        
+        self.rx_modem = ReceivingModem()
         self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=50,
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)
-        self.rx_modem.device = self.rx_device
         #self.rx_modem.waveform_generator.synchronization = SingleCarrierCorrelationSynchronization()
         self.rx_modem.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
         self.rx_modem.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
-            
+        
+        self.tx_device.transmitters.add(self.tx_modem)
+        self.rx_device.receivers.add(self.rx_device)
+    
     def __propagate(self) -> Tuple[CommunicationTransmission, CommunicationReception]:
         
         communication_transmission = self.tx_modem.transmit()
@@ -56,7 +58,7 @@ class TestMIMOLink(TestCase):
         device_reception[0].samples = device_reception[0].samples[:, :self.rx_modem.waveform_generator.samples_in_frame]
         self.rx_device.receive(device_reception)
         
-        self.rx_modem._receiver.cache_reception(self.rx_modem._receiver.signal, csi)
+        self.rx_modem.cache_reception(self.rx_modem.signal, csi)
         communication_reception = self.rx_modem.receive()
         
         return communication_transmission, communication_reception
@@ -64,7 +66,7 @@ class TestMIMOLink(TestCase):
     def test_conventional_beamforming(self) -> None:
         """Test valid data transmission using conventional beamformers"""
 
-        tx_beamformer = ConventionalBeamformer()
+        tx_beamformer = ConventionalBeamformer()n
         rx_beamformer = ConventionalBeamformer()
 
         self.tx_modem.transmit_stream_coding[0] = tx_beamformer
