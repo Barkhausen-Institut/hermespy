@@ -1,6 +1,7 @@
 from .hardware_loop import HardwareLoop
 from .physical_device import PhysicalDevice
 from .physical_device_dummy import PhysicalDeviceDummy
+from .usrp import UsrpDevice, UsrpSystem
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -11,4 +12,8 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = ['HardwareLoop', 'PhysicalDevice', 'PhysicalDeviceDummy']
+__all__ = [
+    'HardwareLoop',
+    'PhysicalDevice', 'PhysicalDeviceDummy',
+    'UsrpDevice', 'UsrpSystem',
+]

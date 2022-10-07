@@ -13,7 +13,7 @@ from typing import Optional
 import numpy as np
 from numba import jit
 
-from hermespy.core import Operator, Serializable
+from hermespy.core import DuplexOperator, Serializable
 from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
 
@@ -61,7 +61,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     yaml_tag = u'ConventionalBeamformer'
     """YAML serialization tag."""
     
-    def __init__(self, operator: Optional[Operator] = None) -> None:
+    def __init__(self, operator: Optional[DuplexOperator] = None) -> None:
         
         TransmitBeamformer.__init__(self, operator=operator)
         ReceiveBeamformer.__init__(self, operator=operator)

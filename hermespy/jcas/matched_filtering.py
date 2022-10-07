@@ -15,7 +15,7 @@ from scipy.signal import correlate, correlation_lags
 from ruamel.yaml import SafeConstructor, MappingNode
 
 from hermespy.core import Signal
-from hermespy.modem import Modem, CommunicationTransmission, CommunicationReception
+from hermespy.modem import DuplexModem, CommunicationTransmission, CommunicationReception
 from hermespy.radar import Radar, RadarTransmission, RadarReception, RadarCube
 
 __author__ = "Jan Adler"
@@ -49,7 +49,7 @@ class JCASReception(CommunicationReception, RadarReception):
         RadarReception.__init__(self, radar.signal, radar.cube, radar.cloud)
 
 
-class MatchedFilterJcas(Modem, Radar):
+class MatchedFilterJcas(DuplexModem, Radar):
     """Joint Communication and Sensing Operator.
     
     A combination of communication and sensing operations.
@@ -74,13 +74,13 @@ class MatchedFilterJcas(Modem, Radar):
         self.__sampling_rate = None
         self.max_range = max_range
         
-        Modem.__init__(self)
+        DuplexModem.__init__(self)
         Radar.__init__(self)
 
     def transmit(self, duration: float = -1.) -> JCASTransmission:
         
         # Cache the recently transmitted waveform for correlation during reception
-        transmission = JCASTransmission(Modem.transmit(self, duration))
+        transmission = JCASTransmission(DuplexModem.transmit(self, duration))
         return transmission
         
     def receive(self) -> JCASReception:
@@ -90,10 +90,10 @@ class MatchedFilterJcas(Modem, Radar):
             raise RuntimeError("Receiving from a matched filter joint must be preceeded by a transmission")
         
         # Receive information
-        communication_reception = Modem.receive(self)
+        communication_reception = DuplexModem.receive(self)
         
         # Re-sample communication waveform
-        signal = self._receiver.signal.resample(self.sampling_rate)
+        signal = self.signal.resample(self.sampling_rate)
         
         resolution = self.range_resolution
         num_propagated_samples = int(2 * self.max_range / resolution)

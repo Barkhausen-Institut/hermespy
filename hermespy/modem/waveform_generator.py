@@ -19,7 +19,7 @@ from hermespy.core import ChannelStateInformation, Serializable, Signal
 from .symbols import StatedSymbols, Symbols
 
 if TYPE_CHECKING:
-    from hermespy.modem import Modem
+    from hermespy.modem.modem import BaseModem
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -214,14 +214,14 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         if self.waveform_generator is None:
             raise RuntimeError("Ideal channel state estimation routine floating")
 
-        if self.waveform_generator.modem.device is None:
+        if self.waveform_generator.modem.receiving_device is None:
             raise RuntimeError("Operating modem floating")
         
-        csi = self.waveform_generator.modem._receiver.csi
-        if csi is None:
+        cached_csi = self.waveform_generator.modem.csi
+        if cached_csi is None:
             raise RuntimeError("No ideal channel state information available")
         
-        return csi
+        return cached_csi
 
 
 class ChannelEqualization(Generic[WaveformType], ABC):
@@ -328,7 +328,7 @@ class WaveformGenerator(ABC):
     symbol_type: np.dtype = complex
     """Symbol type."""
 
-    __modem: Optional[Modem]                        # Modem this waveform generator is attached to
+    __modem: Optional[BaseModem]                        # Modem this waveform generator is attached to
     __synchronization: Synchronization              # Synchronization routine
     __channel_estimation: ChannelEstimation         # Channel estimation routine
     __channel_equalization: ChannelEqualization     # Channel equalization routine
@@ -336,13 +336,13 @@ class WaveformGenerator(ABC):
     __modulation_order: int                         # Cardinality of the set of communication symbols
 
     def __init__(self,
-                 modem: Optional[Modem] = None,
+                 modem: Optional[BaseModem] = None,
                  oversampling_factor: int = 1,
                  modulation_order: int = 16) -> None:
         """Waveform Generator initialization.
 
         Args:
-            modem (Modem, optional):
+            modem (BaseModem, optional):
                 A modem this generator is attached to.
                 By default, the generator is considered to be floating.
 
@@ -609,7 +609,7 @@ class WaveformGenerator(ABC):
         return bits / time
 
     @property
-    def modem(self) -> Modem:
+    def modem(self) -> BaseModem:
         """Access the modem this generator is attached to.
 
         Returns:
@@ -627,7 +627,7 @@ class WaveformGenerator(ABC):
         return self.__modem
 
     @modem.setter
-    def modem(self, handle: Modem) -> None:
+    def modem(self, handle: BaseModem) -> None:
         """Modify the modem this generator is attached to.
 
         Args:
@@ -643,6 +643,7 @@ class WaveformGenerator(ABC):
             handle.waveform_generator = self
 
         self.__modem = handle
+        self.random_mother = handle
         
     @property
     def synchronization(self) -> Synchronization:

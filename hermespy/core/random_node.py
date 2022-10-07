@@ -6,10 +6,13 @@ Random Graph
 """
 
 from __future__ import annotations
+from random import Random
 from typing import Optional, Type, Union
 
 from numpy.random import default_rng, Generator
 from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
+
+from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -21,13 +24,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RandomNode(object):
+class RandomNode(Serializable):
     """Random Node within a random dependency graph."""
-
-    # __slots__ = ['__mother_node', '__generator', '__seed']
-
-    yaml_tag = u'RandomNode'
-    """YAML serialization tag."""
 
     __mother_node: Optional[RandomNode]     # Mother node of this node
     __generator: Optional[Generator]        # Numpy generator object
@@ -66,6 +64,11 @@ class RandomNode(object):
             return self.__generator
 
         return self.__mother_node._rng
+    
+    @_rng.setter
+    def _rng(self, value: Optional[Generator]) -> None:
+        
+        self.__generator = value
 
     @property
     def is_random_root(self) -> bool:
@@ -159,4 +162,11 @@ class RandomNode(object):
         state = constructor.construct_mapping(node)
 
         # Just mask the seed state if provided
-        state['random_generator'] = state.pop('seed', None)
+        random_seed = state.pop('seed', None)
+
+        rng: RandomNode = cls.InitializationWrapper(state)
+        
+        if random_seed is not None:
+            rng.set_seed(random_seed)
+
+        return rng

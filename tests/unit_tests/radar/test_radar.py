@@ -235,7 +235,6 @@ class TestRadar(TestCase):
         transmission = self.radar.transmit()
         self.assertEqual(self.device.antennas.num_antennas, transmission.signal.num_streams)
 
-
     def test_receive_waveform_validation(self) -> None:
         """Receiving should raise a RuntimeError if no waveform was configured"""
         
@@ -256,7 +255,7 @@ class TestRadar(TestCase):
         """Receiving without a configured beamformer should raise a RuntimeError"""
 
         transmission = self.radar.transmit()
-        self.radar._receiver.cache_reception(transmission.signal)
+        self.radar.cache_reception(transmission.signal)
         self.radar.receive_beamformer = None
 
         with self.assertRaises(RuntimeError):
@@ -266,7 +265,7 @@ class TestRadar(TestCase):
         """Receiving should raise a RuntimeError if the configured beamformer is not supported"""
 
         transmission = self.radar.transmit()
-        self.radar._receiver.cache_reception(transmission.signal)
+        self.radar.cache_reception(transmission.signal)
 
         beamformer = Mock()
         beamformer.num_receive_output_streams = 2
@@ -279,7 +278,7 @@ class TestRadar(TestCase):
         """Receiving should raise a RuntimeError if the configured beamformer is not supported"""
 
         tranmsission = self.radar.transmit()
-        self.radar._receiver.cache_reception(tranmsission.signal)
+        self.radar.cache_reception(tranmsission.signal)
 
         beamformer = Mock()
         beamformer.num_receive_output_streams = 1
@@ -293,7 +292,7 @@ class TestRadar(TestCase):
         """Receiving without a beamformer should result in a valid radar cube"""
 
         self.device.antennas.num_antennas = 1
-        self.radar._receiver.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
+        self.radar.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
         self.radar.receive_beamformer = None
 
         reception = self.radar.receive()
@@ -303,7 +302,7 @@ class TestRadar(TestCase):
         """Receiving with a beamformer should result in a valid radar cube"""
 
         transmission = self.radar.transmit()
-        self.radar._receiver.cache_reception(transmission.signal)
+        self.radar.cache_reception(transmission.signal)
 
         reception = self.radar.receive()
         self.assertEqual(1, len(reception.cube.angle_bins))

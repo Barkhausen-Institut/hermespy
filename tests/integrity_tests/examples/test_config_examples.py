@@ -27,7 +27,8 @@ def init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
     
     args = list(args)
     args[1] = 1
-    kwargs['num_actors'] = 1
+    kwargs['num_actors'] = 1            # Only spawn a single actor
+    kwargs['catch_exceptions'] = False  # Don't catch exceptions during runtime
     
     monte_carlo_init(cls, *args, **kwargs)
 
@@ -76,8 +77,9 @@ class TestConfigurationExamples(TestCase):
             path (str):
                 Path to the yaml configuration file.
         """
-
-        with patch.object(MonteCarlo, '__init__', new=init_mock), patch('sys.stdout'), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
+        
+        # patch('sys.stdout')
+        with patch.object(MonteCarlo, '__init__', new=init_mock), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
 
             hermes([path, '-o', self.tempdir.name])
     

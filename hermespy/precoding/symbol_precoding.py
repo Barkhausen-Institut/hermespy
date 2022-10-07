@@ -16,7 +16,9 @@ from hermespy.core.factory import Serializable
 from .precoding import Precoder, Precoding
 
 if TYPE_CHECKING:
-    from hermespy.modem import Modem, StatedSymbols
+    
+    from hermespy.modem import StatedSymbols
+    from hermespy.modem.modem import BaseModem
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -75,7 +77,7 @@ class SymbolPrecoder(Precoder, ABC):
         ...  # pragma no cover
 
 
-class SymbolPrecoding(Serializable, Precoding[SymbolPrecoder]):
+class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
     """Channel SymbolPrecoding configuration for wireless transmission of modulated data symbols.
 
     Symbol precoding may occur as an intermediate step between bit-mapping and base-band symbol modulations.
@@ -84,11 +86,11 @@ class SymbolPrecoding(Serializable, Precoding[SymbolPrecoder]):
     streams into multi-dimensional symbol streams during transmission and subsequently decode during reception.
     """
 
-    yaml_tag = u'Symbol-Precoding'
+    yaml_tag = u'SymbolCoding'
     """YAML serialization tag."""
 
     def __init__(self,
-                 modem: Modem = None) -> None:
+                 modem: BaseModem = None) -> None:
         """Symbol Precoding object initialization.
 
         Args:

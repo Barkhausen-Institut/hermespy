@@ -407,7 +407,8 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
 
     __actor_count: int = 0
 
-    def __init__(self, argument_tuple: Any) -> None:
+    def __init__(self, argument_tuple: Any,
+                 catch_exceptions: bool = True) -> None:
         """
         Args:
 
@@ -415,7 +416,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
                 MonteCarloActor initialization arguments.
         """
 
-        MonteCarloActor.__init__(self, argument_tuple)
+        MonteCarloActor.__init__(self, argument_tuple, catch_exceptions)
         SimulationRunner.__init__(self, self._investigated_object)
 
         # Update the internal random seed pseudo-deterministically for each actor instance
@@ -600,25 +601,33 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
 
         # Pop configuration sections for "special" treatment
         devices: List[SimulatedDevice] = state.pop('Devices', [])
-        channels: List[Tuple[Channel, int]] = state.pop('Channels', [])
+        channels: List[Channel] = state.pop('Channels', [])
         operators: List[Operator] = state.pop('Operators', [])
         evaluators: List[Evaluator] = state.pop('Evaluators', [])
         dimensions: Dict[str, Any] = state.pop('Dimensions', {})
 
         # Initialize simulation
-        simulation = cls.InitializationWrapper(state)
+        simulation: Simulation = cls.InitializationWrapper(state)
 
         # Add devices to the simulation
         for device in devices:
             simulation.scenario.add_device(device)
 
         # Assign channel models
-        for channel, channel_position in channels:
+        for channel in channels:
 
-            output_device_idx = channel_position[0]
-            input_device_idx = channel_position[1]
+            # If the scenario features just a single device, we can infer the transmitter and receiver easily
+            if channel.transmitter is None or channel.receiver is None:
+                
+                if simulation.scenario.num_devices > 1:
+                    raise RuntimeError("Please specifiy the transmitting and receiving device of each channel in a multi-device scenario")
 
-            simulation.scenario.set_channel(output_device_idx, input_device_idx, channel)
+                channel.transmitter = simulation.scenario.devices[0]
+                channel.receiver = simulation.scenario.devices[0]
+
+            simulation.scenario.set_channel(channel.receiver, channel.transmitter, channel)
+
+        
 
         # Register evaluators
         for evaluator in evaluators:
