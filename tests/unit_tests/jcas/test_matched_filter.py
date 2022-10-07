@@ -5,6 +5,7 @@ import numpy as np
 
 from hermespy.core import Signal
 from hermespy.modem import Symbols, WaveformGenerator
+from hermespy.simulation import SimulatedDevice
 from hermespy.jcas import MatchedFilterJcas
 
 __author__ = "Jan Adler"
@@ -86,18 +87,16 @@ class TestMatchedFilterJoint(TestCase):
     def setUp(self) -> None:
         
         self.rng = np.random.default_rng(42)
-        
-        self.device = Mock()
-        self.device.num_antennas = 1
-        self.device.carrier_frequency = 0.
-        self.device._rng = self.rng
-        self.waveform = MockWaveformGenerator()
-        
         self.range_resolution = 10
         
         self.joint = MatchedFilterJcas(max_range=10)
-        self.joint.device = self.device
+        self.waveform = MockWaveformGenerator()
         self.joint.waveform_generator = self.waveform
+        
+        self.device = SimulatedDevice()
+        self.device._rng = self.rng
+        self.device.transmitters.add(self.joint)
+        self.device.receivers.add(self.joint)
         
     def test_transmit_receive(self) -> None:
         
@@ -107,7 +106,7 @@ class TestMatchedFilterJoint(TestCase):
         delay_offset = Signal(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate)
         delay_offset.append_samples(transmission.signal)
         
-        self.joint._receiver.cache_reception(delay_offset)
+        self.joint.cache_reception(delay_offset)
         
         reception = self.joint.receive()
         self.assertTrue(10, reception.cube.data.argmax)

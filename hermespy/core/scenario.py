@@ -33,8 +33,6 @@ class Scenario(RandomNode, Generic[DeviceType]):
     Each device can be operated by multiple operators simultaneously.
     """
 
-    __slots__ = ['__devices']
-
     __devices: List[DeviceType]         # Registered devices within this scenario.
     __drop_duration: float              # Drop duration in seconds.
 

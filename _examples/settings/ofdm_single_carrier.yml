@@ -15,13 +15,14 @@ Devices:
       dimensions: [2, 1, 1]         # 2 elements within the array
 
 
-# Channel models between device models
+# Specify channel models interconnecting devices 
 Channels:
 
-  # 5G TDL model at alpha device
-  - !<5GTDL_0_0>
-    type: A
-    rms_delay: 1e-6
+  # 5G TDL model at the self-interference channel of device_alpha
+  - !<5GTDL>
+    devices: [*device_alpha, *device_alpha]
+    type: A                        # Type of the TDL model. A-E are available
+    rms_delay: 1e-6                # Root mean square delay in seconds    
 
 
 # Operators transmitting or receiving signals over the devices
@@ -30,7 +31,8 @@ Operators:
   # A single modem operating the device #0
   - &modem_alpha !<Modem>
 
-    device: *device_alpha          # Device the modem is operating on
+    device: *device_alpha                 # Device the modem is operating on
+    reference: *device_alpha              # Reference device to which the channel is estimated
 
     # Bit encoding configuration before mapping to modulation symbols
     #Encoding:
@@ -39,11 +41,11 @@ Operators:
     #    block_size: 256
     #    rate: [1, 2]
 
-    # Stream encoding configuration
-    Precoding:
+    # MIMO configuration on the symbol level
+    precoding: !<SymbolCoding>
 
-      - !<DFT>
-      - !<SM>
+      - !<DFT>      # Discrete Fourier Transform Precoding
+      - !<SM>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
     Waveform: !<OFDM>

@@ -12,8 +12,10 @@ from fractions import Fraction
 
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 
+from hermespy.core.factory import Serializable
+
 if TYPE_CHECKING:
-    from hermespy.modem import Modem
+    from hermespy.modem.modem import BaseModem
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -138,7 +140,7 @@ PrecoderType = TypeVar('PrecoderType', bound=Precoder)
 """Type of precoder."""
 
 
-class Precoding(Generic[PrecoderType]):
+class Precoding(Generic[PrecoderType], Serializable):
     """Channel Precoding configuration for wireless transmission of modulated data symbols.
 
     Symbol precoding may occur as an intermediate step between bit-mapping and base-band symbol modulations.
@@ -156,11 +158,11 @@ class Precoding(Generic[PrecoderType]):
             The full precoding results from a sequential execution of each precoding step.
     """
 
-    __modem: Optional[Modem]
+    __modem: Optional[BaseModem]
     __precoders: List[PrecoderType]
 
     def __init__(self,
-                 modem: Modem = None) -> None:
+                 modem: BaseModem = None) -> None:
         """Symbol Precoding object initialization.
 
         Args:
@@ -210,18 +212,18 @@ class Precoding(Generic[PrecoderType]):
                 Newly created `Precoding` instance.
         """
 
-        state = constructor.construct_sequence(node, deep=True)
+        state: List[Precoder] = constructor.construct_sequence(node, deep=True)
         symbol_precoding = cls()
 
         symbol_precoding.__precoders = state
 
-        for precoder in symbol_precoding.__precoders:
+        for precoder in state:
             precoder.precoding = symbol_precoding
 
         return symbol_precoding
 
     @property
-    def modem(self) -> Modem:
+    def modem(self) -> BaseModem:
         """Access the modem this Precoding configuration is attached to.
 
         Returns:
@@ -238,7 +240,7 @@ class Precoding(Generic[PrecoderType]):
         return self.__modem
 
     @modem.setter
-    def modem(self, modem: Modem) -> None:
+    def modem(self, modem: BaseModem) -> None:
         """Modify the modem this Precoding configuration is attached to.
 
         Args:
@@ -270,8 +272,13 @@ class Precoding(Generic[PrecoderType]):
         precoder_index = self.__precoders.index(precoder)
 
         if precoder_index >= len(self.__precoders) - 1:
-             return self.__modem.device.num_antennas
+            
+            if self.modem.transmitting_device:
+                return self.modem.transmitting_device.num_antennas
 
+            else:
+                return self.modem.receiving_device.num_antennas
+            
         return self.__precoders[precoder_index + 1].num_input_streams
 
     def required_inputs(self, precoder: PrecoderType) -> int:

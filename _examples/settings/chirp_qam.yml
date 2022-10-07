@@ -35,9 +35,10 @@ Operators:
   - &modem_alpha !<Modem>
 
     device: *device_alpha          # Device the modem is operating on
+    reference: *device_alpha
 
     # Bit encoding configuration before mapping to modulation symbols
-    Encoding:
+    Encoding: !<Encoding>
 
       # Repetition encoding, repeating bit sections for redundancy
       - !<Repetition>
@@ -60,6 +61,7 @@ Operators:
       guard_interval: 1e-6
 
       # Post-Processing
+      channel_estimation: !<SC-Ideal>
       channel_equalization: !<SC-MMSE>
 
 # Performance indication evaluation configuration

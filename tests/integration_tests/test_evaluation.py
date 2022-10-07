@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from hermespy.modem import Modem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
+from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
 from hermespy.core.monte_carlo import EvaluationResult, Evaluator, GridDimension, dimension
 
@@ -34,7 +34,7 @@ class TestEvaluators(TestCase):
                                             modulation_order=64, oversampling_factor=1)
         self.device = SimulatedDevice()
         
-        self.modem = Modem()
+        self.modem = DuplexModem()
         self.modem.waveform_generator = waveform
         self.modem.device = self.device
 

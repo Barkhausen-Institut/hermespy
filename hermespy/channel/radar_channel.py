@@ -13,9 +13,9 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 from scipy.constants import pi, speed_of_light
 
-from ..core.device import FloatingError
-from ..tools import db2lin
 from .channel import Channel
+from hermespy.tools import db2lin
+from hermespy.core import FloatingError, Serializable
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -27,7 +27,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RadarChannel(Channel):
+class RadarChannel(Channel, Serializable):
     """Model of a monostatic radar channel in base-band.
 
     The radar channel is currently implemented as a single-point reflector.
@@ -49,7 +49,6 @@ class RadarChannel(Channel):
     """
 
     yaml_tag = u'RadarChannel'
-    yaml_matrix = True
 
     __target_range: float
     __radar_cross_section: float

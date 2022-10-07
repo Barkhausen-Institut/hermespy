@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # Import required HermesPy modules
-from hermespy.channel import Channel, RadarChannel
+from hermespy.channel import RadarChannel
 from hermespy.simulation import SimulatedDevice
 from hermespy.radar import Radar, DetectionProbEvaluator, ReceiverOperatingCharacteristic, FMCW
 
