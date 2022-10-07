@@ -41,8 +41,9 @@ class FMCWRadarSimulation(TestCase):
         self.radar.waveform = self.waveform
         self.radar.transmit_beamformer = self.beamformer
         self.radar.receive_beamformer = self.beamformer
-
-        self.radar.device = self.device
+        
+        self.device.transmitters.add(self.radar)
+        self.device.receivers.add(self.radar)
 
         self.channel = RadarChannel(target_range=.5*self.waveform.max_range,
                                     radar_cross_section=1.)

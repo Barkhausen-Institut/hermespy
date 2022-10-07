@@ -59,7 +59,7 @@ from ..core.executable import Executable
 from ..core.factory import Serializable
 from ..core.scenario import Scenario
 from ..core.monte_carlo import Artifact, ArtifactTemplate, Evaluator, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult
-from .modem import Modem
+from .modem import TransmittingModem, ReceivingModem
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -74,19 +74,19 @@ __status__ = "Prototype"
 class CommunicationEvaluator(Evaluator, ABC):
     """Base class for evaluating communication processes between two modems."""
 
-    __transmitting_modem: Modem     # Handle to the transmitting modem
-    __receiving_modem: Modem        # Handle to the receiving modem
+    __transmitting_modem: TransmittingModem     # Handle to the transmitting modem
+    __receiving_modem: ReceivingModem           # Handle to the receiving modem
 
     def __init__(self,
-                 transmitting_modem: Modem,
-                 receiving_modem: Modem) -> None:
+                 transmitting_modem: TransmittingModem,
+                 receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
-            transmitting_modem (Modem):
+            transmitting_modem (TransmittingModem):
                 Modem transmitting information.
 
-            receiving_modem (Modem):
+            receiving_modem (ReceivingModem):
                 Modem receiving information.
         """
 
@@ -97,7 +97,7 @@ class CommunicationEvaluator(Evaluator, ABC):
         Evaluator.__init__(self)
 
     @property
-    def transmitting_modem(self) -> Modem:
+    def transmitting_modem(self) -> TransmittingModem:
         """Modem transmitting information.
 
         Returns:
@@ -107,7 +107,7 @@ class CommunicationEvaluator(Evaluator, ABC):
         return self.__transmitting_modem
 
     @property
-    def receiving_modem(self) -> Modem:
+    def receiving_modem(self) -> ReceivingModem:
         """Modem receiving information.
 
         Returns:
@@ -160,15 +160,15 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     """YAML serialization tag"""
 
     def __init__(self,
-                 transmitting_modem: Modem,
-                 receiving_modem: Modem) -> None:
+                 transmitting_modem: TransmittingModem,
+                 receiving_modem: ReveivingModem) -> None:
         """
         Args:
 
-            transmitting_modem (Modem):
+            transmitting_modem (TransmittingModem):
                 Modem transmitting information.
 
-            receiving_modem (Modem):
+            receiving_modem (ReceivingModem):
                 Modem receiving information.
         """
 
@@ -242,15 +242,15 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
     """YAML serialization tag"""
 
     def __init__(self,
-                 transmitting_modem: Modem,
-                 receiving_modem: Modem) -> None:
+                 transmitting_modem: TransmittingModem,
+                 receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
-            transmitting_modem (Modem):
+            transmitting_modem (TransmittingModem):
                 Modem transmitting information.
 
-            receiving_modem (Modem):
+            receiving_modem (ReceivingModem):
                 Modem receiving information.
         """
 
@@ -334,15 +334,15 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     """YAML serialization tag"""
 
     def __init__(self,
-                 transmitting_modem: Modem,
-                 receiving_modem: Modem) -> None:
+                 transmitting_modem: TransmittingModem,
+                 receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
-            transmitting_modem (Modem):
+            transmitting_modem (TransmittingModem):
                 Modem transmitting information.
 
-            receiving_modem (Modem):
+            receiving_modem (ReceivingModem):
                 Modem receiving information.
         """
 
@@ -447,15 +447,15 @@ class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
     """YAML serialization tag"""
 
     def __init__(self,
-                 transmitting_modem: Modem,
-                 receiving_modem: Modem) -> None:
+                 transmitting_modem: TransmittingModem,
+                 receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
-            transmitting_modem (Modem):
+            transmitting_modem (TransmittingModem):
                 Modem transmitting information.
 
-            receiving_modem (Modem):
+            receiving_modem (ReceivingModem):
                 Modem receiving information.
         """
 

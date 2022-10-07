@@ -52,12 +52,8 @@ class TestOperator(TestCase):
 
         self.device = DeviceMock()
         self.slot = OperatorSlot(device=self.device)
-        self.operator = Operator(slot=self.slot)
-
-    def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes."""
-
-        self.assertIs(self.slot, self.operator.slot)
+        self.operator = Operator()
+        self.slot.add(self.operator)
 
     def test_slot_setget(self) -> None:
         """Slot property getter should return setter argument."""
@@ -80,14 +76,15 @@ class TestOperator(TestCase):
     def test_slot_index(self) -> None:
         """The slot index property should return the proper slot index."""
 
-        self.operator.slot = None
-        self.assertEqual(None, self.operator.slot_index)
-        self.assertEqual(0, self.slot.num_operators)
+        self.assertEqual(0, self.operator.slot_index)
+        self.assertEqual(1, self.slot.num_operators)
 
         self.slot.add(Operator())
-        self.operator.slot = self.slot
         self.slot.add(Operator())
-        self.assertEqual(self.operator.slot_index, 1)
+        
+        new_operator = Operator()
+        self.slot.add(new_operator)
+        self.assertEqual(3, new_operator.slot_index)
 
     def test_device(self) -> None:
         """The device property should return the proper handle."""
@@ -257,15 +254,6 @@ class TestOperatorSlot(TestCase):
 
         self.assertTrue(self.slot.registered(operator))
         self.assertIs(operator.slot, self.slot)
-
-    def test_add_validation(self) -> None:
-        """Adding an already existing operator should raise a RuntimeError."""
-
-        operator = Mock()
-        self.slot.add(operator)
-
-        with self.assertRaises(RuntimeError):
-            self.slot.add(operator)
 
     def test_remove(self) -> None:
         """Operators should be properly removed from the list."""

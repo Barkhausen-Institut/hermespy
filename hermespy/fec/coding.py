@@ -69,7 +69,7 @@ from hermespy.core.factory import Serializable
 from hermespy.core.random_node import RandomNode
 
 if TYPE_CHECKING:
-    from hermespy.modem import Modem
+    from hermespy.modem.modem import BaseModem
 
 
 __author__ = "Jan Adler"
@@ -248,7 +248,7 @@ class Encoder(ABC, Serializable):
         return self.bit_block_size / self.code_block_size
 
 
-class EncoderManager(Serializable, RandomNode):
+class EncoderManager(RandomNode, Serializable):
     """Configuration managing a channel coding pipeline."""
 
     yaml_tag: str = u'Encoding'
@@ -259,17 +259,17 @@ class EncoderManager(Serializable, RandomNode):
     allow_truncating: bool
     """Tolerate truncating of data code blocks during decoding."""
 
-    __modem: Optional[Modem]        # Communication modem instance this coding pipeline configuration is attached to
+    __modem: Optional[BaseModem]        # Communication modem instance this coding pipeline configuration is attached to
     _encoders: List[Encoder]        # List of encoding steps defining the internal pipeline configuration
 
     def __init__(self,
-                 modem: Modem = None,
+                 modem: BaseModem = None,
                  allow_padding: bool = True,
                  allow_truncating: bool = True) -> None:
         """
         Args:
 
-            modem (Modem, optional):
+            modem (BaseModem, optional):
                 Communication modem instance this coding pipeline configuration is attached to.
                 By default, the coding pipeline is considered to be floating.
 
@@ -341,7 +341,7 @@ class EncoderManager(Serializable, RandomNode):
         return manager
 
     @property
-    def modem(self) -> Modem:
+    def modem(self) -> BaseModem:
         """Communication modem instance this coding pipeline configuration is attached to.
 
         Returns:
@@ -361,7 +361,7 @@ class EncoderManager(Serializable, RandomNode):
         return self.__modem
 
     @modem.setter
-    def modem(self, modem: Modem) -> None:
+    def modem(self, modem: BaseModem) -> None:
 
         if self.__modem is not modem:
             self.__modem = modem

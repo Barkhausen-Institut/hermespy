@@ -341,10 +341,7 @@ class Radar(DuplexOperator):
             else:
                 signal = self.transmit_beamformer.transmit(signal)
 
-        # Transmit signal over the occupied device slot (if the radar is attached to a device)
-        if self._transmitter.attached:
-            self._transmitter.slot.add_transmission(self._transmitter, signal)
-
+        self.device.transmitters.add_transmission(self, signal)
         return RadarTransmission(signal)
 
     def receive(self) -> RadarReception:
@@ -353,10 +350,10 @@ class Radar(DuplexOperator):
             raise RuntimeError("Radar waveform not specified")
         
         if not self.device:
-            raise RuntimeError("Error attempting to transmit over a floating radar operator")
+            raise RuntimeError("Error attempting to receive over a floating radar operator")
 
         # Retrieve signal from receiver slot
-        signal = self._receiver.signal.resample(self.__waveform.sampling_rate)
+        signal: Signal = self.signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:

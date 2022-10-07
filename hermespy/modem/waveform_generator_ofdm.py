@@ -9,7 +9,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
 from math import ceil
-from multiprocessing.sharedctypes import Value
 from re import sub
 from typing import List, Tuple, Optional, Type, Union, Any, Set
 
@@ -1492,8 +1491,11 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         return StatedSymbols(symbols.raw, csi.state[:, :, :symbols.num_blocks, :]), csi
 
 
-class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform]):
+class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Serializable):
     """Least-Squares channel estimation for OFDM waveforms."""
+    
+    yaml_tag: u'OFDM-LS'
+    """YAML serializtion tag"""
     
     def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
         
@@ -1533,7 +1535,7 @@ class OFDMChannelEqualization(ChannelEqualization[OFDMWaveform], ABC):
         ChannelEqualization.__init__(self, waveform_generator)
 
 
-class OFDMZeroForcingChannelEqualization(ZeroForcingChannelEqualization[OFDMWaveform]):
+class OFDMZeroForcingChannelEqualization(ZeroForcingChannelEqualization[OFDMWaveform], Serializable):
     """Zero-Forcing channel equalization for OFDM waveforms."""
     
     yaml_tag = u'OFDM-ZF'

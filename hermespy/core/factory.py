@@ -33,11 +33,11 @@ from any context.
 from __future__ import annotations
 
 import re
-from abc import ABCMeta
+from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections.abc import Iterable
 from functools import partial
 from inspect import getmembers, isclass, signature
-from importlib import import_module
+from importlib import __import__, import_module
 from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
@@ -45,10 +45,11 @@ from re import compile, Pattern, Match
 from typing import Any, Dict, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
 
 import numpy as np
+from h5py import Group
 from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node, MappingNode, SequenceNode
 from ruamel.yaml.constructor import ConstructorError
 
-import hermespy as hermes
+import hermespy
 from ..tools import db2lin
 
 __author__ = "Jan Adler"
@@ -154,7 +155,7 @@ class Serializable(metaclass=ABCMeta):
                 continue
 
             # Make sure the attribute is a property and settable
-            if isinstance(attribute_type, property) and attribute_type.setter:
+            if isinstance(attribute_type, property):
                 properties.append(attribute_key)
 
         init_parameters: Dict[str, Any] = {}
@@ -167,17 +168,41 @@ class Serializable(metaclass=ABCMeta):
                 init_parameters[configuration_key] = configuration.pop(configuration_key)
                 continue
 
+            lower_key = configuration_key.lower()
+            
+            if lower_key in init_signature or lower_key in arg_signature:
+
+                init_parameters[lower_key] = configuration.pop(configuration_key)
+                continue
+
             if configuration_key in properties:
+                
                 init_properties[configuration_key] = configuration.pop(configuration_key)
+                continue
+            
+            if lower_key in properties:
+                
+                init_properties[lower_key] = configuration.pop(configuration_key)
+                continue
 
         # Initialize class
         init_parameters.update(configuration)       # Remaining configuration fields get treated as kwargs
-        instance = cls(**init_parameters)
+        
+        try:
+            instance = cls(**init_parameters)
+            
+        except TypeError as e:
+            raise TypeError(f"Erorr while attempting to initialize '{cls.__name__}', {str(e)}")
 
         # Configure properties
         for property_name, property_value in init_properties.items():
-            setattr(instance, property_name, property_value)
-
+            
+            try:
+                setattr(instance, property_name, property_value)
+                
+            except AttributeError as e:
+                raise AttributeError(f"Error while attempting to configure '{property_name}', {str(e)}")
+                
         # Return configured class instance
         return instance
 
@@ -238,8 +263,14 @@ class Factory:
         self.__registered_classes = set()
         self.__registered_tags = set()
 
-        # Browse the current environment for packages within the 'hermespy' namespace
-        for finder, name, ispkg in iter_modules(hermes.__path__, "hermespy."):
+        # Iterate over all modules within the hermespy namespace
+        # Scan for serializable classes
+        
+        lookup_paths = list(hermespy.__path__) + [os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))]
+        for _, name, is_module in iter_modules(lookup_paths, hermespy.__name__ + '.'):
+
+            if not is_module:
+                continue
 
             module = import_module(name)
 
@@ -720,3 +751,39 @@ class Factory:
 
             else:
                 self.__yaml.dump(*serializable_object, stream)
+
+
+class HDFSerializable(metaclass=ABCMeta):
+    """Base class for object serializble to the HDF5 format.
+    
+    Structures are serialized to HDF5 files by the :meth:`.to_HDF` routine and
+    de-serialized by the :meth:`.from_HDF` method, respectively.
+    """
+    
+    @abstractmethod
+    def to_HDF(self, group: Group) -> None:
+        """Serialize the object state to HDF5.
+        
+        Dumps the object's state and additional information to a HDF5 group.
+        
+        Args:
+        
+            group (Group):
+                The HDF5 group to which the object is serialized.
+        """
+        ...  # pragma no cover
+        
+    @abstractclassmethod
+    def from_HDF(cls: Type[HDFSerializable], group: Group) -> HDFSerializable:
+        """De-Serialized the object state from HDF5.
+        
+        Recalls the object's state from a HDF5 group.
+        
+        Args:
+        
+            group (Group):
+                The HDF5 group from which the object state is recalled.
+                
+        Returns: The object initialized from the HDF5 group state.
+        """
+        ...  # pragma no cover

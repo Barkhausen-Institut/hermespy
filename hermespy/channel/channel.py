@@ -13,7 +13,7 @@ import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 
 from hermespy.core import RandomNode, Signal, ChannelStateInformation
-from hermespy.core.factory import SerializableArray
+from hermespy.core.factory import Serializable
 from hermespy.core.channel_state_information import ChannelStateFormat
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel(SerializableArray, RandomNode):
+class Channel(RandomNode, Serializable):
     """An ideal distortion-less channel.
 
     It also serves as a base class for all other channel models.
@@ -56,6 +56,7 @@ class Channel(SerializableArray, RandomNode):
     def __init__(self,
                  transmitter: Optional[SimulatedDevice] = None,
                  receiver: Optional[SimulatedDevice] = None,
+                 devices: Optional[Tuple[SimulatedDevice, SimulatedDevice]]= None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: float = 0.,
@@ -66,10 +67,13 @@ class Channel(SerializableArray, RandomNode):
         Args:
 
             transmitter (Transmitter, optional):
-                The modem transmitting into this channel.
+                The device transmitting into this channel.
 
             receiver (Receiver, optional):
-                The modem receiving from this channel.
+                The device receiving from this channel.
+                
+            devices (Tuple[SimulatedDevice, SimulatedDevice], optional):
+                Tuple of devices connected by this channel model.
 
             active (bool, optional):
                 Channel activity flag.
@@ -93,7 +97,7 @@ class Channel(SerializableArray, RandomNode):
         """
 
         # Initialize base classes
-        SerializableArray.__init__(self)        # Must be first in order for correct diamond resolve
+        Serializable.__init__(self)        # Must be first in order for correct diamond resolve
         RandomNode.__init__(self, seed=seed)
 
         # Default parameters
@@ -112,6 +116,14 @@ class Channel(SerializableArray, RandomNode):
 
         if receiver is not None:
             self.receiver = receiver
+            
+        if devices is not None:
+            
+            if self.receiver is not None or self.transmitter is not None:
+                raise ValueError("Can't use 'devices' initialization argument in combination with specifying a transmitter / receiver")
+
+            self.transmitter = devices[0]
+            self.receiver = devices[1]
 
         if active is not None:
             self.active = active
