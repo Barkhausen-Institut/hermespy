@@ -9,11 +9,11 @@ import numpy as np
 import numpy.random as rand
 import numpy.testing as npt
 from numpy import exp
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from scipy import stats
 from scipy.constants import pi
 
-from hermespy.channel import MultipathFadingChannel
+from hermespy.channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation
 from hermespy.core.signal_model import Signal
 
 __author__ = "Andre Noll Barreto"
@@ -24,6 +24,82 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class MockAntennaCorrelation(AntennaCorrelation):
+    """Mock antenna correlation implementation for test purposes"""
+
+    @property
+    def covariance(self) -> np.ndarray:
+
+        return np.identity(2, dtype=complex)
+
+
+class TestAntennaCorrelation(unittest.TestCase):
+    """Test antenna correlation model base class"""
+
+    def setUp(self) -> None:
+
+        self.correlation = MockAntennaCorrelation()
+    
+    def test_channel_setget(self) -> None:
+        """Channel property getter should return setter argument"""
+
+        channel = Mock()
+        self.correlation.channel = channel
+        
+        self.assertIs(channel, self.correlation.channel)
+
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
+
+        device = Mock()
+        self.correlation.device = device
+
+        self.assertIs(device, self.correlation.device)
+
+
+class TestCustomAntennaCorrelation(unittest.TestCase):
+    """Test custom antenna correlation model"""
+
+    def setUp(self) -> None:
+
+        self.device = Mock()
+        self.device.num_antennas = 2
+        self.covariance = np.identity(2, dtype=complex)
+
+        self.correlation = CustomAntennaCorrelation(covariance=self.covariance)
+        self.correlation.device = self.device
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as class attributes"""
+
+        assert_array_equal(self.covariance, self.correlation.covariance)
+
+    def test_covariance_setget(self) -> None:
+        """Covariance property getter should return setter argument"""
+
+        covariance = 5 * np.identity(2, dtype=complex)
+        self.correlation.covariance = covariance
+
+        assert_array_equal(covariance, self.correlation.covariance)
+
+    def test_covariance_set_validation(self) -> None:
+        """Covariance property setter should raise a ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.correlation.covariance = np.diag(np.array([1, 2, 3]), 2)
+
+        with self.assertRaises(ValueError):
+            self.correlation.covariance = np.zeros((2, 2), dtype=complex)
+
+    def test_covariance_get_validation(self) -> None:
+        """Covariance property should raise a RuntimeError if the number of device antennas does not match"""
+
+        self.device.num_antennas = 4
+
+        with self.assertRaises(RuntimeError):
+            _ = self.correlation.covariance
 
 
 class TestMultipathFadingChannel(unittest.TestCase):
@@ -42,6 +118,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.transmit_frequency = pi * self.sampling_rate
         self.num_sinusoids = 40
         self.doppler_frequency = 0.0
+        self.los_doppler_frequency = 0.
 
         self.transmitter = Mock()
         self.receiver = Mock()
@@ -63,6 +140,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             'num_sinusoids': self.num_sinusoids,
             'los_angle': None,
             'doppler_frequency': self.doppler_frequency,
+            'los_doppler_frequency': self.los_doppler_frequency,
             'sync_offset_low': self.sync_offset_low,
             'sync_offset_high': self.sync_offset_high,
             'seed': 42,
@@ -121,6 +199,16 @@ class TestMultipathFadingChannel(unittest.TestCase):
         with self.assertRaises(ValueError):
             params = deepcopy(self.channel_params)
             params['rice_factors'] = np.array([-1.0])
+            _ = MultipathFadingChannel(**params)
+            
+        with self.assertRaises(ValueError):
+            params = deepcopy(self.channel_params)
+            params['delays'] = np.ones((1, 2))
+            _ = MultipathFadingChannel(**params)
+        
+        with self.assertRaises(ValueError):
+            params = deepcopy(self.channel_params)
+            params['delays'] = np.empty((0,))
             _ = MultipathFadingChannel(**params)
 
     def test_delays_get(self) -> None:
@@ -228,6 +316,24 @@ class TestMultipathFadingChannel(unittest.TestCase):
         second_draw = channel.impulse_response(self.num_samples, self.sampling_rate)
 
         assert_array_almost_equal(first_draw, second_draw)
+        
+    def test_impulse_response_no_interpolation(self) -> None:
+        """Test impulse response generation without interpolation"""
+        
+        self.channel_params['impulse_response_interpolation'] = False
+        channel = MultipathFadingChannel(**self.channel_params)
+        
+        impulse_response = channel.impulse_response(self.num_samples, self.sampling_rate)
+        self.assertEqual(1, impulse_response.shape[1])
+        
+    def test_impulse_response_fixed_los_angle(self) -> None:
+        """Test impulse response generation with a fixed line of sight angle"""
+        
+        self.channel_params['los_angle'] = 0.
+        channel = MultipathFadingChannel(**self.channel_params)
+        
+        impulse_response = channel.impulse_response(self.num_samples, self.sampling_rate)
+        self.assertEqual(1, impulse_response.shape[1])
 
     def test_propagation_siso_no_fading(self) -> None:
         """
@@ -429,6 +535,71 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel_state_info_gain = channel_gain.impulse_response(len(timestamps), self.sampling_rate)
 
         npt.assert_array_almost_equal(channel_state_info_gain, channel_state_info_no_gain * gain)
+
+    def test_antenna_correlation(self) -> None:
+        """Test channel simulation with antenna correlation modeling"""
+        
+        self.transmitter.antennas.num_antennas = 2
+        self.receiver.antennas.num_antennas = 2
+        
+        uncorrelated_channel = MultipathFadingChannel(**self.channel_params)
+        
+        self.channel_params['alpha_correlation'] = MockAntennaCorrelation()
+        self.channel_params['beta_correlation'] = MockAntennaCorrelation()
+        
+        correlated_channel = MultipathFadingChannel(**self.channel_params)
+        
+        uncorrelated_csi = uncorrelated_channel.impulse_response(self.num_samples, self.sampling_rate)
+        correlated_csi = correlated_channel.impulse_response(self.num_samples, self.sampling_rate)
+
+        # Since the correlation mock is just an identity, both channel states should be identical
+        assert_array_almost_equal(uncorrelated_csi, correlated_csi)
+        
+    def test_alpha_correlation_setget(self) -> None:
+        """Alpha correlation property getter should return setter argument"""
+        
+        channel = MultipathFadingChannel(**self.channel_params)
+        expected_correlation = Mock()
+        
+        channel.alpha_correlation = expected_correlation
+        
+        self.assertIs(expected_correlation, channel.alpha_correlation)
+        self.assertIs(self.transmitter, channel.alpha_correlation.device)
+        
+    def test_beta_correlation_setget(self) -> None:
+        """Beta correlation property getter should return setter argument"""
+        
+        channel = MultipathFadingChannel(**self.channel_params)
+        expected_correlation = Mock()
+        
+        channel.beta_correlation = expected_correlation
+        
+        self.assertIs(expected_correlation, channel.beta_correlation)
+        self.assertIs(self.receiver, channel.beta_correlation.device)
+        
+    def test_transmitter_setget(self) -> None:
+        """Setting the transmitter property should update the correlation configuration"""
+        
+        channel = MultipathFadingChannel(**self.channel_params)
+        channel.alpha_correlation = Mock()
+        expected_device = Mock()
+        
+        channel.transmitter = expected_device
+        
+        self.assertIs(expected_device, channel.transmitter)
+        self.assertIs(expected_device, channel.alpha_correlation.device)
+        
+    def test_receiver_setget(self) -> None:
+        """Setting the receiver property should update the correlation configuration"""
+        
+        channel = MultipathFadingChannel(**self.channel_params)
+        channel.beta_correlation = Mock()
+        expected_device = Mock()
+        
+        channel.receiver = expected_device
+        
+        self.assertIs(expected_device, channel.receiver)
+        self.assertIs(expected_device, channel.beta_correlation.device)
 
     def test_to_yaml(self) -> None:
         """Test YAML serialization dump validity."""
