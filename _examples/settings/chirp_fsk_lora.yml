@@ -36,6 +36,17 @@ Channels:
     power_profile: [ 0 ]    # Channel gain in dB
     rice_factors: [ .inf ]
 
+    # Configure 3GPP standard antenna correlation models at both linked devices
+    alpha_correlation: !<StandardCorrelation>
+
+        device_type: BASE_STATION
+        correlation: LOW
+
+    beta_correlation: !<StandardCorrelation>
+      
+        device_type: TERMINAL
+        correlation: MEDIUM
+
 
 # Operators transmitting or receiving signals over the devices
 Operators:

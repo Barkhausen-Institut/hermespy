@@ -80,6 +80,7 @@ setup(
         'sphinx~=4.5.0',
         'rich~=11.2.0',
         'ZODB~=5.7.0',
+        'h5py~=3.7.0',
     ],
     command_options={
         'build_sphinx': {

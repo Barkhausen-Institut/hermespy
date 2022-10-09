@@ -6,8 +6,8 @@ from .cluster_delay_line_rural_macrocells import RuralMacrocellsLineOfSight, Rur
 from .cluster_delay_line_street_canyon import StreetCanyonLineOfSight, StreetCanyonNoLineOfSight, StreetCanyonOutsideToInside
 from .cluster_delay_line_urban_macrocells import UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, UrbanMacrocellsOutsideToInside
 from .cluster_delay_lines import ClusterDelayLine, DelayNormalization
-from .multipath_fading_channel import MultipathFadingChannel
-from .multipath_fading_templates import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential
+from .multipath_fading_channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation
+from .multipath_fading_templates import MultipathFadingCost256, MultipathFading5GTDL, MultipathFadingExponential, StandardAntennaCorrelation, DeviceType, CorrelationType
 from .radar_channel import RadarChannel
 
 __author__ = "Tobias Kronauer"
@@ -33,12 +33,15 @@ except ImportError:
 
 from .quadriga_channel import QuadrigaChannel
 
-__all__ = ['ChannelStateDimension', 'ChannelStateFormat', 'ChannelStateInformation', 'Channel',
-           'IndoorFactoryLineOfSight', 'IndoorFactoryNoLineOfSight',
-           'IndoorOfficeLineOfSight', 'IndoorOfficeNoLineOfSight',
-           'RuralMacrocellsLineOfSight', 'RuralMacrocellsNoLineOfSight', 'RuralMacrocellsOutsideToInside',
-           'StreetCanyonLineOfSight', 'StreetCanyonNoLineOfSight', 'StreetCanyonOutsideToInside',
-           'UrbanMacrocellsLineOfSight', 'UrbanMacrocellsNoLineOfSight', 'UrbanMacrocellsOutsideToInside',
-           'ClusterDelayLine', 'DelayNormalization',
-           'MultipathFadingChannel', 'MultipathFading5GTDL', 'MultipathFadingCost256', 'MultipathFadingExponential',
-           'QuadrigaChannel', 'QuadrigaInterface', 'RadarChannel']
+__all__ = [
+    'ChannelStateDimension', 'ChannelStateFormat', 'ChannelStateInformation', 'Channel',
+    'IndoorFactoryLineOfSight', 'IndoorFactoryNoLineOfSight',
+    'IndoorOfficeLineOfSight', 'IndoorOfficeNoLineOfSight',
+    'RuralMacrocellsLineOfSight', 'RuralMacrocellsNoLineOfSight', 'RuralMacrocellsOutsideToInside',
+    'StreetCanyonLineOfSight', 'StreetCanyonNoLineOfSight', 'StreetCanyonOutsideToInside',
+    'UrbanMacrocellsLineOfSight', 'UrbanMacrocellsNoLineOfSight', 'UrbanMacrocellsOutsideToInside',
+    'ClusterDelayLine', 'DelayNormalization',
+    'MultipathFadingChannel', 'AntennaCorrelation', 'CustomAntennaCorrelation',
+    'MultipathFading5GTDL', 'MultipathFadingCost256', 'MultipathFadingExponential', 'StandardAntennaCorrelation', 'DeviceType', 'CorrelationType',
+    'QuadrigaChannel', 'QuadrigaInterface', 'RadarChannel',
+]
