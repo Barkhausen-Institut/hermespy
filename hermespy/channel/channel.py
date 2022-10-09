@@ -448,14 +448,14 @@ class Channel(RandomNode, Serializable):
         propagated_samples = np.zeros((impulse_response.shape[1],
                                        signal.num_samples + num_delay_samples), dtype=complex)
 
-        for delay_index in range(num_delay_samples+1):
+        for delay_index in range(num_delay_samples + 1):
             for tx_idx, rx_idx in product(range(num_tx_streams), range(num_rx_streams)):
 
                 delayed_signal = impulse_response[:num_signal_samples, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
-                propagated_samples[rx_idx, delay_index:delay_index+num_signal_samples] += delayed_signal
+                propagated_samples[rx_idx, delay_index:delay_index + num_signal_samples] += delayed_signal
 
         return Signal(propagated_samples, sampling_rate=signal.sampling_rate,
-                      carrier_frequency=signal.carrier_frequency, delay=signal.delay+delay)
+                      carrier_frequency=signal.carrier_frequency, delay=signal.delay + delay)
 
     def impulse_response(self,
                          num_samples: int,
