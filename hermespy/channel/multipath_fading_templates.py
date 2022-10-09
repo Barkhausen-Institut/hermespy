@@ -6,12 +6,14 @@ Multipath Fading Standard Templates
 """
 
 from __future__ import annotations
+from multiprocessing.sharedctypes import Value
 import numpy as np
-from enum import IntEnum
-from typing import Any, Optional, Type
+from enum import Enum, IntEnum
+from typing import Any, Optional, Type, Union
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 
-from hermespy.channel import MultipathFadingChannel
+from hermespy.core import FloatingError, Serializable
+from .multipath_fading_channel import AntennaCorrelation, MultipathFadingChannel
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -21,6 +23,139 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class DeviceType(IntEnum):
+    """3GPP device type"""
+
+    BASE_STATION = 0
+    """Base station"""
+
+    TERMINAL = 1
+    """Mobile terminal"""
+
+
+class CorrelationType(Enum):
+    """3GPP correlation type"""
+
+    LOW = 0., 0.
+    """Low antenna correlation"""
+
+    MEDIUM = .3, .3,
+    """Medium antenna correlation"""
+    
+    MEDIUM_A = .3, .3874
+    """Medium antenna correlation"""
+
+    HIGH = .9, .9
+    """High antenna correlation"""
+
+
+class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
+    """3GPP 5G Multipath fading standardized antenna correlations"""
+    
+    yaml_tag = u'StandardCorrelation'
+    """YAML serialization tag"""
+
+    __device_type: DeviceType                     # The assumed device
+    __correlation: CorrelationType                # The assumed correlation
+
+    def __init__(self,
+                 device_type: Union[DeviceType, int, str],
+                 correlation: Union[CorrelationType, str],
+                 **kwargs) -> None:
+        """
+        Args:
+
+            device_type (Union[DeviceType, int, str]):
+                The assumed device.
+
+            correlation (Union[CorrelationType, str]):
+                The assumed correlation.
+        """
+
+        self.device_type = device_type
+        self.correlation = correlation
+
+        AntennaCorrelation.__init__(self, **kwargs)
+        
+    @property
+    def device_type(self) -> DeviceType:
+        """Assumed 3GPP device type
+        
+        Returns: The device type.
+        
+        Raises:
+            
+            ValuError: On unsupported type conversions.
+        """
+        
+        return self.__device_type
+    
+    @device_type.setter
+    def device_type(self, value: Union[DeviceType, int, str]) -> None:
+        
+        if isinstance(value, DeviceType):
+            self.__device_type = value
+            
+        elif isinstance(value, int):
+            self.__device_type = DeviceType(value)
+            
+        elif isinstance(value, str):
+            self.__device_type = DeviceType[value]
+            
+        else:
+            raise ValueError("Unknown device_type type")
+        
+    @property
+    def correlation(self) -> CorrelationType:
+        """Assumed 3GPP standard correlation type.
+        
+        Returns: The correlation type.
+        
+        Raises:
+            
+            ValuError: On unsupported type conversions.
+        """
+        
+        return self.__correlation
+    
+    @correlation.setter
+    def correlation(self, value: Union[CorrelationType, str]) -> None:
+        
+        if isinstance(value, CorrelationType):
+            self.__correlation = value
+
+        elif isinstance(value, str):
+            self.__correlation  = CorrelationType[value]
+            
+        else:
+            raise ValueError("Unsupported correlation type conversion")
+
+    @property
+    def covariance(self) -> np.ndarray:
+
+        if self.device is None:
+            raise FloatingError("Error trying to compute the covariance matrix of an unknown device")
+
+        f = self.__correlation.value[self.__device_type]
+        n = self.device.num_antennas
+
+        if n == 1:
+            return np.ones((1, 1), dtype=complex)
+
+        if n == 2:
+            return np.array([[1, f], [f, 1]], dtype=complex)
+
+        if n == 4:
+            return np.array([
+                [1, f ** (1 / 9), f ** (4 / 9), f],
+                [f**(1 / 9), 1, f**(1 / 9), f**(4 / 9)],
+                [f**(4 / 9), f**(1 / 9), 1, f**(1 / 9)],
+                [f, f**(4 / 9), f**(1 / 9), 1]
+            ], dtype=complex)
+
+        raise RuntimeError(f"3GPP standard antenna covariance is only defined for 1, 2 and 4 antennas, device has {n} antennas")
 
 
 class MultipathFadingCost256(MultipathFadingChannel):
@@ -35,7 +170,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
 
     yaml_tag = u'COST256'
     yaml_matrix = True
-    __model_type: TYPE
+    __model_type: MultipathFadingCost256.TYPE
 
     def __init__(self,
                  model_type: MultipathFadingCost256.TYPE = 0,
@@ -111,7 +246,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
                                         **kwargs)
 
     @property
-    def model_type(self) -> TYPE:
+    def model_type(self) -> MultipathFadingCost256.TYPE:
         """Access the configured model type.
 
         Returns:
@@ -202,7 +337,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
 
     yaml_tag = u'5GTDL'
     yaml_matrix = True
-    model_type: TYPE
+    model_type: MultipathFading5GTDL.TYPE
     __rms_delay: float
 
     def __init__(self,
@@ -319,7 +454,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
                                         **kwargs)
 
     @property
-    def model_type(self) -> TYPE:
+    def model_type(self) -> MultipathFading5GTDL.TYPE:
         """Access the configured model type.
 
         Returns:
