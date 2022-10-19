@@ -12,6 +12,7 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from hermespy.core import Executable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -69,18 +70,20 @@ class RadarCube(object):
         # Collapse the cube into the range-dimension
         range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
 
-        figure, axes = plt.subplots()
-        figure.suptitle(title)
+        with Executable.style_context():
 
-        axes.set_xlabel("Range [m]")
-        axes.set_ylabel("Power")
-        axes.plot(self.range_bins, range_profile)
+            figure, axes = plt.subplots()
+            figure.suptitle(title)
 
-        return figure
+            axes.set_xlabel("Range [m]")
+            axes.set_ylabel("Power")
+            axes.plot(self.range_bins, range_profile)
+
+            return figure
 
     def plot_range_velocity(self,
-                            title: Optional[str] = None,
-                            interpolate: bool = True) -> plt.Figure:
+                           title: Optional[str] = None,
+                           interpolate: bool = True) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -96,21 +99,21 @@ class RadarCube(object):
             plt.Figure:
         """
 
-        title = "Radar Range-Velocity Profile" if title is None else title
+        title = "Radar Range-Doppler Profile" if title is None else title
 
         # Collapse the cube into the range-dimension
         range_velocity_profile = np.sum(self.data, axis=0, keepdims=False)
 
         figure, axes = plt.subplots()
         figure.suptitle(title)
-
-        axes.set_xlabel("Range [m]")
-        axes.set_ylabel("Velocity [m/s]")
-        axes.imshow(range_velocity_profile, aspect='auto')
-
-        return figure
-
-    def normalize_power(self) -> None:
-        """Normalize bin powers."""
         
-        self.data /= abs(self.data).max()
+        with Executable.style_context():
+
+            extent = np.min(self.range_bins), np.max(self.range_bins), np.min(self.velocity_bins), np.max(self.velocity_bins)
+
+            axes.set_xlabel("Range [m]")
+            axes.set_ylabel("Doppler [Hz]")
+
+            plt.pcolormesh(self.range_bins, self.velocity_bins, range_velocity_profile, shading='auto')
+
+            return figure

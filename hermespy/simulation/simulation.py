@@ -6,8 +6,8 @@ Simulation
 """
 
 from __future__ import annotations
-from enum import Enum
-from typing import Any, Callable, Dict, List, Type, Optional, Union, Tuple
+from re import S
+from typing import Any, Callable, Dict, List, Type, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,8 @@ from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core import Executable, Verbosity, Operator, Serializable, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal
+from hermespy.core import Executable, Verbosity, Operator, Serializable, ConsoleMode, Evaluator, dimension, \
+    MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, SNRType
 from hermespy.channel import QuadrigaInterface, Channel
 from .simulated_device import SimulatedDevice
 
@@ -27,18 +28,6 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class SNRType(Enum):
-    """Supported types of signal-to-noise ratios."""
-
-    EBN0 = 0
-    """Bit energy to noise power ratio."""
-
-    ESN0 = 1
-    """Symbol energy to noise power ratio."""
-
-    CUSTOM = 2
     
 
 class SimulationScenario(Scenario[SimulatedDevice]):
@@ -50,7 +39,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     def __init__(self,
                  seed: Optional[int] = None,
                  snr: float = float('inf'),
-                 snr_type: Union[str, SNRType] = SNRType.EBN0) -> None:
+                 snr_type: Union[str, SNRType] = SNRType.PN0) -> None:
         """
         Args:
 
@@ -63,6 +52,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
             snr_type (Union[str, SNRType], optional):
                 The signal to noise ratio metric to be used.
+                By default, signal power to noise power is assumed.
         """
 
         Scenario.__init__(self, seed=seed)
@@ -255,7 +245,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             channel.transmitter = self.devices[transmitter]
             channel.receiver = self.devices[receiver]
             channel.random_mother = self
-            channel.scenario = self
 
     @dimension
     def snr(self) -> Optional[float]:
@@ -287,7 +276,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
             self.__snr = value
             
-    @property
+    @dimension
     def snr_type(self) -> SNRType:
         """Type of signal-to-noise ratio.
 
@@ -297,17 +286,20 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr_type
 
-    @snr_type.setter
-    def snr_type(self, snr_type: Union[str, SNRType]) -> None:
+    @snr_type.setter(first_impact='receive_devices')
+    def snr_type(self, snr_type: Union[str, int, SNRType]) -> None:
         """Modify the type of signal-to-noise ratio.
 
         Args:
-            snr_type (Union[str, SNRType]):
+            snr_type (Union[str, int, SNRType]):
                 The new type of signal to noise ratio, string or enum representation.
         """
 
         if isinstance(snr_type, str):
             snr_type = SNRType[snr_type]
+            
+        if isinstance(snr_type, int):
+            snr_type = SNRType(int)
 
         self.__snr_type = snr_type
 
@@ -394,7 +386,8 @@ class SimulationRunner(object):
                              f"the number of receiving devices ({self.__scenario.num_devices})")
 
         for device, impinging_signals in zip(self.__scenario.devices, propagation_matrix):
-            _ = device.receive(device_signals=impinging_signals, snr=self.__scenario.snr)
+            _ = device.receive(device_signals=impinging_signals,
+                               snr=self.__scenario.snr, snr_type=self.__scenario.snr_type)
 
     def receive_operators(self) -> None:
         """Demodulate base-band signal models received by all registered receiving operators."""
@@ -405,9 +398,9 @@ class SimulationRunner(object):
 @remote(num_cpus=1)
 class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
 
-    __actor_count: int = 0
-
-    def __init__(self, argument_tuple: Any,
+    def __init__(self,
+                 argument_tuple: Any,
+                 index: int,
                  catch_exceptions: bool = True) -> None:
         """
         Args:
@@ -416,13 +409,13 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
                 MonteCarloActor initialization arguments.
         """
 
-        MonteCarloActor.__init__(self, argument_tuple, catch_exceptions)
+        MonteCarloActor.__init__(self, argument_tuple, index, catch_exceptions)
         SimulationRunner.__init__(self, self._investigated_object)
 
         # Update the internal random seed pseudo-deterministically for each actor instance
         seed = self._investigated_object._rng.integers(0, 100000000000000)
-        self._investigated_object.set_seed(seed + self.__actor_count)
-        self.__actor_count += 1
+        individual_seed = seed + index * 12345678
+        self._investigated_object.set_seed(individual_seed)
         
     @staticmethod
     def stage_identifiers() -> List[str]:
@@ -626,8 +619,6 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
                 channel.receiver = simulation.scenario.devices[0]
 
             simulation.scenario.set_channel(channel.receiver, channel.transmitter, channel)
-
-        
 
         # Register evaluators
         for evaluator in evaluators:

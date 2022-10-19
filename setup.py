@@ -31,7 +31,6 @@ setup(
         "Topic :: Scientific/Engineering",
     ],
     packages=find_namespace_packages(include=['hermespy.*']),
-#    package_dir={'': '.'},
     package_data={
         'hermespy.core': ['styles/*.mplstyle'],
         'hermespy.channel': ['res/*'],

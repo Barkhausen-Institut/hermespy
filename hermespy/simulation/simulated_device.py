@@ -12,8 +12,7 @@ import numpy as np
 from ruamel.yaml import MappingNode, SafeConstructor, SafeRepresenter, ScalarNode
 from scipy.constants import pi
 
-from hermespy.core import Device, FloatingError, RandomNode, Scenario, Serializable, Signal, device
-from hermespy.core.statistics import SNRType
+from hermespy.core import Device, FloatingError, RandomNode, Scenario, Serializable, Signal, Receiver, SNRType
 from .analog_digital_converter import AnalogDigitalConverter
 from .noise import Noise, AWGN
 from .rf_chain.rf_chain import RfChain
@@ -345,7 +344,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     def receive(self,
                 device_signals: Union[List[Signal], Signal, np.ndarray],
                 snr: Optional[float] = None,
-                snr_type: SNRType = SNRType.EBN0,
+                snr_type: SNRType = SNRType.PN0,
                 leaking_signal: Optional[Signal] = None) -> Signal:
         """Receive signals at this device.
 
@@ -388,10 +387,15 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         # Tranform list arguments to matrix arguments
         elif isinstance(device_signals, list):
-            
-            propagation_matrix = np.empty(1, dtype=object)
-            propagation_matrix[0] = (device_signals, None)
-            device_signals = propagation_matrix
+
+            if isinstance(device_signals[0], Signal):
+                device_signals = np.array([(device_signals, None)], dtype=object)
+
+            elif isinstance(device_signals[0], tuple):
+                device_signals = np.array([device_signals], dtype=object)
+                
+            else:
+                raise ValueError("Unsupported propagation matrix")
 
         # Superimpose transmit signals
         for signals, _ in device_signals:
@@ -415,6 +419,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         baseband_signal = self.adc.convert(baseband_signal)
         
         # Cache received signal at receiver slots
+        receiver: Receiver
         for receiver in self.receivers:
 
             # Collect the reference channel if a reference transmitter has been specified
@@ -437,7 +442,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 receiver_signal = baseband_signal.copy()
 
             # Add noise to the received signal according to the selected ratio
-            noise_power = receiver.energy / snr
+            noise_power = receiver.noise_power(snr, snr_type)
             self.__noise.add(receiver_signal, noise_power)
 
             # Cache reception
