@@ -21,18 +21,22 @@ class TestFMCW(TestCase):
 
         self.num_chirps = 9
         self.bandwidth = 1.4e9
-        self.sampling_rate = 1.4e9
-        self.max_range = 20
+        self.chirp_duration = 2e-6
+        self.pulse_rep_interval = 2e-6
+        self.sampling_rate = 4 * self.bandwidth
 
-        self.fmcw = FMCW(num_chirps=self.num_chirps, bandwidth=self.bandwidth, sampling_rate=self.sampling_rate, max_range=self.max_range)
+        self.fmcw = FMCW(num_chirps=self.num_chirps, bandwidth=self.bandwidth,
+                         chirp_duration=self.chirp_duration, pulse_rep_interval=self.pulse_rep_interval,
+                         sampling_rate=self.sampling_rate)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""
 
         self.assertEqual(self.num_chirps, self.fmcw.num_chirps)
         self.assertEqual(self.bandwidth, self.fmcw.bandwidth)
+        self.assertEqual(self.chirp_duration, self.fmcw.chirp_duration)
+        self.assertEqual(self.pulse_rep_interval, self.fmcw.pulse_rep_interval)
         self.assertEqual(self.sampling_rate, self.fmcw.sampling_rate)
-        self.assertEqual(self.max_range, self.fmcw.max_range)
     
     def test_ping_estimate(self) -> None:
         """Pinging and estimating should result in a valid velocity-range profile"""
@@ -77,23 +81,6 @@ class TestFMCW(TestCase):
         with self.assertRaises(ValueError):
             self.fmcw.bandwidth = -1.
 
-    def test_range_resolution_setget(self) -> None:
-        """Range resolution property getter should return setter argument"""
-
-        range_resolution = 10.
-        self.fmcw.range_resolution = 10.
-
-        self.assertEqual(range_resolution, self.fmcw.range_resolution)
-
-    def test_range_resolution_validation(self) -> None:
-        """Range resolution property setter should raise ValueError on arguments smaller or equal to zero"""
-
-        with self.assertRaises(ValueError):
-            self.fmcw.range_resolution = 0.
-
-        with self.assertRaises(ValueError):
-            self.fmcw.range_resolution = -1.
-
     def test_sampling_rate_setget(self) -> None:
         """Sampling rate property getter should return setter argument"""
 
@@ -110,20 +97,21 @@ class TestFMCW(TestCase):
 
         with self.assertRaises(ValueError):
             self.fmcw.sampling_rate = -1.
+    
+    def test_power(self) -> None:
+        """A single chirp should have unit signal power"""
+        
+        self.fmcw.pulse_rep_interval = self.fmcw.chirp_duration
+        self.fmcw.num_chirps = 1
+        
+        pulse = self.fmcw.ping()
+        self.assertEqual(self.fmcw.power, pulse.power)
 
-    def test_max_range_setget(self) -> None:
-        """Maximum range property getter should return setter argument"""
-
-        max_range = 10.
-        self.fmcw.max_range = 10.
-
-        self.assertEqual(max_range, self.fmcw.max_range)
-
-    def test_max_range_validation(self) -> None:
-        """Maximum range property setter should raise ValueError on arguments smaller or equal to zero"""
-
-        with self.assertRaises(ValueError):
-            self.fmcw.max_range = 0.
-
-        with self.assertRaises(ValueError):
-            self.fmcw.max_range = -1.
+    def test_energy(self) -> None:
+        """A single chirp should have the correct energy"""
+        
+        self.fmcw.pulse_rep_interval = self.fmcw.chirp_duration
+        self.fmcw.num_chirps = 1
+        
+        pulse = self.fmcw.ping()
+        self.assertEqual(self.fmcw.energy, pulse.energy)

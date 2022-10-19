@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 from hermespy.simulation import Simulation
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator
 
+
 # Create a new HermesPy simulation scenario
-simulation = Simulation()
+simulation = Simulation(seed=42)
 
 # Create device
 device = simulation.scenario.new_device()
@@ -25,4 +26,6 @@ result = simulation.run()
 
 # Visualize results
 result.plot()
+result.save_to_matlab("output.mat")
+
 plt.show()

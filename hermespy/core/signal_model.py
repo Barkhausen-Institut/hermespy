@@ -251,12 +251,21 @@ class Signal:
     def power(self) -> np.ndarray:
         """Compute the power of the modeled signal.
 
-        Returns:
-            np.ndarray:: The power of each modeled stream within a numpy vector.
+        Returns: The power of each modeled stream within a numpy vector.
         """
 
         stream_power = np.sum(self.__samples.real ** 2 + self.__samples.imag ** 2, axis=1) / self.num_samples
         return stream_power
+    
+    @property
+    def energy(self) -> np.ndarray:
+        """Compute the energy of the modeled signal.
+
+        Returns: The energy of each modeled stream within a numpy vector.
+        """
+        
+        stream_energy = np.sum(self.__samples.real ** 2 + self.__samples.imag ** 2, axis=1)
+        return stream_energy
 
     def copy(self) -> Signal:
         """Copy this signal model to a new object.

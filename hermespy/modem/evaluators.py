@@ -122,6 +122,12 @@ class CommunicationEvaluator(Evaluator, ABC):
         
         return ScalarEvaluationResult(grid, artifacts, self)
 
+    def generate_result(self,
+                        grid: List[GridDimension],
+                        artifacts: np.ndarray) -> EvaluationResult:
+
+        return ScalarEvaluationResult(grid, artifacts, self)
+
 
 class BitErrorArtifact(ArtifactTemplate[float]):
     """Artifact of a bit error evaluation between two modems exchanging information."""

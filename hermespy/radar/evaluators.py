@@ -19,11 +19,13 @@ evaluated and one :class:`RadarChannel<hermespy.channel.radar_channel.RadarChann
 truth.
 The currently considered performance indicators are
 
-================================ ================================ ======================================================
-Evaluator                        Artifact                         Performance Indicator
-================================ ================================ ======================================================
-:class:`.DetectionProbEvaluator` :class:`.DetectionProbArtifact`  Probability of detecting the target at the right bin
-================================ ================================ ======================================================
+========================================= ================================ ============================================================
+Evaluator                                 Artifact                         Performance Indicator
+========================================= ================================ ============================================================
+:class:`.DetectionProbEvaluator`          :class:`.DetectionProbArtifact`  Probability of detecting the target at the right bin
+:class:`.ReceiverOperatingCharacteristic` :class:`.RocArtifact`            Probability of detection versus probability of false alarm
+:class`.RootMeanSquareError`              :class:`.RootMeanSquareArtifact` Root mean square error of point detections
+========================================= ================================ ============================================================
 
 Configuring :class:`RadarEvaluators<.RadarEvaluator>` to evaluate the radar detection of
 :class:`Modem<hermespy.modem.modem.Modem>` instances is rather straightforward:
@@ -37,17 +39,19 @@ Configuring :class:`RadarEvaluators<.RadarEvaluator>` to evaluate the radar dete
    # Create a radar evaluation as an evaluation example
    radar_evaluator = DetectionProbEvaluator(modem, channel)
 
-   # Extract evaluation artifact
-   radar_artifact = radar_evaluator.evaluate()
+   # Extract evaluation 
+   radar_evaluation = radar_evaluator.evaluate()
 
-   # Visualize artifact
-   radar_artifact.plot()
+   # Visualize evaluation
+   radar_evaluation.plot()
 
 """
 
 from __future__ import annotations
 from abc import ABC
-from typing import List, Optional, Tuple
+from itertools import product
+from re import A
+from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,11 +59,12 @@ from scipy.stats import uniform
 
 from hermespy.core.executable import Executable
 from hermespy.core.factory import Serializable
-from hermespy.core.scenario import Scenario
-from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult
+from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, \
+    ArtifactTemplate, Artifact, ScalarEvaluationResult, ProcessedScalarEvaluationResult
 from hermespy.radar import Radar
 from hermespy.channel.radar_channel import RadarChannel
 from hermespy.radar.cube import RadarCube
+from hermespy.radar.detection import RadarPointCloud
 
 
 __author__ = "André Noll Barreto"
@@ -77,12 +82,10 @@ class RadarEvaluator(Evaluator, ABC):
 
     __receiving_radar: Radar   # Handle to the radar receiver
     __radar_channel: RadarChannel   # Handle to the radar channel
-    __receiving_radar_null_hypothesis: Radar    # handle to a radar receiver with only noise (H0)
 
     def __init__(self,
                  receiving_radar: Radar,
-                 radar_channel: Optional[RadarChannel] = None,
-                 receiving_radar_null_hypothesis: Optional[Radar] = None,
+                 radar_channel: Optional[RadarChannel] = None
                  ) -> None:
         """
         Args:
@@ -93,12 +96,9 @@ class RadarEvaluator(Evaluator, ABC):
             radar_channel (RadarChannel):
                 Radar channel containing a desired target.
 
-            receiving_radar_null_hypothesis(Optional, Radar):
-                Radar receiver containing only noise.
         """
 
         self.__receiving_radar = receiving_radar
-        self.__receiving_radar_null_hypothesis = receiving_radar_null_hypothesis
         self.__radar_channel = radar_channel
 
         # Initialize base class
@@ -115,16 +115,6 @@ class RadarEvaluator(Evaluator, ABC):
         return self.__receiving_radar
 
     @property
-    def receiving_radar_null_hypothesis(self) -> Radar:
-        """Radar detector with only noise
-
-        Returns:
-            Modem: Handle to the receiving modem, with only noise at receiver.
-        """
-
-        return self.__receiving_radar_null_hypothesis
-
-    @property
     def radar_channel(self) -> RadarChannel:
         """Radar channel
 
@@ -133,6 +123,12 @@ class RadarEvaluator(Evaluator, ABC):
         """
 
         return self.__radar_channel
+
+    def generate_result(self,
+                        grid: List[GridDimension],
+                        artifacts: np.ndarray) -> EvaluationResult:
+
+        return ScalarEvaluationResult(grid, artifacts, self)
 
 
 class DetectionProbArtifact(ArtifactTemplate[bool]):
@@ -143,15 +139,11 @@ class DetectionProbArtifact(ArtifactTemplate[bool]):
         return float(self.artifact)
     
     
-class DetectionProbEvaluation(EvaluationTemplate[float]):
+class DetectionProbabilityEvaluation(EvaluationTemplate[bool]):
     
     def artifact(self) -> DetectionProbArtifact:
         
         return DetectionProbArtifact(self.evaluation)
-    
-    
-class DetectionProbResult(ScalarEvaluationResult):
-    ...
 
 
 class DetectionProbEvaluator(RadarEvaluator, Serializable):
@@ -186,11 +178,11 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
     
     def generate_result(self,
                         grid: List[GridDimension],
-                        artifacts: np.ndarray) -> DetectionProbResult:
+                        artifacts: np.ndarray) -> ScalarEvaluationResult:
         
-        return DetectionProbResult(grid, artifacts, self)
+        return ScalarEvaluationResult(grid, artifacts, self)
 
-    def evaluate(self) -> DetectionProbEvaluation:
+    def evaluate(self) -> DetectionProbArtifact:
 
         # Retrieve transmitted and received bits
         cloud = self.receiving_radar.cloud
@@ -200,57 +192,145 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
             
         # Verify if a target is detected in any bin
         detection = cloud.num_points > 0
-        return DetectionProbEvaluation(detection)
-    
-    
-class DetectionArtifact(ArtifactTemplate[bool]):
-    """Artifact generated from a single detection evaluation."""
-    ...
+        return DetectionProbabilityEvaluation(detection)
 
-class DetectionEvaluation(Evaluation):
-    """Extraction of a detection probability evaluation for a radar detector."""
+
+class RocArtifact(Artifact):
+    """Artifact of receiver operating characteristics (ROC) evaluation"""
+
+    __h0_value: float
+    __h1_value: float
+
+    def __init__(self,
+                 h0_value: float,
+                 h1_value: float) -> None:
+        """
+        Args:
+
+            h0_value (float):
+                Measured value for null-hypothesis (H0), i.e., noise only
+
+            h1_value (float):
+                Measured value for alternative hypothesis (H1)
+
+        """
+
+        self.__h0_value = h0_value
+        self.__h1_value = h1_value
+
+    def __str__(self) -> str:
+        return f"({self.__h0_value:4.0f}, {self.__h1_value:4.0f})"
+
+    @property
+    def h0_value(self) -> float:
+        return self.__h0_value
+
+    @property
+    def h1_value(self) -> float:
+        return self.__h1_value
+
+
+class RocEvaluation(Evaluation):
+    """Evaluation of receiver operating characteristics (ROC)"""
+
+    data_h0: np.ndarray
+    data_h1: np.ndarray
+
+    def __init__(self,
+                 cube_h0: RadarCube,
+                 cube_h1: RadarCube) -> None:
+
+        self.data_h0 = cube_h0.data
+        self.data_h1 = cube_h1.data
+
+    def artifact(self) -> RocArtifact:
+
+        h0_value = self.data_h0.max()
+        h1_value = self.data_h1.max()
+
+        return RocArtifact(h0_value, h1_value)
     
-    detection: RadarCube
-    null_hypothesis: RadarCube
+    
+class RocEvaluationResult(EvaluationResult):
+    """Final result of an receive operating characteristcs evaluation."""
+    
+    __evaluator: ReceiverOperatingCharacteristic
+    __grid: List[GridDimension]
+    __detection_probabilities: np.ndarray
+    __false_alarm_probabilities: np.ndarray
     
     def __init__(self,
-                 detection: RadarCube,
-                 null_hypothesis: RadarCube) -> None:
+                 evaluator: ReceiverOperatingCharacteristic,
+                 grid: List[GridDimension],
+                 detection_probabilities: np.ndarray,
+                 false_alarm_probabilities: np.ndarray) -> None:
         
-        self.detection = detection
-        self.null_hypothesis = null_hypothesis
+        self.__evaluator = evaluator
+        self.__grid = grid
+        self.__detection_probabilities = detection_probabilities
+        self.__false_alarm_probabilities = false_alarm_probabilities
         
-    def to_scalar(self) -> float:
+    def plot(self) -> plt.Figure:
+        
+        with Executable.style_context():
 
-        return float('inf')
-    
-    def artifact(self) -> DetectionArtifact:
-        
-        # Verify if a target is detected in any bin
-        detection_value_h1 = np.max(self.detection.data)
-        detection_value_h0 = np.max(self.null_hypothesis.data)
-        
-        # Do something
-        return DetectionArtifact(False)
-    
+            figure = plt.figure()
+            figure.suptitle(self.__evaluator.title)
 
-class DetectionEvaluationResult(ScalarEvaluationResult):
-    ...
-    
+            # Create single axes
+            axes = figure.add_subplot()
+
+            # Configure axes labels
+            axes.set_xlabel("False Alarm Probability")
+            axes.set_ylabel("Detection Probability")
+            
+            # Configure axes limits
+            axes.set_xlim(0., 1.)
+            axes.set_ylim(0., 1.)
+
+            section_magnitudes = tuple(s.num_sample_points for s in self.__grid)
+            for section_indices in np.ndindex(section_magnitudes):
+
+                # Generate the graph line label
+                line_label = ''
+                for i, v in enumerate(section_indices):
+                    line_label += f'{self.__grid[i].title} = {self.__grid[i].sample_points[v]}, '
+                line_label = line_label[:-2]
+
+                # Select the graph line scalars
+                x_axis = self.__false_alarm_probabilities[section_indices]
+                y_axis = self.__detection_probabilities[section_indices]
+
+                # Plot the graph line
+                
+                axes.plot(x_axis, y_axis, label=line_label)
+
+            # Only plot the legend for an existing sweep grid.
+            if len(self.__grid) > 0:
+                axes.legend()
+            
+            return figure
+        
+    def to_array(self) -> np.ndarray:
+        
+        return np.stack((self.__detection_probabilities, self.__false_alarm_probabilities), axis=-1)
+        
 
 class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
-    """Evaluate the receiver operator characteristics for a radar operator.
-
-    """
+    """Evaluate the receiver operating characteristics for a radar operator."""
+    
     yaml_tag = u'ROC'
     """YAML serialization tag."""
+
+    receiving_radar: Radar
+    __receiving_radar_null_hypothesis: Radar    # handle to a radar receiver with only noise (H0)
+    __num_thresholds: int
 
     def __init__(self,
                  receiving_radar: Radar,
                  receiving_radar_null_hypothesis: Radar,
                  radar_channel: RadarChannel = None,
-                 num_thresholds=100
-                 ) -> None:
+                 num_thresholds=101) -> None:
         """
         Args:
 
@@ -269,18 +349,29 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
                 Number of different thresholds to be considered in ROC curve
         """
         
-        Serializable.__init__(self)
         RadarEvaluator.__init__(self, receiving_radar=receiving_radar,
-                                receiving_radar_null_hypothesis=receiving_radar_null_hypothesis,
                                 radar_channel=radar_channel)
-        
-    def evaluate(self) -> DetectionEvaluation:
+                        
+        self.__receiving_radar_null_hypothesis = receiving_radar_null_hypothesis
+        self.__num_thresholds = num_thresholds
+
+    def evaluate(self) -> RocEvaluation:
 
         # Retrieve transmitted and received bits
-        radar_cube_h1 = self.receiving_radar.cube
         radar_cube_h0 = self.receiving_radar_null_hypothesis.cube
-        
-        return DetectionEvaluation(radar_cube_h1, radar_cube_h0)
+        radar_cube_h1 = self.receiving_radar.cube
+
+        return RocEvaluation(radar_cube_h0, radar_cube_h1)
+
+    @property
+    def receiving_radar_null_hypothesis(self) -> Radar:
+        """Radar detector with only noise
+
+        Returns:
+            Modem: Handle to the receiving modem, with only noise at receiver.
+        """
+
+        return self.__receiving_radar_null_hypothesis
 
     @property
     def abbreviation(self) -> str:
@@ -288,9 +379,123 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
     
     @property
     def title(self) -> str:
-        
         return "Operating Characteristics"
 
-    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> DetectionEvaluationResult:
+    def generate_result(self,
+                        grid: List[GridDimension],
+                        artifacts: np.ndarray) -> EvaluationResult:
+
+        # Prepare result containers        
+        dimensions = tuple(g.num_sample_points for g in grid)
+        detection_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
+        false_alarm_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
+
+        # Convert artifacts to raw data array
+        for grid_coordinates in np.ndindex(dimensions):
+            
+            artifact_line = artifacts[grid_coordinates]
+            roc_data = np.array([[a.h0_value, a.h1_value] for a in artifact_line])
+            
+            for t, threshold in enumerate(np.linspace(roc_data.min(), roc_data.max(), self.__num_thresholds, endpoint=True)):
+                
+                threshold_coordinates = grid_coordinates + (t,)
+                detection_probabilities[threshold_coordinates] = np.mean(roc_data[:, 1] >= threshold)
+                false_alarm_probabilities[threshold_coordinates] = np.mean(roc_data[:, 0] >= threshold)
+                
+        return RocEvaluationResult(self, grid, detection_probabilities, false_alarm_probabilities)
+
+
+class RootMeanSquareArtifact(Artifact):
+    """Artifact of a root mean square evaluation"""
+    
+    num_errors: int
+    cummulation: float
+
+    def __init__(self,
+                 num_errors: int,
+                 cummulation: float) -> None:
+        """
+        Args:
         
-        return DetectionEvaluationResult(grid, artifacts, self)
+            num_errors (int):
+                Number of errros.
+                
+            cummulation (float):
+                Sum of squared errors distances.
+        """
+        
+        self.num_errors = num_errors
+        self.cummulation = cummulation
+        
+    def to_scalar(self) -> float:
+        
+        return np.sqrt(self.cummulation / self.num_errors)
+
+    def __str__(self) -> str:
+        return f"{self.to_scalar():4.0f}"
+
+class RootMeanSquareEvaluation(Evaluation):
+    """Result of a single root mean squre evaluation."""
+    
+    __pcl: RadarPointCloud
+    __ground_truth: np.ndarray
+    
+    def __init__(self,
+                 pcl: RadarPointCloud,
+                 ground_truth: np.ndarray) -> None:
+
+        self.__pcl = pcl
+        self.__ground_truth = ground_truth
+        
+    def artifact(self) -> RootMeanSquareArtifact:
+        
+        num_errors = self.__pcl.num_points * self.__ground_truth.shape[0]
+        cummulative_square_error = 0.
+        
+        for point, truth in product(self.__pcl.points, self.__ground_truth):
+            cummulative_square_error += np.linalg.norm(point.position - truth) ** 2
+            
+        return RootMeanSquareArtifact(num_errors, cummulative_square_error)
+
+
+class RootMeanSquareErrorResult(ProcessedScalarEvaluationResult):
+    """Result of a root mean square error evaluation."""
+    ...  # pragma no cover
+
+
+class RootMeanSquareError(RadarEvaluator):
+    """Root mean square estimation error of point detections."""
+    
+    def evaluate(self) -> Evaluation:
+        
+        point_cloud = self.receiving_radar.cloud
+        ground_truth = self.radar_channel.ground_truth
+        
+        return RootMeanSquareEvaluation(point_cloud, ground_truth)
+
+    @property
+    def title(self) -> str:
+        return 'Root Mean Square Error'
+    
+    @property
+    def abbreviation(self) -> str:
+        return 'RMSE'
+
+    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> RootMeanSquareErrorResult:
+
+        rmse_section_artifacts = np.empty(artifacts.shape, dtype=float)
+        for coordinates, section_artifacts in np.ndenumerate(artifacts):
+            
+            cummulative_errors = 0.
+            error_count = 0
+            
+            artifact: RootMeanSquareArtifact
+            for artifact in section_artifacts:
+                
+                cummulative_errors += artifact.cummulation
+                error_count += artifact.num_errors
+                
+            rmse = np.sqrt(cummulative_errors / error_count)
+            rmse_section_artifacts[coordinates] = rmse
+            
+        return RootMeanSquareErrorResult(grid, rmse_section_artifacts, self)
