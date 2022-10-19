@@ -458,7 +458,7 @@ class TestMonteCarloActor(TestCase):
         self.dimensions = [GridDimension(self.investigated_object, 'property_a', [1, 2, 6, 7, 8])]
         self.evaluators = [SumEvaluator(self.investigated_object), ProductEvaluator(self.investigated_object)]
 
-        self.actor = MonteCarloActorMock.remote((self.investigated_object, self.dimensions, self.evaluators))
+        self.actor = MonteCarloActorMock.remote((self.investigated_object, self.dimensions, self.evaluators), 0)
 
     def test_run(self) -> None:
         """Running the actor should produce the expected result"""

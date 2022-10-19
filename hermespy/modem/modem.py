@@ -202,8 +202,7 @@ from ruamel.yaml import MappingNode, SafeConstructor
 
 from hermespy.channel import ChannelStateInformation
 from hermespy.fec import EncoderManager
-from hermespy.core import DuplexOperator, RandomNode, Transmission, Reception, Signal, Device, Transmitter, Receiver
-from hermespy.core.factory import Serializable
+from hermespy.core import RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
 from hermespy.precoding import SymbolPrecoding, ReceiveStreamCoding, TransmitStreamCoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import Symbols
@@ -647,13 +646,22 @@ class BaseModem(RandomNode, Serializable, ABC):
 
         return self.waveform_generator.sampling_rate
 
-    @property
-    def energy(self) -> float:
-
+    def noise_power(self, strength: float, snr_type: SNRType) -> float:
+        
+        # No waveform configured equals no noise required
         if self.waveform_generator is None:
             return 0.
+        
+        if snr_type == SNRType.EBN0:
+            return self.waveform_generator.bit_energy / strength
+        
+        if snr_type == SNRType.ESN0:
+            return self.waveform_generator.symbol_energy / strength
+        
+        if snr_type == SNRType.PN0:
+            return self.waveform_generator.power / strength
 
-        return self.waveform_generator.bit_energy
+        raise ValueError(f"SNR of type '{snr_type}' is not supported by modem operators")
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:

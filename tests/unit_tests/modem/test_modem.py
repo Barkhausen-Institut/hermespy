@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """HermesPy testing for modem base class."""
 
+from multiprocessing.sharedctypes import Value
 from typing import Type
 from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
 from numpy import random as rnd
-from numpy.testing import assert_array_equal, assert_almost_equal
+from numpy.testing import assert_almost_equal
 from hermespy.core.device import Device
 
 from hermespy.fec import EncoderManager
-from hermespy.core import UniformArray, IdealAntenna
+from hermespy.core import UniformArray, IdealAntenna, SNRType
 from hermespy.modem import RandomBitsSource
 from hermespy.modem.modem import CommunicationReception, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink
 from hermespy.precoding import SymbolPrecoding
-from hermespy.simulation import SimulatedDevice, simulated_device
+from hermespy.simulation import SimulatedDevice
 
 from .test_waveform_generator import MockWaveformGenerator
 
@@ -171,13 +172,15 @@ class TestBaseModem(TestCase):
         self.assertIs(precoding, self.modem.precoding)
         self.assertIs(precoding.modem, self.modem)
 
-    def test_energy(self) -> None:
-        """Bit energy property should report a correct energy value"""
+    def test_noise_power(self) -> None:
+        """Noise power estiamtor should report the correct noise powers"""
 
-        self.assertEqual(1, self.modem.energy)
-
-        self.modem.waveform_generator = None
-        self.assertEqual(0, self.modem.energy)
+        self.assertEqual(1., self.modem.noise_power(1., SNRType.EBN0))
+        self.assertEqual(1., self.modem.noise_power(1., SNRType.ESN0))
+        self.assertEqual(1., self.modem.noise_power(1., SNRType.PN0))
+        
+        with self.assertRaises(ValueError):
+            _ = self.modem.noise_power(1., SNRType.EN0)
 
 
 class TestTransmittingModem(TestBaseModem):

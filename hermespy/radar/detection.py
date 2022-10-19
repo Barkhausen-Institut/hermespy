@@ -169,7 +169,6 @@ class RadarPointCloud(object):
         self.points.append(point)
 
 
-
 class RadarDetector(object):
     """Base class for radar detection algorithms.
     
@@ -189,7 +188,7 @@ class RadarDetector(object):
         
             The resulting (usually sparse) point cloud.
         """
-        ...
+        ...  # Pragma no cover
 
 
 class ThresholdDetector(RadarDetector, Serializable):
@@ -256,4 +255,30 @@ class ThresholdDetector(RadarDetector, Serializable):
             
             cloud.add_point(PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator))
             
+        return cloud
+
+
+class MaxDetector(RadarDetector, Serializable):
+    """Extracts the maximum point from the radar cube."""
+    
+    yaml_tag = u'Max'
+    """YAML serialization tag."""
+    
+    def detect(self, cube: RadarCube) -> RadarPointCloud:
+        
+        # Find the maximum point
+        point_index = np.unravel_index(np.argmax(cube.data), cube.data.shape)
+        point_power = cube.data[point_index]
+        
+        # Return an empty point cloud if no maximum was found
+        if point_power <= 0.:
+            return RadarPointCloud()
+        
+        angles_of_arrival = cube.angle_bins[point_index[0], :]
+        velocity = cube.velocity_bins[point_index[1]]
+        range = cube.range_bins[point_index[2]]
+        
+        cloud = RadarPointCloud()
+        cloud.add_point(PointDetection.FromSpherical(angles_of_arrival[0], angles_of_arrival[1], velocity, range, point_power))
+        
         return cloud
