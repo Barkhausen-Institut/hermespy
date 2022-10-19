@@ -93,7 +93,6 @@ class TestSimulationScenario(TestCase):
         self.assertIs(channel, self.scenario.channels[2, 3])
         self.assertIs(channel, self.scenario.channels[3, 2])
         self.assertIs(self.scenario, channel.random_mother)
-        self.assertIs(self.scenario, channel.scenario)
 
     def test_snr_setget(self) -> None:
         """SNR property getter should return setter argument."""
@@ -227,7 +226,7 @@ class TestSimulationActor(TestCase):
         self.dimensions = []
         self.evaluator = Mock()
 
-        self.actor = SimulationActor.remote((self.scenario, self.dimensions, [self.evaluator]))
+        self.actor = SimulationActor.remote((self.scenario, self.dimensions, [self.evaluator]), 0)
 
     def test_sample(self) -> None:
         """"""

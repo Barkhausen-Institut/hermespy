@@ -125,6 +125,7 @@ from scipy.constants import speed_of_light
 
 from hermespy.tools.math import transform_coordinates
 from .antennas import AntennaArrayBase, UniformArray, IdealAntenna
+from .definitions import SNRType
 from .channel_state_information import ChannelStateInformation
 from .signal_model import Signal
 from .random_node import RandomNode
@@ -472,14 +473,24 @@ class Receiver(RandomNode, MixingOperator['ReceiverSlot']):
 
         self.__signal = signal
         self.__csi = csi
-
-    @property
-    @abstractmethod
-    def energy(self) -> float:
-        """Average energy of the received signal.
-
-        Returns:
-            float: Energy.
+        
+    def noise_power(self,
+                    strength: float,
+                    snr_type = SNRType) -> float:
+        """Compute noise power for a given signal strength.
+        
+        Args:
+        
+            strength (float):
+                Signal strength indicator.
+                The unit depends on `snr_type`.
+                
+            snr_type (SNRType):
+                The considered signal to noise ratio type.
+                
+        Raises:
+        
+            ValueError: If the receiver does not support the required snr type.
         """
         ...  # pragma no cover
 
@@ -1256,13 +1267,8 @@ class DuplexOperator(Transmitter, Receiver):
     @abstractmethod
     def frame_duration(self) -> float:
         ...  # pragma no cover
-
+        
     @property
     @abstractmethod
-    def energy(self) -> float:
-        """Average energy of the transmitted and received signal.
-
-        Returns:
-            flot: Energy.
-        """
+    def noise_power(self, strength: float, snr_type=SNRType) -> float:
         ...  # pragma no cover

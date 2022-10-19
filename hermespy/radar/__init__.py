@@ -1,8 +1,8 @@
 from .cube import RadarCube
-from .detection import RadarDetector, PointDetection, RadarPointCloud, ThresholdDetector
+from .detection import RadarDetector, PointDetection, RadarPointCloud, ThresholdDetector, MaxDetector
 from .radar import Radar, RadarWaveform, RadarTransmission, RadarReception
 from .fmcw import FMCW
-from .evaluators import ReceiverOperatingCharacteristic, DetectionProbEvaluator
+from .evaluators import ReceiverOperatingCharacteristic, DetectionProbEvaluator, RootMeanSquareError
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -14,9 +14,9 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 __all__ = [
-    'RadarCube', 
-    'RadarDetector', 'PointDetection', 'RadarPointCloud', 'ThresholdDetector',
+    'RadarCube',
+    'RadarDetector', 'PointDetection', 'RadarPointCloud', 'ThresholdDetector', 'MaxDetector',
     'Radar',  'RadarWaveform', 'RadarTransmission', 'RadarReception',
     'FMCW',
-    'ReceiverOperatingCharacteristic', 'DetectionProbEvaluator',
+    'ReceiverOperatingCharacteristic', 'DetectionProbEvaluator', 'RootMeanSquareError',
 ]

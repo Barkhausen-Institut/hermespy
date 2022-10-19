@@ -1,10 +1,11 @@
 from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
+from .definitions import SNRType
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, \
     Transmitter, Receiver, Device, FloatingError, Transmission, Reception
 from .executable import Executable, Verbosity
 from .factory import Factory, Serializable
-from .monte_carlo import Artifact, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
+from .monte_carlo import Artifact, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, ProcessedScalarEvaluationResult, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
 from .random_node import RandomNode
 from .scenario import Scenario
 from .signal_model import Signal
@@ -21,10 +22,11 @@ __status__ = "Prototype"
 
 __all__ = [
     'Antenna', 'IdealAntenna', 'Dipole', 'PatchAntenna', 'AntennaArrayBase', 'AntennaArray', 'UniformArray',
+    'SNRType',
     'ChannelStateFormat', 'ChannelStateInformation',
     'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot', 'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError', 'Transmission', 'Reception',
     'Executable', 'Verbosity',
-    'Artifact', 'ConsoleMode', 'Evaluator', 'Evaluator', 'Evaluation', 'EvaluationResult', 'EvaluationTemplate', 'ScalarEvaluationResult', 'MonteCarlo', 'MonteCarloActor', 'MonteCarloResult', 'MonteCarloSample', 'dimension',
+    'Artifact', 'ConsoleMode', 'Evaluator', 'Evaluator', 'Evaluation', 'EvaluationResult', 'EvaluationTemplate', 'ProcessedScalarEvaluationResult', 'ScalarEvaluationResult', 'MonteCarlo', 'MonteCarloActor', 'MonteCarloResult', 'MonteCarloSample', 'dimension',
     'Factory', 'Serializable',
     'RandomNode',
     'Scenario',

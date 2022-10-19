@@ -7,8 +7,8 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from matplotlib.figure import Figure
 
-from hermespy.core import Signal
-from hermespy.radar import PointDetection, Radar, RadarCube, RadarWaveform
+from hermespy.core import Signal, SNRType
+from hermespy.radar import Radar, RadarCube, RadarWaveform
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -18,28 +18,6 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class TestPointDetection(TestCase):
-    """Test the base class for radar point detections"""
-    
-    def setUp(self) -> None:
-        
-        self.rng = np.random.default_rng(42)
-        
-        self.position = self.rng.normal(size=3)
-        self.velocity = self.rng.normal(size=3)
-        self.power = 1.2345
-        
-        self.point = PointDetection(self.position, self.velocity, self.power)
-        
-    def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes"""
-
-        assert_array_equal(self.position, self.point.position)
-        assert_array_equal(self.velocity, self.point.velocity)
-        self.assertEqual(self.power, self.point.power)
-        
 
 
 class TestRadarCube(TestCase):
@@ -101,7 +79,6 @@ class RadarWaveformMock(RadarWaveform):
 
         return Signal(np.exp(2j * np.pi * self.rng.uniform(0, 1, size=(1, self.num_samples))), self.sampling_rate)
             
-            
     def estimate(self, signal: Signal) -> np.ndarray:
 
         num_velocity_bins = len(self.velocity_bins)
@@ -123,6 +100,14 @@ class RadarWaveformMock(RadarWaveform):
     @property
     def velocity_bins(self) -> np.ndarray:
         return np.arange(5)
+    
+    @property
+    def energy(self) -> float:
+        return 1.
+    
+    @property
+    def power(self) -> float:
+        return 1.
 
 
 class TestRadar(TestCase):
@@ -175,10 +160,17 @@ class TestRadar(TestCase):
         
         self.assertEqual(1., self.radar.frame_duration)
         
-    def test_energy(self) -> None:
-        """Energy property should return the energy"""
+    def test_noise_power(self) -> None:
+        """Noise power estimator should compute the correct powers"""
         
-        self.assertEqual(1., self.radar.energy)
+        self.assertEqual(1., self.radar.noise_power(1., SNRType.EN0))
+        self.assertEqual(1., self.radar.noise_power(1., SNRType.PN0))
+        
+        with self.assertRaises(ValueError):
+            _ = self.radar.noise_power(1., SNRType.EBN0)
+
+        self.radar.waveform = None
+        self.assertEqual(0., self.radar.noise_power(1., SNRType.PN0))
 
     def test_transmit_waveform_validation(self) -> None:
         """Transmitting should raise a RuntimeError if no waveform was configured"""
