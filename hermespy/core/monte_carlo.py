@@ -1474,71 +1474,6 @@ class MonteCarloResult(Generic[MO]):
         for dimension in self.__grid:
             mat_dict[dimension.title] = dimension.sample_points
 
-        """mat_dict = {      
-            "snr_type": self.snr_type.name,
-            "snr_vector": self.snr_loop,
-            "ber_mean": self.average_bit_error_rate,
-            "fer_mean": self.average_block_error_rate,
-            "ber_lower": self.bit_error_min,
-            "ber_upper": self.bit_error_max,
-            "fer_lower": self.block_error_min,
-            "fer_upper": self.block_error_max,
-        }
-
-        if self.__calc_transmit_spectrum:
-            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_tx, self._frequency_range_tx)):
-                if periodogram is not None and frequency is not None:
-                    mat_dict["frequency_tx_" + str(idx)] = fft.fftshift(frequency)
-                    mat_dict["power_spectral_density_tx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
-
-        if self.__calc_transmit_stft:
-            for idx, (time, freq, power) in enumerate(self._stft_tx):
-                if time is not None and freq is not None and power is not None:
-                    mat_dict["stft_time_tx_" + str(idx)] = time
-                    mat_dict["stft_frequency_tx" + str(idx)] = freq
-                    mat_dict["stft_power_tx" + str(idx)] = power
-
-        if self.__calc_receive_spectrum:
-            for idx, (periodogram, frequency) in enumerate(zip(self._periodogram_rx, self._frequency_range_rx)):
-
-                mat_dict["frequency_rx_" + str(idx)] = fft.fftshift(frequency)
-                mat_dict["power_spectral_density_rx_" + str(idx)] = fft.fftshift(periodogram) / np.amax(periodogram)
-
-        if self.__calc_receive_stft:
-            for idx, (time, freq, power) in enumerate(self._stft_rx):
-                if time is not None and freq is not None and power is not None:
-                    mat_dict["stft_time_rx_" + str(idx)] = time
-                    mat_dict["stft_frequency_rx_" + str(idx)] = freq
-                    mat_dict["stft_power_rx_" + str(idx)] = power
-
-        ber_theory = np.nan * np.ones((self.__scenario.num_transmitters,
-                                      self.__scenario.num_receivers,
-                                      self.__num_snr_loops), dtype=float)
-        fer_theory = np.nan * np.ones((self.__scenario.num_transmitters,
-                                      self.__scenario.num_receivers,
-                                      self.__num_snr_loops), dtype=float)
-        theory_notes = [[np.nan for _ in self.__scenario.receivers] for _ in self.__scenario.transmitters]
-
-        if self.theoretical_results is not None:
-
-            for tx_idx, rx_idx in zip(range(self.__scenario.num_transmitters), range(self.__scenario.num_receivers)):
-
-                link_theory = self.theoretical_results[tx_idx, rx_idx]
-                if link_theory is not None:
-
-                    if 'ber' in link_theory:
-                        ber_theory[tx_idx, rx_idx, :] = link_theory['ber']
-
-                    if 'fer' in link_theory:
-                        fer_theory[tx_idx, rx_idx, :] = link_theory['fer']
-
-                    if 'notes' in link_theory:
-                        theory_notes[tx_idx][rx_idx] = link_theory['notes']
-
-            mat_dict["ber_theory"] = ber_theory
-            mat_dict["fer_theory"] = fer_theory
-            mat_dict["theory_notes"] = theory_notes"""
-
         # Save results in matlab file
         savemat(file, mat_dict)
 
@@ -1593,7 +1528,7 @@ class GridDimension(object):
         property_name = property_path[-1]
         
         self.plot_scale = 'linear' if plot_scale is None else plot_scale
-        self.__setter_lambdas= tuple()
+        self.__setter_lambdas = tuple()
         self.__dimension = dimension
         self.__sample_points = sample_points
         self.__title = title
@@ -1631,7 +1566,7 @@ class GridDimension(object):
                 self.__first_impact = first_impact
                 self.__last_impact = last_impact
 
-            self.__considered_objects  += (considered_object,)
+            self.__considered_objects += (considered_object,)
             self.__setter_lambdas += (self.__create_setter_lambda(considered_object, dimension),)
 
     @property

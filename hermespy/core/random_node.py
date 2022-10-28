@@ -66,7 +66,7 @@ class RandomNode(Serializable):
         return self.__mother_node._rng
     
     @_rng.setter
-    def _rng(self, value: Optional[Generator]) -> None:
+    def _rng(self, value: Generator) -> None:
         
         self.__generator = value
 

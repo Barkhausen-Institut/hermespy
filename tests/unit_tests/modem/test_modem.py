@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
 """HermesPy testing for modem base class."""
 
-from multiprocessing.sharedctypes import Value
+from os import path
+from tempfile import TemporaryDirectory
 from typing import Type
 from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
+from h5py import File
 from numpy import random as rnd
-from numpy.testing import assert_almost_equal
-from hermespy.core.device import Device
+from numpy.testing import assert_array_almost_equal
 
+from hermespy.core import UniformArray, IdealAntenna, Signal, Device, ChannelStateFormat, ChannelStateInformation, SNRType
 from hermespy.fec import EncoderManager
-from hermespy.core import UniformArray, IdealAntenna, SNRType
-from hermespy.modem import RandomBitsSource
-from hermespy.modem.modem import CommunicationReception, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink
+from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, CommunicationReception, \
+                           BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource
 from hermespy.precoding import SymbolPrecoding
 from hermespy.simulation import SimulatedDevice
 
 from .test_waveform_generator import MockWaveformGenerator
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -35,19 +36,20 @@ class TestCommunicationReception(TestCase):
 
     def setUp(self) -> None:
 
-        self.signal = Mock()
-
-        first_frame = Mock()
-        first_frame.encoded_bits = np.zeros(10, dtype=np.uint8)
-        first_frame.decoded_bits = np.zeros(10, dtype=np.uint8)
-
-        second_frame = Mock()
-        second_frame.encoded_bits = np.zeros(10, dtype=np.uint8)
-        second_frame.decoded_bits = np.zeros(10, dtype=np.uint8)
-
-        self.frames = [first_frame, second_frame]
-
-        self.reception = CommunicationReception(self.signal, self.frames)
+        self.rng = np.random.default_rng(42)
+        
+        self.base_signal = Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1)
+        self.frames = [CommunicationReceptionFrame(Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1),
+                                                   Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1),
+                                                   Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                   Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                   1.2345,
+                                                   Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                   self.rng.integers(0, 2, 20), self.rng.integers(0, 2, 10),
+                                                   ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
+                                                                           self.rng.uniform(size=(2,1,10,2)) + 1j * self.rng.uniform(size=(2,1,10,2)))) for _ in range(2)]
+        
+        self.reception = CommunicationReception(self.base_signal, self.frames)
 
     def test_num_frames(self) -> None:
         """Number of frames property should return the correct number of frames"""
@@ -57,14 +59,94 @@ class TestCommunicationReception(TestCase):
     def test_encoded_bits(self) -> None:
         """Encoded bits property should return a concatenation of all encoded bits"""
 
-        self.assertEqual(20, self.reception.encoded_bits.shape[0])
+        self.assertEqual(40, self.reception.encoded_bits.shape[0])
 
     def test_bits(self) -> None:
         """Bits property should return a concatenation of all decoded bits"""
 
         self.assertEqual(20, self.reception.bits.shape[0])
+
+    def test_hdf_serialization(self) -> None:
+        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+        
+        reception: CommunicationReception = None
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+            
+            with File(file_location, 'a') as file:
+                
+                group = file.create_group('testgroup')
+                self.reception.to_HDF(group)
+                
+            with File(file_location, 'r') as file:
+                
+                group = file['testgroup']
+                reception = self.reception.from_HDF(group)
+                
+        np.testing.assert_array_equal(self.base_signal.samples, reception.signal.samples)
+        self.assertEqual(2, reception.num_frames)
+        
+        for initial_frame, serialized_frame in zip(self.frames, reception.frames):
+            
+            np.testing.assert_array_equal(initial_frame.signal.samples, serialized_frame.signal.samples)
+            np.testing.assert_array_equal(initial_frame.decoded_signal.samples, serialized_frame.decoded_signal.samples)
+            np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
+            np.testing.assert_array_equal(initial_frame.decoded_symbols.raw, serialized_frame.decoded_symbols.raw)
+            self.assertEqual(initial_frame.timestamp, serialized_frame.timestamp)
+            np.testing.assert_array_equal(initial_frame.equalized_symbols.raw, serialized_frame.equalized_symbols.raw)
+            np.testing.assert_array_equal(initial_frame.encoded_bits, serialized_frame.encoded_bits)
+            np.testing.assert_array_equal(initial_frame.decoded_bits, serialized_frame.decoded_bits)
+            np.testing.assert_array_equal(initial_frame.csi.state, serialized_frame.csi.state)
+        
+        
+class TestCommunicationTransmission(TestCase):
     
-    
+    def setUp(self) -> None:
+        
+        self.rng = np.random.default_rng(42)
+        
+        self.base_signal = Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1)
+        self.frames = [CommunicationTransmissionFrame(Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1),
+                                                      self.rng.integers(0, 2, 10), self.rng.integers(0, 2, 20),
+                                                      Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                      Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                      1.2345) for _ in range(2)]
+        
+        self.transmission = CommunicationTransmission(self.base_signal, self.frames)
+        
+    def test_hdf_serialization(self) -> None:
+        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+        
+        transmission: CommunicationTransmission = None
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+            
+            with File(file_location, 'a') as file:
+                
+                group = file.create_group('testgroup')
+                self.transmission.to_HDF(group)
+                
+            with File(file_location, 'r') as file:
+                
+                group = file['testgroup']
+                transmission = self.transmission.from_HDF(group)
+                
+        np.testing.assert_array_equal(self.base_signal.samples, transmission.signal.samples)
+        self.assertEqual(2, transmission.num_frames)
+        
+        for initial_frame, serialized_frame in zip(self.frames, transmission.frames):
+            
+            np.testing.assert_array_equal(initial_frame.bits, serialized_frame.bits)
+            np.testing.assert_array_equal(initial_frame.encoded_bits, serialized_frame.encoded_bits)
+            np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
+            np.testing.assert_array_equal(initial_frame.encoded_symbols.raw, serialized_frame.encoded_symbols.raw)
+            np.testing.assert_array_equal(initial_frame.signal.samples, serialized_frame.signal.samples)
+
+
 class BaseModemMock(BaseModem):
     """Mock class to test abstract base modem."""
     
@@ -291,7 +373,7 @@ class TestDuplexModem(TestBaseModem):
         
         reception = self.modem.receive()
         
-        assert_almost_equal(transmission.bits, reception.bits)
+        assert_array_almost_equal(transmission.bits, reception.bits)
         self.assertIs(transmission, self.modem.transmission)
 
     def test_empty_receive(self) -> None:
@@ -323,7 +405,7 @@ class TestDuplexModem(TestBaseModem):
         
         reception = self.modem.receive()
         
-        assert_almost_equal(transmission.bits, reception.bits)
+        assert_array_almost_equal(transmission.bits, reception.bits)
         self.assertIs(transmission, self.modem.transmission)
 
     def test_empty_receive(self) -> None:

@@ -15,7 +15,9 @@ It is split into several interdependent sub-modules:
    core.monte_carlo
    core.executable
    core.factory
+   core.definitions
    core.device
+   core.pipeline
    core.random_node
    core.scenario
    core.signal_model

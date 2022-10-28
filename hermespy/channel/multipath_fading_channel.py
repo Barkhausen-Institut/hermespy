@@ -7,7 +7,6 @@ Multipath Fading
 
 from __future__ import annotations
 from abc import abstractmethod, ABC
-from enum import Enum, IntEnum
 from itertools import product
 from typing import Any, Optional, Type, TYPE_CHECKING, Union, List
 
@@ -17,7 +16,7 @@ from ruamel.yaml import SafeRepresenter, MappingNode, SafeConstructor
 from scipy.constants import pi
 
 from hermespy.core import Serializable
-from hermespy.core.device import Device, FloatingError
+from hermespy.core.device import Device
 from hermespy.tools import delay_resampling_matrix
 from .channel import Channel
 

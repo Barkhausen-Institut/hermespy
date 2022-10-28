@@ -15,7 +15,7 @@ import numpy as np
 
 from hermespy.core import ChannelStateInformation, Executable, FloatingError, Serializable, Signal
 from hermespy.core.channel_state_information import ChannelStateFormat
-from .waveform_generator import ConfigurablePilotWaveform, WaveformGenerator, Synchronization, \
+from .waveform_generator import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, Synchronization, \
     ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
@@ -63,6 +63,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
                  num_postamble_symbols: int = 0,
                  pilot_rate: int = 0,
                  guard_interval: float = 0.,
+                 oversampling_factor: int = 4,
                  pilot_symbol_sequence: Optional[PilotSymbolSequence] = None,
                  repeat_pilot_symbol_sequence: bool = True,
                  **kwargs: Any) -> None:
@@ -85,6 +86,9 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
             guard_interval (float, optional):
                 Guard interval between communication frames in seconds.
                 Zero by default.
+                
+            oversampling_factor (int, optional):
+                The oversampling factor of the waform.
 
             pilot_rate (int, optional):
                 Pilot symbol rate.
@@ -108,14 +112,12 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         self.num_postamble_symbols = num_postamble_symbols
         self.pilot_rate = pilot_rate
         self.guard_interval = guard_interval
-
-        #self._data_symbol_idx = None
-        #self._symbol_idx = None
-        #self._pulse_correlation_matrix = None
-
-        # Initialize base classes
+        
+        WaveformGenerator.__init__(self, oversampling_factor=oversampling_factor, **kwargs)
+        
+        pilot_symbol_sequence = MappedPilotSymbolSequence(self.__mapping) if pilot_symbol_sequence is None else pilot_symbol_sequence
         ConfigurablePilotWaveform.__init__(self, symbol_sequence=pilot_symbol_sequence, repeat_symbol_sequence=repeat_pilot_symbol_sequence)
-        WaveformGenerator.__init__(self, **kwargs)
+        
 
     @abstractmethod
     def _transmit_filter(self) -> np.ndarray:
@@ -410,7 +412,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         if self.pilot_rate <= 0:
             return 0
 
-        return int(self.num_data_symbols / self.pilot_rate)
+        return max(0, int(self.num_data_symbols / self.pilot_rate) - 1)
 
     @property
     def _num_payload_symbols(self) -> int:
@@ -429,7 +431,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         if self.pilot_rate <= 0:
             return np.empty(0, dtype=int)
 
-        pilot_indices = np.arange(self._num_pilot_symbols) * (1 + self.pilot_rate)
+        pilot_indices = np.arange(1, 1 + self._num_pilot_symbols) * (1 + self.pilot_rate) - 1
         return pilot_indices
 
     @property

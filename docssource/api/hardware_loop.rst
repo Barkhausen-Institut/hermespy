@@ -9,7 +9,24 @@ HermesPy over real hardware setups such as USRPs (Universal Software-Defined Rad
    :alt: Hardware Loop Module Tree
    :align: center
 
+It consists of the base classes for hardware bindings
+
 .. toctree::
 
    hardware_loop.hardware_loop
    hardware_loop.physical_device
+   hardware_loop.scenario
+   hardware_loop.physical_device_dummy
+
+as well as specific bindings to UHD devices
+
+.. toctree::
+
+   hardware_loop.usrp
+
+and audio devices (sound cards)
+
+.. toctree::
+   
+   hardware_loop.audio.device
+   hardware_loop.audio.scenario

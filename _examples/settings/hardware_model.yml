@@ -57,12 +57,12 @@ Evaluators:
     transmitting_modem: *modem_alpha
     receiving_modem: *modem_alpha
     confidence: .9
-    tolerance: .01
+    tolerance: 1e-4
     plot_scale: log
 
 # Simulation parameters
-num_samples: 50                    # Number of samples per simulation grid section
-min_num_samples: 10                # Minimum number of samples per simulation grid section before premature stopping
+num_samples: 10000                 # Number of samples per simulation grid section
+min_num_samples: 50                # Minimum number of samples per simulation grid section before premature stopping
 snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 

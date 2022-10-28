@@ -25,9 +25,8 @@ from typing import Optional, Union
 
 from hermespy.core import Serializable, Signal
 from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter,  SafeConstructor
-from ruamel.yaml.constructor import ConstructorError
 
-from hermespy.tools.math import lin2db, DbConversionType, rms_value
+from hermespy.tools.math import rms_value
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -42,6 +41,7 @@ __status__ = "Prototype"
 class GainControlType(Enum):
     """Type of automatig gain control """
     
+    NONE = 0
     MAX_AMPLITUDE = 1
     RMS_AMPLITUDE = 2
 
@@ -406,6 +406,8 @@ class AnalogDigitalConverter(Serializable):
         if input_samples is None:
             input_samples = np.arange(-1, 1, .01) + 1j*np.arange(1, -1, -.01)
 
+        input_samples = input_samples.flatten()
+
         figure: Optional[plt.figure] = None
         if fig_axes is None:
 
@@ -417,7 +419,7 @@ class AnalogDigitalConverter(Serializable):
         else:
             quant_axes = fig_axes
 
-        output_samples = self.convert(input_samples)
+        output_samples = self.convert(Signal(input_samples, 1.)).samples.flatten()
         quant_axes.plot(np.real(input_samples), np.real(output_samples))
 
         quant_axes

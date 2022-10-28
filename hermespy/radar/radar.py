@@ -131,7 +131,7 @@ class RadarWaveform(object):
     def power(self) -> float:
         """Power of the radar waveform.
 
-        Returns: Radar power in :math:`\\mathrm{W}.
+        Returns: Radar power in :math:`\\mathrm{W}`.
         """
         ...  # pragma: no cover
 
@@ -364,10 +364,14 @@ class Radar(DuplexOperator):
             else:
                 signal = self.transmit_beamformer.transmit(signal)
 
+        # Prepare transmission
+        signal.carrier_frequency = self.carrier_frequency
+        transmission = RadarTransmission(signal)
+
         if self.attached:
-            self.device.transmitters.add_transmission(self, signal)
+            self.device.transmitters.add_transmission(self, transmission)
             
-        return RadarTransmission(signal)
+        return transmission
 
     def receive(self) -> RadarReception:
 

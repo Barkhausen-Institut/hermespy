@@ -7,19 +7,19 @@ Signal Modeling
 
 from __future__ import annotations
 from copy import deepcopy
-from ctypes import Union
-from math import ceil
-from typing import Optional, Type
+from typing import Literal, Optional, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from h5py import Group
 from numba import jit, complex128
 from scipy.constants import pi
 from scipy.fft import fft, fftshift, fftfreq
-from scipy.signal import butter, sosfilt, sosfilt_zi, firwin
 from scipy.ndimage import convolve1d
+from scipy.signal import butter, sosfilt, firwin
 
 from .executable import Executable
+from .factory import HDFSerializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -31,13 +31,10 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Signal:
+class Signal(HDFSerializable):
     """Base class of signal models in HermesPy.
 
     Attributes:
-    
-        filter_order (int):
-            Order of the filters applied during resampling and supoperosition mixing.
 
         __samples (np.ndarray):
             An MxT matrix containing uniformly sampled base-band samples of the modeled signal.
@@ -51,7 +48,9 @@ class Signal:
             i.e. the central frequency in Hz.
     """
 
-    filter_order = 10
+    filter_order: int = 10
+    """Order of the filters applied during resampling and supoperosition mixing."""
+    
     __samples: np.ndarray
     __sampling_rate: float
     __carrier_frequency: float
@@ -254,6 +253,9 @@ class Signal:
         Returns: The power of each modeled stream within a numpy vector.
         """
 
+        if self.num_samples < 1:
+            return 0.
+
         stream_power = np.sum(self.__samples.real ** 2 + self.__samples.imag ** 2, axis=1) / self.num_samples
         return stream_power
     
@@ -305,16 +307,29 @@ class Signal:
         if self.__sampling_rate != sampling_rate:
             
             # Apply an anti-aliasing filter if the respective flag is enabled
-            if self.__sampling_rate > sampling_rate and aliasing_filter:
-            
-                filter_coefficients = butter(self.filter_order, sampling_rate / self.__sampling_rate, btype='low', output='sos')
-                filter_init = np.repeat(sosfilt_zi(filter_coefficients)[:, np.newaxis, :], self.num_streams, axis=1)
-                filtered_samples, _ = sosfilt(filter_coefficients, self.__samples, axis=1, zi=filter_init)
+            if aliasing_filter:
                 
+                # Apply an anti-aliasing filter after resampling if the signal is upsampled
+                if sampling_rate > self.sampling_rate:
+
+                    samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
+                        
+                    aliasing_filter = butter(8, self.sampling_rate / sampling_rate,
+                                             btype='low', output='sos')
+                    samples = sosfilt(aliasing_filter, samples, axis=1)
+                    
+                # Apply an anti-aliasing filter before resampling if the signal is downsampled
+                elif sampling_rate < self.sampling_rate:
+                    
+                    aliasing_filter = butter(8, sampling_rate / self.sampling_rate,
+                                             btype='low', output='sos')
+                    samples = sosfilt(aliasing_filter, self.__samples, axis=1)
+                    
+                    samples = Signal.__resample(samples, self.__sampling_rate, sampling_rate)
+
             else:
-                filtered_samples = self.__samples
-            
-            samples = Signal.__resample(filtered_samples, self.__sampling_rate, sampling_rate)
+
+                samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
 
         # Skip resampling if both sampling rates are identical
         else:
@@ -325,6 +340,7 @@ class Signal:
 
     def superimpose(self,
                     added_signal: Signal,
+                    resample: bool = True,
                     aliasing_filter: bool = True) -> None:
         """Superimpose an additive signal model to this model.
 
@@ -333,16 +349,14 @@ class Signal:
 
         Args:
         
-            added_signal (Signal):
-                Model of the signal to be superimposed.
-                
-            aliasing_filter (bool, optional):
-                Apply an anti-aliasing filter during mixing.
-                Enabled by default.
+            added_signal (Signal): The signal to be superimposed onto this one.
+            resample (bool): Allow for dynamic resampling during superposition.
+            aliasing_filter (bool, optional): Apply an anti-aliasing filter during mixing.
                 
         Raises:
         
             ValueError: If `added_signal` contains a different number of streams than this signal model.
+            RuntimeError: If resampling is required but not allowd.
             NotImplementedError: If the delays if this signal and `added_signal` differ.
         """
 
@@ -372,6 +386,10 @@ class Signal:
 
         # Resample the added signal if the respective sampling rates don't match
         if self.sampling_rate != added_signal.sampling_rate:
+
+            if not resample:
+                raise RuntimeError("Resampling required but not allowed")
+
             resampled_added_samples = self.__resample(added_samples, added_signal.sampling_rate, self.sampling_rate)
 
         else:
@@ -427,7 +445,7 @@ class Signal:
              title: Optional[str] = None,
              angle: bool = False,
              axes: Optional[np.ndarray] = None,
-             space: Union['time', 'frequency', 'both'] = 'both',
+             space: Union[Literal['time'], Literal['frequency'], Literal['both']] = 'both',
              legend: bool = True) -> Optional[plt.figure]:
         """Plot the current signal in time- and frequency-domain.
 
@@ -468,11 +486,10 @@ class Signal:
                 figure, axes = plt.subplots(self.num_streams, num_axes, squeeze=False)
                 figure.suptitle(title)
                 
-
             # Generate timestamps for time-domain plotting
             timestamps = self.timestamps
             
-            # Infer the axis indices to account for different plot 
+            # Infer the axis indices to account for different plot
             time_axis_idx = 0
             frequency_axis_idx = 1 if space == 'both' else 0
 
@@ -536,7 +553,7 @@ class Signal:
         num_streams = signal.shape[0]
 
         num_input_samples = signal.shape[1]
-        num_output_samples = ceil(num_input_samples * output_sampling_rate / input_sampling_rate)
+        num_output_samples = round(num_input_samples * output_sampling_rate / input_sampling_rate)
 
         input_timestamps = np.arange(num_input_samples) / input_sampling_rate
         output_timestamps = np.arange(num_output_samples) / output_sampling_rate
@@ -667,3 +684,33 @@ class Signal:
             complex_samples /= np.iinfo(interleaved_samples.dtype).max
 
         return cls(samples=complex_samples, **kwargs)
+    
+    @classmethod
+    def from_HDF(cls, group: Group) -> Signal:
+        
+        # De-serialize attributes
+        sampling_rate = group.attrs.get('sampling_rate', 1.)
+        carrier_frequency = group.attrs.get('carrier_frequency', 0.)
+        delay = group.attrs.get('delay', 0.)
+        noise_power = group.attrs.get('noise_power', 0.)
+        
+        # De-serialize samples
+        samples = np.array(group['samples'], dtype=complex)
+        
+        return Signal(samples=samples, sampling_rate=sampling_rate, carrier_frequency=carrier_frequency,
+                      delay=delay, noise_power=noise_power)
+                
+    def to_HDF(self, group: Group) -> None:
+        
+        # Serialize attributes
+        group.attrs['carrier_frequency'] = self.carrier_frequency
+        group.attrs['sampling_rate'] = self.sampling_rate
+        group.attrs['num_streams'] = self.num_streams
+        group.attrs['num_samples'] = self.num_samples
+        group.attrs['power'] = self.power
+        group.attrs['delay'] = self.delay
+        group.attrs['noise_power'] = self.noise_power
+        
+        # Serialize samples
+        group.create_dataset('samples', data=self.samples)
+        group.create_dataset('timestamps', data=self.timestamps)

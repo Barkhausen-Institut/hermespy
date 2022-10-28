@@ -8,12 +8,13 @@ Communication Symbols
 from __future__ import annotations
 from copy import deepcopy
 from enum import Enum
-from typing import Optional, Union, Iterable
+from typing import Optional, Union, Iterable, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
+from h5py import Group
 
-from hermespy.core import Executable
+from hermespy.core import Executable, HDFSerializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -65,7 +66,7 @@ class Symbol(object):
         self.flag = flag
 
 
-class Symbols(object):
+class Symbols(HDFSerializable):
     """A time-series of communication symbols located somewhere on the complex plane."""
 
     __symbols: np.ndarray       # Internal symbol storage
@@ -267,7 +268,9 @@ class Symbols(object):
 
             self.__symbols[slice] = value
 
-    def plot_constellation(self, axes: Optional[plt.axes.Axes] = None) -> Optional[plt.Figure]:
+    def plot_constellation(self,
+                           axes: Optional[plt.axes.Axes] = None,
+                           title: str = 'Symbol Constellation') -> Optional[plt.Figure]:
         """Plot the symbol constellation.
 
         Essentially projects the time-series of symbols onto a single complex plane.
@@ -277,6 +280,10 @@ class Symbols(object):
             axes (Optional[plt.axes.Axes], optional):
                 The axes to plot the graph to.
                 By default, a new matplotlib figure is created.
+                
+            title (str, optional):
+                Plot title.
+                Only relevant if no axes were provided.
 
         Returns:
 
@@ -294,7 +301,7 @@ class Symbols(object):
             with Executable.style_context():
             
                 figure, axes = plt.subplots()
-                figure.suptitle("Symbol Constellation")
+                figure.suptitle(title)
 
         axes.scatter(symbols.real, symbols.imag)
         axes.set(ylabel="Imag")
@@ -304,6 +311,25 @@ class Symbols(object):
         axes.axvline(x=0, color='k')
 
         return figure
+    
+    @classmethod
+    def from_HDF(cls: Type[Symbols], group: Group) -> Symbols:
+
+        # Recall datasets
+        symbols = np.array(group['symbols'], dtype=complex)
+
+        # Initialize object from recalled state
+        return cls(symbols=symbols)
+        
+    def to_HDF(self, group: Group) -> None:
+        
+        # Serialize datasets
+        group.create_dataset('symbols', data=self.__symbols)
+        
+        # Serialize attributes
+        group.attrs['num_streams'] = self.num_streams
+        group.attrs['num_blocks'] = self.num_blocks
+        group.attrs['num_symbols'] = self.num_symbols
 
 
 class StatedSymbols(Symbols):
@@ -375,3 +401,21 @@ class StatedSymbols(Symbols):
         """
         
         return self.__states.shape[1]
+    
+    @classmethod
+    def from_HDF(cls: Type[StatedSymbols], group: Group) -> StatedSymbols:
+
+        # Recall datasets
+        symbols = np.array(group['symbols'], dtype=complex)
+        states = np.array(group['states'], dtype=complex)
+
+        # Initialize object from recalled state
+        return cls(symbols=symbols, states=states)
+        
+    def to_HDF(self, group: Group) -> None:
+        
+        # Serialize base class
+        Symbols.to_HDF(self, group)
+        
+        # Serialize datasets
+        group.create_dataset('states', data=self.__states)
