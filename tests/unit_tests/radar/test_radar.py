@@ -6,9 +6,11 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_equal
 from matplotlib.figure import Figure
+from scipy.constants import speed_of_light
 
-from hermespy.core import Signal, SNRType
+from hermespy.core import Signal, SNRType, IdealAntenna, UniformArray
 from hermespy.radar import Radar, RadarCube, RadarWaveform
+from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -118,8 +120,7 @@ class TestRadar(TestCase):
         self.rng = np.random.default_rng(42)
         
         self.waveform = RadarWaveformMock()
-        self.device = Mock()
-        self.device.antennas.num_antennas = 2
+        self.device = SimulatedDevice(carrier_frequency=1e8, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / 1e8, (2, 1, 1)))
         
         self.radar = Radar()
         self.radar.waveform = self.waveform
@@ -283,7 +284,7 @@ class TestRadar(TestCase):
     def test_receive_no_beamformer(self) -> None:
         """Receiving without a beamformer should result in a valid radar cube"""
 
-        self.device.antennas.num_antennas = 1
+        self.device.antennas = UniformArray(IdealAntenna(), 1., (1,))
         self.radar.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
         self.radar.receive_beamformer = None
 

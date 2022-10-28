@@ -12,7 +12,6 @@ if __name__ == '__main__':
         if dir.lower() == repository:
             path.remove(dir)
 
-    
     # Warn the user if we cannot detect hermes
     try:
         import hermespy 
@@ -24,7 +23,7 @@ if __name__ == '__main__':
     
     # Run all tests as usual
     test_loader = TestLoader()
-    test_runner = TextTestRunner(verbosity=2)
+    test_runner = TextTestRunner(verbosity=2, failfast=True)
     
     if len(argv) < 2:
         start_dir = '.'
@@ -33,4 +32,7 @@ if __name__ == '__main__':
         start_dir = argv[1]
     
     tests = test_loader.discover(start_dir)
-    test_runner.run(tests)
+    test_result = test_runner.run(tests)
+
+    # Return with a proper exit code indicating test success / failure
+    exit(int(not test_result.wasSuccessful()))

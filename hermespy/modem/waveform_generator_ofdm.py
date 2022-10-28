@@ -9,7 +9,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
 from math import ceil
-from re import sub
 from typing import List, Tuple, Optional, Type, Union, Any, Set
 
 import numpy as np
@@ -18,12 +17,8 @@ from scipy.fft import fft, fftshift, ifft, ifftshift
 from scipy.interpolate import griddata
 from scipy.signal import find_peaks
 
-from hermespy.modem.symbols import StatedSymbols
-
-from ..core.factory import Serializable
-from ..core.channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
-from ..core.signal_model import Signal
-from .modem import Symbols
+from hermespy.core import ChannelStateFormat, ChannelStateInformation, Serializable, Signal
+from .symbols import StatedSymbols, Symbols
 from .waveform_generator import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, PilotWaveformGenerator, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
@@ -1225,8 +1220,11 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         return ofdm
     
 
-class PilotSection(FrameSection):
+class PilotSection(FrameSection, Serializable):
     """Pilot symbol section within an OFDM frame."""
+    
+    yaml_tag = u'Pilot'
+    """YAML serialization tag"""
     
     __pilot_elements: Optional[Symbols]
     __cached_num_subcarriers: int
@@ -1373,6 +1371,9 @@ class SchmidlCoxPilotSection(PilotSection):
     
     Refer to :footcite:t:`1997:schmidl` for a detailed description.
     """
+    
+    yaml_tag = u'SchmidlCoxPilot'
+    """YAML serialization tag"""
 
     @property
     def num_samples(self) -> int:

@@ -51,8 +51,6 @@ class Executable(ABC, Serializable):
     yaml_tag = u'Executable'
     """YAML serialization tag."""
 
-    __spectrum_fft_size: int        # Number of FFT bins considered during computation.
-    __max_num_drops: int            # Number of maximum executions per scenario.
     __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
     __verbosity: Verbosity          # Information output behaviour during execution.
     __style: str = 'dark'           # Color scheme
@@ -93,7 +91,7 @@ class Executable(ABC, Serializable):
     @abstractmethod
     def run(self) -> None:
         """Execute the configuration."""
-        ...
+        ...  # pragma no cover
 
     @property
     def results_dir(self) -> str:

@@ -36,6 +36,9 @@ setup(
         'hermespy.channel': ['res/*'],
     },
     include_package_data=True,
+    exclude_package_data={
+        '': ['3rdparty', 'tests'],
+    },
     extras_require={
         "test": ['pytest', 'coverage'],
         "quadriga": ["oct2py"],
@@ -52,6 +55,8 @@ setup(
             'ipywidgets',
             'scikit-build',
         ],
+        "uhd": ['usrp_uhd_api@git+https://github.com/Barkhausen-Institut/usrp_uhd_wrapper.git'],
+        "audio": ['sounddevice'],
         "develop": [
             "pybind11",
             "scikit-build",
@@ -67,6 +72,7 @@ setup(
     },
     install_requires=[
         'matplotlib~=3.5.1',
+        'h5py~=3.7.0',
         'numpy~=1.21.5',
         'scipy~=1.7.1',
         'pytest-mypy~=0.9.1',
@@ -79,7 +85,6 @@ setup(
         'sphinx~=4.5.0',
         'rich~=11.2.0',
         'ZODB~=5.7.0',
-        'h5py~=3.7.0',
     ],
     command_options={
         'build_sphinx': {

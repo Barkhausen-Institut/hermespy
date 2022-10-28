@@ -1,25 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-====================
-USRP Hardware Driver
-====================
+==========
+UHD Device
+==========
 """
 
 from functools import cached_property
-from math import ceil
-from time import sleep
-from typing import List, Optional
-
+from typing import Any, List, Optional, Callable
 
 import numpy as np
 from zerorpc import Client
-
-from hermespy.core import Device, Scenario, Signal
-from .physical_device import PhysicalDevice
-from .scenario import PhysicalScenario
+from zerorpc.exceptions import LostRemote, RemoteError
 from usrp_client.rpc_client import UsrpClient
-from usrp_client.system import System as _UsrpSystem, LabeledUsrp as _LabeledUsrp
 from uhd_wrapper.utils.config import MimoSignal, TxStreamingConfig, RxStreamingConfig, RfConfig, txContainsClippedValue
+
+from hermespy.core import Serializable, Signal
+from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -31,29 +27,63 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class UsrpDevice(UsrpClient, PhysicalDevice):
+class UsrpDevice(PhysicalDevice, Serializable):
+    
+    yaml_tag = u'USRP'
+    """YAML serialization tag"""
 
     __ip: str
     __port: int
+    __usrp_client: UsrpClient
+    __num_rpc_retries = 10
+    __collection_enabled: bool
 
     def __init__(self,
                  ip: str,
                  port: Optional[int] = 5555,
                  carrier_frequency: float = 7e8,
+                 tx_gain: float = 0.,
+                 rx_gain: float = 0.,
                  *args, **kwargs) -> None:
 
-        client = Client()
-        client.connect(f"tcp://{ip}:{port}")
+        rpc_client = Client()
+        rpc_client.connect(f"tcp://{ip}:{port}")
+
         self.__ip = ip
         self.__port = port
 
-        UsrpClient.__init__(self, client)
+        self.__usrp_client = UsrpClient(rpc_client)
+
         PhysicalDevice.__init__(self, *args, **kwargs)
 
         self.carrier_frequency = carrier_frequency
-        self.tx_gain = 0.
-        self.rx_gain = 0.
-        self.__current_configuration = RfConfig(-1)
+        self.tx_gain = tx_gain
+        self.rx_gain = rx_gain
+        self.__current_configuration = self.__rpc_call_wrapper(self.__usrp_client.getRfConfig)
+        self.__collection_enabled = False
+
+    def __rpc_call_wrapper(self, call: Callable, *args, **kwargs) -> Any:
+        """Wrapper to RPC client calls to perform multiple calls to hack the timeout bug.
+
+        Returns: The call return.
+
+        Raises:
+
+            RuntimeError: If the call didn't succeed within the configured amount of attempts.
+        """
+
+        for _ in range(self.__num_rpc_retries):
+
+            try:
+                return call(*args, **kwargs)
+
+            except LostRemote:
+                continue
+
+            except RemoteError as e:
+                raise RuntimeError(f"Remote exception occured at '{self.ip}:{self.port}': {e.msg}")
+
+        raise RuntimeError(f"Lost connection to  the remote '{self.ip}:{self.port}'")
 
     def _configure_device(self) -> None:
 
@@ -89,59 +119,79 @@ class UsrpDevice(UsrpClient, PhysicalDevice):
                 rxGain=rx_gain,
             )
 
-            self.configureRfConfig(config)
-            self.resetStreamingConfigs()
+            self.__rpc_call_wrapper(self.__usrp_client.configureRfConfig, config)
             self.__current_configuration = config
 
-    def configure(self) -> None:
+    def _upload(self, baseband_signal: Signal) -> None:
 
         # Configure device
         self._configure_device()
 
-        # Configure transmission
-        baseband_signal = Device.transmit(self)
+        # Reset the streaming config
+        self.__rpc_call_wrapper(self.__usrp_client.resetStreamingConfigs)
 
+        # Scale signal to a maximum absolute vlaue of zero to full exploit the DAC range
         if baseband_signal.num_samples > 0:
             baseband_signal.samples /= np.abs(baseband_signal.samples).max()
+
+        # Hack: Append some zeros to account for the premature transmission stop
+        hack_num_samples = 200
+        baseband_signal.samples = np.concatenate((np.zeros((baseband_signal.num_streams, hack_num_samples), dtype=complex),
+                                                  baseband_signal.samples, np.zeros((baseband_signal.num_streams, hack_num_samples), dtype=complex)),
+                                                 axis=1)
 
         if baseband_signal.num_samples % 2 != 0:
             baseband_signal.samples = np.append(baseband_signal.samples, np.zeros((baseband_signal.num_streams, 1), dtype=complex), axis=1)
 
         mimo_signal = MimoSignal(list(baseband_signal.samples))
         tx_config = TxStreamingConfig(max(0., -self.calibration_delay), mimo_signal)
-        self.configureTx(tx_config)
+        self.__rpc_call_wrapper(self.__usrp_client.configureTx, tx_config)
 
         # Configure reception
         duration = self.receivers.min_frame_duration
-        num_receive_samples = int((duration + self.max_receive_delay) * self.sampling_rate)
-        num_receive_samples += num_receive_samples % 2  # Workaround for the uneven sample bug
 
-        rx_config = RxStreamingConfig(max(0., self.calibration_delay), num_receive_samples)
-        self.configureRx(rx_config)
+        if duration >= 0.:
+
+            num_receive_samples = int((duration + self.max_receive_delay) * self.sampling_rate)
+            num_receive_samples += num_receive_samples % 2  # Workaround for the uneven sample bug
+
+            rx_config = RxStreamingConfig(max(0., self.calibration_delay), num_receive_samples)
+            self.__rpc_call_wrapper(self.__usrp_client.configureRx, rx_config)
+
+            self.__collection_enabled = True
+
+        else:
+            self.__collection_enabled = False
 
     def trigger(self) -> None:
 
-        # Configure transmit and receive behaviour
-        self.configure()
-
         # Queue execution command
-        self.execute(self.getCurrentFpgaTime() + .2)
+        self.__usrp_client.execute(self.__usrp_client.getCurrentFpgaTime() + .2)
 
-        # Fetch resulting samples
-        self.fetch()
+    def _download(self) -> Signal:
 
-    def fetch(self) -> None:
+        # Abort if no samples are to be expcted during collection
+        if not self.__collection_enabled:
+            return Signal.empty(self.sampling_rate, self.antennas.num_antennas)
         
-        mimo_signals = self.collect()
-        signal_model = Signal.empty(self.sampling_rate, self.antennas.num_antennas)
+        mimo_signals = self.__usrp_client.collect()
+        signal_model = Signal.empty(self.sampling_rate, self.antennas.num_antennas, carrier_frequency=self.carrier_frequency)
 
         for mimo_signal in mimo_signals:
 
             streams = np.array(mimo_signal.signals)
             signal_model.samples = np.append(signal_model.samples, streams, axis=1)
 
-        for receiver in self.receivers:
-            receiver.cache_reception(signal_model)
+        return signal_model
+
+    @property
+    def _client(self) -> UsrpClient:
+        """Access to the UHD client.
+
+        Returns: Handle to the client.
+        """
+
+        return self.__usrp_client
 
     @property
     def ip(self) -> str:
@@ -188,7 +238,7 @@ class UsrpDevice(UsrpClient, PhysicalDevice):
     @property
     def sampling_rate(self) -> float:
 
-        ideal_sampling_rate = self.transmitters.max_sampling_rate
+        ideal_sampling_rate = self.transmitters.max_sampling_rate if self.transmitters.num_operators > 0 else self.receivers.max_sampling_rate
         selected_sampling_rate = min(self.__supported_sampling_rates, key=lambda x: abs(x - ideal_sampling_rate))
         
         return selected_sampling_rate
@@ -211,40 +261,4 @@ class UsrpDevice(UsrpClient, PhysicalDevice):
     @cached_property
     def __supported_sampling_rates(self) -> List[float]:
 
-        return self.getSupportedSamplingRates()
-
-
-class UsrpSystem(PhysicalScenario[UsrpDevice]):
-
-    def __init__(self, *args, **kwargs) -> None:
-
-        self.__synchronized = False
-        PhysicalScenario.__init__(self, *args, **kwargs)
-
-        # Hacked USRP system (hidden)   
-        self.__system = _UsrpSystem()
-
-    def new_device(self, *args, **kwargs) -> UsrpDevice:
-
-        device = UsrpDevice(*args, **kwargs)
-        self.add_device(device)
-
-        return device
-
-    def add_device(self, device: UsrpDevice) -> None:
-
-        usrp_uid = str(self.num_devices)
-        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(usrp_uid, device.ip, device)
-        Scenario.add_device(self, device)
-     
-    def trigger(self) -> None:
-
-        # Configure devices
-        for device in self.devices:
-            device.configure()
-
-        self.__system.execute()
-
-        # Fetch results from device
-        for device in self.devices:
-            device.fetch()
+        return self.__usrp_client.getSupportedSamplingRates()
