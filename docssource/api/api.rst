@@ -15,6 +15,7 @@ The subpackages may have interdependencies, but in general, the root of dependen
    channel
    fec
    hardware_loop
+   jcas
    modem
    precoding
    beamforming

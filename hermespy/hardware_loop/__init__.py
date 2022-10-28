@@ -1,7 +1,8 @@
 from .hardware_loop import HardwareLoop
 from .physical_device import PhysicalDevice
-from .physical_device_dummy import PhysicalDeviceDummy
-from .usrp import UsrpDevice, UsrpSystem
+from .physical_device_dummy import PhysicalDeviceDummy, PhysicalScenarioDummy
+from .scenario import PhysicalScenario, PhysicalScenarioType
+from .uhd import UsrpDevice, UsrpSystem
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -14,6 +15,8 @@ __status__ = "Prototype"
 
 __all__ = [
     'HardwareLoop',
-    'PhysicalDevice', 'PhysicalDeviceDummy',
+    'PhysicalDevice',
+    'PhysicalDeviceDummy', 'PhysicalScenarioDummy',
+    'PhysicalScenario', 'PhyiscalScenarioType',
     'UsrpDevice', 'UsrpSystem',
 ]

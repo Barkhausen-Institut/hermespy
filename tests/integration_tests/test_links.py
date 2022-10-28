@@ -3,19 +3,14 @@ from unittest import TestCase
 import numpy as np
 
 from hermespy.channel import Channel, MultipathFading5GTDL
-from hermespy.core import Scenario, IdealAntenna, UniformArray
-from hermespy.modem.waveform_generator import CustomPilotSymbolSequence
-from hermespy.modem.waveform_generator_chirp_fsk import ChirpFSKCorrelationSynchronization, ChirpFSKWaveform
-from hermespy.modem.waveform_generator_ofdm import OFDMIdealChannelEstimation, OFDMZeroForcingChannelEqualization
-from hermespy.simulation import SimulatedDevice
-from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, RootRaisedCosineWaveform, ZeroForcingChannelEqualization, \
+from hermespy.core import IdealAntenna, UniformArray
+from hermespy.simulation import SimulationScenario
+from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, RootRaisedCosineWaveform, CustomPilotSymbolSequence, \
     SingleCarrierCorrelationSynchronization, SingleCarrierZeroForcingChannelEqualization, SingleCarrierIdealChannelEstimation, \
     ChirpFSKWaveform, ChirpFSKCorrelationSynchronization, \
-    OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
-from hermespy.precoding import DFT
-    
+    OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization, OFDMIdealChannelEstimation
+from hermespy.precoding import DFT, SpatialMultiplexing
 from hermespy.fec import RepetitionEncoder
-from hermespy.precoding import SpatialMultiplexing
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -33,12 +28,9 @@ class TestSISOLinks(TestCase):
     def setUp(self) -> None:
 
         # Configure a 1x1link scenario
-        self.tx_device = SimulatedDevice()
-        self.rx_device = SimulatedDevice()
-
-        scenario = Scenario(seed=42)
-        scenario.add_device(self.tx_device)
-        scenario.add_device(self.rx_device)
+        scenario = SimulationScenario(seed=42)
+        self.tx_device = scenario.new_device()
+        self.rx_device = scenario.new_device()
 
         # Define a transmit operation on the first device
         self.tx_operator = TransmittingModem()
@@ -212,12 +204,10 @@ class TestMIMOLinks(TestCase):
 
         # Configure a 2x2 link scenario
         antennas = UniformArray(IdealAntenna(), 5e-3, [2, 1, 1])
-        self.tx_device = SimulatedDevice(antennas=antennas)
-        self.rx_device = SimulatedDevice(antennas=antennas)
 
-        scenario = Scenario(seed=42)
-        scenario.add_device(self.tx_device)
-        scenario.add_device(self.rx_device)
+        scenario = SimulationScenario(seed=42)
+        self.tx_device = scenario.new_device(antennas=antennas)
+        self.rx_device = scenario.new_device(antennas=antennas)
 
         # Define a transmit operation on the first device
         self.tx_operator = TransmittingModem()

@@ -125,27 +125,19 @@ class Encoder(ABC, Serializable):
             self.manager = manager
 
     @property
-    def manager(self) -> EncoderManager:
+    def manager(self) -> Optional[EncoderManager]:
         """Coding pipeline configuration this encoder is registered in.
 
-        Returns:
-            EncoderManager:
-                Handle to the coding pipeline.
-
-        Raises:
-            RuntimeError: If the encoder is considered floating.
+        Returns: Handle to the coding pipeline.
         """
-
-        if self.__manager is None:
-            raise RuntimeError("Trying to access the manager of a floating encoding")
 
         return self.__manager
 
     @manager.setter
-    def manager(self, manager: EncoderManager) -> None:
+    def manager(self, value: EncoderManager) -> None:
 
-        if self.__manager is not manager:
-            self.__manager = manager
+        if self.__manager is not value:
+            self.__manager = value
 
     @abstractmethod
     def encode(self, bits: np.ndarray) -> np.ndarray:
@@ -169,7 +161,7 @@ class Encoder(ABC, Serializable):
             ValueError:
                 If the length of ``bits`` does not equal :meth:`bit_block_size`.
         """
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
@@ -193,7 +185,7 @@ class Encoder(ABC, Serializable):
             ValueError:
                 If the length of ``encoded_bits`` does not equal :meth:`code_block_size`.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
@@ -209,7 +201,7 @@ class Encoder(ABC, Serializable):
             int:
                 Number of bits :math:`K_n`.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
@@ -225,7 +217,7 @@ class Encoder(ABC, Serializable):
             int:
                 Number of bits :math:`L_n`.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     def rate(self) -> float:
@@ -375,7 +367,8 @@ class EncoderManager(RandomNode, Serializable):
         """
 
         # Register this encoding configuration to the encoder
-        encoder.manager = self
+        if hasattr(encoder, 'manager'):
+            encoder.manager = self
 
         # Add new encoder to the queue of configured encoders
         self._encoders.append(encoder)

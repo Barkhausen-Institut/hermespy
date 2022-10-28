@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """Test Channel State Information model for wireless transmission links."""
 
+from os import path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 
+from h5py import File
 from numpy import exp
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal  # , assert_array_almost_equal
@@ -152,3 +155,25 @@ class TestChannelStateInformation(TestCase):
 
         self.csi.set_state(ChannelStateFormat.IMPULSE_RESPONSE, state)
         self.assertEqual(num_samples, self.csi.num_samples)
+
+    def test_hdf_serialization(self) -> None:
+        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+        
+        csi: ChannelStateInformation = None
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+            
+            with File(file_location, 'a') as file:
+                
+                group = file.create_group('testgroup')
+                self.csi.to_HDF(group)
+                
+            with File(file_location, 'r') as file:
+                
+                group = file['testgroup']
+                csi = self.csi.from_HDF(group)
+                
+        assert_array_equal(self.csi.state, csi.state)
+        self.assertEqual(self.csi.state_format, csi.state_format)

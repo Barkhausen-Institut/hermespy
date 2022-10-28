@@ -15,7 +15,8 @@ import numpy as np
 from numba import jit
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node, ScalarNode
 
-from hermespy.core import ChannelStateInformation, Serializable, Signal
+from hermespy.core import ChannelStateInformation, Serializable, Signal, ChannelStateFormat
+from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 
 if TYPE_CHECKING:
@@ -191,7 +192,7 @@ class ChannelEstimation(Generic[WaveformType], ABC):
         """
 
         state = np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)
-        return StatedSymbols(symbols.raw, state), state
+        return StatedSymbols(symbols.raw, state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, state)
 
 
 class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformType]):
@@ -840,6 +841,19 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
     def sequence(self) -> np.ndarray:
 
         return self.__pilot_symbols
+    
+    
+class MappedPilotSymbolSequence(CustomPilotSymbolSequence):
+    """Pilot symbol sequence derived from a mapping."""
+    
+    def __init__(self, mapping: PskQamMapping) -> None:
+        """
+
+        Args:
+            mapping (PskQamMapping): Mapping from which the symbols pilot symbols should be inferred
+        """
+        
+        CustomPilotSymbolSequence.__init__(self, mapping.get_mapping())
 
 
 class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):

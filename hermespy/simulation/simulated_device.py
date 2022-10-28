@@ -310,7 +310,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                  clear_cache: bool = True) -> List[Signal]:
 
         # Collect transmissions
-        signals = self.transmitters.get_transmissions(clear_cache) if self.operator_separation else \
+        signals = [t.signal for t in self.transmitters.get_transmissions(clear_cache)] if self.operator_separation else \
             [Device.transmit(self, clear_cache)]
 
         # Simulate rf-chain
@@ -379,6 +379,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas,
                                     num_samples=0, carrier_frequency=self.carrier_frequency)
 
+        # Transform signal argument to matrix argument
         if isinstance(device_signals, Signal):
             
             propagation_matrix = np.empty(1, dtype=object)
@@ -397,7 +398,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             else:
                 raise ValueError("Unsupported propagation matrix")
 
-        # Superimpose transmit signals
+        # Superimpose receive signals
         for signals, _ in device_signals:
 
             if signals is not None:
@@ -416,8 +417,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Model radio-frequency chain during transmission
         baseband_signal = self.rf_chain.receive(coupled_signal)
 
+        # Model adc conversion during transmission
         baseband_signal = self.adc.convert(baseband_signal)
-        
+
+        # After rf chain transmission, the signal is considered to be converted to base-band
+        # However, for now, carrier frequency information will remain to enable beamforming
+
         # Cache received signal at receiver slots
         receiver: Receiver
         for receiver in self.receivers:

@@ -25,7 +25,7 @@ Build Package:
   stage: build
   script:
     - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-    - pip install .[test,quadriga,documentation]
+    - pip install .[test,quadriga,documentation,uhd,audio]
 
 Unit Testing:
   stage: test

@@ -16,6 +16,7 @@ HermesPy `repository`_ or directly access them via Google `Colabs`_ and run them
    notebooks/fec_coding.ipynb
    notebooks/beamformer.ipynb
    notebooks/waveform.ipynb
+   notebooks/audio.ipynb
 
 .. _Jupyter: https://docs.jupyter.org/en/latest/
 .. _repository: https://github.com/Barkhausen-Institut/hermespy/tree/main/docssource/notebooks/

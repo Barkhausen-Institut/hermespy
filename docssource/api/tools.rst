@@ -9,3 +9,4 @@ the main modules.
 
    tools.math
    tools.resampling
+   tools.tile

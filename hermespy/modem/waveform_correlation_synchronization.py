@@ -138,12 +138,12 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
           
         # Correct pilot indices by the convolution length
         pilot_length = len(pilot_sequence)
-        if pilot_length % 2 == 0:
-            pilot_indices -= pilot_length - 1
-        else:
-            pilot_indices -= pilot_length
-        
+        pilot_indices -= pilot_length - 1
+            
+        # Correct infeasible pilot index choices
         pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
+        pilot_indices = np.where(pilot_indices > (signal.shape[1] - frame_length), abs(signal.shape[1] -frame_length), pilot_indices)
+
         return pilot_indices.tolist()
 
     @classmethod

@@ -1,4 +1,4 @@
-from msilib.schema import Error
+# -*- coding: utf-8 -*-
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -38,7 +38,6 @@ class TestEvaluators(TestCase):
         self.modem.waveform_generator = waveform
         self.modem.device = self.device
 
-            
         investigated_object = InvestigatedObject()
         self.dimension = GridDimension(investigated_object, 'dimension', [0], 'title')
 
