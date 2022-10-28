@@ -6,7 +6,8 @@ Simulation
 """
 
 from __future__ import annotations
-from re import S
+from enum import Enum
+from time import time
 from typing import Any, Callable, Dict, List, Type, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -15,8 +16,8 @@ from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core import Executable, Verbosity, Operator, Serializable, ConsoleMode, Evaluator, dimension, \
-    MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, SNRType
+from hermespy.core import Drop, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, \
+    MonteCarloResult, Scenario, Signal, DeviceTransmission, DeviceReception, SNRType
 from hermespy.channel import QuadrigaInterface, Channel
 from .simulated_device import SimulatedDevice
 
@@ -303,6 +304,66 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         self.__snr_type = snr_type
 
+    def propagate(self, transmitted_signals: List[Signal]) -> np.ndarray:
+
+        if len(transmitted_signals) != self.num_devices:
+            raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match "
+                             f"the number of registered devices ({self.num_devices})")
+
+        # Initialize the propagated signals
+        propagation_matrix = np.empty((self.num_devices, self.num_devices), dtype=object)
+
+        # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
+        for device_alpha_idx, device_alpha in enumerate(self.devices):
+            for device_beta_idx, device_beta in enumerate(self.devices[:(1+device_alpha_idx)]):
+
+                alpha_transmissions = transmitted_signals[device_alpha_idx]
+                beta_transmissions = transmitted_signals[device_beta_idx]
+
+                channel: Channel = self.channels[device_alpha_idx, device_beta_idx]
+                beta_receptions, alpha_receptions, csi = channel.propagate(alpha_transmissions, beta_transmissions)
+
+                propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi.reciprocal())
+                propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
+
+        return propagation_matrix
+
+    def receive_devices(self, receptions: Union[List[Signal], np.ndarray]) -> List[Signal]:
+        """Generate base-band signal models received by devices."""
+        
+        # Resolve to the base method if just a signal array is provided
+        if isinstance(receptions, list):
+            return Scenario.receive_devices(self, receptions)
+
+        if len(receptions) != self.num_devices:
+            raise ValueError(f"Number of arriving signals ({len(receptions)}) does not match "
+                             f"the number of receiving devices ({self.num_devices})")
+
+        received_signals = [d.receive(s, self.snr, self.snr_type) for d, s in zip(self.devices, receptions)]
+        return received_signals
+
+    def _drop(self) -> Drop:
+
+        # Generate drop timestamp
+        timestamp = time()
+        
+        # Generate device transmissions
+        operator_transmissions = self.transmit_operators()
+        transmitted_device_signals = self.transmit_devices()
+
+        # ToDo: Support operator separation here or elsewhere
+        device_transmissions = [DeviceTransmission(s[0], i) for s, i in zip(transmitted_device_signals, operator_transmissions)]
+        
+        # Simulate channel propagation
+        propagation_matrix = self.propagate(transmitted_device_signals)
+        
+        received_device_signals = self.receive_devices(propagation_matrix)
+        operator_receptions = self.receive_operators()
+        # ToDo: Patch CSI here
+        device_receptions = [DeviceReception(s, None, i) for s, i in zip(received_device_signals, operator_receptions)]
+
+        return Drop(timestamp, device_transmissions, device_receptions)
+
 
 class SimulationRunner(object):
 
@@ -425,7 +486,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         return [self.transmit_operators, self.transmit_devices, self.propagate, self.receive_devices, self.receive_operators]
 
 
-class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
+class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
     """HermesPy simulation configuration."""
 
     yaml_tag = u'Simulation'
@@ -437,10 +498,9 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
     dump_results: bool
     """Dump results to files after simulation runs."""
 
-    __scenario: SimulationScenario
-
     def __init__(self,
-                 num_samples: int = 100,
+                 scenario: Optional[SimulationScenario] = None,
+                 num_drops: int = 100,
                  drop_duration: float = 0.,
                  plot_results: bool = False,
                  dump_results: bool = True,
@@ -449,9 +509,16 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
                  results_dir: Optional[str] = None,
                  verbosity: Union[str, Verbosity] = Verbosity.INFO,
                  seed: Optional[int] = None,
-                 num_actors: Optional[int] = None,
-                 *args, **kwargs) -> None:
+                 num_actors: Optional[int] = None) -> None:
         """Args:
+        
+            scenario (SimulationScenario, optional):
+                The simulated scenario.
+                If none is provided, an empty one will be initialized.
+                
+            num_drops (int, optional):
+                Number of drops generated per sweeping grid section.
+                100 by default.
 
             drop_duration(float, optional):
                 Duration of simulation drops in seconds.
@@ -478,29 +545,33 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
                 Random seed used to initialize the pseudo-random number generator.
         """
 
-        Executable.__init__(self, results_dir, verbosity)
+        scenario = SimulationScenario() if scenario is None else scenario
+        
+        if seed is not None:
+            scenario.set_seed(seed)
+            
+        Pipeline.__init__(self, scenario, results_dir=results_dir, verbosity=verbosity)
 
-        self.__scenario = SimulationScenario(seed=seed, *args, **kwargs)
+        MonteCarlo.__init__(self, self.scenario, num_drops,
+                            console=self.console, console_mode=console_mode, ray_address=ray_address,
+                            num_actors=num_actors)
+        
         self.plot_results = plot_results
         self.dump_results = dump_results
         self.drop_duration = drop_duration
-
-        MonteCarlo.__init__(self, self.__scenario, num_samples,
-                            console=self.console, console_mode=console_mode, ray_address=ray_address,
-                            num_actors=num_actors)
-        return
-
-    @property
-    def scenario(self) -> SimulationScenario:
-        """Scenario description of the simulation.
-
-        Returns:
-
-            SimulationScenario:
-                Scenario description.
-        """
-
-        return self.__scenario
+        self.num_drops = num_drops
+        
+    @Pipeline.num_drops.setter
+    def num_drops(self, value: int) -> int:
+        
+        Pipeline.num_drops.fset(self, value)
+        MonteCarlo.num_samples.fset(self, value)
+        
+    @MonteCarlo.num_samples.setter
+    def num_samples(self, value: int) -> int:
+        
+        Pipeline.num_drops.fset(self, value)
+        MonteCarlo.num_samples.fset(self, value)
 
     def run(self) -> MonteCarloResult[SimulationScenario]:
 
@@ -598,8 +669,9 @@ class Simulation(Executable, Serializable, MonteCarlo[SimulationScenario]):
         operators: List[Operator] = state.pop('Operators', [])
         evaluators: List[Evaluator] = state.pop('Evaluators', [])
         dimensions: Dict[str, Any] = state.pop('Dimensions', {})
-
+        
         # Initialize simulation
+        state['scenario']= SimulationScenario(snr=state.pop('snr', float('inf')), snr_type=state.pop('snr_type', SNRType.EBN0))
         simulation: Simulation = cls.InitializationWrapper(state)
 
         # Add devices to the simulation

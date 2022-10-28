@@ -1,7 +1,7 @@
 from .bits_source import RandomBitsSource, StreamBitsSource
 from .symbols import Symbol, Symbols, StatedSymbols
-from .modem import CommunicationReception, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink
-from .waveform_generator import WaveformGenerator, Synchronization, PilotWaveformGenerator, PilotSymbolSequence,  UniformPilotSymbolSequence, CustomPilotSymbolSequence, ConfigurablePilotWaveform, ChannelEqualization, ZeroForcingChannelEqualization
+from .modem import CommunicationReception, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink
+from .waveform_generator import WaveformGenerator, Synchronization, PilotWaveformGenerator, PilotSymbolSequence,  UniformPilotSymbolSequence, CustomPilotSymbolSequence, MappedPilotSymbolSequence, ConfigurablePilotWaveform, ChannelEqualization, ZeroForcingChannelEqualization
 from .waveform_generator_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization,\
     ChirpFSKCorrelationSynchronization
 from .waveform_single_carrier import FilteredSingleCarrierWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierMinimumMeanSquareChannelEqualization, SingleCarrierCorrelationSynchronization, RaisedCosineWaveform, RootRaisedCosineWaveform, FMCWWaveform, RectangularWaveform, SingleCarrierIdealChannelEstimation
@@ -19,15 +19,27 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+# Class name aliasing
+SCLeastSquaresChannelEstimation = SingleCarrierLeastSquaresChannelEstimation
+SCZeroForcingChannelEqualization = SingleCarrierZeroForcingChannelEqualization
+SCMinimumMeanSquareChannelEqualization = SingleCarrierMinimumMeanSquareChannelEqualization
+SCCorrelationSynchronization = SingleCarrierCorrelationSynchronization
+RCWaveform = RaisedCosineWaveform
+RRCWaveform = RootRaisedCosineWaveform
+RectWaveform = RectangularWaveform
+SCIdealChannelEstimation = SingleCarrierIdealChannelEstimation
+
+
 __all__ = [
     'RandomBitsSource', 'StreamBitsSource',
     'Symbol', 'Symbols', 'StatedSymbols',
-    'CommunicationReception', 'CommunicationReceptionFrame', 'CommunicationTransmission', 'CommunicationTransmissionFrame', 'TransmittingModem', 'ReceivingModem', 'DuplexModem', 'SimplexLink',
-    'WaveformGenerator', 'Synchronization', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'ConfigurablePilotWaveform', 'ChannelEqualization', 'ZeroForcingChannelEqualization',
+    'CommunicationReception', 'CommunicationReceptionFrame', 'CommunicationTransmission', 'CommunicationTransmissionFrame', 'BaseModem', 'TransmittingModem', 'ReceivingModem', 'DuplexModem', 'SimplexLink',
+    'WaveformGenerator', 'Synchronization', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'MappedPilotSymbolSequence', 'ConfigurablePilotWaveform', 'ChannelEqualization', 'ZeroForcingChannelEqualization',
     'ChirpFSKWaveform', 'ChirpFSKSynchronization', 'ChirpFSKCorrelationSynchronization',
     'FilteredSingleCarrierWaveform', 'SingleCarrierLeastSquaresChannelEstimation', 'SingleCarrierZeroForcingChannelEqualization', 'SingleCarrierMinimumMeanSquareChannelEqualization', 'SingleCarrierCorrelationSynchronization', 'RaisedCosineWaveform', 'RootRaisedCosineWaveform', 'FMCWWaveform', 'RectangularWaveform', 'SingleCarrierIdealChannelEstimation',
     'OFDMWaveform', 'PilotSection', 'SchmidlCoxPilotSection','FrameSymbolSection', 'FrameGuardSection', 'FrameResource', 'FrameElement', 'ElementType', 'OFDMCorrelationSynchronization', 'SchmidlCoxSynchronization', 'OFDMMinimumMeanSquareChannelEqualization', 'OFDMZeroForcingChannelEqualization', 'OFDMIdealChannelEstimation', 'OFDMLeastSquaresChannelEstimation',
     'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator',
     'FrameErrorEvaluator', 'ThroughputEvaluator',
     'PskQamMapping',
+    'SCLeastSquaresChannelEstimation', 'SCZeroForcingChannelEqualization', 'SCMinimumMeanSquareChannelEqualization', 'SCCorrelationSynchronization', 'RCWaveform', 'RRCWaveform', 'RectWaveform', 'SCIdealChannelEstimation',
 ]

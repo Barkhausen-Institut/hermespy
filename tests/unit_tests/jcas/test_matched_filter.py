@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
+
 from unittest import TestCase
-from unittest.mock import Mock
 
 import numpy as np
 
@@ -52,6 +53,11 @@ class MockWaveformGenerator(WaveformGenerator):
     def power(self) -> float:
         
         return 1.
+
+    @property
+    def carrier_frequency(self) -> float:
+        
+        return 1.
     
     def map(self, data_bits: np.ndarray) -> Symbols:
         
@@ -87,13 +93,13 @@ class TestMatchedFilterJoint(TestCase):
     def setUp(self) -> None:
         
         self.rng = np.random.default_rng(42)
-        self.range_resolution = 10
-        
+        self.carrier_frequency = 1e8
+
         self.joint = MatchedFilterJcas(max_range=10)
         self.waveform = MockWaveformGenerator()
         self.joint.waveform_generator = self.waveform
         
-        self.device = SimulatedDevice()
+        self.device = SimulatedDevice(carrier_frequency=self.carrier_frequency)
         self.device._rng = self.rng
         self.device.transmitters.add(self.joint)
         self.device.receivers.add(self.joint)
@@ -103,7 +109,8 @@ class TestMatchedFilterJoint(TestCase):
         num_delay_samples = 10
         transmission = self.joint.transmit()
         
-        delay_offset = Signal(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate)
+        delay_offset = Signal(np.zeros((1, num_delay_samples), dtype=complex),
+                              transmission.signal.sampling_rate, carrier_frequency=self.carrier_frequency)
         delay_offset.append_samples(transmission.signal)
         
         self.joint.cache_reception(delay_offset)

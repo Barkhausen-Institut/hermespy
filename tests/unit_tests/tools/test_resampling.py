@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Test HermesPy resampling routines."""
 
-import unittest
+from unittest import TestCase
 from itertools import product
 
 import numpy as np
 from numpy.testing import assert_almost_equal
-from scipy.constants import pi
+from scipy.fft import fft, ifft, ifftshift, fftshift
 
 from hermespy.tools import delay_resampling_matrix
 
@@ -20,7 +20,12 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestDelayResampling(unittest.TestCase):
+class TestDelayResampling(TestCase):
+    
+    
+    def setUp(self) -> None:
+        
+        self.rng = np.random.default_rng(42)
 
     def test_resampling_matrix_circular(self) -> None:
         """Make sure the resampling matrix has circular properties."""

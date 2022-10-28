@@ -49,16 +49,13 @@ Configuring :class:`CommunicationEvaluators<.CommunicationEvaluator>` to evaluat
 
 from __future__ import annotations
 from abc import ABC
-from typing import List, Optional
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import uniform
 
-from ..core.executable import Executable
-from ..core.factory import Serializable
-from ..core.scenario import Scenario
-from ..core.monte_carlo import Artifact, ArtifactTemplate, Evaluator, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult
+from hermespy.core import ArtifactTemplate, Executable, Serializable, Evaluator, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult
 from .modem import TransmittingModem, ReceivingModem
 
 __author__ = "Jan Adler"
@@ -140,12 +137,19 @@ class BitErrorArtifact(ArtifactTemplate[float]):
 class BitErrorEvaluation(EvaluationTemplate[np.ndarray]):
     """Bit error evaluation of a single communication process between modems."""
 
-    def plot(self) -> List[plt.Figure]:
+    def plot(self,
+             axes: plt.Axes = None) -> List[plt.Figure]:
 
         with Executable.style_context():
 
-            figure, axes = plt.subplots()
-            figure.suptitle("Bit Error Evaluation")
+            if not axes:
+
+                figure, axes = plt.subplots()
+                figure.suptitle("Bit Error Evaluation")
+
+            else:
+
+                figure = None
 
             axes.stem(self.evaluation)
             axes.set_xlabel("Bit Index")
@@ -167,7 +171,7 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
 
     def __init__(self,
                  transmitting_modem: TransmittingModem,
-                 receiving_modem: ReveivingModem) -> None:
+                 receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
