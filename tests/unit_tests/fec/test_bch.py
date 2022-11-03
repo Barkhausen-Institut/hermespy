@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
+from tempfile import NamedTemporaryFile
 
 import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
+from ray.cloudpickle.cloudpickle_fast import dump
+from ray.cloudpickle import load
 
 from hermespy.fec import BCHCoding
 
@@ -19,7 +22,7 @@ __status__ = "Prototype"
 
 
 class TestBCHCoding(TestCase):
-    """Test Bose-Chaudhuri-Hocquenghem Coding."""
+    """Test Bose-Chaudhuri-Hocquenghem Coding"""
     
     def setUp(self) -> None:
         
@@ -33,7 +36,7 @@ class TestBCHCoding(TestCase):
         self.coding = BCHCoding(self.data_block_size, self.code_block_size, self.power)
         
     def test_encode_decode(self) -> None:
-        """Encoding a data block should yield a valid code."""
+        """Encoding a data block should yield a valid code"""
         
         for _ in range(self.num_attempts):
             
@@ -45,3 +48,16 @@ class TestBCHCoding(TestCase):
             
             decoded_block = self.coding.decode(code_block)
             assert_array_equal(data_block, decoded_block)
+
+    def test_pickle(self) -> None:
+        """Pickeling and unpickeling the C++ wrapper"""
+        
+        with NamedTemporaryFile() as file:
+        
+            dump(self.coding, file)
+            file.seek(0)
+            
+            coding = load(file)
+            self.assertEqual(self.data_block_size, coding.bit_block_size)
+            self.assertEqual(self.code_block_size, coding.code_block_size)
+            self.assertEqual(self.power, coding.correction_power)

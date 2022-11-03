@@ -22,7 +22,11 @@ class LDPC
 public:
 
     LDPC(const int numIterations, const std::string& hSourcePath, const std::string& gSavePath, const bool syndromeChecking, const int minNumIterations) :
-        numIterations(numIterations)
+        numIterations(numIterations),
+        hSourcePath(hSourcePath),
+        gSavePath(gSavePath),
+        minNumIterations(minNumIterations),
+        syndromeChecking(syndromeChecking)
     {
         // Read the H matrix
         this->infoBitPos = std::vector<uint32_t>(dataBlockSize);
@@ -33,7 +37,7 @@ public:
         this->dataBlockSize = this->H->get_n_cols();
         this->codeBlockSize = this->H->get_n_rows();
 
-        this->encoder = std::make_unique<Encoder_LDPC_from_H<int>>(this->dataBlockSize, this->codeBlockSize, *this->H, "IDENTITY", gSavePath);   
+        this->encoder = std::make_unique<Encoder_LDPC_from_H<int>>(this->dataBlockSize, this->codeBlockSize, *this->H, "IDENTITY", gSavePath, false);   
         if (this->infoBitPos.size() < 1) this->infoBitPos = this->encoder->get_info_bits_pos();
 
         this->decoder = std::make_unique<Decoder_LDPC_BP_flooding<int, float>>(this->dataBlockSize, this->codeBlockSize, numIterations, *this->H, infoBitPos, *this->updateRule, syndromeChecking, minNumIterations);
@@ -70,6 +74,26 @@ public:
         return this->numIterations;
     }
 
+    std::string getHSourcePath() const
+    {
+        return this->hSourcePath;
+    }
+
+    std::string getGSavePath() const
+    {
+        return this->gSavePath;
+    }
+
+    int getMinNumIterations() const
+    {
+        return this->minNumIterations;
+    }
+
+    bool getSyndromeChecking() const
+    {
+        return this->syndromeChecking;
+    }
+
     void setNumIterations(const int num)
     {
         if (num < 1) throw std::invalid_argument("Number of decoding iterations must be greater than zero");
@@ -84,6 +108,10 @@ protected:
     int dataBlockSize;
     int codeBlockSize;
     int numIterations;
+    int minNumIterations;
+    bool syndromeChecking;
+    std::string hSourcePath;
+    std::string gSavePath;
 
     std::vector<uint32_t> infoBitPos;
     std::unique_ptr<Update_rule_SPA<float>> updateRule;
@@ -157,5 +185,18 @@ PYBIND11_MODULE(ldpc, m)
 
         .def_property("num_iterations", &LDPC::getNumIterations, &LDPC::setNumIterations, R"pbdoc(
             Number of iterations during decoding.
-        )pbdoc");
+        )pbdoc")
+
+        .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
+            C++ bindings are always enabled.
+        )pbdoc")
+
+        .def(py::pickle(
+            [](const LDPC& ldpc) {
+                return py::make_tuple(ldpc.getNumIterations(), ldpc.getHSourcePath(), ldpc.getGSavePath(), ldpc.getSyndromeChecking(), ldpc.getMinNumIterations());
+            },
+            [](py::tuple t) {
+                return LDPC(t[0].cast<int>(), t[1].cast<std::string>(), t[2].cast<std::string>(), t[3].cast<bool>(), t[4].cast<int>());
+            }
+        ));
 }

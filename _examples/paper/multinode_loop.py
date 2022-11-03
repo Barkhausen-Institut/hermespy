@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from copy import deepcopy
 from ipaddress import IPv4Address
 from typing import List
@@ -7,6 +9,16 @@ from numpy import linspace
 from hermespy.core import Device
 from hermespy.hardware_loop import HardwareLoop, UsrpSystem
 from hermespy.modem import TransmittingModem, ReceivingModem, RRCWaveform, SCCorrelationSynchronization, SCLeastSquaresChannelEstimation, SCZeroForcingChannelEqualization, BitErrorEvaluator
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.3.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 pipe = HardwareLoop(UsrpSystem(), manual_triggering=False)
 
@@ -29,8 +41,8 @@ devs: List[Device] = []
 for d in range(4):
 
     ip = str(IPv4Address("192.168.189.131") + d)
-    device = pipe.new_device(ip=ip, carrier_frequency=cf, tx_gain=30., rx_gain=50.,
-                             max_receive_delay=2e-6, calibration_delay=.5e-6)
+    device = pipe.new_device(ip=ip, carrier_frequency=cf, tx_gain=30., rx_gain=30.,
+                             calibration_delay=1e-6)
     devs.append(device)
 
 # Set up two interfering simplex links between a pair of devices, respectively
@@ -39,10 +51,6 @@ for d in range(2):
     # Initialize a new transmitting modem
     tx_operator = TransmittingModem()
     tx_operator.waveform_generator = deepcopy(wave)
-
-    # Hack for the mismatching sampling rates
-    if d == 0:
-        tx_operator.waveform_generator.oversampling_factor = 8
     
     # Initialize a new receiving modem
     rx_operator = ReceivingModem()

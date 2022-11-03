@@ -1,8 +1,12 @@
 from unittest import TestCase
+from tempfile import NamedTemporaryFile
 
 import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
+from ray.cloudpickle.cloudpickle_fast import dump
+from ray.cloudpickle import load
+
 
 from hermespy.fec import PolarSCCoding, PolarSCLCoding
 
@@ -42,6 +46,16 @@ class TestPolarSCCoding(TestCase):
             decoded_block = self.coding.decode(code_block)
             assert_array_equal(data_block, decoded_block)
 
+    def test_pickle(self) -> None:
+        """Pickeling and unpickeling the C++ wrapper"""
+        
+        with NamedTemporaryFile() as file:
+        
+            dump(self.coding, file)
+            file.seek(0)
+            
+            _ = load(file)
+            
 
 class TestPolarSCLCoding(TestCase):
     """Test the Polar SCL Coding."""
@@ -68,3 +82,13 @@ class TestPolarSCLCoding(TestCase):
             
             decoded_block = self.coding.decode(code_block)
             assert_array_equal(data_block, decoded_block)
+
+    def test_pickle(self) -> None:
+        """Pickeling and unpickeling the C++ wrapper"""
+        
+        with NamedTemporaryFile() as file:
+        
+            dump(self.coding, file)
+            file.seek(0)
+            
+            _ = load(file)

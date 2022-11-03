@@ -1,24 +1,31 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
-import matplotlib.pyplot as plt
-from unittest.mock import Mock
 from scipy.constants import speed_of_light
 
-from hermespy.channel import IndoorFactoryLineOfSight, MultipathFading5GTDL
+from hermespy.channel import IndoorFactoryLineOfSight
 from hermespy.modem.waveform_generator_ofdm import FrameElement, FrameSymbolSection
-from hermespy.modem import Modem, WaveformGeneratorOfdm, FrameResource, BitErrorEvaluator
-from hermespy.modem.waveform_generator_psk_qam import PskQamLeastSquaresChannelEstimation, WaveformGeneratorPskQam
-from hermespy.precoding.zero_forcing_equalizer import ZFTimeEqualizer
-from hermespy.simulation import Simulation, SimulationScenario
-from hermespy.simulation.simulation import SimulationRunner
-from hermespy.core import ConsoleMode, UniformArray, IdealAntenna
+from hermespy.modem import TransmittingModem, ReceivingModem, OFDMWaveform, FrameResource, BitErrorEvaluator
+from hermespy.simulation import Simulation
+from hermespy.core import UniformArray, IdealAntenna
 from hermespy.radar import FMCW, Radar
 from hermespy.tools import db2lin
 from hermespy.precoding import SpaceTimeBlockCoding
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.3.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
+
 # Initialize devices
 carrier_frequency = 3.5e9
 wavelength = speed_of_light / carrier_frequency
-simulation = Simulation(console_mode=ConsoleMode.LINEAR, ray_address='auto')
+simulation = Simulation()
 tx_device = simulation.scenario.new_device(carrier_frequency=carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * wavelength, [2]))
 rx_device = simulation.scenario.new_device(carrier_frequency=carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * wavelength, [2]))
 
@@ -39,22 +46,22 @@ ofdm_receive_tructure = [
     FrameSymbolSection(16, [0, 1, 1, 1, 2, 1, 1]),
 ]
 
-transmit_operator = Modem()
-transmit_operator.waveform_generator = WaveformGeneratorOfdm(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
+transmit_operator = TransmittingModem()
+transmit_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
 transmit_operator.precoding[0] = SpaceTimeBlockCoding()
-transmit_operator.device = tx_device
-receive_operator = Modem()
-receive_operator.waveform_generator = WaveformGeneratorOfdm(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
-receive_operator.device = rx_device
+tx_device.transmitters.add(transmit_operator)
+
+receive_operator = ReceivingModem()
+receive_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
 receive_operator.precoding[0] = SpaceTimeBlockCoding()
-transmit_operator.reference_transmitter = receive_operator
-receive_operator.reference_transmitter = transmit_operator
-interfering_opeartor = Radar()
-interfering_opeartor.waveform = FMCW(sampling_rate=transmit_operator.waveform_generator.sampling_rate,
+rx_device.receivers.add(receive_operator)
+
+interfering_operator = Radar()
+interfering_operator.waveform = FMCW(sampling_rate=transmit_operator.waveform_generator.sampling_rate,
                                      bandwidth=transmit_operator.waveform_generator.bandwidth,
-                                     max_range=transmit_operator.waveform_generator.samples_in_frame * speed_of_light / (2 * transmit_operator.waveform_generator.bandwidth))
-interfering_opeartor.waveform.num_chirps = 1
-interfering_opeartor.device = in_device
+                                     chirp_duration=transmit_operator.waveform_generator.samples_in_frame * speed_of_light)
+interfering_operator.waveform.num_chirps = 1
+in_device.transmitters.add(interfering_operator)
 
 # Configure channels
 simulation.scenario.set_channel(rx_device, tx_device, IndoorFactoryLineOfSight(48000, 80000))
@@ -73,6 +80,6 @@ simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
 simulation.num_samples, simulation.min_num_samples = 10000, 10000
 simulation.plot_results = True
 simulation.scenario.set_seed(42)
-simulation.results_dir = '/home/jan.adler/paper/alamouti/'
+simulation.results_dir = simulation.default_results_dir()
 
 simulation.run()

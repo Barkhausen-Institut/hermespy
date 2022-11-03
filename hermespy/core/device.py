@@ -500,21 +500,22 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
         """Central frequency of the mixed signal in radio-frequency transmission band.
 
         By default, the carrier frequency of the operated device is returned.
+        If no device is being operated, we assume a base band, i.e. carrier frequency of zero.
 
         Returns:
             float: Carrier frequency in Hz.
 
         Raises:
             ValueError: If the carrier frequency is smaller than zero.
-            RuntimeError: If the operator is considered floating.
         """
 
         if self.__carrier_frequency is None:
 
             if self.device is None:
-                raise RuntimeError("Error trying to get the carrier frequency of a floating operator")
-
-            return self.device.carrier_frequency
+                return 0.
+            
+            else:
+                return self.device.carrier_frequency
 
         return self.__carrier_frequency
 
@@ -898,8 +899,8 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
     def add(self,
             operator: Transmitter) -> None:
 
-        self.__transmissions.append(None)
         OperatorSlot[Transmitter].add(self, operator)
+        self.__transmissions.append(None)
 
     def add_transmission(self,
                          transmitter: Transmitter,
@@ -1390,20 +1391,21 @@ class DuplexOperator(Transmitter, Receiver):
     def device(self, value: Optional[Device]) -> None:
         """Set the device this operator is operating."""
 
-        if value is self.device:
+        if value is self.__device:
             return
         
         if self.__device is not None:
             
             self.__device.transmitters.remove(self)
             self.__device.receivers.remove(self)
+            
+        self.__device = value
 
         if value is not None:
             
             value.transmitters.add(self)
             value.receivers.add(self)
-            
-        self.__device = value
+
         
     @Transmitter.slot.setter
     def slot(self, value: OperatorSlot[Transmitter]) -> None:

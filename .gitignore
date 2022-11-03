@@ -18,6 +18,7 @@ matlab_env/
 *.so
 *.pyc
 .python-version
+*.so
 
 # Don't track build fragments
 wheel/

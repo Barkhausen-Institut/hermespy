@@ -4,7 +4,6 @@ from .spatial_multiplexing import SpatialMultiplexing
 from .dft import DFT
 from .stream_precoding import TransmitStreamCoding, ReceiveStreamCoding, TransmitStreamEncoder, ReceiveStreamDecoder
 from .space_time_block_coding import SpaceTimeBlockCoding
-from .space_time_block_coding import SpaceTimeBlockCoding
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
