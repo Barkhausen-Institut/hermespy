@@ -1,4 +1,5 @@
-from itertools import product
+# -*- coding: utf-8 -*-
+
 from os import mkdir
 from os.path import join
 
@@ -9,6 +10,17 @@ from scipy import stats
 from scipy.special import comb
 
 from hermespy.tools import db2lin
+from hermespy.core import Executable
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.3.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 def sc_awgn(snrs: np.ndarray,
             modulation_order: int) -> np.ndarray:
@@ -70,7 +82,7 @@ def fsk_awgn(snrs: np.ndarray,
         return None
 
     n_bits = np.log2(mod_order)
-    ebn0_linear = snrs / n_bits
+    ebn0_linear = snrs
 
     # calculate BER according do Proakis, Salehi, Digital
     # Communications, 5th edition, Section 4.5, Equations 44 and 47
@@ -87,7 +99,7 @@ modulation_orders = [2, 4, 16, 64]
 snrs = np.array([db2lin(x) for x in np.arange(-10, 20, .5)])
 
 
-directory_prefix = 'D:\\hermes_paper\\'
+directory_prefix = Executable.default_results_dir()
 
 
 awgn_theory = np.empty((len(modulation_orders), len(snrs)))

@@ -906,6 +906,10 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         else:
             output_signal = np.empty(0, dtype=complex)
 
+        # Abort here if no symbols were provided, returning only a pilot section
+        if symbols.num_blocks < 1:
+            return Signal(output_signal, self.sampling_rate)
+
         # Convert symbols
         symbol_blocks = symbols.raw[0, :, :]
 
@@ -1107,8 +1111,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
     @property
     def power(self) -> float:
 
-        return 1  # ToDo: Re-implement
-#        return self.num_occupied_subcarriers / self.fft_size
+        return  1 / np.sqrt(2) 
 
     @property
     def num_subcarriers(self) -> int:

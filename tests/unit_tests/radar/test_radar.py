@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from scipy.constants import speed_of_light
 
 from hermespy.core import Signal, SNRType, IdealAntenna, UniformArray
-from hermespy.radar import Radar, RadarCube, RadarWaveform
+from hermespy.radar import Radar, RadarCube, RadarWaveform, PointDetection
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -20,6 +20,27 @@ __version__ = "0.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class TestPointDetection(TestCase):
+    """Test the base class for radar point detections"""
+    
+    def setUp(self) -> None:
+        
+        self.rng = np.random.default_rng(42)
+        
+        self.position = self.rng.normal(size=3)
+        self.velocity = self.rng.normal(size=3)
+        self.power = 1.2345
+        
+        self.point = PointDetection(self.position, self.velocity, self.power)
+        
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as class attributes"""
+
+        assert_array_equal(self.position, self.point.position)
+        assert_array_equal(self.velocity, self.point.velocity)
+        self.assertEqual(self.power, self.point.power)
 
 
 class TestRadarCube(TestCase):
