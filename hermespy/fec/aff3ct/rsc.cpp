@@ -18,7 +18,10 @@ public:
 
     RSC(const int nDataBits, const int nCodeBits, const bool buffered_encoding, const int polyA, const int polyB) :
         dataBlockSize(nDataBits),
-        codeBlockSize(nCodeBits)
+        codeBlockSize(nCodeBits),
+        bufferedEncoding(buffered_encoding),
+        polyA(polyA),
+        polyB(polyB)
     {
         const std::vector<int> poly = { polyA, polyB };
         this->encoder = std::make_unique<Encoder_RSC_generic_sys<int8_t>>(nDataBits, nCodeBits, buffered_encoding, poly);
@@ -41,10 +44,38 @@ public:
         return data;
     }
 
+    int getDataBlockSize() const 
+    {
+        return this->dataBlockSize;
+    }
+
+    int getCodeBlockSize() const 
+    {
+        return this->codeBlockSize;
+    }
+
+    bool getBufferedEncoding() const 
+    {
+        return this->bufferedEncoding;
+    }
+
+    int getPolyA() const 
+    {
+        return this->polyA;
+    }
+
+    int getPolyB() const 
+    {
+        return this->polyB;
+    }
+
 protected:
 
     const int dataBlockSize;
     const int codeBlockSize;
+    const bool bufferedEncoding;
+    const int polyA;
+    const int polyB;
 
     std::unique_ptr<Encoder_RSC_generic_sys<int8_t>> encoder;
     std::unique_ptr<Decoder_RSC_BCJR_seq_generic_std<int8_t, int8_t>> decoder;
@@ -104,5 +135,26 @@ PYBIND11_MODULE(rsc, m)
 
             Returns:
                 The data bit block after decoding.
-        )pbdoc");
+        )pbdoc")
+
+        .def_property("bit_block_size", &RSC::getDataBlockSize, nullptr, R"pbdoc(
+            Number of bits within a data block to be encoded.
+        )pbdoc")
+
+        .def_property("code_block_size", &RSC::getCodeBlockSize, nullptr, R"pbdoc(
+            Number of bits within a code block to be decoded.
+        )pbdoc")
+
+        .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
+            C++ bindings are always enabled.
+        )pbdoc")
+
+        .def(py::pickle(
+            [](const RSC& rsc) {
+                return py::make_tuple(rsc.getDataBlockSize(), rsc.getCodeBlockSize(), rsc.getBufferedEncoding(), rsc.getPolyA(), rsc.getPolyB());
+            },
+            [](py::tuple t) {
+                return RSC(t[0].cast<int>(), t[1].cast<int>(), t[2].cast<bool>(), t[3].cast<int>(), t[4].cast<int>());
+            }
+        ));
 }

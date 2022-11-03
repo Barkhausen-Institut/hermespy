@@ -117,3 +117,8 @@ class RadarCube(object):
             plt.pcolormesh(self.range_bins, self.velocity_bins, range_velocity_profile, shading='auto')
 
             return figure
+
+    def normalize_power(self) -> None:
+        """Normalize the represented power indicators to unit maximum."""
+        
+        self.data /= self.data.max()

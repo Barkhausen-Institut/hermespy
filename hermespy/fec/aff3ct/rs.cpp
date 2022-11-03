@@ -160,5 +160,18 @@ PYBIND11_MODULE(rs, m)
 
         .def_property("correction_power", &ReedSolomon::getCorrectionPower, &ReedSolomon::setCorrectionPower, R"pbdoc(
             Number of symbol errors the coding may correct.
-        )pbdoc");
+        )pbdoc")
+
+        .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
+            C++ bindings are always enabled.
+        )pbdoc")
+
+        .def(py::pickle(
+            [](const ReedSolomon& rs) {
+                return py::make_tuple(rs.getDataBlockSize(), rs.getCorrectionPower());
+            },
+            [](py::tuple t) {
+                return ReedSolomon(t[0].cast<int>(), t[1].cast<int>());
+            }
+        ));
 }

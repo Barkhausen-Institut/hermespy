@@ -128,14 +128,14 @@ class TestEncoderManager(TestCase):
         with self.assertRaises(RuntimeError):
             self.assertEqual(self.encoder_manager.modem, None, "This assert is never called")
 
-    def test_add_encoder_registration(self) -> None:
-        """Added encoders must refer back to the manager they have been added to."""
-
-        self.encoder_manager.add_encoder(self.encoder_alpha)
-        self.encoder_manager.add_encoder(self.encoder_beta)
-
-        self.assertIs(self.encoder_alpha.manager, self.encoder_manager, "Added encoder does not refer back to manager")
-        self.assertIs(self.encoder_beta.manager, self.encoder_manager, "Added encoder does not refer back to manager")
+#    def test_add_encoder_registration(self) -> None:
+#        """Added encoders must refer back to the manager they have been added to."""
+#
+#        self.encoder_manager.add_encoder(self.encoder_alpha)
+#        self.encoder_manager.add_encoder(self.encoder_beta)
+#
+#        self.assertIs(self.encoder_alpha.manager, self.encoder_manager, "Added encoder does not refer back to manager")
+#        self.assertIs(self.encoder_beta.manager, self.encoder_manager, "Added encoder does not refer back to manager")
 
     def test_encoder_sorting(self) -> None:
         """Test that encoders are automatically ordered in ascending order,

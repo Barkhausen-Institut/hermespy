@@ -25,6 +25,7 @@ public:
     PolarCoding(const int dataBlockSize, const int codeBlockSize, const float ber) :
         dataBlockSize(dataBlockSize),
         codeBlockSize(codeBlockSize),
+        ber(ber),
         frozenBits(codeBlockSize)
     {
         // Generate frozen bits after the 5G standard
@@ -53,10 +54,26 @@ public:
         return data;
     }
 
+    int getDataBlockSize() const
+    {
+        return this->dataBlockSize;
+    }
+
+    int getCodeBlockSize() const
+    {
+        return this->codeBlockSize;
+    }
+
+    int getBer() const
+    {
+        return this->ber;
+    }
+
 protected:
 
     const int dataBlockSize;
     const int codeBlockSize;
+    const int ber;
     std::vector<bool> frozenBits;
 
     std::unique_ptr<Event_probability<float>> noise;
@@ -69,10 +86,20 @@ class PolarSCLCoding : public PolarCoding<Decoder_polar_SCL_naive<int32_t, int32
 public:
 
     PolarSCLCoding(const int dataBlockSize, const int codeBlockSize, const float ber, const int numPaths) :
-        PolarCoding(dataBlockSize, codeBlockSize, ber)
+        PolarCoding(dataBlockSize, codeBlockSize, ber),
+        numPaths(numPaths)
     {
         this->decoder = std::make_unique<Decoder_polar_SCL_naive<int32_t, int32_t>>(dataBlockSize, codeBlockSize, numPaths, this->frozenBits);
     }
+
+    int getNumPaths() const
+    {
+        return this->numPaths;
+    }
+
+protected:
+
+    const int numPaths;
 };
 
 
@@ -139,7 +166,28 @@ PYBIND11_MODULE(polar, m)
 
             Returns:
                 The data bit block after decoding.
-        )pbdoc");
+        )pbdoc")
+
+        .def_property("bit_block_size", &PolarSCCoding::getDataBlockSize, nullptr, R"pbdoc(
+            Number of bits within a data block to be encoded.
+        )pbdoc")
+
+        .def_property("code_block_size", &PolarSCCoding::getCodeBlockSize, nullptr, R"pbdoc(
+            Number of bits within a code block to be decoded.
+        )pbdoc")  
+        
+        .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
+            C++ bindings are always enabled.
+        )pbdoc")
+
+        .def(py::pickle(
+            [](const PolarSCCoding& polar) {
+                return py::make_tuple(polar.getDataBlockSize(), polar.getCodeBlockSize(), polar.getBer());
+            },
+            [](py::tuple t) {
+                return PolarSCCoding(t[0].cast<int>(), t[1].cast<int>(), t[2].cast<int>());
+            }
+        ));
 
     py::class_<PolarSCLCoding>(m, "PolarSCLCoding")
 
@@ -184,5 +232,26 @@ PYBIND11_MODULE(polar, m)
 
             Returns:
                 The data bit block after decoding.
-        )pbdoc");
+        )pbdoc")
+
+        .def_property("bit_block_size", &PolarSCLCoding::getDataBlockSize, nullptr, R"pbdoc(
+            Number of bits within a data block to be encoded.
+        )pbdoc")
+
+        .def_property("code_block_size", &PolarSCLCoding::getCodeBlockSize, nullptr, R"pbdoc(
+            Number of bits within a code block to be decoded.
+        )pbdoc")  
+
+        .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
+            C++ bindings are always enabled.
+        )pbdoc")
+
+        .def(py::pickle(
+            [](const PolarSCLCoding& polar) {
+                return py::make_tuple(polar.getDataBlockSize(), polar.getCodeBlockSize(), polar.getBer(), polar.getNumPaths());
+            },
+            [](py::tuple t) {
+                return PolarSCLCoding(t[0].cast<int>(), t[1].cast<int>(), t[2].cast<int>(), t[3].cast<int>());
+            }
+        ));
 }

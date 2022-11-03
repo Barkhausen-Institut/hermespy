@@ -1,14 +1,26 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 from scipy.constants import speed_of_light
 
 from hermespy.channel import IndoorFactoryLineOfSight
 from hermespy.modem.waveform_generator_ofdm import FrameElement, FrameSymbolSection
-from hermespy.modem import Modem, WaveformGeneratorOfdm, FrameResource, BitErrorEvaluator
-from hermespy.precoding.zero_forcing_equalizer import ZFTimeEqualizer
+from hermespy.modem import DuplexModem, OFDMWaveform, FrameResource, BitErrorEvaluator
+from hermespy.precoding import ZFTimeEqualizer
 from hermespy.simulation import Simulation
 from hermespy.radar import FMCW, Radar
 from hermespy.tools import db2lin
 from hermespy.core import ConsoleMode
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.3.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 # Initialize devices
 carrier_frequency = 3.5e9
@@ -33,11 +45,11 @@ ofdm_receive_tructure = [
     FrameSymbolSection(16, [0, 1, 1, 1, 2, 1, 1]),
 ]
 
-transmit_operator = Modem()
-transmit_operator.waveform_generator = WaveformGeneratorOfdm(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
+transmit_operator = DuplexModem()
+transmit_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
 transmit_operator.device = tx_device
-receive_operator = Modem()
-receive_operator.waveform_generator = WaveformGeneratorOfdm(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
+receive_operator = DuplexModem()
+receive_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
 receive_operator.device = rx_device
 receive_operator.precoding[0] = ZFTimeEqualizer()
 transmit_operator.reference_transmitter = receive_operator

@@ -84,6 +84,16 @@ public:
         return this->numIterations;
     }
 
+    int getPolyA() const 
+    {
+        return this->polyA;
+    }
+
+    int getPolyB() const 
+    {
+        return this->polyB;
+    }
+
 protected:
 
     int dataBlockSize;
@@ -190,5 +200,18 @@ PYBIND11_MODULE(turbo, m)
 
         .def_property("num_iterations", &Turbo::getNumIterations, &Turbo::setNumIterations, R"pbdoc(
             Number of iterations during decoding.
-        )pbdoc");
+        )pbdoc")
+
+        .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
+            C++ bindings are always enabled.
+        )pbdoc")
+
+        .def(py::pickle(
+            [](const Turbo& turbo) {
+                return py::make_tuple(turbo.getDataBlockSize(), turbo.getPolyA(), turbo.getPolyB(), turbo.getNumIterations());
+            },
+            [](py::tuple t) {
+                return Turbo(t[0].cast<int>(), t[1].cast<int>(), t[2].cast<int>(), t[3].cast<int>());
+            }
+        ));
 }

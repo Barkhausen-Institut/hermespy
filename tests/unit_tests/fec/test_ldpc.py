@@ -2,12 +2,14 @@
 
 from os import path
 from shutil import rmtree
-from tempfile import mkdtemp
+from tempfile import mkdtemp, NamedTemporaryFile
 from unittest import TestCase
 
 import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
+from ray.cloudpickle.cloudpickle_fast import dump
+from ray.cloudpickle import load
 
 from hermespy.fec import LDPCCoding
 
@@ -32,21 +34,22 @@ class TestLDPCCoding(TestCase):
             '..', '..', '..', 
             'submodules', 'affect', 'conf', 'dec', 'LDPC'
         )
-        self.h_path = path.join(h_directory, 'DEBUG_6_3.alist')
+        self.h_path = path.join(h_directory, 'CCSDS_64_128.alist')
         
         self.g_directory = mkdtemp()
         self.g_path = path.join(self.g_directory, 'test.alist')
         
         self.rng = default_rng(42)
         self.num_attempts = 10
+        self.num_iterations = 10
         
-        self.coding = LDPCCoding(10, self.h_path, self.g_path, False, 10)
+        self.coding = LDPCCoding(self.num_iterations, self.h_path, self.g_path, False, 10)
         
     def tearDown(self) -> None:
         
         rmtree(self.g_directory)
         
-    def test_encode_decode(self) -> None:
+    def _test_encode_decode(self) -> None:
         """Encoding a data block should yield a valid code."""
         
         for i in range(self.num_attempts):
@@ -59,3 +62,15 @@ class TestLDPCCoding(TestCase):
             
             decoded_block = self.coding.decode(code_block)
             assert_array_equal(data_block, decoded_block)
+
+    def _test_pickle(self) -> None:
+        """Pickeling and unpickeling the C++ wrapper"""
+        
+        with NamedTemporaryFile() as file:
+        
+            dump(self.coding, file)
+            file.seek(0)
+            
+            coding = load(file)
+            self.assertEqual(self.num_iterations, coding.num_iterations)
+            
