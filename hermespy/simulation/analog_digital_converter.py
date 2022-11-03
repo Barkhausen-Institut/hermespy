@@ -422,7 +422,6 @@ class AnalogDigitalConverter(Serializable):
         output_samples = self.convert(Signal(input_samples, 1.)).samples.flatten()
         quant_axes.plot(np.real(input_samples), np.real(output_samples))
 
-        quant_axes
         quant_axes.axhline(0)
         quant_axes.axvline(0)
 

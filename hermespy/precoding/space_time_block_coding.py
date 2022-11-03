@@ -10,6 +10,7 @@ from typing import Type, Tuple
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from hermespy.core.channel_state_information import ChannelStateInformation
 
 from hermespy.core.factory import Serializable
 from hermespy.modem import StatedSymbols

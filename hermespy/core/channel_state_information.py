@@ -180,11 +180,11 @@ class ChannelStateInformation(HDFSerializable):
         if num_frequency_bins is None:
             num_frequency_bins = state.shape[3]
 
-        if num_delay_taps < 1:
-            raise ValueError("Number of delay taps must be greater or equal to one")
+        #if num_delay_taps < 1:
+        #    raise ValueError("Number of delay taps must be greater or equal to one")
 
-        if num_frequency_bins < 1:
-            raise ValueError("Number of frequency bins must be greater or equal to one")
+        #if num_frequency_bins < 1:
+        #    raise ValueError("Number of frequency bins must be greater or equal to one")
 
         if state_format == ChannelStateFormat.IMPULSE_RESPONSE and num_delay_taps != state.shape[3]:
             raise ValueError("Number of delay taps must be equal to the last dimension of the impulse response")

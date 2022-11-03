@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from copy import deepcopy
 
 import numpy as np
@@ -7,6 +9,15 @@ from hermespy.tools import db2lin
 from hermespy.simulation import Simulation
 
 from hermespy.modem import TransmittingModem, ReceivingModem, OFDMWaveform, FrameResource, FrameElement, FrameSymbolSection, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "0.3.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 simulation = Simulation()
@@ -33,7 +44,9 @@ simulation.add_evaluator(BitErrorEvaluator(tx_modem, rx_modem))
 simulation.add_evaluator(BlockErrorEvaluator(tx_modem, rx_modem))
 simulation.add_evaluator(FrameErrorEvaluator(tx_modem, rx_modem))
 simulation.add_evaluator(ThroughputEvaluator(tx_modem, rx_modem))
-simulation.num_samples, simulation.min_num_samples = 1000, 1000
+simulation.num_samples, simulation.min_num_samples = 10000, 10000
 simulation.plot_results = True
+simulation.num_actors = 12
+simulation.results_dir = simulation.default_results_dir()
 
 simulation.run()

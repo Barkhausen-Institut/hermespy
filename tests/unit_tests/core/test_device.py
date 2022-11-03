@@ -159,11 +159,6 @@ class TestMixingOperator(TestCase):
         except ValueError:
             self.fail()
 
-        self.mixing_operator.slot = None
-        self.mixing_operator.carrier_frequency = None
-        with self.assertRaises(RuntimeError):
-            _ = self.mixing_operator.carrier_frequency
-
 
 class ReceiverMock(Receiver):
     """Mock of the receiving device operator base class."""

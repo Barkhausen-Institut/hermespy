@@ -168,5 +168,18 @@ PYBIND11_MODULE(bch, m)
 
         .def_property("correction_power", &BCH::getCorrectionPower, &BCH::setCorrectionPower, R"pbdoc(
             Number of corretable bit errors.
-        )pbdoc");
+        )pbdoc")
+
+        .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
+            C++ bindings are always enabled.
+        )pbdoc")
+
+        .def(py::pickle(
+            [](const BCH& bch) {
+                return py::make_tuple(bch.getDataBlockSize(), bch.getCodeBlockSize(), bch.getCorrectionPower());
+            },
+            [](py::tuple t) {
+                return BCH(t[0].cast<int>(), t[1].cast<int>(), t[2].cast<int>());
+            }
+        ));
 }

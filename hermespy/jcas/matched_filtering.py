@@ -122,9 +122,10 @@ class MatchedFilterJcas(DuplexModem, Radar):
 
         #Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)
-        self._Radar__cloud = cloud
 
         radar_reception = RadarReception(signal, cube, cloud)
+
+        self.cache_reception(radar_reception)
         return JCASReception(communication_reception, radar_reception)
         
     @property

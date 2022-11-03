@@ -219,7 +219,7 @@ class RocArtifact(Artifact):
         self.__h1_value = h1_value
 
     def __str__(self) -> str:
-        return f"({self.__h0_value:4.0f}, {self.__h1_value:4.0f})"
+        return f"({self.__h0_value:.4}, {self.__h1_value:.4})"
 
     @property
     def h0_value(self) -> float:
