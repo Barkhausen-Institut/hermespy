@@ -30,7 +30,10 @@ PGT = TypeVar('PGT', bound=PilotWaveformGenerator)
 
 
 class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
-    """Correlation-based clock synchronization for arbitrary communication waveforms."""
+    """Correlation-based clock synchronization for arbitrary communication waveforms.
+    
+    The implemented algorithm is equivalent to :cite:p:`1976:knapp` without pre-filtering.
+    """
 
     yaml_tag = u'PilotCorrelation'
     """YAML serialization tag."""
