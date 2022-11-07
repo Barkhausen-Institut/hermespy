@@ -1,36 +1,36 @@
-image: python:3.9
+image: $CI_REGISTRY/barkhauseninstitut/wicon/hermespy:python-39-linux
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: recursive
-  
+  HERMES_VERSION: "0.3.0"
+  HERMES_WHEEL: "hermespy-$HERMES_VERSION-cp39-cp39-linux_x86_64.whl"
+
 stages:
   - build
   - test
   - deploy
 
 cache:
+  key: build-cache
   paths:
-    - .cache/pip
-    - venv/
-
-before_script:
-  - apt update
-  - apt-get install -y build-essential octave pandoc
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
+    - dist/
 
 Build Package:
   stage: build
   script:
     - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-    - pip install .[test,quadriga,documentation,uhd,audio]
+    - python -m build
+  artifacts:
+    paths:
+      - dist/$HERMES_WHEEL
 
 Unit Testing:
   stage: test
   dependencies:
     - Build Package
+  before_script:
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
     - python tests/test_install.py unit_tests
 
@@ -38,6 +38,8 @@ Integration Testing:
   stage: test
   dependencies:
     - Build Package
+  before_script:
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
     - python tests/test_install.py integration_tests
 
@@ -45,6 +47,8 @@ Integrity Testing:
   stage: test
   dependencies:
     - Build Package
+  before_script:
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
     - python tests/test_install.py integrity_tests
 
@@ -52,6 +56,8 @@ pages:
   stage: deploy
   only:
     - master
+  before_script:
+    - pip install dist/$HERMES_WHEEL\[test,documentation,quadriga,uhd,audio\]
   script:
     - python -m setup build_sphinx
   after_script:
