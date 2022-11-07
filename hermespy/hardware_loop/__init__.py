@@ -17,6 +17,6 @@ __all__ = [
     'HardwareLoop',
     'PhysicalDevice',
     'PhysicalDeviceDummy', 'PhysicalScenarioDummy',
-    'PhysicalScenario', 'PhyiscalScenarioType',
+    'PhysicalScenario', 'PhysicalScenarioType',
     'UsrpDevice', 'UsrpSystem',
 ]

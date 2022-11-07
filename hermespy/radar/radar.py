@@ -257,21 +257,22 @@ class Radar(DuplexOperator):
 
         # ToDo: Support frame duration
         return 1.
-    
+
     def noise_power(self, strength: float, snr_type=SNRType) -> float:
-        
+
         # No waveform configured equals no noise required
         if self.waveform is None:
             return 0.
-        
+
         if snr_type == SNRType.EN0:
             return self.waveform.energy / strength
-        
+
         if snr_type == SNRType.PN0:
             return self.waveform.power / strength
-        
-        raise ValueError(f"SNR of type '{snr_type}' is not supported by radar operators")
-        
+
+        raise ValueError(
+            f"SNR of type '{snr_type}' is not supported by radar operators")
+
     @property
     def waveform(self) -> Optional[RadarWaveform]:
         """The waveform to be emitted by this radar.
@@ -336,7 +337,8 @@ class Radar(DuplexOperator):
             raise RuntimeError("Radar waveform not specified")
 
         if not self.device:
-            raise RuntimeError("Error attempting to transmit over a floating radar operator")
+            raise RuntimeError(
+                "Error attempting to transmit over a floating radar operator")
 
         # Generate the radar waveform
         signal = self.waveform.ping()
@@ -347,14 +349,17 @@ class Radar(DuplexOperator):
             # If no beamformer is configured, only the first antenna will transmit the ping
             if self.transmit_beamformer is None:
 
-                additional_streams = Signal(np.zeros((self.device.antennas.num_antennas - signal.num_streams, signal.num_samples), dtype=complex), signal.sampling_rate)
+                additional_streams = Signal(np.zeros(
+                    (self.device.antennas.num_antennas - signal.num_streams, signal.num_samples), dtype=complex), signal.sampling_rate)
                 signal.append_streams(additional_streams)
 
             elif self.transmit_beamformer.num_transmit_input_streams != 1:
-                raise RuntimeError("Only transmit beamformers requiring a single input stream are supported by radar operators")
+                raise RuntimeError(
+                    "Only transmit beamformers requiring a single input stream are supported by radar operators")
 
             elif self.transmit_beamformer.num_transmit_output_streams != self.device.antennas.num_antennas:
-                raise RuntimeError("Radar operator transmit beamformers are required to consider the full number of antennas")
+                raise RuntimeError(
+                    "Radar operator transmit beamformers are required to consider the full number of antennas")
 
             else:
                 signal = self.transmit_beamformer.transmit(signal)
@@ -365,7 +370,7 @@ class Radar(DuplexOperator):
 
         if self.attached:
             self.device.transmitters.add_transmission(self, transmission)
-            
+
         return transmission
 
     def receive(self) -> RadarReception:
@@ -374,7 +379,8 @@ class Radar(DuplexOperator):
             raise RuntimeError("Radar waveform not specified")
 
         if not self.device:
-            raise RuntimeError("Error attempting to receive over a floating radar operator")
+            raise RuntimeError(
+                "Error attempting to receive over a floating radar operator")
 
         # Retrieve signal from receiver slot
         signal: Signal = self.signal.resample(self.__waveform.sampling_rate)
@@ -383,13 +389,16 @@ class Radar(DuplexOperator):
         if self.device.antennas.num_antennas > 1:
 
             if self.receive_beamformer is None:
-                raise RuntimeError("Receiving over a device with more than one antenna requires a beamforming configuration")
+                raise RuntimeError(
+                    "Receiving over a device with more than one antenna requires a beamforming configuration")
 
             if self.receive_beamformer.num_receive_output_streams != 1:
-                raise RuntimeError("Only receive beamformers generating a single output stream are supported by radar operators")
+                raise RuntimeError(
+                    "Only receive beamformers generating a single output stream are supported by radar operators")
 
             if self.receive_beamformer.num_receive_input_streams != self.device.antennas.num_antennas:
-                raise RuntimeError("Radar operator receive beamformers are required to consider the full number of antenna streams")
+                raise RuntimeError(
+                    "Radar operator receive beamformers are required to consider the full number of antenna streams")
 
             beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
 
@@ -398,7 +407,8 @@ class Radar(DuplexOperator):
             beamformed_samples = signal.samples
 
         # Build the radar cube by generating a beam-forming line over all angles of interest
-        angles_of_interest = np.array([[0., 0.]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.probe_focus_points[:, 0, :]
+        angles_of_interest = np.array(
+            [[0., 0.]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.probe_focus_points[:, 0, :]
 
         range_bins = self.waveform.range_bins
         velocity_bins = self.waveform.velocity_bins
@@ -410,19 +420,21 @@ class Radar(DuplexOperator):
         for angle_idx, line in enumerate(beamformed_samples):
 
             # Process the single angular line by the waveform generator
-            line_signal = Signal(line, signal.sampling_rate, carrier_frequency=signal.carrier_frequency)
+            line_signal = Signal(line, signal.sampling_rate,
+                                 carrier_frequency=signal.carrier_frequency)
             line_estimate = self.waveform.estimate(line_signal)
 
             cube_data[angle_idx, ::] = line_estimate
 
         # Create radar cube object
-        cube = RadarCube(cube_data, angles_of_interest, velocity_bins, range_bins)
+        cube = RadarCube(cube_data, angles_of_interest,
+                         velocity_bins, range_bins)
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)
         # Return receive information
-        
+
         reception = RadarReception(signal, cube, cloud)
         self.cache_reception(reception)
-        
+
         return reception

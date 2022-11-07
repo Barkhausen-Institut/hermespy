@@ -6,16 +6,13 @@ Quadriga Channel Model
 """
 
 from __future__ import annotations
-from typing import Type, TYPE_CHECKING, Optional
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from typing import Type, Optional
+
 import numpy as np
-import numpy.random as rnd
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 from hermespy.channel import Channel, QuadrigaInterface
 
-if TYPE_CHECKING:
-    from hermespy.scenario import Scenario
-    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -35,8 +32,9 @@ class QuadrigaChannel(Channel):
 
     yaml_tag = u'Quadriga'
     yaml_matrix = True
-    
-    __interface: Optional[QuadrigaInterface]        # Reference to the interface class
+
+    # Reference to the interface class
+    __interface: Optional[QuadrigaInterface]
 
     def __init__(self,
                  *args,
@@ -44,7 +42,7 @@ class QuadrigaChannel(Channel):
                  **kwargs) -> None:
         """
         Args:
-        
+
             interface (Optional[QuadrigaInterface], optional):
                 Specifies the consisdered Quadriga interface.
                 Defaults to None.
@@ -52,7 +50,7 @@ class QuadrigaChannel(Channel):
 
         # Init base channel class
         Channel.__init__(self,  *args, **kwargs)
-        
+
         # Save interface settings
         self.__interface = interface
 
@@ -80,9 +78,10 @@ class QuadrigaChannel(Channel):
     def impulse_response(self,
                          num_samples: int,
                          sampling_rate: float) -> np.ndarray:
-        
+
         # Query the quadriga interface for a new impulse response
-        path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
+        path_gains, path_delays = self.__quadriga_interface.get_impulse_response(
+            self)
 
         max_delay_in_samples = np.around(
             np.max(path_delays) * sampling_rate).astype(int)
@@ -109,7 +108,7 @@ class QuadrigaChannel(Channel):
                         cir_txa_rxa[delay_idx]
                     )
         return impulse_response
-    
+
     @classmethod
     def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:
         """Serialize a QuadrigaChannel object to YAML.

@@ -69,8 +69,10 @@ class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
     @property
     def zod_spread_mean(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
+        terminal_height = abs(
+            self.transmitter.position[2] - self.receiver.position[2])
 
         return max(-1, -17e-5 * device_distance - .01 * (terminal_height - 1.5) + .22)
 
@@ -180,8 +182,10 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
     @property
     def zod_spread_mean(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
+        terminal_height = abs(
+            self.transmitter.position[2] - self.receiver.position[2])
 
         return max(-1, -19e-5 * device_distance - .01 * (terminal_height - 1.5) + .28)
 
@@ -192,7 +196,8 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
     @property
     def zod_offset(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
 
         return atan((35 - .35) / device_distance) - atan((35 - 1.5) / device_distance)
 
@@ -294,8 +299,10 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
     @property
     def zod_spread_mean(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
+        terminal_height = abs(
+            self.transmitter.position[2] - self.receiver.position[2])
 
         return max(-1, -19e-5 * device_distance - .01 * (terminal_height - 1.5) + .28)
 
@@ -306,7 +313,8 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
     @property
     def zod_offset(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
 
         return atan((35 - .35) / device_distance) - atan((35 - 1.5) / device_distance)
 

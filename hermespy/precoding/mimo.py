@@ -96,7 +96,8 @@ class Mimo(SymbolPrecoder):
         """
 
         number_of_symbols = np.int(input_data.size / self.number_of_streams)
-        output = np.reshape(input_data, (self.number_of_streams, number_of_symbols), 'F')
+        output = np.reshape(
+            input_data, (self.number_of_streams, number_of_symbols), 'F')
         return output
 
     def _decode_sc(self, input_data: np.ndarray,
@@ -121,10 +122,14 @@ class Mimo(SymbolPrecoder):
         """
 
         channel_estimation = np.squeeze(channel_estimation, axis=1)
-        antenna_index = np.argmax(np.abs(channel_estimation) ** 2 / noise_var, axis=0)
-        output = np.take_along_axis(input_data, antenna_index[np.newaxis, :], axis=0)
-        channel_estimation = np.take_along_axis(channel_estimation, antenna_index[np.newaxis, :], axis=0)
-        noise_var = np.take_along_axis(noise_var, antenna_index[np.newaxis, :], axis=0)
+        antenna_index = np.argmax(
+            np.abs(channel_estimation) ** 2 / noise_var, axis=0)
+        output = np.take_along_axis(
+            input_data, antenna_index[np.newaxis, :], axis=0)
+        channel_estimation = np.take_along_axis(
+            channel_estimation, antenna_index[np.newaxis, :], axis=0)
+        noise_var = np.take_along_axis(
+            noise_var, antenna_index[np.newaxis, :], axis=0)
 
         return output, channel_estimation, noise_var
 
@@ -149,9 +154,12 @@ class Mimo(SymbolPrecoder):
         """
 
         channel_estimation = np.squeeze(channel_estimation, axis=1)
-        output = np.sum(input_data * channel_estimation.conj(), axis=0)[np.newaxis]
-        noise_var = np.sum(noise_var * (np.abs(channel_estimation) ** 2), axis=0)[np.newaxis]
-        channel_estimation = np.sum(np.abs(channel_estimation) ** 2, axis=0)[np.newaxis]
+        output = np.sum(input_data * channel_estimation.conj(),
+                        axis=0)[np.newaxis]
+        noise_var = np.sum(
+            noise_var * (np.abs(channel_estimation) ** 2), axis=0)[np.newaxis]
+        channel_estimation = np.sum(
+            np.abs(channel_estimation) ** 2, axis=0)[np.newaxis]
 
         return output, channel_estimation, noise_var
 
@@ -175,8 +183,10 @@ class Mimo(SymbolPrecoder):
 
         number_of_rx_antennas = input_data.shape[0]
         number_of_symbols = input_data.shape[1]
-        output = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
-        channel_estimation_out = np.zeros((number_of_rx_antennas, number_of_symbols), dtype=complex)
+        output = np.zeros(
+            (number_of_rx_antennas, number_of_symbols), dtype=complex)
+        channel_estimation_out = np.zeros(
+            (number_of_rx_antennas, number_of_symbols), dtype=complex)
 
         channel = channel_estimation / np.sqrt(2)
 
@@ -188,7 +198,8 @@ class Mimo(SymbolPrecoder):
         y_odd = (-channel[:, 1, even_idx] * np.conj(input_data[:, even_idx]) +
                  np.conj(channel[:, 0, odd_idx]) * input_data[:, odd_idx])
 
-        norm = np.sqrt(np.abs(channel[:, 0, even_idx]) ** 2 + np.abs(channel[:, 1, even_idx]) ** 2)
+        norm = np.sqrt(np.abs(channel[:, 0, even_idx])
+                       ** 2 + np.abs(channel[:, 1, even_idx]) ** 2)
 
         output[:, even_idx] = y_even / norm
         output[:, odd_idx] = y_odd / norm
@@ -199,7 +210,8 @@ class Mimo(SymbolPrecoder):
 
         if number_of_rx_antennas > 1:
             output, channel_estimation_out, noise_var = self._decode_mrc(output,
-                                                                         channel_estimation_out[:, np.newaxis, :],
+                                                                         channel_estimation_out[:,
+                                                                                                np.newaxis, :],
                                                                          noise_var)
 
         return output, channel_estimation_out, noise_var
@@ -236,7 +248,8 @@ class Mimo(SymbolPrecoder):
         tx3_idx = tx0_idx + 3
 
         # antenna 0 and 2
-        input_stbc_tx_antennas_0_2 = np.zeros((number_of_rx_antennas, len(tx0_idx) + len(tx1_idx)), dtype=complex)
+        input_stbc_tx_antennas_0_2 = np.zeros(
+            (number_of_rx_antennas, len(tx0_idx) + len(tx1_idx)), dtype=complex)
         input_stbc_tx_antennas_0_2[:, ::2] = input_data[:, tx0_idx]
         input_stbc_tx_antennas_0_2[:, 1::2] = input_data[:, tx1_idx]
 
@@ -244,7 +257,8 @@ class Mimo(SymbolPrecoder):
         noise_var_0_2[:, ::2] = noise_var[:, tx0_idx]
         noise_var_0_2[:, 1::2] = noise_var[:, tx1_idx]
 
-        ce_0_2 = np.zeros((number_of_rx_antennas, 2, (len(tx0_idx) + len(tx1_idx))), dtype=complex)
+        ce_0_2 = np.zeros(
+            (number_of_rx_antennas, 2, (len(tx0_idx) + len(tx1_idx))), dtype=complex)
         ce_0_2[:, 0, ::2] = channel_estimation[:, 0, tx0_idx]
         ce_0_2[:, 0, 1::2] = channel_estimation[:, 0, tx1_idx]
         ce_0_2[:, 1, ::2] = channel_estimation[:, 2, tx0_idx]
@@ -259,7 +273,8 @@ class Mimo(SymbolPrecoder):
         noise_var_0_2 = np.reshape(noise_var_0_2, (-1, 2))
 
         # antenna 1 and 3
-        input_stbc_tx_antennas_1_3 = np.zeros((number_of_rx_antennas, len(tx2_idx) + len(tx3_idx)), dtype=complex)
+        input_stbc_tx_antennas_1_3 = np.zeros(
+            (number_of_rx_antennas, len(tx2_idx) + len(tx3_idx)), dtype=complex)
         input_stbc_tx_antennas_1_3[:, ::2] = input_data[:, tx2_idx]
         input_stbc_tx_antennas_1_3[:, 1::2] = input_data[:, tx3_idx]
 
@@ -267,7 +282,8 @@ class Mimo(SymbolPrecoder):
         noise_var_1_3[:, ::2] = noise_var[:, tx2_idx]
         noise_var_1_3[:, 1::2] = noise_var[:, tx3_idx]
 
-        ce_1_3 = np.zeros((number_of_rx_antennas, 2, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
+        ce_1_3 = np.zeros(
+            (number_of_rx_antennas, 2, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
         ce_1_3[:, 0, ::2] = channel_estimation[:, 1, tx2_idx]
         ce_1_3[:, 0, 1::2] = channel_estimation[:, 1, tx3_idx]
         ce_1_3[:, 1, ::2] = channel_estimation[:, 3, tx2_idx]
@@ -318,7 +334,8 @@ class Mimo(SymbolPrecoder):
         # convert noise variance into noise covariance diagonal matrices
         idx = np.arange(number_rx_antennas)
         idx = idx + number_rx_antennas * idx
-        noise_covariance = np.zeros((number_of_symbols, number_rx_antennas * number_rx_antennas))
+        noise_covariance = np.zeros(
+            (number_of_symbols, number_rx_antennas * number_rx_antennas))
         noise_covariance[:, idx] = noise_var.T
         noise_covariance = np.reshape(noise_covariance, (number_of_symbols, number_rx_antennas,
                                                          number_rx_antennas))
@@ -328,7 +345,8 @@ class Mimo(SymbolPrecoder):
         elif self.method == 'SM-MMSE':
             ch_hermitian = np.transpose(ch, axes=[0, 2, 1]).conj()
 
-            linear_decoder = ch_hermitian @ np.linalg.inv(ch @ ch_hermitian + noise_covariance)
+            linear_decoder = ch_hermitian @ np.linalg.inv(
+                ch @ ch_hermitian + noise_covariance)
             norm = np.diagonal(linear_decoder @ ch, axis1=1, axis2=2).T
 
         else:
@@ -346,7 +364,8 @@ class Mimo(SymbolPrecoder):
         else:
             noise_covariance = (linear_decoder @ np.transpose(linear_decoder.conj(), axes=[0, 2, 1])
                                 @ noise_covariance)
-            noise_var_out = np.real(np.diagonal(noise_covariance, axis1=1, axis2=2)).T
+            noise_var_out = np.real(np.diagonal(
+                noise_covariance, axis1=1, axis2=2)).T
 
         return output, np.ones((self.number_of_streams, number_of_symbols)), noise_var_out
 
@@ -370,10 +389,10 @@ class MaximumRatioCombining(Mimo):
         # level as input. It is assumed that all data have equal noise levels.
 
         channel_estimation = self.precoding.modem.reference_channel.estimate()
-        noise_var = 0.0
 
         channel_estimation = np.squeeze(channel_estimation, axis=1)
-        output_stream = np.sum(input_stream * channel_estimation.conj(), axis=0)[np.newaxis]
+        output_stream = np.sum(
+            input_stream * channel_estimation.conj(), axis=0)[np.newaxis]
         # noise_var = np.sum(noise_var * (np.abs(stream_responses) ** 2), axis=0)[np.newaxis]
         # stream_responses = np.sum(np.abs(stream_responses) ** 2, axis=0)[np.newaxis]
 
@@ -436,13 +455,16 @@ class SpaceTimeBlockCoding(Mimo):
         noise_var = 0.0
 
         if num_input_streams == 2:
-            output, _, _ = self._decode_stbc_2_tx_antennas(input_stream, channel_estimation, noise_var)
+            output, _, _ = self._decode_stbc_2_tx_antennas(
+                input_stream, channel_estimation, noise_var)
 
         elif num_input_streams == 4:
-            output, _, _ = self._decode_stbc_4_tx_antennas(input_stream, channel_estimation, noise_var)
+            output, _, _ = self._decode_stbc_4_tx_antennas(
+                input_stream, channel_estimation, noise_var)
 
         else:
-            raise RuntimeError("Space-Time Block decoding is currently only available for 2 and 4 input streams")
+            raise RuntimeError(
+                "Space-Time Block decoding is currently only available for 2 and 4 input streams")
 
 
 class SpaceFrequencyBlockCoding(Mimo):
@@ -464,13 +486,16 @@ class SpaceFrequencyBlockCoding(Mimo):
         noise_var = 0.0
 
         if num_input_streams == 2:
-            output_stream, _, _ = self._decode_stbc_2_tx_antennas(input_stream, channel_estimation, noise_var)
+            output_stream, _, _ = self._decode_stbc_2_tx_antennas(
+                input_stream, channel_estimation, noise_var)
 
         elif num_input_streams == 4:
-            output_stream, _, _ = self._decode_stbc_4_tx_antennas(input_stream, channel_estimation, noise_var)
+            output_stream, _, _ = self._decode_stbc_4_tx_antennas(
+                input_stream, channel_estimation, noise_var)
 
         else:
-            raise RuntimeError("Space-Frequency Block decoding is currently only available for 2 and 4 input streams")
+            raise RuntimeError(
+                "Space-Frequency Block decoding is currently only available for 2 and 4 input streams")
 
         return output_stream
 
@@ -487,7 +512,8 @@ class SpatialMultiplexingZeroForcing(Mimo):
     def encode(self, input_data: np.array) -> np.ndarray:
 
         number_of_symbols = np.int(input_data.size / self.number_of_streams)
-        output = np.reshape(input_data, (self.number_of_streams, number_of_symbols), 'F')
+        output = np.reshape(
+            input_data, (self.number_of_streams, number_of_symbols), 'F')
         return output
 
     def decode(self, input_stream: np.ndarray) -> np.ndarray:
@@ -530,7 +556,8 @@ class SpatialMultiplexingMinimumMeanSquareError(Mimo):
     def encode(self, input_data: np.array) -> np.ndarray:
 
         number_of_symbols = np.int(input_data.size / self.number_of_streams)
-        output = np.reshape(input_data, (self.number_of_streams, number_of_symbols), 'F')
+        output = np.reshape(
+            input_data, (self.number_of_streams, number_of_symbols), 'F')
         return output
 
     def decode(self, input_stream: np.ndarray) -> np.ndarray:
@@ -545,14 +572,16 @@ class SpatialMultiplexingMinimumMeanSquareError(Mimo):
         # convert noise variance into noise covariance diagonal matrices
         idx = np.arange(number_rx_antennas)
         idx = idx + number_rx_antennas * idx
-        noise_covariance = np.zeros((number_of_symbols, number_rx_antennas * number_rx_antennas))
+        noise_covariance = np.zeros(
+            (number_of_symbols, number_rx_antennas * number_rx_antennas))
         noise_covariance[:, idx] = noise_var
         noise_covariance = np.reshape(noise_covariance, (number_of_symbols, number_rx_antennas,
                                                          number_rx_antennas))
 
         ch_hermitian = np.transpose(ch, axes=[0, 2, 1]).conj()
 
-        linear_decoder = ch_hermitian @ np.linalg.inv(ch @ ch_hermitian + noise_covariance)
+        linear_decoder = ch_hermitian @ np.linalg.inv(
+            ch @ ch_hermitian + noise_covariance)
         norm = np.diagonal(linear_decoder @ ch, axis1=1, axis2=2).T
 
         output = np.matmul(linear_decoder, input_stream.T[:, :, np.newaxis])

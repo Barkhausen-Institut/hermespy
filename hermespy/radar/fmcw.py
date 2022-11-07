@@ -9,7 +9,7 @@ from fractions import Fraction
 
 import numpy as np
 from scipy.constants import speed_of_light, pi
-from scipy.fft import fft2, fftshift
+from scipy.fft import fft2
 from scipy import signal
 
 from hermespy.core import Signal
@@ -75,7 +75,7 @@ class FMCW(RadarWaveform):
         self.chirp_duration = chirp_duration
         self.pulse_rep_interval = pulse_rep_interval
         self.sampling_rate = bandwidth if sampling_rate is None else sampling_rate
-        self.adc_sampling_rate = self.sampling_rate  if adc_sampling_rate is None else adc_sampling_rate
+        self.adc_sampling_rate = self.sampling_rate if adc_sampling_rate is None else adc_sampling_rate
 
     def ping(self) -> Signal:
         return Signal(self.__frame_prototype(), self.sampling_rate)
@@ -83,7 +83,8 @@ class FMCW(RadarWaveform):
     def estimate(self, input_signal: Signal) -> np.ndarray:
 
         pulse_len = int(self.pulse_rep_interval * self.sampling_rate)
-        input_signal = input_signal.resample(self.sampling_rate).samples[0, :pulse_len * self.num_chirps]
+        input_signal = input_signal.resample(
+            self.sampling_rate).samples[0, :pulse_len * self.num_chirps]
         chirp_stack = np.reshape(input_signal, (-1, pulse_len))
 
         chirp_prototype = self.__chirp_prototype()
@@ -91,14 +92,16 @@ class FMCW(RadarWaveform):
         baseband_samples = chirp_stack.conj() * chirp_prototype
 
         if self.adc_sampling_rate < self.sampling_rate:
-            downsampling_rate = Fraction(self.adc_sampling_rate / self.sampling_rate).limit_denominator(100)
+            downsampling_rate = Fraction(
+                self.adc_sampling_rate / self.sampling_rate).limit_denominator(100)
 
             baseband_samples = signal.resample_poly(baseband_samples,
                                                     up=downsampling_rate.numerator, down=downsampling_rate.denominator,
                                                     axis=1)
 
         transform = fft2(baseband_samples)
-        transform = np.fft.ifftshift(transform, axes=0)  # fft shift the Doppler components
+        # fft shift the Doppler components
+        transform = np.fft.ifftshift(transform, axes=0)
 
         return np.abs(transform)
 
@@ -116,7 +119,8 @@ class FMCW(RadarWaveform):
     @property
     def velocity_bins(self) -> np.ndarray:
 
-        bins = (np.arange(self.num_chirps) - np.ceil(self.num_chirps / 2)) * self.doppler_resolution
+        bins = (np.arange(self.num_chirps) -
+                np.ceil(self.num_chirps / 2)) * self.doppler_resolution
         return bins
 
     @property
@@ -141,7 +145,8 @@ class FMCW(RadarWaveform):
     def num_chirps(self, value: int) -> None:
 
         if value < 1:
-            raise ValueError("Number of chirps must be greater or equal to one")
+            raise ValueError(
+                "Number of chirps must be greater or equal to one")
 
         self.__num_chirps = int(value)
 
@@ -165,26 +170,26 @@ class FMCW(RadarWaveform):
             raise ValueError("Bandwidth must be greater than zero")
 
         self.__bandwidth = value
-        
+
     @property
     def chirp_duration(self) -> float:
         """Duration of a single chirp within the FMCW frame.
-        
+
         Returns: Duration in seconds.
-        
+
         Raises:
-        
+
             ValueErorr: For durations smaller or equal to zero.
         """
-        
+
         return self.__chirp_duration
-    
+
     @chirp_duration.setter
     def chirp_duration(self, value: float) -> None:
-        
+
         if value <= 0.:
             raise ValueError("FMCW chirp duration must be greater than zero")
-        
+
         self.__chirp_duration = value
 
     @property
@@ -263,7 +268,8 @@ class FMCW(RadarWaveform):
     def pulse_rep_interval(self, value: float) -> None:
 
         if value <= 0.:
-            raise ValueError("Pulse repetition interval must be greater than zero")
+            raise ValueError(
+                "Pulse repetition interval must be greater than zero")
 
         self.__pulse_rep_interval = value
 
@@ -276,7 +282,7 @@ class FMCW(RadarWaveform):
             float: Maximum target velocity in m/s.
         """
 
-        raise NotImplementedError   #pragma no cover
+        raise NotImplementedError  # pragma no cover
 
     @property
     def slope(self) -> float:
@@ -300,10 +306,10 @@ class FMCW(RadarWaveform):
         """
 
         return self.num_chirps * int(self.chirp_duration * self.sampling_rate)
-        
+
     @property
     def power(self) -> float:
-        
+
         return 1.
 
     def __chirp_prototype(self) -> np.ndarray:
@@ -313,17 +319,21 @@ class FMCW(RadarWaveform):
         timestamps = np.arange(num_samples) / self.sampling_rate
 
         # baseband chirp between -B/2 and B/2
-        chirp = np.exp(1j * pi * (-self.bandwidth * timestamps + self.slope * timestamps ** 2))
+        chirp = np.exp(1j * pi * (-self.bandwidth *
+                       timestamps + self.slope * timestamps ** 2))
         return chirp
 
     def __pulse_prototype(self) -> np.ndarray:
 
-        num_zero_samples = int((self.pulse_rep_interval - self.chirp_duration) * self.sampling_rate)
-        
+        num_zero_samples = int(
+            (self.pulse_rep_interval - self.chirp_duration) * self.sampling_rate)
+
         if num_zero_samples < 0:
-            raise ValueError("Pulse repetition interval cannot be less than chirp duration in FMCW radar")
-        
-        pulse = np.concatenate((self.__chirp_prototype(), np.zeros(num_zero_samples)))
+            raise ValueError(
+                "Pulse repetition interval cannot be less than chirp duration in FMCW radar")
+
+        pulse = np.concatenate(
+            (self.__chirp_prototype(), np.zeros(num_zero_samples)))
         return pulse
 
     def __frame_prototype(self) -> np.ndarray:

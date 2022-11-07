@@ -17,11 +17,10 @@ The following figure visualizes the quantizer responses.
 
 from __future__ import annotations
 from enum import Enum
-from typing import Type, Optional
+from typing import Type, Union, Optional
 
 import numpy as np
 from matplotlib import pyplot as plt
-from typing import Optional, Union
 
 from hermespy.core import Serializable, Signal
 from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter,  SafeConstructor
@@ -40,7 +39,7 @@ __status__ = "Prototype"
 
 class GainControlType(Enum):
     """Type of automatig gain control """
-    
+
     NONE = 0
     MAX_AMPLITUDE = 1
     RMS_AMPLITUDE = 2
@@ -48,7 +47,7 @@ class GainControlType(Enum):
 
 class Gain(Serializable):
     """Base class for analog-to-digital conversion gain modeling."""
-    
+
     yaml_tag = u'Gain'
     """YAML serialization tag."""
 
@@ -114,7 +113,7 @@ class Gain(Serializable):
 
 class AutomaticGainControl(Gain):
     """Analog-to-digital conversion automatic gain control modeling."""
-    
+
     yaml_tag = u'AutomaticGainControl'
     """YAML serialization tag."""
 
@@ -212,7 +211,8 @@ class AutomaticGainControl(Gain):
         if isinstance(node, ScalarNode):
             return cls()
 
-        state = SafeConstructor.construct_mapping(constructor, node, deep=False)
+        state = SafeConstructor.construct_mapping(
+            constructor, node, deep=False)
 
         return cls.InitializationWrapper(state)
 
@@ -370,13 +370,16 @@ class AnalogDigitalConverter(Serializable):
                 bins = np.arange(-max_amplitude + step, max_amplitude, step)
                 offset = 0
             elif self.quantizer_type == QuantizerType.MID_TREAD:
-                bins = np.arange(-max_amplitude + step/2, max_amplitude - step/2, step)
+                bins = np.arange(-max_amplitude + step/2,
+                                 max_amplitude - step/2, step)
                 offset = -step/2
 
             quant_idx = np.digitize(np.real(input_signal), bins)
-            quantized_signal += quant_idx * step - (max_amplitude - step / 2) + offset
+            quantized_signal += quant_idx * step - \
+                (max_amplitude - step / 2) + offset
             quant_idx = np.digitize(np.imag(input_signal), bins)
-            quantized_signal += 1j * (quant_idx * step - (max_amplitude - step / 2) + offset)
+            quantized_signal += 1j * \
+                (quant_idx * step - (max_amplitude - step / 2) + offset)
 
         return quantized_signal
 
@@ -419,7 +422,8 @@ class AnalogDigitalConverter(Serializable):
         else:
             quant_axes = fig_axes
 
-        output_samples = self.convert(Signal(input_samples, 1.)).samples.flatten()
+        output_samples = self.convert(
+            Signal(input_samples, 1.)).samples.flatten()
         quant_axes.plot(np.real(input_samples), np.real(output_samples))
 
         quant_axes.axhline(0)
@@ -476,4 +480,3 @@ class AnalogDigitalConverter(Serializable):
             state['gain_control'] = node.gain
 
         return representer.represent_mapping(cls.yaml_tag, state)
-

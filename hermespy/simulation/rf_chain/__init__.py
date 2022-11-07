@@ -12,6 +12,6 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['RfChain', 
+__all__ = ['RfChain',
            'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier',
            'CustomPowerAmplifier']

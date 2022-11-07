@@ -79,7 +79,7 @@ class RandomBitsSource(BitsSource, Serializable):
 
     yaml_tag = u'RandomBits'
 
-    def __init__(self, 
+    def __init__(self,
                  seed: Optional[int] = None) -> None:
         """
         Args:

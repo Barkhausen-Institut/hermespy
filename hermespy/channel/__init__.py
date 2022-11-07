@@ -28,7 +28,7 @@ except ImportError:
 
         from .quadriga_interface_octave import QuadrigaOctaveInterface as QuadrigaInterface
 
-    except ImportError as error:
+    except ImportError:
         from .quadriga_interface import QuadrigaInterface
 
 from .quadriga_channel import QuadrigaChannel

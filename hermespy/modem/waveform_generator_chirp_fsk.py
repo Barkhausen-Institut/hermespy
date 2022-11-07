@@ -65,16 +65,16 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
             chirp_bandwidth (float, optional):
                 Bandwidth of a single chirp in Hz.
-                
+
             freq_difference (Optional[float], optional):
                 Frequency difference of two adjacent chirp symbols.
-                
+
             num_pilot_chirps (int, optional):
                 Number of pilot symbols within a single frame.
-                
+
             num_data_chirps (int, optional):
                 Number of data symbols within a single frame.
-                
+
             guard_interval (float, optional):
                 Frame guard interval in seconds.
 
@@ -122,7 +122,8 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         }
 
         mapping = representer.represent_mapping(cls.yaml_tag, state)
-        mapping.value.extend(WaveformGenerator.to_yaml(representer, node).value)
+        mapping.value.extend(
+            WaveformGenerator.to_yaml(representer, node).value)
 
         return mapping
 
@@ -143,7 +144,7 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         Returns:
             float:
                 Chirp duration in seconds.
-                
+
         Raises:
             ValueError: If the duration is less or equal to zero.
         """
@@ -196,23 +197,23 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         Returns:
             float:
                 The frequency difference in Hz.
-                
+
         Raises:
             ValueError: If `freq_difference` is smaller or equal to zero.
         """
-        
+
         if self.__freq_difference is None:
             return self.chirp_bandwidth / self.modulation_order
-        
+
         return self.__freq_difference
-    
+
     @freq_difference.setter
     def freq_difference(self, value: Optional[float]) -> None:
-        
+
         if value is None:
             self.__freq_difference = None
             return
-        
+
         if value <= 0.:
             raise ValueError("Frequency difference must be greater than zero")
 
@@ -243,7 +244,8 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         """
 
         if num < 0:
-            raise ValueError("The number of pilot chirps must be greater or equal to zero.")
+            raise ValueError(
+                "The number of pilot chirps must be greater or equal to zero.")
 
         self.__num_pilot_chirps = num
         self._clear_cache()
@@ -273,7 +275,8 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         """
 
         if num < 0:
-            raise ValueError("The number of data chirps must be greater or equal to zero")
+            raise ValueError(
+                "The number of data chirps must be greater or equal to zero")
 
         self.__num_data_chirps = num
 
@@ -302,7 +305,8 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         """
 
         if interval < 0.0:
-            raise ValueError("The guard interval must be greater or equal to zero.")
+            raise ValueError(
+                "The guard interval must be greater or equal to zero.")
 
         self.__guard_interval = interval
 
@@ -412,7 +416,8 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         # Modulate data symbols
         for symbol in symbols.raw[0, ::].flat:
 
-            samples[sample_idx:sample_idx+samples_in_chirp] = prototypes[int(symbol.real), :]
+            samples[sample_idx:sample_idx +
+                    samples_in_chirp] = prototypes[int(symbol.real), :]
             sample_idx += samples_in_chirp
 
         return Signal(samples, self.sampling_rate)
@@ -440,7 +445,8 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
         for s, symbol in enumerate(symbols.raw[0, ::].flat):
 
-            symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
+            symbol_bits = [int(x) for x in list(
+                np.binary_repr(int(symbol.real), width=bits_per_symbol))]
             bits[s*bits_per_symbol:(s+1)*bits_per_symbol] = symbol_bits
 
         return bits
@@ -472,16 +478,16 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
     @property
     def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
-    
+
     @WaveformGenerator.modulation_order.setter
     def modulation_order(self, value: int) -> None:
-        
+
         self._prototypes.cache_clear()
         WaveformGenerator.modulation_order.fset(self, value)
-        
+
     @property
     def symbol_precoding_support(self) -> bool:
-        
+
         return False
 
     @lru_cache(maxsize=1, typed=True)
@@ -507,14 +513,17 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         f1 = -f0
 
         # non-coherent detection
-        prototypes = np.zeros((2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
+        prototypes = np.zeros(
+            (2 ** self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
 
         for idx in range(self.modulation_order):
             initial_frequency = f0 + idx * self.freq_difference
             frequency = chirp_time * slope + initial_frequency
             frequency[frequency > f1] -= self.chirp_bandwidth
 
-            phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
+            phase = 2 * np.pi * \
+                integrate.cumtrapz(frequency, dx=1 /
+                                   self.sampling_rate, initial=0)
             prototypes[idx, :] = np.exp(1j * phase)
 
         symbol_energy = sum(abs(prototypes[0, :])**2)
@@ -537,7 +546,8 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         # Generate single pilot chirp prototype
         prototypes, _ = self._prototypes()
 
-        pilot_samples = np.empty(self.samples_in_chirp * self.num_pilot_chirps, dtype=complex)
+        pilot_samples = np.empty(
+            self.samples_in_chirp * self.num_pilot_chirps, dtype=complex)
         for pilot_idx in range(self.num_pilot_chirps):
 
             pilot_samples[pilot_idx*self.samples_in_chirp:(1+pilot_idx)*self.samples_in_chirp] = \

@@ -58,17 +58,21 @@ class SingleCarrier(SymbolPrecoder, Serializable):
 
         # TODO: Check this approach with André
         # Essentially, over all symbol streams for each symbol the one with the strongest response will be selected
-        squeezed_channel_state = channel_state.state.sum(axis=1, keepdims=False)
+        squeezed_channel_state = channel_state.state.sum(
+            axis=1, keepdims=False)
 
         # Select proper antenna for each symbol timestamp
         antenna_selection = argmax(abs(squeezed_channel_state), axis=0)
 
-        symbol_stream = np.take_along_axis(symbol_stream, antenna_selection.T, axis=0)
-        stream_noises = np.take_along_axis(stream_noises, antenna_selection.T, axis=0)
+        symbol_stream = np.take_along_axis(
+            symbol_stream, antenna_selection.T, axis=0)
+        stream_noises = np.take_along_axis(
+            stream_noises, antenna_selection.T, axis=0)
 
         channel_state_selection = antenna_selection.T[:, np.newaxis, :, np.newaxis]\
             .repeat(2, axis=1).repeat(channel_state.state.shape[3], axis=3)
-        channel_state.state = np.take_along_axis(channel_state.state, channel_state_selection, axis=0)
+        channel_state.state = np.take_along_axis(
+            channel_state.state, channel_state_selection, axis=0)
 
         return symbol_stream, channel_state, stream_noises
 
