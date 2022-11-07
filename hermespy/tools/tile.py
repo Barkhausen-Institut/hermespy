@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+
 def screen_geometry(monitor=0):
     try:
         from screeninfo import get_monitors
@@ -24,17 +25,19 @@ def screen_geometry(monitor=0):
         print("Returning default: %s" % (default,))
         return default
 
+
 def set_figure_geometry(fig, backend, x, y, w, h):
     if backend in ("Qt5Agg", "Qt4Agg"):
         fig.canvas.manager.window.setGeometry(x, y, w, h)
-        #fig.canvas.manager.window.statusBar().setVisible(False)
-        #fig.canvas.toolbar.setVisible(True)
+        # fig.canvas.manager.window.statusBar().setVisible(False)
+        # fig.canvas.toolbar.setVisible(True)
     elif backend in ("TkAgg",):
-        fig.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w,h,x,y))
+        fig.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w, h, x, y))
     else:
         print("This backend is not supported yet.")
         print("Set the backend with matplotlib.use(<name>).")
         return
+
 
 def tile_figures(cols=3, rows=2, screen_rect=None, tile_offsets=None):
     """
@@ -45,23 +48,23 @@ def tile_figures(cols=3, rows=2, screen_rect=None, tile_offsets=None):
         matplotlib.use('Qt5Agg')
         matplotlib.use('TkAgg')
 
-    Arguments: 
-        cols, rows:     Number of cols, rows shown. Will be adjusted if the 
+    Arguments:
+        cols, rows:     Number of cols, rows shown. Will be adjusted if the
                         number of figures is larger than cols*rows.
-        screen_rect:    A 4-tuple specifying the geometry (x,y,w,h) of the 
-                        screen area used for tiling (in pixels). If None, the 
+        screen_rect:    A 4-tuple specifying the geometry (x,y,w,h) of the
+                        screen area used for tiling (in pixels). If None, the
                         system's screen is queried using the screeninfo module.
         tile_offsets:   A 2-tuple specifying the offsets in x- and y- direction.
                         Can be used to compensate the title bar height.
-    """    
-    assert(isinstance(cols, int) and cols>0)
-    assert(isinstance(rows, int) and rows>0)
-    assert(screen_rect is None or len(screen_rect)==4)
+    """
+    assert (isinstance(cols, int) and cols > 0)
+    assert (isinstance(rows, int) and rows > 0)
+    assert (screen_rect is None or len(screen_rect) == 4)
     backend = mpl.get_backend()
     if screen_rect is None:
         screen_rect = screen_geometry()
     if tile_offsets is None:
-        tile_offsets = (0,0)
+        tile_offsets = (0, 0)
     sx, sy, sw, sh = screen_rect
     sx += tile_offsets[0]
     sy += tile_offsets[1]
@@ -76,9 +79,10 @@ def tile_figures(cols=3, rows=2, screen_rect=None, tile_offsets=None):
     h = int(sh/rows)
     for i, num in enumerate(fig_ids):
         fig = plt.figure(num)
-        x = (i%cols) *(w+tile_offsets[0])+sx
+        x = (i % cols) * (w+tile_offsets[0])+sx
         y = (i//cols)*(h+tile_offsets[1])+sy
         set_figure_geometry(fig, backend, x, y, w, h)
+
 
 def test(n_figs=10, backend="Qt5Agg", **kwargs):
     mpl.use(backend)

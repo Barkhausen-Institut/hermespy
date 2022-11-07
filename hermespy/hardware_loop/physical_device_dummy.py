@@ -8,9 +8,7 @@ Implements a physical device dummy for testing and demonstration purposes.
 """
 
 from __future__ import annotations
-from typing import List, Union
-
-import numpy as np
+from typing import List
 
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice
@@ -29,56 +27,55 @@ __status__ = "Prototype"
 
 class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice):
     """Physical device dummy for testing and demonstration.
-    
+
     The physical device dummy always receives back its most recent transmission.
     """
-    
+
     __cached_signal: Signal
-    
+
     def __init__(self, *args, **kwargs) -> None:
-        
+
         SimulatedDevice.__init__(self, *args, **kwargs)
         PhysicalDevice.__init__(self)
 
         self.__cached_signal = Signal.empty(1., self.num_antennas)
-        
+
     def _upload(self, signal: Signal) -> None:
-        
+
         self.__cached_signal = signal
-        
+
     def _download(self) -> Signal:
-        
+
         return self.__cached_signal
-    
+
     def transmit(self, clear_cache: bool = True) -> List[Signal]:
-        
+
         return PhysicalDevice.transmit(self, clear_cache)
-    
+
     def receive(self, *args) -> Signal:
 
         return PhysicalDevice.receive(self, *args)
-        
+
     def trigger(self) -> None:
-        
+
         # Triggering a dummy does nothing
         return
 
-
     @property
     def max_sampling_rate(self) -> float:
-        
+
         return self.sampling_rate
 
 
 class PhysicalScenarioDummy(PhysicalScenario[PhysicalDeviceDummy]):
     """Physical scenario for testing and demonstration."""
-    
+
     def _trigger(self) -> None:
-        return 
+        return
 
     def new_device(self, *args, **kwargs) -> PhysicalDeviceDummy:
-        
+
         device = PhysicalDeviceDummy(*args, **kwargs)
         self.add_device(device)
-        
+
         return device

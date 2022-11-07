@@ -40,10 +40,10 @@ class StaticOperator(object):
                  sampling_rate: float) -> None:
         """
         Args:
-        
+
             num_samples (int):
                 Number of samples per transmission.
-                
+
             sampling_rate (float):
                 Sampling rate of transmission.
         """
@@ -54,20 +54,20 @@ class StaticOperator(object):
     @property
     def num_samples(self) -> int:
         """Number of samples per transmission.
-        
+
         Returns: Number of samples.
         """
-        
+
         return self.__num_samples
 
     @property
     def sampling_rate(self) -> float:
-        
+
         return self.__sampling_rate
-    
+
     @property
     def frame_duration(self) -> float:
-        
+
         return self.__num_samples / self.sampling_rate
 
 
@@ -76,14 +76,15 @@ class SilentTransmitter(StaticOperator, Transmitter):
 
     def transmit(self,
                  duration: float = 0.) -> Transmission:
-        
+
         # Compute the number of samples to be transmitted
-        num_samples = self.num_samples if duration <= 0. else int(duration * self.sampling_rate)
+        num_samples = self.num_samples if duration <= 0. else int(
+            duration * self.sampling_rate)
 
         silence = Signal(np.zeros((self.device.num_antennas, num_samples), dtype=complex),
                          sampling_rate=self.sampling_rate,
                          carrier_frequency=self.device.carrier_frequency)
-        
+
         transmission = Transmission(silence)
 
         self.device.transmitters.add_transmission(self, transmission)
@@ -107,12 +108,12 @@ class PowerReceiver(Receiver):
 
     @property
     def sampling_rate(self) -> float:
-        
+
         return self.device.sampling_rate
 
     @property
     def energy(self) -> float:
-        
+
         return 0.
 
     def receive(self) -> Reception:
@@ -123,7 +124,7 @@ class PowerReceiver(Receiver):
 
     @property
     def frame_duration(self) -> float:
-        
+
         return 0.
 
 
@@ -132,11 +133,11 @@ class SignalReceiver(StaticOperator, Receiver):
 
     @property
     def energy(self) -> float:
-        
+
         return 0.
 
     def receive(self) -> Reception:
-        
+
         received_signal = self.signal.resample(self.sampling_rate)
         return Reception(received_signal)
 
@@ -192,19 +193,19 @@ class PhysicalDevice(Device):
     def trigger(self) -> None:
         """Trigger the device."""
         ...  # pragma no cover
-        
+
     @property
     def adaptive_sampling(self) -> bool:
         """Allow adaptive sampling during transmission.
-        
+
         Returns: Enabled flag.
         """
-        
+
         return self.__adaptive_sampling
-    
+
     @adaptive_sampling.setter
     def adaptive_sampling(self, value: bool) -> None:
-        
+
         self.__adaptive_sampling = bool(value)
 
     @property
@@ -228,9 +229,9 @@ class PhysicalDevice(Device):
         Returns:
             Filter bandwidth in Hz.
             Zero if the device should determine the bandwidth automatically.
-            
+
         Raises:
-        
+
             ValueError: For negative bandwidths.
         """
 
@@ -240,7 +241,8 @@ class PhysicalDevice(Device):
     def lowpass_bandwidth(self, value: float) -> None:
 
         if value < 0.:
-            raise ValueError("Lowpass filter bandwidth should be greater or equal to zero")
+            raise ValueError(
+                "Lowpass filter bandwidth should be greater or equal to zero")
 
         self.__lowpass_bandwidth = float(value)
 
@@ -249,7 +251,7 @@ class PhysicalDevice(Device):
         """Maximum expected delay during signal reception.
 
         The expected delay will be appended as additional samples to the expected frame length during reception.
-        
+
         Returns:
 
             The expected receive delay in seconds.
@@ -265,24 +267,26 @@ class PhysicalDevice(Device):
     def max_receive_delay(self, value: float) -> None:
 
         if value < 0.:
-            raise ValueError("The maximum receive delay must be greater or equal to zero")
+            raise ValueError(
+                "The maximum receive delay must be greater or equal to zero")
 
         self.__max_receive_delay = value
-        
+
     @property
     @abstractmethod
     def max_sampling_rate(self) -> float:
         """Maximal device sampling rate.
-        
+
         Returns: The samplin rate in Hz.
         """
-        
+
         ...  # pragma no cover
 
     @property
     def velocity(self) -> np.ndarray:
 
-        raise NotImplementedError("The velocity of physical devices is undefined by default")
+        raise NotImplementedError(
+            "The velocity of physical devices is undefined by default")
 
     def estimate_noise_power(self,
                              num_samples: int = 1000) -> np.ndarray:
@@ -332,17 +336,17 @@ class PhysicalDevice(Device):
 
         # The default routine is a stub
         return  # pragma no cover
-    
+
     def transmit(self,
                  clear_cache: bool = True) -> Signal:
-        
+
         # If adaptive sampling is disabled, resort to the default transmission routine
         if not self.adaptive_sampling or self.transmitters.num_operators < 1:
 
             device_transmission = Device.transmit(self, clear_cache)
 
         else:
-        
+
             transmissions = self.transmitters.get_transmissions(clear_cache)
 
             device_transmission = transmissions[0].signal
@@ -350,19 +354,21 @@ class PhysicalDevice(Device):
                 return None
 
             for transmission in transmissions[1:]:
-                
+
                 if transmission is None:
                     continue
-                
+
                 if transmission.signal.sampling_rate != device_transmission.sampling_rate:
-                    raise RuntimeError("Adpative sampling does not support operators with differing sampling rates")
-                
-                device_transmission.superimpose(transmission.signal, resample=False)
-            
+                    raise RuntimeError(
+                        "Adpative sampling does not support operators with differing sampling rates")
+
+                device_transmission.superimpose(
+                    transmission.signal, resample=False)
+
             # Adaptive sampling rate will simply assume the device's sampling rate
             device_transmission.sampling_rate = self.sampling_rate
             device_transmission.carrier_frequency = self.carrier_frequency
-            
+
         # Upload the samples
         self._upload(device_transmission)
 
@@ -377,19 +383,22 @@ class PhysicalDevice(Device):
         """
 
         # This method is a stub by default
-        raise NotImplementedError("The default physical device does not support downloads")
-    
+        raise NotImplementedError(
+            "The default physical device does not support downloads")
+
     def receive(self,
                 signal: Optional[Signal] = None) -> Signal:
-        
+
         if signal is None:
             signal = self._download()
 
         if signal.num_streams != self.num_antennas:
-            raise ValueError("Number of received signal streams does not match number of configured antennas")
-        
+            raise ValueError(
+                "Number of received signal streams does not match number of configured antennas")
+
         if signal.sampling_rate != self.sampling_rate:
-            raise ValueError(f"Received signal sampling rate ({signal.sampling_rate}) does not match device sampling rate({self.sampling_rate})")
+            raise ValueError(
+                f"Received signal sampling rate ({signal.sampling_rate}) does not match device sampling rate({self.sampling_rate})")
 
         filtered_signal = signal.copy()
 
@@ -401,21 +410,23 @@ class PhysicalDevice(Device):
             else:
                 filter_cutoff = .5 * self.lowpass_bandwidth
 
-            filter = butter(5, filter_cutoff, output='sos', fs=self.sampling_rate)
-            filtered_signal.samples = sosfilt(filter, filtered_signal.samples, axis=1)
+            filter = butter(5, filter_cutoff, output='sos',
+                            fs=self.sampling_rate)
+            filtered_signal.samples = sosfilt(
+                filter, filtered_signal.samples, axis=1)
 
         # Cache the reception at all operators
         for receiver in self.receivers:
-            
+
             received_signal = filtered_signal.copy()
             received_signal.carrier_frequency = 0.
 
             # Simply override the sampling rate if adaptive sampling is enabled
             if self.adaptive_sampling:
                 received_signal.sampling_rate = receiver.sampling_rate
-            
+
             receiver.cache_reception(received_signal)
-        
+
         return filtered_signal
 
     def calibrate(self,
@@ -451,10 +462,12 @@ class PhysicalDevice(Device):
         """
 
         if num_iterations < 1:
-            raise ValueError("The number of iterations must be greater or equal to one")
+            raise ValueError(
+                "The number of iterations must be greater or equal to one")
 
         if wait < 0.:
-            raise ValueError("The waiting time must be greater or equal to zero")
+            raise ValueError(
+                "The waiting time must be greater or equal to zero")
 
         # Clear transmit caches
         self.transmitters.clear_cache()
@@ -462,7 +475,8 @@ class PhysicalDevice(Device):
         sampling_rate = self.max_sampling_rate
         num_samples = int(2 * max_delay * self.max_sampling_rate)
         if num_samples <= 1:
-            raise ValueError("The assumed maximum delay is not resolvable by the configured sampling rate")
+            raise ValueError(
+                "The assumed maximum delay is not resolvable by the configured sampling rate")
 
         # Register operators
         calibration_transmitter = SignalTransmitter(num_samples, sampling_rate)
@@ -474,7 +488,8 @@ class PhysicalDevice(Device):
         dirac_index = int(max_delay * sampling_rate)
         waveform = np.zeros((self.num_antennas, num_samples), dtype=complex)
         waveform[:, dirac_index] = 1.
-        calibration_signal = Signal(waveform, sampling_rate, self.carrier_frequency)
+        calibration_signal = Signal(
+            waveform, sampling_rate, self.carrier_frequency)
 
         propagated_signals: List[Signal] = []
         propagated_dirac_indices = np.empty(num_iterations, dtype=int)
@@ -493,7 +508,8 @@ class PhysicalDevice(Device):
 
             # Infer the implicit delay by estimating the sample index of the propagated dirac
             propagated_signals.append(propagated_signal)
-            propagated_dirac_indices = np.argmax(abs(propagated_signal.samples[0, :]))
+            propagated_dirac_indices = np.argmax(
+                abs(propagated_signal.samples[0, :]))
 
             # Wait the configured amount of time between iterations
             sleep(wait)
@@ -503,8 +519,10 @@ class PhysicalDevice(Device):
         self.receivers.remove(calibration_receiver)
 
         # Compute calibration delay
-        mean_dirac_index = np.mean(propagated_dirac_indices)   # This is just a ML estimation
-        calibration_delay = (dirac_index - mean_dirac_index) / propagated_signal.sampling_rate
+        # This is just a ML estimation
+        mean_dirac_index = np.mean(propagated_dirac_indices)
+        calibration_delay = (dirac_index - mean_dirac_index) / \
+            propagated_signal.sampling_rate
 
         # Dump calibration to pickle savefile
         with open(calibration_file, 'wb') as file_stream:
@@ -517,10 +535,12 @@ class PhysicalDevice(Device):
         fig, axes = plt.subplots(2, 1)
         fig.suptitle('Device Delay Calibration')
 
-        axes[0].plot(calibration_signal.timestamps, abs(calibration_signal.samples[0, :]))
+        axes[0].plot(calibration_signal.timestamps,
+                     abs(calibration_signal.samples[0, :]))
         for sig in propagated_signals:
             axes[1].plot(sig.timestamps, abs(sig.samples[0, :]), color='blue')
-        axes[1].axvline(x=(dirac_index / sampling_rate - calibration_delay), color='red')
+        axes[1].axvline(x=(dirac_index / sampling_rate -
+                        calibration_delay), color='red')
 
     def load_calibration(self,
                          calibration_file: str) -> None:

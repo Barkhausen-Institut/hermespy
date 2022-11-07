@@ -166,7 +166,8 @@ class ChannelStateInformation(HDFSerializable):
                 If `state` dimensions are invalid.
         """
 
-        state = np.empty((0, 0, 0, 1), dtype=complex) if state is None else state
+        state = np.empty(
+            (0, 0, 0, 1), dtype=complex) if state is None else state
 
         if state_format not in ChannelStateFormat:
             raise ValueError("Unknown channel state format flag")
@@ -180,14 +181,15 @@ class ChannelStateInformation(HDFSerializable):
         if num_frequency_bins is None:
             num_frequency_bins = state.shape[3]
 
-        #if num_delay_taps < 1:
+        # if num_delay_taps < 1:
         #    raise ValueError("Number of delay taps must be greater or equal to one")
 
-        #if num_frequency_bins < 1:
+        # if num_frequency_bins < 1:
         #    raise ValueError("Number of frequency bins must be greater or equal to one")
 
         if state_format == ChannelStateFormat.IMPULSE_RESPONSE and num_delay_taps != state.shape[3]:
-            raise ValueError("Number of delay taps must be equal to the last dimension of the impulse response")
+            raise ValueError(
+                "Number of delay taps must be equal to the last dimension of the impulse response")
 
 #        if state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY and state.shape[3] != 1:
 #            raise ValueError("In frequency selectivity mode,"
@@ -241,8 +243,8 @@ class ChannelStateInformation(HDFSerializable):
             else:
                 self.__num_frequency_bins = num_bins
 
-            self.__state = fft(self.__state[:, :, :num_bins, :], axis=3, n=num_bins)
-            #self.__state = self.__state.reshape((self.num_receive_streams, self.num_transmit_streams, -1, 1))
+            self.__state = fft(
+                self.__state[:, :, :num_bins, :], axis=3, n=num_bins)
 
             self.__state_format = ChannelStateFormat.FREQUENCY_SELECTIVITY
 
@@ -316,7 +318,8 @@ class ChannelStateInformation(HDFSerializable):
         if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
             return self.__frequency_response_transformation()
 
-        raise RuntimeError("To linear CSI conversion encountered invalid internal state format")
+        raise RuntimeError(
+            "To linear CSI conversion encountered invalid internal state format")
 
     @linear.setter
     def linear(self, transformation: Union[COO, np.ndarray]) -> None:
@@ -328,13 +331,15 @@ class ChannelStateInformation(HDFSerializable):
         """
 
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
-            self.__from_impulse_response(self.__state, transformation, self.num_delay_taps)
+            self.__from_impulse_response(
+                self.__state, transformation, self.num_delay_taps)
 
         elif self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
             self.__from_frequency_selectivity(self.__state, transformation)
 
         else:
-            raise RuntimeError("To linear CSI conversion encountered invalid internal state format")
+            raise RuntimeError(
+                "To linear CSI conversion encountered invalid internal state format")
 
     def __impulse_response_transformation(self) -> COO:
         """Convert a channel impulse response to a linear transformation tensor.
@@ -354,16 +359,19 @@ class ChannelStateInformation(HDFSerializable):
         num_in = num_s
 
         in_ids = np.repeat(np.arange(num_in), num_taps)
-        out_ids = np.array([np.arange(num_taps) + t for t in range(num_in)]).flatten()
+        out_ids = np.array(
+            [np.arange(num_taps) + t for t in range(num_in)]).flatten()
         rx_ids = np.arange(num_rx)
         tx_ids = np.arange(num_tx)
 
         coordinates = [rx_ids.repeat(num_tx * num_taps * num_in),
-                       tx_ids.repeat(num_rx * num_taps * num_in).reshape((num_tx, -1), order='F').flatten(),
+                       tx_ids.repeat(
+                           num_rx * num_taps * num_in).reshape((num_tx, -1), order='F').flatten(),
                        np.tile(out_ids, num_rx * num_tx),
                        np.tile(in_ids, num_rx * num_tx)]
 
-        transformation = COO(coordinates, self.__state.flatten(), shape=(num_rx, num_tx, num_out, num_in))
+        transformation = COO(coordinates, self.__state.flatten(), shape=(
+            num_rx, num_tx, num_out, num_in))
         return transformation
 
     def __frequency_response_transformation(self) -> COO:
@@ -388,7 +396,8 @@ class ChannelStateInformation(HDFSerializable):
         tx_ids = np.arange(num_tx)
 
         coordinates = [rx_ids.repeat(num_tx * num_symbols),
-                       np.tile(tx_ids.repeat(num_symbols), num_rx),     # ToDo: This is probably not completely correct
+                       # ToDo: This is probably not completely correct
+                       np.tile(tx_ids.repeat(num_symbols), num_rx),
                        np.tile(diagonal_ids, num_rx * num_tx),
                        np.tile(diagonal_ids, num_rx * num_tx)]
 
@@ -403,14 +412,17 @@ class ChannelStateInformation(HDFSerializable):
 
         for delay_idx in range(num_taps):
 
-            diagonal_elements = diagonal(transformation, axis1=3, axis2=2, offset=delay_idx)
-            state[:, :, :diagonal_elements.shape[2], delay_idx] = diagonal_elements.todense()
+            diagonal_elements = diagonal(
+                transformation, axis1=3, axis2=2, offset=delay_idx)
+            state[:, :, :diagonal_elements.shape[2],
+                  delay_idx] = diagonal_elements.todense()
 
     @staticmethod
     def __from_frequency_selectivity(state: np.ndarray, transformation: Union[COO, np.ndarray]) -> None:
 
         diagonal_elements = diagonal(transformation, axis1=2, axis2=3)
-        state[:, :, :diagonal_elements.shape[2], :].flat = diagonal_elements.todense()
+        state[:, :, :diagonal_elements.shape[2],
+              :].flat = diagonal_elements.todense()
 
     @staticmethod
     def Ideal(num_samples: int,
@@ -434,7 +446,8 @@ class ChannelStateInformation(HDFSerializable):
                 Ideal channel state information of a non-distorting channel.
         """
 
-        state = np.ones((num_receive_streams, num_transmit_streams, num_samples, 1), dtype=complex)
+        state = np.ones(
+            (num_receive_streams, num_transmit_streams, num_samples, 1), dtype=complex)
         return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, state)
 
     def received_streams(self) -> Generator[ChannelStateInformation, ChannelStateInformation, None]:
@@ -475,7 +488,8 @@ class ChannelStateInformation(HDFSerializable):
         """
 
         state_section = self.__state[section]
-        num_delay_taps = self.__num_delay_taps if state_section.shape[3] == self.__state.shape[3] else None
+        num_delay_taps = self.__num_delay_taps if state_section.shape[
+            3] == self.__state.shape[3] else None
 
         return ChannelStateInformation(self.__state_format, state_section, num_delay_taps)
 
@@ -495,7 +509,8 @@ class ChannelStateInformation(HDFSerializable):
         """
 
         if value.state_format != self.__state_format:
-            raise NotImplementedError("Setting CSIs of a different type is not yet supported")
+            raise NotImplementedError(
+                "Setting CSIs of a different type is not yet supported")
 
         self.__state[key] = value.__state
 
@@ -507,8 +522,10 @@ class ChannelStateInformation(HDFSerializable):
         stack = np.concatenate(states, axis=dimension.value)
 
         # ToDo: Make this smarter, it's not generally correct
-        state_format = elements[0].__state_format if len(elements) > 0 else ChannelStateFormat.IMPULSE_RESPONSE
-        num_delay_taps = elements[0].__num_delay_taps if len(elements) > 0 else None
+        state_format = elements[0].__state_format if len(
+            elements) > 0 else ChannelStateFormat.IMPULSE_RESPONSE
+        num_delay_taps = elements[0].__num_delay_taps if len(
+            elements) > 0 else None
 
         return ChannelStateInformation(state_format, stack, num_delay_taps)
 
@@ -518,7 +535,8 @@ class ChannelStateInformation(HDFSerializable):
         Plots the absolute values of all channel state weights.
         """
 
-        fig, axes = plt.subplots(self.__state.shape[0], self.__state.shape[1], squeeze=False)
+        fig, axes = plt.subplots(
+            self.__state.shape[0], self.__state.shape[1], squeeze=False)
         for rx_id, receive_states in enumerate(self.__state):
             for tx_id, transmit_states in enumerate(receive_states):
 
@@ -551,13 +569,13 @@ class ChannelStateInformation(HDFSerializable):
             axis (int):
                 The dimension along which to append the `linear_state`.
         """
-        
+
     def reciprocal(self) -> ChannelStateInformation:
         """Compute the reciprocal channel state.
-        
+
         Returns: The reciprocal channel state information.
         """
-        
+
         reciprocal_state = self.__state.transpose((1, 0, 2, 3)).conj()
         return ChannelStateInformation(self.__state_format, reciprocal_state, self.num_delay_taps, self.__num_frequency_bins)
 
@@ -568,16 +586,17 @@ class ChannelStateInformation(HDFSerializable):
         state = np.array(group['state'], dtype=complex)
 
         # Recall attributes
-        format = ChannelStateFormat[group.attrs.get('format', 'IMPULSE_RESPONSE')]
-        
+        format = ChannelStateFormat[group.attrs.get(
+            'format', 'IMPULSE_RESPONSE')]
+
         # Initialize object from recalled state
         return cls(state=state, state_format=format)
-        
+
     def to_HDF(self, group: Group) -> None:
-        
+
         # Serialize datasets
         group.create_dataset('state', data=self.state)
-        
+
         # Serialize attributes
         group.attrs['num_transmit_streams'] = self.num_transmit_streams
         group.attrs['num_receive_streams'] = self.num_receive_streams

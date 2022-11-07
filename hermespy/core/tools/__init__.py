@@ -8,3 +8,8 @@ __version__ = "0.3.0"
 __maintainer__ = "Tobias Kronauer"
 __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+__all__ = [
+    'TheoreticalResults',
+]

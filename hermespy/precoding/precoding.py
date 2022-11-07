@@ -55,14 +55,15 @@ class Precoder(ABC):
         """
 
         if self.__precoding is None:
-            raise RuntimeError("Trying to access the precoding of a floating precoder")
+            raise RuntimeError(
+                "Trying to access the precoding of a floating precoder")
 
         return self.__precoding
 
     @precoding.setter
     def precoding(self, precoding: Precoding) -> None:
         """Modify the precoding configuration this precoder is attached to.
-        
+
         Args:
             precoding (Precoding): Handle to the precoding configuration.
         """
@@ -103,7 +104,8 @@ class Precoder(ABC):
         """
 
         if self.__precoding is None:
-            raise RuntimeError("Error trying to access requirements of a floating precoder")
+            raise RuntimeError(
+                "Error trying to access requirements of a floating precoder")
 
         return self.precoding.required_outputs(self)
 
@@ -119,7 +121,8 @@ class Precoder(ABC):
         """
 
         if self.__precoding is None:
-            raise RuntimeError("Error trying to access requirements of a floating precoder")
+            raise RuntimeError(
+                "Error trying to access requirements of a floating precoder")
 
         return self.precoding.required_inputs(self)
 
@@ -134,7 +137,7 @@ class Precoder(ABC):
         """
 
         return Fraction(1, 1)
-    
+
 
 PrecoderType = TypeVar('PrecoderType', bound=Precoder)
 """Type of precoder."""
@@ -235,7 +238,8 @@ class Precoding(Generic[PrecoderType], Serializable):
         """
 
         if self.__modem is None:
-            raise RuntimeError("Trying to access the modem of a floating Precoding configuration")
+            raise RuntimeError(
+                "Trying to access the modem of a floating Precoding configuration")
 
         return self.__modem
 
@@ -272,13 +276,13 @@ class Precoding(Generic[PrecoderType], Serializable):
         precoder_index = self.__precoders.index(precoder)
 
         if precoder_index >= len(self.__precoders) - 1:
-            
+
             if self.modem.transmitting_device:
                 return self.modem.transmitting_device.num_antennas
 
             else:
                 return self.modem.receiving_device.num_antennas
-            
+
         return self.__precoders[precoder_index + 1].num_input_streams
 
     def required_inputs(self, precoder: PrecoderType) -> int:
@@ -319,29 +323,29 @@ class Precoding(Generic[PrecoderType], Serializable):
             r *= symbol_precoder.rate
 
         return r
-    
+
     @property
     def num_input_streams(self) -> int:
         """Number of input streams required to perform the precoding.
-        
+
         Returns: The number of inputs.
         """
-        
+
         if len(self.__precoders) < 1:
             return 1
-        
+
         return self.__precoders[0].num_input_streams
-    
+
     @property
     def num_output_streams(self) -> int:
         """Number of output streams resulting from the precoding.
-        
+
         Returns: Number of outputs
         """
-        
+
         if len(self.__precoders) < 1:
             return 1
-        
+
         return self.__precoders[-1].num_output_streams
 
     def __getitem__(self, index: int) -> PrecoderType:
@@ -386,12 +390,12 @@ class Precoding(Generic[PrecoderType], Serializable):
 
     def pop_precoder(self, index: int) -> Precoder:
         """Remove a precoder from the processing chain.
-        
+
         Args:
-        
+
             index (int): Index of the precoder to be removed.
-            
+
         Returns: Handle to the removed precoder.
         """
-        
+
         return self.__precoders.pop(index)

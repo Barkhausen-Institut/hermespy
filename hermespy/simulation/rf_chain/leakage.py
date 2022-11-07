@@ -8,8 +8,6 @@ Transmit-Receive Leakage Modeling
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
-import numpy as np
-
 from ...core.factory import Serializable
 from ...core.signal_model import Signal
 
@@ -69,7 +67,6 @@ class LinearLeakage(Leakage):
     """Linear leakage model between transmit and receive hardware chains."""
 
     __transmit_cache: Signal
-
 
     def __init__(self) -> None:
         pass

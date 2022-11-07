@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Type, Optional
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from ruamel.yaml import SafeRepresenter, Node
 
 from hermespy.core.signal_model import Signal
 from hermespy.core.factory import Serializable
@@ -64,33 +64,34 @@ class RfChain(Serializable):
     @property
     def amplitude_imbalance(self) -> float:
         """I/Q amplitude imbalance.
-        
+
         Raises:
-        
+
             ValueError: If the imbalance is less than -1 or more than one.
         """
-        
+
         return self.__amplitude_imbalance
 
     @amplitude_imbalance.setter
     def amplitude_imbalance(self, val) -> None:
         if abs(val) >= 1:
-            raise ValueError("Amplitude imbalance must be within interval (-1, 1).")
+            raise ValueError(
+                "Amplitude imbalance must be within interval (-1, 1).")
 
         self.__amplitude_imbalance = val
 
     @property
     def phase_offset(self) -> float:
         """I/Q phase offset.
-        
+
         Returns: Phase offset in radians.
         """
-        
+
         return self.__phase_offset
-    
+
     @phase_offset.setter
     def phase_offset(self, value: float) -> None:
-    
+
         self.__phase_offset = value
 
     @classmethod
@@ -136,11 +137,13 @@ class RfChain(Serializable):
         transmitted_signal = input_signal.copy()
 
         # Simulate IQ imbalance
-        transmitted_signal.samples = self.add_iq_imbalance(transmitted_signal.samples)
+        transmitted_signal.samples = self.add_iq_imbalance(
+            transmitted_signal.samples)
 
         # Simulate power amplifier
         if self.power_amplifier is not None:
-            transmitted_signal.samples = self.power_amplifier.send(transmitted_signal.samples)
+            transmitted_signal.samples = self.power_amplifier.send(
+                transmitted_signal.samples)
 
         return transmitted_signal
 

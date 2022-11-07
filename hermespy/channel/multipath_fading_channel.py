@@ -110,7 +110,8 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
     def covariance(self) -> np.ndarray:
 
         if self.device is not None and self.device.num_antennas != self.__covariance_matrix.shape[0]:
-            raise RuntimeError(f"Device with {self.device.num_antennas} antennas does not match covariance matrix of magnitude {self.__covariance_matrix.shape[0]}")
+            raise RuntimeError(
+                f"Device with {self.device.num_antennas} antennas does not match covariance matrix of magnitude {self.__covariance_matrix.shape[0]}")
 
         return self.__covariance_matrix
 
@@ -121,7 +122,8 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
             raise ValueError("Antenna correlation must be a hermitian matrix")
 
         if np.any(np.linalg.eigvals(value) <= 0.):
-            raise ValueError("Antenna correlation matrix must be positive definite")
+            raise ValueError(
+                "Antenna correlation matrix must be positive definite")
 
         self.__covariance_matrix = value
 
@@ -178,8 +180,10 @@ class MultipathFadingChannel(Channel, Serializable):
     los_gains: np.ndarray
     __doppler_frequency: float
     __los_doppler_frequency: Optional[float]
-    __alpha_correlation: Optional[AntennaCorrelation]       # Correlation of the first device
-    __beta_correlation: Optional[AntennaCorrelation]        # Correlation of the second device
+    # Correlation of the first device
+    __alpha_correlation: Optional[AntennaCorrelation]
+    # Correlation of the second device
+    __beta_correlation: Optional[AntennaCorrelation]
     interpolate_signals: bool
 
     def __init__(self,
@@ -252,24 +256,31 @@ class MultipathFadingChannel(Channel, Serializable):
         """
 
         # Convert delays, power profile and rice factors to numpy arrays if they were provided as lists
-        self.__delays = np.array(delays) if isinstance(delays, list) else delays
-        self.__power_profile = np.array(power_profile) if isinstance(power_profile, list) else power_profile
-        self.__rice_factors = np.array(rice_factors) if isinstance(rice_factors, list) else rice_factors
+        self.__delays = np.array(delays) if isinstance(
+            delays, list) else delays
+        self.__power_profile = np.array(power_profile) if isinstance(
+            power_profile, list) else power_profile
+        self.__rice_factors = np.array(rice_factors) if isinstance(
+            rice_factors, list) else rice_factors
 
         if self.__delays.ndim != 1 or self.__power_profile.ndim != 1 or self.__rice_factors.ndim != 1:
-            raise ValueError("Delays, power profile and rice factors must be vectors")
+            raise ValueError(
+                "Delays, power profile and rice factors must be vectors")
 
         if len(delays) < 1:
-            raise ValueError("Configuration must contain at least one delay tap")
-        
+            raise ValueError(
+                "Configuration must contain at least one delay tap")
+
         if len(delays) != len(power_profile) or len(power_profile) != len(rice_factors):
-            raise ValueError("Delays, power profile and rice factor vectors must be of equal length")
+            raise ValueError(
+                "Delays, power profile and rice factor vectors must be of equal length")
 
         if np.any(self.__delays < 0.0):
             raise ValueError("Delays must be greater or equal to zero")
 
         if np.any(self.__power_profile < 0.0):
-            raise ValueError("Power profile factors must be greater or equal to zero")
+            raise ValueError(
+                "Power profile factors must be greater or equal to zero")
 
         if np.any(self.__rice_factors < 0.0):
             raise ValueError("Rice factors must be greater or equal to zero")
@@ -301,13 +312,15 @@ class MultipathFadingChannel(Channel, Serializable):
         self.non_los_gains = np.empty(self.num_resolvable_paths, dtype=float)
 
         self.los_gains[rice_inf_pos] = 1.0
-        self.los_gains[rice_num_pos] = np.sqrt(self.__rice_factors[rice_num_pos] / (1 + self.__rice_factors[rice_num_pos]))
-        self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
+        self.los_gains[rice_num_pos] = np.sqrt(
+            self.__rice_factors[rice_num_pos] / (1 + self.__rice_factors[rice_num_pos]))
+        self.non_los_gains[rice_num_pos] = 1 / \
+            np.sqrt(1 + self.__rice_factors[rice_num_pos])
         self.non_los_gains[rice_inf_pos] = 0.0
 
         # Initialize base class
         Channel.__init__(self, **kwargs)
-        
+
         # Update correlations (required here to break dependency cycle during init)
         self.alpha_correlation = alpha_correlation
         self.beta_correlation = beta_correlation
@@ -427,7 +440,8 @@ class MultipathFadingChannel(Channel, Serializable):
         """
 
         if num < 0:
-            raise ValueError("Number of sinusoids must be greater or equal to zero")
+            raise ValueError(
+                "Number of sinusoids must be greater or equal to zero")
 
         self.__num_sinusoids = num
 
@@ -470,7 +484,8 @@ class MultipathFadingChannel(Channel, Serializable):
 
             for rx_idx, tx_idx in product(range(self.transmitter.antennas.num_antennas),
                                           range(self.receiver.antennas.num_antennas)):
-                signal_weights = power ** .5 * self.__tap(timestamps, los_gain, nlos_gain)
+                signal_weights = power ** .5 * \
+                    self.__tap(timestamps, los_gain, nlos_gain)
 
                 if interpolation_filter is not None:
                     impulse_response[:, rx_idx, tx_idx, :] += np.outer(signal_weights,
@@ -478,19 +493,22 @@ class MultipathFadingChannel(Channel, Serializable):
 
                 else:
                     delay_idx = int(self.__delays[path_idx] * sampling_rate)
-                    impulse_response[:, rx_idx, tx_idx, delay_idx] += signal_weights
+                    impulse_response[:, rx_idx, tx_idx,
+                                     delay_idx] += signal_weights
 
         # Force a signal covariance at the transmitter if configured
         if self.alpha_correlation is not None:
 
             alpha_covariance = self.alpha_correlation.covariance
-            impulse_response = np.tensordot(alpha_covariance, impulse_response, (0, 2)).transpose((1, 2, 0, 3))
+            impulse_response = np.tensordot(
+                alpha_covariance, impulse_response, (0, 2)).transpose((1, 2, 0, 3))
 
         # Force a signal covariance at the receiver if configured
         if self.beta_correlation is not None:
 
             beta_covariance = self.beta_correlation.covariance
-            impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
+            impulse_response = np.tensordot(
+                beta_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
 
         return self.gain * impulse_response
 
@@ -523,7 +541,8 @@ class MultipathFadingChannel(Channel, Serializable):
 
         nlos_component = np.zeros(len(timestamps), dtype=complex)
         for s in range(self.num_sinusoids):
-            nlos_component += exp(1j * (nlos_doppler * timestamps * cos((2 * pi * s + nlos_angles[s]) / self.num_sinusoids) + nlos_phases[s]))
+            nlos_component += exp(1j * (nlos_doppler * timestamps * cos(
+                (2 * pi * s + nlos_angles[s]) / self.num_sinusoids) + nlos_phases[s]))
 
         nlos_component *= nlos_gain * (self.num_sinusoids ** -.5)
 
@@ -535,7 +554,8 @@ class MultipathFadingChannel(Channel, Serializable):
 
         los_doppler = self.los_doppler_frequency
         los_phase = self._rng.uniform(0, 2 * pi)
-        los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
+        los_component = los_gain * \
+            exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
         return los_component + nlos_component
 
     def interpolation_filter(self, sampling_rate: float) -> np.ndarray:
@@ -550,12 +570,15 @@ class MultipathFadingChannel(Channel, Serializable):
         """
 
         num_delay_samples = int(self.__delays[-1] * sampling_rate)
-        filter_instances = np.empty((self.num_resolvable_paths, num_delay_samples + 1), float)
+        filter_instances = np.empty(
+            (self.num_resolvable_paths, num_delay_samples + 1), float)
 
         for path_idx, delay in enumerate(self.__delays):
 
-            resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples + 1)
-            filter_instances[path_idx, :] = resampling_matrix[:, 0] / np.linalg.norm(resampling_matrix)
+            resampling_matrix = delay_resampling_matrix(
+                sampling_rate, 1, delay, num_delay_samples + 1)
+            filter_instances[path_idx, :] = resampling_matrix[:,
+                                                              0] / np.linalg.norm(resampling_matrix)
 
         return filter_instances
 
@@ -678,29 +701,31 @@ class MultipathFadingChannel(Channel, Serializable):
         """
 
         state = constructor.construct_mapping(node)
-        
+
         power_profile = state.pop('power_profile', None)
-        correlation: Union[List[AntennaCorrelation], AntennaCorrelation, None] = state.pop('correlation', None)
+        correlation: Union[List[AntennaCorrelation],
+                           AntennaCorrelation, None] = state.pop('correlation', None)
 
         # Convert power profile from dB to linear
         if power_profile is not None:
             state['power_profile'] = 10 ** (np.array(power_profile) / 10)
-            
+
         # Configure correlations
         if correlation is not None:
-            
+
             # Convert to list for more convenient processing
             if not isinstance(correlation, list):
                 correlation = [correlation]
-        
+
             for cor in correlation:
-                
+
                 if cor.device is None:
-                    raise ValueError("Antenna correlation models must specify a device")
+                    raise ValueError(
+                        "Antenna correlation models must specify a device")
 
                 if cls.transmitter is cor.device:
                     state['alpha_correlation'] = cor
-                    
+
                 elif cls.receiver is cor.device:
                     state['beta_correlation'] = cor
 

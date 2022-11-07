@@ -62,7 +62,8 @@ class QuadrigaInterface:
         # Infer the quadriga source path
         self.__path_quadriga_src = os.environ.get('HERMES_QUADRIGA')
         if self.__path_quadriga_src is None:
-            self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '../..', '3rdparty', 'quadriga_src')
+            self.__path_quadriga_src = os.path.join(os.path.dirname(
+                __file__), '../..', '3rdparty', 'quadriga_src')
 
         self.__antenna_kind = 'omni'
         self.__scenario_label = '3GPP_38.901_UMa_LOS'
@@ -79,15 +80,15 @@ class QuadrigaInterface:
 
         if scenario_label is not None:
             self.scenario_label = scenario_label
-            
+
     @property
     def path_launch_script(self) -> str:
         """Generate path to the launch Matlab script.
-        
+
         Returns:
             Path to the launch file.
         """
-        
+
         return path.join(path.split(__file__)[0], 'res')
 
     @classmethod
@@ -152,7 +153,8 @@ class QuadrigaInterface:
         """
 
         if not os.path.exists(path):
-            raise ValueError("Provided path to Quadriga sources does not exist within filesystem")
+            raise ValueError(
+                "Provided path to Quadriga sources does not exist within filesystem")
 
         self.__path_quadriga_src = path
 
@@ -276,7 +278,8 @@ class QuadrigaInterface:
         # Mark this channel as having been fetched
         self.__fetched_channels.append(channel)
 
-        channel_indices = self.__channel_indices[self.__channels.index(channel), :]
+        channel_indices = self.__channel_indices[self.__channels.index(
+            channel), :]
         channel = self.__cirs[channel_indices[0], channel_indices[1]]
         return channel.path_impulse_responses, channel.tau
 
@@ -290,7 +293,8 @@ class QuadrigaInterface:
         """
 
         if len(self.__channels) < 1:
-            raise RuntimeError("Attempting to launch Quadriga simulation without registered channels")
+            raise RuntimeError(
+                "Attempting to launch Quadriga simulation without registered channels")
 
         transmitters: List[Transmitter] = []
         receivers: List[Receiver] = []
@@ -301,7 +305,8 @@ class QuadrigaInterface:
 
         for channel_idx, channel in enumerate(self.__channels):
 
-            self.__channel_indices[channel_idx, :] = (receiver_index, transmitter_index)
+            self.__channel_indices[channel_idx, :] = (
+                receiver_index, transmitter_index)
 
             if channel.transmitter not in transmitters:
 
@@ -324,10 +329,12 @@ class QuadrigaInterface:
 
             position = transmitter.position
             if position is None:
-                raise RuntimeError("Quadriga channel model requires transmitter position definitions")
+                raise RuntimeError(
+                    "Quadriga channel model requires transmitter position definitions")
 
             if np.array_equal(position, np.array([0, 0, 0])):
-                raise RuntimeError("Position of transmitter must not be [0, 0, 0]")
+                raise RuntimeError(
+                    "Position of transmitter must not be [0, 0, 0]")
 
             sampling_rates[t] = transmitter.sampling_rate
             carriers[t] = transmitter.carrier_frequency
@@ -338,7 +345,8 @@ class QuadrigaInterface:
 
             position = receiver.position
             if position is None:
-                raise RuntimeError("Quadriga channel model requires receiver position definitions")
+                raise RuntimeError(
+                    "Quadriga channel model requires receiver position definitions")
 
             rx_positions[r, :] = receiver.position
             rx_num_antennas[r] = receiver.num_antennas
@@ -375,7 +383,8 @@ class QuadrigaInterface:
             **parameters: Quadriga channel parameters.
         """
 
-        raise NotImplementedError("Neither a Matlab or Octave interface was found during Quadriga execution")
+        raise NotImplementedError(
+            "Neither a Matlab or Octave interface was found during Quadriga execution")
 
     @classmethod
     def to_yaml(cls: Type[QuadrigaInterface], representer: SafeRepresenter, node: QuadrigaInterface) -> MappingNode:

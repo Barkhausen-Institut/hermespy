@@ -124,7 +124,8 @@ class PseudoRandomGenerator:
 
     def __forward_x2(self) -> int:
 
-        x2 = (self.__queue_x2[-3] + self.__queue_x2[-2] + self.__queue_x2[-1] + self.__queue_x1[0]) % 2
+        x2 = (self.__queue_x2[-3] + self.__queue_x2[-2] +
+              self.__queue_x2[-1] + self.__queue_x1[0]) % 2
 
         self.__queue_x2.append(x2)
         return x2
@@ -137,7 +138,8 @@ class Scrambler3GPP(Encoder, Serializable):
     """
 
     yaml_tag: str = u'SCRAMBLER_3GPP'
-    __random_generator: PseudoRandomGenerator               # Random rng used to generate scramble sequences.
+    # Random rng used to generate scramble sequences.
+    __random_generator: PseudoRandomGenerator
     __default_seed = np.array([0, 1, 0, 1, 1, 0, 1], int)
 
     def __init__(self,
@@ -178,7 +180,7 @@ class Scrambler3GPP(Encoder, Serializable):
     @property
     def code_block_size(self) -> int:
         return 1
-    
+
     @classmethod
     def to_yaml(cls: Type[Scrambler3GPP], representer: SafeRepresenter, node: Scrambler3GPP) -> ScalarNode:
         """Serialize a `Scrambler3GPP` to YAML.
@@ -282,7 +284,8 @@ class Scrambler80211a(Encoder, Serializable):
 
         for bit in value:
             if bit != 0 and bit != 1:
-                raise ValueError("Only bits (i.e. 0 or 1) represent valid seed fields")
+                raise ValueError(
+                    "Only bits (i.e. 0 or 1) represent valid seed fields")
 
         self.__seed = value
         self.__queue = deque(self.__seed, 7)
@@ -331,7 +334,7 @@ class Scrambler80211a(Encoder, Serializable):
     @property
     def code_block_size(self) -> int:
         return 1
-    
+
     @classmethod
     def to_yaml(cls: Type[Scrambler80211a], representer: SafeRepresenter, node: Scrambler80211a) -> ScalarNode:
         """Serialize a `Scrambler80211a` to YAML.

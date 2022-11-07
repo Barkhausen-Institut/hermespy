@@ -10,11 +10,10 @@ from typing import Type, Tuple
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
-from hermespy.core.channel_state_information import ChannelStateInformation
 
 from hermespy.core.factory import Serializable
 from hermespy.modem import StatedSymbols
-from.ratio_combining import MaximumRatioCombining
+from .ratio_combining import MaximumRatioCombining
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -28,7 +27,7 @@ __status__ = "Prototype"
 
 class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
     """A precoder distributing symbols in space and time.
-    
+
     Cool.
     """
 
@@ -50,26 +49,30 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
 
         Returns: Encoded data with size :math:`N_tx \\times K` symbols
         """
-        
+
         if symbols.num_streams != 1:
-            raise ValueError("Space-Time block codings require a single symbol input stream")
+            raise ValueError(
+                "Space-Time block codings require a single symbol input stream")
 
         num_tx_streams = self.required_num_output_streams
         input_data = symbols.raw[0, :, :]
 
         if num_tx_streams == 2:
-            
+
             if symbols.num_blocks % 2 != 0:
-                raise ValueError("Alamouti encoding must contain an even amount of data symbols")
-        
-            output = np.empty((2, symbols.num_blocks, symbols.num_symbols), dtype=complex)
+                raise ValueError(
+                    "Alamouti encoding must contain an even amount of data symbols")
+
+            output = np.empty(
+                (2, symbols.num_blocks, symbols.num_symbols), dtype=complex)
             output[0, :, :] = input_data
             output[1, 0::2, :] = -input_data[1::2, :].conj()
             output[1, 1::2, :] = input_data[0::2, :].conj()
 
         elif num_tx_streams == 4:
-            
-            output = np.empty((4, symbols.num_blocks, symbols.num_symbols), dtype=complex)
+
+            output = np.empty(
+                (4, symbols.num_blocks, symbols.num_symbols), dtype=complex)
 
             idx0 = np.arange(0, symbols.num_blocks, 4)
             idx1 = idx0 + 1
@@ -90,7 +93,8 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
             raise ValueError(f"Number of transmit streams ({num_tx_streams}) "
                              "not supported in space-time/frequency code")
 
-        state = np.ones((output.shape[0], 1, output.shape[1], output.shape[2]), dtype=complex)
+        state = np.ones(
+            (output.shape[0], 1, output.shape[1], output.shape[2]), dtype=complex)
         return StatedSymbols(output, state)
 
     def decode(self,
@@ -120,24 +124,30 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
                 output: Decoded data with size 1 x N.
                 channel_estimation_out: updated channel estimation with size 1 x N.
         """
-        
+
         if symbols.num_blocks % 2 != 0:
-            raise ValueError("Alamouti decoding must contain an even amount of data symbols blocks")
-        
+            raise ValueError(
+                "Alamouti decoding must contain an even amount of data symbols blocks")
+
         # The considered channel is the channel mean over the duration of two symbols,
         # since the Alamouti scheme assumes a coherent channel over this duration
         # channel_state = np.mean(np.reshape(symbols.state[0, :2, :, 0], (2, -1, 2)), -1, keepdims=False)
         # Alternatively: channel_state = channel.state[0, :2, 0::2, 0]
 
         channel_state = symbols.states[0, :2, :, :]
-        weight_norms = np.sum(np.abs(channel_state) ** 2, axis=0, keepdims=False)
-        
-        # Only the signal arriving at the first antenna is relevant
-        weight_norms = np.sum(np.abs(channel_state) ** 2, axis=0, keepdims=False)
+        weight_norms = np.sum(np.abs(channel_state) **
+                              2, axis=0, keepdims=False)
 
-        decoded_symbols = np.empty((symbols.num_blocks, symbols.num_symbols), dtype=complex)
-        decoded_symbols[0::2, :] = (channel_state[0, 0::2, :].conj() * symbols.raw[0, 0::2, :] + channel_state[1, 1::2, :] * symbols.raw[0, 1::2, :].conj())
-        decoded_symbols[1::2, :] = (channel_state[0, 1::2, :].conj() * symbols.raw[0, 1::2, :] - channel_state[1, 0::2, :] * symbols.raw[0, 0::2, :].conj())
+        # Only the signal arriving at the first antenna is relevant
+        weight_norms = np.sum(np.abs(channel_state) **
+                              2, axis=0, keepdims=False)
+
+        decoded_symbols = np.empty(
+            (symbols.num_blocks, symbols.num_symbols), dtype=complex)
+        decoded_symbols[0::2, :] = (channel_state[0, 0::2, :].conj(
+        ) * symbols.raw[0, 0::2, :] + channel_state[1, 1::2, :] * symbols.raw[0, 1::2, :].conj())
+        decoded_symbols[1::2, :] = (channel_state[0, 1::2, :].conj(
+        ) * symbols.raw[0, 1::2, :] - channel_state[1, 0::2, :] * symbols.raw[0, 0::2, :].conj())
         decoded_symbols /= weight_norms
 
         return StatedSymbols(decoded_symbols[np.newaxis, :, :], np.ones((1, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex))
@@ -170,7 +180,8 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
         tx3_idx = tx0_idx + 3
 
         # antenna 0 and 2
-        input_stbc_tx_antennas_0_2 = np.zeros((number_of_rx_antennas, len(tx0_idx) + len(tx1_idx)), dtype=complex)
+        input_stbc_tx_antennas_0_2 = np.zeros(
+            (number_of_rx_antennas, len(tx0_idx) + len(tx1_idx)), dtype=complex)
         input_stbc_tx_antennas_0_2[:, ::2] = input_data[:, tx0_idx]
         input_stbc_tx_antennas_0_2[:, 1::2] = input_data[:, tx1_idx]
 
@@ -193,7 +204,8 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
         noise_var_0_2 = np.reshape(noise_var_0_2, (-1, 2))
 
         # antenna 1 and 3
-        input_stbc_tx_antennas_1_3 = np.zeros((number_of_rx_antennas, len(tx2_idx) + len(tx3_idx)), dtype=complex)
+        input_stbc_tx_antennas_1_3 = np.zeros(
+            (number_of_rx_antennas, len(tx2_idx) + len(tx3_idx)), dtype=complex)
         input_stbc_tx_antennas_1_3[:, ::2] = input_data[:, tx2_idx]
         input_stbc_tx_antennas_1_3[:, 1::2] = input_data[:, tx3_idx]
 
@@ -201,7 +213,8 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
         noise_var_1_3[:, ::2] = noise_var[:, tx2_idx]
         noise_var_1_3[:, 1::2] = noise_var[:, tx3_idx]
 
-        ce_1_3 = np.zeros((number_of_rx_antennas, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
+        ce_1_3 = np.zeros(
+            (number_of_rx_antennas, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
         ce_1_3[0, ::2] = channel_estimation[1, tx2_idx]
         ce_1_3[0, 1::2] = channel_estimation[1, tx3_idx]
         ce_1_3[1, ::2] = channel_estimation[3, tx2_idx]

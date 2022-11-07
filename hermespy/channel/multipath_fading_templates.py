@@ -6,10 +6,11 @@ Multipath Fading Standard Templates
 """
 
 from __future__ import annotations
-from multiprocessing.sharedctypes import Value
-import numpy as np
+
 from enum import Enum, IntEnum
 from typing import Any, Optional, Type, Union
+
+import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, ScalarNode
 
 from hermespy.core import FloatingError, Serializable
@@ -43,7 +44,7 @@ class CorrelationType(Enum):
 
     MEDIUM = .3, .3,
     """Medium antenna correlation"""
-    
+
     MEDIUM_A = .3, .3874
     """Medium antenna correlation"""
 
@@ -53,7 +54,7 @@ class CorrelationType(Enum):
 
 class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
     """3GPP 5G Multipath fading standardized antenna correlations"""
-    
+
     yaml_tag = u'StandardCorrelation'
     """YAML serialization tag"""
 
@@ -78,57 +79,57 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
         self.correlation = correlation
 
         AntennaCorrelation.__init__(self, **kwargs)
-        
+
     @property
     def device_type(self) -> DeviceType:
         """Assumed 3GPP device type
-        
+
         Returns: The device type.
-        
+
         Raises:
-            
+
             ValuError: On unsupported type conversions.
         """
-        
+
         return self.__device_type
-    
+
     @device_type.setter
     def device_type(self, value: Union[DeviceType, int, str]) -> None:
-        
+
         if isinstance(value, DeviceType):
             self.__device_type = value
-            
+
         elif isinstance(value, int):
             self.__device_type = DeviceType(value)
-            
+
         elif isinstance(value, str):
             self.__device_type = DeviceType[value]
-            
+
         else:
             raise ValueError("Unknown device_type type")
-        
+
     @property
     def correlation(self) -> CorrelationType:
         """Assumed 3GPP standard correlation type.
-        
+
         Returns: The correlation type.
-        
+
         Raises:
-            
+
             ValuError: On unsupported type conversions.
         """
-        
+
         return self.__correlation
-    
+
     @correlation.setter
     def correlation(self, value: Union[CorrelationType, str]) -> None:
-        
+
         if isinstance(value, CorrelationType):
             self.__correlation = value
 
         elif isinstance(value, str):
-            self.__correlation  = CorrelationType[value]
-            
+            self.__correlation = CorrelationType[value]
+
         else:
             raise ValueError("Unsupported correlation type conversion")
 
@@ -136,7 +137,8 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
     def covariance(self) -> np.ndarray:
 
         if self.device is None:
-            raise FloatingError("Error trying to compute the covariance matrix of an unknown device")
+            raise FloatingError(
+                "Error trying to compute the covariance matrix of an unknown device")
 
         f = self.__correlation.value[self.__device_type]
         n = self.device.num_antennas
@@ -155,7 +157,8 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
                 [f, f**(4 / 9), f**(1 / 9), 1]
             ], dtype=complex)
 
-        raise RuntimeError(f"3GPP standard antenna covariance is only defined for 1, 2 and 4 antennas, device has {n} antennas")
+        raise RuntimeError(
+            f"3GPP standard antenna covariance is only defined for 1, 2 and 4 antennas, device has {n} antennas")
 
 
 class MultipathFadingCost256(MultipathFadingChannel):
@@ -210,20 +213,25 @@ class MultipathFadingCost256(MultipathFadingChannel):
 
         elif model_type == self.TYPE.RURAL:
 
-            delays = 1e-6 * np.array([0, .042, .101, .129, .149, .245, .312, .410, .469, .528])
-            power_db = np.array([-5.2, -6.4, -8.4, -9.3, -10.0, -13.1, -15.3, -18.5, -20.4, -22.4])
+            delays = 1e-6 * \
+                np.array(
+                    [0, .042, .101, .129, .149, .245, .312, .410, .469, .528])
+            power_db = np.array(
+                [-5.2, -6.4, -8.4, -9.3, -10.0, -13.1, -15.3, -18.5, -20.4, -22.4])
             rice_factors = np.zeros(delays.shape)
 
         elif model_type == self.TYPE.HILLY:
 
             if los_angle is not None:
-                raise ValueError("Model type HILLY does not support line of sight angle configuration")
+                raise ValueError(
+                    "Model type HILLY does not support line of sight angle configuration")
 
             delays = 1e-6 * np.array([0, .356, .441, .528, .546, .609, .625, .842, .916, .941, 15.0,
                                       16.172, 16.492, 16.876, 16.882, 16.978, 17.615, 17.827, 17.849, 18.016])
             power_db = np.array([-3.6, -8.9, -10.2, -11.5, -11.8, -12.7, -13.0, -16.2, -17.3, -17.7,
                                  -17.6, -22.7, -24.1, -25.8, -25.8, -26.2, -29.0, -29.9, -30.0, -30.7])
-            rice_factors = np.hstack([np.array([np.inf]), np.zeros(delays.size - 1)])
+            rice_factors = np.hstack(
+                [np.array([np.inf]), np.zeros(delays.size - 1)])
             los_angle = np.arccos(.7)
 
         else:
@@ -311,13 +319,15 @@ class MultipathFadingCost256(MultipathFadingChannel):
 
         # Handle empty yaml nodes
         if isinstance(node, ScalarNode):
-            raise RuntimeError("Cost256 channel configurations require at least a model specification")
+            raise RuntimeError(
+                "Cost256 channel configurations require at least a model specification")
 
         state = constructor.construct_mapping(node)
 
         model_type = state.pop('model_type', None)
         if model_type is None:
-            raise RuntimeError("Cost256 channel configurations require at least a model specification")
+            raise RuntimeError(
+                "Cost256 channel configurations require at least a model specification")
 
         state['model_type'] = cls.TYPE[model_type]
         return cls(**state)
@@ -373,7 +383,8 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         """
 
         if rms_delay < 0.0:
-            raise ValueError("Root-Mean-Squared delay must be greater or equal to zero")
+            raise ValueError(
+                "Root-Mean-Squared delay must be greater or equal to zero")
 
         self.__rms_delay = rms_delay
 
@@ -409,7 +420,8 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         elif model_type == self.TYPE.D:
 
             if los_doppler_frequency is not None:
-                raise ValueError("Model type D does not support line of sight doppler frequency configuration")
+                raise ValueError(
+                    "Model type D does not support line of sight doppler frequency configuration")
 
             normalized_delays = np.array([0, 0.035, 0.612, 1.363, 1.405, 1.804, 2.596, 1.775, 4.042, 7.937, 9.424,
                                           9.708, 12.525])
@@ -422,7 +434,8 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         elif model_type == self.TYPE.E:
 
             if los_doppler_frequency is not None:
-                raise ValueError("Model type E does not support line of sight doppler frequency configuration")
+                raise ValueError(
+                    "Model type E does not support line of sight doppler frequency configuration")
 
             normalized_delays = np.array([0, 0.5133, 0.5440, 0.5630, 0.5440, 0.7112, 1.9092, 1.9293, 1.9589,
                                           2.6426, 3.7136, 5.4524, 12.0034, 20.6519])
@@ -520,13 +533,15 @@ class MultipathFading5GTDL(MultipathFadingChannel):
 
         # Handle empty yaml nodes
         if isinstance(node, ScalarNode):
-            raise RuntimeError("5G TDL channel configurations require at least a model specification")
+            raise RuntimeError(
+                "5G TDL channel configurations require at least a model specification")
 
         state = constructor.construct_mapping(node)
 
         model_type = state.pop('type', None)
         if model_type is None:
-            raise RuntimeError("5G TDL channel configurations require at least a model specification")
+            raise RuntimeError(
+                "5G TDL channel configurations require at least a model specification")
 
         state['model_type'] = cls.TYPE[model_type]
         return cls(**state)
@@ -566,7 +581,8 @@ class MultipathFadingExponential(MultipathFadingChannel):
             raise ValueError("Tap interval must be greater than zero")
 
         if rms_delay <= 0.0:
-            raise ValueError("Root-Mean-Squared delay must be greater than zero")
+            raise ValueError(
+                "Root-Mean-Squared delay must be greater than zero")
 
         self.__tap_interval = tap_interval
         self.__rms_delay = rms_delay
@@ -578,8 +594,10 @@ class MultipathFadingExponential(MultipathFadingChannel):
         # Truncate the distributions for paths whose average power is very
         # small (less than exponential_truncation).
 
-        alpha = -2 * np.log((-1 + np.sqrt(1 + 4 * rms_norm ** 2)) / (2 * rms_norm))
-        max_delay_in_samples = int(np.ceil(np.log(MultipathFadingExponential.__exponential_truncation) / alpha))
+        alpha = -2 * \
+            np.log((-1 + np.sqrt(1 + 4 * rms_norm ** 2)) / (2 * rms_norm))
+        max_delay_in_samples = int(
+            np.ceil(np.log(MultipathFadingExponential.__exponential_truncation) / alpha))
 
         delays = np.arange(max_delay_in_samples + 1) * tap_interval
         power_profile = np.exp(-alpha * np.arange(max_delay_in_samples + 1))

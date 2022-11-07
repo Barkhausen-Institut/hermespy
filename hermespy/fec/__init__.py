@@ -11,7 +11,7 @@ try:
 
     from .aff3ct import BCHCoding, LDPCCoding, PolarSCCoding, PolarSCLCoding, ReedSolomonCoding, RSCCoding, TurboCoding
 
-except ModuleNotFoundError as _:
+except ModuleNotFoundError:
     ...
 
 

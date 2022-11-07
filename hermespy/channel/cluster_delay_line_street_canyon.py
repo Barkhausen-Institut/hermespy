@@ -70,8 +70,10 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
     @property
     def zod_spread_mean(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
+        terminal_height = abs(
+            self.transmitter.position[2] - self.receiver.position[2])
 
         return max(-.21, -148e-4 * device_distance + .01 * terminal_height + .83)
 
@@ -142,8 +144,10 @@ class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
     @property
     def zod_spread_mean(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
+        terminal_height = abs(
+            self.transmitter.position[2] - self.receiver.position[2])
 
         return max(-.5, -31e-4 * device_distance + .01 * terminal_height + .2)
 
@@ -154,7 +158,8 @@ class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
     @property
     def zod_offset(self) -> float:
 
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
+        device_distance = np.linalg.norm(
+            self.receiver.position - self.transmitter.position, 2)
         return -10 ** (-1.5 * log10(max(10, device_distance)) + 3.3)
 
 

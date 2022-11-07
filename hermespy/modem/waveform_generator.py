@@ -7,12 +7,10 @@ Communication Waveform Base
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from math import ceil, floor
-from sre_parse import State
+from math import ceil
 from typing import Generic, TYPE_CHECKING, Optional, Tuple, Type, TypeVar, List
 
 import numpy as np
-from numba import jit
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node, ScalarNode
 
 from hermespy.core import ChannelStateInformation, Serializable, Signal, ChannelStateFormat
@@ -44,7 +42,8 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
     yaml_tag = u'Synchronization'
     """YAML serialization tag"""
 
-    __waveform_generator: Optional[WaveformType]       # Waveform generator this routine is attached to
+    # Waveform generator this routine is attached to
+    __waveform_generator: Optional[WaveformType]
 
     def __init__(self,
                  waveform_generator: Optional[WaveformType] = None) -> None:
@@ -88,7 +87,7 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
                 Vector of complex base-band samples of with `num_streams`x`num_samples` entries.
 
         Returns:
-        
+
             List of time indices indicating the first samples of frames detected in `signal`.
 
         Raises:
@@ -97,11 +96,12 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         """
 
         if self.__waveform_generator is None:
-            raise RuntimeError("Trying to synchronize with a floating synchronization routine")
-        
+            raise RuntimeError(
+                "Trying to synchronize with a floating synchronization routine")
+
         samples_per_frame = self.__waveform_generator.samples_in_frame
         num_frames = int(signal.shape[1] / samples_per_frame)
-        
+
         return np.arange(num_frames).tolist()
 
     @classmethod
@@ -175,7 +175,8 @@ class ChannelEstimation(Generic[WaveformType], ABC):
         """Set waveform generator this synchronization routine is attached to."""
 
         if self.__waveform_generator is not None:
-            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
+            raise RuntimeError(
+                "Error trying to re-attach already attached synchronization routine.")
 
         self.__waveform_generator = value
 
@@ -191,37 +192,39 @@ class ChannelEstimation(Generic[WaveformType], ABC):
         Returns: The symbols and their respective channel states.
         """
 
-        state = np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)
+        state = np.ones((symbols.num_streams, 1, symbols.num_blocks,
+                        symbols.num_symbols), dtype=complex)
         return StatedSymbols(symbols.raw, state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, state)
 
 
 class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformType]):
     """Channel estimation accessing the ideal channel state informaion.
-    
+
     This type of channel estimation is only available during simulation runtime.
     """
-    
+
     def _csi(self) -> ChannelStateInformation:
         """Query the ideal channel state information.
-        
+
         Returns: Ideal channel state information of the most recent reception.
-        
+
         Raises:
-        
+
             RuntimeError: If the estimation routine is not attached.
             RuntimeError: If no channel state is available.
         """
-        
+
         if self.waveform_generator is None:
-            raise RuntimeError("Ideal channel state estimation routine floating")
+            raise RuntimeError(
+                "Ideal channel state estimation routine floating")
 
         if self.waveform_generator.modem.receiving_device is None:
             raise RuntimeError("Operating modem floating")
-        
+
         cached_csi = self.waveform_generator.modem.csi
         if cached_csi is None:
             raise RuntimeError("No ideal channel state information available")
-        
+
         return cached_csi
 
 
@@ -254,7 +257,8 @@ class ChannelEqualization(Generic[WaveformType], ABC):
         """Set waveform generator this equalization routine is attached to."""
 
         if self.__waveform_generator is not None:
-            raise RuntimeError("Error trying to re-attach already attached equalization routine.")
+            raise RuntimeError(
+                "Error trying to re-attach already attached equalization routine.")
 
         self.__waveform_generator = value
 
@@ -267,58 +271,46 @@ class ChannelEqualization(Generic[WaveformType], ABC):
 
         Returns: The equalize symbols.
         """
-        
+
         # The default routine performs no equalization
         return stated_symbols
-    
+
 
 class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[WaveformType], Serializable, ):
     """Zero-Forcing channel equalization for arbitrary waveforms."""
-    
+
     yaml_tag = u'ZeroForcing'
     """YAML serialization tag"""
 
     def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
-        
-        equalized_raw_symbols = ZeroForcingChannelEqualization.__equalize_channel(stated_symbols.raw, stated_symbols.states)
-        return Symbols(equalized_raw_symbols)
-        
-        """# If no information about transmitted streams is available, assume orthogonal channels
-        if stated_symbols.num_transmit_streams < 2:
-            
-            equalized_symbols = Symbols(
-            return equalized_symbols
 
-        # Default behaviour for MIMO systems is to use the pseudo-inverse for equalization
-        equalized_symbols = np.empty((stated_symbols.num_streams, stated_symbols.num_blocks, stated_symbols.num_symbols), dtype=complex)
-        for b, s in product(range(stated_symbols.num_blocks, stated_symbols.num_symbols)):
-            
-            equalization = np.linalg.pinv(stated_symbols.state[:, :, b, s])
-            equalized_symbols[:, s] = equalization @ symbols
-            
-        return Symbols(equalized_symbols[:, np.newaxis, :])"""
-    
+        equalized_raw_symbols = ZeroForcingChannelEqualization.__equalize_channel(
+            stated_symbols.raw, stated_symbols.states)
+
+        return Symbols(equalized_raw_symbols)
+
     # @staticmethod
     # @jit(nopython=True, parallel=True)
     def __equalize_channel(symbols: np.ndarray, states: np.ndarray) -> np.ndarray:
 
         # If no information about transmitted streams is available, assume orthogonal channels
         if symbols.shape[0] < 2:
-            
+
             equalized_symbols = symbols / states[:, 0, :, :]
-            
+
         else:
-            
+
             equalized_symbols = np.empty(symbols.shape, dtype=np.complex128)
-            
+
             for b in range(symbols.shape[1]):
                 for s in range(symbols.shape[2]):
-                    
+
                     equalization = np.linalg.pinv(states[:, :, b, s])
-                    equalized_symbols[:, b, s] = np.dot(equalization, symbols[:, b, s])
+                    equalized_symbols[:, b, s] = np.dot(
+                        equalization, symbols[:, b, s])
 
         return equalized_symbols
-        
+
 
 class WaveformGenerator(ABC):
     """Implements an abstract waveform generator.
@@ -329,12 +321,14 @@ class WaveformGenerator(ABC):
     symbol_type: np.dtype = complex
     """Symbol type."""
 
-    __modem: Optional[BaseModem]                        # Modem this waveform generator is attached to
+    # Modem this waveform generator is attached to
+    __modem: Optional[BaseModem]
     __synchronization: Synchronization              # Synchronization routine
     __channel_estimation: ChannelEstimation         # Channel estimation routine
     __channel_equalization: ChannelEqualization     # Channel equalization routine
     __oversampling_factor: int                      # Oversampling factor
-    __modulation_order: int                         # Cardinality of the set of communication symbols
+    # Cardinality of the set of communication symbols
+    __modulation_order: int
 
     def __init__(self,
                  modem: Optional[BaseModem] = None,
@@ -408,7 +402,8 @@ class WaveformGenerator(ABC):
         """
 
         if factor < 1:
-            raise ValueError("The oversampling factor must be greater or equal to one")
+            raise ValueError(
+                "The oversampling factor must be greater or equal to one")
 
         self.__oversampling_factor = factor
 
@@ -439,7 +434,8 @@ class WaveformGenerator(ABC):
         """
 
         if order <= 0 or (order & (order - 1)) != 0:
-            raise ValueError("Modulation order must be a positive power of two")
+            raise ValueError(
+                "Modulation order must be a positive power of two")
 
         self.__modulation_order = order
 
@@ -574,13 +570,13 @@ class WaveformGenerator(ABC):
             The demodulated communication symbols
         """
         ...  # pragma no cover
-        
+
     def estimate_channel(self, frame: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-        
+
         return self.channel_estimation.estimate_channel(frame)
-    
+
     def equalize_symbols(self, symbols: StatedSymbols) -> Symbols:
-        
+
         return self.channel_equalization.equalize_channel(symbols)
 
     @property
@@ -594,19 +590,19 @@ class WaveformGenerator(ABC):
             float: Bandwidth in Hz.
         """
         ...  # pragma no cover
-        
+
     @property
     def data_rate(self) -> float:
         """Data rate theoretically achieved by this waveform configuration.
-        
+
         Returns:
-        
+
             Bits per second.
         """
-        
+
         time = self.frame_duration  # ToDo: Consider guard interval
         bits = self.bits_per_frame
-        
+
         return bits / time
 
     @property
@@ -623,7 +619,8 @@ class WaveformGenerator(ABC):
         """
 
         if self.__modem is None:
-            raise RuntimeError("This waveform generator is not attached to any modem")
+            raise RuntimeError(
+                "This waveform generator is not attached to any modem")
 
         return self.__modem
 
@@ -645,7 +642,7 @@ class WaveformGenerator(ABC):
 
         self.__modem = handle
         self.random_mother = handle
-        
+
     @property
     def synchronization(self) -> Synchronization:
         """Synchronization routine.
@@ -681,7 +678,7 @@ class WaveformGenerator(ABC):
 
         if value.waveform_generator is not self:
             value.waveform_generator = self
-            
+
     @property
     def channel_equalization(self) -> ChannelEqualization:
         """Channel estimation routine.
@@ -709,14 +706,14 @@ class WaveformGenerator(ABC):
             float: Sampling rate in Hz.
         """
         ...
-        
+
     @property
     def symbol_precoding_support(self) -> bool:
         """Flag indicating if this waveforms supports symbol precodings.
-        
+
         Returns: Boolean support flag.
         """
-        
+
         return True
 
     @classmethod
@@ -841,23 +838,23 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
     def sequence(self) -> np.ndarray:
 
         return self.__pilot_symbols
-    
-    
+
+
 class MappedPilotSymbolSequence(CustomPilotSymbolSequence):
     """Pilot symbol sequence derived from a mapping."""
-    
+
     def __init__(self, mapping: PskQamMapping) -> None:
         """
 
         Args:
             mapping (PskQamMapping): Mapping from which the symbols pilot symbols should be inferred
         """
-        
+
         CustomPilotSymbolSequence.__init__(self, mapping.get_mapping())
 
 
 class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
-     
+
     pilot_symbol_sequence: PilotSymbolSequence
     """The configured pilot symbol sequence."""
 
@@ -879,7 +876,8 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
                 Enabled by default.
         """
 
-        self.pilot_symbol_sequence = UniformPilotSymbolSequence() if symbol_sequence is None else symbol_sequence
+        self.pilot_symbol_sequence = UniformPilotSymbolSequence(
+        ) if symbol_sequence is None else symbol_sequence
         self.repeat_pilot_symbol_sequence = repeat_symbol_sequence
 
     def pilot_symbols(self, num_symbols: int) -> np.ndarray:
@@ -904,7 +902,8 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
         if num_repetitions > 1:
 
             if not self.repeat_pilot_symbol_sequence:
-                raise RuntimeError("Pilot symbol repetition required for sequence generation but not allowed")
+                raise RuntimeError(
+                    "Pilot symbol repetition required for sequence generation but not allowed")
 
             symbol_sequence = np.tile(symbol_sequence, num_repetitions)
 
