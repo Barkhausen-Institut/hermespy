@@ -19,6 +19,7 @@ endif()
 set(AFF3CT_COMPILE_EXE OFF CACHE INTERNAL "Disable executable target" FORCE)
 set(AFF3CT_COMPILE_STATIC_LIB ON CACHE INTERNAL "Enable static library target" FORCE)
 set(AFF3CT_COMPILE_SHARED_LIB OFF CACHE INTERNAL "Disable shared library target" FORCE)
+set(AFF3CT_OVERRIDE_VERSION ON CACHE INTERNAL "Enable build without .git" FORCE)
 add_subdirectory(submodules/affect)
 
 # Add aff3ct bindings to hermes api

@@ -13,7 +13,7 @@ push = false
 "README.md" = [ "{version}" ]
 "bumpver.toml" = [ 'current_version = "{version}"' ]
 "setup.py" = [ 'version="{version}"', "'version': ('setup.py', '{version}')" ]
-".gitlab-ci.yml" = [ 'hermespy-{version}-py3-none-any.whl' ]
+".gitlab-ci.yml" = [ 'HERMES_VERSION: "{version}"' ]
 
 # Source files
 "hermespy/beamforming/*.py" = [ '__version__ = "{version}"' ]
