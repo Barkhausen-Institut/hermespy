@@ -28,14 +28,11 @@ The following figure visualizes the gain characteristics for the implemented amp
 """
 
 from __future__ import annotations
-from abc import abstractmethod
-from math import sqrt
-from typing import Any, Optional, Tuple, Type, Union
+from typing import Any, Optional, Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
-from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter,  SafeConstructor
-from ruamel.yaml.constructor import ConstructorError
+from ruamel.yaml import MappingNode, SafeRepresenter
 from scipy.constants import pi
 
 from hermespy.core import Serializable
@@ -67,7 +64,7 @@ class PowerAmplifier(Serializable):
 
     adjust_power: bool
     """Power adjustment flag.
-    
+
     If enabled, the power amplifier will normalize the distorted signal after propagation modeling.
     """
 
@@ -88,13 +85,13 @@ class PowerAmplifier(Serializable):
 
         self.saturation_amplitude = saturation_amplitude
         self.adjust_power = adjust_power
-        
+
         Serializable.__init__(self)
 
     @property
     def saturation_amplitude(self) -> float:
         """Cut-off point for the linear behaviour of the amplification.
-        
+
         Referred to as :math:`s_\\mathrm{sat} \\ \\mathbb{R}_{+}` in equations.
 
         Returns:
@@ -112,7 +109,8 @@ class PowerAmplifier(Serializable):
         """Set the cut-off point for the linear behaviour of the amplification."""
 
         if value < 0.:
-            raise ValueError("Power-Amplifier model saturation amplitude must be greater or equal to zero")
+            raise ValueError(
+                "Power-Amplifier model saturation amplitude must be greater or equal to zero")
 
         self.__saturation_amplitude = value
 
@@ -134,7 +132,8 @@ class PowerAmplifier(Serializable):
 
         # Adjust distorted signal if the respective flag is enabled
         if self.adjust_power:
-            loss = np.linalg.norm(distorted_signal) / np.linalg.norm(input_signal)
+            loss = np.linalg.norm(distorted_signal) / \
+                np.linalg.norm(input_signal)
             distorted_signal /= loss
 
         return distorted_signal
@@ -162,11 +161,11 @@ class PowerAmplifier(Serializable):
         Generates a matplotlib plot depicting the phase/amplitude.
 
         Args:
-        
+
             samples (np.ndarray, optional):
                 Sample points at which to evaluate the characteristics.
                 In other words, the x-axis of the resulting characteristics plot.
-                
+
             axes (Optional[Tuple[plt.axes, plt.axes]], optional):
                 Axes to which to plot the characteristics.
                 By default, a new figure is created.
@@ -181,25 +180,25 @@ class PowerAmplifier(Serializable):
 
         figure: Optional[plt.figure] = None
         if axes is None:
-            
+
             figure, amplitude_axes = plt.subplots()
             figure.suptitle(self.__class__.__name__ + " Characteristics")
 
             amplitude_axes.set_xlabel("Input Amplitude")
             amplitude_axes.set_ylabel("Output Amplitude")
-            
+
             phase_axes = amplitude_axes.twinx()
             phase_axes.set_ylabel("Output Phase")
             phase_axes.set_ylim([-pi, pi])
-            
+
         else:
-            
+
             amplitude_axes = axes[0]
             phase_axes = axes[1]
 
         amplitude_axes.plot(samples, amplitude)
         phase_axes.plot(samples, phase)
-        
+
         if figure is not None:
             figure.tight_layout()
 
@@ -258,7 +257,8 @@ class ClippingPowerAmplifier(PowerAmplifier):
         output_signal = input_signal.copy()
 
         clip_idx = np.nonzero(np.abs(input_signal) > self.saturation_amplitude)
-        output_signal[clip_idx] = self.saturation_amplitude * np.exp(1j * np.angle(input_signal[clip_idx]))
+        output_signal[clip_idx] = self.saturation_amplitude * \
+            np.exp(1j * np.angle(input_signal[clip_idx]))
 
         return output_signal
 
@@ -328,7 +328,8 @@ class RappPowerAmplifier(PowerAmplifier):
     def model(self, input_signal: np.ndarray) -> np.ndarray:
 
         p = self.smoothness_factor
-        gain = (1 + (np.abs(input_signal) / self.saturation_amplitude) ** (2 * p)) ** (-1 / (2 * p))
+        gain = (1 + (np.abs(input_signal) / self.saturation_amplitude)
+                ** (2 * p)) ** (-1 / (2 * p))
 
         return input_signal * gain
 
@@ -354,8 +355,9 @@ class RappPowerAmplifier(PowerAmplifier):
         }
 
         representation = representer.represent_mapping(cls.yaml_tag, state)
-        representation.value.extend(PowerAmplifier.to_yaml(representer, node).value)
-        
+        representation.value.extend(
+            PowerAmplifier.to_yaml(representer, node).value)
+
         return representation
 
 
@@ -456,7 +458,8 @@ class SalehPowerAmplifier(PowerAmplifier):
         """Set the amplitude model factor alpha."""
 
         if value < 0.:
-            raise ValueError("Amplitude model factor alpha must be greater or equal to zero")
+            raise ValueError(
+                "Amplitude model factor alpha must be greater or equal to zero")
 
         self.__amplitude_alpha = value
 
@@ -478,7 +481,8 @@ class SalehPowerAmplifier(PowerAmplifier):
         """Set the amplitude model factor beta."""
 
         if value < 0.:
-            raise ValueError("Amplitude model factor beta must be greater or equal to zero")
+            raise ValueError(
+                "Amplitude model factor beta must be greater or equal to zero")
 
         self.__amplitude_beta = value
 
@@ -486,7 +490,8 @@ class SalehPowerAmplifier(PowerAmplifier):
 
         amp = np.abs(input_signal) / self.saturation_amplitude
         gain = self.__amplitude_alpha / (1 + self.__amplitude_beta * amp ** 2)
-        phase_shift = self.phase_alpha * amp ** 2 / (1 + self.phase_beta * amp ** 2)
+        phase_shift = self.phase_alpha * amp ** 2 / \
+            (1 + self.phase_beta * amp ** 2)
 
         return input_signal * gain * np.exp(1j * phase_shift)
 
@@ -515,7 +520,8 @@ class SalehPowerAmplifier(PowerAmplifier):
         }
 
         representation = representer.represent_mapping(cls.yaml_tag, state)
-        representation.value.extend(PowerAmplifier.to_yaml(representer, node).value)
+        representation.value.extend(
+            PowerAmplifier.to_yaml(representer, node).value)
 
         return representation
 
@@ -559,7 +565,8 @@ class CustomPowerAmplifier(PowerAmplifier):
             raise ValueError("Custom power amplifier phase must be a vector")
 
         if len(input) != len(gain) != len(phase):
-            raise ValueError("Custom power amplifier input, gain and phase vectors must be of identical length")
+            raise ValueError(
+                "Custom power amplifier input, gain and phase vectors must be of identical length")
 
         self.__input = input
         self.__gain = gain

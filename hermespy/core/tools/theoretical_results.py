@@ -16,7 +16,7 @@ from hermespy.channel import Channel, MultipathFadingChannel
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
-__credits__ = [ "Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
+__credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
 __maintainer__ = "Tobias Kronauer"
@@ -59,7 +59,8 @@ class TheoreticalResults:
         """
 
         # Generate theory callback axes
-        self.__waveform_generators = [ChirpFSKWaveform, FilteredSingleCarrierWaveform]
+        self.__waveform_generators = [
+            ChirpFSKWaveform, FilteredSingleCarrierWaveform]
         self.__channels = [MultipathFadingChannel, Channel]
 
         # Generate theory callback lookup table
@@ -68,12 +69,14 @@ class TheoreticalResults:
 
         # Insert theoretically computable configurations
         self.__theory_grid[0, 1] = TheoreticalResults.__theory_chirpfsk_channel
-        self.__theory_grid[1, 0] = TheoreticalResults.__theory_pskquam_stochastic
+        self.__theory_grid[1,
+                           0] = TheoreticalResults.__theory_pskquam_stochastic
         self.__theory_grid[1, 1] = TheoreticalResults.__theory_pskquam_channel
 
     def theory(self, scenario: Scenario, snrs: np.ndarray) -> np.ndarray:
 
-        theoretical_results = np.empty((scenario.num_transmitters, scenario.num_receivers), dtype=object)
+        theoretical_results = np.empty(
+            (scenario.num_transmitters, scenario.num_receivers), dtype=object)
 
         channels = scenario.channels
 
@@ -95,7 +98,7 @@ class TheoreticalResults:
         return None
 
         # Currently, only identical waveform generators are theoretically supported
-        if type(transmitter.waveform_generator) != type(receiver.waveform_generator):
+        if isinstance(transmitter.waveform_generator, type(receiver.waveform_generator)):
             return None
 
         waveform_type = type(transmitter.waveform_generator)
@@ -149,7 +152,8 @@ class TheoreticalResults:
         # M-QAM
         elif modulation_order in [16, 64, 256]:
             ser = 4 * (np.sqrt(modulation_order) - 1) / np.sqrt(modulation_order) * \
-                  stats.norm.sf(np.sqrt(3 * bits_per_symbol / (modulation_order - 1) * snrs))
+                stats.norm.sf(np.sqrt(3 * bits_per_symbol /
+                              (modulation_order - 1) * snrs))
             ber = ser / bits_per_symbol
 
         else:
@@ -186,13 +190,15 @@ class TheoreticalResults:
         # M-QAM
         elif modulation_order in [16, 64, 256]:
 
-            alpha = 4 * (np.sqrt(modulation_order) -1) / np.sqrt(modulation_order)
+            alpha = 4 * (np.sqrt(modulation_order) - 1) / \
+                np.sqrt(modulation_order)
             beta = 3 / (modulation_order - 1)
 
         else:
             return None
 
-        ser = alpha / 2 * (1 - np.sqrt(beta * snrs / 2 / (1 + beta * snrs / 2)))
+        ser = alpha / 2 * \
+            (1 - np.sqrt(beta * snrs / 2 / (1 + beta * snrs / 2)))
         ber = ser / np.log2(modulation_order)
 
         return {'ser': ser, 'ber': ber, 'notes': 'Rayleigh channel'}
@@ -215,7 +221,8 @@ class TheoreticalResults:
         # Communications, 5th edition, Section 4.5, Equations 44 and 47
         ser = np.zeros(len(ebn0_linear))  # symbol error rate
         for n in range(2, mod_order+1):
-            ser += (-1)**n / n * exp(- (n - 1) * n_bits / n * ebn0_linear) * comb(mod_order - 1, n - 1)
+            ser += (-1)**n / n * exp(- (n - 1) * n_bits / n *
+                                     ebn0_linear) * comb(mod_order - 1, n - 1)
 
         # Bit error rate
         ber = 2 ** (n_bits - 1) / (2 ** n_bits - 1) * ser
@@ -234,7 +241,8 @@ class TheoreticalResults:
         """
 
         fig, axes = plt.subplots()
-        fig.suptitle("Error Probability Orthogonal Signaling, Noncoherent Detection")
+        fig.suptitle(
+            "Error Probability Orthogonal Signaling, Noncoherent Detection")
 
         ebn0_linear = 10 ** (ebn0 / 10)
 
@@ -244,7 +252,8 @@ class TheoreticalResults:
 
             ser = np.zeros(len(ebn0_linear))  # symbol error rate
             for n in range(2, mod_order+1):
-                ser += (-1)**n / n * exp(- (n - 1) * n_bits / n * ebn0_linear) * comb(mod_order - 1, n - 1)
+                ser += (-1)**n / n * exp(- (n - 1) * n_bits / n *
+                                         ebn0_linear) * comb(mod_order - 1, n - 1)
 
             # Bit error rate
             ber = 2 ** (n_bits - 1) / (2 ** n_bits - 1) * ser

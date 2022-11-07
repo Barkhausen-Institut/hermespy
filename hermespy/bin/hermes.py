@@ -98,11 +98,15 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
     parser = argparse.ArgumentParser(description='HermesPy - The Heterogeneous Mobile Radio Simulator',
                                      prog='hermes')
-    parser.add_argument("-o", help="output directory to which results will be dumped", type=str)
+    parser.add_argument(
+        "-o", help="output directory to which results will be dumped", type=str)
     parser.add_argument("-s", help="style of result plots", type=str)
-    parser.add_argument('-t', '--test', action='store_true', help='run in test-mode, does not dump results')
-    parser.add_argument('-l', '--log', action='store_true', help='log the console information to a txt file')
-    parser.add_argument("config", help="parameters source file from which to read the simulation configuration", type=str)
+    parser.add_argument('-t', '--test', action='store_true',
+                        help='run in test-mode, does not dump results')
+    parser.add_argument('-l', '--log', action='store_true',
+                        help='log the console information to a txt file')
+    parser.add_argument(
+        "config", help="parameters source file from which to read the simulation configuration", type=str)
     arguments = parser.parse_args(args)
 
     # Create console
@@ -110,20 +114,23 @@ def hermes(args: Optional[List[str]] = None) -> None:
     console.show_cursor(False)
 
     # Draw welcome header
-    console.print("\n[bold green]Welcome to HermesPy - The Heterogeneous Radio Mobile Simulator\n")
+    console.print(
+        "\n[bold green]Welcome to HermesPy - The Heterogeneous Radio Mobile Simulator\n")
 
     console.print(f"Version: {__version__}")
     console.print(f"Maintainer: {__maintainer__}")
     console.print(f"Contact: {__email__}")
 
-    console.print("\nFor detailed instructions, refer to the documentation https://hermespy.org/")
-    console.print("Please report any bugs to https://github.com/Barkhausen-Institut/hermespy/issues\n")
+    console.print(
+        "\nFor detailed instructions, refer to the documentation https://hermespy.org/")
+    console.print(
+        "Please report any bugs to https://github.com/Barkhausen-Institut/hermespy/issues\n")
 
     # Validate command line parameters
-    #if not input_parameters_dir:
+    # if not input_parameters_dir:
     #    input_parameters_dir = os.path.join(os.getcwd(), '_settings')
 
-    #elif not(os.path.isabs(input_parameters_dir)):
+    # elif not(os.path.isabs(input_parameters_dir)):
     #    input_parameters_dir = os.path.join(os.getcwd(), input_parameters_dir)
 
     console.print(f"Configuration will be read from '{arguments.config}'")
@@ -140,21 +147,25 @@ def hermes(args: Optional[List[str]] = None) -> None:
             serializables: List[Serializable] = factory.load(arguments.config)
 
             # Filter out non-executables from the serialization list
-            executables: List[Executable] = [s for s in serializables if isinstance(s, Executable)]
+            executables: List[Executable] = [
+                s for s in serializables if isinstance(s, Executable)]
 
             # Abort execution if no executable was found
             if len(executables) < 1:
 
-                console.log("No executable routine was detected, aborting execution", style="red")
+                console.log(
+                    "No executable routine was detected, aborting execution", style="red")
                 exit(-1)
 
             # For now, only single executables are supported
             executable = executables[0]
-            executable.results_dir = Executable.default_results_dir() if arguments.o is None else arguments.o
+            executable.results_dir = Executable.default_results_dir(
+            ) if arguments.o is None else arguments.o
 
         except ConstructorError as error:
-            
-            console.log(f"YAML import failed during parsing of line {error.problem_mark.line} in file '{error.problem_mark.name}':\n\t{error.problem}", style="red")
+
+            console.log(
+                f"YAML import failed during parsing of line {error.problem_mark.line} in file '{error.problem_mark.name}':\n\t{error.problem}", style="red")
             exit(-1)
 
         # Configure console

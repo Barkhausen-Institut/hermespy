@@ -57,7 +57,8 @@ class BlockInterleaver(Encoder, Serializable):
 
     yaml_tag = 'BlockInterleaver'
     __block_size: int           # The number of bits the interleaver operates on
-    __interleave_blocks: int    # The number of sub-blocks the interleaver divides `__block_size` in
+    # The number of sub-blocks the interleaver divides `__block_size` in
+    __interleave_blocks: int
 
     def __init__(self,
                  block_size: int,
@@ -83,7 +84,8 @@ class BlockInterleaver(Encoder, Serializable):
         self.__interleave_blocks = interleave_blocks
 
         if self.block_size % self.interleave_blocks != 0:
-            raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
+            raise ValueError(
+                "The block size must be an integer multiple of the number of interleave blocks")
 
     @classmethod
     def to_yaml(cls: Type[BlockInterleaver], representer: SafeRepresenter, node: BlockInterleaver) -> MappingNode:
@@ -195,7 +197,8 @@ class BlockInterleaver(Encoder, Serializable):
     def interleave_blocks(self, num_blocks: int) -> None:
 
         if num_blocks < 1:
-            raise ValueError("The number of interleaved sections must be at least one")
+            raise ValueError(
+                "The number of interleaved sections must be at least one")
 
         self.__interleave_blocks = num_blocks
 

@@ -23,7 +23,7 @@ __status__ = "Prototype"
 
 class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
     """Scenario of USRPs running the UHD server application."""
-    
+
     yaml_tag = u'UsrpSystem'
     """YAML serialization tag"""
 
@@ -36,12 +36,12 @@ class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
 
     def new_device(self, *args, **kwargs) -> UsrpDevice:
         """Create a new UHD device managed by the system.
-        
+
         Args:
-        
+
             Device initialization parameters.
             Refer to :class:.UsrpDevice for further details.
-            
+
         Returns: A handle to the initialized device.
         """
 
@@ -52,17 +52,18 @@ class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
 
     def add_device(self, device: UsrpDevice) -> None:
         """Register an existing UHD device to be managed by the system.
-        
+
         Args:
-        
+
             device (UsrpDevice):
                 The device to be added.
         """
 
         usrp_uid = str(self.num_devices)
-        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(usrp_uid, device.ip, device._client)
+        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(
+            usrp_uid, device.ip, device._client)
         PhysicalScenario.add_device(self, device)
-     
+
     def _trigger(self) -> None:
 
         self.__system.execute()

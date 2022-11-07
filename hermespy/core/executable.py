@@ -51,8 +51,10 @@ class Executable(ABC, Serializable):
     yaml_tag = u'Executable'
     """YAML serialization tag."""
 
-    __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
-    __verbosity: Verbosity          # Information output behaviour during execution.
+    # Directory in which all execution artifacts will be dropped.
+    __results_dir: Optional[str]
+    # Information output behaviour during execution.
+    __verbosity: Verbosity
     __style: str = 'dark'           # Color scheme
     __console: Console              # Rich console instance for text output
 
@@ -122,7 +124,8 @@ class Executable(ABC, Serializable):
             raise ValueError("The provided results directory does not exist")
 
         if not path.isdir(directory):
-            raise ValueError("The provided results directory path is not a directory")
+            raise ValueError(
+                "The provided results directory path is not a directory")
 
         self.__results_dir = directory
 
@@ -169,12 +172,14 @@ class Executable(ABC, Serializable):
         if not path.exists(base_directory):
             mkdir(base_directory)
 
-        results_dir = path.join(base_directory, today + '_' + '{:03d}'.format(dir_index))
+        results_dir = path.join(
+            base_directory, today + '_' + '{:03d}'.format(dir_index))
 
         while path.exists(results_dir):
 
             dir_index += 1
-            results_dir = path.join(base_directory, today + '_' + '{:03d}'.format(dir_index))
+            results_dir = path.join(
+                base_directory, today + '_' + '{:03d}'.format(dir_index))
 
         # Create the results directory
         mkdir(results_dir)

@@ -22,13 +22,13 @@ __status__ = "Prototype"
 
 class PerfectCoupling(Serializable, Coupling):
     """Ideal mutual coupling between two antenna arrays."""
-    
+
     yaml_tag = u'Perfect-Coupling'
-    
+
     def _transmit(self, signal: Signal) -> Signal:
-        
+
         return signal
-    
+
     def _receive(self, signal: Signal) -> Signal:
-        
+
         return signal

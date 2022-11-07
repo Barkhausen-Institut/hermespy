@@ -45,21 +45,24 @@ class PhysicalScenario(Generic[PhysicalDeviceType], Scenario[PhysicalDeviceType]
             return Scenario.receive_devices(self, receptions)
 
     def _drop(self) -> Drop:
-        
+
         # Generate device transmissions
         operator_transmissions = self.transmit_operators()
         transmitted_device_signals = self.transmit_devices()
-        device_transmissions = [DeviceTransmission(s, i) for s, i in zip(transmitted_device_signals, operator_transmissions)]
-        
+        device_transmissions = [DeviceTransmission(s, i) for s, i in zip(
+            transmitted_device_signals, operator_transmissions)]
+
         # Trigger the full scenario for phyiscal transmission and reception
         timestamp = time()
         self._trigger()
-        
+
         received_device_signals = self.receive_devices()
         operator_receptions = self.receive_operators()
-        device_receptions = [DeviceReception(s, None, i) for s, i in zip(received_device_signals, operator_receptions)]
+        device_receptions = [DeviceReception(s, None, i) for s, i in zip(
+            received_device_signals, operator_receptions)]
 
         return Drop(timestamp, device_transmissions, device_receptions)
+
 
 PhysicalScenarioType = TypeVar('PhysicalScenarioType', bound=PhysicalScenario)
 """Type of physical scenario"""

@@ -2,7 +2,7 @@
 """Matlab interface to the Quadriga channel model."""
 
 from __future__ import annotations
-from typing import Optional, List, Any
+from typing import List, Any
 from matlab.engine import MatlabEngine, start_matlab
 import matlab
 import numpy as np
@@ -25,7 +25,6 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
     __engine: MatlabEngine
 
     def __init__(self, *args, **kwargs) -> None:
-
 
         # Init base class
         QuadrigaInterface.__init__(self, *args, **kwargs)

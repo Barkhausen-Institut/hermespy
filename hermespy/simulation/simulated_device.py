@@ -33,13 +33,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     """Representation of a device simulating hardware.
 
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
-    
-    
+
+
     .. warning::
-    
+
        When configuring simulated devices within simulation scenarios,
-       channel models may ignore spatial properties such as :func:`.position`, :func:`.orientation` or :func:`.velocity`.  
-       
+       channel models may ignore spatial properties such as :func:`.position`, :func:`.orientation` or :func:`.velocity`.
     """
 
     yaml_tag = u'SimulatedDevice'
@@ -50,17 +49,20 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
     adc: AnalogDigitalConverter
     """Model of receiver's ADC"""
-    
+
     __isolation: Isolation
     """Model of the device's transmit-receive isolations"""
-    
+
     __coupling: Coupling
     """Model of the device's antenna array mutual coupling"""
 
     __noise: Noise                          # Model of the hardware noise
-    __scenario: Optional[Scenario]          # Scenario this device is attached to
-    __sampling_rate: Optional[float]        # Sampling rate at which this device operate
-    __carrier_frequency: float              # Center frequency of the mixed signal in rf-band
+    # Scenario this device is attached to
+    __scenario: Optional[Scenario]
+    # Sampling rate at which this device operate
+    __sampling_rate: Optional[float]
+    # Center frequency of the mixed signal in rf-band
+    __carrier_frequency: float
     __velocity: np.ndarray                  # Cartesian device velocity vector
     __operator_separation: bool
 
@@ -86,11 +88,11 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             adc (AnalogDigitalConverter, optional):
                 Model of receiver's ADC converter.
-                
+
             isolation (Isolation, optional):
                 Model of the device's transmit-receive isolations.
                 By default, perfect isolation is assumed.
-                
+
             coupling (Coupling, optional):
                 Model of the device's antenna array mutual coupling.
                 By default, ideal coupling behaviour is assumed.
@@ -139,7 +141,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         """
 
         if self.__scenario is None:
-            raise FloatingError("Error trying to access the scenario of a floating modem")
+            raise FloatingError(
+                "Error trying to access the scenario of a floating modem")
 
         return self.__scenario
 
@@ -160,7 +163,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         """Set the scenario this device is attached to. """
 
         if hasattr(self, '_SimulatedDevice__scenario') and self.__scenario is not None:
-            raise RuntimeError("Error trying to modify the scenario of an already attached modem")
+            raise RuntimeError(
+                "Error trying to modify the scenario of an already attached modem")
 
         self.__scenario = scenario
 
@@ -195,34 +199,34 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         self.__noise = value
         self.__noise.random_mother = self
-        
+
     @property
     def isolation(self) -> Isolation:
         """Model of the device's transmit-receive isolation.
-        
+
         Returns: Handle to the isolation model.
         """
-        
+
         return self.__isolation
-    
+
     @isolation.setter
     def isolation(self, value: Isolation) -> None:
-        
+
         self.__isolation = value
         value.device = self
-         
+
     @property
     def coupling(self) -> Coupling:
         """Model of the device's antenna array mutual coupling behaviour.
-        
+
         Returns: Handle to the coupling model.
         """
-        
+
         return self.__coupling
-    
+
     @coupling.setter
     def coupling(self, value: Coupling) -> None:
-        
+
         self.__coupling = value
         value.device = self
 
@@ -271,7 +275,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     def carrier_frequency(self, value: float) -> None:
 
         if value < 0.:
-            raise ValueError("Carrier frequency must be greater or equal to zero")
+            raise ValueError(
+                "Carrier frequency must be greater or equal to zero")
 
         self.__carrier_frequency = value
 
@@ -293,7 +298,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     @property
     def operator_separation(self) -> bool:
         """Separate operators during signal modeling.
-        
+
         Returns:
 
             Enabled flag.
@@ -315,9 +320,10 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         # Simulate rf-chain
         transmissions = [self.rf_chain.transmit(signal) for signal in signals]
-        
+
         # Simulate mutual coupling behaviour
-        coupled_transmission = [self.coupling.transmit(signal) for signal in transmissions]
+        coupled_transmission = [self.coupling.transmit(
+            signal) for signal in transmissions]
 
         # Return result
         return coupled_transmission
@@ -325,7 +331,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     @property
     def snr(self) -> float:
         """Signal to noise ratio at the receiver side.
-        
+
         Returns:
 
             Linear ratio of signal to noise power.
@@ -337,7 +343,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     def snr(self, value: float) -> None:
 
         if value <= 0:
-            raise ValueError("The linear signal to noise ratio must be greater than zero")
+            raise ValueError(
+                "The linear signal to noise ratio must be greater than zero")
 
         self.__snr = value
 
@@ -362,7 +369,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             snr_type (SNRType, optional):
                 Type of signal to noise ratio.
-                
+
             leaking_signal(Signal, optional):
                 Signal leaking from transmit to receive chains.
 
@@ -381,7 +388,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         # Transform signal argument to matrix argument
         if isinstance(device_signals, Signal):
-            
+
             propagation_matrix = np.empty(1, dtype=object)
             propagation_matrix[0] = ([device_signals], None)
             device_signals = propagation_matrix
@@ -390,11 +397,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         elif isinstance(device_signals, list):
 
             if isinstance(device_signals[0], Signal):
-                device_signals = np.array([(device_signals, None)], dtype=object)
+                device_signals = np.array(
+                    [(device_signals, None)], dtype=object)
 
             elif isinstance(device_signals[0], tuple):
                 device_signals = np.array([device_signals], dtype=object)
-                
+
             else:
                 raise ValueError("Unsupported propagation matrix")
 
@@ -404,13 +412,13 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             if signals is not None:
                 for signal in signals:
                     mixed_signal.superimpose(signal)
-                    
+
         # Model mutual coupling behaviour
         coupled_signal = self.coupling.receive(mixed_signal)
-                    
+
         # Add leaked signal if provided
         if leaking_signal is not None:
-            
+
             modeled_leakage = self.__isolation.leak(leaking_signal)
             coupled_signal.superimpose(modeled_leakage)
 
@@ -430,13 +438,16 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             # Collect the reference channel if a reference transmitter has been specified
             if receiver.reference is not None and self.attached:
 
-                reference_device_idx = self.scenario.devices.index(receiver.reference)
-                reference_csi = device_signals[reference_device_idx][1] if isinstance(device_signals[reference_device_idx], (tuple, list, np.ndarray)) else None
+                reference_device_idx = self.scenario.devices.index(
+                    receiver.reference)
+                reference_csi = device_signals[reference_device_idx][1] if isinstance(
+                    device_signals[reference_device_idx], (tuple, list, np.ndarray)) else None
 
                 if self.operator_separation:
 
                     reference_transmitter_idx = receiver.slot_index
-                    receiver_signal = device_signals[reference_device_idx][0][reference_transmitter_idx].copy()
+                    receiver_signal = device_signals[reference_device_idx][0][reference_transmitter_idx].copy(
+                    )
 
                 else:
                     receiver_signal = baseband_signal.copy()

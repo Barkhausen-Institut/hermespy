@@ -103,11 +103,12 @@ class Encoder(ABC, Serializable):
 
     yaml_tag: Optional[str] = u'Encoder'
     """YAML serialization tag."""
-    
+
     enabled: bool
     """Enable flag for the encoding within its managed pipeline."""
-    
-    __manager: Optional[EncoderManager]     # Coding pipeline configuration this encoder is registered to
+
+    # Coding pipeline configuration this encoder is registered to
+    __manager: Optional[EncoderManager]
 
     def __init__(self, manager: EncoderManager = None) -> None:
         """
@@ -251,8 +252,10 @@ class EncoderManager(RandomNode, Serializable):
     allow_truncating: bool
     """Tolerate truncating of data code blocks during decoding."""
 
-    __modem: Optional[BaseModem]        # Communication modem instance this coding pipeline configuration is attached to
-    _encoders: List[Encoder]        # List of encoding steps defining the internal pipeline configuration
+    # Communication modem instance this coding pipeline configuration is attached to
+    __modem: Optional[BaseModem]
+    # List of encoding steps defining the internal pipeline configuration
+    _encoders: List[Encoder]
 
     def __init__(self,
                  modem: BaseModem = None,
@@ -282,7 +285,7 @@ class EncoderManager(RandomNode, Serializable):
 
         if modem is not None:
             self.modem = modem
-            
+
         RandomNode.__init__(self)
 
     @classmethod
@@ -348,7 +351,8 @@ class EncoderManager(RandomNode, Serializable):
         """
 
         if self.__modem is None:
-            raise RuntimeError("Trying to access the modem of a floating encoding configuration")
+            raise RuntimeError(
+                "Trying to access the modem of a floating encoding configuration")
 
         return self.__modem
 
@@ -415,55 +419,63 @@ class EncoderManager(RandomNode, Serializable):
             ValueError:
                 If `num_code_bits` is smaller than the resulting code bits after encoding.
         """
-        
+
         code_state = data_bits.copy()
-        
+
         # Loop through the encoders and encode the data, using the output of the last encoder as input to the next
         for encoder in self._encoders:
-            
+
             # Skip if the respective encoder is disabled
             if not encoder.enabled:
                 continue
-            
+
             data_block_size = encoder.bit_block_size
             code_block_size = encoder.code_block_size
-            
+
             # Compute the number of blocks within the code for this coding step
             num_blocks = ceil(len(code_state) / data_block_size)
-            
+
             # Pad if allowed
             data_state = code_state
             code_state = np.empty(num_blocks*code_block_size, dtype=bool)
-            
+
             required_num_data_bits = num_blocks * data_block_size
             if len(data_state) < required_num_data_bits:
-                
+
                 if not self.allow_padding:
-                    raise RuntimeError('Encoding would require padding, but padding is not allowed')
-                    
-                num_padding_bits = required_num_data_bits -len(data_state)
-                data_state = np.append(data_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool))
+                    raise RuntimeError(
+                        'Encoding would require padding, but padding is not allowed')
+
+                num_padding_bits = required_num_data_bits - len(data_state)
+                data_state = np.append(data_state, self._rng.integers(
+                    0, 2, num_padding_bits, dtype=bool))
 
             # Encode all blocks sequentially
             for block_idx in range(num_blocks):
-                
-                encoded_block = encoder.encode(data_state[block_idx*data_block_size:(1+block_idx)*data_block_size])
-                code_state[block_idx*code_block_size:(1+block_idx)*code_block_size] = encoded_block
+
+                encoded_block = encoder.encode(
+                    data_state[block_idx*data_block_size:(1+block_idx)*data_block_size])
+                code_state[block_idx *
+                           code_block_size:(1+block_idx)*code_block_size] = encoded_block
 
         if num_code_bits and len(code_state) > num_code_bits:
-            raise RuntimeError('Too many input bits provided for encoding, truncating would destroy information')
+            raise RuntimeError(
+                'Too many input bits provided for encoding, truncating would destroy information')
 
         if num_code_bits and len(code_state) < num_code_bits:
-            
-            if not self.allow_padding:
-                raise RuntimeError('Encoding would require padding, but padding is not allowed')
-                
-            num_padding_bits = num_code_bits - len(code_state)
-            
-            if num_padding_bits >= self.code_block_size:
-                raise ValueError('Insufficient number of input blocks provided for encoding')
 
-            code_state = np.append(code_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool))
+            if not self.allow_padding:
+                raise RuntimeError(
+                    'Encoding would require padding, but padding is not allowed')
+
+            num_padding_bits = num_code_bits - len(code_state)
+
+            if num_padding_bits >= self.code_block_size:
+                raise ValueError(
+                    'Insufficient number of input blocks provided for encoding')
+
+            code_state = np.append(code_state, self._rng.integers(
+                0, 2, num_padding_bits, dtype=bool))
 
         # Return resulting overall code
         return code_state
@@ -501,7 +513,8 @@ class EncoderManager(RandomNode, Serializable):
 
         bit_block_size = self.bit_block_size
         code_block_size = self.code_block_size
-        num_blocks = int(encoded_bits.shape[0] / self.code_block_size)  # Float to int conversion floors by default
+        # Float to int conversion floors by default
+        num_blocks = int(encoded_bits.shape[0] / self.code_block_size)
 
         if num_data_bits is not None:
 
@@ -512,34 +525,35 @@ class EncoderManager(RandomNode, Serializable):
                                    "of bits recovered by decoding")
 
             if not self.allow_truncating and num_data_bits != num_data_bits_full:
-                raise RuntimeError("Data truncating is required but not allowed")
+                raise RuntimeError(
+                    "Data truncating is required but not allowed")
 
         else:
             num_data_bits = num_blocks * bit_block_size
 
-
         data_state = encoded_bits.copy()
-        
+
         # Loop through the encoders decode the code using the output of the last encoder as input to the next
         for encoder in reversed(self._encoders):
-            
+
             # Skip if the respective encoder is disabled
             if not encoder.enabled:
                 continue
-            
+
             code_block_size = encoder.code_block_size
             data_block_size = encoder.bit_block_size
-            
+
             # Compute the number of blocks within the code for this coding step
             num_blocks = int(len(data_state) / code_block_size)
-            
+
             # Truncate if allowed, otherwise throw an exception
             code_state = data_state[:num_blocks*code_block_size]
             data_state = np.empty(num_blocks*data_block_size, dtype=bool)
-            
+
             # Decode all blocks sequentially
             for block_idx in range(num_blocks):
-                data_state[block_idx*data_block_size:(1+block_idx)*data_block_size] = encoder.decode(code_state[block_idx*code_block_size:(1+block_idx)*code_block_size])
+                data_state[block_idx*data_block_size:(1+block_idx)*data_block_size] = encoder.decode(
+                    code_state[block_idx*code_block_size:(1+block_idx)*code_block_size])
 
         # Return resulting data
         return data_state[:num_data_bits]
@@ -560,21 +574,21 @@ class EncoderManager(RandomNode, Serializable):
 
         if len(self._encoders) < 1:
             return 1
-        
+
         encoder_index = 0
         block_size = 1
         num_bits = 1
-                
+
         for encoder_index, encoder in enumerate(self._encoders):
 
             if encoder.enabled:
-                
+
                 block_size = encoder.bit_block_size
                 num_bits = encoder.code_block_size
                 break
-            
+
         for encoder in self._encoders[encoder_index+1:]:
-            
+
             if not encoder.enabled:
                 continue
 
@@ -597,9 +611,9 @@ class EncoderManager(RandomNode, Serializable):
             int:
                 Number of bits :math:`L`.
         """
-        
+
         for encoder in reversed(self.encoders):
-            
+
             if encoder.enabled:
                 return encoder.code_block_size
 
@@ -634,7 +648,7 @@ class EncoderManager(RandomNode, Serializable):
 
         code_rate = 1.0
         for encoder in self._encoders:
-            
+
             if encoder.enabled:
                 code_rate *= encoder.rate
 

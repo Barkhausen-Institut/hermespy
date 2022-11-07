@@ -9,6 +9,7 @@ variables:
 stages:
   - build
   - test
+  - lint 
   - deploy
 
 cache:
@@ -51,6 +52,14 @@ Integrity Testing:
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
     - python tests/test_install.py integrity_tests
+
+PEP8 Testing:
+  stage: lint
+  before_script:
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install flake8
+  script:
+    - flake8 hermespy/
 
 pages:
   stage: deploy

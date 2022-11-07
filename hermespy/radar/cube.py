@@ -37,15 +37,18 @@ class RadarCube(object):
                  angle_bins: np.ndarray,
                  velocity_bins: np.ndarray,
                  range_bins: np.ndarray) -> None:
-        
+
         if data.shape[0] != len(angle_bins):
-            raise ValueError("Data cube angle dimension does not match angle bins")
-        
+            raise ValueError(
+                "Data cube angle dimension does not match angle bins")
+
         if data.shape[1] != len(velocity_bins):
-            raise ValueError("Data cube velocity dimension does not match velocity bins")
+            raise ValueError(
+                "Data cube velocity dimension does not match velocity bins")
 
         if data.shape[2] != len(range_bins):
-            raise ValueError("Data cube range dimension does not match range bins")
+            raise ValueError(
+                "Data cube range dimension does not match range bins")
 
         self.data = data
         self.angle_bins = angle_bins
@@ -82,8 +85,8 @@ class RadarCube(object):
             return figure
 
     def plot_range_velocity(self,
-                           title: Optional[str] = None,
-                           interpolate: bool = True) -> plt.Figure:
+                            title: Optional[str] = None,
+                            interpolate: bool = True) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -106,19 +109,18 @@ class RadarCube(object):
 
         figure, axes = plt.subplots()
         figure.suptitle(title)
-        
-        with Executable.style_context():
 
-            extent = np.min(self.range_bins), np.max(self.range_bins), np.min(self.velocity_bins), np.max(self.velocity_bins)
+        with Executable.style_context():
 
             axes.set_xlabel("Range [m]")
             axes.set_ylabel("Doppler [Hz]")
 
-            plt.pcolormesh(self.range_bins, self.velocity_bins, range_velocity_profile, shading='auto')
+            plt.pcolormesh(self.range_bins, self.velocity_bins,
+                           range_velocity_profile, shading='auto')
 
             return figure
 
     def normalize_power(self) -> None:
         """Normalize the represented power indicators to unit maximum."""
-        
+
         self.data /= self.data.max()

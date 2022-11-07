@@ -11,8 +11,6 @@ from abc import ABCMeta
 from math import log10
 from typing import Any
 
-import numpy as np
-
 from ..core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
@@ -38,39 +36,39 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
                  **kwargs: Any) -> None:
         """
         Args:
-            
+
             volume (float):
                 Hall volume in m3.
-                
+
             surface (float):
                 Total surface hall area in m2 (walls/floor/ceiling).
         """
-        
+
         self.volume = volume
         self.surface = surface
         ClusterDelayLineBase.__init__(self, **kwargs)
-        
+
     @property
     def volume(self) -> float:
         """Hall volume.
-        
+
         Returns:
-            
+
             float: Volume in m3.
-            
+
         Raises:
             ValueError:
                 For volumes smaller or equal to zero.
         """
-        
+
         return self.__volume
-    
+
     @volume.setter
     def volume(self, value: float) -> None:
-        
+
         if value <= 0.:
             raise ValueError("Hall volume must be greater than zero")
-        
+
         self.__volume = value
 
     @property

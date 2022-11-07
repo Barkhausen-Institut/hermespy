@@ -56,7 +56,8 @@ class Channel(RandomNode, Serializable):
     def __init__(self,
                  transmitter: Optional[SimulatedDevice] = None,
                  receiver: Optional[SimulatedDevice] = None,
-                 devices: Optional[Tuple[SimulatedDevice, SimulatedDevice]]= None,
+                 devices: Optional[Tuple[SimulatedDevice,
+                                         SimulatedDevice]] = None,
                  active: Optional[bool] = None,
                  gain: Optional[float] = None,
                  sync_offset_low: float = 0.,
@@ -71,7 +72,7 @@ class Channel(RandomNode, Serializable):
 
             receiver (Receiver, optional):
                 The device receiving from this channel.
-                
+
             devices (Tuple[SimulatedDevice, SimulatedDevice], optional):
                 Tuple of devices connected by this channel model.
 
@@ -97,7 +98,8 @@ class Channel(RandomNode, Serializable):
         """
 
         # Initialize base classes
-        Serializable.__init__(self)        # Must be first in order for correct diamond resolve
+        # Must be first in order for correct diamond resolve
+        Serializable.__init__(self)
         RandomNode.__init__(self, seed=seed)
 
         # Default parameters
@@ -116,11 +118,12 @@ class Channel(RandomNode, Serializable):
 
         if receiver is not None:
             self.receiver = receiver
-            
+
         if devices is not None:
-            
+
             if self.receiver is not None or self.transmitter is not None:
-                raise ValueError("Can't use 'devices' initialization argument in combination with specifying a transmitter / receiver")
+                raise ValueError(
+                    "Can't use 'devices' initialization argument in combination with specifying a transmitter / receiver")
 
             self.transmitter = devices[0]
             self.receiver = devices[1]
@@ -219,7 +222,8 @@ class Channel(RandomNode, Serializable):
         """
 
         if value < 0:
-            raise ValueError("Synchronization offset lower bound must be greater or equal to zero")
+            raise ValueError(
+                "Synchronization offset lower bound must be greater or equal to zero")
 
         self.__sync_offset_low = value
 
@@ -245,7 +249,8 @@ class Channel(RandomNode, Serializable):
         """
 
         if value < 0:
-            raise ValueError("Synchronization offset upper bound must be greater or equal to zero")
+            raise ValueError(
+                "Synchronization offset upper bound must be greater or equal to zero")
 
         self.__sync_offset_high = value
 
@@ -295,7 +300,8 @@ class Channel(RandomNode, Serializable):
         """
 
         if self.__transmitter is None:
-            raise RuntimeError("Error trying to access the number of inputs of a floating channel")
+            raise RuntimeError(
+                "Error trying to access the number of inputs of a floating channel")
 
         return self.__transmitter.antennas.num_antennas
 
@@ -314,7 +320,8 @@ class Channel(RandomNode, Serializable):
         """
 
         if self.__receiver is None:
-            raise RuntimeError("Error trying to access the number outputs of a floating channel")
+            raise RuntimeError(
+                "Error trying to access the number outputs of a floating channel")
 
         return self.__receiver.antennas.num_antennas
 
@@ -373,16 +380,19 @@ class Channel(RandomNode, Serializable):
         # Abort if the channel is considered floating, since physical device properties are required for
         # channel modeling
         if self.transmitter is None or self.receiver is None:
-            raise RuntimeError("Channel is floating, making propagation simulation impossible")
+            raise RuntimeError(
+                "Channel is floating, making propagation simulation impossible")
 
         # Validate that the signal models contain the correct number of streams
         for signal in forwards:
             if signal.num_streams != self.transmitter.antennas.num_antennas:
-                raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+                raise ValueError(
+                    "Number of transmitted signal streams does not match number of transmit antennas")
 
         for signal in backwards:
             if signal.num_streams != self.receiver.antennas.num_antennas:
-                raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
+                raise ValueError(
+                    "Number of transmitted signal streams does not match number of transmit antennas")
 
         # Determine the sampling rate and sample count of the CSI samples
         # For now, the sampling rate and sample count is the maximum over all provided signal models
@@ -399,10 +409,12 @@ class Channel(RandomNode, Serializable):
             return [], [], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
 
         # Generate the channel's impulse response
-        impulse_response = self.impulse_response(csi_num_samples, csi_sampling_rate)
+        impulse_response = self.impulse_response(
+            csi_num_samples, csi_sampling_rate)
 
         # Consider the a random synchronization offset between transmitter and receiver
-        sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
+        sync_offset: float = self._rng.uniform(
+            low=self.__sync_offset_low, high=self.__sync_offset_high)
 
         forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), impulse_response, sync_offset)
                                for signal in forwards]
@@ -451,8 +463,10 @@ class Channel(RandomNode, Serializable):
         for delay_index in range(num_delay_samples + 1):
             for tx_idx, rx_idx in product(range(num_tx_streams), range(num_rx_streams)):
 
-                delayed_signal = impulse_response[:num_signal_samples, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
-                propagated_samples[rx_idx, delay_index:delay_index + num_signal_samples] += delayed_signal
+                delayed_signal = impulse_response[:num_signal_samples,
+                                                  rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
+                propagated_samples[rx_idx, delay_index:delay_index +
+                                   num_signal_samples] += delayed_signal
 
         return Signal(propagated_samples, sampling_rate=signal.sampling_rate,
                       carrier_frequency=signal.carrier_frequency, delay=signal.delay + delay)
@@ -481,7 +495,8 @@ class Channel(RandomNode, Serializable):
         """
 
         if self.transmitter is None or self.receiver is None:
-            raise RuntimeError("Channel is floating, making impulse response simulation impossible")
+            raise RuntimeError(
+                "Channel is floating, making impulse response simulation impossible")
 
         # MISO case
         if self.receiver.antennas.num_antennas == 1:
@@ -500,7 +515,8 @@ class Channel(RandomNode, Serializable):
                                                dtype=complex), (num_samples, 1, 1))
 
         # Scale by channel gain and add dimension for delay response
-        impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
+        impulse_responses = self.gain * \
+            np.expand_dims(impulse_responses, axis=3)
 
         # Save newly generated response as most recent impulse response
         self.recent_response = impulse_responses

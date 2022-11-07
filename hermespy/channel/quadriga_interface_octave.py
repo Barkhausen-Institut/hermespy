@@ -32,10 +32,10 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         """Quadriga Octave interface object initialization.
 
         Args:
-        
+
             octave_bin (str, optional):
                 Path to the octave cli executable.
-                
+
             kwargs (Any):
                 Interface arguments.
         """
@@ -49,7 +49,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
 
         # Add quadriga source folder to octave lookup paths
         self.__octave.addpath(self.path_quadriga_src)
-        
+
         # Add launch script folder to octave loopkup paths
         self.__octave.addpath(self.path_launch_script)
 

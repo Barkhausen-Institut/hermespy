@@ -6,13 +6,12 @@ Correlation-Based Waveform Synchronization
 """
 
 from __future__ import annotations
-from typing import Any, Generic, List, Tuple, Type, TypeVar
+from typing import Any, Generic, List, Type, TypeVar
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter
 from scipy.signal import correlate, find_peaks
 
-from ..core.channel_state_information import ChannelStateInformation
 from .waveform_generator import PilotWaveformGenerator, Synchronization
 
 __author__ = "Jan Adler"
@@ -31,7 +30,7 @@ PGT = TypeVar('PGT', bound=PilotWaveformGenerator)
 
 class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
     """Correlation-based clock synchronization for arbitrary communication waveforms.
-    
+
     The implemented algorithm is equivalent to :cite:p:`1976:knapp` without pre-filtering.
     """
 
@@ -82,7 +81,8 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         """Set correlation threshold at which a pilot signal is detected."""
 
         if value < 0. or value > 1.:
-            raise ValueError("Synchronization threshold must be between zero and one.")
+            raise ValueError(
+                "Synchronization threshold must be between zero and one.")
 
         self.__threshold = value
 
@@ -107,7 +107,8 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         """Set correlation guard ratio at which a pilot signal is detected."""
 
         if value < 0. or value > 1.:
-            raise ValueError("Synchronization guard ratio must be between zero and one.")
+            raise ValueError(
+                "Synchronization guard ratio must be between zero and one.")
 
         self.__guard_ratio = value
 
@@ -122,30 +123,35 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:
-            raise RuntimeError("No pilot sequence configured, time-domain correlation synchronization impossible")
+            raise RuntimeError(
+                "No pilot sequence configured, time-domain correlation synchronization impossible")
 
         # Compute the correlation between each signal stream and the pilot sequence, sum up as a result
-        correlation = np.zeros(len(pilot_sequence) + signal.shape[1] - 1, dtype=float)
+        correlation = np.zeros(len(pilot_sequence) +
+                               signal.shape[1] - 1, dtype=float)
         for stream in signal:
-            correlation += abs(correlate(stream, pilot_sequence, mode='full', method='fft'))
+            correlation += abs(correlate(stream, pilot_sequence,
+                               mode='full', method='fft'))
 
         correlation /= correlation.max()  # Normalize correlation
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
         frame_length = self.waveform_generator.samples_in_frame
-        pilot_indices, _ = find_peaks(abs(correlation), height=.9, distance=int(.8 * frame_length))
-        
+        pilot_indices, _ = find_peaks(
+            abs(correlation), height=.9, distance=int(.8 * frame_length))
+
         # Abort if no pilot section has been detected
         if len(pilot_indices) < 1:
             return []
-          
+
         # Correct pilot indices by the convolution length
         pilot_length = len(pilot_sequence)
         pilot_indices -= pilot_length - 1
-            
+
         # Correct infeasible pilot index choices
         pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
-        pilot_indices = np.where(pilot_indices > (signal.shape[1] - frame_length), abs(signal.shape[1] -frame_length), pilot_indices)
+        pilot_indices = np.where(pilot_indices > (
+            signal.shape[1] - frame_length), abs(signal.shape[1] - frame_length), pilot_indices)
 
         return pilot_indices.tolist()
 
