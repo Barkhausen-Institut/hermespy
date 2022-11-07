@@ -37,7 +37,7 @@ from abc import ABCMeta, abstractclassmethod, abstractmethod
 from collections.abc import Iterable
 from functools import partial
 from inspect import getmembers, isclass, signature
-from importlib import __import__, import_module
+from importlib import import_module
 from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
@@ -70,14 +70,14 @@ class Serializable(metaclass=ABCMeta):
 
     yaml_tag: Optional[str] = None
     """YAML serialization tag."""
-    
+
     @staticmethod
     def _arg_signature() -> Set[str]:
         """Argument signature.
-        
+
         Returns: Additional arguments not inferable from the init signature.
         """
-        
+
         return {}
 
     @classmethod
@@ -165,44 +165,51 @@ class Serializable(metaclass=ABCMeta):
 
             if configuration_key in init_signature or configuration_key in arg_signature:
 
-                init_parameters[configuration_key] = configuration.pop(configuration_key)
+                init_parameters[configuration_key] = configuration.pop(
+                    configuration_key)
                 continue
 
             lower_key = configuration_key.lower()
-            
+
             if lower_key in init_signature or lower_key in arg_signature:
 
-                init_parameters[lower_key] = configuration.pop(configuration_key)
+                init_parameters[lower_key] = configuration.pop(
+                    configuration_key)
                 continue
 
             if configuration_key in properties:
-                
-                init_properties[configuration_key] = configuration.pop(configuration_key)
+
+                init_properties[configuration_key] = configuration.pop(
+                    configuration_key)
                 continue
-            
+
             if lower_key in properties:
-                
-                init_properties[lower_key] = configuration.pop(configuration_key)
+
+                init_properties[lower_key] = configuration.pop(
+                    configuration_key)
                 continue
 
         # Initialize class
-        init_parameters.update(configuration)       # Remaining configuration fields get treated as kwargs
-        
+        # Remaining configuration fields get treated as kwargs
+        init_parameters.update(configuration)
+
         try:
             instance = cls(**init_parameters)
-            
+
         except TypeError as e:
-            raise TypeError(f"Erorr while attempting to initialize '{cls.__name__}', {str(e)}")
+            raise TypeError(
+                f"Erorr while attempting to initialize '{cls.__name__}', {str(e)}")
 
         # Configure properties
         for property_name, property_value in init_properties.items():
-            
+
             try:
                 setattr(instance, property_name, property_value)
-                
+
             except AttributeError as e:
-                raise AttributeError(f"Error while attempting to configure '{property_name}', {str(e)}")
-                
+                raise AttributeError(
+                    f"Error while attempting to configure '{property_name}', {str(e)}")
+
         # Return configured class instance
         return instance
 
@@ -265,8 +272,9 @@ class Factory:
 
         # Iterate over all modules within the hermespy namespace
         # Scan for serializable classes
-        
-        lookup_paths = list(hermespy.__path__) + [os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))]
+
+        lookup_paths = list(
+            hermespy.__path__) + [os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))]
         for _, name, is_module in iter_modules(lookup_paths, hermespy.__name__ + '.'):
 
             if not is_module:
@@ -288,11 +296,14 @@ class Factory:
 
                     if issubclass(serializable_class, SerializableArray):
 
-                        array_constructor = partial(Factory.__construct_matrix, serializable_class)
-                        self.__yaml.constructor.add_multi_constructor(serializable_class.yaml_tag, array_constructor)
+                        array_constructor = partial(
+                            Factory.__construct_matrix, serializable_class)
+                        self.__yaml.constructor.add_multi_constructor(
+                            serializable_class.yaml_tag, array_constructor)
 
         # Add constructors for untagged classes
-        self.__yaml.constructor.add_constructor('tag:yaml.org,2002:map', self.__construct_map)
+        self.__yaml.constructor.add_constructor(
+            'tag:yaml.org,2002:map', self.__construct_map)
         # self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
 
         # Construct regular expressions for purging
@@ -300,7 +311,8 @@ class Factory:
         self.__purge_regex_beta = compile(r"- !<([^']+)>")
         self.__restore_regex_alpha = compile(r"([ ]*)([a-zA-Z]+):\n$")
         self.__restore_regex_beta = compile(r"([ ]*)- ([^\s]+)([^']*)\n$")
-        self.__range_regex = compile(r'([0-9.e-]*)[ ]*,[ ]*([0-9.e-]*)[ ]*,[ ]*\.\.\.[ ]*,[ ]*([0-9.e-]*)')
+        self.__range_regex = compile(
+            r'([0-9.e-]*)[ ]*,[ ]*([0-9.e-]*)[ ]*,[ ]*\.\.\.[ ]*,[ ]*([0-9.e-]*)')
         self.__db_regex = compile(r"\[([ 0-9.,-]*)\][ ]*dB")
 
     @property
@@ -446,10 +458,12 @@ class Factory:
         for node in node.value:
 
             if node.tag in constructor.yaml_constructors:
-                sequence.append(constructor.yaml_constructors[node.tag](constructor, node))
+                sequence.append(
+                    constructor.yaml_constructors[node.tag](constructor, node))
 
             else:
-                sequence.append(constructor.construct_non_recursive_object(node))
+                sequence.append(
+                    constructor.construct_non_recursive_object(node))
 
         return sequence
 
@@ -489,7 +503,8 @@ class Factory:
             str: The purged sequence.
         """
 
-        linear_values = [db2lin(float(str_rep)) for str_rep in match[1].replace(' ', '').split(',')]
+        linear_values = [db2lin(float(str_rep))
+                         for str_rep in match[1].replace(' ', '').split(',')]
 
         string_replacement = "["
         for linear_value in linear_values:
@@ -528,7 +543,8 @@ class Factory:
                 hermes_objects += self.from_file(path)
 
             else:
-                raise ValueError("Lookup location '{}' not recognized".format(path))
+                raise ValueError(
+                    "Lookup location '{}' not recognized".format(path))
 
         return hermes_objects
 
@@ -551,7 +567,8 @@ class Factory:
             raise ValueError("Lookup path '{}' not found".format(path))
 
         if not os.path.isdir(path):
-            raise ValueError("Lookup path '{}' is not a directory".format(path))
+            raise ValueError(
+                "Lookup path '{}' is not a directory".format(path))
 
         hermes_objects: List[Any] = []
 
@@ -560,7 +577,8 @@ class Factory:
 
                 _, extension = os.path.splitext(file)
                 if extension in self.extensions:
-                    hermes_objects += self.from_file(os.path.join(directory, file))
+                    hermes_objects += self.from_file(
+                        os.path.join(directory, file))
 
             if not recurse:
                 break
@@ -718,8 +736,10 @@ class Factory:
         clean_stream = ''
         for line in stream.readlines():
 
-            clean_line = self.__range_regex.sub(self.__range_restore_callback, line)
-            clean_line = self.__db_regex.sub(self.__decibel_conversion, clean_line)
+            clean_line = self.__range_regex.sub(
+                self.__range_restore_callback, line)
+            clean_line = self.__db_regex.sub(
+                self.__decibel_conversion, clean_line)
             clean_stream += clean_line
 
         hermes_objects = self.__yaml.load(StringIO(clean_stream))
@@ -747,7 +767,8 @@ class Factory:
         for serializable_object in args:
 
             if self.__clean:
-                self.__yaml.dump(*serializable_object, stream, transform=self.__purge_tags)
+                self.__yaml.dump(*serializable_object, stream,
+                                 transform=self.__purge_tags)
 
             else:
                 self.__yaml.dump(*serializable_object, stream)
@@ -755,35 +776,35 @@ class Factory:
 
 class HDFSerializable(metaclass=ABCMeta):
     """Base class for object serializble to the HDF5 format.
-    
+
     Structures are serialized to HDF5 files by the :meth:`.to_HDF` routine and
     de-serialized by the :meth:`.from_HDF` method, respectively.
     """
-    
+
     @abstractmethod
     def to_HDF(self, group: Group) -> None:
         """Serialize the object state to HDF5.
-        
+
         Dumps the object's state and additional information to a HDF5 group.
-        
+
         Args:
-        
+
             group (Group):
                 The HDF5 group to which the object is serialized.
         """
         ...  # pragma no cover
-        
+
     @abstractclassmethod
     def from_HDF(cls: Type[HDFSerializable], group: Group) -> HDFSerializable:
         """De-Serialized the object state from HDF5.
-        
+
         Recalls the object's state from a HDF5 group.
-        
+
         Args:
-        
+
             group (Group):
                 The HDF5 group from which the object state is recalled.
-                
+
         Returns: The object initialized from the HDF5 group state.
         """
         ...  # pragma no cover

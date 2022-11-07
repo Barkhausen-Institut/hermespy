@@ -6,7 +6,6 @@ Random Graph
 """
 
 from __future__ import annotations
-from random import Random
 from typing import Optional, Type, Union
 
 from numpy.random import default_rng, Generator
@@ -29,7 +28,8 @@ class RandomNode(Serializable):
 
     __mother_node: Optional[RandomNode]     # Mother node of this node
     __generator: Optional[Generator]        # Numpy generator object
-    __seed: Optional[int]                   # Seed used to initialize the pseud-random number generator
+    # Seed used to initialize the pseud-random number generator
+    __seed: Optional[int]
 
     def __init__(self,
                  mother_node: Optional[RandomNode] = None,
@@ -64,10 +64,10 @@ class RandomNode(Serializable):
             return self.__generator
 
         return self.__mother_node._rng
-    
+
     @_rng.setter
     def _rng(self, value: Generator) -> None:
-        
+
         self.__generator = value
 
     @property
@@ -165,7 +165,7 @@ class RandomNode(Serializable):
         random_seed = state.pop('seed', None)
 
         rng: RandomNode = cls.InitializationWrapper(state)
-        
+
         if random_seed is not None:
             rng.set_seed(random_seed)
 

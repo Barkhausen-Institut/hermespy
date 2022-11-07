@@ -25,10 +25,10 @@ class SNRType(Enum):
 
     ESN0 = 1
     """Symbol energy to noise power ratio."""
-    
+
     PN0 = 2
     """Signal power to noise power ratio."""
-    
+
     EN0 = 3
     """Signal energy to noise power ratio."""
 

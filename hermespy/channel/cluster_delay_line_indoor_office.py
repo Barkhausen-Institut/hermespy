@@ -7,12 +7,9 @@
 Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.
 """
 
-from abc import ABCMeta
 from math import log10
 
-import numpy as np
-
-from ..core.factory import Serializable
+from hermespy.core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"

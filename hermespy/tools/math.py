@@ -32,6 +32,7 @@ class DbConversionType(Enum):
     AMPLITUDE = 1
     HILLY = 2
 
+
 @jit
 def db2lin(db_val: float,
            conversion_type: Optional[DbConversionType] = DbConversionType.POWER):
@@ -51,7 +52,7 @@ def db2lin(db_val: float,
     elif conversion_type == DbConversionType.AMPLITUDE:
         output = 10**(db_val/20)
     else:
-        raise ValueError(f"dB conversion type not supported")
+        raise ValueError("dB conversion type not supported")
 
     return output
 
@@ -75,7 +76,7 @@ def lin2db(val: float,
     elif conversion_type == DbConversionType.AMPLITUDE:
         output = 20 * np.log10(val)
     else:
-        raise ValueError(f"dB conversion type not supported")
+        raise ValueError("dB conversion type not supported")
 
     return output
 
@@ -105,10 +106,11 @@ def rotation_matrix(orientation: np.ndarray) -> np.ndarray:
 
     a = orientation[2]  # Pitch: Rotation around the z-axis
     b = orientation[1]  # Yaw:   Rotation around the y-axis
-    c = orientation[0]  # Roll:  Rotation around the x-axis      
+    c = orientation[0]  # Roll:  Rotation around the x-axis
 
     R = np.array([[cos(a)*cos(b), cos(a)*sin(b)*sin(c) - sin(a)*cos(c), cos(a)*sin(b)*cos(c) + sin(a)*sin(c)],
-                  [sin(a)*cos(b), sin(a)*sin(b)*sin(c) + cos(a)*cos(c), sin(a)*sin(b)*cos(c) - cos(a)*sin(c)],
+                  [sin(a)*cos(b), sin(a)*sin(b)*sin(c) + cos(a) *
+                   cos(c), sin(a)*sin(b)*cos(c) - cos(a)*sin(c)],
                   [-sin(b), cos(b)*sin(c), cos(b)*cos(c)]])
 
     return R

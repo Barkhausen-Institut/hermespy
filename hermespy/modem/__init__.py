@@ -37,7 +37,7 @@ __all__ = [
     'WaveformGenerator', 'Synchronization', 'PilotWaveformGenerator', 'PilotSymbolSequence',  'UniformPilotSymbolSequence', 'CustomPilotSymbolSequence', 'MappedPilotSymbolSequence', 'ConfigurablePilotWaveform', 'ChannelEqualization', 'ZeroForcingChannelEqualization',
     'ChirpFSKWaveform', 'ChirpFSKSynchronization', 'ChirpFSKCorrelationSynchronization',
     'FilteredSingleCarrierWaveform', 'SingleCarrierLeastSquaresChannelEstimation', 'SingleCarrierZeroForcingChannelEqualization', 'SingleCarrierMinimumMeanSquareChannelEqualization', 'SingleCarrierCorrelationSynchronization', 'RaisedCosineWaveform', 'RootRaisedCosineWaveform', 'FMCWWaveform', 'RectangularWaveform', 'SingleCarrierIdealChannelEstimation',
-    'OFDMWaveform', 'PilotSection', 'SchmidlCoxPilotSection','FrameSymbolSection', 'FrameGuardSection', 'FrameResource', 'FrameElement', 'ElementType', 'OFDMCorrelationSynchronization', 'SchmidlCoxSynchronization', 'OFDMMinimumMeanSquareChannelEqualization', 'OFDMZeroForcingChannelEqualization', 'OFDMIdealChannelEstimation', 'OFDMLeastSquaresChannelEstimation',
+    'OFDMWaveform', 'PilotSection', 'SchmidlCoxPilotSection', 'FrameSymbolSection', 'FrameGuardSection', 'FrameResource', 'FrameElement', 'ElementType', 'OFDMCorrelationSynchronization', 'SchmidlCoxSynchronization', 'OFDMMinimumMeanSquareChannelEqualization', 'OFDMZeroForcingChannelEqualization', 'OFDMIdealChannelEstimation', 'OFDMLeastSquaresChannelEstimation',
     'Synchronization', 'BitErrorEvaluator', 'BlockErrorEvaluator',
     'FrameErrorEvaluator', 'ThroughputEvaluator',
     'PskQamMapping',

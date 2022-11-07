@@ -96,7 +96,8 @@ class RepetitionEncoder(Encoder, Serializable):
             return encoded_bits
 
         code = encoded_bits.reshape((self.repetitions, self.bit_block_size))
-        bits = (np.sum(code, axis=0) / self.repetitions) >= 0.5  # Majority voting
+        # Majority voting
+        bits = (np.sum(code, axis=0) / self.repetitions) >= 0.5
 
         return bits.astype(int)
 
@@ -109,7 +110,8 @@ class RepetitionEncoder(Encoder, Serializable):
     def bit_block_size(self, num_bits: int) -> None:
 
         if num_bits < 1:
-            raise ValueError("Number data bits must be greater or equal to one")
+            raise ValueError(
+                "Number data bits must be greater or equal to one")
 
         self.__bit_block_size = num_bits
 
@@ -140,7 +142,8 @@ class RepetitionEncoder(Encoder, Serializable):
     def repetitions(self, num: int) -> None:
 
         if num < 1:
-            raise ValueError("The number of data bit repetitions must be at least one")
+            raise ValueError(
+                "The number of data bit repetitions must be at least one")
 
         if num % 2 == 0:
             raise ValueError("Repetitions must be an uneven integer")

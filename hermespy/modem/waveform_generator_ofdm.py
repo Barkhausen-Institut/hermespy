@@ -100,7 +100,8 @@ class FrameResource:
         """
 
         if reps < 1:
-            raise ValueError("Number of frame resource repetitions must be greater or equal to one")
+            raise ValueError(
+                "Number of frame resource repetitions must be greater or equal to one")
 
         self.__repetitions = reps
 
@@ -126,7 +127,8 @@ class FrameResource:
         """
 
         if ratio < 0.0 or ratio > 1.0:
-            raise ValueError("Cyclic prefix ratio must be between zero and one")
+            raise ValueError(
+                "Cyclic prefix ratio must be between zero and one")
 
         self.__cp_ratio = ratio
 
@@ -184,12 +186,14 @@ class FrameResource:
         """
 
         # Initialize the base mask as all false
-        mask = np.ndarray((len(ElementType), self.num_subcarriers), dtype=bool) * False
+        mask = np.ndarray(
+            (len(ElementType), self.num_subcarriers), dtype=bool) * False
 
         element_count = 0
         for element in self.elements:
 
-            mask[element.type.value, element_count:element_count+element.repetitions] = True
+            mask[element.type.value, element_count:element_count +
+                 element.repetitions] = True
             element_count += element.repetitions
 
         # Repeat the subcarrier masks according to the configured number of repetitions.
@@ -232,7 +236,8 @@ class FrameSection:
         """
 
         if value < 1:
-            raise ValueError("OFDM frame number of repetitions must be greater or equal to one")
+            raise ValueError(
+                "OFDM frame number of repetitions must be greater or equal to one")
 
         self.__num_repetitions = value
 
@@ -289,42 +294,42 @@ class FrameSection:
             int: Number of samples
         """
         ...
-        
+
     def place_symbols(self, data_symbols: np.ndarray, reference_symbols: np.ndarray) -> np.ndarray:
-        
+
         # Collect resource masks
         mask = self.resource_mask[:, :self.num_subcarriers, :]
-        
+
         grid = np.zeros((self.num_subcarriers, self.num_words), dtype=complex)
         grid[mask[ElementType.REFERENCE.value, ::]] = reference_symbols
         grid[mask[ElementType.DATA.value, ::]] = data_symbols
-                
+
         return grid
-    
+
     def pick_symbols(self, grid: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        
+
         # Collect resource masks
         mask = self.resource_mask[:, :self.num_subcarriers, :]
-        
+
         # Select correct subgrid
         subgrid = grid[:self.num_subcarriers, :]
-        
+
         # Pick symbols
         reference_symbols = subgrid[mask[ElementType.REFERENCE.value]]
         data_symbols = subgrid[mask[ElementType.DATA.value]]
-        
+
         return data_symbols, reference_symbols
-    
+
     @abstractmethod
     def modulate(self, symbols) -> np.ndarray:
         """Modulate this section into a complex base-band signal.
 
         Args:
-        
+
             symbols (np.ndarray):
                 The palced complex symbols encoded in this OFDM section.
                 This includes both reference and data symbols to be transmitted.
-                
+
         Returns:
             np.ndarray: The modulated signal vector.
         """
@@ -336,7 +341,7 @@ class FrameSection:
 
         Args:
             signal (np.ndarray): Vector of complex-valued base-band samples.
-            
+
         Returns: Sequence of demodulated data and reference symbols.
         """
         ...
@@ -352,7 +357,8 @@ class FrameSymbolSection(FrameSection, Serializable):
                  pattern: Optional[List[int]] = None,
                  frame: Optional[OFDMWaveform] = None) -> None:
 
-        FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
+        FrameSection.__init__(
+            self, num_repetitions=num_repetitions, frame=frame)
         self.pattern = pattern if pattern is not None else []
         self.frame = frame
 
@@ -396,16 +402,19 @@ class FrameSymbolSection(FrameSection, Serializable):
 
         # Generate the resource grid of the oversampled OFDM frame
         padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
-        grid = np.zeros((padded_num_subcarriers, self.num_words), dtype=complex)
-        
+        grid = np.zeros(
+            (padded_num_subcarriers, self.num_words), dtype=complex)
+
         # Select the subgrid onto which to project this symbol section's resource configuration
-        subgrid_start_idx = int(.5 * (padded_num_subcarriers - self.num_subcarriers))
-        grid[subgrid_start_idx:subgrid_start_idx+self.num_subcarriers, :] = symbols.T
+        subgrid_start_idx = int(.5 *
+                                (padded_num_subcarriers - self.num_subcarriers))
+        grid[subgrid_start_idx:subgrid_start_idx +
+             self.num_subcarriers, :] = symbols.T
 
         # Shift in order to suppress the dc component
         # Note that for configurations without any oversampling the DC component will not be suppressed
         if self.frame.dc_suppression:
-            
+
             dc_index = int(.5 * padded_num_subcarriers)
             grid[dc_index:, :] = np.roll(grid[dc_index:, :], 1, axis=0)
 
@@ -436,7 +445,6 @@ class FrameSymbolSection(FrameSection, Serializable):
         # Remove the cyclic prefixes before transformation into time-domain
         sample_index = 0
         sample_indices = np.empty(0, dtype=int)
-        #channel_sample_indices = np.empty(0, dtype=int)
         num_slots = len(self.pattern) * self.num_repetitions
 
         for slot_idx in range(num_slots):
@@ -444,17 +452,17 @@ class FrameSymbolSection(FrameSection, Serializable):
             pattern_idx = slot_idx % len(self.pattern)
             resource = self.frame.resources[self.pattern[pattern_idx]]
 
-            num_prefix_samples = int(padded_num_subcarriers * resource.cp_ratio)
+            num_prefix_samples = int(
+                padded_num_subcarriers * resource.cp_ratio)
             sample_index += num_prefix_samples
 
-            sample_indices = np.append(sample_indices, np.arange(sample_index, sample_index + padded_num_subcarriers))
-            #channel_sample_indices = np.append(channel_sample_indices, np.array(sample_index))
+            sample_indices = np.append(sample_indices, np.arange(
+                sample_index, sample_index + padded_num_subcarriers))
 
             sample_index += padded_num_subcarriers
 
-        slot_samples = signal[sample_indices].reshape((padded_num_subcarriers, num_slots), order='F')
-        #slot_channel_state = channel_state[:, :, channel_sample_indices, :]\
-        #    .to_frequency_selectivity(num_bins=self.frame.num_subcarriers)
+        slot_samples = signal[sample_indices].reshape(
+            (padded_num_subcarriers, num_slots), order='F')
 
         # Transform grid back to data symbols
         grid = fftshift(fft(slot_samples, axis=0, norm='ortho'), axes=0)
@@ -464,10 +472,12 @@ class FrameSymbolSection(FrameSection, Serializable):
 
             dc_index = int(.5 * padded_num_subcarriers)
             grid[dc_index:, :] = np.roll(grid[dc_index:, :], -1, axis=0)
-            
+
         # Extract the subgrid relevant to this section
-        subgrid_start_idx = int(.5 * (padded_num_subcarriers - self.num_subcarriers))
-        subgrid = grid[subgrid_start_idx:subgrid_start_idx+self.num_subcarriers, :]
+        subgrid_start_idx = int(.5 *
+                                (padded_num_subcarriers - self.num_subcarriers))
+        subgrid = grid[subgrid_start_idx:subgrid_start_idx +
+                       self.num_subcarriers, :]
 
         return subgrid.T
 
@@ -475,7 +485,8 @@ class FrameSymbolSection(FrameSection, Serializable):
     def resource_mask(self) -> np.ndarray:
 
         # Initialize the base mask as all false
-        mask = np.zeros((len(ElementType), self.num_subcarriers, len(self.pattern)), dtype=bool)
+        mask = np.zeros((len(ElementType), self.num_subcarriers,
+                        len(self.pattern)), dtype=bool)
 
         for word_idx, resource_idx in enumerate(self.pattern):
 
@@ -492,7 +503,8 @@ class FrameSymbolSection(FrameSection, Serializable):
 
         # Add up the additional samples from cyclic prefixes
         for resource_idx in self.pattern:
-            num += int(num_samples_per_slot * self.frame.resources[resource_idx].cp_ratio)
+            num += int(num_samples_per_slot *
+                       self.frame.resources[resource_idx].cp_ratio)
 
         # Add up the base samples from each timeslot
         return num * self.num_repetitions
@@ -528,7 +540,8 @@ class FrameGuardSection(FrameSection, Serializable):
                  num_repetitions: int = 1,
                  frame: Optional[OFDMWaveform] = None) -> None:
 
-        FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
+        FrameSection.__init__(
+            self, num_repetitions=num_repetitions, frame=frame)
         self.duration = duration
 
     @property
@@ -553,7 +566,8 @@ class FrameGuardSection(FrameSection, Serializable):
         """
 
         if value < 0.0:
-            raise ValueError("Guard section duration must be greater or equal to zero")
+            raise ValueError(
+                "Guard section duration must be greater or equal to zero")
 
         self.__duration = value
 
@@ -616,11 +630,11 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
     dc_suppression: bool
     resources: List[FrameResource]
     structure: List[FrameSection]
-    
+
     @staticmethod
     def _arg_signature() -> Set[str]:
-        
-        return { 'modulation_order' }
+
+        return {'modulation_order'}
 
     def __init__(self,
                  subcarrier_spacing: float = 1e3,
@@ -669,11 +683,10 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         if structure is not None:
             for section in structure:
                 self.add_section(section)
-        
-        
+
     @WaveformGenerator.modulation_order.setter
     def modulation_order(self, value: int) -> None:
-        
+
         WaveformGenerator.modulation_order.fset(self, value)
         self._mapping = PskQamMapping(value)
 
@@ -698,34 +711,34 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
 
         self.structure.append(section)
         section.frame = self
-        
+
     @property
     def pilot_section(self) -> Optional[FrameSection]:
         """Static pilot section transmitted at the beginning of each OFDM frame.
-        
+
         Required for time-domain synchronization and equalization of carrier frequency offsets.
-        
+
         Returns:
             FrameSection of the pilot symbols, `None` if no pilot is configured.
         """
-        
+
         return self.__pilot_section
-    
+
     @pilot_section.setter
     def pilot_section(self, value: Optional[FrameSection]) -> None:
-        
+
         if value is None:
             self.__pilot_section = None
             return
-            
+
         self.__pilot_section = value
-        
+
         if value.frame is not self:
             value.frame = self
-            
+
     @property
     def pilot_signal(self) -> Signal:
-        
+
         if self.pilot_section:
             return Signal(self.pilot_section.modulate(), sampling_rate=self.sampling_rate)
 
@@ -813,7 +826,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
 
     @property
     def frame_duration(self) -> float:
-        
+
         return self.samples_in_frame / self.sampling_rate
 
     @property
@@ -823,82 +836,88 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         num = 0
         for section in self.structure:
             num += section.num_samples
-            
+
         if self.pilot_signal:
             num += self.pilot_signal.num_samples
 
         return num
-    
+
     @property
     def _num_reference_symbols(self) -> int:
-        
+
         num_symbols = 0
         for section in self.structure:
             num_symbols += section.num_references
-            
+
         return num_symbols
-    
+
     @property
     def _num_data_symbols(self) -> int:
-        
+
         num_symbols = 0
         for section in self.structure:
             num_symbols += section.num_symbols
-            
+
         return num_symbols
 
     def map(self, data_bits: np.ndarray) -> Symbols:
-        
+
         if len(data_bits) != self.bits_per_frame:
-            raise ValueError("Incorrect number of information bits provided for mapping")
-        
+            raise ValueError(
+                "Incorrect number of information bits provided for mapping")
+
         # Map data bits to data symbols
         data_symbols = self._mapping.get_symbols(data_bits)
-        
+
         # Query reference symbols
         # ToDo: Support custom reference symbol sequences
         reference_symbols = np.ones(self._num_reference_symbols, dtype=complex)
-        
+
         # Generate the symbol sequence for a full OFDM frame
         symbols = Symbols()
-        
+
         data_idx = 0
         reference_idx = 0
         for section in self.structure:
 
-            appended_symbols = np.zeros((1, section.num_words, self.num_subcarriers), dtype=complex)
-            
+            appended_symbols = np.zeros(
+                (1, section.num_words, self.num_subcarriers), dtype=complex)
+
             num_data_symbols = section.num_symbols
             num_reference_symbols = section.num_references
-            
+
             data = data_symbols[data_idx:data_idx + num_data_symbols]
-            reference = reference_symbols[reference_idx:reference_idx + num_reference_symbols]
-            
-            appended_symbols[0, :, :section.num_subcarriers] = section.place_symbols(data, reference).T
+            reference = reference_symbols[reference_idx:
+                                          reference_idx + num_reference_symbols]
+
+            appended_symbols[0, :, :section.num_subcarriers] = section.place_symbols(
+                data, reference).T
             symbols.append_symbols(Symbols(appended_symbols))
-            
+
             data_idx += num_data_symbols
             reference_idx += num_reference_symbols
-            
+
         return symbols
 
     def unmap(self, symbols: Symbols) -> np.ndarray:
-        
+
         symbols = symbols.raw[0, :, :].T
         data_symbols = Symbols()
         block_idx = 0
         for section in self.structure:
-            
-            section_data_symbols, _ = section.pick_symbols(symbols[:, block_idx:block_idx+section.num_words])
-            
+
+            section_data_symbols, _ = section.pick_symbols(
+                symbols[:, block_idx:block_idx+section.num_words])
+
             data_symbols.append_symbols(section_data_symbols)
             block_idx += section.num_words
 
-        detected_bits = self._mapping.detect_bits(data_symbols.raw.flatten()).astype(int)
+        detected_bits = self._mapping.detect_bits(
+            data_symbols.raw.flatten()).astype(int)
         return detected_bits
 
     def modulate(self, symbols: Symbols) -> Signal:
-       
+
         # Start the frame with a pilot section, if configured
         if self.pilot_section:
             output_signal = self.pilot_section.modulate()
@@ -917,9 +936,10 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         for section in self.structure:
 
             # Modulate the signal
-            section_signal = section.modulate(symbol_blocks[block_idx:block_idx+section.num_words, :section.num_subcarriers])
+            section_signal = section.modulate(
+                symbol_blocks[block_idx:block_idx+section.num_words, :section.num_subcarriers])
             output_signal = np.append(output_signal, section_signal)
-            
+
             block_idx += section.num_words
 
         signal_model = Signal(output_signal, self.sampling_rate)
@@ -933,11 +953,12 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         # If the frame contains a pilot section, skip the respective samples
         if self.pilot_section:
             sample_index += self.pilot_section.num_samples
-        
+
         symbols = Symbols()
         for section in self.structure:
-            
-            appended_symbols = np.zeros((1, section.num_words, self.num_subcarriers), dtype=complex)
+
+            appended_symbols = np.zeros(
+                (1, section.num_words, self.num_subcarriers), dtype=complex)
 
             num_samples = section.num_samples
 
@@ -947,31 +968,34 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
                 continue
 
             signal_section = signal[sample_index:sample_index+num_samples]
-            
-            appended_symbols[0, :, :section.num_subcarriers] = section.demodulate(signal_section)
+
+            appended_symbols[0, :, :section.num_subcarriers] = section.demodulate(
+                signal_section)
             symbols.append_symbols(Symbols(appended_symbols))
-            
+
             sample_index += num_samples
 
         return symbols
-    
+
     @property
     def _resource_mask(self) -> np.ndarray:
         """Resource mask of the full OFDM frame.
-        
+
         Returns: The resource mask.
         """
-        
-        resource_mask = np.zeros((len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=bool)
-        
+
+        resource_mask = np.zeros(
+            (len(ElementType), self.num_subcarriers, self.words_per_frame), dtype=bool)
+
         word_idx = 0
         for section in self.structure:
-            
+
             num_words = section.num_words
-            resource_mask[:, :section.num_subcarriers, word_idx:word_idx+num_words] = section.resource_mask
-            
+            resource_mask[:, :section.num_subcarriers,
+                          word_idx:word_idx+num_words] = section.resource_mask
+
             word_idx += num_words
-            
+
         return resource_mask
 
     @property
@@ -981,7 +1005,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
 
-    def  __channel_estimation(self,
+    def __channel_estimation(self,
                              symbol_grid: np.ndarray,
                              channel_state: ChannelStateInformation,
                              resource_mask: np.ndarray) -> ChannelStateInformation:
@@ -1032,7 +1056,8 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_MIDAMBLE:
 
             word_idx = int(.5 * num_words)
-            estimate = channel_state.state[:, :, word_idx*num_symbols:(1+word_idx)*num_symbols, :]
+            estimate = channel_state.state[:, :, word_idx *
+                                           num_symbols:(1+word_idx)*num_symbols, :]
             channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
             return channel_state
 
@@ -1073,28 +1098,33 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         """
 
         propagated_reference_symbols = symbol_grid.T[resource_mask[ElementType.REFERENCE.value, ::].T]
-        reference_symbols = np.ones(len(propagated_reference_symbols), dtype=complex)
+        reference_symbols = np.ones(
+            len(propagated_reference_symbols), dtype=complex)
         reference_channel_estimation = propagated_reference_symbols / reference_symbols
 
         channel_estimation = np.zeros(symbol_grid.shape, dtype=complex)
-        channel_estimation.T[resource_mask[ElementType.REFERENCE.value, ::].T] = reference_channel_estimation
+        channel_estimation.T[resource_mask[ElementType.REFERENCE.value,
+                                           ::].T] = reference_channel_estimation
 
-        interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
-        holes = np.where(np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
+        interpolation_stems = np.where(
+            resource_mask[ElementType.REFERENCE.value, ::])
+        holes = np.where(
+            np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
 
         # ToDo: Check with group what to do about missing values outside the convex hull
-        interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method='nearest')
+        interpolated_holes = griddata(
+            interpolation_stems, reference_channel_estimation, holes, method='nearest')
         channel_estimation[holes] = interpolated_holes
         return ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, channel_estimation.T.flatten()[None, None, :, None])
 
     @property
     def bits_per_frame(self) -> int:
-        
+
         num_data_symbols = 0
         for section in self.structure:
             num_data_symbols += section.num_symbols
-        
-        return num_data_symbols* self._mapping.bits_per_symbol
+
+        return num_data_symbols * self._mapping.bits_per_symbol
 
     @property
     def bit_energy(self) -> float:
@@ -1111,7 +1141,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
     @property
     def power(self) -> float:
 
-        return  1 / np.sqrt(2) 
+        return 1 / np.sqrt(2)
 
     @property
     def num_subcarriers(self) -> int:
@@ -1137,7 +1167,8 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         """
 
         if value < 1:
-            raise ValueError("Number of subcarriers must be greater or equal to one")
+            raise ValueError(
+                "Number of subcarriers must be greater or equal to one")
 
         self.__num_subcarriers = value
 
@@ -1172,7 +1203,8 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         }
 
         mapping = representer.represent_mapping(cls.yaml_tag, state)
-        mapping.value.extend(WaveformGenerator.to_yaml(representer, node).value)
+        mapping.value.extend(
+            WaveformGenerator.to_yaml(representer, node).value)
 
         return mapping
 
@@ -1221,25 +1253,25 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
                 ofdm.add_section(section)
 
         return ofdm
-    
+
 
 class PilotSection(FrameSection, Serializable):
     """Pilot symbol section within an OFDM frame."""
-    
+
     yaml_tag = u'Pilot'
     """YAML serialization tag"""
-    
+
     __pilot_elements: Optional[Symbols]
     __cached_num_subcarriers: int
     __cached_oversampling_factor: int
     __cached_pilot: Optional[np.ndarray]
-    
+
     def __init__(self,
                  pilot_elements: Optional[Symbols] = None,
                  frame: Optional[OFDMWaveform] = None) -> None:
         """
         Args:
-        
+
             pilot_elements (Optional[Symbols], optional):
                 Symbols with which the subcarriers within the pilot will be modulated.
                 By default, a pseudo-random sequence from the frame mapping will be generated.
@@ -1247,162 +1279,174 @@ class PilotSection(FrameSection, Serializable):
             frame (Optional[WaveformGeneratorOfdm], optional):
                 The frame configuration this pilot section belongs to.
         """
-        
+
         self.__pilot_elements = pilot_elements
         self.__cached_num_subcarriers = -1
         self.__cached_oversampling_factor = -1
         self.__cached_pilot = None
-        
+
         FrameSection.__init__(self, num_repetitions=1, frame=frame)
-        
+
     @property
     def num_samples(self) -> int:
-        
+
         return self.frame.num_subcarriers * self.frame.oversampling_factor
-        
+
     @property
     def pilot_elements(self) -> Optional[Symbols]:
         """Symbols with which the subcarriers within the pilot will be modulated.
-        
+
         Returns:
-        
+
             A stream of symbols. `None`, if no subsymbols where specified.
-            
+
         Raises:
-        
+
             ValueError: If the configured symbols contains multiple streams.
         """
-        
+
         return self.__pilot_elements
-    
+
     @pilot_elements.setter
     def pilot_elements(self, value: Optional[Symbols]) -> None:
-        
+
         if value is None:
             self.__pilot_elements = None
             return
-        
+
         if value.num_streams != 1:
-            raise ValueError("Subsymbol pilot configuration may only contain a single stream")
-        
+            raise ValueError(
+                "Subsymbol pilot configuration may only contain a single stream")
+
         if value.num_symbols < 1:
-            raise ValueError("Subsymbol pilot configuration must contain at least one symbol")
-        
+            raise ValueError(
+                "Subsymbol pilot configuration must contain at least one symbol")
+
         # Reset the cached pilot, since the subsymbols have changed
         self.__cached_pilot = None
-        
+
         self.__pilot_elements = value
-            
+
     def _pilot_sequence(self, num_symbols: int = None) -> Symbols:
         """Generate a new sequence of pilot elements.
-        
+
         Args:
-        
+
             num_symbols (int, optional):
                 The required number of symbols.
                 By default, a symbol for each subcarrier is generated.
-                
+
         Returns:
-        
+
             A sequence of symbols.
         """
-        
+
         num_symbols = self.frame.num_subcarriers if num_symbols is None else num_symbols
-        
+
         # Generate a pseudo-random symbol stream if no subsymbols are specified
         if self.__pilot_elements is None:
-            
+
             rng = np.random.default_rng(50)
             num_bits = num_symbols * self.frame._mapping.bits_per_symbol
-            subsymbols = self.frame._mapping.get_symbols(rng.integers(0, 2, num_bits))[None, None, :]
-            
+            subsymbols = self.frame._mapping.get_symbols(
+                rng.integers(0, 2, num_bits))[None, None, :]
+
         else:
-            
-            num_repetitions = int(ceil(num_symbols / self.__pilot_elements.num_symbols))
-            subsymbols = np.tile(self.__pilot_elements.raw, (1, 1, num_repetitions))
-            
+
+            num_repetitions = int(
+                ceil(num_symbols / self.__pilot_elements.num_symbols))
+            subsymbols = np.tile(self.__pilot_elements.raw,
+                                 (1, 1, num_repetitions))
+
         return Symbols(subsymbols[:, :, :num_symbols])
-    
+
     def modulate(self, *_: Any) -> np.ndarray:
-        
+
         # Return the cached pilot signal if available and the relevant frame parameters haven't changed
         if self.__cached_pilot is not None and self.__cached_num_subcarriers == self.frame.num_subcarriers and self.__cached_oversampling_factor == self.frame.oversampling_factor:
             return self.__cached_pilot
-        
+
         pilot = self._pilot()
         self.__cached_pilot = pilot
-        
+
         return pilot
-    
+
     def demodulate(self, *_: Any) -> Tuple[np.ndarray, np.ndarray]:
-        
+
         return np.empty(0, dtype=complex), np.empty(0, dtype=complex)
-        
+
     def _pilot(self) -> np.ndarray:
         """Generate the samples for a pilot section in time domain.
-        
+
         Returns:
-        
+
             Complex base-band pilot section samples.
         """
 
         # Generate the resource grid of the oversampled OFDM frame
         padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
         grid = np.zeros(padded_num_subcarriers, dtype=complex)
-        
+
         # Select the subgrid onto which to project this symbol section's resource configuration
-        subgrid_start_idx = int(.5 * (padded_num_subcarriers - self.frame.num_subcarriers))
+        subgrid_start_idx = int(.5 * (padded_num_subcarriers -
+                                self.frame.num_subcarriers))
 
         # Set grid symbols
-        grid[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers] = self._pilot_sequence().raw.flatten()
+        grid[subgrid_start_idx:subgrid_start_idx +
+             self.frame.num_subcarriers] = self._pilot_sequence().raw.flatten()
 
         # Shift in order to suppress the dc component
         # Note that for configurations without any oversampling the DC component will not be suppressed
         if self.frame.dc_suppression:
-            
+
             dc_index = int(.5 * padded_num_subcarriers)
             grid[dc_index:] = np.roll(grid[dc_index:], 1)
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
         pilot = ifft(ifftshift(grid), norm='ortho')
-        
+
         return pilot
 
 
 class SchmidlCoxPilotSection(PilotSection):
     """Pilot Symbol Section of the Schmidl Cox Algorithm.
-    
+
     Refer to :footcite:t:`1997:schmidl` for a detailed description.
     """
-    
+
     yaml_tag = u'SchmidlCoxPilot'
     """YAML serialization tag"""
 
     @property
     def num_samples(self) -> int:
-        
+
         return 2 * self.frame.num_subcarriers * self.frame.oversampling_factor
 
     def _pilot(self) -> np.ndarray:
 
         samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
-        pilot_sequence = self._pilot_sequence(int(.5 * self.frame.num_subcarriers) + self.frame.num_subcarriers).raw.flatten()
+        pilot_sequence = self._pilot_sequence(
+            int(.5 * self.frame.num_subcarriers) + self.frame.num_subcarriers).raw.flatten()
 
         pilot_frequencies = np.zeros((samples_per_symbol, 2), dtype=complex)
 
-        subgrid_start_idx = int(.5 * (samples_per_symbol - self.frame.num_subcarriers))
-        pilot_frequencies[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers:2, 0] = pilot_sequence[:int(.5 * self.frame.num_subcarriers)]
-        pilot_frequencies[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers, 1] = pilot_sequence[int(.5 * self.frame.num_subcarriers):]
+        subgrid_start_idx = int(.5 * (samples_per_symbol -
+                                self.frame.num_subcarriers))
+        pilot_frequencies[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers:2,
+                          0] = pilot_sequence[:int(.5 * self.frame.num_subcarriers)]
+        pilot_frequencies[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers,
+                          1] = pilot_sequence[int(.5 * self.frame.num_subcarriers):]
 
-        pilot_symbols_time = ifft(ifftshift(pilot_frequencies, axes=0), axis=0, norm='ortho', n=samples_per_symbol)
+        pilot_symbols_time = ifft(ifftshift(
+            pilot_frequencies, axes=0), axis=0, norm='ortho', n=samples_per_symbol)
         pilot_samples = np.concatenate(pilot_symbols_time.T, axis=0)
-        
+
         return pilot_samples
-    
+
     def demodulate(self, *_: Any) -> Tuple[np.ndarray, ChannelStateInformation]:
-        
+
         return np.empty(0, dtype=complex), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY)
-    
+
 
 class OFDMSynchronization(Synchronization[OFDMWaveform]):
     """Synchronization Routine for OFDM Waveforms."""
@@ -1416,7 +1460,7 @@ class OFDMCorrelationSynchronization(CorrelationSynchronization[OFDMWaveform]):
 
 class SchmidlCoxSynchronization(OFDMSynchronization):
     """Schmidl-Cox Algorithm for OFDM Waveform Time Synchronization and Carrier Frequency Offset Equzalization.
-    
+
     Applying the synchronization routine requires the respective waveform to have a :class:`.SchmidlCoxPilotSection` pilot
     symbol section configured.
 
@@ -1430,12 +1474,13 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
                     signal: np.ndarray,
                     channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
 
-        symbol_length = self.waveform_generator.oversampling_factor * self.waveform_generator.num_subcarriers
-        
+        symbol_length = self.waveform_generator.oversampling_factor * \
+            self.waveform_generator.num_subcarriers
+
         # Abort if the supplied signal is shorter than one symbol length
         if signal.shape[-1] < symbol_length:
             return []
-            
+
         half_symbol_length = int(.5 * symbol_length)
 
         num_delay_candidates = 1 + signal.shape[-1] - symbol_length
@@ -1443,8 +1488,9 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
         delay_powers[0] = 0.    # In order to be able to detect a peak on the first sample
         for d in range(0, num_delay_candidates - 1):
 
-            delay_powers[1 + d] = np.sum(abs(np.sum(signal[:, d:d + half_symbol_length].conj() * signal[:, d + half_symbol_length:d + 2 * half_symbol_length], axis=1)))
-        
+            delay_powers[1 + d] = np.sum(abs(np.sum(signal[:, d:d + half_symbol_length].conj(
+            ) * signal[:, d + half_symbol_length:d + 2 * half_symbol_length], axis=1)))
+
         num_samples = self.waveform_generator.samples_in_frame
         peaks, _ = find_peaks(delay_powers, distance=int(.8 * num_samples))
         frame_indices = peaks - 3
@@ -1453,7 +1499,8 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
         for frame_idx in frame_indices:
 
             frame_idx = max(0, frame_idx)
-            frames.append((signal[:, frame_idx:frame_idx + num_samples], channel_state[:, :, frame_idx:frame_idx + num_samples, :]))
+            frames.append((signal[:, frame_idx:frame_idx + num_samples],
+                          channel_state[:, :, frame_idx:frame_idx + num_samples, :]))
 
         return frames
 
@@ -1465,61 +1512,69 @@ class ReferencePosition(Enum):
     IDEAL_PREAMBLE = 1
     IDEAL_MIDAMBLE = 2
     IDEAL_POSTAMBLE = 3
-    
-    
+
+
 class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializable):
     """Ideal channel state estimation for OFDM waveforms."""
-    
+
     yaml_tag = u'OFDM-Ideal'
     """YAML serialization tag"""
-    
+
     reference_position: ReferencePosition
     """Assumed position of the reference symbol within the frame."""
-    
+
     def __init__(self,
                  reference_position: ReferencePosition = ReferencePosition.IDEAL,
                  *args, **kwargs) -> None:
         """
         Args:
-        
+
             reference_position (ReferencPosition, optional):
                 Assumed location of the reference symbols within the ofdm frame.
         """
-        
+
         self.reference_position = reference_position
         IdealChannelEstimation.__init__(self, *args, **kwargs)
-    
+
     def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-        
-        csi = self._csi().to_frequency_selectivity(self.waveform_generator.num_subcarriers)
+
+        csi = self._csi().to_frequency_selectivity(
+            self.waveform_generator.num_subcarriers)
         return StatedSymbols(symbols.raw, csi.state[:, :, :symbols.num_blocks, :]), csi
 
 
 class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Serializable):
     """Least-Squares channel estimation for OFDM waveforms."""
-    
-    yaml_tag: u'OFDM-LS'
+
+    yaml_tag = u'OFDM-LS'
     """YAML serializtion tag"""
-    
+
     def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
-        
+
         if symbols.num_streams != 1:
-            raise NotImplementedError("Least-Squares channel estimation is only implemented for SISO links")
-        
+            raise NotImplementedError(
+                "Least-Squares channel estimation is only implemented for SISO links")
+
         resource_mask = self.waveform_generator._resource_mask
-        
-        propagated_references = symbols.raw[0, resource_mask[ElementType.REFERENCE.value, ::].T]
+
+        propagated_references = symbols.raw[0,
+                                            resource_mask[ElementType.REFERENCE.value, ::].T]
         reference_symbols = np.ones(len(propagated_references), dtype=complex)
         reference_channel_estimation = propagated_references / reference_symbols
 
-        channel_estimation = np.zeros(((1, 1, symbols.num_blocks, symbols.num_symbols)), dtype=complex)
-        channel_estimation[0, 0, resource_mask[ElementType.REFERENCE.value, ::].T] = reference_channel_estimation
+        channel_estimation = np.zeros(
+            ((1, 1, symbols.num_blocks, symbols.num_symbols)), dtype=complex)
+        channel_estimation[0, 0, resource_mask[ElementType.REFERENCE.value,
+                                               ::].T] = reference_channel_estimation
 
-        interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
-        holes = np.where(np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
+        interpolation_stems = np.where(
+            resource_mask[ElementType.REFERENCE.value, ::])
+        holes = np.where(
+            np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
 
         # ToDo: Check with group what to do about missing values outside the convex hull
-        interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method='nearest')
+        interpolated_holes = griddata(
+            interpolation_stems, reference_channel_estimation, holes, method='nearest')
         channel_estimation[0, 0, holes[1], holes[0]] = interpolated_holes
         return StatedSymbols(symbols.raw, channel_estimation), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, channel_estimation)
 
@@ -1541,14 +1596,14 @@ class OFDMChannelEqualization(ChannelEqualization[OFDMWaveform], ABC):
 
 class OFDMZeroForcingChannelEqualization(ZeroForcingChannelEqualization[OFDMWaveform], Serializable):
     """Zero-Forcing channel equalization for OFDM waveforms."""
-    
+
     yaml_tag = u'OFDM-ZF'
     """YAML serialization tag"""
 
 
 class OFDMMinimumMeanSquareChannelEqualization(Serializable, OFDMChannelEqualization, ABC):
     """Minimum-Mean-Square Channel estimation for Psk Qam waveforms."""
-    
+
     yaml_tag = u'OFDM-MMSE'
     """YAML serialization tag"""
 
@@ -1570,5 +1625,5 @@ class OFDMMinimumMeanSquareChannelEqualization(Serializable, OFDMChannelEqualiza
 
         signal = signal.copy()
         signal.samples /= (csi.state[0, 0, :signal.num_samples, 0] + 1 / snr)
-        
+
         return signal

@@ -79,7 +79,8 @@ class Noise(RandomNode):
         """Set power of the added noise."""
 
         if value < 0.:
-            raise ValueError("Additive white Gaussian noise power must be greater or equal to zero")
+            raise ValueError(
+                "Additive white Gaussian noise power must be greater or equal to zero")
 
         self.__power = value
 
@@ -104,7 +105,7 @@ class AWGN(Noise):
             power: Optional[float] = None) -> None:
 
         power = self.power if power is None else power
-        
+
         signal.samples += (self._rng.normal(0, power ** .5, signal.samples.shape) +
                            1j * self._rng.normal(0, power ** .5, signal.samples.shape)) / 2 ** .5
         signal.noise_power += power

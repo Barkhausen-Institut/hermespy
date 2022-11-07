@@ -30,7 +30,7 @@ __status__ = "Prototype"
 
 class CyclicRedundancyCheck(Encoder, Serializable):
     """Cyclic Redundancy Check Mock.
-    
+
     This channel coding step mocks CRC algorithms by appending a random checksum of
     :math:`Q` :meth:`.check_block_size` bits to data bit blocks of size :math:`K_n` :meth:`.bit_block_size`.
     The achieved coding rate is therefore
@@ -49,43 +49,44 @@ class CyclicRedundancyCheck(Encoder, Serializable):
                  check_block_size) -> None:
         """
         Args:
-            
+
             bit_block_size (int):
                 Number of bits per encoded block.
-                
+
             check_block_size (int):
                 Number of bits appended to bit blocks.
         """
 
         Encoder.__init__(self)
-        
+
         self.bit_block_size = bit_block_size
         self.check_block_size = check_block_size
 
     def encode(self, data: np.ndarray) -> np.ndarray:
-        
+
         return data.append(self.manager.modem._rng.randint(2, self.__check_block_size))
 
     def decode(self, code: np.ndarray) -> np.ndarray:
-        
+
         return code[:-self.__check_block_size]
 
     @property
     def bit_block_size(self) -> int:
         return self.__bit_block_size
-    
+
     @bit_block_size.setter
     def bit_block_size(self, value: int) -> None:
-        
+
         if value < 1:
-            raise ValueError("CRC bit block size must be greater or equal to one")
-        
+            raise ValueError(
+                "CRC bit block size must be greater or equal to one")
+
         self.__bit_block_size = value
-        
+
     @property
     def check_block_size(self) -> int:
         """Number of appended check bits per bit block.
-        
+
         Returns:
             int: Number of check bits :math:`Q`.
 
@@ -93,17 +94,18 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         Raises:
             ValueError: If `check_block_size` is smaller than zero.
         """
-        
+
         return self.__check_block_size
-    
+
     @check_block_size.setter
     def check_block_size(self, value: int) -> None:
 
         if value < 0:
-            raise ValueError("Number of check bits must be greater or equal to zero")
-        
+            raise ValueError(
+                "Number of check bits must be greater or equal to zero")
+
         self.__check_block_size = value
-        
+
     @property
     def code_block_size(self) -> int:
         return self.__bit_block_size + self.__check_block_size

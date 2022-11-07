@@ -82,7 +82,7 @@ class RadarChannel(Channel, Serializable):
             target_azimuth (float, optional):
                 Target location azimuth angle in radians, considering spherical coordinates.
                 Zero by default.
-                
+
             target_zenith (float, optional):
                 Target location zenith angle in radians, considering spherical coordinates.
                 Zero by default.
@@ -127,7 +127,7 @@ class RadarChannel(Channel, Serializable):
         Returns: Target range in meters.
 
         Raises:
-            
+
             ValueError: If the range is smaller than zero.
         """
 
@@ -137,20 +137,23 @@ class RadarChannel(Channel, Serializable):
     def target_range(self, value: Union[float, Tuple[float, float]]) -> None:
 
         if isinstance(value, (float, int)):
-            
+
             if value < 0.:
-                raise ValueError("Target range must be greater or equal to zero")
-            
+                raise ValueError(
+                    "Target range must be greater or equal to zero")
+
         elif isinstance(value, (tuple, list)):
-            
+
             if len(value) != 2:
                 raise ValueError("Target range span must be a tuple of two")
-            
+
             if value[1] < value[0]:
-                raise ValueError("Target range span second value must be greater than first value")
+                raise ValueError(
+                    "Target range span second value must be greater than first value")
 
             if value[1] < 0.:
-                raise ValueError("Target range span minimum must be greater or equal to zero")
+                raise ValueError(
+                    "Target range span minimum must be greater or equal to zero")
 
         else:
             raise ValueError("Unknown targer range format")
@@ -192,40 +195,41 @@ class RadarChannel(Channel, Serializable):
         """
 
         if value < 0:
-            raise ValueError("Radar cross section be greater than or equal to zero")
+            raise ValueError(
+                "Radar cross section be greater than or equal to zero")
 
         self.__radar_cross_section = value
-        
+
     @property
     def target_azimuth(self) -> float:
         """Target position azimuth in spherical coordiantes.
-        
+
         Returns:
-        
+
             Azimuth angle in radians.
         """
-        
+
         return self.__target_azimuth
-    
+
     @target_azimuth.setter
     def target_azimuth(self, value: float) -> None:
-        
+
         self.__target_azimuth = value
-        
+
     @property
     def target_zenith(self) -> float:
         """Target position zenith in spherical coordiantes.
-        
+
         Returns:
-        
+
             Zenith angle in radians.
         """
-        
+
         return self.__target_zenith
-    
+
     @target_zenith.setter
     def target_zenith(self, value: float) -> None:
-        
+
         self.__target_zenith = value
 
     @property
@@ -242,11 +246,13 @@ class RadarChannel(Channel, Serializable):
                          sampling_rate: float) -> np.ndarray:
 
         if self.transmitter is None:
-            raise FloatingError("Radar channel must be anchored to a transmitting device")
-        
+            raise FloatingError(
+                "Radar channel must be anchored to a transmitting device")
+
         if self.transmitter.carrier_frequency <= 0.:
-            raise RuntimeError("Radar channel does not support base-band transmissions")
-        
+            raise RuntimeError(
+                "Radar channel does not support base-band transmissions")
+
         # For the radar channel, only channels linking the same device are currently feasible
         if self.transmitter is not self.receiver:
             raise RuntimeError("Radar channels may only link the same devices")
@@ -263,11 +269,15 @@ class RadarChannel(Channel, Serializable):
 
         # Infer relevant parameters
         wavelength = speed_of_light / self.transmitter.carrier_frequency
-        doppler_frequency = 2 * self.target_velocity / ((1 - self.target_velocity / speed_of_light) * wavelength)
-        target_range = self.target_range if isinstance(self.target_range, (float, int)) else self._rng.uniform(self.target_range[0], self.target_range[1])
+        doppler_frequency = 2 * self.target_velocity / \
+            ((1 - self.target_velocity / speed_of_light) * wavelength)
+        target_range = self.target_range if isinstance(
+            self.target_range, (float, int)) else self._rng.uniform(self.target_range[0], self.target_range[1])
         delay = 2 * target_range / speed_of_light
-        max_delay = delay + 2 * self.target_velocity * timestamps[-1] / speed_of_light
-        max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate))
+        max_delay = delay + 2 * self.target_velocity * \
+            timestamps[-1] / speed_of_light
+        max_delay_in_samples = int(
+            np.ceil(max_delay * self.transmitter.sampling_rate))
 
         impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples),
                                     dtype=complex)
@@ -296,31 +306,35 @@ class RadarChannel(Channel, Serializable):
 
             echo_delay = delay + 2 * self.target_velocity * timestamp / speed_of_light
             time = timestamp + np.arange(max_delay_in_samples) / sampling_rate
-            echo_weights = power_factor * np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
+            echo_weights = power_factor * \
+                np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
 
-            interpolated_impulse_tap = np.sinc(sampling_rate * (delay_taps - echo_delay)) * echo_weights
+            interpolated_impulse_tap = np.sinc(
+                sampling_rate * (delay_taps - echo_delay)) * echo_weights
 
             # Note that this impulse response selection is technically incorrect,
             # since it is only feasible for planar arrays
-            impulse_response[idx, ::] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
+            impulse_response[idx, ::] = np.tensordot(
+                mimo_response, interpolated_impulse_tap, axes=0)
 
         self.__ground_truth = np.array([[0., 0., target_range]])
         return impulse_response
-    
+
     @property
     def ground_truth(self) -> np.ndarray:
         """Set of carthesian points representing ideal point estimates from the most recent impulse response.
-        
+
         Returns: Numpy array of dimension :math:`N \\times 3` where :math:`N` is the number of detections.
-        
+
         Raises:
-        
+
             RuntimeError: If no ground truth is available.
         """
-        
+
         if self.__ground_truth is None:
-            raise RuntimeError("Error trying to acces the ground truth of a channel without impulse response.")
-        
+            raise RuntimeError(
+                "Error trying to acces the ground truth of a channel without impulse response.")
+
         return self.__ground_truth
 
     @classmethod

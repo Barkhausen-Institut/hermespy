@@ -9,14 +9,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-import numpy as np
-import matplotlib.pyplot as plt
-
 from hermespy.core.factory import Serializable
 from .precoding import Precoder, Precoding
 
 if TYPE_CHECKING:
-    
+
     from hermespy.modem import StatedSymbols
     from hermespy.modem.modem import BaseModem
 
@@ -45,14 +42,14 @@ class SymbolPrecoder(Precoder, ABC):
         This operation may modify the number of streams as well as the number of data symbols per stream.
 
         Args:
-            
+
             symbols (StatedSymbols):
                 Symbols to be encoded.
 
         Returns: Encoded symbols.
 
         Raises:
-        
+
             NotImplementedError: If an encoding operation is not supported.
         """
         ...  # pragma no cover
@@ -64,14 +61,14 @@ class SymbolPrecoder(Precoder, ABC):
         This operation may modify the number of streams as well as the number of data symbols per stream.
 
         Args:
-            
+
             symbols (Symbols):
                 Symbols to be decoded.
 
         Returns: Decoded symbols.
 
         Raises:
-        
+
             NotImplementedError: If an encoding operation is not supported.
         """
         ...  # pragma no cover
@@ -94,7 +91,7 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
         """Symbol Precoding object initialization.
 
         Args:
-        
+
             modem (Modem, Optional):
                 The modem this `SymbolPrecoding` configuration is attached to.
         """
@@ -107,13 +104,13 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
         This operation may modify the number of streams as well as the number of data symbols per stream.
 
         Args:
-            
+
             symbols (Symbols): Symbols to be encoded.
 
         Returns: Encoded symbols.
 
         Raises:
-        
+
             NotImplementedError: If an encoding operation is not supported.
         """
 
@@ -130,19 +127,19 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
         This operation may modify the number of streams as well as the number of data symbols per stream.
 
         Args:
-            
+
             symbols (Symbols):
                 Symbols to be decoded.
 
         Returns: Decoded symbols.
 
         Raises:
-        
+
             NotImplementedError: If an encoding operation is not supported.
         """
-        
+
         decoded_symbols = symbols.copy()
         for precoder in reversed(self):
             decoded_symbols = precoder.decode(decoded_symbols)
-            
+
         return decoded_symbols
