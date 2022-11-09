@@ -61,13 +61,15 @@ Operators:
       Resources:
 
         - repetitions: 20
-          cp_ratio: 0.078125
+          prefix_type: CYCLIC
+          prefix_ratio: 0.078125
           elements:
             - type: DATA
               repetitions: 5
 
         - repetitions: 20
-          cp_ratio: 0.0703125
+          prefix_type: CYCLIC
+          prefix_ratio: 0.0703125
           elements:
             - type: DATA
               repetitions: 5

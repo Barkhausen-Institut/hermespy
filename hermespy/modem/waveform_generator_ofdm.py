@@ -37,8 +37,26 @@ class ElementType(Enum):
     """Type of resource element."""
 
     REFERENCE = 0
+    """Reference element within the time-frequency OFDM grid"""
+
     DATA = 1
+    """Data element within the time-frequency OFDM grid"""
+
     NULL = 2
+    """Empty element within the time-frequency OFDM grid"""
+
+
+class PrefixType(Enum):
+    """Type of prefix applied to the OFDM resource"""
+
+    CYCLIC = 0
+    """Cyclic prefix repeating the resource waveform in time-domain"""
+
+    ZEROPAD = 1
+    """Prefix zero-padding the prefix in time-domain"""
+
+    NONE = 2
+    """No prefix applied"""
 
 
 class FrameElement:
@@ -66,16 +84,23 @@ class FrameResource:
     """Configures one sub-section of an OFDM symbol section in time AND frequency."""
 
     __repetitions: int
-    __cp_ratio: float
+    __prefix_ratio: float
+
+    prefix_type: PrefixType
+    """Prefix type of the frame resource"""
+
     elements: List[FrameElement]
+    """Individual resource elements"""
 
     def __init__(self,
                  repetitions: int = 1,
-                 cp_ratio: float = 0.0,
+                 prefix_type: Union[PrefixType, str] = PrefixType.CYCLIC,
+                 prefix_ratio: float = 0.0,
                  elements: Optional[List[FrameElement]] = None) -> None:
 
         self.repetitions = repetitions
-        self.cp_ratio = cp_ratio
+        self.prefix_ratio = prefix_ratio
+        self.prefix_type = PrefixType[prefix_type] if isinstance(prefix_type, str) else prefix_type
         self.elements = elements if elements is not None else []
 
     @property
@@ -106,31 +131,26 @@ class FrameResource:
         self.__repetitions = reps
 
     @property
-    def cp_ratio(self) -> float:
-        """Ratio between full block length and cyclic prefix.
+    def prefix_ratio(self) -> float:
+        """Ratio between full block length and prefix length.
 
         Returns:
             float: The ratio between zero and one.
-        """
-
-        return self.__cp_ratio
-
-    @cp_ratio.setter
-    def cp_ratio(self, ratio: float) -> None:
-        """Modify the ratio between full block element length and cyclic prefix.
-
-        Args:
-            ratio (float): New ratio between zero and one.
 
         Raises:
             ValueError: If ratio is less than zero or larger than one.
         """
 
+        return self.__prefix_ratio
+
+    @prefix_ratio.setter
+    def prefix_ratio(self, ratio: float) -> None:
+
         if ratio < 0.0 or ratio > 1.0:
             raise ValueError(
                 "Cyclic prefix ratio must be between zero and one")
 
-        self.__cp_ratio = ratio
+        self.__prefix_ratio = ratio
 
     @property
     def num_subcarriers(self) -> int:
@@ -398,6 +418,99 @@ class FrameSymbolSection(FrameSection, Serializable):
 
         return num
 
+    def _add_prefix(self, resource_signals: np.ndarray) -> np.ndarray:
+        """Add prefixes to time-domain resource signals.
+
+        Args:
+
+            resource_signals (np.ndarray):
+                Numpy array of individual resource signals.
+
+        Returns:
+            Concatenated source signals with appended prefixes.
+        """
+
+        # Compute the number of required samples per resource
+        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
+
+        signals = []
+        for resource_idx, resource_samples in enumerate(resource_signals.T):
+
+            # Infer pattern index
+            pattern_idx = resource_idx % len(self.pattern)
+
+            # Extract prefix parameters from configuration
+            prefix_ratio = self.frame.resources[self.pattern[pattern_idx]].prefix_ratio
+            prefix_type = self.frame.resources[self.pattern[pattern_idx]].prefix_type
+
+            num_prefix_samples = int(padded_num_subcarriers * prefix_ratio)
+
+            # Only add a prefix if required
+            if num_prefix_samples > 0 and prefix_type != PrefixType.NONE:
+
+                # Cyclic prefix
+                if prefix_type == PrefixType.CYCLIC:
+                    signals.append(resource_samples[-num_prefix_samples:])
+
+                # Zero padding
+                elif prefix_type == PrefixType.ZEROPAD:
+                    signals.append(np.zeros(num_prefix_samples, dtype=complex))
+
+                # Raise exception for unsupproted prefix types
+                else:
+                    raise NotImplementedError("Unsupported prefix type configured")
+
+            # Append base resource waveform after prefix
+            signals.append(resource_samples)
+
+        # The result is a concatenation in time domain of all prefixed resource signals
+        signal_samples = np.concatenate(signals, axis=0)
+        return signal_samples
+
+    def _remove_prefix(self, signal_samples: np.ndarray) -> np.ndarray:
+        """Remove prefixes and split signal into resource signals.
+
+        Args:
+
+            signal_samples(np.ndarray):
+                Numpy vector of signal samples representing a single frame section.
+
+        Returns: Two-dimensional numpy array representing signal samples of individual sections.
+        """
+
+        # Compute the number of required samples per resource
+        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
+
+        sample_index = 0
+        num_resources = len(self.pattern) * self.num_repetitions
+        resource_samples = np.empty((padded_num_subcarriers, num_resources), dtype=complex)
+
+        for resource_idx in range(num_resources):
+
+            # Infer pattern index
+            pattern_idx = resource_idx % len(self.pattern)
+
+            # Extract prefix parameters from configuration
+            resource = self.frame.resources[self.pattern[pattern_idx]]
+            prefix_ratio = resource.prefix_ratio
+            prefix_type = resource.prefix_type
+
+            num_prefix_samples = int(padded_num_subcarriers * prefix_ratio)
+
+            # Only add a prefix if required
+            if num_prefix_samples > 0 and prefix_type != PrefixType.NONE:
+
+                # Advance the sample index by the prefix length, essentially skipping the prefix
+                sample_index += num_prefix_samples
+
+            # Sort resource samples into their respective matrix sections
+            resource_samples[:, resource_idx] = signal_samples[sample_index:sample_index + padded_num_subcarriers]
+
+            # Advance sample index by resource length
+            sample_index += padded_num_subcarriers
+
+        return resource_samples
+
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
 
         # Generate the resource grid of the oversampled OFDM frame
@@ -421,21 +534,9 @@ class FrameSymbolSection(FrameSection, Serializable):
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
         resource_signals = ifft(ifftshift(grid, axes=0), axis=0, norm='ortho')
 
-        # Add the cyclic prefix to each time slot while simultaneously flatten the resource signals into time domain
-        signals = []
-        for resource_idx, resource_samples in enumerate(resource_signals.T):
+        # Add prefixes and concatenate resources
+        signal_samples = self._add_prefix(resource_signals)
 
-            pattern_idx = resource_idx % len(self.pattern)
-            cp_ratio = self.frame.resources[self.pattern[pattern_idx]].cp_ratio
-
-            num_prefix_samples = int(padded_num_subcarriers * cp_ratio)
-
-            if num_prefix_samples > 0:
-                signals.append(resource_samples[-num_prefix_samples:])
-
-            signals.append(resource_samples)
-
-        signal_samples = np.concatenate(signals, axis=0)
         return signal_samples
 
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
@@ -443,29 +544,10 @@ class FrameSymbolSection(FrameSection, Serializable):
         padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
 
         # Remove the cyclic prefixes before transformation into time-domain
-        sample_index = 0
-        sample_indices = np.empty(0, dtype=int)
-        num_slots = len(self.pattern) * self.num_repetitions
-
-        for slot_idx in range(num_slots):
-
-            pattern_idx = slot_idx % len(self.pattern)
-            resource = self.frame.resources[self.pattern[pattern_idx]]
-
-            num_prefix_samples = int(
-                padded_num_subcarriers * resource.cp_ratio)
-            sample_index += num_prefix_samples
-
-            sample_indices = np.append(sample_indices, np.arange(
-                sample_index, sample_index + padded_num_subcarriers))
-
-            sample_index += padded_num_subcarriers
-
-        slot_samples = signal[sample_indices].reshape(
-            (padded_num_subcarriers, num_slots), order='F')
+        resource_signals = self._remove_prefix(signal)
 
         # Transform grid back to data symbols
-        grid = fftshift(fft(slot_samples, axis=0, norm='ortho'), axes=0)
+        grid = fftshift(fft(resource_signals, axis=0, norm='ortho'), axes=0)
 
         # Account for the DC suppression
         if self.frame.dc_suppression:
@@ -504,7 +586,7 @@ class FrameSymbolSection(FrameSection, Serializable):
         # Add up the additional samples from cyclic prefixes
         for resource_idx in self.pattern:
             num += int(num_samples_per_slot *
-                       self.frame.resources[resource_idx].cp_ratio)
+                       self.frame.resources[resource_idx].prefix_ratio)
 
         # Add up the base samples from each timeslot
         return num * self.num_repetitions
@@ -907,7 +989,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         for section in self.structure:
 
             section_data_symbols, _ = section.pick_symbols(
-                symbols[:, block_idx:block_idx+section.num_words])
+                symbols[:, block_idx:block_idx + section.num_words])
 
             data_symbols.append_symbols(section_data_symbols)
             block_idx += section.num_words
@@ -937,7 +1019,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
 
             # Modulate the signal
             section_signal = section.modulate(
-                symbol_blocks[block_idx:block_idx+section.num_words, :section.num_subcarriers])
+                symbol_blocks[block_idx:block_idx + section.num_words, :section.num_subcarriers])
             output_signal = np.append(output_signal, section_signal)
 
             block_idx += section.num_words
