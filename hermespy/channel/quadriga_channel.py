@@ -13,7 +13,6 @@ from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNod
 
 from hermespy.channel import Channel, QuadrigaInterface
 
-
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
@@ -49,7 +48,7 @@ class QuadrigaChannel(Channel):
         """
 
         # Init base channel class
-        Channel.__init__(self,  *args, **kwargs)
+        Channel.__init__(self, *args, **kwargs)
 
         # Save interface settings
         self.__interface = interface
@@ -136,7 +135,7 @@ class QuadrigaChannel(Channel):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor,  node: MappingNode) -> QuadrigaChannel:
+    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor, node: MappingNode) -> QuadrigaChannel:
         """Recall a new `QuadrigaChannel` instance from YAML.
 
         Args:
