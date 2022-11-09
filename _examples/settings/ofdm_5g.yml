@@ -75,7 +75,8 @@ Operators:
       Resources:
 
         - repetitions: 1
-          cp_ratio: 0.0703125
+          prefix_type: CYCLIC
+          prefix_ratio: 0.0703125
           elements:
             - type: NULL
               repetitions: 600
@@ -85,7 +86,8 @@ Operators:
               repetitions: 600
 
         - repetitions: 1
-          cp_ratio: 0.078125
+          prefix_type: CYCLIC
+          prefix_ratio: 0.078125
           elements:
             - type: NULL
               repetitions: 600
