@@ -47,5 +47,6 @@ HermesPy may be used in one of two modes of operation:
    tutorials
    examples/examples
    api/api
+   matlab
    references
    developer_hints
