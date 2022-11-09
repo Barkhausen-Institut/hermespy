@@ -16,8 +16,8 @@ from scipy.fft import fft, fftshift
 
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
-from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource, symbols
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, ChannelEstimation
+from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, ChannelEstimation
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -35,18 +35,20 @@ class TestFrameResource(TestCase):
     def setUp(self) -> None:
 
         self.repetitions = 2
-        self.cp_ratio = 0.01
+        self.prefix_type = PrefixType.CYCLIC
+        self.prefix_ratio = 0.01
         self.elements = [FrameElement(ElementType.DATA, 2),
                          FrameElement(ElementType.REFERENCE, 1),
                          FrameElement(ElementType.NULL, 3)]
 
-        self.resource = FrameResource(self.repetitions, self.cp_ratio, self.elements)
+        self.resource = FrameResource(self.repetitions, self.prefix_type, self.prefix_ratio, self.elements)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
 
         self.assertEqual(self.repetitions, self.resource.repetitions)
-        self.assertEqual(self.cp_ratio, self.resource.cp_ratio)
+        self.assertEqual(self.prefix_type, self.resource.prefix_type)
+        self.assertEqual(self.prefix_ratio, self.resource.prefix_ratio)
         self.assertCountEqual(self.elements, self.resource.elements)
 
     def test_repetitions_setget(self) -> None:
@@ -66,27 +68,27 @@ class TestFrameResource(TestCase):
         with self.assertRaises(ValueError):
             self.resource.repetitions = -1
 
-    def test_cp_ratio_setget(self) -> None:
+    def test_prefix_ratio_setget(self) -> None:
         """Cyclic prefix ratio property getter should return setter argument."""
 
-        cp_ratio = .5
-        self.resource.cp_ratio = .5
+        prefix_ratio = .5
+        self.resource.prefix_ratio = .5
 
-        self.assertEqual(cp_ratio, self.resource.cp_ratio)
+        self.assertEqual(prefix_ratio, self.resource.prefix_ratio)
 
-    def test_cp_ratio_validation(self) -> None:
+    def test_prefix_ratio_validation(self) -> None:
         """Cyclic prefix ratio property setter should raise ValueError on arguments
         smaller than zero or bigger than one."""
 
         with self.assertRaises(ValueError):
-            self.resource.cp_ratio = -1.0
+            self.resource.prefix_ratio = -1.0
 
         with self.assertRaises(ValueError):
-            self.resource.cp_ratio = 1.5
+            self.resource.prefix_ratio = 1.5
 
         try:
-            self.resource.cp_ratio = 0.0
-            self.resource.cp_ratio = 1.0
+            self.resource.prefix_ratio = 0.0
+            self.resource.prefix_ratio = 1.0
 
         except ValueError:
             self.fail()
@@ -181,18 +183,20 @@ class TestFrameSymbolSection(TestCase):
         self.rnd = np.random.default_rng(42)
 
         self.repetitions_a = 2
-        self.cp_ratio_a = 0.1
+        self.prefix_type_a = PrefixType.ZEROPAD
+        self.prefix_ratio_a = 0.1
         self.elements_a = [FrameElement(ElementType.DATA, 2),
                            FrameElement(ElementType.REFERENCE, 1),
                            FrameElement(ElementType.NULL, 3)]
-        self.resource_a = FrameResource(self.repetitions_a, self.cp_ratio_a, self.elements_a)
+        self.resource_a = FrameResource(self.repetitions_a, self.prefix_type_a, self.prefix_ratio_a, self.elements_a)
 
         self.repetitions_b = 3
-        self.cp_ratio_b = 0.0
+        self.prefix_type_b = PrefixType.CYCLIC
+        self.prefix_ratio_b = 0.2
         self.elements_b = [FrameElement(ElementType.REFERENCE, 2),
                            FrameElement(ElementType.DATA, 1),
                            FrameElement(ElementType.NULL, 3)]
-        self.resource_b = FrameResource(self.repetitions_b, self.cp_ratio_b, self.elements_b)
+        self.resource_b = FrameResource(self.repetitions_b, self.prefix_type_b, self.prefix_ratio_b, self.elements_b)
 
         self.frame = Mock()
         self.frame.num_subcarriers = 20
@@ -240,7 +244,7 @@ class TestFrameSymbolSection(TestCase):
 
         modulated_signal = self.section.modulate(expected_symbols)
         demodulated_symbols = self.section.demodulate(modulated_signal)
-
+ 
         assert_array_almost_equal(expected_symbols, demodulated_symbols)
         
     def test_modulate_demodulate_dc_suppression(self) -> None:
@@ -349,18 +353,20 @@ class TestOFDMWaveform(TestCase):
         self.modem.carrier_frequency = 100e6
 
         self.repetitions_a = 2
-        self.cp_ratio_a = 0.1
+        self.prefix_type_a = PrefixType.CYCLIC
+        self.prefix_ratio_a = 0.1
         self.elements_a = [FrameElement(ElementType.DATA, 2),
                            FrameElement(ElementType.REFERENCE, 1),
                            FrameElement(ElementType.NULL, 3)]
-        self.resource_a = FrameResource(self.repetitions_a, self.cp_ratio_a, self.elements_a)
+        self.resource_a = FrameResource(self.repetitions_a, self.prefix_type_a, self.prefix_ratio_a, self.elements_a)
 
         self.repetitions_b = 3
-        self.cp_ratio_b = 0.0
+        self.prefix_type_b = PrefixType.ZEROPAD
+        self.prefix_ratio_b = 0.2
         self.elements_b = [FrameElement(ElementType.REFERENCE, 2),
                            FrameElement(ElementType.DATA, 1),
                            FrameElement(ElementType.NULL, 3)]
-        self.resource_b = FrameResource(self.repetitions_b, self.cp_ratio_b, self.elements_b)
+        self.resource_b = FrameResource(self.repetitions_b, self.prefix_type_b, self.prefix_ratio_b, self.elements_b)
 
         self.section_a = FrameSymbolSection(2, [1, 0, 1])
         self.section_b = FrameGuardSection(1e-3)
@@ -370,9 +376,9 @@ class TestOFDMWaveform(TestCase):
         self.sections = [self.section_a, self.section_b, self.section_c]
 
         self.ofdm = OFDMWaveform(subcarrier_spacing=self.subcarrier_spacing, modem=self.modem,
-                                               resources=self.resources, structure=self.sections,
-                                               num_subcarriers=self.num_subcarriers,
-                                               oversampling_factor=self.oversampling_factor)
+                                 resources=self.resources, structure=self.sections,
+                                 num_subcarriers=self.num_subcarriers,
+                                 oversampling_factor=self.oversampling_factor)
 
     def test_init(self) -> None:
         """Object initialization arguments should be properly stored as class attributes."""
@@ -446,7 +452,7 @@ class TestOFDMWaveform(TestCase):
             self.ofdm.subcarrier_spacing = -1.
 
         with self.assertRaises(ValueError):
-            self.ofdm.subcarrier_spacing = 0.   
+            self.ofdm.subcarrier_spacing = 0.
 
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a data frame should yield identical symbols."""
