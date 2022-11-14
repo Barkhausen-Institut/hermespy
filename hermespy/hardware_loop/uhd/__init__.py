@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from .usrp import UsrpDevice
-from .system import UsrpSystem
+try:
+
+    from .usrp import UsrpDevice
+    from .system import UsrpSystem
+
+except ImportError:
+    UsrpDevice, UsrpSystem = None, None
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
