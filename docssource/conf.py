@@ -53,6 +53,7 @@ add_module_names = False
 
 # Bibtex
 bibtex_bibfiles = ['references.bib']
+bibtex_foot_reference_style = 'foot'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

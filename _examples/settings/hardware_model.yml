@@ -16,9 +16,18 @@ Devices:
     # RF-Chain hardware model
     rf_chain: !<RfChain>           
 
-      amplitude_imbalance: 1e-3     # I/Q amplitude imbalance
-      phase_offset: 1e-2            # I/Q phase imbalance
-      power_amplifier: !<Rapp>      # Power amplifier model 
+      amplitude_imbalance: 1e-3          # I/Q amplitude imbalance
+      phase_offset: 1e-2                 # I/Q phase imbalance
+      power_amplifier: !<Rapp>           # Power amplifier model
+      
+      #phase_noise: !<PowerLaw>           # Phase noise model
+
+      #  flicker_scale: 1e-8
+      #  white_fm_scale: 1e-4
+      #  flicker_fm_scale: 1e-2
+      #  random_walk_fm_scale: 1.
+      #  gauss_cutoff: 0.
+      #  vicinity: 1e-4
 
     # AD-Conversion hardware model
     adc: !<ADC> 
