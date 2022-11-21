@@ -87,7 +87,7 @@ class Signal(HDFSerializable):
                 Zero by default.
         """
 
-        self.samples = samples.copy()
+        self.samples = samples.astype(complex).copy()
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.delay = delay
@@ -461,6 +461,15 @@ class Signal(HDFSerializable):
         """
 
         return np.arange(self.num_samples) / self.__sampling_rate - self.delay
+
+    @property
+    def frequencies(self) -> np.ndarray:
+        """The signal model's discrete sample points in frequcy domain.
+
+        Returns: Numpy vector of frequency bins.
+        """
+
+        return fftfreq(self.num_samples, 1 / self.sampling_rate)
 
     def plot(self,
              title: Optional[str] = None,

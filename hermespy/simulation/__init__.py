@@ -1,6 +1,6 @@
 from .simulation import Simulation, SimulationScenario
 from .simulated_device import SimulatedDevice
-from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier, CustomPowerAmplifier
+from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier, CustomPowerAmplifier, PhaseNoise, NoPhaseNoise, PowerLawPhaseNoise
 from .analog_digital_converter import AnalogDigitalConverter, Gain, AutomaticGainControl
 from .noise import Noise
 from .isolation import Isolation, PerfectIsolation, SpecificIsolation
@@ -18,7 +18,7 @@ __status__ = "Prototype"
 __all__ = [
     'Simulation', 'SimulationScenario',
     'SimulatedDevice',
-    'RfChain', 'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier', 'CustomPowerAmplifier',
+    'RfChain', 'PowerAmplifier', 'SalehPowerAmplifier', 'RappPowerAmplifier', 'ClippingPowerAmplifier', 'CustomPowerAmplifier', 'PhaseNoise', 'NoPhaseNoise', 'PowerLawPhaseNoise',
     'AnalogDigitalConverter', 'Gain', 'AutomaticGainControl',
     'Noise',
     'Isolation', 'PerfectIsolation', 'SpecificIsolation',
