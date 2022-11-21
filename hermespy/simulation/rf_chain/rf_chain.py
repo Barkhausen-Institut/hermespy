@@ -16,6 +16,7 @@ from ruamel.yaml import SafeRepresenter, Node
 
 from hermespy.core.signal_model import Signal
 from hermespy.core.factory import Serializable
+from .phase_noise import PhaseNoise, NoPhaseNoise
 from .power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"
@@ -40,6 +41,7 @@ class RfChain(Serializable):
     __amplitude_imbalance: float
 
     __power_amplifier: Optional[PowerAmplifier]
+    __phase_noise: PhaseNoise
 
     def __init__(self,
                  tx_power: float = None,
@@ -51,6 +53,7 @@ class RfChain(Serializable):
         self.__amplitude_imbalance = 0.0
 
         self.__power_amplifier = None
+        self.__phase_noise = NoPhaseNoise()
 
         if tx_power is not None:
             self.__tx_power = tx_power
@@ -140,6 +143,9 @@ class RfChain(Serializable):
         transmitted_signal.samples = self.add_iq_imbalance(
             transmitted_signal.samples)
 
+        # Simulate phase noise
+        transmitted_signal = self.phase_noise.add_noise(transmitted_signal)
+
         # Simulate power amplifier
         if self.power_amplifier is not None:
             transmitted_signal.samples = self.power_amplifier.send(
@@ -181,6 +187,9 @@ class RfChain(Serializable):
         # Simulate IQ imbalance
         input_signal.samples = self.add_iq_imbalance(input_signal.samples)
 
+        # Simulate phase noise
+        input_signal = self.phase_noise.add_noise(input_signal)
+
         return input_signal
 
     @property
@@ -203,3 +212,18 @@ class RfChain(Serializable):
         """
 
         self.__power_amplifier = power_amplifier
+
+    @property
+    def phase_noise(self) -> PhaseNoise:
+        """Phase Noise model configuration.
+
+
+        Returns: Handle to the pase noise model.
+        """
+
+        return self.__phase_noise
+
+    @phase_noise.setter
+    def phase_noise(self, value: PhaseNoise) -> None:
+
+        self.__phase_noise = value
