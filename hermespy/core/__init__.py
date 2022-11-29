@@ -6,10 +6,10 @@ from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, Tran
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, HDFSerializable
-from .monte_carlo import Artifact, ArtifactTemplate, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
+from .monte_carlo import Artifact, ArtifactTemplate, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension, ProcessedScalarEvaluationResult
 from .random_node import RandomNode
 from .drop import Drop
-from .scenario import Scenario
+from .scenario import Scenario, ScenarioMode
 from .signal_model import Signal
 
 __author__ = "André Noll Barreto"
@@ -29,10 +29,10 @@ __all__ = [
     'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot', 'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError', 'Transmission', 'Reception', 'DeviceReception', 'DeviceTransmission',
     'Executable', 'Verbosity',
     'Pipeline',
-    'Artifact', 'ArtifactTemplate', 'ConsoleMode', 'Evaluator', 'Evaluator', 'Evaluation', 'EvaluationResult', 'EvaluationTemplate', 'GridDimension', 'ScalarEvaluationResult', 'MonteCarlo', 'MonteCarloActor', 'MonteCarloResult', 'MonteCarloSample', 'dimension',
+    'Artifact', 'ArtifactTemplate', 'ConsoleMode', 'Evaluator', 'Evaluator', 'Evaluation', 'EvaluationResult', 'EvaluationTemplate', 'GridDimension', 'ScalarEvaluationResult', 'MonteCarlo', 'MonteCarloActor', 'MonteCarloResult', 'MonteCarloSample', 'dimension', 'ProcessedScalarEvaluationResult',
     'Factory', 'Serializable', 'HDFSerializable',
     'RandomNode',
     'Drop',
-    'Scenario',
+    'Scenario', 'ScenarioMode',
     'Signal',
 ]

@@ -435,6 +435,28 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
 
         receptions = [[o.receive() for o in d.receivers] for d in self.devices]
         return receptions
+    
+    @property
+    def num_drops(self) -> Optional[int]:
+        """Number of drops within the scenario.
+        
+        If the scenario is in replay mode, this property represents the 
+        recorded number of drops
+        
+        If the scenario is in record mode, this property represnts the
+        current number of recorded drops.
+        
+        Returns: Number of drops. `None` if not applicable.
+        """
+        
+        if self.mode == ScenarioMode.DEFAULT:
+            return None
+        
+        if self.mode == ScenarioMode.RECORD:
+            return self.__drop_counter
+        
+        if self.mode == ScenarioMode.REPLAY:
+            return self.__file.attrs['num_drops']
 
     @abstractmethod
     def _drop(self) -> Drop:
@@ -459,7 +481,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
             drop = Drop.from_HDF(
                 self.__file[f'drop_{self.__drop_counter:02d}'])
             self.__drop_counter = (
-                self.__drop_counter + 1) % self.__file.attrs['num_drops']
+                self.__drop_counter + 1) % self.num_drops
 
             # Replay device operator transmissions
             for device, device_transmission in zip(self.devices, drop.device_transmissions):
