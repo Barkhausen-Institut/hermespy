@@ -429,9 +429,11 @@ class Radar(DuplexOperator):
         # Create radar cube object
         cube = RadarCube(cube_data, angles_of_interest,
                          velocity_bins, range_bins)
+        self.__cube = cube
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)
+        self.__cloud = cloud
         # Return receive information
 
         reception = RadarReception(signal, cube, cloud)

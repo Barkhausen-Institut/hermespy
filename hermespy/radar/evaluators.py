@@ -56,10 +56,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import uniform
 
-from hermespy.core.executable import Executable
-from hermespy.core.factory import Serializable
-from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, \
-    ArtifactTemplate, Artifact, ScalarEvaluationResult, ProcessedScalarEvaluationResult
+from hermespy.core import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, Executable, GridDimension, \
+    ArtifactTemplate, Artifact, ScalarEvaluationResult, Serializable, Scenario, ScenarioMode, ProcessedScalarEvaluationResult
 from hermespy.radar import Radar
 from hermespy.channel.radar_channel import RadarChannel
 from hermespy.radar.cube import RadarCube
@@ -411,6 +409,71 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         return RocEvaluationResult(self, grid, detection_probabilities, false_alarm_probabilities)
 
+    @classmethod
+    def from_scenarios(cls: ReceiverOperatingCharacteristic,
+                       h0_scenario: Scenario,
+                       h1_scenario: Scenario,
+                       h0_operator: Optional[Radar] = None,
+                       h1_operator: Optional[Radar] = None) -> RocEvaluationResult:
+        
+        # Assert that both scenarios are in replay mode
+        if h0_scenario.mode != ScenarioMode.REPLAY:
+            raise ValueError("Null hypothesis scenario is not in replay mode")
+        
+        if h1_scenario.mode != ScenarioMode.REPLAY:
+            raise ValueError("One hypothesis scenario is not in replay mode")
+        
+        # Assert that both scenarios have at least a single drop recorded
+        if h0_scenario.num_drops < 1:
+            raise ValueError("Null hypothesis scenario has no recorded drops")
+        
+        if h1_scenario.num_drops < 1:
+            raise ValueError("One hypothesis scenario has no recorded drops")
+        
+        # Select operators if none were provided
+        if h0_operator:
+            if h0_operator not in h0_scenario.operators:
+                raise ValueError("Null hypthesis radar not an operator within the null hypothesis scenario")
+            
+        else:
+            if h0_scenario.num_operators < 1:
+                raise ValueError("Null hypothesis radar has no registered operators")
+            
+            h0_operator = h0_scenario.operators[0]
+            
+        if h1_operator:
+            if h1_operator not in h1_scenario.operators:
+                raise ValueError("One hypthesis radar not an operator within the null hypothesis scenario")
+            
+        else:
+            if h1_scenario.num_operators < 1:
+                raise ValueError("One hypothesis radar has no registered operators")
+            
+            h1_operator = h1_scenario.operators[0]
+            
+        # Register evaluators
+        evaluator: ReceiverOperatingCharacteristic = cls(h1_operator, h0_operator)
+            
+        # The overall number of considered drops is bounded by the H1 hypothesis
+        num_drops = h1_scenario.num_drops
+        artifacts = np.empty(1, dtype=object)
+        artifacts[0] = []
+        
+        # Collect artifacts
+        for _ in range(num_drops):
+        
+            _ = h0_scenario.drop()
+            _ = h1_scenario.drop()
+            
+            _ = h0_operator.receive()
+            _ = h1_operator.receive()
+            
+            artifacts[0].append(evaluator.evaluate().artifact())
+            
+        # Generate results
+        grid = [GridDimension(h1_scenario, 'num_drops', [0.])]
+        result = evaluator.generate_result(grid, artifacts)
+        return result
 
 class RootMeanSquareArtifact(Artifact):
     """Artifact of a root mean square evaluation"""
