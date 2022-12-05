@@ -31,7 +31,7 @@ class SpatialMultiplexing(SymbolPrecoder, Serializable):
     Takes a on-dimensional input stream and distributes the symbols to multiple output streams.
     """
 
-    yaml_tag: str = u'SM'
+    yaml_tag: str = "SM"
 
     def __init__(self) -> None:
         """Spatial Multiplexing object initialization."""

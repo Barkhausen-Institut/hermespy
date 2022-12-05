@@ -21,11 +21,9 @@ __status__ = "Prototype"
 class PerfectIsolation(Serializable, Isolation):
     """Perfect isolation model without leakage between RF chains."""
 
-    yaml_tag = u'Perfect'
+    yaml_tag = "PerfectIsolation"
 
     def _leak(self, signal: Signal) -> Signal:
 
         # No leakage at all, therefore an empty signal is sufficient
-        return Signal.empty(signal.sampling_rate,
-                            self.device.antennas.num_receive_antennas,
-                            carrier_frequency=signal.carrier_frequency)
+        return Signal.empty(signal.sampling_rate, self.device.antennas.num_receive_antennas, carrier_frequency=signal.carrier_frequency)

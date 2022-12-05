@@ -26,9 +26,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
     __octave: Oct2Py
     __logger: Logger
 
-    def __init__(self,
-                 octave_bin: Optional[str] = None,
-                 **kwargs: Any) -> None:
+    def __init__(self, octave_bin: Optional[str] = None, **kwargs: Any) -> None:
         """Quadriga Octave interface object initialization.
 
         Args:
@@ -44,7 +42,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         QuadrigaInterface.__init__(self, **kwargs)
 
         # Init octave session
-        self.__logger = getLogger('octave_logger')
+        self.__logger = getLogger("octave_logger")
         self.__octave = Oct2Py(logger=self.__logger)  # executable=octave_bin)
 
         # Add quadriga source folder to octave lookup paths
@@ -66,7 +64,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
 
         # Launch octave
         try:
-            self.__octave.eval('launch_quadriga')
+            self.__octave.eval("launch_quadriga")
 
         except Oct2PyError as error:
             raise RuntimeError(error)

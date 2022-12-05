@@ -1,11 +1,10 @@
 from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .definitions import SNRType
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
-from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, \
-    Transmitter, Receiver, Device, FloatingError, Transmission, Reception, DeviceReception, DeviceTransmission
+from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, DeviceReception, DeviceTransmission
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
-from .factory import Factory, Serializable, HDFSerializable
+from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
 from .monte_carlo import Artifact, ArtifactTemplate, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
 from .random_node import RandomNode
 from .drop import Drop
@@ -23,16 +22,54 @@ __status__ = "Prototype"
 
 
 __all__ = [
-    'Antenna', 'IdealAntenna', 'Dipole', 'PatchAntenna', 'AntennaArrayBase', 'AntennaArray', 'UniformArray',
-    'SNRType',
-    'ChannelStateFormat', 'ChannelStateInformation',
-    'Operator', 'OperatorSlot', 'DuplexOperator', 'MixingOperator', 'TransmitterSlot', 'ReceiverSlot', 'Transmitter', 'Receiver', 'Device', 'FloatingError', 'Transmission', 'Reception', 'DeviceReception', 'DeviceTransmission',
-    'Executable', 'Verbosity',
-    'Pipeline',
-    'Artifact', 'ArtifactTemplate', 'ConsoleMode', 'Evaluator', 'Evaluator', 'Evaluation', 'EvaluationResult', 'EvaluationTemplate', 'GridDimension', 'ScalarEvaluationResult', 'MonteCarlo', 'MonteCarloActor', 'MonteCarloResult', 'MonteCarloSample', 'dimension',
-    'Factory', 'Serializable', 'HDFSerializable',
-    'RandomNode',
-    'Drop',
-    'Scenario',
-    'Signal',
+    "Antenna",
+    "IdealAntenna",
+    "Dipole",
+    "PatchAntenna",
+    "AntennaArrayBase",
+    "AntennaArray",
+    "UniformArray",
+    "SNRType",
+    "ChannelStateFormat",
+    "ChannelStateInformation",
+    "Operator",
+    "OperatorSlot",
+    "DuplexOperator",
+    "MixingOperator",
+    "TransmitterSlot",
+    "ReceiverSlot",
+    "Transmitter",
+    "Receiver",
+    "Device",
+    "FloatingError",
+    "Transmission",
+    "Reception",
+    "DeviceReception",
+    "DeviceTransmission",
+    "Executable",
+    "Verbosity",
+    "Pipeline",
+    "Artifact",
+    "ArtifactTemplate",
+    "ConsoleMode",
+    "Evaluator",
+    "Evaluator",
+    "Evaluation",
+    "EvaluationResult",
+    "EvaluationTemplate",
+    "GridDimension",
+    "ScalarEvaluationResult",
+    "MonteCarlo",
+    "MonteCarloActor",
+    "MonteCarloResult",
+    "MonteCarloSample",
+    "dimension",
+    "Factory",
+    "Serializable",
+    "SerializableEnum",
+    "HDFSerializable",
+    "RandomNode",
+    "Drop",
+    "Scenario",
+    "Signal",
 ]

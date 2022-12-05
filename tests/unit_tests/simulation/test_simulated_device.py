@@ -2,13 +2,14 @@
 """Test HermesPy simulated device module."""
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_equal
 
 from hermespy.core.device import FloatingError
 from hermespy.simulation.simulated_device import SimulatedDevice
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -60,15 +61,7 @@ class TestSimulatedDevice(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.device.scenario = Mock()
-
-    def test_scenario_get_validation(self) -> None:
-        """Accessing the scenario property of a floating device should raise a FloatingError."""
-
-        self.device = SimulatedDevice()
-
-        with self.assertRaises(FloatingError):
-            _ = self.device.scenario
-
+            
     def test_attached(self) -> None:
         """The attached property should return the proper device attachment state."""
 
@@ -86,8 +79,7 @@ class TestSimulatedDevice(TestCase):
     def test_sampling_rate_inference(self) -> None:
         """Sampling rate property should attempt to infer the sampling rate from all possible sources."""
 
-        with self.assertRaises(RuntimeError):
-            _ = self.device.sampling_rate
+        self.assertIsNone(self.device.sampling_rate)
 
         receiver = Mock()
         receiver.sampling_rate = 1.23
@@ -127,9 +119,19 @@ class TestSimulatedDevice(TestCase):
             self.device.carrier_frequency = -1.
 
         try:
-
             self.device.carrier_frequency = 0.
 
         except RuntimeError:
 
             self.fail()
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        default_blacklist = self.device.property_blacklist
+        default_blacklist.add('scenario')
+        
+        with patch('hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist', new_callable=PropertyMock) as blacklist:
+
+            blacklist.return_value = default_blacklist
+            test_yaml_roundtrip_serialization(self, self.device, {'sampling_rate', 'scenario', 'antenna_positions', 'attached'})

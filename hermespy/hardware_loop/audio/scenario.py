@@ -20,4 +20,5 @@ __status__ = "Prototype"
 
 class AudioScenario(PhysicalScenario[AudioDevice]):
     """Scenario of phyical device bindings to sound cards."""
+
     ...  # pragma no cover

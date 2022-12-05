@@ -6,10 +6,9 @@ Single-Target Radar Channel Modeling
 """
 
 from __future__ import annotations
-from typing import Optional, Tuple, Type, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, MappingNode
 from scipy.constants import pi, speed_of_light
 
 from .channel import Channel
@@ -47,7 +46,8 @@ class RadarChannel(Channel, Serializable):
     ToDo: Add literature references for this channel model.
     """
 
-    yaml_tag = u'RadarChannel'
+    yaml_tag = "RadarChannel"
+    serialized_attributes = {"impulse_response_interpolation", "target_exists", "attenuate"}
 
     __target_range: float
     __radar_cross_section: float
@@ -59,16 +59,7 @@ class RadarChannel(Channel, Serializable):
     attenuate: bool
     __ground_truth: Optional[np.ndarray]
 
-    def __init__(self,
-                 target_range: Union[float, Tuple[float, float]],
-                 radar_cross_section: float,
-                 target_azimuth: float = 0.,
-                 target_zenith: float = 0.,
-                 target_exists: bool = True,
-                 losses_db: float = 0,
-                 velocity: Union[float, np.ndarray] = 0,
-                 attenuate: bool = True,
-                 **kwargs) -> None:
+    def __init__(self, target_range: Union[float, Tuple[float, float]], radar_cross_section: float, target_azimuth: float = 0.0, target_zenith: float = 0.0, target_exists: bool = True, losses_db: float = 0, velocity: Union[float, np.ndarray] = 0, attenuate: bool = True, **kwargs) -> None:
         """
         Args:
 
@@ -138,9 +129,8 @@ class RadarChannel(Channel, Serializable):
 
         if isinstance(value, (float, int)):
 
-            if value < 0.:
-                raise ValueError(
-                    "Target range must be greater or equal to zero")
+            if value < 0.0:
+                raise ValueError("Target range must be greater or equal to zero")
 
         elif isinstance(value, (tuple, list)):
 
@@ -148,12 +138,10 @@ class RadarChannel(Channel, Serializable):
                 raise ValueError("Target range span must be a tuple of two")
 
             if value[1] < value[0]:
-                raise ValueError(
-                    "Target range span second value must be greater than first value")
+                raise ValueError("Target range span second value must be greater than first value")
 
-            if value[1] < 0.:
-                raise ValueError(
-                    "Target range span minimum must be greater or equal to zero")
+            if value[1] < 0.0:
+                raise ValueError("Target range span minimum must be greater or equal to zero")
 
         else:
             raise ValueError("Unknown targer range format")
@@ -195,8 +183,7 @@ class RadarChannel(Channel, Serializable):
         """
 
         if value < 0:
-            raise ValueError(
-                "Radar cross section be greater than or equal to zero")
+            raise ValueError("Radar cross section be greater than or equal to zero")
 
         self.__radar_cross_section = value
 
@@ -241,17 +228,13 @@ class RadarChannel(Channel, Serializable):
         """
         return self.__losses_db
 
-    def impulse_response(self,
-                         num_samples: int,
-                         sampling_rate: float) -> np.ndarray:
+    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
 
         if self.transmitter is None:
-            raise FloatingError(
-                "Radar channel must be anchored to a transmitting device")
+            raise FloatingError("Radar channel must be anchored to a transmitting device")
 
-        if self.transmitter.carrier_frequency <= 0.:
-            raise RuntimeError(
-                "Radar channel does not support base-band transmissions")
+        if self.transmitter.carrier_frequency <= 0.0:
+            raise RuntimeError("Radar channel does not support base-band transmissions")
 
         # For the radar channel, only channels linking the same device are currently feasible
         if self.transmitter is not self.receiver:
@@ -269,18 +252,13 @@ class RadarChannel(Channel, Serializable):
 
         # Infer relevant parameters
         wavelength = speed_of_light / self.transmitter.carrier_frequency
-        doppler_frequency = 2 * self.target_velocity / \
-            ((1 - self.target_velocity / speed_of_light) * wavelength)
-        target_range = self.target_range if isinstance(
-            self.target_range, (float, int)) else self._rng.uniform(self.target_range[0], self.target_range[1])
+        doppler_frequency = 2 * self.target_velocity / ((1 - self.target_velocity / speed_of_light) * wavelength)
+        target_range = self.target_range if isinstance(self.target_range, (float, int)) else self._rng.uniform(self.target_range[0], self.target_range[1])
         delay = 2 * target_range / speed_of_light
-        max_delay = delay + 2 * self.target_velocity * \
-            timestamps[-1] / speed_of_light
-        max_delay_in_samples = int(
-            np.ceil(max_delay * self.transmitter.sampling_rate))
+        max_delay = delay + 2 * self.target_velocity * timestamps[-1] / speed_of_light
+        max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate))
 
-        impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples),
-                                    dtype=complex)
+        impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples), dtype=complex)
 
         # If no target is present we may abort already
         if not self.target_exists:
@@ -291,33 +269,28 @@ class RadarChannel(Channel, Serializable):
         # 2. The power loss during reflection (semi-deterministic, depends on rcs, wavelength and target distance)
         reflection_phase = self._rng.uniform(0, 1)
 
-        power_factor = 1.
+        power_factor = 1.0
         if self.attenuate:
-            power_factor = (wavelength ** 2 * self.__radar_cross_section / (4 * pi) ** 3 / target_range ** 4
-                            * db2lin(self.__losses_db))
+            power_factor = wavelength**2 * self.__radar_cross_section / (4 * pi) ** 3 / target_range**4 * db2lin(self.__losses_db)
 
         delay_taps = np.arange(max_delay_in_samples) / sampling_rate
 
-        array_response = self.transmitter.antennas.spherical_response(self.transmitter.carrier_frequency,
-                                                                      self.target_azimuth, self.target_zenith)
+        array_response = self.transmitter.antennas.spherical_response(self.transmitter.carrier_frequency, self.target_azimuth, self.target_zenith)
         mimo_response = np.outer(array_response.conj(), array_response)
 
         for idx, timestamp in enumerate(timestamps):
 
             echo_delay = delay + 2 * self.target_velocity * timestamp / speed_of_light
             time = timestamp + np.arange(max_delay_in_samples) / sampling_rate
-            echo_weights = power_factor * \
-                np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
+            echo_weights = power_factor * np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
 
-            interpolated_impulse_tap = np.sinc(
-                sampling_rate * (delay_taps - echo_delay)) * echo_weights
+            interpolated_impulse_tap = np.sinc(sampling_rate * (delay_taps - echo_delay)) * echo_weights
 
             # Note that this impulse response selection is technically incorrect,
             # since it is only feasible for planar arrays
-            impulse_response[idx, ::] = np.tensordot(
-                mimo_response, interpolated_impulse_tap, axes=0)
+            impulse_response[idx, ::] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
 
-        self.__ground_truth = np.array([[0., 0., target_range]])
+        self.__ground_truth = np.array([[0.0, 0.0, target_range]])
         return impulse_response
 
     @property
@@ -332,39 +305,6 @@ class RadarChannel(Channel, Serializable):
         """
 
         if self.__ground_truth is None:
-            raise RuntimeError(
-                "Error trying to acces the ground truth of a channel without impulse response.")
+            raise RuntimeError("Error trying to acces the ground truth of a channel without impulse response.")
 
         return self.__ground_truth
-
-    @classmethod
-    def to_yaml(cls: Type[RadarChannel], representer: SafeRepresenter,
-                node: RadarChannel) -> MappingNode:
-        """Serialize a radar channel object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (RadarChannel):
-                The channel instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {
-            'target_range': node.target_range,
-            'radar_cross_section': node.radar_cross_section,
-            'target_azimuth': node.target_azimuth,
-            'target_zenith': node.target_zenith,
-            'gain': node.gain,
-            'losses_db': node.losses_db,
-            'velocity': node.target_velocity,
-            'attenuate': node.attenuate,
-            'target_exists': node.target_exists,
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, state)

@@ -8,6 +8,7 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.core import DuplexOperator, Reception, Signal, Transmission
 from hermespy.hardware_loop.audio import AudioDevice
 from hermespy.hardware_loop.audio.device import AudioDeviceAntennas
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -120,13 +121,7 @@ class TestAudioDevice(TestCase):
         channels = [1, 2, 3, 4]
         self.device.playback_channels = channels
         
-        self.assertCountEqual(channels, self.device.playback_channels)
-        
-    def test_playback_channels_validation(self) -> None:
-        """Playback channels property setter should raise ValueError on invalid arguments"""
-        
-        with self.assertRaises(ValueError):
-            self.device.playback_channels = np.array([[1, 2, 3, 4]])        
+        self.assertCountEqual(channels, self.device.playback_channels)       
             
     def test_record_channels_setget(self) -> None:
         """Record channels property getter should return setter argument"""
@@ -135,12 +130,6 @@ class TestAudioDevice(TestCase):
         self.device.record_channels = channels
         
         self.assertCountEqual(channels, self.device.record_channels)
-        
-    def test_record_channels_validation(self) -> None:
-        """Record channels property setter should raise ValueError on invalid arguments"""
-        
-        with self.assertRaises(ValueError):
-            self.device.record_channels = np.array([[1, 2, 3, 4]])
             
     def test_sampling_rate_setget(self) ->  None:
         """Sampling rate property getter should return setter argument"""
@@ -185,3 +174,8 @@ class TestAudioDevice(TestCase):
         reception = operator.receive()
         
         assert_array_almost_equal(transmission.signal.samples, reception.signal.samples)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.device, {'antenna_positions'})

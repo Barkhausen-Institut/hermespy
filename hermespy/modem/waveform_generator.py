@@ -8,10 +8,9 @@ Communication Waveform Base
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-from typing import Generic, TYPE_CHECKING, Optional, Tuple, Type, TypeVar, List
+from typing import Generic, TYPE_CHECKING, Optional, Tuple, TypeVar, List
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node, ScalarNode
 
 from hermespy.core import ChannelStateInformation, Serializable, Signal, ChannelStateFormat
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
@@ -30,7 +29,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-WaveformType = TypeVar('WaveformType', bound='WaveformGenerator')
+WaveformType = TypeVar("WaveformType", bound="WaveformGenerator")
 
 
 class Synchronization(Generic[WaveformType], ABC, Serializable):
@@ -39,14 +38,13 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
     Refer to :footcite:t:`2016:nasir` for an overview of the current state of the art.
     """
 
-    yaml_tag = u'Synchronization'
+    yaml_tag = "Synchronization"
     """YAML serialization tag"""
 
     # Waveform generator this routine is attached to
     __waveform_generator: Optional[WaveformType]
 
-    def __init__(self,
-                 waveform_generator: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
         """
         Args:
             waveform_generator (WaveformGenerator, optional):
@@ -96,61 +94,20 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         """
 
         if self.__waveform_generator is None:
-            raise RuntimeError(
-                "Trying to synchronize with a floating synchronization routine")
+            raise RuntimeError("Trying to synchronize with a floating synchronization routine")
 
         samples_per_frame = self.__waveform_generator.samples_in_frame
         num_frames = int(signal.shape[1] / samples_per_frame)
 
         return np.arange(num_frames).tolist()
 
-    @classmethod
-    def to_yaml(cls: Type[Synchronization], representer: SafeRepresenter, node: Synchronization) -> Node:
-        """Serialize an `Synchronization` object to YAML.
 
-        Args:
-            representer (Synchronization):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
+class ChannelEstimation(Generic[WaveformType], Serializable):
+    """Base class for channel estimation routines of waveform generators."""
 
-            node (Synchronization):
-                The `Synchronization` instance to be serialized.
+    yaml_tag = "NoChannelEstimation"
 
-        Returns:
-            Node:
-                The serialized YAML node
-        """
-
-        return representer.represent_scalar(cls.yaml_tag, None)
-
-    @classmethod
-    def from_yaml(cls: Type[Synchronization], constructor: SafeConstructor, node: Node) -> Synchronization:
-        """Recall a new `Synchronization` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Synchronization` serialization.
-
-        Returns:
-            Synchronization:
-                Newly created `Synchronization` instance.
-        """
-
-        # For scalar nodes, initialize the synchronization routine with default parameters
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        return cls.InitializationWrapper(constructor.construct_mapping(node))
-
-
-class ChannelEstimation(Generic[WaveformType], ABC):
-    """Abstract base class for channel estimation routines of waveform generators."""
-
-    def __init__(self,
-                 waveform_generator: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
         """
         Args:
             waveform_generator (WaveformGenerator, optional):
@@ -175,13 +132,11 @@ class ChannelEstimation(Generic[WaveformType], ABC):
         """Set waveform generator this synchronization routine is attached to."""
 
         if self.__waveform_generator is not None:
-            raise RuntimeError(
-                "Error trying to re-attach already attached synchronization routine.")
+            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
 
         self.__waveform_generator = value
 
-    def estimate_channel(self,
-                         symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
+    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
         """Estimate the wireless channel of a received communication frame.
 
         Args:
@@ -192,8 +147,7 @@ class ChannelEstimation(Generic[WaveformType], ABC):
         Returns: The symbols and their respective channel states.
         """
 
-        state = np.ones((symbols.num_streams, 1, symbols.num_blocks,
-                        symbols.num_symbols), dtype=complex)
+        state = np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)
         return StatedSymbols(symbols.raw, state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, state)
 
 
@@ -202,6 +156,8 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
 
     This type of channel estimation is only available during simulation runtime.
     """
+
+    yaml_tag = "IdealChannelEstimation"
 
     def _csi(self) -> ChannelStateInformation:
         """Query the ideal channel state information.
@@ -215,8 +171,7 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         """
 
         if self.waveform_generator is None:
-            raise RuntimeError(
-                "Ideal channel state estimation routine floating")
+            raise RuntimeError("Ideal channel state estimation routine floating")
 
         if self.waveform_generator.modem.receiving_device is None:
             raise RuntimeError("Operating modem floating")
@@ -228,11 +183,12 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         return cached_csi
 
 
-class ChannelEqualization(Generic[WaveformType], ABC):
+class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
     """Abstract base class for channel equalization routines of waveform generators."""
 
-    def __init__(self,
-                 waveform_generator: Optional[WaveformType] = None) -> None:
+    yaml_tag = "NoEqualization"
+
+    def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
         """
         Args:
             waveform_generator (WaveformGenerator, optional):
@@ -257,8 +213,7 @@ class ChannelEqualization(Generic[WaveformType], ABC):
         """Set waveform generator this equalization routine is attached to."""
 
         if self.__waveform_generator is not None:
-            raise RuntimeError(
-                "Error trying to re-attach already attached equalization routine.")
+            raise RuntimeError("Error trying to re-attach already attached equalization routine.")
 
         self.__waveform_generator = value
 
@@ -276,16 +231,15 @@ class ChannelEqualization(Generic[WaveformType], ABC):
         return stated_symbols
 
 
-class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[WaveformType], Serializable, ):
+class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[WaveformType], Serializable):
     """Zero-Forcing channel equalization for arbitrary waveforms."""
 
-    yaml_tag = u'ZeroForcing'
+    yaml_tag = "ZeroForcing"
     """YAML serialization tag"""
 
     def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
 
-        equalized_raw_symbols = ZeroForcingChannelEqualization.__equalize_channel(
-            stated_symbols.raw, stated_symbols.states)
+        equalized_raw_symbols = ZeroForcingChannelEqualization.__equalize_channel(stated_symbols.raw, stated_symbols.states)
 
         return Symbols(equalized_raw_symbols)
 
@@ -306,8 +260,7 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
                 for s in range(symbols.shape[2]):
 
                     equalization = np.linalg.pinv(states[:, :, b, s])
-                    equalized_symbols[:, b, s] = np.dot(
-                        equalization, symbols[:, b, s])
+                    equalized_symbols[:, b, s] = np.dot(equalization, symbols[:, b, s])
 
         return equalized_symbols
 
@@ -323,17 +276,14 @@ class WaveformGenerator(ABC):
 
     # Modem this waveform generator is attached to
     __modem: Optional[BaseModem]
-    __synchronization: Synchronization              # Synchronization routine
-    __channel_estimation: ChannelEstimation         # Channel estimation routine
-    __channel_equalization: ChannelEqualization     # Channel equalization routine
-    __oversampling_factor: int                      # Oversampling factor
+    __synchronization: Synchronization  # Synchronization routine
+    __channel_estimation: ChannelEstimation  # Channel estimation routine
+    __channel_equalization: ChannelEqualization  # Channel equalization routine
+    __oversampling_factor: int  # Oversampling factor
     # Cardinality of the set of communication symbols
     __modulation_order: int
 
-    def __init__(self,
-                 modem: Optional[BaseModem] = None,
-                 oversampling_factor: int = 1,
-                 modulation_order: int = 16) -> None:
+    def __init__(self, modem: Optional[BaseModem] = None, oversampling_factor: int = 1, modulation_order: int = 16) -> None:
         """Waveform Generator initialization.
 
         Args:
@@ -402,8 +352,7 @@ class WaveformGenerator(ABC):
         """
 
         if factor < 1:
-            raise ValueError(
-                "The oversampling factor must be greater or equal to one")
+            raise ValueError("The oversampling factor must be greater or equal to one")
 
         self.__oversampling_factor = factor
 
@@ -434,8 +383,7 @@ class WaveformGenerator(ABC):
         """
 
         if order <= 0 or (order & (order - 1)) != 0:
-            raise ValueError(
-                "Modulation order must be a positive power of two")
+            raise ValueError("Modulation order must be a positive power of two")
 
         self.__modulation_order = order
 
@@ -606,21 +554,11 @@ class WaveformGenerator(ABC):
         return bits / time
 
     @property
-    def modem(self) -> BaseModem:
+    def modem(self) -> Optional[BaseModem]:
         """Access the modem this generator is attached to.
 
-        Returns:
-            Modem:
-                A handle to the modem.
-
-        Raises:
-            RuntimeError:
-                If this waveform generator is not attached to a modem.
+        Returns: A handle to the modem.
         """
-
-        if self.__modem is None:
-            raise RuntimeError(
-                "This waveform generator is not attached to any modem")
 
         return self.__modem
 
@@ -666,7 +604,7 @@ class WaveformGenerator(ABC):
         """Channel estimation routine.
 
         Returns:
-            ChannelEstimation: Handle to the synchronization routine.
+            ChannelEstimation: Handle to the estimation routine.
         """
 
         return self.__channel_estimation
@@ -716,49 +654,6 @@ class WaveformGenerator(ABC):
 
         return True
 
-    @classmethod
-    def to_yaml(cls: Type[WaveformGenerator], representer: SafeRepresenter, node: WaveformGenerator) -> Node:
-        """Serialize an `WaveformGenerator` object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (WaveformGenerator):
-                The `WaveformGenerator` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node
-        """
-
-        state = {
-            "oversampling_factor": node.__oversampling_factor,
-            "modulation_order": node.modulation_order,
-            'synchronization': node.synchronization,
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[WaveformGenerator], constructor: SafeConstructor, node: Node) -> WaveformGenerator:
-        """Recall a new `WaveformGenerator` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `WaveformGenerator` serialization.
-
-        Returns:
-            WaveformGenerator:
-                Newly created `WaveformGenerator` instance.
-        """
-
-        return cls.InitializationWrapper(constructor.construct_mapping(node))
-
 
 class PilotWaveformGenerator(WaveformGenerator, ABC):
     """Abstract base class of communication waveform generators generating a pilot signal."""
@@ -797,9 +692,9 @@ class UniformPilotSymbolSequence(PilotSymbolSequence):
     Not advisable to be used in production scenarios.
     """
 
-    __pilot_symbol: complex     # The configured pilot symbol
+    __pilot_symbol: complex  # The configured pilot symbol
 
-    def __init__(self, pilot_symbol: complex = 1. + 0.j) -> None:
+    def __init__(self, pilot_symbol: complex = 1.0 + 0.0j) -> None:
         """
         Args:
 
@@ -822,7 +717,7 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
     The user may freely chose the pilot symbols from samples within the complex plane.
     """
 
-    __pilot_symbols: complex     # The configured pilot symbols
+    __pilot_symbols: complex  # The configured pilot symbols
 
     def __init__(self, pilot_symbols: np.ndarray) -> None:
         """
@@ -861,23 +756,20 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
     repeat_pilot_symbol_sequence: bool
     """Allow the repetition of pilot symbol sequences."""
 
-    def __init__(self,
-                 symbol_sequence: Optional[PilotSymbolSequence] = None,
-                 repeat_symbol_sequence: bool = True) -> None:
+    def __init__(self, symbol_sequence: Optional[PilotSymbolSequence] = None, repeat_symbol_sequence: bool = True) -> None:
         """
-         Args:
+        Args:
 
-            symbol_sequence (Optional[PilotSymbolSequence], optional):
-                The configured pilot symbol sequence.
-                Uniform by default.
+           symbol_sequence (Optional[PilotSymbolSequence], optional):
+               The configured pilot symbol sequence.
+               Uniform by default.
 
-            repeat_symbol_sequence (bool, optional):
-                Allow the repetition of pilot symbol sequences.
-                Enabled by default.
+           repeat_symbol_sequence (bool, optional):
+               Allow the repetition of pilot symbol sequences.
+               Enabled by default.
         """
 
-        self.pilot_symbol_sequence = UniformPilotSymbolSequence(
-        ) if symbol_sequence is None else symbol_sequence
+        self.pilot_symbol_sequence = UniformPilotSymbolSequence() if symbol_sequence is None else symbol_sequence
         self.repeat_pilot_symbol_sequence = repeat_symbol_sequence
 
     def pilot_symbols(self, num_symbols: int) -> np.ndarray:
@@ -902,8 +794,7 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
         if num_repetitions > 1:
 
             if not self.repeat_pilot_symbol_sequence:
-                raise RuntimeError(
-                    "Pilot symbol repetition required for sequence generation but not allowed")
+                raise RuntimeError("Pilot symbol repetition required for sequence generation but not allowed")
 
             symbol_sequence = np.tile(symbol_sequence, num_repetitions)
 
