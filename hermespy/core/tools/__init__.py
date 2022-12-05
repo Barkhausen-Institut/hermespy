@@ -10,6 +10,4 @@ __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = [
-    'TheoreticalResults',
-]
+__all__ = ["TheoreticalResults"]

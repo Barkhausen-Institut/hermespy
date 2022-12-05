@@ -13,7 +13,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = [
-    'AudioDevice',
-    'AudioScenario',
-]
+__all__ = ["AudioDevice", "AudioScenario"]

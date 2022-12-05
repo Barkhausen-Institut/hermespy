@@ -11,6 +11,7 @@ from scipy.constants import pi
 
 from hermespy.modem import FilteredSingleCarrierWaveform, Symbols, RaisedCosineWaveform, RootRaisedCosineWaveform, RectangularWaveform, FMCWWaveform, SingleCarrierCorrelationSynchronization
 from hermespy.modem.waveform_single_carrier import SingleCarrierLeastSquaresChannelEstimation
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -316,7 +317,7 @@ class TestSingleCarrierChannelEstimation(TestCase):
         estimation = SingleCarrierLeastSquaresChannelEstimation()
         self.waveform.channel_estimation = estimation
         
-        stated_symbols, csi = estimation.estimate_channel(self.symbols)
+        _, csi = estimation.estimate_channel(self.symbols)
         self.assertEqual(self.waveform.symbols_per_frame, csi.num_samples)
 
 
@@ -352,6 +353,11 @@ class TestRootRaisedCosineWaveform(TestCase):
         symbols = self.waveform.demodulate(waveform.samples[0, :])
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.waveform)
 
 
 class TestRaisedCosineWaveform(TestCase):
@@ -386,6 +392,11 @@ class TestRaisedCosineWaveform(TestCase):
         symboles = self.waveform.demodulate(waveform.samples[0, :])
 
         assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.waveform)
 
 
 class TestRectangularWaveform(TestCase):
@@ -418,6 +429,11 @@ class TestRectangularWaveform(TestCase):
         symboles = self.waveform.demodulate(waveform.samples[0, :])
 
         assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.waveform)
 
 
 class TestFMCWWaveform(TestCase):
@@ -450,3 +466,8 @@ class TestFMCWWaveform(TestCase):
         symboles = self.waveform.demodulate(waveform.samples[0, :])
 
         assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.waveform)

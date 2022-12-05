@@ -48,9 +48,7 @@ class Symbol(object):
     flag: SymbolType
     """Type of the symbol."""
 
-    def __init__(self,
-                 value: complex,
-                 flag: SymbolType = SymbolType.DATA) -> None:
+    def __init__(self, value: complex, flag: SymbolType = SymbolType.DATA) -> None:
         """
         Args:
 
@@ -69,10 +67,9 @@ class Symbol(object):
 class Symbols(HDFSerializable):
     """A time-series of communication symbols located somewhere on the complex plane."""
 
-    __symbols: np.ndarray       # Internal symbol storage
+    __symbols: np.ndarray  # Internal symbol storage
 
-    def __init__(self,
-                 symbols: Optional[Union[Iterable, np.ndarray]] = None) -> None:
+    def __init__(self, symbols: Optional[Union[Iterable, np.ndarray]] = None) -> None:
         """
         Args:
 
@@ -83,15 +80,12 @@ class Symbols(HDFSerializable):
                 the the dimension the number of symbols per block.
         """
 
-        symbols = np.empty(
-            (0, 0, 0), dtype=complex) if symbols is None else symbols
-        symbols = np.array(symbols) if not isinstance(
-            symbols, np.ndarray) else symbols
+        symbols = np.empty((0, 0, 0), dtype=complex) if symbols is None else symbols
+        symbols = np.array(symbols) if not isinstance(symbols, np.ndarray) else symbols
 
         # Make sure the initialization is a valid symbol sequence
         if symbols.ndim > 3:
-            raise ValueError(
-                "Symbols initialization array may have a maximum of three dimensions")
+            raise ValueError("Symbols initialization array may have a maximum of three dimensions")
 
         # Exand the dimensions if required
         if symbols.ndim == 1:
@@ -157,8 +151,7 @@ class Symbols(HDFSerializable):
             symbols = symbols[:, :, np.newaxis]
 
         if symbols.ndim != 3:
-            raise ValueError(
-                "Symbols must be matrix (an array of dimension two)")
+            raise ValueError("Symbols must be matrix (an array of dimension two)")
 
         if self.num_symbols < 1 and self.num_streams <= 1:
 
@@ -167,12 +160,10 @@ class Symbols(HDFSerializable):
         else:
 
             if self.num_symbols != symbols.shape[2]:
-                raise ValueError(
-                    "Symbol models to be concatenated do not match in time-domain")
+                raise ValueError("Symbol models to be concatenated do not match in time-domain")
 
             if self.num_blocks != symbols.shape[1]:
-                raise ValueError(
-                    "Symbol models to be concatenated do not match in block-domain")
+                raise ValueError("Symbol models to be concatenated do not match in block-domain")
 
             self.__symbols = np.append(self.__symbols, symbols, axis=0)
 
@@ -210,8 +201,7 @@ class Symbols(HDFSerializable):
         else:
 
             if self.num_streams != symbols.shape[0]:
-                raise ValueError(
-                    "Symbol models to be concatenated do not match in stream-domain")
+                raise ValueError("Symbol models to be concatenated do not match in stream-domain")
 
             self.__symbols = np.append(self.__symbols, symbols, axis=1)
 
@@ -275,9 +265,7 @@ class Symbols(HDFSerializable):
 
             self.__symbols[slice] = value
 
-    def plot_constellation(self,
-                           axes: Optional[plt.axes.Axes] = None,
-                           title: str = 'Symbol Constellation') -> Optional[plt.Figure]:
+    def plot_constellation(self, axes: Optional[plt.axes.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
         """Plot the symbol constellation.
 
         Essentially projects the time-series of symbols onto a single complex plane.
@@ -313,9 +301,9 @@ class Symbols(HDFSerializable):
         axes.scatter(symbols.real, symbols.imag)
         axes.set(ylabel="Imag")
         axes.set(xlabel="Real")
-        axes.grid(True, which='both')
-        axes.axhline(y=0, color='k')
-        axes.axvline(x=0, color='k')
+        axes.grid(True, which="both")
+        axes.axhline(y=0, color="k")
+        axes.axvline(x=0, color="k")
 
         return figure
 
@@ -323,7 +311,7 @@ class Symbols(HDFSerializable):
     def from_HDF(cls: Type[Symbols], group: Group) -> Symbols:
 
         # Recall datasets
-        symbols = np.array(group['symbols'], dtype=complex)
+        symbols = np.array(group["symbols"], dtype=complex)
 
         # Initialize object from recalled state
         return cls(symbols=symbols)
@@ -331,12 +319,12 @@ class Symbols(HDFSerializable):
     def to_HDF(self, group: Group) -> None:
 
         # Serialize datasets
-        group.create_dataset('symbols', data=self.__symbols)
+        group.create_dataset("symbols", data=self.__symbols)
 
         # Serialize attributes
-        group.attrs['num_streams'] = self.num_streams
-        group.attrs['num_blocks'] = self.num_blocks
-        group.attrs['num_symbols'] = self.num_symbols
+        group.attrs["num_streams"] = self.num_streams
+        group.attrs["num_blocks"] = self.num_blocks
+        group.attrs["num_symbols"] = self.num_symbols
 
 
 class StatedSymbols(Symbols):
@@ -344,9 +332,7 @@ class StatedSymbols(Symbols):
 
     __states: np.ndarray  # Symbol states, four-dimensional array
 
-    def __init__(self,
-                 symbols: Optional[Union[Iterable, np.ndarray]],
-                 states: Optional[np.ndarray]) -> None:
+    def __init__(self, symbols: Optional[Union[Iterable, np.ndarray]], states: Optional[np.ndarray]) -> None:
         """
         Args:
 
@@ -388,16 +374,13 @@ class StatedSymbols(Symbols):
             raise ValueError("State must be a four-dimensional numpy array")
 
         if value.shape[0] != self.num_streams:
-            raise ValueError(
-                f"Number of received streams don't match, expected {self.num_streams} instead of {value.shape[0]}")
+            raise ValueError(f"Number of received streams don't match, expected {self.num_streams} instead of {value.shape[0]}")
 
         if value.shape[2] != self.num_blocks:
-            raise ValueError(
-                f"Number of received blocks don't match, expected {self.num_blocks} instead of {value.shape[2]}")
+            raise ValueError(f"Number of received blocks don't match, expected {self.num_blocks} instead of {value.shape[2]}")
 
         if value.shape[3] != self.num_symbols:
-            raise ValueError(
-                f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}")
+            raise ValueError(f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}")
 
         self.__states = value.copy()
 
@@ -414,8 +397,8 @@ class StatedSymbols(Symbols):
     def from_HDF(cls: Type[StatedSymbols], group: Group) -> StatedSymbols:
 
         # Recall datasets
-        symbols = np.array(group['symbols'], dtype=complex)
-        states = np.array(group['states'], dtype=complex)
+        symbols = np.array(group["symbols"], dtype=complex)
+        states = np.array(group["states"], dtype=complex)
 
         # Initialize object from recalled state
         return cls(symbols=symbols, states=states)
@@ -426,4 +409,4 @@ class StatedSymbols(Symbols):
         Symbols.to_HDF(self, group)
 
         # Serialize datasets
-        group.create_dataset('states', data=self.__states)
+        group.create_dataset("states", data=self.__states)

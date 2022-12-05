@@ -24,7 +24,7 @@ __status__ = "Prototype"
 class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
     """Scenario of USRPs running the UHD server application."""
 
-    yaml_tag = u'UsrpSystem'
+    yaml_tag = "UsrpSystem"
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -60,8 +60,7 @@ class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
         """
 
         usrp_uid = str(self.num_devices)
-        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(
-            usrp_uid, device.ip, device._client)
+        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(usrp_uid, device.ip, device._client)
         PhysicalScenario.add_device(self, device)
 
     def _trigger(self) -> None:

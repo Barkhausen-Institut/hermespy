@@ -21,7 +21,7 @@ Channels:
   # 5G TDL model at the self-interference channel of device_alpha
   - !<5GTDL>
     devices: [*device_alpha, *device_alpha]
-    type: A                        # Type of the TDL model. A-E are available
+    model_type: !<TDLType> A       # Type of the TDL model. A-E are available
     rms_delay: 1e-6                # Root mean square delay in seconds    
 
 
@@ -48,9 +48,9 @@ Operators:
       - !<SM>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
-    Waveform: !<OFDM>
+    waveform: !<OFDM>
 
-      # !<Symbol> modulation settings
+      # Modulation settings
       modulation_order: 16                  # Modulation order, in other words 4 bit per data resource element
       subcarrier_spacing: 15e3              # Spacing between the individual subcarrier center frequencies in Hz
       dc_suppression: False                 # Consider the DC component during the DFT
@@ -58,24 +58,28 @@ Operators:
       channel_estimation: !<OFDM-Ideal>     # Ideal channel estimation routine
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
-      Resources:
+      resources:
 
-        - repetitions: 20
-          prefix_type: CYCLIC
+        - !<OFDM-Resource>
+          repetitions: 20
+          prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.078125
           elements:
-            - type: DATA
+            - !<FrameElement>
+              type: !<ElementType> DATA
               repetitions: 5
 
-        - repetitions: 20
-          prefix_type: CYCLIC
+        - !<OFDM-Resource>
+          repetitions: 20
+          prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.0703125
           elements:
-            - type: DATA
+            - !<FrameElement>
+              type: !<ElementType> DATA
               repetitions: 5
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
-      Structure:
+      structure:
 
         - !<Symbol>
           num_repetitions: 2

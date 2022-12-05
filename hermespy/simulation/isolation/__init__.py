@@ -12,8 +12,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = [
-    'Isolation',
-    'SpecificIsolation',
-    'PerfectIsolation',
-]
+__all__ = ["Isolation", "SpecificIsolation", "PerfectIsolation"]

@@ -2,7 +2,7 @@
 """Test prototype for waveform generation modeling."""
 
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 import numpy.random as rnd
@@ -11,8 +11,9 @@ from scipy.constants import pi
 from math import floor
 
 from hermespy.channel import ChannelStateFormat, ChannelStateInformation
-from hermespy.modem import WaveformGenerator, UniformPilotSymbolSequence, Synchronization, Symbols
+from hermespy.modem import ChannelEstimation, WaveformGenerator, UniformPilotSymbolSequence, Synchronization, Symbols
 from hermespy.core import Signal
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -126,23 +127,34 @@ class TestSynchronization(unittest.TestCase):
         frames = self.synchronization.synchronize(signal)
         self.assertEqual(num_frames, len(frames))
 
-    def test_to_yaml(self) -> None:
-        """YAML serialization should result in a proper state representation"""
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.modem.waveform_generator.Synchronization.property_blacklist', new_callable=PropertyMock) as blacklist:
+        
+            blacklist.return_value  = {'waveform_generator',}
+            test_yaml_roundtrip_serialization(self, self.synchronization)
+        
+        
+class TestChannelEstimation(unittest.TestCase):
+    
+    def setUp(self) -> None:
+        
+        self.waveform = MockWaveformGenerator()
+        self.estimation = ChannelEstimation(self.waveform)
+        
+    def test_init(self) -> None:
+        """Initialization should properly set class properties"""
+        
+        self.assertIs(self.waveform, self.estimation.waveform_generator)
 
-        representer = Mock()
-        node = Synchronization.to_yaml(representer, self.synchronization)
-
-        representer.represent_scalar.assert_called()
-
-    def test_from_yaml(self) -> None:
-        """YAML deserialization should result in a correctly configured instance"""
-
-        constructor = Mock()
-        constructor.construct_mapping.return_value = {}
-        node = Mock()
-
-        instance = Synchronization.from_yaml(constructor, node)
-        self.assertIsInstance(instance, Synchronization)
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.modem.waveform_generator.ChannelEstimation.property_blacklist', new_callable=PropertyMock) as blacklist:
+        
+            blacklist.return_value  = {'waveform_generator',}
+            test_yaml_roundtrip_serialization(self, self.estimation)
 
 class TestWaveformGenerator(unittest.TestCase):
     """Test the communication waveform generator unit."""

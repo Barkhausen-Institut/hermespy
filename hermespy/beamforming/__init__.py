@@ -13,8 +13,4 @@ from .beamformer import BeamformerBase, FocusMode, TransmitBeamformer, ReceiveBe
 from .conventional import ConventionalBeamformer
 from .capon import CaponBeamformer
 
-__all__ = [
-    'BeamformerBase', 'FocusMode', 'TransmitBeamformer', 'ReceiveBeamformer',
-    'ConventionalBeamformer',
-    'CaponBeamformer',
-]
+__all__ = ["BeamformerBase", "FocusMode", "TransmitBeamformer", "ReceiveBeamformer", "ConventionalBeamformer", "CaponBeamformer"]

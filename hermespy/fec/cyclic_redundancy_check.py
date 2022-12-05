@@ -40,13 +40,11 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         R_{n} = \\frac{K_n}{K_n + Q} \\mathrm{.}
     """
 
-    yaml_tag = u'CRC'
-    __bit_block_size: int       # Number of bits per encoded block.
-    __check_block_size: int     # Number of bits appended to bit blocks.
+    yaml_tag = "CRC"
+    __bit_block_size: int  # Number of bits per encoded block.
+    __check_block_size: int  # Number of bits appended to bit blocks.
 
-    def __init__(self,
-                 bit_block_size,
-                 check_block_size) -> None:
+    def __init__(self, bit_block_size, check_block_size) -> None:
         """
         Args:
 
@@ -68,7 +66,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
 
     def decode(self, code: np.ndarray) -> np.ndarray:
 
-        return code[:-self.__check_block_size]
+        return code[: -self.__check_block_size]
 
     @property
     def bit_block_size(self) -> int:
@@ -78,8 +76,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
     def bit_block_size(self, value: int) -> None:
 
         if value < 1:
-            raise ValueError(
-                "CRC bit block size must be greater or equal to one")
+            raise ValueError("CRC bit block size must be greater or equal to one")
 
         self.__bit_block_size = value
 
@@ -101,8 +98,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
     def check_block_size(self, value: int) -> None:
 
         if value < 0:
-            raise ValueError(
-                "Number of check bits must be greater or equal to zero")
+            raise ValueError("Number of check bits must be greater or equal to zero")
 
         self.__check_block_size = value
 
@@ -111,9 +107,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         return self.__bit_block_size + self.__check_block_size
 
     @classmethod
-    def to_yaml(cls: Type[CyclicRedundancyCheck],
-                representer: SafeRepresenter,
-                node: CyclicRedundancyCheck) -> MappingNode:
+    def to_yaml(cls: Type[CyclicRedundancyCheck], representer: SafeRepresenter, node: CyclicRedundancyCheck) -> MappingNode:
         """Serialize a `CyclicRedundancyCheck` to YAML.
 
         Args:
@@ -131,17 +125,12 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         :meta private:
         """
 
-        state = {
-            'bit_block_size': node.__bit_block_size,
-            'check_block_size': node.__check_block_size,
-        }
+        state = {"bit_block_size": node.__bit_block_size, "check_block_size": node.__check_block_size}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[CyclicRedundancyCheck],
-                  constructor: SafeConstructor,
-                  node: MappingNode) -> CyclicRedundancyCheck:
+    def from_yaml(cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: MappingNode) -> CyclicRedundancyCheck:
         """Recall a new `CyclicRedundancyCheck` from YAML.
 
         Args:

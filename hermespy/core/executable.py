@@ -20,8 +20,6 @@ from typing import ContextManager, List, Optional, Union
 import matplotlib.pyplot as plt
 from rich.console import Console
 
-from hermespy.core.factory import Serializable
-
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -35,33 +33,27 @@ __status__ = "Prototype"
 class Verbosity(Enum):
     """Information output behaviour configuration of an executable."""
 
-    ALL = 0      # Print absolutely everything
-    INFO = 1     # Information
+    ALL = 0  # Print absolutely everything
+    INFO = 1  # Information
     WARNING = 2  # Warnings only
-    ERROR = 3    # Errors only
-    NONE = 4     # Print absolutely nothing
+    ERROR = 3  # Errors only
+    NONE = 4  # Print absolutely nothing
 
 
-class Executable(ABC, Serializable):
+class Executable(ABC):
     """Base Class for HermesPy Entry Points.
 
     All executables are required to implement the :meth:`.run` method.
     """
 
-    yaml_tag = u'Executable'
-    """YAML serialization tag."""
-
     # Directory in which all execution artifacts will be dropped.
     __results_dir: Optional[str]
     # Information output behaviour during execution.
     __verbosity: Verbosity
-    __style: str = 'dark'           # Color scheme
-    __console: Console              # Rich console instance for text output
+    __style: str = "dark"  # Color scheme
+    __console: Console  # Rich console instance for text output
 
-    def __init__(self,
-                 results_dir: Optional[str] = None,
-                 verbosity: Union[Verbosity, str] = Verbosity.INFO,
-                 console: Optional[Console] = None) -> None:
+    def __init__(self, results_dir: Optional[str] = None, verbosity: Union[Verbosity, str] = Verbosity.INFO, console: Optional[Console] = None) -> None:
         """
         Args:
 
@@ -124,8 +116,7 @@ class Executable(ABC, Serializable):
             raise ValueError("The provided results directory does not exist")
 
         if not path.isdir(directory):
-            raise ValueError(
-                "The provided results directory path is not a directory")
+            raise ValueError("The provided results directory path is not a directory")
 
         self.__results_dir = directory
 
@@ -172,14 +163,12 @@ class Executable(ABC, Serializable):
         if not path.exists(base_directory):
             mkdir(base_directory)
 
-        results_dir = path.join(
-            base_directory, today + '_' + '{:03d}'.format(dir_index))
+        results_dir = path.join(base_directory, today + "_" + "{:03d}".format(dir_index))
 
         while path.exists(results_dir):
 
             dir_index += 1
-            results_dir = path.join(
-                base_directory, today + '_' + '{:03d}'.format(dir_index))
+            results_dir = path.join(base_directory, today + "_" + "{:03d}".format(dir_index))
 
         # Create the results directory
         mkdir(results_dir)
@@ -224,8 +213,7 @@ class Executable(ABC, Serializable):
             List[str]: List of style identifiers.
         """
 
-        return [path.splitext(path.basename(x))[0] for x in
-                glob(path.join(Executable.__hermes_root_dir(), 'core', 'styles', '*.mplstyle'))]
+        return [path.splitext(path.basename(x))[0] for x in glob(path.join(Executable.__hermes_root_dir(), "core", "styles", "*.mplstyle"))]
 
     @staticmethod
     @contextmanager
@@ -238,8 +226,7 @@ class Executable(ABC, Serializable):
         """
 
         if Executable.__style in Executable.__hermes_styles():
-            yield plt.style.use(path.join(Executable.__hermes_root_dir(), 'core', 'styles',
-                                          Executable.__style + '.mplstyle'))
+            yield plt.style.use(path.join(Executable.__hermes_root_dir(), "core", "styles", Executable.__style + ".mplstyle"))
 
         else:
             yield plt.style.use(Executable.__style)

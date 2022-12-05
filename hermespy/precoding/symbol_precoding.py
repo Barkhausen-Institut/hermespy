@@ -83,11 +83,10 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
     streams into multi-dimensional symbol streams during transmission and subsequently decode during reception.
     """
 
-    yaml_tag = u'SymbolCoding'
+    yaml_tag = "SymbolCoding"
     """YAML serialization tag."""
 
-    def __init__(self,
-                 modem: BaseModem = None) -> None:
+    def __init__(self, modem: BaseModem = None) -> None:
         """Symbol Precoding object initialization.
 
         Args:

@@ -2,7 +2,7 @@
 """Test Radar Channel"""
 
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, PropertyMock
 
 import numpy as np
 from numpy.random import default_rng
@@ -11,6 +11,8 @@ from scipy.constants import pi, speed_of_light
 
 from hermespy.channel import RadarChannel
 from hermespy.core import FloatingError, Signal
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -271,10 +273,15 @@ class TestRadarChannel(unittest.TestCase):
 
         assert_array_almost_equal(output[0].samples, np.zeros(output[0].samples.shape))
 
-    def test_to_yaml(self) -> None:
+    def test_serialization(self) -> None:
         """Test YAML serialization"""
-
-        representer = Mock()
-        _ = RadarChannel.to_yaml(representer, self.channel)
-
-        representer.represent_mapping.assert_called()
+        
+        with patch('hermespy.channel.Channel.transmitter', new_callable=PropertyMock) as transmitter_mock, \
+             patch('hermespy.channel.Channel.receiver', new_callable=PropertyMock) as receiver_mock, \
+             patch('hermespy.channel.Channel.random_mother', new_callable=PropertyMock) as random_mock:
+            
+            transmitter_mock.return_value = None
+            receiver_mock.return_value = None
+            random_mock.return_value = None
+            
+            test_yaml_roundtrip_serialization(self, self.channel)
