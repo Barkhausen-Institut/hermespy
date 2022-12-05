@@ -24,13 +24,10 @@ __status__ = "Prototype"
 class Pipeline(Executable, Generic[ScenarioType]):
     """Base class of HermesPy simulation pipelines."""
 
-    __scenario: ScenarioType        # The simulated scenario.
-    __num_drops: int                # Number of data drops being generated
+    __scenario: ScenarioType  # The simulated scenario.
+    __num_drops: int  # Number of data drops being generated
 
-    def __init__(self,
-                 scenario: ScenarioType,
-                 num_drops: int = 1,
-                 *args, **kwargs) -> None:
+    def __init__(self, scenario: ScenarioType, num_drops: int = 1, *args, **kwargs) -> None:
         """
         Args:
 
@@ -76,7 +73,7 @@ class Pipeline(Executable, Generic[ScenarioType]):
     def num_drops(self, value: int) -> None:
 
         if value < 1:
-            raise ValueError('Number of drops must be greater than zero')
+            raise ValueError("Number of drops must be greater than zero")
 
         self.__num_drops = value
 

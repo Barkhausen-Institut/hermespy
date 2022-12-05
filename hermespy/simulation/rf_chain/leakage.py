@@ -25,8 +25,7 @@ class Leakage(Serializable, ABC):
     """Leakage model between transmit and receive hardware chains."""
 
     @abstractmethod
-    def transmit(self,
-                 transmission: Signal) -> Signal:
+    def transmit(self, transmission: Signal) -> Signal:
         """Model a leaking transmission.
 
         Args:
@@ -44,8 +43,7 @@ class Leakage(Serializable, ABC):
         return transmission
 
     @abstractmethod
-    def receive(self,
-                reception: Signal) -> Signal:
+    def receive(self, reception: Signal) -> Signal:
         """Model a leaking reception.
 
         Args:

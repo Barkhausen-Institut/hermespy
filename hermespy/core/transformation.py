@@ -22,7 +22,6 @@ __status__ = "Prototype"
 
 
 class Transformation(np.ndarray):
-
     @property
     def position(self) -> np.ndarray:
 
@@ -37,7 +36,7 @@ class Transformation(np.ndarray):
         """
 
         roll = atan(self[2, 1] / self[2, 2])
-        pitch = atan(- self[2, 0] * (self[2, 1] + self[2, 2]) ** -.5)
+        pitch = atan(-self[2, 0] * (self[2, 1] + self[2, 2]) ** -0.5)
         yaw = atan(self[1, 0] / self[0, 0])
 
         return roll, pitch, yaw

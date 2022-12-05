@@ -79,12 +79,10 @@ class Isolation(ABC):
         """
 
         if self.device is None:
-            raise FloatingError(
-                "Error trying to simulate leakage of a floating model")
+            raise FloatingError("Error trying to simulate leakage of a floating model")
 
         if self.device.antennas.num_transmit_antennas != signal.num_streams:
-            raise ValueError(
-                "Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.antennas.num_transmit_antennas})")
+            raise ValueError("Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.antennas.num_transmit_antennas})")
 
         return self._leak(signal)
 

@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 def screen_geometry(monitor=0):
     try:
         from screeninfo import get_monitors
+
         sizes = [(s.x, s.y, s.width, s.height) for s in get_monitors()]
         return sizes[monitor]
     except ModuleNotFoundError:
@@ -57,9 +58,9 @@ def tile_figures(cols=3, rows=2, screen_rect=None, tile_offsets=None):
         tile_offsets:   A 2-tuple specifying the offsets in x- and y- direction.
                         Can be used to compensate the title bar height.
     """
-    assert (isinstance(cols, int) and cols > 0)
-    assert (isinstance(rows, int) and rows > 0)
-    assert (screen_rect is None or len(screen_rect) == 4)
+    assert isinstance(cols, int) and cols > 0
+    assert isinstance(rows, int) and rows > 0
+    assert screen_rect is None or len(screen_rect) == 4
     backend = mpl.get_backend()
     if screen_rect is None:
         screen_rect = screen_geometry()
@@ -70,17 +71,17 @@ def tile_figures(cols=3, rows=2, screen_rect=None, tile_offsets=None):
     sy += tile_offsets[1]
     fig_ids = plt.get_fignums()
     # Adjust tiles if necessary.
-    tile_aspect = cols/rows
-    while len(fig_ids) > cols*rows:
+    tile_aspect = cols / rows
+    while len(fig_ids) > cols * rows:
         cols += 1
-        rows = max(np.round(cols/tile_aspect), rows)
+        rows = max(np.round(cols / tile_aspect), rows)
     # Apply geometry per figure.
-    w = int(sw/cols)
-    h = int(sh/rows)
+    w = int(sw / cols)
+    h = int(sh / rows)
     for i, num in enumerate(fig_ids):
         fig = plt.figure(num)
-        x = (i % cols) * (w+tile_offsets[0])+sx
-        y = (i//cols)*(h+tile_offsets[1])+sy
+        x = (i % cols) * (w + tile_offsets[0]) + sx
+        y = (i // cols) * (h + tile_offsets[1]) + sy
         set_figure_geometry(fig, backend, x, y, w, h)
 
 

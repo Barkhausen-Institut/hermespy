@@ -2,16 +2,15 @@
 """Test communication evaluators."""
 
 from unittest import TestCase
-from unittest.mock import PropertyMock, Mock
+from unittest.mock import PropertyMock, patch, Mock
 
-import numpy as np
 from numpy.random import default_rng
 
-from hermespy.modem.evaluators import ThroughputEvaluator
 from hermespy.radar.evaluators import DetectionProbEvaluator
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.5"

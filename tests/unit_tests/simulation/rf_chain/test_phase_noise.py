@@ -8,7 +8,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from hermespy.core import Signal
 from hermespy.simulation.rf_chain.phase_noise import NoPhaseNoise, PowerLawPhaseNoise
-
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -134,3 +134,8 @@ class TestPowerLawPhaseNoise(TestCase):
 
         with self.assertRaises(ValueError):
             _ = self.pn._psd(100, -1)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.pn)

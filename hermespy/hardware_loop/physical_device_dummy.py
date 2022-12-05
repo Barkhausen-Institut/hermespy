@@ -38,7 +38,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice):
         SimulatedDevice.__init__(self, *args, **kwargs)
         PhysicalDevice.__init__(self)
 
-        self.__cached_signal = Signal.empty(1., self.num_antennas)
+        self.__cached_signal = Signal.empty(1.0, self.num_antennas)
 
     def _upload(self, signal: Signal) -> None:
 

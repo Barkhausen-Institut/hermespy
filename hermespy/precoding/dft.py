@@ -27,14 +27,12 @@ __status__ = "Prototype"
 
 
 class DFT(SymbolPrecoder, Serializable):
-    """A precoder applying the Discrete Fourier Transform to each data stream.
-    """
+    """A precoder applying the Discrete Fourier Transform to each data stream."""
 
-    yaml_tag = u'DFT'
+    yaml_tag = "DFT"
     __fft_norm: str
 
-    def __init__(self,
-                 fft_norm: str = None) -> None:
+    def __init__(self, fft_norm: str = None) -> None:
         """Object initialization.
 
         Args:
@@ -43,7 +41,7 @@ class DFT(SymbolPrecoder, Serializable):
                 See also numpy.fft.fft for details
         """
 
-        self.__fft_norm = 'ortho'
+        self.__fft_norm = "ortho"
 
         if fft_norm is not None:
             self.__fft_norm = fft_norm
@@ -53,16 +51,14 @@ class DFT(SymbolPrecoder, Serializable):
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
 
         encoded_symbols = symbols.copy()
-        encoded_symbols.raw = np.fft.fft(
-            symbols.raw, axis=2, norm=self.__fft_norm)
+        encoded_symbols.raw = np.fft.fft(symbols.raw, axis=2, norm=self.__fft_norm)
 
         return encoded_symbols
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
 
         decoded_symbols = symbols.copy()
-        decoded_symbols.raw = np.fft.ifft(
-            symbols.raw, axis=2, norm=self.__fft_norm)
+        decoded_symbols.raw = np.fft.ifft(symbols.raw, axis=2, norm=self.__fft_norm)
 
         return decoded_symbols
 

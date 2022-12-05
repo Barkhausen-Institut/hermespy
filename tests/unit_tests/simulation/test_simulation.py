@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 import ray
 
 from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -253,11 +254,8 @@ class TestSimulation(TestCase):
     def tearDownClass(cls):
         
         ray.shutdown()
+       
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
 
-    def test_to_yaml(self) -> None:
-        """Test YAML serialization dump validity."""
-        pass
-
-    def test_from_yaml(self) -> None:
-        """Test YAML serialization recall validity."""
-        pass
+        test_yaml_roundtrip_serialization(self, self.simulation) 

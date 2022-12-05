@@ -9,4 +9,4 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = ['MatchedFilterJcas']
+__all__ = ["MatchedFilterJcas"]
