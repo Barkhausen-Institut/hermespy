@@ -58,9 +58,9 @@ class TestSISOLinks(TestCase):
                 The channel over which to propagate the signal from transmitter to receiver.
         """
         
-        channel.set_seed(42)
-        self.tx_operator.set_seed(42)
-        self.rx_operator.set_seed(42)
+        channel.seed = 42
+        self.tx_operator.seed = 42
+        self.rx_operator.seed = 42
 
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()
@@ -233,9 +233,9 @@ class TestMIMOLinks(TestCase):
                 The channel over which to propagate the signal from transmitter to receiver.
         """
         
-        channel.set_seed(42)
-        self.tx_operator.set_seed(42)
-        self.rx_operator.set_seed(42)
+        channel.seed = 42
+        self.tx_operator.seed = 42
+        self.rx_operator.seed = 42
 
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()

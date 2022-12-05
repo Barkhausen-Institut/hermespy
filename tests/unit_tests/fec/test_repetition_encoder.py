@@ -7,9 +7,10 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from hermespy.fec import RepetitionEncoder
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -150,10 +151,7 @@ class TestRepetitionEncoder(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.encoder.repetitions = -1
 
-    def test_to_yaml(self) -> None:
-        """Test YAML serialization dump validity."""
-        pass
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
 
-    def test_from_yaml(self) -> None:
-        """Test YAML serialization recall validity."""
-        pass
+        test_yaml_roundtrip_serialization(self, self.encoder)

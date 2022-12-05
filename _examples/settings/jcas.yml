@@ -32,7 +32,7 @@ Channels:
   # 5G TDL communication channel model
   - !<5GTDL>
     devices: [*base_station, *terminal]
-    type: A                 # Type of the TDL model. A-E are available
+    model_type: !<TDLType> A  # Type of the TDL model. A-E are available
 
   # No self-interference at the terminal
   - !<Channel>

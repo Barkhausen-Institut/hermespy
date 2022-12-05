@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+from copy import deepcopy
 import unittest
 
 import numpy as np
@@ -6,7 +9,7 @@ from hermespy.simulation.analog_digital_converter import AnalogDigitalConverter,
                                                          QuantizerType, GainControlType
 from hermespy.tools.math import rms_value
 from hermespy.core.signal_model import Signal
-from copy import deepcopy
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll-Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -30,8 +33,7 @@ class TestQuantization(unittest.TestCase):
 
         self.quantizer = AnalogDigitalConverter(num_quantization_bits=self.num_quantization_bits,
                                                 gain=self.gain,
-                                                quantizer_type=self.quantizer_type
-                                                )
+                                                quantizer_type=self.quantizer_type)
 
     def test_init(self) -> None:
         """Initialization arguments should be properly stored as object attributes."""
@@ -246,5 +248,7 @@ class TestQuantization(unittest.TestCase):
 
         np.testing.assert_almost_equal(np.real(output_signal.samples.flatten()), quantization_levels)
 
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
 
-
+        test_yaml_roundtrip_serialization(self, self.quantizer)

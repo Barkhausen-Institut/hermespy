@@ -235,11 +235,11 @@ class TestClusterDelayLine(TestCase):
         sampling_rate = 1e9
         
         self.channel.delay_normalization = DelayNormalization.ZERO
-        self.channel.set_seed(1)
+        self.channel.seed = 1
         zero_delay_response = self.channel.impulse_response(10, sampling_rate)
 
         self.channel.delay_normalization = DelayNormalization.TOF
-        self.channel.set_seed(1)
+        self.channel.seed = 1
         tof_delay_response = self.channel.impulse_response(10, sampling_rate)
 
         expected_num_tof_samples = int(np.linalg.norm(self.transmitter.position - self.receiver.position, 2) / speed_of_light * sampling_rate)
@@ -267,12 +267,12 @@ class TestClusterDelayLine(TestCase):
         sampling_rate = 1e5
         
         # Generate first impulse response
-        self.channel.set_seed(1)
+        self.channel.seed = 1
         first_impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         first_number = self.channel._rng.normal()
 
         # Generate second impulse response with identical initial seed
-        self.channel.set_seed(1)
+        self.channel.seed = 1
         second_impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
         second_number = self.channel._rng.normal()
 
@@ -308,7 +308,7 @@ class TestClusterDelayLine(TestCase):
 
         for a, (zenith, azimuth) in enumerate(angle_candidates):
 
-            self.channel.set_seed(1)
+            self.channel.seed = 1
             self.transmitter.position = range * np.array([cos(azimuth) * sin(zenith),
                                                           sin(azimuth) * sin(zenith),
                                                           cos(zenith)], dtype=float)

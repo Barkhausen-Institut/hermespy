@@ -5,9 +5,11 @@ import unittest
 import numpy as np
 
 from hermespy.fec import BlockInterleaver
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -31,23 +33,6 @@ class TestBlockInterleaver(unittest.TestCase):
                          "Block size init failed")
         self.assertEqual(self.interleave_blocks, self.interleaver.interleave_blocks,
                          "Number of interleaved blocks init failed")
-
-    def test_serialization(self) -> None:
-        """Serialization should recall the full object state.
-        TODO
-        """
-        pass
-#        yaml = YAML(typ='safe')
-#        representer = SafeRepresenter()
-#        constructor = SafeConstructor()
-#
-#        yaml = Interleaver.to_yaml(representer, self.interleaver)
-#        recall = Interleaver.from_yaml(constructor, yaml)
-#
-#        self.assertEqual(self.interleaver.block_size, recall.block_size,
-#                          "Block size recall failed")
-#        self.assertEqual(self.interleaver.interleave_blocks, recall.interleave_blocks,
-#                          "Interleave blocks recall failed")
 
     def test_init_validation(self) -> None:
         """The interleaver init must raise a `ValueError` if blocks can't be sectioned properly"""
@@ -115,3 +100,8 @@ class TestBlockInterleaver(unittest.TestCase):
         expected_bits = np.arange(self.block_size)
 
         np.testing.assert_array_equal(expected_bits, self.interleaver.decode(code))
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.interleaver)

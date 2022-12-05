@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Test Minimum-Mean-Square channel equalization."""
 
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
-from numpy.testing import assert_array_equal
 
-from hermespy.channel import ChannelStateInformation, ChannelStateFormat
 from hermespy.precoding import SpatialMultiplexing
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -59,3 +57,14 @@ class TestSpatialMultiplexing(unittest.TestCase):
 
             self.precoding.required_outputs = lambda precoder: num_outputs
             self.assertEqual(1, float(self.precoder.rate))
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.precoding.spatial_multiplexing.SpatialMultiplexing.precoding', new_callable=PropertyMock) as precoding, \
+             patch('hermespy.precoding.spatial_multiplexing.SpatialMultiplexing.property_blacklist', new_callable=PropertyMock) as blacklist:
+        
+            precoding.return_value = self.precoding
+            blacklist.return_value = {'precoding'}
+            
+            test_yaml_roundtrip_serialization(self, self.precoder, {'precoding',})

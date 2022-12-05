@@ -44,7 +44,7 @@ Operators:
     device: *device_alpha           # Device the modem is operating on
 
     # Waveform configuration
-    Waveform: !<SC-RootRaisedCosine>
+    waveform: !<SC-RootRaisedCosine>
 
         # Symbol settings
         symbol_rate: 100e6

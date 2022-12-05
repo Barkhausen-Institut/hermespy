@@ -10,4 +10,4 @@ __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ['PskQamMapping']
+__all__ = ["PskQamMapping"]

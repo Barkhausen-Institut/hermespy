@@ -24,7 +24,7 @@
       device: *device                     # Device the modem is operating on
       
       # Configuration of the waveform emitted by this transmitter
-      Waveform: !<OFDM>
+      waveform: !<OFDM>
 
         # Symbol modulation settings
         modulation_order: 2               # Modulation order, in other words 1 / subcarrier / subsymbol
@@ -36,7 +36,7 @@
         synchronization: !<SchmidlCox>    # Schmidl-Cox synchronization
 
         # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
-        Resources:
+        resources:
 
           - repetitions: 1
             cp_ratio: 0.0703125
@@ -59,7 +59,7 @@
                 repetitions: 600
 
         # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
-        Structure:
+        structure:
 
           - !<SchmidlCoxPilot>
 

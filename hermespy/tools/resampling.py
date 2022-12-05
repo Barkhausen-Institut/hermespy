@@ -19,10 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-def delay_resampling_matrix(sampling_rate: float,
-                            num_samples_in: int,
-                            delay: float,
-                            num_samples_out: int = -1) -> np.ndarray:
+def delay_resampling_matrix(sampling_rate: float, num_samples_in: int, delay: float, num_samples_out: int = -1) -> np.ndarray:
     """Generate an interpolation-matrix for resampling a signal at a specific delay.
 
     Args:
@@ -50,14 +47,11 @@ def delay_resampling_matrix(sampling_rate: float,
     input_timestamps = np.arange(num_samples_in)
 
     if num_samples_out < 0:
-        delay_samples_overhead = int(
-            ceil(abs(delay) * sampling_rate)) * np.sign(delay)
-        output_timestamps = np.arange(
-            num_samples_in + delay_samples_overhead) - delay * sampling_rate
+        delay_samples_overhead = int(ceil(abs(delay) * sampling_rate)) * np.sign(delay)
+        output_timestamps = np.arange(num_samples_in + delay_samples_overhead) - delay * sampling_rate
 
     else:
         output_timestamps = np.arange(num_samples_out) - delay * sampling_rate
 
-    interpolation_filter = np.sinc(
-        np.subtract.outer(output_timestamps, input_timestamps))
+    interpolation_filter = np.sinc(np.subtract.outer(output_timestamps, input_timestamps))
     return interpolation_filter

@@ -48,7 +48,7 @@ class TestClusterDelayLine(TestCase):
 
         self.channel = RuralMacrocellsLineOfSight()
         self.simulation.scenario.set_channel(self.device_a, self.device_b, self.channel)
-        self.channel.set_seed(123456)
+        self.channel.seed = 123456
 
     def test_cdl(self):
 

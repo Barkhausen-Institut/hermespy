@@ -106,7 +106,7 @@ class ReceiveStreamDecoder(Precoder, ABC):
 class TransmitStreamCoding(Precoding[TransmitStreamEncoder], Serializable):
     """Stream MIMO coding configuration during signal transmission."""
 
-    yaml_tag = u'TransmitCoding'
+    yaml_tag = "TransmitCoding"
     """YAML serialization tag."""
 
     def encode(self, signal: Signal) -> Signal:
@@ -132,7 +132,7 @@ class TransmitStreamCoding(Precoding[TransmitStreamEncoder], Serializable):
 class ReceiveStreamCoding(Precoding[ReceiveStreamDecoder], Serializable):
     """Stream MIMO coding configuration during signal transmission."""
 
-    yaml_tag = u'ReceiveCoding'
+    yaml_tag = "ReceiveCoding"
     """YAML serialization tag."""
 
     def decode(self, signal: Signal) -> Signal:

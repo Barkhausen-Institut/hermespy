@@ -13,10 +13,4 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = [
-    'RadarCube',
-    'RadarDetector', 'PointDetection', 'RadarPointCloud', 'ThresholdDetector', 'MaxDetector',
-    'Radar',  'RadarWaveform', 'RadarTransmission', 'RadarReception',
-    'FMCW',
-    'ReceiverOperatingCharacteristic', 'DetectionProbEvaluator', 'RootMeanSquareError',
-]
+__all__ = ["RadarCube", "RadarDetector", "PointDetection", "RadarPointCloud", "ThresholdDetector", "MaxDetector", "Radar", "RadarWaveform", "RadarTransmission", "RadarReception", "FMCW", "ReceiverOperatingCharacteristic", "DetectionProbEvaluator", "RootMeanSquareError"]

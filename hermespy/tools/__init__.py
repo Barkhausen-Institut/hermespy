@@ -12,8 +12,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = [
-    'db2lin', 'lin2db', 'DbConversionType',
-    'delay_resampling_matrix',
-    'tile_figures',
-]
+__all__ = ["db2lin", "lin2db", "DbConversionType", "delay_resampling_matrix", "tile_figures"]

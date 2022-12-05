@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
@@ -9,6 +9,7 @@ from scipy.constants import pi
 
 from hermespy.core import UniformArray, IdealAntenna
 from hermespy.beamforming import ConventionalBeamformer
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -61,3 +62,18 @@ class TestConventionalBeamformer(TestCase):
             decoded_samples = self.beamformer._decode(encoded_samples, carrier_frequency, focus_angle)
             
             assert_array_almost_equal(expected_samples, decoded_samples[0, ::])
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        blacklist = self.beamformer.property_blacklist
+        blacklist.add('operator')
+        
+        with patch('hermespy.beamforming.conventional.ConventionalBeamformer.property_blacklist', new_callable=PropertyMock) as blacklist_mock, \
+             patch('hermespy.beamforming.conventional.ConventionalBeamformer.operator', new_callable=PropertyMock) as operator_mock:
+            
+            blacklist_mock.return_value = blacklist
+            operator_mock.return_value = self.operator
+            
+            test_yaml_roundtrip_serialization(self, self.beamformer,
+                                              {'operator', 'required_num_output_streams', 'required_num_input_streams',})

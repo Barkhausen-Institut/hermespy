@@ -32,31 +32,23 @@ class RadarCube(object):
     velocity_bins: np.ndarray
     range_bins: np.ndarray
 
-    def __init__(self,
-                 data: np.ndarray,
-                 angle_bins: np.ndarray,
-                 velocity_bins: np.ndarray,
-                 range_bins: np.ndarray) -> None:
+    def __init__(self, data: np.ndarray, angle_bins: np.ndarray, velocity_bins: np.ndarray, range_bins: np.ndarray) -> None:
 
         if data.shape[0] != len(angle_bins):
-            raise ValueError(
-                "Data cube angle dimension does not match angle bins")
+            raise ValueError("Data cube angle dimension does not match angle bins")
 
         if data.shape[1] != len(velocity_bins):
-            raise ValueError(
-                "Data cube velocity dimension does not match velocity bins")
+            raise ValueError("Data cube velocity dimension does not match velocity bins")
 
         if data.shape[2] != len(range_bins):
-            raise ValueError(
-                "Data cube range dimension does not match range bins")
+            raise ValueError("Data cube range dimension does not match range bins")
 
         self.data = data
         self.angle_bins = angle_bins
         self.velocity_bins = velocity_bins
         self.range_bins = range_bins
 
-    def plot_range(self,
-                   title: Optional[str] = None) -> plt.Figure:
+    def plot_range(self, title: Optional[str] = None) -> plt.Figure:
         """Visualize the cube's range data.
 
         Args:
@@ -84,9 +76,7 @@ class RadarCube(object):
 
             return figure
 
-    def plot_range_velocity(self,
-                            title: Optional[str] = None,
-                            interpolate: bool = True) -> plt.Figure:
+    def plot_range_velocity(self, title: Optional[str] = None, interpolate: bool = True) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -115,8 +105,7 @@ class RadarCube(object):
             axes.set_xlabel("Range [m]")
             axes.set_ylabel("Doppler [Hz]")
 
-            plt.pcolormesh(self.range_bins, self.velocity_bins,
-                           range_velocity_profile, shading='auto')
+            plt.pcolormesh(self.range_bins, self.velocity_bins, range_velocity_profile, shading="auto")
 
             return figure
 

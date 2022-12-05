@@ -49,8 +49,7 @@ class BitsSource(ABC, RandomNode):
     Inheriting classes are required to implement the :meth:`.generate_bits` routine.
     """
 
-    def __init__(self,
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, seed: Optional[int] = None) -> None:
         """
         Args:
             seed (int, optional): Seed used to initialize the pseudo-random number generator.
@@ -77,10 +76,9 @@ class BitsSource(ABC, RandomNode):
 class RandomBitsSource(BitsSource, Serializable):
     """Bit stream generator for pseudo-random sequences of bits."""
 
-    yaml_tag = u'RandomBits'
+    yaml_tag = "RandomBits"
 
-    def __init__(self,
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, seed: Optional[int] = None) -> None:
         """
         Args:
             seed (int, optional):
@@ -100,8 +98,7 @@ class StreamBitsSource(BitsSource, Serializable):
 
     __stream: BinaryIO
 
-    def __init__(self,
-                 path: str) -> None:
+    def __init__(self, path: str) -> None:
         """
         Args:
 
@@ -110,7 +107,7 @@ class StreamBitsSource(BitsSource, Serializable):
         """
 
         BitsSource.__init__(self)
-        self.__stream = open(path, mode='rb')
+        self.__stream = open(path, mode="rb")
 
     def __del__(self) -> None:
 

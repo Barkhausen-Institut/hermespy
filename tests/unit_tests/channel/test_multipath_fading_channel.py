@@ -3,7 +3,7 @@
 
 import unittest
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 import numpy.random as rand
@@ -15,9 +15,10 @@ from scipy.constants import pi
 
 from hermespy.channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation
 from hermespy.core.signal_model import Signal
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -309,10 +310,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         channel = MultipathFadingChannel(**self.channel_params)
 
-        channel.set_seed(100)
+        channel.seed = 100
         first_draw = channel.impulse_response(self.num_samples, self.sampling_rate)
 
-        channel.set_seed(100)
+        channel.seed = 100
         second_draw = channel.impulse_response(self.num_samples, self.sampling_rate)
 
         assert_array_almost_equal(first_draw, second_draw)
@@ -375,10 +376,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
             delayed_params['delays'] = reference_params['delays'] + delay
             delayed_channel = MultipathFadingChannel(**delayed_params)
 
-            reference_channel.set_seed(d)
+            reference_channel.seed = d
             reference_propagation, _, _ = reference_channel.propagate(transmit_signal)
 
-            delayed_channel.set_seed(d)
+            delayed_channel.seed = d
             delayed_propagation, _, _ = delayed_channel.propagate(transmit_signal)
 
             zero_pads = int(self.sampling_rate * float(delay))
@@ -601,10 +602,13 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.assertIs(expected_device, channel.receiver)
         self.assertIs(expected_device, channel.beta_correlation.device)
 
-    def test_to_yaml(self) -> None:
-        """Test YAML serialization dump validity."""
-        pass
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.channel.multipath_fading_channel.MultipathFadingChannel.transmitter', new=PropertyMock) as transmitter, \
+             patch('hermespy.channel.multipath_fading_channel.MultipathFadingChannel.receiver', new=PropertyMock) as receiver:
 
-    def test_from_yaml(self) -> None:
-        """Test YAML serialization recall validity."""
-        pass
+            transmitter.return_value = self.transmitter
+            receiver.return_value = self.receiver
+
+            test_yaml_roundtrip_serialization(self, MultipathFadingChannel(**self.channel_params), {'num_outputs', 'num_inputs'})

@@ -4,13 +4,10 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-import numpy as np
-from numpy.testing import assert_array_equal
-
 from hermespy.hardware_loop import HardwareLoop, PhysicalScenario
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -38,4 +35,3 @@ class TestPhysicalDevice(TestCase):
         
         self.assertIs(self.scenario, self.hardware_loop.scenario)
         self.assertTrue(self.hardware_loop.manual_triggering)
-    
