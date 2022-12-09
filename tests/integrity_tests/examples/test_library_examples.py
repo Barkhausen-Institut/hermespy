@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from io import StringIO
+from os import path as os_path
+from sys import path as sys_path
 from unittest import TestCase
 from unittest.mock import Mock, patch, PropertyMock
 from warnings import catch_warnings, simplefilter
@@ -13,7 +15,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -23,28 +25,33 @@ class TestLibraryExamples(TestCase):
     """Test library example execution without exceptions"""
 
     def setUp(self) -> None:
-        ...
+        
+        library_dir = os_path.abspath(os_path.join(os_path.dirname(__file__), '..', '..', '..', '_examples', 'library'))
+        sys_path.append(library_dir)
 
     @classmethod
     def setUpClass(cls) -> None:
+        
+        if not ray.is_initialized():
 
-        # Run ray in local mode
-        with catch_warnings():
+            # Run ray in local mode
+            with catch_warnings():
 
-            simplefilter("ignore")
-            ray.init(local_mode=True)
+                simplefilter("ignore")
+                ray.init(local_mode=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
 
+        ...
         # Shut down ray 
-        ray.shutdown()
+        #ray.shutdown()
 
     @patch('matplotlib.pyplot.figure')
     def test_getting_started_link(self, mock_figure) -> None:
         """Test getting started library link example execution"""
 
-        import _examples.library.getting_started_link
+        import getting_started_link
         mock_figure.assert_called()
 
     @patch('matplotlib.pyplot.figure')
@@ -55,7 +62,7 @@ class TestLibraryExamples(TestCase):
         with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples:
 
             num_samples.return_value = 1
-            import _examples.library.getting_started_simulation_multidim
+            import getting_started_simulation_multidim
 
         mock_figure.assert_called()
 
@@ -67,7 +74,7 @@ class TestLibraryExamples(TestCase):
         with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples:
 
             num_samples.return_value = 1
-            import _examples.library.getting_started_simulation
+            import getting_started_simulation
 
         mock_figure.assert_called()
 
@@ -75,5 +82,5 @@ class TestLibraryExamples(TestCase):
     def test_getting_started(self, mock_figure) -> None:
         """Test getting started library example execution"""
 
-        import _examples.library.getting_started
+        import getting_started
         mock_figure.assert_called()

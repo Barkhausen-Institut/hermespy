@@ -1,6 +1,6 @@
-============
-Radar Module
-============
+=======
+Sensing
+=======
 
 The radar module provides all functionalities to implement sensing operations on
 devices.
@@ -15,6 +15,9 @@ It consists of the
 .. toctree::
 
    radar.radar
+   radar.cube
+   radar.detection
+   radar.evaluation
 
 as well as the specific waveform implementations
 

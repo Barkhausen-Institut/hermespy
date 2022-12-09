@@ -1,6 +1,6 @@
-==================
-Beamforming Module
-==================
+===========
+Beamforming
+===========
 
 The beamforming module of HermesPy provides routines for spatial precoding of MIMO antenna streams.
 
@@ -15,6 +15,10 @@ By focusing towards a dictionary of angles of interest during signal reception, 
 Within this package, this process is referred to as :func:`probing <hermespy.beamforming.beamformer.ReceiveBeamformer.probe>`.
 
 .. toctree::
-
+   :maxdepth: 0
+   :caption: Module Content:
+   :titlesonly:
+   
    beamforming.beamformer
    beamforming.conventional
+   beamforming.capon

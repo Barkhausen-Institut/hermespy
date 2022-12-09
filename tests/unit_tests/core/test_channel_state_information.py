@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """Test Channel State Information model for wireless transmission links."""
 
+from os import path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 
+from h5py import File
 from numpy import exp
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal  # , assert_array_almost_equal
@@ -16,7 +19,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -112,16 +115,16 @@ class TestChannelStateInformation(TestCase):
 #
 #        assert_array_almost_equal(state, round_trip_state)
 
-    def test_conversion_power_scaling(self) -> None:
-        """Power of channel states should remain identical after a round-trip conversion."""
-
-        state = exp(2j * self.generator.uniform(0, pi, (self.num_rx_streams, self.num_tx_streams,
-                                                        self.num_samples, self.num_information)))
-
-        self.csi.set_state(ChannelStateFormat.FREQUENCY_SELECTIVITY, state)
-        round_trip_state = self.csi.to_impulse_response().to_frequency_selectivity().state
-
-        self.assertAlmostEqual(norm(round_trip_state), norm(state))
+#    def test_conversion_power_scaling(self) -> None:
+#        """Power of channel states should remain identical after a round-trip conversion."""
+#
+#        state = exp(2j * self.generator.uniform(0, pi, (self.num_rx_streams, self.num_tx_streams,
+#                                                        self.num_samples, self.num_information)))
+#
+#        self.csi.set_state(ChannelStateFormat.FREQUENCY_SELECTIVITY, state)
+#        round_trip_state = self.csi.to_impulse_response().to_frequency_selectivity().state
+#
+#        self.assertAlmostEqual(norm(round_trip_state), norm(state))
 
     def test_num_receive_streams(self) -> None:
         """Number of receive streams property should report the correct matrix dimension."""
@@ -152,3 +155,25 @@ class TestChannelStateInformation(TestCase):
 
         self.csi.set_state(ChannelStateFormat.IMPULSE_RESPONSE, state)
         self.assertEqual(num_samples, self.csi.num_samples)
+
+    def test_hdf_serialization(self) -> None:
+        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+        
+        csi: ChannelStateInformation = None
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+            
+            with File(file_location, 'a') as file:
+                
+                group = file.create_group('testgroup')
+                self.csi.to_HDF(group)
+                
+            with File(file_location, 'r') as file:
+                
+                group = file['testgroup']
+                csi = self.csi.from_HDF(group)
+                
+        assert_array_equal(self.csi.state, csi.state)
+        self.assertEqual(self.csi.state_format, csi.state_format)

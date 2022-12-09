@@ -8,12 +8,13 @@ Antenna Configuration
 from __future__ import annotations
 from abc import abstractmethod
 from math import cos, sin, exp, sqrt
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
+from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
 from scipy.constants import pi, speed_of_light
 
 from .executable import Executable
@@ -24,7 +25,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -36,8 +37,9 @@ class Antenna(Serializable):
     A set of antenna models defines an antenna array model.
     """
 
-    yaml_tag = u'Antenna'
-    __array: Optional[AntennaArray]     # Array this antenna belongs to
+    yaml_tag = "Antenna"
+    property_blacklist = {"pos"}
+    __array: Optional[AntennaArray]  # Array this antenna belongs to
 
     def __init__(self) -> None:
 
@@ -64,7 +66,7 @@ class Antenna(Serializable):
 
         if self.__array is not None:
             self.__array.remove_antenna(self)
-        
+
         self.__array = value
 
     @property
@@ -133,9 +135,7 @@ class Antenna(Serializable):
         return signal
 
     @abstractmethod
-    def polarization(self,
-                     azimuth: float,
-                     elevation) -> Tuple[float, float]:
+    def polarization(self, azimuth: float, elevation) -> Tuple[float, float]:
         """Generate a single sample of the antenna's polarization characteristics.
 
 
@@ -159,11 +159,11 @@ class Antenna(Serializable):
                 Vertical and horizontal polarization components of the antenna response.
         """
 
-        ...
+        ...  # pragma no cover
 
     def plot_polarization(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna polarization depending on the angles of interest.
-        
+
         Args:
 
             angle_resolution (int, optional):
@@ -184,55 +184,51 @@ class Antenna(Serializable):
         with Executable.style_context():
 
             figure, axes = plt.subplots(1, 2, subplot_kw={"projection": "3d"})
-            figure.suptitle('Antenna Polarization')
+            figure.suptitle("Antenna Polarization")
 
             azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution - pi
-            elevation_angles = pi * np.arange(int(.5 * angle_resolution)) / int(.5 * angle_resolution) - .5 * pi
+            elevation_angles = pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
 
             azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
             e_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             e_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
             h_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             h_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
-            
+
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-                
+
                 e_magnitude, h_magnitude = self.polarization(azimuth, elevation)
-                
+
                 e_magnitudes[i] = e_magnitude
                 h_magnitudes[i] = h_magnitude
-                
-                e_surface[i, :] = (e_magnitude * cos(azimuth) * cos(elevation),
-                                   e_magnitude * sin(azimuth) * cos(elevation),
-                                   e_magnitude * sin(elevation))
-                h_surface[i, :] = (h_magnitude * cos(azimuth) * cos(elevation),
-                                   h_magnitude * sin(azimuth) * cos(elevation),
-                                   h_magnitude * sin(elevation))
+
+                e_surface[i, :] = (e_magnitude * cos(azimuth) * cos(elevation), e_magnitude * sin(azimuth) * cos(elevation), e_magnitude * sin(elevation))
+                h_surface[i, :] = (h_magnitude * cos(azimuth) * cos(elevation), h_magnitude * sin(azimuth) * cos(elevation), h_magnitude * sin(elevation))
 
             triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
 
-            e_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(e_magnitudes.min(), e_magnitudes.max()), cmap='jet')
+            e_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(e_magnitudes.min(), e_magnitudes.max()), cmap="jet")
             e_cmap.set_array(e_magnitudes)
-            h_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(h_magnitudes.min(), h_magnitudes.max()), cmap='jet')
+            h_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(h_magnitudes.min(), h_magnitudes.max()), cmap="jet")
             h_cmap.set_array(h_magnitudes)
 
-            axes[0].set_title('E-Field')
-            axes[0].plot_trisurf(e_surface[:, 0], e_surface[:, 1], e_surface[:, 2], triangles=triangles.triangles, cmap=e_cmap.cmap, norm=e_cmap.norm, linewidth=0.)
-            axes[0].set_xlabel('X')
-            axes[0].set_ylabel('Y')
-            axes[0].set_zlabel('Z')
+            axes[0].set_title("E-Field")
+            axes[0].plot_trisurf(e_surface[:, 0], e_surface[:, 1], e_surface[:, 2], triangles=triangles.triangles, cmap=e_cmap.cmap, norm=e_cmap.norm, linewidth=0.0)
+            axes[0].set_xlabel("X")
+            axes[0].set_ylabel("Y")
+            axes[0].set_zlabel("Z")
 
-            axes[1].set_title('H-Field')
-            axes[1].plot_trisurf(h_surface[:, 0], h_surface[:, 1], h_surface[:, 2], triangles=triangles.triangles, cmap=h_cmap.cmap, norm=h_cmap.norm, linewidth=0.)
-            axes[1].set_xlabel('X')
-            axes[1].set_ylabel('Y')
-            axes[1].set_zlabel('Z')
+            axes[1].set_title("H-Field")
+            axes[1].plot_trisurf(h_surface[:, 0], h_surface[:, 1], h_surface[:, 2], triangles=triangles.triangles, cmap=h_cmap.cmap, norm=h_cmap.norm, linewidth=0.0)
+            axes[1].set_xlabel("X")
+            axes[1].set_ylabel("Y")
+            axes[1].set_zlabel("Z")
 
             return figure
 
     def plot_gain(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna gain depending on the angles of interest.
-        
+
         Args:
 
             angle_resolution (int, optional):
@@ -253,34 +249,32 @@ class Antenna(Serializable):
         with Executable.style_context():
 
             figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
-            figure.suptitle('Antenna Gain')
+            figure.suptitle("Antenna Gain")
 
             azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution - pi
-            elevation_angles = pi * np.arange(int(.5 * angle_resolution)) / int(.5 * angle_resolution) - .5 * pi
+            elevation_angles = pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
 
             azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
             surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-                
+
                 e_magnitude, h_magnitude = self.polarization(azimuth, elevation)
-                magnitude = sqrt(e_magnitude ** 2 + h_magnitude **2)    
+                magnitude = sqrt(e_magnitude**2 + h_magnitude**2)
                 magnitudes[i] = magnitude
-                
-                surface[i, :] = (magnitude * cos(azimuth) * cos(elevation),
-                                 magnitude * sin(azimuth) * cos(elevation),
-                                 magnitude * sin(elevation))
+
+                surface[i, :] = (magnitude * cos(azimuth) * cos(elevation), magnitude * sin(azimuth) * cos(elevation), magnitude * sin(elevation))
 
             triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
 
-            cmap = plt.cm.ScalarMappable(norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap='jet')
+            cmap = plt.cm.ScalarMappable(norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap="jet")
             cmap.set_array(magnitudes)
 
-            axes.plot_trisurf(surface[:, 0], surface[:, 1], surface[:, 2], triangles=triangles.triangles, cmap=cmap.cmap, norm=cmap.norm, linewidth=0.)
-            axes.set_xlabel('X')
-            axes.set_ylabel('Y')
-            axes.set_zlabel('Z')
+            axes.plot_trisurf(surface[:, 0], surface[:, 1], surface[:, 2], triangles=triangles.triangles, cmap=cmap.cmap, norm=cmap.norm, linewidth=0.0)
+            axes.set_xlabel("X")
+            axes.set_ylabel("Y")
+            axes.set_zlabel("Z")
 
             return figure
 
@@ -308,11 +302,12 @@ class IdealAntenna(Antenna):
     resulting in unit gain in every direction.
     """
 
-    yaml_tag: u'IdealAntenna'
+    yaml_tag = "IdealAntenna"
+    """YAML serialization tag"""
 
     def polarization(self, azimuth: float, elevation: float) -> Tuple[float, float]:
 
-        return 2 ** -.5, 2 ** -.5
+        return 2**-0.5, 2**-0.5
 
 
 class PatchAntenna(Antenna):
@@ -328,12 +323,15 @@ class PatchAntenna(Antenna):
     Refer to :footcite:t:`2012:jaeckel` for further information.
     """
 
+    yaml_tag = "PatchAntenna"
+    """YAML serialization tag"""
+
     def polarization(self, azimuth: float, elevation: float) -> Tuple[float, float]:
 
-        vertical_azimuth = .1 + .9 * exp(-1.315 * azimuth ** 2)
+        vertical_azimuth = 0.1 + 0.9 * exp(-1.315 * azimuth**2)
         vertical_elevation = cos(elevation) ** 2
 
-        return max(.1, vertical_azimuth * vertical_elevation), 0.
+        return max(0.1, vertical_azimuth * vertical_elevation), 0.0
 
 
 class Dipole(Antenna):
@@ -355,12 +353,13 @@ class Dipole(Antenna):
 
     """
 
-    def polarization(self,
-                     azimuth: float,
-                     elevation) -> Tuple[float, float]:
+    yaml_tag = "DipoleAntenna"
+    """YAML serialization tag"""
 
-        vertical_polarization = 0. if elevation == 0. else cos(.5 * pi * cos(elevation)) / sin(elevation)
-        return vertical_polarization, 0.
+    def polarization(self, azimuth: float, elevation) -> Tuple[float, float]:
+
+        vertical_polarization = 0.0 if elevation == 0.0 else cos(0.5 * pi * cos(elevation)) / sin(elevation)
+        return vertical_polarization, 0.0
 
 
 class AntennaArrayBase(object):
@@ -374,8 +373,25 @@ class AntennaArrayBase(object):
         Returns:
             int: Number of antenna elements.
         """
+        ...  # pragma no cover
 
-        ...
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of transmitting antenna elements within this array.
+
+        Returns: Number of transmitting elements.
+        """
+
+        return self.num_antennas
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of receiving antenna elements within this array.
+
+        Returns: Number of receiving elements.
+        """
+
+        return self.num_antennas
 
     @property
     @abstractmethod
@@ -391,16 +407,14 @@ class AntennaArrayBase(object):
                 math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
         """
 
-        ...
+        ...  # pragma no cover
 
     @abstractmethod
-    def polarization(self,
-                     azimuth: float,
-                     elevation: float) -> np.ndarray:
+    def polarization(self, azimuth: float, elevation: float) -> np.ndarray:
         """Sensor array polarizations towards a certain angle.
-           
+
         Args:
-        
+
             azimuth (float):
                 Azimuth angle of interest in radians.
 
@@ -414,11 +428,11 @@ class AntennaArrayBase(object):
                 math:`M \\times 2` topology matrix, where :math:`M` is the number of antenna elements.
         """
 
-        ...
+        ...  # pragma no cover
 
     def plot_topology(self) -> plt.Figure:
         """Plot a scatter representation of the array topology.
-        
+
         Returns:
             plt.Figure:
                 The created figure.
@@ -429,19 +443,17 @@ class AntennaArrayBase(object):
         with Executable.style_context():
 
             figure = plt.figure()
-            figure.suptitle('Antenna Array Topology')
+            figure.suptitle("Antenna Array Topology")
 
-            axes = figure.add_subplot(projection='3d')
+            axes = figure.add_subplot(projection="3d")
             axes.scatter(topology[:, 0], topology[:, 1], topology[:, 2])
-            axes.set_xlabel('X [m]')
-            axes.set_ylabel('Y [m]')
-            axes.set_zlabel('Z [m]')
+            axes.set_xlabel("X [m]")
+            axes.set_ylabel("Y [m]")
+            axes.set_zlabel("Z [m]")
 
             return figure
 
-    def cartesian_response(self,
-                           carrier_frequency: float,
-                           position: np.ndarray) -> np.ndarray:
+    def cartesian_response(self, carrier_frequency: float, position: np.ndarray) -> np.ndarray:
         """Response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a point source at position :math:`\\mathbf{t} \\in \\mathbb{R}^{3}` within the sensor array's
@@ -495,10 +507,7 @@ class AntennaArrayBase(object):
         # That's it
         return response
 
-    def horizontal_response(self,
-                            carrier_frequency: float,
-                            azimuth: float,
-                            elevation: float) -> np.ndarray:
+    def horizontal_response(self, carrier_frequency: float, azimuth: float, elevation: float) -> np.ndarray:
         """Response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a far-field point source impinges onto the sensor array from horizontal angles of arrival
@@ -548,9 +557,7 @@ class AntennaArrayBase(object):
         """
 
         # Compute the wave vector
-        k = np.array([cos(azimuth) * cos(elevation),
-                      sin(azimuth) * cos(elevation),
-                      sin(elevation)], dtype=float)
+        k = np.array([cos(azimuth) * cos(elevation), sin(azimuth) * cos(elevation), sin(elevation)], dtype=float)
 
         # Transform the distances to complex phases, i.e. the array response
         response = np.exp(2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
@@ -558,10 +565,7 @@ class AntennaArrayBase(object):
         # That's it
         return response
 
-    def spherical_response(self,
-                           carrier_frequency: float,
-                           azimuth: float,
-                           zenith: float) -> np.ndarray:
+    def spherical_response(self, carrier_frequency: float, azimuth: float, zenith: float) -> np.ndarray:
         """Response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a far-field point source impinges onto the sensor array from spherical angles of arrival
@@ -611,13 +615,11 @@ class AntennaArrayBase(object):
         """
 
         # Compute the wave vector
-        k = np.array([cos(azimuth) * sin(zenith),
-                      sin(azimuth) * sin(zenith),
-                      cos(zenith)], dtype=float)
+        k = np.array([cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float)
 
         # Transform the distances to complex phases, i.e. the array response
         response = np.exp(-2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
-    
+
         # That's it
         return response
 
@@ -625,15 +627,14 @@ class AntennaArrayBase(object):
 class UniformArray(AntennaArrayBase, Serializable):
     """Model of a Uniform Antenna Array."""
 
-    yaml_tag = u'UniformArray'
-    __antenna: Antenna                      # The assumed antenna model
-    __spacing: float                        # Spacing betwene the antenna elements
-    __dimensions: Tuple[int, int, int]    # Number of antennas in x-, y-, and z-direction
+    yaml_tag = "UniformArray"
+    property_blacklist = {"topology"}
+    __antenna: Antenna  # The assumed antenna model
+    __spacing: float  # Spacing betwene the antenna elements
+    # Number of antennas in x-, y-, and z-direction
+    __dimensions: Tuple[int, int, int]
 
-    def __init__(self,
-                 antenna: Antenna,
-                 spacing: float,
-                 dimensions: Tuple[int, ...]) -> None:
+    def __init__(self, antenna: Antenna, spacing: float, dimensions: Tuple[int, ...]) -> None:
         """
         Args:
 
@@ -643,13 +644,13 @@ class UniformArray(AntennaArrayBase, Serializable):
             spacing (float):
                 Spacing between the antenna elements in m.
 
-            dimensions (Tuple[int, ...]):
+            dimensions (Tuple[int, ...  # pragma no cover]):
                 The number of antennas in x-, y-, and z-dimension.
         """
 
         self.__antenna = antenna
         self.spacing = spacing
-        self.dimensions = dimensions
+        self.dimensions = tuple(dimensions)
 
     @property
     def spacing(self) -> float:
@@ -668,7 +669,7 @@ class UniformArray(AntennaArrayBase, Serializable):
     @spacing.setter
     def spacing(self, value: float) -> None:
 
-        if value <= 0.:
+        if value <= 0.0:
             raise ValueError("Spacing must be greater than zero")
 
         self.__spacing = value
@@ -693,13 +694,13 @@ class UniformArray(AntennaArrayBase, Serializable):
     def dimensions(self, value: Tuple[int, int, int]) -> None:
 
         if isinstance(value, int):
-            value = value,
+            value = (value,)
 
         if len(value) == 1:
             value += 1, 1
 
         elif len(value) == 2:
-            value += 1,
+            value += (1,)
 
         elif len(value) > 3:
             raise ValueError("Number of antennas must have three or less entries")
@@ -716,9 +717,7 @@ class UniformArray(AntennaArrayBase, Serializable):
         positions = self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T
         return positions
 
-    def polarization(self,
-                     azimuth: float,
-                     elevation: float) -> np.ndarray:
+    def polarization(self, azimuth: float, elevation: float) -> np.ndarray:
 
         # Query polarization of the base antenna model
         polarization = np.array(self.__antenna.polarization(azimuth, elevation), dtype=float)[np.newaxis, :]
@@ -726,19 +725,51 @@ class UniformArray(AntennaArrayBase, Serializable):
 
         return polarization
 
+    @property
+    def antenna(self) -> Antenna:
+        """The assumed antenna model.
 
-class AntennaArray(Serializable):
+        Returns: The antenna model.
+        """
+
+        return self.__antenna
+
+
+class AntennaArray(AntennaArrayBase, Serializable):
     """Model of a set of arbitrary antennas."""
 
-    __antennas: List[Antenna]           
+    yaml_tag = "CustomArray"
+
+    __antennas: List[Antenna]
     __positions: List[np.ndarray]
     __orientations: List[np.ndarray]
 
-    def __init__(self) -> None:
+    def __init__(self, antennas: Optional[List[Antenna]] = None, positions: Optional[List[np.ndarray]] = None, orientations: Optional[List[np.ndarray]] = None) -> None:
+        """
+        Args:
+
+            antennas (List[Antenna], optional): Antenna models of each array element.
+            positions (List[np.ndarray], optional): Antenna positions of each array element.
+            orientations(List[np.ndarray], optional): Antenna orientation of each array element.
+
+        Raises:
+
+            ValueError: If the argument lists contain an unequal amount of objects.
+        """
 
         self.__antennas = []
         self.__positions = []
         self.__orientations = []
+
+        antennas = antennas if antennas else []
+        positions = positions if positions else []
+        orientations = orientations if orientations else []
+
+        if len(antennas) != len(positions) or len(antennas) != len(orientations):
+            raise ValueError("Number of fields in antennas, positions and orientations must be identical")
+
+        for antenna, position, orientation in zip(antennas, positions, orientations):
+            self.add_antenna(antenna, position, orientation)
 
     @property
     def antennas(self) -> List[Antenna]:
@@ -762,10 +793,25 @@ class AntennaArray(Serializable):
 
         return len(self.__antennas)
 
-    def add_antenna(self,
-                    antenna: Antenna,
-                    position: np.ndarray,
-                    orientation: Optional[np.ndarray]) -> None:
+    @property
+    def positions(self) -> List[np.ndarray]:
+        """Antenna positions within the array
+
+        Returns: List of carthesian vectors.
+        """
+
+        return self.__positions.copy()
+
+    @property
+    def orientations(self) -> List[np.ndarray]:
+        """Antenna orientations within the array
+
+        Returns: List of horizaontal orientation vectors.
+        """
+
+        return self.__orientations.copy()
+
+    def add_antenna(self, antenna: Antenna, position: np.ndarray, orientation: Optional[np.ndarray]) -> None:
         """Add a new antenna element to this array.
 
         Args:
@@ -796,7 +842,7 @@ class AntennaArray(Serializable):
             raise ValueError("Antenna position must be a cartesian vector")
 
         # Raise exception if the orientation is not 2D for azimuth and elevation
-        orientation = np.array([0., 0.], dtype=float) if orientation is None else orientation.flatten()
+        orientation = np.array([0.0, 0.0], dtype=float) if orientation is None else orientation.flatten()
         if len(orientation) != 2:
             raise ValueError("Antenna orientation must contain azimuth and elevation angles information")
 
@@ -829,8 +875,50 @@ class AntennaArray(Serializable):
 
         return np.array(self.__positions, dtype=float)
 
-    def polarization(self,
-                     azimuth: float,
-                     elevation: float) -> np.ndarray:
-        
+    def polarization(self, azimuth: float, elevation: float) -> np.ndarray:
+
         return np.array([ant.polarization(azimuth, elevation) for ant in self.__antennas], dtype=float)
+
+    @classmethod
+    def to_yaml(cls: Type[AntennaArray], representer: SafeRepresenter, node: AntennaArray) -> MappingNode:
+        """Serialize a serializable object to YAML.
+
+        Args:
+
+            representer (SafeRepresenter):
+                A handle to a representer used to generate valid YAML code.
+                The representer gets passed down the serialization tree to each node.
+
+            node (AntennaArray):
+                The channel instance to be serialized.
+
+        Returns: The serialized YAML node.
+        """
+
+        additional_fields = {"positions": [position.tolist() for position in node.positions], "orientations": [orientation.tolist() for orientation in node.orientations]}
+
+        return node._mapping_serialization_wrapper(representer, additional_fields=additional_fields)
+
+    @classmethod
+    def from_yaml(cls: Type[AntennaArray], constructor: SafeConstructor, node: MappingNode) -> AntennaArray:
+        """Recall a new serializable class instance from YAML.
+
+        Args:
+
+            constructor (SafeConstructor):
+                A handle to the constructor extracting the YAML information.
+
+            node (Node):
+                YAML node representing the `AntennaArray` serialization.
+
+        Returns: The de-serialized object.
+        """
+
+        state = constructor.construct_mapping(node, deep=True)
+        positions = state.pop("positions", [])
+        orientations = state.pop("orientations", [])
+
+        state["positions"] = [np.array(position) for position in positions]
+        state["orientations"] = [np.array(orientation) for orientation in orientations]
+
+        return cls.InitializationWrapper(state)

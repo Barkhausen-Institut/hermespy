@@ -2,7 +2,7 @@
 """Matlab interface to the Quadriga channel model."""
 
 from __future__ import annotations
-from typing import Optional, List, Any
+from typing import List, Any
 from matlab.engine import MatlabEngine, start_matlab
 import matlab
 import numpy as np
@@ -13,7 +13,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Tobias Kronauer"
 __email__ = "tobias.kronauer@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -25,7 +25,6 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
     __engine: MatlabEngine
 
     def __init__(self, *args, **kwargs) -> None:
-
 
         # Init base class
         QuadrigaInterface.__init__(self, *args, **kwargs)

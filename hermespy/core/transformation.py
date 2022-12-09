@@ -7,7 +7,7 @@ Coordinate System Transformations
 
 from __future__ import annotations
 from math import atan
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -15,14 +15,13 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class Transformation(np.ndarray):
-
     @property
     def position(self) -> np.ndarray:
 
@@ -31,16 +30,17 @@ class Transformation(np.ndarray):
     @property
     def orientation_rpy(self) -> Tuple[float, float, float]:
         """Orientation in Roll, Pitch and Yaw Angles.
-        
+
         Returns:
             Roll, Pitch and Yaw in Radians.
         """
 
-        roll = attan(self[2, 1] / self[2, 2])
-        pitch = atan(- self[2, 0] * (self[2, 1] + self[2, 2]) ** -.5)
+        roll = atan(self[2, 1] / self[2, 2])
+        pitch = atan(-self[2, 0] * (self[2, 1] + self[2, 2]) ** -0.5)
         yaw = atan(self[1, 0] / self[0, 0])
 
         return roll, pitch, yaw
+
 
 class Transformable(object):
     """Representation of a Coordinate Frame within a Kinematic Chain."""
@@ -49,7 +49,7 @@ class Transformable(object):
     __linked_frames: List[Transformable]
 
     def __init__(self) -> None:
-        
+
         self.__reference_frame = None
         self.__linked_frames = []
 
@@ -70,7 +70,6 @@ class Transformable(object):
 
         return self.__position
 
-
     @position.setter
     def position(self, value: np.ndarray) -> None:
 
@@ -85,7 +84,6 @@ class Transformable(object):
     def orientation_rpy(self) -> Tuple[float, float, float]:
 
         return self.__orientation
-    
 
     @property
     def reference(self) -> Optional[Transformable]:
@@ -101,7 +99,6 @@ class Transformable(object):
         """
 
         return self.__reference_frame
-
 
     @reference.setter
     def reference(self, value: Transformable) -> None:
@@ -124,7 +121,6 @@ class Transformable(object):
 
         return self.__reference_frame is None
 
-
     def add_link(self, link: Transformable) -> None:
         """Establish a new link to acoordinate frame depending on this frame.
 
@@ -135,7 +131,7 @@ class Transformable(object):
                 The transformable frame to be registered.
 
         Raises:
-            
+
             RuntimeError:
                 If the `link` is already registered as a dependency.
         """
@@ -145,10 +141,9 @@ class Transformable(object):
 
         self.__linked_frames.append(link)
 
-
     def remove_link(self, link: Transformable) -> None:
         """Remove an established link to this coordinate frame.
-        
+
         Args:
 
             link (Transformable):

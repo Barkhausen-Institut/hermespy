@@ -2,18 +2,18 @@
 """Test HermesPy simulation executable."""
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-import numpy as np
-from numpy.testing import assert_array_equal
+import ray
 
 from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -94,7 +94,6 @@ class TestSimulationScenario(TestCase):
         self.assertIs(channel, self.scenario.channels[2, 3])
         self.assertIs(channel, self.scenario.channels[3, 2])
         self.assertIs(self.scenario, channel.random_mother)
-        self.assertIs(self.scenario, channel.scenario)
 
     def test_snr_setget(self) -> None:
         """SNR property getter should return setter argument."""
@@ -118,6 +117,19 @@ class TestSimulationScenario(TestCase):
 
         except ValueError:
             self.fail()
+            
+    def test_snr_type_setget(self) -> None:
+        """SNR type property getter should return setter argument."""
+
+        for snr_type in SNRType:
+
+            # Enum set
+            self.scenario.snr_type = snr_type
+            self.assertEqual(snr_type, self.scenario.snr_type)
+
+            # String set
+            self.scenario.snr_type = str(snr_type.name)
+            self.assertEqual(snr_type, self.scenario.snr_type)
 
 
 class TestSimulationRunner(TestCase):
@@ -133,13 +145,25 @@ class TestSimulationRunner(TestCase):
 
         self.transmitter_alpha = Mock()
         self.transmitter_beta = Mock()
+        self.receiver_alpha = Mock()
+        self.receiver_beta = Mock()
 
         self.device_alpha.transmitters = [self.transmitter_alpha]
         self.device_beta.transmitters = [self.transmitter_beta]
+        self.device_alpha.receivers = [self.receiver_alpha]
+        self.device_beta.receivers = [self.receiver_beta]
 
         self.scenario = SimulationScenario(seed=self.seed)
         self.scenario.add_device(self.device_alpha)
         self.scenario.add_device(self.device_beta)
+        
+        for m in range(self.scenario.num_devices):
+            for n in range(self.scenario.num_devices):
+
+                channel = Mock()
+                channel.propagate.return_value = Mock(), Mock(), Mock()
+                self.scenario.set_channel(m, n, channel)
+                
 
         self.runner = SimulationRunner(self.scenario)
 
@@ -149,15 +173,6 @@ class TestSimulationRunner(TestCase):
 
         self.assertTrue(self.transmitter_alpha.transmit.called)
         self.assertTrue(self.transmitter_beta.transmit.called)
-
-    def test_transmit_operators_validation(self) -> None:
-        """Transmit Operators should raise a ValueError on negative drop durations."""
-
-        with self.assertRaises(ValueError):
-            self.runner.transmit_operators(-1.)
-
-        with self.assertRaises(ValueError):
-            self.runner.transmit_operators(0.)
 
     def test_transmit_devices(self) -> None:
         """Transmit devices should call each device's transmit function."""
@@ -170,18 +185,31 @@ class TestSimulationRunner(TestCase):
     def test_propagate(self) -> None:
         """A single propagation should result in each channel being sampled once."""
 
-        for m in range(self.scenario.num_devices):
-            for n in range(self.scenario.num_devices):
-
-                channel = Mock()
-                channel.propagate.return_value = Mock(), Mock(), Mock()
-                self.scenario.set_channel(m, n, channel)
-
-        _ = self.runner.propagate([Mock() for _ in range(2)])
+        self.runner.transmit_operators()
+        self.runner.transmit_devices()
+        self.runner.propagate()
 
         for channel in self.scenario.channels.flat:
             self.assertEqual(1, channel.propagate.call_count)
 
+    def test_receive_devices(self) -> None:
+        """Test receive devices stage callback execution"""
+        
+        self.runner.transmit_operators()
+        self.runner.transmit_devices()
+        self.runner.propagate()
+        self.runner.receive_devices()
+        
+        self.device_alpha.receive.assert_called()
+        self.device_beta.receive.assert_called()
+        
+    def test_receiver_operators(self) -> None:
+        """Test receive operators stage callback execution"""
+        
+        self.runner.receive_operators()
+        
+        self.receiver_alpha.receive.assert_called()
+        self.receiver_beta.receive.assert_called()
 
 class TestSimulationActor(TestCase):
     """Test the Simulation Actor."""
@@ -199,7 +227,7 @@ class TestSimulationActor(TestCase):
         self.dimensions = []
         self.evaluator = Mock()
 
-        self.actor = SimulationActor.remote((self.scenario, self.dimensions, [self.evaluator]))
+        self.actor = SimulationActor.remote((self.scenario, self.dimensions, [self.evaluator]), 0)
 
     def test_sample(self) -> None:
         """"""
@@ -216,24 +244,18 @@ class TestSimulation(TestCase):
     def setUp(self) -> None:
 
         self.simulation = Simulation()
+        
+    @classmethod
+    def setUpClass(cls) -> None:
 
-    def test_snr_type_setget(self) -> None:
-        """SNR type property getter should return setter argument."""
+        ray.init(local_mode=True, num_cpus=1)
+            
+    @classmethod
+    def tearDownClass(cls):
+        
+        ray.shutdown()
+       
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
 
-        for snr_type in SNRType:
-
-            # Enum set
-            self.simulation.snr_type = snr_type
-            self.assertEqual(snr_type, self.simulation.snr_type)
-
-            # String set
-            self.simulation.snr_type = str(snr_type.name)
-            self.assertEqual(snr_type, self.simulation.snr_type)
-
-    def test_to_yaml(self) -> None:
-        """Test YAML serialization dump validity."""
-        pass
-
-    def test_from_yaml(self) -> None:
-        """Test YAML serialization recall validity."""
-        pass
+        test_yaml_roundtrip_serialization(self, self.simulation) 

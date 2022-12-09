@@ -6,22 +6,18 @@ Quadriga Channel Model
 """
 
 from __future__ import annotations
-from typing import Type, TYPE_CHECKING, Optional
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from typing import Type, Optional
+
 import numpy as np
-import numpy.random as rnd
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
 from hermespy.channel import Channel, QuadrigaInterface
-
-if TYPE_CHECKING:
-    from hermespy.scenario import Scenario
-    from hermespy.modem import Transmitter, Receiver
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -33,26 +29,24 @@ class QuadrigaChannel(Channel):
     Maps the output of the QuadrigaInterface to fit into hermes software architecture.
     """
 
-    yaml_tag = u'Quadriga'
+    yaml_tag = "Quadriga"
     yaml_matrix = True
-    
-    __interface: Optional[QuadrigaInterface]        # Reference to the interface class
 
-    def __init__(self,
-                 *args,
-                 interface: Optional[QuadrigaInterface] = None,
-                 **kwargs) -> None:
+    # Reference to the interface class
+    __interface: Optional[QuadrigaInterface]
+
+    def __init__(self, *args, interface: Optional[QuadrigaInterface] = None, **kwargs) -> None:
         """
         Args:
-        
+
             interface (Optional[QuadrigaInterface], optional):
                 Specifies the consisdered Quadriga interface.
                 Defaults to None.
         """
 
         # Init base channel class
-        Channel.__init__(self,  *args, **kwargs)
-        
+        Channel.__init__(self, *args, **kwargs)
+
         # Save interface settings
         self.__interface = interface
 
@@ -77,20 +71,14 @@ class QuadrigaChannel(Channel):
 
         return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface
 
-    def impulse_response(self,
-                         num_samples: int,
-                         sampling_rate: float) -> np.ndarray:
-        
+    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
+
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
 
-        max_delay_in_samples = np.around(
-            np.max(path_delays) * sampling_rate).astype(int)
+        max_delay_in_samples = np.around(np.max(path_delays) * sampling_rate).astype(int)
 
-        impulse_response = np.zeros((num_samples,
-                                     self.receiver.num_antennas,
-                                     self.transmitter.num_antennas,
-                                     max_delay_in_samples + 1), dtype=complex)
+        impulse_response = np.zeros((num_samples, self.receiver.num_antennas, self.transmitter.num_antennas, max_delay_in_samples + 1), dtype=complex)
 
         for tx_antenna in range(self.transmitter.num_antennas):
             for rx_antenna in range(self.receiver.num_antennas):
@@ -99,17 +87,13 @@ class QuadrigaChannel(Channel):
                 cir_txa_rxa = path_gains[rx_antenna, tx_antenna, :]
                 tau_txa_rxa = path_delays[rx_antenna, tx_antenna, :]
 
-                time_delay_in_samples_vec = np.around(
-                    tau_txa_rxa * sampling_rate).astype(int)
+                time_delay_in_samples_vec = np.around(tau_txa_rxa * sampling_rate).astype(int)
 
-                for delay_idx, delay_in_samples in enumerate(
-                        time_delay_in_samples_vec):
+                for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
 
-                    impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += (
-                        cir_txa_rxa[delay_idx]
-                    )
+                    impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += cir_txa_rxa[delay_idx]
         return impulse_response
-    
+
     @classmethod
     def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:
         """Serialize a QuadrigaChannel object to YAML.
@@ -127,17 +111,12 @@ class QuadrigaChannel(Channel):
                 The serialized YAML node.
         """
 
-        state = {
-            'active': node.active,
-            'gain': node.gain,
-            'sync_offset_low': node.sync_offset_low,
-            'sync_offset_high': node.sync_offset_high
-        }
+        state = {"active": node.active, "gain": node.gain, "sync_offset_low": node.sync_offset_low, "sync_offset_high": node.sync_offset_high}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor,  node: MappingNode) -> QuadrigaChannel:
+    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor, node: MappingNode) -> QuadrigaChannel:
         """Recall a new `QuadrigaChannel` instance from YAML.
 
         Args:
