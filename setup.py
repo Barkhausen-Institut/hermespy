@@ -51,6 +51,7 @@ setup(
             'sphinx-rtd-dark-mode',
             'sphinx-tabs',
             'sphinx-copybutton',
+            'sphinx-carousel',
             'nbsphinx',
             'ipywidgets',
             'scikit-build',
