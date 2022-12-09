@@ -31,7 +31,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt-get install -y build-essential octave
-        pip install .[test,quadriga,documentation]
+        pip install .[test,documentation,quadriga,uhd,audio]
 
     - name: Run unit tests
       run: python tests/test_install.py unit_tests
