@@ -56,7 +56,7 @@ setup(
             'ipywidgets',
             'scikit-build',
         ],
-        "uhd": ['usrp_uhd_api@git+https://github.com/Barkhausen-Institut/usrp_uhd_wrapper.git'],
+        "uhd": ['usrp-uhd-client>=0.0.1'],
         "audio": ['sounddevice'],
         "develop": [
             "pybind11",
