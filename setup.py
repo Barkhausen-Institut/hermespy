@@ -73,7 +73,7 @@ setup(
         'console_scripts': ['hermes=hermespy.bin:hermes'],
     },
     install_requires=[
-        'matplotlib~=3.6.2',
+        'matplotlib>=3.5.2',
         'h5py~=3.7.0',
         'numpy>=1.21.6',
         'scipy~=1.9.3',
