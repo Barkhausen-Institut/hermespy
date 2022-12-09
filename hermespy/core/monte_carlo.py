@@ -132,7 +132,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -304,6 +304,55 @@ class EvaluationResult(ABC):
         """
         ...  # pragma no cover
 
+    @staticmethod
+    def _plot_multidim(grid: List[GridDimension], scalar_data: np.ndarray, x_dimension: int, y_label: str, x_scale: str, y_scale: str, figure: plt.Figure) -> None:
+        """Plot multidimensional simulation results into a two-dimensional axes system.
+
+        Args:
+            grid (List[GridDimension]): Simulation grid.
+            scalar_data (np.ndarray): Scalar data to be plotted.
+            x_dimension (int): The dimension index featured on the plot's x-axis.
+            y_label (str): The y-axis label
+            x_scale (str): The x-axis scale.
+            y_scale (str): The y-axis scale.
+            figure (plt.Figure): Figure to which the axis should be added.
+        """
+
+        # Create single axes
+        axes: plt.Axes = figure.add_subplot()
+
+        # Configure axes labels
+        axes.set_xlabel(grid[x_dimension].title)
+        axes.set_ylabel(y_label)
+
+        # Configure axes scales
+        axes.set_yscale(y_scale)
+        axes.set_xscale(x_scale)
+
+        subgrid = grid.copy()
+        del subgrid[x_dimension]
+
+        section_magnitudes = tuple(s.num_sample_points for s in subgrid)
+        for section_indices in np.ndindex(section_magnitudes):
+
+            # Generate the graph line label
+            line_label = ""
+            for i, v in enumerate(section_indices):
+                line_label += f"{grid[i+1].title} = {grid[i+1].sample_points[v]}, "
+            line_label = line_label[:-2]
+
+            if len(line_label) < 1:
+                line_label = None
+
+            # Select the graph line scalars
+            line_scalars = scalar_data[(..., *section_indices)]
+
+            # Plot the graph line
+            axes.plot(grid[x_dimension].sample_points, line_scalars, label=line_label)
+
+        if len(section_magnitudes) > 1:
+            axes.legend()
+
 
 class ProcessedScalarEvaluationResult(EvaluationResult):
     """Base class for scalar evaluation results."""
@@ -311,7 +360,7 @@ class ProcessedScalarEvaluationResult(EvaluationResult):
     __grid: List[GridDimension]
     __scalar_results: np.ndarray
     __evaluator: Evaluator
-    __plot_surface: bool
+    plot_surface: bool
     __base_dimension_index: int
 
     def __init__(self, grid: List[GridDimension], scalar_results: np.ndarray, evaluator: Evaluator, plot_surface: bool = True) -> None:
@@ -319,7 +368,7 @@ class ProcessedScalarEvaluationResult(EvaluationResult):
         self.__grid = grid
         self.__scalar_results = scalar_results
         self.__evaluator = evaluator
-        self.__plot_surface = plot_surface
+        self.plot_surface = plot_surface
         self.__base_dimension_index = 0
 
     def plot(self) -> plt.Figure:
@@ -351,7 +400,7 @@ class ProcessedScalarEvaluationResult(EvaluationResult):
                 axes.plot(sample_points, scalars)
 
             # Two dimensions, with surface plotting enabled
-            elif len(grid) == 2 and self.__plot_surface:
+            elif len(grid) == 2 and self.plot_surface:
 
                 # Create 3D axes
                 axes = figure.add_subplot(projection="3d")
@@ -366,33 +415,7 @@ class ProcessedScalarEvaluationResult(EvaluationResult):
 
             # Multiple dimensions, resort to legend-based multiplots
             else:
-
-                # Create single axes
-                axes = figure.add_subplot()
-
-                # Configure axes labels
-                axes.set_xlabel(grid[0].title)
-                axes.set_ylabel(self.__evaluator.abbreviation)
-
-                # Configure axes scales
-                axes.set_yscale(self.__evaluator.plot_scale)
-
-                section_magnitudes = tuple(s.num_sample_points for s in grid[1:])
-                for section_indices in np.ndindex(section_magnitudes):
-
-                    # Generate the graph line label
-                    line_label = ""
-                    for i, v in enumerate(section_indices):
-                        line_label += f"{grid[i+1].title} = {grid[i+1].sample_points[v]}, "
-                    line_label = line_label[:-2]
-
-                    # Select the graph line scalars
-                    line_scalars = self.__scalar_results[(..., *section_indices)]
-
-                    # Plot the graph line
-                    axes.plot(sample_points, line_scalars, label=line_label)
-
-                axes.legend()
+                self._plot_multidim(grid, scalars, 0, self.__evaluator.abbreviation, "linear", self.__evaluator.plot_scale, figure)
 
             # Return resulting figure handle
             return figure
@@ -1227,6 +1250,15 @@ class MonteCarloResult(Generic[MO]):
         # Save results in matlab file
         savemat(file, mat_dict)
 
+    @property
+    def evaluation_results(self) -> List[EvaluationResult]:
+        """Access individual evaluation results.
+
+        Returns: List of evaluation results.
+        """
+
+        return self.__results
+
 
 class GridDimension(object):
     """Single axis within the simulation grid."""
@@ -1652,6 +1684,17 @@ class MonteCarlo(Generic[MO]):
         self.num_actors = num_actors
         self.catch_exceptions = catch_exceptions
 
+    @staticmethod
+    def __sample_point_to_str(sample_point: Any) -> str:
+
+        if isinstance(sample_point, float):
+            return f"{sample_point:.2f}"
+
+        if type(sample_point).__str__ is not object.__str__:
+            return str(sample_point)
+
+        return sample_point.__class__.__name__
+
     def simulate(self, actor: Type[MonteCarloActor]) -> MonteCarloResult[MO]:
         """Launch the Monte Carlo simulation.
 
@@ -1701,7 +1744,7 @@ class MonteCarlo(Generic[MO]):
 
                 section_str = ""
                 for sample_point in dimension.sample_points:
-                    section_str += f"{sample_point:.2f} "
+                    section_str += self.__sample_point_to_str(sample_point) + " "
 
                 dimension_table.add_row(dimension.title, section_str)
 
@@ -1787,7 +1830,7 @@ class MonteCarlo(Generic[MO]):
                             results_row: List[str] = []
 
                             for dimension, section_idx in zip(self.__dimensions, sample.grid_section):
-                                results_row.append(f"{dimension.sample_points[section_idx]:.2f}")
+                                results_row.append(self.__sample_point_to_str(dimension.sample_points[section_idx]))
 
                             results_row.append(str(sample_grid[sample.grid_section].num_samples))
 

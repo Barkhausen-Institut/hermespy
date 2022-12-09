@@ -212,7 +212,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -926,6 +926,10 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
 
         else:
             num_output_streams = 1
+
+        # Assert that the number of output streams matches the antenna count
+        if self.device is not None and num_output_streams != self.device.num_antennas:
+            raise ValueError(f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.device.num_antennas})")
 
         signal = Signal.empty(self.sampling_rate, num_output_streams)
 

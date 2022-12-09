@@ -22,7 +22,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -293,16 +293,26 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     def transmit(self, clear_cache: bool = True) -> List[Signal]:
 
         # Collect transmissions
-        signals = [t.signal for t in self.transmitters.get_transmissions(clear_cache)] if self.operator_separation else [Device.transmit(self, clear_cache)]
+        operator_signals = [t.signal for t in self.transmitters.get_transmissions(clear_cache)] if self.operator_separation else [Device.transmit(self, clear_cache)]
 
-        # Simulate rf-chain
-        transmissions = [self.rf_chain.transmit(signal) for signal in signals]
+        transmitted_signals = []
+        for operator_signal in operator_signals:
 
-        # Simulate mutual coupling behaviour
-        coupled_transmission = [self.coupling.transmit(signal) for signal in transmissions]
+            if operator_signal is None:
+
+                transmitted_signals.append(Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency))
+                continue
+
+            # Simulate rf-chain
+            rf_signal = self.rf_chain.transmit(operator_signal)
+
+            # Simulate mutual coupling behaviour
+            coupled_signal = self.coupling.transmit(rf_signal)
+
+            transmitted_signals.append(coupled_signal)
 
         # Return result
-        return coupled_transmission
+        return transmitted_signals
 
     @property
     def snr(self) -> float:
@@ -381,6 +391,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             if signals is not None:
                 for signal in signals:
                     mixed_signal.superimpose(signal)
+
+        # Call base class reception routine
+        Device.receive(self, mixed_signal)
 
         # Model mutual coupling behaviour
         coupled_signal = self.coupling.receive(mixed_signal)

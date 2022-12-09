@@ -26,7 +26,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -50,7 +50,7 @@ class AudioDeviceAntennas(AntennaArrayBase):
 class AudioDevice(PhysicalDevice, Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
 
-    yaml_tag = "Audio"
+    yaml_tag = "AudioDevice"
     property_blacklist = {"topology", "wavelength", "velocity", "orientation", "position", "random_mother"}
 
     # Device over which audio streams are to be transmtited

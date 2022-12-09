@@ -7,6 +7,15 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.simulation.rf_chain.rf_chain import RfChain
 from hermespy.core.factory import Factory
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.0.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class TestIqImbalance(unittest.TestCase):
 

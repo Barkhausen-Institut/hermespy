@@ -23,7 +23,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -250,7 +250,8 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
         # If no information about transmitted streams is available, assume orthogonal channels
         if symbols.shape[0] < 2:
 
-            equalized_symbols = symbols / states[:, 0, :, :]
+            summed_tx_states = np.sum(states, axis=1, keepdims=False)
+            equalized_symbols = symbols / summed_tx_states
 
         else:
 

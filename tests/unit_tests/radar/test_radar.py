@@ -18,7 +18,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -239,6 +239,10 @@ class TestRadar(TestCase):
         beamformer = Mock()
         beamformer.num_transmit_input_streams = 1
         beamformer.num_transmit_output_streams = 2
+        
+        ping = self.waveform.ping()
+        ping.samples = np.repeat(ping.samples, 2, 0)
+        beamformer.transmit.return_value = ping
         self.radar.transmit_beamformer = beamformer
 
         _ = self.radar.transmit()

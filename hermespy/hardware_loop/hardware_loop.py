@@ -16,7 +16,7 @@ from rich.prompt import Confirm
 from rich.table import Table
 from ruamel.yaml import SafeConstructor, MappingNode
 
-from hermespy.core import Drop, Evaluation, Evaluator, MonteCarloResult, Pipeline
+from hermespy.core import Drop, Evaluation, Evaluator, MonteCarloResult, Pipeline, Serializable
 from hermespy.core.monte_carlo import GridDimension, SampleGrid, GridSection, MonteCarloSample
 from hermespy.tools import tile_figures
 from .physical_device import PhysicalDevice
@@ -26,13 +26,13 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class HardwareLoop(Generic[PhysicalScenarioType], Pipeline[PhysicalScenarioType]):
+class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[PhysicalScenarioType]):
     """Hermespy hardware loop configuration."""
 
     yaml_tag = "HardwareLoop"
@@ -49,11 +49,11 @@ class HardwareLoop(Generic[PhysicalScenarioType], Pipeline[PhysicalScenarioType]
     # Evaluators further processing drop information
     __evaluators: List[Evaluator]
 
-    def __init__(self, scenario: PhysicalScenarioType, manual_triggering: bool = False, plot_information: bool = True, **kwargs) -> None:
+    def __init__(self, system: PhysicalScenarioType, manual_triggering: bool = False, plot_information: bool = True, **kwargs) -> None:
         """
         Args:
 
-            scenario (PhysicalScenarioType):
+            system (PhysicalScenarioType):
                 The physical scenario being controlled by the hardware loop.
 
             manual_triggering (bool, optional):
@@ -65,7 +65,7 @@ class HardwareLoop(Generic[PhysicalScenarioType], Pipeline[PhysicalScenarioType]
                 Enabled by default.
         """
 
-        Pipeline.__init__(self, scenario=scenario, **kwargs)
+        Pipeline.__init__(self, scenario=system, **kwargs)
 
         self.manual_triggering = manual_triggering
         self.plot_information = plot_information

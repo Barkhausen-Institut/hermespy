@@ -8,10 +8,18 @@ Curtesy of
 https://stackoverflow.com/questions/61503168/how-to-tile-matplotlib-figures-evenly-on-screen
 """
 
-
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.0.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 def screen_geometry(monitor=0):
