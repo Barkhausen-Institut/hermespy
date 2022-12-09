@@ -75,7 +75,7 @@ setup(
     install_requires=[
         'matplotlib~=3.6.2',
         'h5py~=3.7.0',
-        'numpy~=1.23.5',
+        'numpy>=1.21.6',
         'scipy~=1.9.3',
         'pybind11~=2.10.1',
         'ray~=2.1.0',
