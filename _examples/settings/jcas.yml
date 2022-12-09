@@ -71,6 +71,7 @@ Operators:
   - &terminal_operator !<Modem>
 
     device: *terminal         # Operator controls the terminal device
+    reference: *base_station
 
     # Waveform configuration
     waveform_generator: !<SC-FMCW>

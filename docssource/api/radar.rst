@@ -1,6 +1,6 @@
-============
-Radar Module
-============
+=======
+Sensing
+=======
 
 The radar module provides all functionalities to implement sensing operations on
 devices.

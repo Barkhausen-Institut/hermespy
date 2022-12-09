@@ -25,7 +25,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -345,7 +345,7 @@ class Signal(HDFSerializable):
         """
 
         if added_signal.num_streams != self.num_streams:
-            raise ValueError("Superimposing signal models with different stream counts is not defined")
+            raise ValueError(f"Superimposing signal models with different stream counts ({added_signal.num_streams} to {self.num_streams}) is not defined")
 
         if self.delay != added_signal.delay:
             raise NotImplementedError("Superimposing signal models of differing delay is not yet supported")

@@ -39,3 +39,14 @@ span.brackets > a:after {
 img.plot-directive {
     margin-bottom: 14px;
 }
+
+div.mermaid {
+    margin-bottom: 42px;
+}
+
+html[data-theme="dark"].writer-html4 .rst-content dl:not(.docutils) dl:not(.field-list) > dt,
+html[data-theme="dark"].writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) dl:not(.field-list) > dt {
+    background-color: #0f0f0f !important;
+    color: #959595 !important;
+    border-color: #2b2b2b !important;
+  }

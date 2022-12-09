@@ -1,6 +1,6 @@
-====================
-Communication Module
-====================
+=============
+Communication
+=============
 
 This module provides functionalities to transmit information in form of bits over a wireless link.
 
