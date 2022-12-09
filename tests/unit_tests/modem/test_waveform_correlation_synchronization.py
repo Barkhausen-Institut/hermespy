@@ -5,16 +5,16 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
-from numpy.testing import assert_array_equal
 
-from hermespy.core import ChannelStateInformation, Signal
+from hermespy.core import Signal
 from hermespy.modem.waveform_correlation_synchronization import CorrelationSynchronization
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -80,17 +80,11 @@ class TestCorellationSynchronization(TestCase):
         self.synchronization.waveform_generator = waveform_generator
 
         shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.samples, axis=1)
-        shifted_csi = ChannelStateInformation.Ideal(30)
 
-        frames = self.synchronization.synchronize(shifted_sequence, shifted_csi)
-
-        self.assertEqual(1, len(frames))
-        assert_array_equal(pilot_sequence.samples, frames[0][0])
-
-    def test_to_yaml(self) -> None:
-        """YAML serialization should result in a proper state representation"""
-
-        representer = Mock()
-        node = CorrelationSynchronization.to_yaml(representer, self.synchronization)
-
-        representer.represent_mapping.assert_called()
+        pilot_indices = self.synchronization.synchronize(shifted_sequence)
+        self.assertCountEqual([10], pilot_indices)
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.synchronization)

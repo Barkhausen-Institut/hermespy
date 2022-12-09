@@ -1,35 +1,33 @@
 # -*- coding: utf-8 -*-
-"""Chirp Frequency Shift Keying rng testing."""
 
 import unittest
 import os
 from math import ceil
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
-from numpy.testing import assert_array_equal
 
-from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
-from hermespy.modem.waveform_generator_chirp_fsk import WaveformGeneratorChirpFsk, ChirpFskSynchronization,\
-    ChirpFskCorrelationSynchronization
+from hermespy.modem.waveform_generator_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization,\
+    ChirpFSKCorrelationSynchronization
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestWaveformGeneratorChirpFsk(unittest.TestCase):
+class TestChirpFSKWaveform(unittest.TestCase):
     """Test the chirp frequency shift keying waveform generation."""
 
     def setUp(self) -> None:
 
-        self.generator = WaveformGeneratorChirpFsk.__new__(WaveformGeneratorChirpFsk)
+        self.generator = ChirpFSKWaveform.__new__(ChirpFSKWaveform)
         self.modem = Mock()
         self.modem.waveform_generator = self.generator
 
@@ -266,10 +264,8 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
         """Verify the proper demodulation of received signals."""
 
         rx_signal = self.__read_saved_results_from_file('rx_signal.npy')
-        channel_state = ChannelStateInformation.Ideal(num_samples=rx_signal.shape[0])
-        noise_variance = 0.0
 
-        received_symbols, _, _ = self.generator.demodulate(rx_signal, channel_state, noise_variance)
+        received_symbols = self.generator.demodulate(rx_signal)
         received_bits = self.generator.unmap(received_symbols)
 
         received_bits_expected = self.__read_saved_results_from_file('received_bits.npy').ravel()
@@ -352,6 +348,14 @@ class TestWaveformGeneratorChirpFsk(unittest.TestCase):
                 f"{file_name} must be in same folder as this file.")
 
         return np.load(os.path.join(self.parent_dir, file_name))
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modem', new_callable=PropertyMock) as blacklist:
+        
+            blacklist.return_value = {'modem'}
+            test_yaml_roundtrip_serialization(self, self.generator, {'modem',})
 
 
 class TestChirpFskSynchronization(unittest.TestCase):
@@ -360,7 +364,7 @@ class TestChirpFskSynchronization(unittest.TestCase):
     def setUp(self) -> None:
 
         self.rng = np.random.default_rng(42)
-        self.waveform_generator = WaveformGeneratorChirpFsk()
+        self.waveform_generator = ChirpFSKWaveform()
 
         self.synchronization = self.waveform_generator.synchronization
 
@@ -368,7 +372,7 @@ class TestChirpFskSynchronization(unittest.TestCase):
         """Initialization parameters should be properly stored as object attributes."""
 
         self.assertIs(self.waveform_generator, self.synchronization.waveform_generator)
-        self.assertIsInstance(self.waveform_generator.synchronization, ChirpFskSynchronization)
+        self.assertIsInstance(self.waveform_generator.synchronization, ChirpFSKSynchronization)
 
 
 class TestChirpFskCorrelationSynchronization(unittest.TestCase):
@@ -384,12 +388,12 @@ class TestChirpFskCorrelationSynchronization(unittest.TestCase):
 
         self.modem = Mock()
         self.modem.carrier_frequency = 1e5
-        self.waveform = WaveformGeneratorChirpFsk(modem=self.modem)
+        self.waveform = ChirpFSKWaveform(modem=self.modem)
         self.waveform.num_pilot_chirps = 5
         self.waveform.num_data_chirps = 20
         self.waveform.oversampling_factor = 2
 
-        self.synchronization = ChirpFskCorrelationSynchronization(threshold=self.threshold,
+        self.synchronization = ChirpFSKCorrelationSynchronization(threshold=self.threshold,
                                                                   guard_ratio=self.guard_ratio,
                                                                   waveform_generator=self.waveform)
 
@@ -452,7 +456,6 @@ class TestChirpFskCorrelationSynchronization(unittest.TestCase):
 
         # Generate frame signal models
         num_samples = 2 * self.max_offset + self.num_frames * self.waveform.samples_in_frame
-        csi = ChannelStateInformation.Ideal(num_samples)
         samples = np.zeros((1, num_samples), dtype=complex)
         expected_frames = []
         pilot_indices = self.rng.integers(0, self.max_offset, self.num_frames) + np.arange(self.num_frames) * self.waveform.samples_in_frame
@@ -466,17 +469,14 @@ class TestChirpFskCorrelationSynchronization(unittest.TestCase):
             samples[:, p:p+self.waveform.samples_in_frame] += signal_samples
             expected_frames.append(samples[:, p:p+self.waveform.samples_in_frame])
 
-        synchronized_frames = self.synchronization.synchronize(samples, csi)
+        synchronized_frames = self.synchronization.synchronize(samples)
 
         if len(synchronized_frames) != len(expected_frames):
             self.fail()
-
-        for expected_frame, (synchronized_frame, _) in zip(expected_frames, synchronized_frames):
-            assert_array_equal(expected_frame, synchronized_frame)
 
     def test_synchronization_validation(self) -> None:
         """Synchronization should raise RuntimeError if no pilot signal is available."""
 
         self.waveform.num_pilot_chirps = 0
         with self.assertRaises(RuntimeError):
-            _ = self.synchronization.synchronize(Mock(), Mock())
+            _ = self.synchronization.synchronize(Mock())

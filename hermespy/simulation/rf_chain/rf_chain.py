@@ -12,17 +12,18 @@ from __future__ import annotations
 from typing import Type, Optional
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
+from ruamel.yaml import SafeRepresenter, Node
 
 from hermespy.core.signal_model import Signal
 from hermespy.core.factory import Serializable
+from .phase_noise import PhaseNoise, NoPhaseNoise
 from .power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -34,23 +35,22 @@ class RfChain(Serializable):
     Only PA is modelled.
     """
 
-    yaml_tag = u'RfChain'
+    yaml_tag = "RfChain"
     __tx_power: float
     __phase_offset: float
     __amplitude_imbalance: float
 
     __power_amplifier: Optional[PowerAmplifier]
+    __phase_noise: PhaseNoise
 
-    def __init__(self,
-                 tx_power: float = None,
-                 phase_offset: float = None,
-                 amplitude_imbalance: float = None) -> None:
+    def __init__(self, tx_power: float = None, phase_offset: float = None, amplitude_imbalance: float = None) -> None:
 
         self.__tx_power = 1.0
         self.__phase_offset = 0.0
         self.__amplitude_imbalance = 0.0
 
         self.__power_amplifier = None
+        self.__phase_noise = NoPhaseNoise()
 
         if tx_power is not None:
             self.__tx_power = tx_power
@@ -63,6 +63,13 @@ class RfChain(Serializable):
 
     @property
     def amplitude_imbalance(self) -> float:
+        """I/Q amplitude imbalance.
+
+        Raises:
+
+            ValueError: If the imbalance is less than -1 or more than one.
+        """
+
         return self.__amplitude_imbalance
 
     @amplitude_imbalance.setter
@@ -74,7 +81,17 @@ class RfChain(Serializable):
 
     @property
     def phase_offset(self) -> float:
+        """I/Q phase offset.
+
+        Returns: Phase offset in radians.
+        """
+
         return self.__phase_offset
+
+    @phase_offset.setter
+    def phase_offset(self, value: float) -> None:
+
+        self.__phase_offset = value
 
     @classmethod
     def to_yaml(cls: Type[RfChain], representer: SafeRepresenter, node: RfChain) -> Node:
@@ -100,10 +117,10 @@ class RfChain(Serializable):
             state[node.power_amplifier.yaml_tag] = node.__power_amplifier
 
         if node.__amplitude_imbalance != 0.0:
-            state['amplitude_imbalance'] = node.__amplitude_imbalance
+            state["amplitude_imbalance"] = node.__amplitude_imbalance
 
         if node.__phase_offset != 0.0:
-            state['phase_offset'] = node.__phase_offset
+            state["phase_offset"] = node.__phase_offset
 
         if len(state) < 1:
             return representer.represent_none(None)
@@ -120,6 +137,9 @@ class RfChain(Serializable):
 
         # Simulate IQ imbalance
         transmitted_signal.samples = self.add_iq_imbalance(transmitted_signal.samples)
+
+        # Simulate phase noise
+        transmitted_signal = self.phase_noise.add_noise(transmitted_signal)
 
         # Simulate power amplifier
         if self.power_amplifier is not None:
@@ -145,8 +165,8 @@ class RfChain(Serializable):
         eps_delta = self.__phase_offset
         eps_a = self.__amplitude_imbalance
 
-        eta_alpha = np.cos(eps_delta/2) + 1j * eps_a * np.sin(eps_delta/2)
-        eta_beta = eps_a * np.cos(eps_delta/2) - 1j * np.sin(eps_delta/2)
+        eta_alpha = np.cos(eps_delta / 2) + 1j * eps_a * np.sin(eps_delta / 2)
+        eta_beta = eps_a * np.cos(eps_delta / 2) - 1j * np.sin(eps_delta / 2)
 
         return eta_alpha * x + eta_beta * np.conj(x)
 
@@ -160,6 +180,9 @@ class RfChain(Serializable):
 
         # Simulate IQ imbalance
         input_signal.samples = self.add_iq_imbalance(input_signal.samples)
+
+        # Simulate phase noise
+        input_signal = self.phase_noise.add_noise(input_signal)
 
         return input_signal
 
@@ -183,3 +206,18 @@ class RfChain(Serializable):
         """
 
         self.__power_amplifier = power_amplifier
+
+    @property
+    def phase_noise(self) -> PhaseNoise:
+        """Phase Noise model configuration.
+
+
+        Returns: Handle to the pase noise model.
+        """
+
+        return self.__phase_noise
+
+    @phase_noise.setter
+    def phase_noise(self, value: PhaseNoise) -> None:
+
+        self.__phase_noise = value

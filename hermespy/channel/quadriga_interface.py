@@ -18,7 +18,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -37,20 +37,17 @@ class QuadrigaInterface:
     This mapping is done in that class.
     """
 
-    yaml_tag = u'QuadrigaInterface'
+    yaml_tag = "QuadrigaInterface"
     __instance: Optional[QuadrigaInterface] = None
     __path_quadriga_src: str
-    __antenna_kind: str         # TODO: Implement Enumeration for possible types of antennas
+    __antenna_kind: str  # TODO: Implement Enumeration for possible types of antennas
     __scenario_label: str
     __channels: List[QuadrigaChannel]
     __fetched_channels: List[QuadrigaChannel]
     __impulse_responses: List
     __delays: List
 
-    def __init__(self,
-                 path_quadriga_src: Optional[str] = None,
-                 antenna_kind: Optional[str] = None,
-                 scenario_label: Optional[str] = None) -> None:
+    def __init__(self, path_quadriga_src: Optional[str] = None, antenna_kind: Optional[str] = None, scenario_label: Optional[str] = None) -> None:
         """Quadriga Interface object initialization.
 
         Args:
@@ -60,12 +57,12 @@ class QuadrigaInterface:
         """
 
         # Infer the quadriga source path
-        self.__path_quadriga_src = os.environ.get('HERMES_QUADRIGA')
+        self.__path_quadriga_src = os.environ.get("HERMES_QUADRIGA")
         if self.__path_quadriga_src is None:
-            self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), '../..', '3rdparty', 'quadriga_src')
+            self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), "../..", "3rdparty", "quadriga_src")
 
-        self.__antenna_kind = 'omni'
-        self.__scenario_label = '3GPP_38.901_UMa_LOS'
+        self.__antenna_kind = "omni"
+        self.__scenario_label = "3GPP_38.901_UMa_LOS"
         self.__channels = []
         self.__fetched_channels = []
         self.__impulse_responses = []
@@ -79,16 +76,16 @@ class QuadrigaInterface:
 
         if scenario_label is not None:
             self.scenario_label = scenario_label
-            
+
     @property
     def path_launch_script(self) -> str:
         """Generate path to the launch Matlab script.
-        
+
         Returns:
             Path to the launch file.
         """
-        
-        return path.join(path.split(__file__)[0], 'res')
+
+        return path.join(path.split(__file__)[0], "res")
 
     @classmethod
     def GlobalInstance(cls: Type[QuadrigaInterface]) -> QuadrigaInterface:
@@ -394,16 +391,12 @@ class QuadrigaInterface:
                 The serialized YAML node.
         """
 
-        state = {
-            'path_quadriga_src': node.path_quadriga_src,
-            'antenna_kind': node.antenna_kind,
-            'scenario_label': node.scenario_label,
-        }
+        state = {"path_quadriga_src": node.path_quadriga_src, "antenna_kind": node.antenna_kind, "scenario_label": node.scenario_label}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[QuadrigaInterface], constructor: SafeConstructor,  node: MappingNode) -> QuadrigaInterface:
+    def from_yaml(cls: Type[QuadrigaInterface], constructor: SafeConstructor, node: MappingNode) -> QuadrigaInterface:
         """Recall a new `QuadrigaInterface` instance from YAML.
 
         Args:

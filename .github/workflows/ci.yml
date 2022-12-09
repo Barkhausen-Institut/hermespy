@@ -20,6 +20,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         lfs: true
+        submodules: recursive
 
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
@@ -33,7 +34,7 @@ jobs:
         pip install .[test,quadriga,documentation]
 
     - name: Run unit tests
-      run: python -m unittest discover tests/unit_tests
+      run: python tests/test_install.py unit_tests
       
 
   Documentation:
@@ -46,6 +47,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         lfs: true
+        submodules: recursive
 
     - name: Setup python 3.9
       uses: actions/setup-python@v2
@@ -55,7 +57,7 @@ jobs:
     - name: Install doc dependencies
       run: |
         sudo apt update
-        sudo apt-get install -y build-essential octave
+        sudo apt-get install -y build-essential octave pandoc
         pip install -e .[test,quadriga,documentation]
 
     - name: Build documentation

@@ -1,0 +1,111 @@
+# In this example we simulate FSK modulated chirps (similar to LORA).
+# A bandwidth of B = 500kHz is considered, with spreading factor SF = 8,
+# This corresponds to M = 2^SF = 256 different initial frequencies, spaced by
+# \delta_f = B / M = 1953.125Hz
+# The symbol rate (chirp duration) is given by Ts = 2^SF/BW = .512 ms
+# Data is uncoded, and the data rate is
+# SF * BW / 2 **SF = log2(M) / Ts = 15625 kbps
+# 
+# Frames have 160 bits, i.e., 20 FSK symbols.
+# 
+# A carrier frequency of 865MHz is considered, with Rayleigh fading and a speed
+# of 10m/s
+
+!<Simulation>
+
+# Physical device models within the simulated scenario
+Devices:
+
+   # Representation of a single (virtual) device
+  - &transmitting_device !<SimulatedDevice>
+
+    carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
+
+  - &receiving_device !<SimulatedDevice>
+
+    carrier_frequency: 865e6      # Center frequency of Rf-band received signal
+
+
+# Channel models between devices
+Channels:
+
+  # Rayleigh fading between on the device self-interfernce channel
+  - !<MultipathFading>
+    devices: [*transmitting_device, *receiving_device]
+    delays: [ 0 ]           # Delay of the channel in seconds
+    power_profile: [ 0 ] dB # Tap gains
+    rice_factors: [ .inf ]
+
+    # Configure 3GPP standard antenna correlation models at both linked devices
+    alpha_correlation: !<StandardCorrelation>
+
+        device_type: BASE_STATION
+        correlation: LOW
+
+    beta_correlation: !<StandardCorrelation>
+      
+        device_type: TERMINAL
+        correlation: MEDIUM
+
+
+# Operators transmitting or receiving signals over the devices
+Operators:
+
+  # Establish a simplex link between both devices
+  - &link !<SimplexLink>
+
+    transmitting_device: *transmitting_device
+    receiving_device: *receiving_device
+
+    # Bit encoding configuration before mapping to modulation symbols
+    encoding: !<Encoding>
+
+      # Repetition encoding, repeating bit sections for redundancy
+      - !<Repetition>
+
+        bit_block_size: 16        # Block size
+        repetitions: 3            # Number of times the bits within the block get repeated
+
+    waveform: !<ChirpFsk>         # Configuration of the waveform emitted by this transmitter
+
+      chirp_bandwidth: 500e3      # Bandwidth of each dedicated chirp in Hz
+      chirp_duration: .512e-3     # Duration each dedicated chirp in s
+      freq_difference: 1953.125   # Frequency offset between each modulated data symbol
+      num_data_chirps: 20         # Number of chirps generated per data frame
+      modulation_order: 256       # Modulation order, in other words 16 bit per data chirp
+
+      guard_interval: 0.          # Pause between frame transmissions in seconds
+
+
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of `link` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *link
+    receiving_modem: *link
+    confidence: .9
+    tolerance: .01
+    plot_scale: log
+
+  # Evaluate throughput of `link` communicating over `device_alpha`
+  - !<ThroughputEvaluator>
+
+    transmitting_modem: *link
+    receiving_modem: *link
+    confidence: 0.
+    plot_scale: log
+
+
+# Simulation parameters
+num_samples: 1000                  # Number of samples per simulation grid section
+min_num_samples: 50                # Minimum number of samples per simulation grid section before premature stopping
+snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+plot_results: True                 # Visualize the evaluations after the simulation has finished
+
+
+# Scenario parameters over which the Monte-Carlo simulation sweeps
+Dimensions:
+
+  snr: [10, 9, ..., -2] dB

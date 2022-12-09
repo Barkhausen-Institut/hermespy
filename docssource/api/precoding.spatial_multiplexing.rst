@@ -1,3 +1,3 @@
-.. automodule:: hermespy.precoding.zero_forcing_equalizer
+.. automodule:: hermespy.precoding.spatial_multiplexing
 
 .. footbibliography::

@@ -13,7 +13,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -23,7 +23,7 @@ class TestQuadrigaChannel(TestCase):
 
     def setUp(self) -> None:
         
-        path_quadriga_src = path.join(path.split(__file__)[0], 'res', 'quadriga_src')
+        path_quadriga_src = path.join(path.dirname(__file__), '..', '..', '..', 'submodules', 'quadriga', 'quadriga_src')
         self.interface = QuadrigaInterface(path_quadriga_src=path_quadriga_src)
                                            
         self.sampling_rate = 1e6

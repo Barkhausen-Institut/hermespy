@@ -8,14 +8,17 @@ results/
 .idea/
 env*/
 matlab_env/
+.ipynb_checkpoints/
 
 # IDE specific
 .vscode/
+*.code-workspace
 
 # python-specific
-
+*.so
 *.pyc
 .python-version
+*.so
 
 # Don't track build fragments
 wheel/

@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
 """Test HermesPy scenario description class."""
 
-import numpy as np
 import numpy.random as rnd
-from typing import List
 from unittest import TestCase
 from unittest.mock import Mock
-from itertools import product
-from numpy.testing import assert_array_equal
 
-from hermespy.core.scenario import Scenario
+from hermespy.core import Drop, Scenario
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
+
+class MockScenario(Scenario):
+    """Implementation of abstract scenario base for testing purpuses"""
+
+    def _drop(self) -> Drop:
+
+        return Mock()
 
 class TestScenario(TestCase):
     """Test scenario base class."""
@@ -31,7 +34,7 @@ class TestScenario(TestCase):
         self.random_root._rng = self.rng
 
         self.drop_duration = 1e-3
-        self.scenario = Scenario()
+        self.scenario = MockScenario()
         self.scenario.random_mother = self.random_root
 
         self.transmitter_alpha = Mock()
@@ -86,6 +89,12 @@ class TestScenario(TestCase):
         self.scenario.add_device(device)
 
         self.assertTrue(self.scenario.device_registered(device))
+        
+    def test_new_device(self) -> None:
+        """Creating a new device should raise a RuntimeError by default"""
+        
+        with self.assertRaises(RuntimeError):
+            _ = self.scenario.new_device()
 
     def test_add_device_validation(self) -> None:
         """Adding an already registered device should raise a ValueError."""

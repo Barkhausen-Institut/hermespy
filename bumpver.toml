@@ -1,6 +1,6 @@
 [bumpver]
 
-current_version = "0.3.0"
+current_version = "1.0.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bump to version {new_version}"
 commit = false
@@ -13,21 +13,26 @@ push = false
 "README.md" = [ "{version}" ]
 "bumpver.toml" = [ 'current_version = "{version}"' ]
 "setup.py" = [ 'version="{version}"', "'version': ('setup.py', '{version}')" ]
-".gitlab-ci.yml" = [ 'hermespy-{version}-py3-none-any.whl' ]
+".gitlab-ci.yml" = [ 'HERMES_VERSION: "{version}"' ]
 
 # Source files
 "hermespy/beamforming/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/bin/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/channel/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/coding/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/core/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/core/tools/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/fec/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/hardware_loop/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/hardware_loop/audio/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/hardware_loop/uhd/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/jcas/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/tools/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/precoding/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/radar/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/simulation/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/simulation/coupling/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/simulation/isolation/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/simulation/noise/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/simulation/rf_chain/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/tools/*.py" = [ '__version__ = "{version}"' ]
@@ -37,12 +42,17 @@ push = false
 "tests/integrity_tests/examples/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/beamforming/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/channel/*.py" = [ '__version__ = "{version}"' ]
-"tests/unit_tests/coding/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/core/*.py" = [ '__version__ = "{version}"' ]
+"tests/unit_tests/fec/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/hardware_loop/*.py" = [ '__version__ = "{version}"' ]
+"tests/unit_tests/hardware_loop/audio/*.py" = [ '__version__ = "{version}"' ]
+"tests/unit_tests/hardware_loop/uhd/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/jcas/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/modem/*.py" = [ '__version__ = "{version}"' ]
+"tests/unit_tests/modem/tools/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/precoding/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/radar/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/simulation/*.py" = [ '__version__ = "{version}"' ]
+"tests/unit_tests/simulation/noise/*.py" = [ '__version__ = "{version}"' ]
+"tests/unit_tests/simulation/rf_chain/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/tools/*.py" = [ '__version__ = "{version}"' ]

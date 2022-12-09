@@ -2,11 +2,15 @@
 """Test the HermesPy Signal Model."""
 
 import unittest
+from tempfile import TemporaryDirectory
 
 import numpy as np
+from h5py import File
+from os import path
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
+from scipy.fft import fft, fftshift, ifft, ifftshift
 
 from hermespy.core.signal_model import Signal
 
@@ -14,7 +18,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -165,11 +169,28 @@ class TestSignal(unittest.TestCase):
         expected_power = self.signal.power
         resampled_power = resampled_signal.power
 
-        assert_array_almost_equal(expected_power, resampled_power, decimal=3)
+        assert_array_almost_equal(expected_power, resampled_power, decimal=2)
         self.assertEqual(expected_sampling_rate, resampled_signal.sampling_rate)
 
-    def test_resampling_circular(self) -> None:
-        """Up- and subsequently down-sampling a signal model should result in the identical signal."""
+    def test_resampling_circular_no_filter(self) -> None:
+        """Up- and subsequently down-sampling a signal model should result in the identical signal"""
+
+        initial_spectrum = np.zeros(self.num_samples, dtype=complex)
+        initial_spectrum[int(.25 * self.num_samples):int(.25 * self.num_samples) + 50] = np.exp(2j * np.pi * self.random.uniform(0, 2, 50))
+        
+        initial_samples = np.outer(np.exp(2j * np.pi * np.array([.33, .66, .99])), ifft(ifftshift(initial_spectrum)))
+        self.signal.samples = initial_samples
+
+        # Up-sample and down-sample again
+        up_signal = self.signal.resample(1.456 * self.sampling_rate, False)
+        down_signal = up_signal.resample(self.sampling_rate, False)
+
+        # Compare to the initial samples
+        assert_array_almost_equal(initial_samples, down_signal.samples, decimal=2)
+        self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
+        
+    def test_resampling_circular_filter(self) -> None:
+        """Up- and subsequently down-sampling a signal model should result in the identical signal"""
 
         # Create an oversampled sinusoid signal
         frequency = 0.3 * self.sampling_rate
@@ -178,33 +199,58 @@ class TestSignal(unittest.TestCase):
         self.signal.samples = samples
 
         # Up-sample and down-sample again
-        up_signal = self.signal.resample(1.5 * self.sampling_rate)
-        down_signal = up_signal.resample(self.sampling_rate)
+        up_signal = self.signal.resample(1.5 * self.sampling_rate, aliasing_filter=True)
+        down_signal = up_signal.resample(self.sampling_rate, aliasing_filter=True)
 
         # Compare to the initial samples
-        assert_array_almost_equal(samples, down_signal.samples, decimal=1)
+        assert_array_almost_equal(abs(samples[:, 10:]), abs(down_signal.samples[:, 10:]), decimal=1)
         self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
 
-    def test_superimpose_power(self) -> None:
-        """Superimposing two signal models should yield approximately the sum of both model's individual power."""
+    def test_superimpose_power_full(self) -> None:
+        """Superimposing two full overlapping signal models should yield approximately the sum of both model's individual power"""
 
         expected_power = 4 * self.signal.power
         self.signal.superimpose(self.signal)
 
         assert_array_almost_equal(expected_power, self.signal.power)
+        
+    def test_superimpose_power_partially(self) -> None:
+        """Superimposing two partially overlapping signal models should yield approximately the sum of the overlapping power"""
+
+        self.signal.samples = ifft(np.exp(2j * np.pi * self.random.uniform(0, 1, self.signal.samples.shape)))
+        initial_power = self.signal.power
+        
+        added_signal = self.signal.copy()
+        added_signal.carrier_frequency = 1e4
+        
+        expected_added_power = initial_power * (.5 * (added_signal.sampling_rate + self.signal.sampling_rate) - abs(added_signal.carrier_frequency - self.signal.carrier_frequency)) / added_signal.sampling_rate
+        self.signal.superimpose(added_signal)
+        
+        assert_array_almost_equal(expected_added_power, self.signal.power - initial_power, decimal=3)
+
+        self.signal.samples = ifft(np.exp(2j * np.pi * self.random.uniform(0, 1, self.signal.samples.shape)))
+        initial_power = self.signal.power
+        
+        added_signal = self.signal.copy()
+        self.signal.carrier_frequency = 1e4
+        
+        expected_added_power = initial_power * (.5 * (added_signal.sampling_rate + self.signal.sampling_rate) - abs(added_signal.carrier_frequency - self.signal.carrier_frequency)) / added_signal.sampling_rate
+        self.signal.superimpose(added_signal)
+        
+        assert_array_almost_equal(expected_added_power, self.signal.power - initial_power, decimal=3)
 
     def test_timestamps(self) -> None:
-        """Timestamps property should return the correct sampling times."""
+        """Timestamps property should return the correct sampling times"""
 
         expected_timestamps = np.arange(self.num_samples) / self.sampling_rate
         assert_array_equal(expected_timestamps, self.signal.timestamps)
 
     def test_plot(self) -> None:
-        """The plot routine should not raise any exceptions."""
+        """The plot routine should not raise any exceptions"""
         pass
 
     def test_append_samples(self) -> None:
-        """Appending a signal model should yield the proper result."""
+        """Appending a signal model should yield the proper result"""
 
         samples = self.signal.samples.copy()
         append_samples = self.signal.samples + 1j
@@ -254,3 +300,28 @@ class TestSignal(unittest.TestCase):
             samples = self.signal.samples
             append_signal = Signal(samples, self.signal.sampling_rate, 0.)
             self.signal.append_streams(append_signal)
+
+    def test_hdf_serialization(self) -> None:
+        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+        
+        signal: Signal = None
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+            
+            with File(file_location, 'a') as file:
+                
+                group = file.create_group('testgroup')
+                self.signal.to_HDF(group)
+                
+            with File(file_location, 'r') as file:
+                
+                group = file['testgroup']
+                signal = self.signal.from_HDF(group)
+                
+        self.assertEqual(self.signal.carrier_frequency, signal.carrier_frequency)
+        self.assertEqual(self.signal.sampling_rate, signal.sampling_rate)
+        self.assertEqual(self.signal.delay, signal.delay)
+        self.assertEqual(self.signal.noise_power, signal.noise_power)
+        assert_array_equal(self.signal.samples, signal.samples)

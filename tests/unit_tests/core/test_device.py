@@ -14,7 +14,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -22,6 +22,11 @@ __status__ = "Prototype"
 
 class DeviceMock(Device):
     """Mock of the device base class."""
+    
+    def __init__(self, *args, **kwargs) -> None:
+
+        self.__carrier_frequency = 1e9
+        Device.__init__(self, *args, **kwargs)
 
     @property
     def velocity(self) -> np.ndarray:
@@ -33,7 +38,11 @@ class DeviceMock(Device):
 
     @property
     def carrier_frequency(self) -> float:
-        return 0.
+        return self.__carrier_frequency
+    
+    @carrier_frequency.setter
+    def carrier_frequency(self, value: float) -> float:
+        self.__carrier_frequency = value
 
 
 class TestOperator(TestCase):
@@ -43,12 +52,8 @@ class TestOperator(TestCase):
 
         self.device = DeviceMock()
         self.slot = OperatorSlot(device=self.device)
-        self.operator = Operator(slot=self.slot)
-
-    def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes."""
-
-        self.assertIs(self.slot, self.operator.slot)
+        self.operator = Operator()
+        self.slot.add(self.operator)
 
     def test_slot_setget(self) -> None:
         """Slot property getter should return setter argument."""
@@ -71,14 +76,15 @@ class TestOperator(TestCase):
     def test_slot_index(self) -> None:
         """The slot index property should return the proper slot index."""
 
-        self.operator.slot = None
-        self.assertEqual(None, self.operator.slot_index)
-        self.assertEqual(0, self.slot.num_operators)
+        self.assertEqual(0, self.operator.slot_index)
+        self.assertEqual(1, self.slot.num_operators)
 
         self.slot.add(Operator())
-        self.operator.slot = self.slot
         self.slot.add(Operator())
-        self.assertEqual(self.operator.slot_index, 1)
+        
+        new_operator = Operator()
+        self.slot.add(new_operator)
+        self.assertEqual(3, new_operator.slot_index)
 
     def test_device(self) -> None:
         """The device property should return the proper handle."""
@@ -152,11 +158,6 @@ class TestMixingOperator(TestCase):
 
         except ValueError:
             self.fail()
-
-        self.mixing_operator.slot = None
-        self.mixing_operator.carrier_frequency = None
-        with self.assertRaises(RuntimeError):
-            _ = self.mixing_operator.carrier_frequency
 
 
 class ReceiverMock(Receiver):
@@ -248,15 +249,6 @@ class TestOperatorSlot(TestCase):
 
         self.assertTrue(self.slot.registered(operator))
         self.assertIs(operator.slot, self.slot)
-
-    def test_add_validation(self) -> None:
-        """Adding an already existing operator should raise a RuntimeError."""
-
-        operator = Mock()
-        self.slot.add(operator)
-
-        with self.assertRaises(RuntimeError):
-            self.slot.add(operator)
 
     def test_remove(self) -> None:
         """Operators should be properly removed from the list."""
@@ -460,3 +452,20 @@ class TestDevice(TestCase):
         self.device.receivers.add(receiver)
 
         self.assertEqual(10, self.device.max_frame_duration)
+        
+    def test_wavelength_validation(self) -> None:
+        """Device wavelength property setter should raise ValueError on invalid arguments."""
+        
+        with self.assertRaises(ValueError):
+            self.device.wavelength = -1.
+            
+        with self.assertRaises(ValueError):
+            self.device.wavelength = 0.
+            
+    def test_wavelength_setget(self) -> None:
+        """Wavelength property getter should return setter argument"""
+        
+        expected_wavelength = 1.234
+        self.device.wavelength = expected_wavelength
+        
+        self.assertAlmostEqual(expected_wavelength, self.device.wavelength)
