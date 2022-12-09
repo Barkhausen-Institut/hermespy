@@ -71,6 +71,7 @@ snr = db2lin(snr_db)
 EpN0 = snr * chirp_duration * bandwidth
 
 simulation.new_dimension('snr', snr)
+simulation.num_samples = 10000
 
 # Launch simulation campaign
 result = simulation.run()
