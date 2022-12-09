@@ -22,7 +22,7 @@ Channels:
   - !<5GTDL>
     devices: [*device_alpha, *device_alpha]
     model_type: !<TDLType> A       # Type of the TDL model. A-E are available
-    rms_delay: 1e-6                # Root mean square delay in seconds    
+    rms_delay: 1e-9                # Root mean square delay in seconds    
 
 
 # Operators transmitting or receiving signals over the devices
@@ -44,8 +44,7 @@ Operators:
     # MIMO configuration on the symbol level
     precoding: !<SymbolCoding>
 
-      - !<DFT>      # Discrete Fourier Transform Precoding
-      - !<SM>       # Spatial Multiplexing
+      - !<SingleCarrier>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
     waveform: !<OFDM>
@@ -56,6 +55,7 @@ Operators:
       dc_suppression: False                 # Consider the DC component during the DFT
       num_subcarriers: 128                  # Number of subcarriers per communication frame
       channel_estimation: !<OFDM-Ideal>     # Ideal channel estimation routine
+      channel_equalization: !<OFDM-ZF>      # Zero-forcing channel equalization
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
       resources:
@@ -104,8 +104,8 @@ Evaluators:
 
 
 # Simulation parameters
-num_samples: 100                   # Number of samples per simulation grid section
-min_num_samples: 10                # Minimum number of samples per simulation grid section before premature stopping
+num_samples: 1000                  # Number of samples per simulation grid section
+min_num_samples: 100               # Minimum number of samples per simulation grid section before premature stopping
 snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 

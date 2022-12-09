@@ -20,7 +20,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
-__version__ = "0.2.7"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -119,8 +119,8 @@ class MatchedFilterJcas(Radar, DuplexModem, Serializable):
         cloud = None if self.detector is None else self.detector.detect(cube)
 
         radar_reception = RadarReception(signal, cube, cloud)
+        Radar._cache_reception(self, radar_reception)
 
-        self.cache_reception(radar_reception)
         return JCASReception(communication_reception, radar_reception)
 
     @property

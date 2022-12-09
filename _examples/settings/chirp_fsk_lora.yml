@@ -33,7 +33,7 @@ Channels:
   - !<MultipathFading>
     devices: [*transmitting_device, *receiving_device]
     delays: [ 0 ]           # Delay of the channel in seconds
-    power_profile: [ 0 ]    # Channel gain in dB
+    power_profile: [ 0 ] dB # Tap gains
     rice_factors: [ .inf ]
 
     # Configure 3GPP standard antenna correlation models at both linked devices

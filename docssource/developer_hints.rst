@@ -21,6 +21,30 @@ In order to launch unit tests locally,
 
 can be executed from the project's root directory.
 
+Coding Style
+------------
+
+Hermes enforces PEP8 compliant coding style, which can be tested by running flake8
+
+.. code-block:: bash
+
+   flake8 hermespy/
+
+from the repository root.
+Most compliancy violations can be automatically resolved by running the black preprocessor
+
+.. code-block:: bash
+
+   black -C hermespy/
+
+from the repository root.
+Prior to their first execution, both tools must be manually installed in your environment of choice
+
+.. code-block::
+
+   pip install flake8 hermespy
+
+
 Documentation
 --------------
 
@@ -29,7 +53,7 @@ It requires some additional dependencies which may be installed from PyPi via
 
 .. code-block:: bash
 
-   pip install -r requirements_doc.txt
+   pip install -e .[documentation]
 
 The documentation source files are located under `/docssource/`, however,
 most API information should be directly inserted into the source code files and inserted

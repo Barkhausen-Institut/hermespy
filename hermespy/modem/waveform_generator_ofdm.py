@@ -26,7 +26,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -1473,8 +1473,6 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
     """Ideal channel state estimation for OFDM waveforms."""
 
     yaml_tag = "OFDM-Ideal"
-    """YAML serialization tag"""
-
     serialized_attributes = {"reference_position"}
 
     reference_position: ReferencePosition

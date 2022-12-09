@@ -1,6 +1,6 @@
-===========
-Core Module
-===========
+====
+Core
+====
 
 The core module of HermesPy provides all basic functionalities of the simulator.
 
@@ -11,6 +11,8 @@ The core module of HermesPy provides all basic functionalities of the simulator.
 It is split into several interdependent sub-modules:
 
 .. toctree::
+   :maxdepth: 0
+   :titlesonly:
 
    core.monte_carlo
    core.executable
