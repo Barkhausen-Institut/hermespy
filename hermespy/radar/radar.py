@@ -64,7 +64,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -413,13 +413,16 @@ class Radar(Serializable, DuplexOperator):
 
         # Create radar cube object
         cube = RadarCube(cube_data, angles_of_interest, velocity_bins, range_bins)
-        self.__cube = cube
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)
-        self.__cloud = cloud
 
         reception = RadarReception(signal, cube, cloud)
-        self.cache_reception(reception)
+        self._cache_reception(reception)
 
         return reception
+
+    def _cache_reception(self, reception: RadarReception) -> None:
+
+        self.__cube = reception.cube
+        self.__cloud = reception.cloud

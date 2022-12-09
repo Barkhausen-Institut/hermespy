@@ -16,7 +16,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -172,7 +172,8 @@ class TestSISOLinks(TestCase):
         self.rx_operator.precoding.pop_precoder(1)
         
         self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
-        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())        
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar()) 
+               
     def test_tdl_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""

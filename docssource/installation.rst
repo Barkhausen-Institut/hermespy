@@ -1,11 +1,12 @@
 Installation
 ===============
 
-There are two supported ways to install HermesPy on your system.
-Users may either pull pre-built wheels from the official python package index `PyPi`_ or
-or clone the source code from `GitHub`_ and build the package from scratch.
+There are three supported ways to install HermesPy on your system.
+Users may either pull pre-built wheels from the official python package index `PyPi`_,
+clone the source code from `GitHub`_ and build the package from scratch,
+or execute the provided `installation routine`_ to install the Hermes command line interface on Windows systems.
 
-Both methods will be described in the following sections.
+All methods will be described in the following sections.
 
 Install from PyPi
 -----------------
@@ -142,6 +143,20 @@ Download the latest version of `Quadriga`_ and extract the zip archive in a loca
 Afterwards, set the environment variable `HERMES_QUADRIGA` to point to the `quadriga_src` directory.
 This will point Hermes to search for the Quadriga files within the specified location during simulation runtime.
 
+
+Installation Routine
+---------------------
+
+The installation routine automatically sets up a Python environment and pulls Hermes from `PyPi`_,
+setting the proper Windows environment variables to enable the operation from Hermes as a command
+line tool within the userspace.
+Simply download and execute the `installation routine`_.
+
+Please note that the installer feature has been newly introduced with version `1.0.0`
+in order to streamline the setup process for users inexperienced in Python.
+To further improve the user experience for everyone, please report issues with the installation to `GitHub`_.
+
+
 .. _PyPi: https://pypi.org/
 .. _GitHub: https://github.com/Barkhausen-Institut/hermespy
 .. _package: https://pypi.org/project/hermespy/
@@ -154,3 +169,4 @@ This will point Hermes to search for the Quadriga files within the specified loc
 .. _oct2py: https://pypi.org/project/oct2py/
 .. _CMake: https://cmake.org/
 .. _Visual Studio Build Tools: https://visualstudio.microsoft.com/de/downloads/#build-tools-for-visual-studio-2022
+.. _installation routine: https://github.com/Barkhausen-Institut/hermespy/blob/main/scripts/install/HermesPy.exe

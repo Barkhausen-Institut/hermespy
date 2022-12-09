@@ -31,37 +31,45 @@
         subcarrier_spacing: 30e3          # Spacing between the individual subcarrier center frequencies in Hz
         dc_suppression: False             # Do not ignore the DC component during the DFT
         num_subcarriers: 4096             # Number of subcarriers per communiction frame
-        channel_estimation: !<OFDM-ZF>    # Zero-Forcing channel estimation
-        channel_equalization: !<OFDM-LS>  # Least-Squares channel equalization
+        channel_estimation: !<OFDM-LS>    # Least-Squares channel estimation
+        channel_equalization: !<OFDM-ZF>  # Zero-forcing channel equalization
         synchronization: !<SchmidlCox>    # Schmidl-Cox synchronization
 
         # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
         resources:
 
-          - repetitions: 1
-            cp_ratio: 0.0703125
+          - !<OFDM-Resource>
+            repetitions: 1
+            prefix_ratio: 0.0703125
             elements:
-              - type: NULL
+              - !<FrameElement>
+                type: NULL
                 repetitions: 600
-              - type: DATA
+              - !<FrameElement>
+                type: !<ElementType> DATA
                 repetitions: 2100
-              - type: NULL
+              - !<FrameElement>
+                type: !<ElementType> NULL
                 repetitions: 600
 
-          - repetitions: 1
-            cp_ratio: 0.078125
+          - !<OFDM-Resource>
+            repetitions: 1
+            prefix_ratio: 0.078125
             elements:
-              - type: NULL
+              - !<FrameElement>
+                type: !<ElementType> NULL
                 repetitions: 600
-              - type: DATA
+              - !<FrameElement>
+                type: !<ElementType> DATA
                 repetitions: 2100
-              - type: NULL
+              - !<FrameElement>
+                type: !<ElementType> NULL
                 repetitions: 600
 
         # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
         structure:
 
-          - !<SchmidlCoxPilot>
+          - !<SchmidlCoxPilot> {}
 
           - !<Symbol>
             num_repetitions: 1

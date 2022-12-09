@@ -33,6 +33,8 @@ author = 'Barkhausen Institut gGmbH'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx_carousel.carousel',                 # Image slideshows
+    'nbsphinx',                                 # Integrate jupyter notebooks
     'sphinxcontrib.mermaid',                    # Smooth flowcahrts
     'sphinxcontrib.bibtex',                     # Latex bibliography support
     'sphinx.ext.autodoc',
@@ -44,7 +46,6 @@ extensions = [
     'sphinx_rtd_dark_mode',                     # Dark theme
     'sphinx_tabs.tabs',                         # Multiple tabs
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
-    'nbsphinx',                                 # Integrate jupyter notebooks
     'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
 ]
 
@@ -76,6 +77,7 @@ autodoc_default_options = {
     'exclude-members': '__weakref__'
 }
 
+nbsphinx_requirejs_path = ""
 nbsphinx_prolog = """
 
 .. note::
@@ -98,12 +100,13 @@ html_title = 'HermesPy Documentation'
 # Sphinx RTD dark mode
 default_dark_mode = True
 
+# Carousel config
+carousel_bootstrap_add_css_js = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['static']
-
 
 def setup(app):
     """Setup."""

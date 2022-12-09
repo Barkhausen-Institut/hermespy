@@ -375,15 +375,12 @@ In short, entering
 
 .. code-block:: bash
 
-   hermes -p /path/to/settings -o /path/to/output
+   hermes /path/to/config.yml -o /path/to/output
 
 is the most common use-case of the command line interface.
-All configuration files located under */path/to/settings* are parsed and interpreted as
-an executable scenario configuration.
-The configuration is subsequently being executed.
+The configuration */path/to/config.yml* is subsequently being executed.
 All data resulting from this execution will be stored within */path/to/output*.
 
-If the command-line parameter ``-p`` is left out, then the default path */_settings* will be considered.
 If the ``-o`` is left out, then the results will be stored in a unique sub-folder of */results/*.
 
 
@@ -416,7 +413,7 @@ Assuming *simulation.yml* is located within */path/to/settings*, calling
 
 .. code-block:: bash
 
-   hermes -p /path/to/settings
+   hermes /path/to/config.yml
 
 will result in the rendering of four plots displaying the respective information.
 The resulting plots and a matlab dump of the evaluation data will be saved in your current working directory.

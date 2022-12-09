@@ -136,7 +136,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -905,6 +905,9 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
         if not self.registered(transmitter):
             raise ValueError("Transmitter not registered at this slot")
 
+        if transmission.signal.num_streams != self.device.num_antennas:
+            raise ValueError(f"Transmitted signal has invalid number of streams ({transmission.signal.num_streams} instead of {self.device.num_antennas})")
+
         self.__transmissions[transmitter.slot_index] = transmission
 
     def get_transmissions(self, clear_cache: bool = True) -> List[Transmission]:
@@ -981,11 +984,10 @@ class Device(ABC, RandomNode):
     """Receivers capturing signals from this device"""
 
     __power: float  # Average power of the transmitted signals
-    # Position of the device within its scenario in cartesian coordinates
-    __position: Optional[np.ndarray]
-    # Orientation of the device within its scenario as a quaternion
-    __orientation: Optional[np.ndarray]
+    __position: Optional[np.ndarray]  # Position of the device within its scenario in cartesian coordinates
+    __orientation: Optional[np.ndarray]  # Orientation of the device within its scenario as a quaternion
     __topology: np.ndarray  # Antenna array topology of the device
+    __received_signal: Optional[Signal]  # Recently received signal
 
     def __init__(self, antennas: Optional[AntennaArrayBase] = None, power: float = 1.0, position: Optional[np.ndarray] = None, orientation: Optional[np.ndarray] = None, topology: Optional[np.ndarray] = None, seed: Optional[int] = None) -> None:
         """
@@ -1025,6 +1027,7 @@ class Device(ABC, RandomNode):
         self.position = position
         self.orientation = orientation
         self.topology = topology
+        self.__received_signal = None
 
     @property
     def power(self) -> float:
@@ -1320,6 +1323,19 @@ class Device(ABC, RandomNode):
 
         for receiver in self.receivers:
             receiver.cache_reception(signal, csi)
+
+        self.__received_signal = signal
+
+    @property
+    def received_signal(self) -> Optional[Signal]:
+        """Recently received signal.
+
+        Returns:
+            The received signal Model.
+            `None` if nothing has been received yet.
+        """
+
+        return self.__received_signal
 
 
 DeviceType = TypeVar("DeviceType", bound=Device)
