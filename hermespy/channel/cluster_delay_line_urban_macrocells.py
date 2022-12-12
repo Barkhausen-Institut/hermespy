@@ -19,7 +19,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -28,7 +28,7 @@ __status__ = "Prototype"
 class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
     """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
 
-    yaml_tag = u'UMaLOS'
+    yaml_tag = "UMaLOS"
     """YAML serialization tag."""
 
     @property
@@ -37,19 +37,19 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def delay_spread_mean(self) -> float:
-        return -6.995 - .0963 * log10(self._center_frequency * 1e-9)
+        return -6.995 - 0.0963 * log10(self._center_frequency * 1e-9)
 
     @property
     def delay_spread_std(self) -> float:
-        return .66
+        return 0.66
 
     @property
     def aod_spread_mean(self) -> float:
-        return 1.06 + .1114 * log10(self._center_frequency * 1e-9)
+        return 1.06 + 0.1114 * log10(self._center_frequency * 1e-9)
 
     @property
     def aod_spread_std(self) -> float:
-        return .28
+        return 0.28
 
     @property
     def aoa_spread_mean(self) -> float:
@@ -57,15 +57,15 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def aoa_spread_std(self) -> float:
-        return .2
+        return 0.2
 
     @property
     def zoa_spread_mean(self) -> float:
-        return .95
+        return 0.95
 
     @property
     def zoa_spread_std(self) -> float:
-        return .16
+        return 0.16
 
     @property
     def zod_spread_mean(self) -> float:
@@ -73,19 +73,19 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
 
-        return max(-.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + .75)
+        return max(-0.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + 0.75)
 
     @property
     def zod_spread_std(self) -> float:
-        return .4
+        return 0.4
 
     @property
     def zod_offset(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def rice_factor_mean(self) -> float:
-        return 9.
+        return 9.0
 
     @property
     def rice_factor_std(self) -> float:
@@ -97,11 +97,11 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def cross_polarization_power_mean(self) -> float:
-        return 8.
+        return 8.0
 
     @property
     def cross_polarization_power_std(self) -> float:
-        return 4.
+        return 4.0
 
     @property
     def num_clusters(self) -> int:
@@ -113,23 +113,23 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-        return max(.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9))
+        return max(0.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9))
 
     @property
     def cluster_aod_spread(self) -> float:
-        return 5.
+        return 5.0
 
     @property
     def cluster_aoa_spread(self) -> float:
-        return 11.
+        return 11.0
 
     @property
     def cluster_zoa_spread(self) -> float:
-        return 7.
+        return 7.0
 
     @property
     def cluster_shadowing_std(self) -> float:
-        return 3.
+        return 3.0
 
     @property
     def _center_frequency(self) -> float:
@@ -145,11 +145,11 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
 
-        return max(-.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + .9)
+        return max(-0.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + 0.9)
 
     @property
     def zod_spread_std(self) -> float:
-        return .49
+        return 0.49
 
     @property
     def zod_offset(self) -> float:
@@ -158,18 +158,18 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
         fc = log10(self._center_frequency)
 
-        a = .208 * fc - .782
+        a = 0.208 * fc - 0.782
         b = 25
-        c = -.13 * fc + 2.03
+        c = -0.13 * fc + 2.03
         e = 7.66 * fc - 5.96
 
-        return e - 10 ** (a * log10(max(b, device_distance)) + c - .07 * (terminal_height - 1.5))
+        return e - 10 ** (a * log10(max(b, device_distance)) + c - 0.07 * (terminal_height - 1.5))
 
 
 class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializable):
     """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
 
-    yaml_tag = u'UMaNLOS'
+    yaml_tag = "UMaNLOS"
     """YAML serialization tag."""
 
     @property
@@ -178,43 +178,43 @@ class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializabl
 
     @property
     def delay_spread_mean(self) -> float:
-        return -6.28 - .204 * log10(self._center_frequency * 1e-9)
+        return -6.28 - 0.204 * log10(self._center_frequency * 1e-9)
 
     @property
     def delay_spread_std(self) -> float:
-        return .39
+        return 0.39
 
     @property
     def aod_spread_mean(self) -> float:
-        return 1.5 + .1114 * log10(self._center_frequency * 1e-9)
+        return 1.5 + 0.1114 * log10(self._center_frequency * 1e-9)
 
     @property
     def aod_spread_std(self) -> float:
-        return .28
+        return 0.28
 
     @property
     def aoa_spread_mean(self) -> float:
-        return 2.08 - .27 * log10(self._center_frequency * 1e-9)
+        return 2.08 - 0.27 * log10(self._center_frequency * 1e-9)
 
     @property
     def aoa_spread_std(self) -> float:
-        return .11
+        return 0.11
 
     @property
     def zoa_spread_mean(self) -> float:
-        return -.3236 * log10(self._center_frequency * 1e-9) + 1.512
+        return -0.3236 * log10(self._center_frequency * 1e-9) + 1.512
 
     @property
     def zoa_spread_std(self) -> float:
-        return .16
+        return 0.16
 
     @property
     def rice_factor_mean(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def rice_factor_std(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def delay_scaling(self) -> float:
@@ -222,11 +222,11 @@ class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializabl
 
     @property
     def cross_polarization_power_mean(self) -> float:
-        return 7.
+        return 7.0
 
     @property
     def cross_polarization_power_std(self) -> float:
-        return 3.
+        return 3.0
 
     @property
     def num_clusters(self) -> int:
@@ -238,23 +238,23 @@ class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializabl
 
     @property
     def cluster_delay_spread(self) -> float:
-        return max(.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9))
+        return max(0.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9))
 
     @property
     def cluster_aod_spread(self) -> float:
-        return 2.
+        return 2.0
 
     @property
     def cluster_aoa_spread(self) -> float:
-        return 15.
+        return 15.0
 
     @property
     def cluster_zoa_spread(self) -> float:
-        return 7.
+        return 7.0
 
     @property
     def cluster_shadowing_std(self) -> float:
-        return 3.
+        return 3.0
 
     @property
     def _center_frequency(self) -> float:
@@ -264,7 +264,7 @@ class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializabl
 class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializable):
     """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
 
-    yaml_tag = u'UMa02I'
+    yaml_tag = "UMa02I"
     """YAML serialization tag."""
 
     @property
@@ -277,7 +277,7 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def delay_spread_std(self) -> float:
-        return .32
+        return 0.32
 
     @property
     def aod_spread_mean(self) -> float:
@@ -285,7 +285,7 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def aod_spread_std(self) -> float:
-        return .42
+        return 0.42
 
     @property
     def aoa_spread_mean(self) -> float:
@@ -293,7 +293,7 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def aoa_spread_std(self) -> float:
-        return .16
+        return 0.16
 
     @property
     def zoa_spread_mean(self) -> float:
@@ -301,15 +301,15 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def zoa_spread_std(self) -> float:
-        return .43
+        return 0.43
 
     @property
     def rice_factor_mean(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def rice_factor_std(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def delay_scaling(self) -> float:
@@ -317,11 +317,11 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def cross_polarization_power_mean(self) -> float:
-        return 9.
+        return 9.0
 
     @property
     def cross_polarization_power_std(self) -> float:
-        return 5.
+        return 5.0
 
     @property
     def num_clusters(self) -> int:
@@ -333,23 +333,23 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def cluster_delay_spread(self) -> float:
-        return 11.
+        return 11.0
 
     @property
     def cluster_aod_spread(self) -> float:
-        return 5.
+        return 5.0
 
     @property
     def cluster_aoa_spread(self) -> float:
-        return 8.
+        return 8.0
 
     @property
     def cluster_zoa_spread(self) -> float:
-        return 3.
+        return 3.0
 
     @property
     def cluster_shadowing_std(self) -> float:
-        return 4.
+        return 4.0
 
     @property
     def _center_frequency(self) -> float:

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Test Power Amplifier Models."""
 
 import unittest
 from unittest.mock import patch
@@ -9,12 +8,13 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_
 
 from hermespy.simulation.rf_chain.power_amplifier import \
     PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.7"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -94,6 +94,11 @@ class TestPowerAmplifier(unittest.TestCase):
 
         assert_array_equal(expected_signal, signal)
 
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.pa)
+
 
 class TestRappPowerAmplifier(unittest.TestCase):
     """Test the Rapp power amplifier model."""
@@ -127,7 +132,10 @@ class TestRappPowerAmplifier(unittest.TestCase):
         """Smoothness factor property setter should raise ValueError on arguments smaller than one."""
 
         with self.assertRaises(ValueError):
-            self.pa.smoothness_factor = 0.5
+            self.pa.smoothness_factor = 0.
+            
+        with self.assertRaises(ValueError):
+            self.pa.smoothness_factor = -1.
 
         try:
             self.pa.smoothness_factor = 1.0
@@ -145,6 +153,11 @@ class TestRappPowerAmplifier(unittest.TestCase):
         expected_output = signal / (1 + (np.abs(signal) / self.saturation_amplitude)**(2 * p)) ** (1 / (2 * p))
 
         assert_array_almost_equal(expected_output, output)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.pa)
 
 
 class TestClippingPowerAmplifier(unittest.TestCase):
@@ -174,6 +187,11 @@ class TestClippingPowerAmplifier(unittest.TestCase):
 
         non_distorted_index = np.abs(signal) <= 1.0
         assert_array_equal(signal[non_distorted_index], output[non_distorted_index])
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.pa)
 
 
 class TestSalehPowerAmplifier(unittest.TestCase):
@@ -278,6 +296,11 @@ class TestSalehPowerAmplifier(unittest.TestCase):
         expected_output = expected_amp * np.exp(1j * expected_phase)
         assert_array_almost_equal(output, expected_output)
 
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.pa)
+
 
 class TestCustomPowerAmplifier(unittest.TestCase):
     """Test the custom power amplifier model."""
@@ -322,3 +345,8 @@ class TestCustomPowerAmplifier(unittest.TestCase):
 
         expected_output = expected_amp * np.exp(1j * expected_phase)
         assert_array_almost_equal(expected_output, output)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.pa)

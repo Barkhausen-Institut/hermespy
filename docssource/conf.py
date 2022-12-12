@@ -11,10 +11,15 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../hermespy')))
+from sys import path, argv
 
+# Remove the source directory from path lookup to prevent aliasing
+repository = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+for dir in path:
+    if dir.lower() == repository:
+        path.remove(dir)
+        
 # -- Project information -----------------------------------------------------
 
 project = 'HermesPy'
@@ -28,16 +33,20 @@ author = 'Barkhausen Institut gGmbH'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx_carousel.carousel',                 # Image slideshows
+    'nbsphinx',                                 # Integrate jupyter notebooks
     'sphinxcontrib.mermaid',                    # Smooth flowcahrts
     'sphinxcontrib.bibtex',                     # Latex bibliography support
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    'sphinx_autodoc_typehints',
+    'sphinx_copybutton',                        # Copy script examples directly
+    'sphinx_autodoc_typehints',                 # Type hinting support for the autodoc extension
     'sphinx_rtd_dark_mode',                     # Dark theme
     'sphinx_tabs.tabs',                         # Multiple tabs
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
+    'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
 ]
 
 autoclass_content = "both"
@@ -45,6 +54,7 @@ add_module_names = False
 
 # Bibtex
 bibtex_bibfiles = ['references.bib']
+bibtex_foot_reference_style = 'foot'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -67,6 +77,16 @@ autodoc_default_options = {
     'exclude-members': '__weakref__'
 }
 
+nbsphinx_requirejs_path = ""
+nbsphinx_prolog = """
+
+.. note::
+
+   This static document was automatically created from the output of a jupyter notebook.
+   
+   Execute and modify the notebook online `here <https://colab.research.google.com/github/Barkhausen-Institut/hermespy/blob/main/docssource/{{ env.docname }}.ipynb>`_.
+"""
+
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -75,16 +95,18 @@ autodoc_default_options = {
 #
 html_theme = 'sphinx_rtd_theme'
 html_logo = 'images/bi.svg'
+html_title = 'HermesPy Documentation'
 
 # Sphinx RTD dark mode
 default_dark_mode = True
 
+# Carousel config
+carousel_bootstrap_add_css_js = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['static']
-
 
 def setup(app):
     """Setup."""

@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_equal
 from matplotlib.figure import Figure
+from scipy.constants import speed_of_light
 
-from hermespy.core import Signal
-from hermespy.radar import PointDetection, Radar, RadarCube, RadarWaveform
+from hermespy.core import Signal, SNRType, IdealAntenna, UniformArray
+from hermespy.radar import Radar, RadarCube, RadarWaveform, PointDetection
+from hermespy.simulation import SimulatedDevice
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -39,24 +43,6 @@ class TestPointDetection(TestCase):
         assert_array_equal(self.position, self.point.position)
         assert_array_equal(self.velocity, self.point.velocity)
         self.assertEqual(self.power, self.point.power)
-        
-    def test_position_validation(self) -> None:
-        """Position property setter should raise a ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.point.position = np.array([1, 2])
-            
-    def test_velocity_validation(self) -> None:
-        """Velocity property setter should raise a ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.point.velocity = np.array([1, 2])
-            
-    def test_power_validation(self) -> None:
-        """Power property setter should raise a valueError on arguments smaller or equal to zero"""
-        
-        with self.assertRaises(ValueError):
-            self.point.power = -1.
 
 
 class TestRadarCube(TestCase):
@@ -118,7 +104,6 @@ class RadarWaveformMock(RadarWaveform):
 
         return Signal(np.exp(2j * np.pi * self.rng.uniform(0, 1, size=(1, self.num_samples))), self.sampling_rate)
             
-            
     def estimate(self, signal: Signal) -> np.ndarray:
 
         num_velocity_bins = len(self.velocity_bins)
@@ -140,6 +125,14 @@ class RadarWaveformMock(RadarWaveform):
     @property
     def velocity_bins(self) -> np.ndarray:
         return np.arange(5)
+    
+    @property
+    def energy(self) -> float:
+        return 1.
+    
+    @property
+    def power(self) -> float:
+        return 1.
 
 
 class TestRadar(TestCase):
@@ -150,8 +143,7 @@ class TestRadar(TestCase):
         self.rng = np.random.default_rng(42)
         
         self.waveform = RadarWaveformMock()
-        self.device = Mock()
-        self.device.antennas.num_antennas = 2
+        self.device = SimulatedDevice(carrier_frequency=1e8, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / 1e8, (2, 1, 1)))
         
         self.radar = Radar()
         self.radar.waveform = self.waveform
@@ -192,10 +184,17 @@ class TestRadar(TestCase):
         
         self.assertEqual(1., self.radar.frame_duration)
         
-    def test_energy(self) -> None:
-        """Energy property should return the energy"""
+    def test_noise_power(self) -> None:
+        """Noise power estimator should compute the correct powers"""
         
-        self.assertEqual(1., self.radar.energy)
+        self.assertEqual(1., self.radar.noise_power(1., SNRType.EN0))
+        self.assertEqual(1., self.radar.noise_power(1., SNRType.PN0))
+        
+        with self.assertRaises(ValueError):
+            _ = self.radar.noise_power(1., SNRType.EBN0)
+
+        self.radar.waveform = None
+        self.assertEqual(0., self.radar.noise_power(1., SNRType.PN0))
 
     def test_transmit_waveform_validation(self) -> None:
         """Transmitting should raise a RuntimeError if no waveform was configured"""
@@ -240,6 +239,10 @@ class TestRadar(TestCase):
         beamformer = Mock()
         beamformer.num_transmit_input_streams = 1
         beamformer.num_transmit_output_streams = 2
+        
+        ping = self.waveform.ping()
+        ping.samples = np.repeat(ping.samples, 2, 0)
+        beamformer.transmit.return_value = ping
         self.radar.transmit_beamformer = beamformer
 
         _ = self.radar.transmit()
@@ -249,9 +252,8 @@ class TestRadar(TestCase):
     def test_transmit_no_beamformer(self) -> None:
         """Transmitting without a beamformer should infer the signal properly"""
 
-        signal, = self.radar.transmit()
-        self.assertEqual(self.device.antennas.num_antennas, signal.num_streams)
-
+        transmission = self.radar.transmit()
+        self.assertEqual(self.device.antennas.num_antennas, transmission.signal.num_streams)
 
     def test_receive_waveform_validation(self) -> None:
         """Receiving should raise a RuntimeError if no waveform was configured"""
@@ -272,8 +274,8 @@ class TestRadar(TestCase):
     def test_receive_no_beamformer_validation(self) -> None:
         """Receiving without a configured beamformer should raise a RuntimeError"""
 
-        signal, = self.radar.transmit()
-        self.radar._receiver.cache_reception(signal)
+        transmission = self.radar.transmit()
+        self.radar.cache_reception(transmission.signal)
         self.radar.receive_beamformer = None
 
         with self.assertRaises(RuntimeError):
@@ -282,8 +284,8 @@ class TestRadar(TestCase):
     def test_receive_beamformer_output_streams_validation(self) -> None:
         """Receiving should raise a RuntimeError if the configured beamformer is not supported"""
 
-        signal, = self.radar.transmit()
-        self.radar._receiver.cache_reception(signal)
+        transmission = self.radar.transmit()
+        self.radar.cache_reception(transmission.signal)
 
         beamformer = Mock()
         beamformer.num_receive_output_streams = 2
@@ -295,8 +297,8 @@ class TestRadar(TestCase):
     def test_receive_beamformer_input_streams_validation(self) -> None:
         """Receiving should raise a RuntimeError if the configured beamformer is not supported"""
 
-        signal, = self.radar.transmit()
-        self.radar._receiver.cache_reception(signal)
+        transmission = self.radar.transmit()
+        self.radar.cache_reception(transmission.signal)
 
         beamformer = Mock()
         beamformer.num_receive_output_streams = 1
@@ -309,18 +311,29 @@ class TestRadar(TestCase):
     def test_receive_no_beamformer(self) -> None:
         """Receiving without a beamformer should result in a valid radar cube"""
 
-        self.device.antennas.num_antennas = 1
-        self.radar._receiver.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
+        self.device.antennas = UniformArray(IdealAntenna(), 1., (1,))
+        self.radar.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
         self.radar.receive_beamformer = None
 
-        cube, = self.radar.receive()
-        self.assertEqual(1, len(cube.angle_bins))
+        reception = self.radar.receive()
+        self.assertEqual(1, len(reception.cube.angle_bins))
 
     def test_receive_beamformer(self) -> None:
         """Receiving with a beamformer should result in a valid radar cube"""
 
-        signal, = self.radar.transmit()
-        self.radar._receiver.cache_reception(signal)
+        transmission = self.radar.transmit()
+        self.radar.cache_reception(transmission.signal)
 
-        cube, = self.radar.receive()
-        self.assertEqual(1, len(cube.angle_bins))
+        reception = self.radar.receive()
+        self.assertEqual(1, len(reception.cube.angle_bins))
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.radar.Radar.property_blacklist', new_callable=PropertyMock) as blacklist, \
+             patch('hermespy.radar.Radar.waveform', new_callable=PropertyMock) as waveform:
+                 
+            blacklist.return_value = {'slot', 'waveform', 'receive_beamformer'}
+            waveform.return_value = self.waveform
+
+            test_yaml_roundtrip_serialization(self, self.radar)

@@ -1,6 +1,6 @@
-=============
-Tools Module
-=============
+=====
+Tools
+=====
 
 The tools module contains a lose collection of various sub-routines supporting
 the main modules.
@@ -9,3 +9,4 @@ the main modules.
 
    tools.math
    tools.resampling
+   tools.tile

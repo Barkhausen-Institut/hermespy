@@ -13,16 +13,13 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-def delay_resampling_matrix(sampling_rate: float,
-                            num_samples_in: int,
-                            delay: float,
-                            num_samples_out: int = -1) -> np.ndarray:
+def delay_resampling_matrix(sampling_rate: float, num_samples_in: int, delay: float, num_samples_out: int = -1) -> np.ndarray:
     """Generate an interpolation-matrix for resampling a signal at a specific delay.
 
     Args:

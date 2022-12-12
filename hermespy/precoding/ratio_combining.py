@@ -6,19 +6,18 @@ Maximum Ratio Combining
 """
 
 from __future__ import annotations
-from typing import Type, Tuple
+from typing import Tuple
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode
 
-from . import SymbolPrecoder
+from .symbol_precoding import SymbolPrecoder
 from hermespy.core.factory import Serializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -27,15 +26,12 @@ __status__ = "Prototype"
 class MaximumRatioCombining(SymbolPrecoder, Serializable):
     """Maximum ratio combining symbol decoding step"""
 
-    yaml_tag: str = u'MRC'
+    yaml_tag: str = "MRC"
 
     def encode(self, symbol_stream: np.ndarray) -> np.ndarray:
         raise NotImplementedError("Maximum ratio combining only supports decoding operations")
 
-    def decode(self,
-               symbol_stream: np.ndarray,
-               stream_responses: np.ndarray,
-               stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def decode(self, symbol_stream: np.ndarray, stream_responses: np.ndarray, stream_noises: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
         # Decode data using MRC receive diversity with N_rx received antennas.
         #

@@ -10,7 +10,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -47,7 +47,7 @@ class TestRandomNode(TestCase):
         
         first_number = self.node._rng.normal()
         
-        self.node.set_seed(self.seed)
+        self.node.seed = self.seed
         second_number = self.node._rng.normal()
         
         self.assertEqual(first_number, second_number)
@@ -84,7 +84,7 @@ class TestRandomTree(TestCase):
     
         first_numbers = [child._rng.normal() for child in self.child_nodes]
         
-        self.root_node.set_seed(self.seed)
+        self.root_node.seed = self.seed
         second_numbers = [child._rng.normal() for child in self.child_nodes]
 
         self.assertCountEqual(first_numbers, second_numbers)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import patch, PropertyMock
+from unittest.mock import MagicMock, patch, PropertyMock
 from tempfile import TemporaryDirectory
 from typing import Any, List, Optional
 from warnings import catch_warnings, simplefilter
@@ -15,10 +15,22 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+monte_carlo_init = MonteCarlo.__init__
+
+def init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
+    
+    args = list(args)
+    args[1] = 1
+    kwargs['num_actors'] = 1            # Only spawn a single actor
+    kwargs['catch_exceptions'] = False  # Don't catch exceptions during runtime
+    
+    monte_carlo_init(cls, *args, **kwargs)
 
 
 def new_dimension_mock(cls: MonteCarlo,
@@ -48,11 +60,8 @@ class TestConfigurationExamples(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-
-        # Run ray in local mode
-        with catch_warnings():
-
-            simplefilter("ignore")
+        
+        if not ray.is_initialized():
             ray.init(local_mode=True)
 
     @classmethod
@@ -70,43 +79,47 @@ class TestConfigurationExamples(TestCase):
                 Path to the yaml configuration file.
         """
 
-        with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples, patch('sys.stdout') as stdout, patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure') as figure:
+        with patch('sys.stdout'), patch.object(MonteCarlo, '__init__', new=init_mock), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
 
-            num_samples.return_value = 1
-            args = ['-p', path, '-o', self.tempdir.name]
-            hermes(args)
+            hermes([path, '-o', self.tempdir.name])
     
     def test_chirp_fsk_lora(self) -> None:
         """Test example settings for chirp FSK modulation"""
 
-        self.__run_yaml("_examples/settings/chirp_fsk_lora")
+        self.__run_yaml("_examples/settings/chirp_fsk_lora.yml")
 
     def test_chirp_qam(self) -> None:
         """Test example settings for chirp QAM modulation"""
 
-        self.__run_yaml("_examples/settings/chirp_qam")
+        self.__run_yaml("_examples/settings/chirp_qam.yml")
+        
+    def test_hardware_model(self) -> None:
+        """Test example settings for hardware simulation"""
+
+        self.__run_yaml("_examples/settings/hardware_model.yml")
 
     def test_interference_ofdm_sc(self) -> None:
         """Test example settings for single carrier OFDM interference"""
 
-        self.__run_yaml("_examples/settings/interference_ofdm_single_carrier")
+        # Currently disabled due to suspicious high runtime
+        # self.__run_yaml("_examples/settings/interference_ofdm_single_carrier.yml")
 
     def test_jcas(self) -> None:
         """Test example settings for joint communications and sensing"""
 
-        self.__run_yaml("_examples/settings/jcas")
+        self.__run_yaml("_examples/settings/jcas.yml")
 
     def test_ofdm_5g(self) -> None:
         """Test example settings for 5G OFDM modulation"""
 
-        self.__run_yaml("_examples/settings/ofdm_5g")
+        self.__run_yaml("_examples/settings/ofdm_5g.yml")
 
     def test_ofdm_single_carrier(self) -> None:
         """Test example settings for single carrier OFDM modulation"""
 
-        self.__run_yaml("_examples/settings/ofdm_single_carrier")
+        self.__run_yaml("_examples/settings/ofdm_single_carrier.yml")
 
     def test_operator_separation(self) -> None:
         """Test example settings for operator separation"""
 
-        self.__run_yaml("_examples/settings/operator_separation")
+        self.__run_yaml("_examples/settings/operator_separation.yml")

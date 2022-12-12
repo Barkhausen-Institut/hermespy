@@ -13,7 +13,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -48,16 +48,17 @@ class TestThroughputEvaluator(TestCase):
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper throughput rate."""
 
-        self.transmitter.transmitted_bits = self.rng.integers(0, 2, self.num_frames * self.bits_per_frame)
-        self.receiver.received_bits = self.transmitter.transmitted_bits.copy()
+        transmitted_bits = self.rng.integers(0, 2, self.num_frames * self.bits_per_frame)
+        self.transmitter.transmission.bits = transmitted_bits.copy()
+        self.receiver.reception.bits = transmitted_bits.copy()
 
         # Assert throughput without any frame errors
         expected_throughput = self.bits_per_frame / self.frame_duration
-        throughput = self.evaluator.evaluate(Mock())
-        self.assertAlmostEqual(expected_throughput, throughput.to_scalar())
+        throughput = self.evaluator.evaluate()
+        self.assertAlmostEqual(expected_throughput, throughput.artifact().to_scalar())
 
         # Assert throughput with frame errors
-        self.receiver.received_bits[0:int(.5*self.bits_per_frame)] = 1.
+        self.receiver.reception.bits[0:int(.5*self.bits_per_frame)] = 1.
         expected_throughput = (self.num_frames - 1) * self.bits_per_frame / (self.num_frames * self.frame_duration)
-        throughput = self.evaluator.evaluate(Mock())
-        self.assertEqual(expected_throughput, throughput.to_scalar())
+        throughput = self.evaluator.evaluate()
+        self.assertEqual(expected_throughput, throughput.artifact().to_scalar())

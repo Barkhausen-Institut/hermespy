@@ -1,0 +1,118 @@
+# This simulation evaluates a joint communication and sensing scenario.
+#
+# We assume a base station communicating with a terminal using a single-carrier
+# waveform. Simulataneously, the base-station infers spatial information from
+# its backscattered communication signal.
+#
+# The simulation evaluates both the bit error rate of the downling commuication
+# between base station and terminal as well as the probability of detection of an
+# object within the base-stations vicinity.s
+
+!<Simulation>
+
+# Physical device models within the simulated scenario
+Devices:
+
+  - &base_station !<SimulatedDevice>
+    carrier_frequency: 1e9    # 1GHz assumed carrier frequency
+
+  - &terminal !<SimulatedDevice>
+    carrier_frequency: 1e9    # 1GHz assumed carrier frequency
+
+
+# Channel models between device models
+Channels:
+
+  # Single target radar channel
+  - &radar_channel !<RadarChannel>
+    devices: [*base_station, *base_station]
+    target_range: 1         # The target is located within a distance of 1m of the base station
+    radar_cross_section: 5  # The target has a cross section of 5m2
+
+  # 5G TDL communication channel model
+  - !<5GTDL>
+    devices: [*base_station, *terminal]
+    model_type: !<TDLType> A  # Type of the TDL model. A-E are available
+
+  # No self-interference at the terminal
+  - !<Channel>
+    devices: [*terminal, *terminal]
+    gain: 0.
+
+# Operators transmitting or receiving signals over the devices
+Operators:
+
+  # The base station is operated by a joint communication and sensing algorithm
+  - &base_station_operator !<MatchedFilterJcas>
+
+    device: *base_station # Operater controls the base station device
+    max_range: 10         # Maximal detectable range of the range estimation in m
+
+    # Waveform configuration
+    waveform_generator: !<SC-FMCW>
+
+      # Symbol settings
+      symbol_rate: 100e6
+      modulation_order: 16
+      oversampling_factor: 4
+
+      # Frame settings
+      bandwidth: 100e6
+      num_preamble_symbols: 16
+      num_data_symbols: 100
+      pilot_rate: 1e6
+      guard_interval: 1e-6
+
+    # Radar detection configuration
+    detector: !<Threshold>
+      min_power: 2e-2
+
+  # The terminal is operated by a communication modem
+  - &terminal_operator !<Modem>
+
+    device: *terminal         # Operator controls the terminal device
+    reference: *base_station
+
+    # Waveform configuration
+    waveform_generator: !<SC-FMCW>
+
+      channel_estimation: !<SC-LS>
+      channel_equalization: !<SC-ZF>
+
+      # Symbol settings
+      symbol_rate: 100e6
+      modulation_order: 16
+      oversampling_factor: 4
+
+      # Frame settings
+      bandwidth: 100e6
+      num_preamble_symbols: 16
+      num_data_symbols: 100
+      pilot_rate: 10
+      guard_interval: 1e-6
+
+
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of the downlink communication between base station and terminal
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *base_station_operator
+    receiving_modem: *terminal_operator
+    confidence: .9
+    tolerance: .01
+    plot_scale: log
+
+
+# Simulation parameters
+num_samples: 100                   # Number of samples per simulation grid section
+min_num_samples: 10                # Minimum number of samples per simulation grid section before premature stopping
+snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+plot_results: True                 # Visualize the evaluations after the simulation has finished
+
+
+# Scenario parameters over which the Monte-Carlo simulation sweeps
+Dimensions:
+
+  snr: [20, 10, 2, 0] dB

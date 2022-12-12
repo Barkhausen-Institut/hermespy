@@ -1,0 +1,6 @@
+[submodule "submodules/affect"]
+	path = submodules/affect
+	url = https://github.com/aff3ct/aff3ct.git
+[submodule "submodules/quadriga"]
+	path = submodules/quadriga
+	url = https://github.com/fraunhoferhhi/QuaDRiGa.git

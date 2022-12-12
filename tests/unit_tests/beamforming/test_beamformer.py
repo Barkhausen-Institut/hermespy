@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.core import FloatingError, Signal
+from hermespy.core import FloatingError, Signal, UniformArray, IdealAntenna
 from hermespy.beamforming import BeamformerBase, FocusMode, ReceiveBeamformer, TransmitBeamformer
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -151,6 +151,8 @@ class TestReceiveBeamformer(TestCase):
         
         self.operator = Mock()
         self.operator.device = Mock()
+        self.operator.device.carrier_frequency = 10e9
+        self.operator.device.antennas = UniformArray(IdealAntenna, 1e-2, (4, 4))
         
         self.beamformer = ReceiveBeamformerMock(operator=self.operator)
         
@@ -190,6 +192,9 @@ class TestReceiveBeamformer(TestCase):
         
         with self.assertRaises(ValueError):
             self.beamformer.probe_focus_points = np.ones((2, 3))
+            
+        with self.assertRaises(ValueError):
+            self.beamformer.probe_focus_points = np.ones((2, 3, 4, 1))
             
         with self.assertRaises(ValueError):
             self.beamformer.probe_focus_points = np.ones((2, 2))
@@ -252,3 +257,16 @@ class TestReceiveBeamformer(TestCase):
         
         steered_signal = self.beamformer.probe(expected_signal, focus)
         assert_array_equal(expected_samples[np.newaxis, ::], steered_signal)
+
+    def test_plot_receive_characteristics(self) -> None:
+        """Plotting the receive beamforming characteristics should result in a proper figure generation"""
+        
+        with patch('matplotlib.pyplot.figure') as figure:
+            
+            _ = self.beamformer.plot_receive_pattern()
+            figure.assert_called()
+            
+        with patch('matplotlib.pyplot.figure') as figure:
+            
+            _ = self.beamformer.PlotReceivePattern()
+            figure.assert_called()

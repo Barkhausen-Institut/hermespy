@@ -6,28 +6,26 @@ Single-Target Radar Channel Modeling
 """
 
 from __future__ import annotations
-from math import cos, sin
-from typing import Type
+from typing import Optional, Tuple, Union
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, MappingNode
 from scipy.constants import pi, speed_of_light
 
-from ..core.device import FloatingError
-from ..tools import db2lin
 from .channel import Channel
+from hermespy.tools import db2lin
+from hermespy.core import FloatingError, Serializable
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RadarChannel(Channel):
+class RadarChannel(Channel, Serializable):
     """Model of a monostatic radar channel in base-band.
 
     The radar channel is currently implemented as a single-point reflector.
@@ -43,13 +41,13 @@ class RadarChannel(Channel):
 
     Obs.:
     Currently only one transmit and receive antennas is supported.
-    Only a radial velocity is considered.
+    Clutter not yet modelled.
 
     ToDo: Add literature references for this channel model.
     """
 
-    yaml_tag = u'RadarChannel'
-    yaml_matrix = True
+    yaml_tag = "RadarChannel"
+    serialized_attributes = {"impulse_response_interpolation", "target_exists", "attenuate"}
 
     __target_range: float
     __radar_cross_section: float
@@ -57,21 +55,17 @@ class RadarChannel(Channel):
     __target_zenith: float
     target_exists: bool
     __losses_db: float
+    __target_velocity: float
+    attenuate: bool
+    __ground_truth: Optional[np.ndarray]
 
-    def __init__(self,
-                 target_range: float,
-                 radar_cross_section: float,
-                 target_azimuth: float = 0.,
-                 target_zenith: float = 0.,
-                 target_exists: bool = True,
-                 losses_db: float = 0,
-                 target_velocity: float = 0,
-                 **kwargs) -> None:
+    def __init__(self, target_range: Union[float, Tuple[float, float]], radar_cross_section: float, target_azimuth: float = 0.0, target_zenith: float = 0.0, target_exists: bool = True, losses_db: float = 0, velocity: Union[float, np.ndarray] = 0, attenuate: bool = True, **kwargs) -> None:
         """
         Args:
 
-            target_range (float):
-                Distance from transmitter to target object
+            target_range (Union[float, Tuple[float, float]]):
+                Absolute distance of target and radar sensor in meters.
+                Either a specific distance or a range of minimal and maximal target distance.
 
             radar_cross_section (float):
                 Radar cross section (RCS) of the assumed single-point reflector in m**2
@@ -79,23 +73,26 @@ class RadarChannel(Channel):
             target_azimuth (float, optional):
                 Target location azimuth angle in radians, considering spherical coordinates.
                 Zero by default.
-                
+
             target_zenith (float, optional):
                 Target location zenith angle in radians, considering spherical coordinates.
                 Zero by default.
 
             target_exists (bool, optional):
-                True if a target exists, False if there is only noise/clutter
+                True if a target exists, False if there is only noise/clutter (default 0 True)
 
             losses_db (float, optional):
                 Any additional atmospheric and/or cable losses, in dB (default = 0)
 
-            target_velocity (float, optional):
-                Radial target velocity, in m/s (default = 0)
+            velocity (Union[float, np.ndarray], optional):
+                Velocity as a 3D vector (or as a float), in m/s (default = 0)
+
+            attenuate (bool, optional):
+                If True, then signal will be attenuated depending on the range, RCS and losses.
+                If False, then received power is equal to transmit power.
 
         Raises:
             ValueError:
-                If target_range < 0.
                 If radar_cross_section < 0.
                 If carrier_frequency <= 0.
                 If more than one antenna is considered.
@@ -110,32 +107,60 @@ class RadarChannel(Channel):
         self.target_zenith = target_zenith
         self.target_exists = target_exists
         self.__losses_db = losses_db
-        self.target_velocity = target_velocity
+        self.target_velocity = velocity
+        self.attenuate = attenuate
+        self.__ground_truth = None
 
     @property
     def target_range(self) -> float:
-        """Access configured target range.
+        """Absolute distance of target and radar sensor.
 
-        Returns:
-            float: range [m]
+        Returns: Target range in meters.
+
+        Raises:
+
+            ValueError: If the range is smaller than zero.
         """
+
         return self.__target_range
 
     @target_range.setter
-    def target_range(self, value: float) -> None:
-        """Modify the configured number of the target range
+    def target_range(self, value: Union[float, Tuple[float, float]]) -> None:
 
-        Args:
-            value (float): The new target range.
+        if isinstance(value, (float, int)):
 
-        Raises:
-            ValueError: If `value` is less than zero.
-        """
+            if value < 0.0:
+                raise ValueError("Target range must be greater or equal to zero")
 
-        if value < 0:
-            raise ValueError("Target range must be greater than or equal to zero")
+        elif isinstance(value, (tuple, list)):
+
+            if len(value) != 2:
+                raise ValueError("Target range span must be a tuple of two")
+
+            if value[1] < value[0]:
+                raise ValueError("Target range span second value must be greater than first value")
+
+            if value[1] < 0.0:
+                raise ValueError("Target range span minimum must be greater or equal to zero")
+
+        else:
+            raise ValueError("Unknown targer range format")
 
         self.__target_range = value
+
+    @property
+    def target_velocity(self) -> np.ndarray:
+        """Perceived target velocity.
+
+        Returns: Velocity in m/s.
+        """
+
+        return self.__target_velocity
+
+    @target_velocity.setter
+    def target_velocity(self, value: float) -> None:
+
+        self.__target_velocity = value
 
     @property
     def radar_cross_section(self) -> float:
@@ -161,38 +186,37 @@ class RadarChannel(Channel):
             raise ValueError("Radar cross section be greater than or equal to zero")
 
         self.__radar_cross_section = value
-        
+
     @property
     def target_azimuth(self) -> float:
         """Target position azimuth in spherical coordiantes.
-        
+
         Returns:
-        
+
             Azimuth angle in radians.
         """
-        
+
         return self.__target_azimuth
-    
+
     @target_azimuth.setter
     def target_azimuth(self, value: float) -> None:
-        
+
         self.__target_azimuth = value
-        
-        
+
     @property
     def target_zenith(self) -> float:
         """Target position zenith in spherical coordiantes.
-        
+
         Returns:
-        
+
             Zenith angle in radians.
         """
-        
+
         return self.__target_zenith
-    
+
     @target_zenith.setter
     def target_zenith(self, value: float) -> None:
-        
+
         self.__target_zenith = value
 
     @property
@@ -204,25 +228,14 @@ class RadarChannel(Channel):
         """
         return self.__losses_db
 
-    @property
-    def delay(self) -> float:
-        """Get delay from target
-
-        Returns:
-            float: propagation delay [s]
-        """
-        return 2 * self.__target_range / speed_of_light
-
-    def impulse_response(self,
-                         num_samples: int,
-                         sampling_rate: float) -> np.ndarray:
+    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
 
         if self.transmitter is None:
             raise FloatingError("Radar channel must be anchored to a transmitting device")
-        
-        if self.transmitter.carrier_frequency <= 0.:
+
+        if self.transmitter.carrier_frequency <= 0.0:
             raise RuntimeError("Radar channel does not support base-band transmissions")
-        
+
         # For the radar channel, only channels linking the same device are currently feasible
         if self.transmitter is not self.receiver:
             raise RuntimeError("Radar channels may only link the same devices")
@@ -232,19 +245,20 @@ class RadarChannel(Channel):
 
         # The overall perceived velocity is a sum of the target's radial velocity
         # and the transmitter's velocity component pointing towards the target
-        target_normal = np.array([cos(self.target_azimuth) * sin(self.target_zenith), sin(self.target_azimuth) * sin(self.target_zenith), cos(self.target_zenith)], dtype=float)
-        transmitter_velocity_abs = np.linalg.norm(self.transmitter.velocity, 2)
-        transmitter_target_velocity = transmitter_velocity_abs * np.dot(target_normal, self.transmitter.velocity / transmitter_velocity_abs) if transmitter_velocity_abs > 0. else 0.
-        velocity = self.target_velocity + transmitter_target_velocity
+        # target_normal = np.array([cos(self.target_azimuth) * sin(self.target_zenith), sin(self.target_azimuth) * sin(self.target_zenith), cos(self.target_zenith)], dtype=float)
+        # transmitter_velocity_abs = np.linalg.norm(self.transmitter.velocity, 2)
+        # transmitter_target_velocity = transmitter_velocity_abs * np.dot(target_normal, self.transmitter.velocity / transmitter_velocity_abs) if transmitter_velocity_abs > 0. else 0.
+        # velocity = self.target_velocity - transmitter_target_velocity
 
         # Infer relevant parameters
         wavelength = speed_of_light / self.transmitter.carrier_frequency
-        doppler_frequency = 2 * velocity / wavelength
-        max_delay = self.delay + 2 * velocity * timestamps[-1] / speed_of_light
+        doppler_frequency = 2 * self.target_velocity / ((1 - self.target_velocity / speed_of_light) * wavelength)
+        target_range = self.target_range if isinstance(self.target_range, (float, int)) else self._rng.uniform(self.target_range[0], self.target_range[1])
+        delay = 2 * target_range / speed_of_light
+        max_delay = delay + 2 * self.target_velocity * timestamps[-1] / speed_of_light
         max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate))
 
-        impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples),
-                                    dtype=complex)
+        impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples), dtype=complex)
 
         # If no target is present we may abort already
         if not self.target_exists:
@@ -254,17 +268,19 @@ class RadarChannel(Channel):
         # 1. The phase shift during reflection (uniformly distributed)
         # 2. The power loss during reflection (semi-deterministic, depends on rcs, wavelength and target distance)
         reflection_phase = self._rng.uniform(0, 1)
-        power_factor = (wavelength ** 2 * self.__radar_cross_section / (4 * pi) ** 3 / self.__target_range ** 4
-                        * db2lin(self.__losses_db))
+
+        power_factor = 1.0
+        if self.attenuate:
+            power_factor = wavelength**2 * self.__radar_cross_section / (4 * pi) ** 3 / target_range**4 * db2lin(self.__losses_db)
 
         delay_taps = np.arange(max_delay_in_samples) / sampling_rate
-        
+
         array_response = self.transmitter.antennas.spherical_response(self.transmitter.carrier_frequency, self.target_azimuth, self.target_zenith)
         mimo_response = np.outer(array_response.conj(), array_response)
 
         for idx, timestamp in enumerate(timestamps):
 
-            echo_delay = self.delay + 2 * self.target_velocity * timestamp / speed_of_light
+            echo_delay = delay + 2 * self.target_velocity * timestamp / speed_of_light
             time = timestamp + np.arange(max_delay_in_samples) / sampling_rate
             echo_weights = power_factor * np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
 
@@ -274,32 +290,21 @@ class RadarChannel(Channel):
             # since it is only feasible for planar arrays
             impulse_response[idx, ::] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
 
+        self.__ground_truth = np.array([[0.0, 0.0, target_range]])
         return impulse_response
 
-    @classmethod
-    def to_yaml(cls: Type[RadarChannel], representer: SafeRepresenter,
-                node: RadarChannel) -> MappingNode:
-        """Serialize a radar channel object to YAML.
+    @property
+    def ground_truth(self) -> np.ndarray:
+        """Set of carthesian points representing ideal point estimates from the most recent impulse response.
 
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
+        Returns: Numpy array of dimension :math:`N \\times 3` where :math:`N` is the number of detections.
 
-            node (RadarChannel):
-                The channel instance to be serialized.
+        Raises:
 
-        Returns:
-            Node:
-                The serialized YAML node.
+            RuntimeError: If no ground truth is available.
         """
 
-        state = {
-            'target_range': node.target_range,
-            'radar_cross_section': node.radar_cross_section,
-            'gain': node.gain,
-            'losses_db': node.losses_db,
-            'velocity': node.target_velocity,
-        }
+        if self.__ground_truth is None:
+            raise RuntimeError("Error trying to acces the ground truth of a channel without impulse response.")
 
-        return representer.represent_mapping(cls.yaml_tag, state)
+        return self.__ground_truth

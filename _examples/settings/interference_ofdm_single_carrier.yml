@@ -1,0 +1,155 @@
+# In this example we simulate the interference between an OFDM signal and a
+# single-carrier signal in an AWGN channel.
+# 
+# The OFDM signal has the same numerology as an LTE system with 20 MHz bandwidth,
+# in which the first 8 sub-frames are used.
+# However, the bits are uncoded. The carrier frequency is 3.5 GHz.
+# 
+# A single carrier 64-QAM interferer with 6 Mbps is also transmitting at 3.501 GHz
+
+!<Simulation>
+
+# Physical device models within the simulated scenario
+Devices:
+
+  # First device
+  - &device_alpha !<SimulatedDevice>
+
+    carrier_frequency: 3.5e9
+    power: 10
+
+  # Second device
+  - &device_beta !<SimulatedDevice>
+
+    carrier_frequency: 3.501e9
+    power: 1
+
+# Operators transmitting or receiving signals over the devices
+Operators:
+
+  # A single modem operating the device #0
+  - &modem_alpha !<Modem>
+
+    device: *device_alpha         # Device the modem is operating on
+
+    # Waveform configuration
+    waveform: !<SC-RootRaisedCosine>
+
+      # Symbol settings
+      symbol_rate: 1e6            # Rate of symbol repetition in Hz
+      modulation_order: 64        # Modulation order, in other words 8 bit per data chirp
+      roll_off: .5                # Roll-Off factor of the pulse filter
+
+      # Frame settings
+      num_preamble_symbols: 10    # Number of preamble chirps before data
+      num_data_symbols: 90        # Number of data chirps
+      pilot_rate: 1e6             # Rate of pilot chirp repetition in Hz
+      guard_interval: 1e-6        # Pause between frame transmissions in seconds
+
+  # A single modem operating the device #1
+  - &modem_beta !<Modem>
+
+    device: *device_beta         # Device the modem is operating on
+
+    # Spatial precoding with zero-forcing channel equalization
+    # Precoding:
+    #   - !<ZF-Time>
+
+    waveform: !<OFDM>
+
+      # Symbol modulation settings
+      modulation_order: 16
+      subcarrier_spacing: 15e3
+      dc_suppression: False
+      num_subcarriers: 2048
+
+      # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
+      resources:
+
+        - !<OFDM-Resource>
+          repetitions: 200
+          prefix_type: !<PrefixType> CYCLIC
+          prefix_ratio: 0.078125
+          elements:
+            - !<FrameElement>
+              type: !<ElementType> REFERENCE
+              repetitions: 1
+            - !<FrameElement>
+              type: !<ElementType> DATA
+              repetitions: 5
+
+        - !<OFDM-Resource>
+          repetitions: 1200
+          prefix_type: !<PrefixType> CYCLIC
+          prefix_ratio: 0.0703125
+          elements:
+            - !<FrameElement>
+              type: !<ElementType> DATA
+              repetitions: 1
+
+        - !<OFDM-Resource>
+          repetitions: 100
+          prefix_type: !<PrefixType> CYCLIC
+          prefix_ratio: 0.0703125
+          elements:
+            - !<FrameElement>
+              type: !<ElementType> DATA
+              repetitions: 3
+            - !<FrameElement>
+              type: !<ElementType> REFERENCE
+              repetitions: 1
+            - !<FrameElement>
+              type: !<ElementType> DATA
+              repetitions: 5
+            - !<FrameElement>
+              type: !<ElementType> REFERENCE
+              repetitions: 1
+            - !<FrameElement>
+              type: !<ElementType> DATA
+              repetitions: 2
+
+      # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
+      structure:
+
+        - !<Symbol>
+          num_repetitions: 16
+          pattern: [0, 1, 1, 1, 2, 1, 1]
+
+        - !<Guard>
+          num_repetitions: 1
+          duration: 2e-3
+
+
+# Performance indication evaluation configuration
+Evaluators:
+
+  # Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_alpha
+    receiving_modem: *modem_alpha
+    confidence: .9
+    tolerance: .01
+    plot_scale: log
+
+  # Evaluate the bit errors of `modem_beta` communicating over `device_beta`
+  - !<BitErrorEvaluator>
+
+    transmitting_modem: *modem_beta
+    receiving_modem: *modem_beta
+    confidence: .9
+    tolerance: .01
+    plot_scale: log
+
+
+# Simulation parameters
+num_samples: 10                    # Number of samples per simulation grid section
+min_num_samples: 5                 # Minimum number of samples per simulation grid section before premature stopping
+snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+plot_results: True                 # Visualize the evaluations after the simulation has finished
+
+
+# Scenario parameters over which the Monte-Carlo simulation sweeps
+Dimensions:
+
+  snr: [36, 32, ..., 0] dB
