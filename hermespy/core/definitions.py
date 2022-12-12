@@ -5,7 +5,7 @@ General Definitions
 ===================
 """
 
-from enum import Enum
+from .factory import SerializableEnum
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -17,7 +17,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SNRType(Enum):
+class SNRType(SerializableEnum):
     """Supported types of signal-to-noise ratios."""
 
     EBN0 = 0

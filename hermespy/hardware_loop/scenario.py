@@ -22,7 +22,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PhysicalScenario(Generic[PhysicalDeviceType], Scenario[PhysicalDeviceType], ABC):
+class PhysicalScenario(Scenario[PhysicalDeviceType], ABC, Generic[PhysicalDeviceType]):
     """Scenario of physical device bindings.
 
     Managing physical devices by a scenario enables synchronized triggering
