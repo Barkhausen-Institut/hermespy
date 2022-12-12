@@ -9,12 +9,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import IntEnum
 from os import path, remove
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, Type, TypeVar, Union
 
 from h5py import File
 
 from .device import DeviceType, Reception, Transmission, Transmitter, Receiver, Operator
 from .drop import Drop
+from .factory import Factory, Serializable
 from .random_node import RandomNode
 from .signal_model import Signal
 
@@ -50,22 +51,25 @@ class ScenarioMode(IntEnum):
     """
 
 
-class Scenario(ABC, RandomNode, Generic[DeviceType]):
-    """A simulation scenario.
+class Scenario(Serializable, ABC, RandomNode, Generic[DeviceType]):
+    """Description of a physical layer wireless scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
     Each device can be operated by multiple operators simultaneously.
     """
+    
+    yaml_tag = u'Scenario'
 
     __mode: ScenarioMode  # Current scenario operating mode
     # Registered devices within this scenario.
     __devices: List[DeviceType]
     __drop_duration: float  # Drop duration in seconds.
     __file: Optional[File]  # HDF5 file handle
-    __file_location: Optional[str]  # HDF5 file location
     __drop_counter: int  # Internal drop counter
 
-    def __init__(self, seed: Optional[int] = None) -> None:
+    def __init__(self,
+                 seed: Optional[int] = None,
+                 devices: Optional[List[DeviceType]] = None) -> None:
         """
         Args:
 
@@ -78,8 +82,11 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         self.__devices = []
         self.drop_duration = 0.0
         self.__file = None
-        self.__file_location = None
         self.__drop_counter = 0
+        
+        if devices is not None:
+            for device in devices:
+                self.add_device(device)
 
     def __del__(self) -> None:
 
@@ -299,7 +306,9 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         self.__drop_duration = value
 
-    def record(self, file: str, override: bool = False) -> None:
+    def record(self,
+               file: str,
+               override: bool = False) -> None:
         """Start recording drop information generated from this scenario.
 
         After the scenario starts recording, changing the device and operator configuration
@@ -330,30 +339,71 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Initialize dataset
         self.__file = File(file, "w-")
-        self.__file_location = file
         self.__drop_counter = 0
 
         # Switch mode
         self.__mode = ScenarioMode.RECORD
 
         # ToDo: Write scenario state to the set
-        # factory = Factory()
-        # self.__file.attrs['serialization'] = factory.to_str(self)
+        factory = Factory()
+        self.__file.attrs['serialization'] = factory.to_str(self)
         self.__file.attrs["drop_duration"] = drop_duration
         self.__file.attrs["num_devices"] = self.num_devices
 
-    def replay(self, path: Optional[str] = None) -> None:
+    def replay(self, file: Union[str, File]) -> None:
+        """Replay a scenario from a dataset
+
+        Args:
+            file (Union[str, File]):
+                File system location of the dataset, or HDF5 file handle.
+
+        Raises:
+            RuntimeError: If the scenario is currently not in DEFAUlt :class:`mode <.ScenarioMode.DEFAULT>`.
+        """
 
         if self.mode != ScenarioMode.DEFAULT:
             raise RuntimeError("Initializing a replay is only possible in default mode. Please stop before starting a new replay.")
 
         # Initialize dataset
-        self.__file = File(path, "r")
-        self.__file_location = path
+        self.__file = file if isinstance(file, File) else File(file, "r")
         self.__drop_counter = 0
 
         # Switch mode
         self.__mode = ScenarioMode.REPLAY
+        
+    @classmethod
+    def From_Dataset(cls: Type[Scenario],
+                     file: str) -> Scenario:
+        """Load and replay a scenario from a recorded dataset.
+        
+        Args:
+        
+            path (str): File system location of the dataset.
+            
+        Raise:
+            RuntimeError: If the scenario fails to be deserialized from the dataset.
+        """
+        
+        dataset = File(file, "r")
+    
+        if 'serialization' not in dataset.attrs.keys():
+            raise RuntimeError("Dataset contains no scenario serialization information")
+    
+        factory = Factory()
+        
+        deserialization_list = factory.from_str(dataset.attrs['serialization'])
+        if len(deserialization_list) != 1:
+            raise RuntimeError("Could not deserialize scenario from dataset, invalid number of objects")
+        
+        scenario: Scenario = deserialization_list[0]
+        if not issubclass(type(scenario), cls):
+            raise RuntimeError("Deserialized object is not a scenario, aborted due to security concerns")
+        
+        # Replay the dataset
+        scenario.replay(dataset)
+        
+        # Return the configured scenario
+        return scenario
 
     def stop(self) -> None:
         """Stop a running recording / playback session."""

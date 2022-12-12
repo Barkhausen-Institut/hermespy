@@ -4,7 +4,7 @@ from os import path
 from unittest import TestCase
 from tempfile import TemporaryDirectory
 
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_almost_equal
 
 from hermespy.simulation import SimulationScenario
 from hermespy.modem import TransmittingModem, ReceivingModem, RaisedCosineWaveform
@@ -51,7 +51,7 @@ class TestRecordReplay(TestCase):
         self.scenario.stop()
         self.tempdir.cleanup()
 
-    def test_record_replay(self) -> None:
+    def test_record_replay_from_object(self) -> None:
         """Test recording and replaying of drops"""
 
         self.scenario.record(self.file)
@@ -67,3 +67,28 @@ class TestRecordReplay(TestCase):
 
             self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
             self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
+
+    def test_record_replay_from_dataset(self) -> None:
+        """Test recording and replaying datasets directly from the filesystem"""
+        
+        self.scenario.record(self.file)
+
+        expected_drops = [self.scenario.drop() for _ in range(self.num_drops)]
+        
+        self.scenario.stop()
+        self.scenario.replay(self.file)
+        
+        replay_scenario = SimulationScenario.From_Dataset(self.file)
+        replayed_drops = [replay_scenario.drop() for _ in range(self.num_drops)]
+        
+        # Compare the expected and replayed drops to make sure the generated information is identical
+        for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
+            
+            self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
+            self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
+            
+            for d in range(2):
+                assert_array_almost_equal(expected_drop.device_transmissions[d].signal.samples,
+                                          replayed_drop.device_transmissions[d].signal.samples)
+                assert_array_almost_equal(expected_drop.device_receptions[d].signal.samples,
+                                          replayed_drop.device_receptions[d].signal.samples)
