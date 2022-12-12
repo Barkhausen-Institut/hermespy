@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hardware Loop &mdash; HermesPy  documentation</title>
+  <title>Hardware Loop &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +33,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Physical Devices" href="hardware_loop.physical_device.html" />
-    <link rel="prev" title="Hardware Loop Module" href="hardware_loop.html" /> 
+    <link rel="prev" title="Hardware Loop" href="hardware_loop.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +57,66 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Hardware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop"><code class="docutils literal notranslate"><span class="pre">HardwareLoop</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.yaml_tag"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.manual_triggering"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.manual_triggering</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.plot_information"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.plot_information</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.new_dimension"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.new_dimension()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_dimension"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.add_dimension()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_evaluator"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.add_evaluator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.num_evaluators"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.num_evaluators</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.run"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.replay"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.replay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.from_yaml"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.from_yaml()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html">Physical Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.StaticOperator"><code class="docutils literal notranslate"><span class="pre">StaticOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter"><code class="docutils literal notranslate"><span class="pre">SilentTransmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter"><code class="docutils literal notranslate"><span class="pre">SignalTransmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver"><code class="docutils literal notranslate"><span class="pre">PowerReceiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver"><code class="docutils literal notranslate"><span class="pre">SignalReceiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDeviceType"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html">Physical Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenario"><code class="docutils literal notranslate"><span class="pre">PhysicalScenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenarioType"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioDummy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html">UHD System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.system.UsrpSystem"><code class="docutils literal notranslate"><span class="pre">UsrpSystem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice"><code class="docutils literal notranslate"><span class="pre">UsrpDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html">Audio Device Binding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDeviceAntennas"><code class="docutils literal notranslate"><span class="pre">AudioDeviceAntennas</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice"><code class="docutils literal notranslate"><span class="pre">AudioDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html#hermespy.hardware_loop.audio.scenario.AudioScenario"><code class="docutils literal notranslate"><span class="pre">AudioScenario</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,10 +134,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="hardware_loop.html">Hardware Loop Module</a> &raquo;</li>
-      <li>Hardware Loop</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="hardware_loop.html">Hardware Loop</a></li>
+      <li class="breadcrumb-item active">Hardware Loop</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/hardware_loop.hardware_loop.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,26 +147,133 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.hardware_loop.hardware_loop"></span><section id="hardware-loop">
-<h1>Hardware Loop<a class="headerlink" href="#hardware-loop" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.hardware_loop.hardware_loop"></span><section id="hardware-loop">
+<h1>Hardware Loop<a class="headerlink" href="#hardware-loop" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HardwareLoop</span></span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.executable.html#hermespy.core.executable.Executable" title="hermespy.core.executable.Executable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.executable.Executable</span></code></a>, <a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.scenario.Scenario</span></code></a>[<a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice" title="hermespy.hardware_loop.physical_device.PhysicalDevice"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.hardware_loop.physical_device.PhysicalDevice</span></code></a>]</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HardwareLoop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manual_triggering</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_information</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenarioType" title="hermespy.hardware_loop.scenario.PhysicalScenarioType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PhysicalScenarioType</span></code></a>], <a class="reference internal" href="core.pipeline.html#hermespy.core.pipeline.Pipeline" title="hermespy.core.pipeline.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a>[<a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenarioType" title="hermespy.hardware_loop.scenario.PhysicalScenarioType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PhysicalScenarioType</span></code></a>]</p>
 <p>Hermespy hardware loop configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>results_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Directory in which all execution artifacts will be dropped.</p></li>
-<li><p><strong>verbosity</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="core.executable.html#hermespy.core.executable.Verbosity" title="hermespy.core.executable.Verbosity"><em>Verbosity</em></a><em>]</em><em>, </em><em>optional</em>) – Information output behaviour during execution.</p></li>
-<li><p><strong>console</strong> (<em>Console</em><em>, </em><em>optional</em>) – The console instance the executable will operate on.</p></li>
+<li><p><strong>system</strong> (<em>PhysicalScenarioType</em>) – The physical scenario being controlled by the hardware loop.</p></li>
+<li><p><strong>manual_triggering</strong> (<em>bool</em><em>, </em><em>optional</em>) – Require a keyboard user input to trigger each drop manually.
+Disabled by default.</p></li>
+<li><p><strong>plot_information</strong> (<em>bool</em><em>, </em><em>optional</em>) – Plot information during loop runtime.
+Enabled by default.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Loop'</span></em><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.yaml_tag" title="Permalink to this definition"></a></dt>
-<dd><p>YAML serialization tag.</p>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'HardwareLoop'</span></em><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.manual_triggering">
+<span class="sig-name descname"><span class="pre">manual_triggering</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.manual_triggering" title="Permalink to this definition"></a></dt>
+<dd><p>Require a user input to trigger each drop manually</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.plot_information">
+<span class="sig-name descname"><span class="pre">plot_information</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.plot_information" title="Permalink to this definition"></a></dt>
+<dd><p>Plot information during loop runtime</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.new_dimension">
+<span class="sig-name descname"><span class="pre">new_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_points</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.new_dimension" title="Permalink to this definition"></a></dt>
+<dd><p>Add a dimension to the sweep grid.</p>
+<p>Must be a property of the <code class="xref py py-meth docutils literal notranslate"><span class="pre">HardwareLoop.scenario()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dimension</strong> (<em>str</em>) – String representation of dimension location relative to the investigated object.</p></li>
+<li><p><strong>sample_points</strong> (<em>List</em><em>[</em><em>Any</em><em>]</em>) – List points at which the dimension will be sampled into a grid.
+The type of points must be identical to the grid arguments / type.</p></li>
+<li><p><strong>*args</strong> (<em>Tuple</em><em>[</em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – References to the object the imension belongs to.
+Resolved to the investigated object by default,
+but may be an attribute or sub-attribute of the investigated object.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: The newly created dimension object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridDimension</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.add_dimension">
+<span class="sig-name descname"><span class="pre">add_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_dimension" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new dimension to the simulation grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dimension</strong> (<a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridDimension</span></code></a>) – Dimension to be added.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the <cite>dimension</cite> already exists within the grid.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.add_evaluator">
+<span class="sig-name descname"><span class="pre">add_evaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_evaluator" title="Permalink to this definition"></a></dt>
+<dd><p>Add new evaluator to the hardware loop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>evaluator</strong> (<a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><em>Evaluator</em></a>) – The evaluator to be added.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.num_evaluators">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_evaluators</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.num_evaluators" title="Permalink to this definition"></a></dt>
+<dd><p>Number of registered evaluators.</p>
+<p>Returns: The number of evaluators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -137,62 +288,54 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.from_yaml">
-<span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new serializable class instance from YAML.</p>
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.replay">
+<span class="sig-name descname"><span class="pre">replay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_location</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.replay" title="Permalink to this definition"></a></dt>
+<dd><p>Replay a stored pipeline run.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>Channel</cite> serialization.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>file_location</strong> (<em>str</em>) – File system location of the replay.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The de-serialized object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable">Serializable</a></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.to_yaml">
-<span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize a serializable object to YAML.</p>
+<dt class="sig sig-object py" id="hermespy.hardware_loop.hardware_loop.HardwareLoop.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new serializable class instance from YAML.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><em>Serializable</em></a>) – The channel instance to be serialized.</p></li>
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>Serializable</cite> serialization.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node.</p>
-</dd>
+</dl>
+<p>Returns: The de-serialized object.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.hardware_loop.hardware_loop.HardwareLoop" title="hermespy.hardware_loop.hardware_loop.HardwareLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">HardwareLoop</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="hardware_loop.html" class="btn btn-neutral float-left" title="Hardware Loop Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hardware_loop.html" class="btn btn-neutral float-left" title="Hardware Loop" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="hardware_loop.physical_device.html" class="btn btn-neutral float-right" title="Physical Devices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcf242580>
+<jinja2.runtime.BlockReference object at 0x7f9e79fa6b50>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

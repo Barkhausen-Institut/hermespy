@@ -1,3 +1,3 @@
-.. automodule:: tools.math
+.. automodule:: hermespy.tools.math
 
 .. footbibliography::

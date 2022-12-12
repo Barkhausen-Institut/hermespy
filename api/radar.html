@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Radar Module &mdash; HermesPy  documentation</title>
+  <title>Sensing &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +33,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Radar Device Operation" href="radar.radar.html" />
-    <link rel="prev" title="Conventional Beamforming" href="beamforming.conventional.html" /> 
+    <link rel="prev" title="Capon Beamformer" href="beamforming.capon.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +57,57 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Radar Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Sensing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform"><code class="docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarTransmission"><code class="docutils literal notranslate"><span class="pre">RadarTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarReception"><code class="docutils literal notranslate"><span class="pre">RadarReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar"><code class="docutils literal notranslate"><span class="pre">Radar</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube"><code class="docutils literal notranslate"><span class="pre">RadarCube</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection"><code class="docutils literal notranslate"><span class="pre">PointDetection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector"><code class="docutils literal notranslate"><span class="pre">RadarDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.MaxDetector"><code class="docutils literal notranslate"><span class="pre">MaxDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbArtifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbabilityEvaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocArtifact"><code class="docutils literal notranslate"><span class="pre">RocArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation"><code class="docutils literal notranslate"><span class="pre">RocEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluationResult"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareEvaluation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareErrorResult"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW"><code class="docutils literal notranslate"><span class="pre">FMCW</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,9 +125,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-      <li>Radar Module</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+      <li class="breadcrumb-item active">Sensing</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/radar.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -102,25 +137,245 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="radar-module">
-<h1>Radar Module<a class="headerlink" href="#radar-module" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="sensing">
+<h1>Sensing<a class="headerlink" href="#sensing" title="Permalink to this heading"></a></h1>
 <p>The radar module provides all functionalities to implement sensing operations on
 devices.</p>
 <div align="center" class="mermaid align-center">
             classDiagram
-  RadarWaveform &lt;|-- FMCW
+  RadarDetector &lt;|-- MaxDetector
+  Generic &lt;|-- Operator
+  RadarDetector &lt;|-- ThresholdDetector
+  Serializable &lt;|-- ReceiverOperatingCharacteristic
+  Reception &lt;|-- RadarReception
   DuplexOperator &lt;|-- Radar
+  RadarEvaluator &lt;|-- DetectionProbEvaluator
+  RandomNode &lt;|-- Receiver
+  RadarCube &lt;|-- RadarReception
+  RadarWaveform &lt;|-- FMCW
+  Serializable &lt;|-- MaxDetector
+  MixingOperator &lt;|-- Receiver
+  OperationResult &lt;|-- Reception
+  RadarEvaluator &lt;|-- ReceiverOperatingCharacteristic
+  ABC &lt;|-- Evaluator
+  Serializable &lt;|-- ThresholdDetector
+  Serializable &lt;|-- Radar
+  Operator &lt;|-- MixingOperator
+  HDFSerializable &lt;|-- OperationResult
+  Receiver &lt;|-- DuplexOperator
+  ABC &lt;|-- MixingOperator
+  ABC &lt;|-- RadarEvaluator
+  RadarEvaluator &lt;|-- RootMeanSquareError
+  OperationResult &lt;|-- Transmission
+  RandomNode &lt;|-- Transmitter
+  Transmission &lt;|-- RadarTransmission
+  MixingOperator &lt;|-- Transmitter
+  Serializable &lt;|-- FMCW
+  Serializable &lt;|-- DetectionProbEvaluator
+  Transmitter &lt;|-- DuplexOperator
+  Evaluator &lt;|-- RadarEvaluator
         </div>
         <p>It consists of the</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform"><code class="docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform.ping"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.ping()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform.estimate"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform.sampling_rate"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform.range_bins"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.range_bins</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform.velocity_bins"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.velocity_bins</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform.energy"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.energy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform.power"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarTransmission"><code class="docutils literal notranslate"><span class="pre">RadarTransmission</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarTransmission.signal"><code class="docutils literal notranslate"><span class="pre">RadarTransmission.signal</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarReception"><code class="docutils literal notranslate"><span class="pre">RadarReception</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarReception.cube"><code class="docutils literal notranslate"><span class="pre">RadarReception.cube</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarReception.cloud"><code class="docutils literal notranslate"><span class="pre">RadarReception.cloud</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar"><code class="docutils literal notranslate"><span class="pre">Radar</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Radar.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.property_blacklist"><code class="docutils literal notranslate"><span class="pre">Radar.property_blacklist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.transmit_beamformer"><code class="docutils literal notranslate"><span class="pre">Radar.transmit_beamformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.receive_beamformer"><code class="docutils literal notranslate"><span class="pre">Radar.receive_beamformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.sampling_rate"><code class="docutils literal notranslate"><span class="pre">Radar.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.frame_duration"><code class="docutils literal notranslate"><span class="pre">Radar.frame_duration</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.noise_power"><code class="docutils literal notranslate"><span class="pre">Radar.noise_power()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.waveform"><code class="docutils literal notranslate"><span class="pre">Radar.waveform</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.detector"><code class="docutils literal notranslate"><span class="pre">Radar.detector</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.cloud"><code class="docutils literal notranslate"><span class="pre">Radar.cloud</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.cube"><code class="docutils literal notranslate"><span class="pre">Radar.cube</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.transmit"><code class="docutils literal notranslate"><span class="pre">Radar.transmit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar.receive"><code class="docutils literal notranslate"><span class="pre">Radar.receive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube"><code class="docutils literal notranslate"><span class="pre">RadarCube</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube.data"><code class="docutils literal notranslate"><span class="pre">RadarCube.data</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube.angle_bins"><code class="docutils literal notranslate"><span class="pre">RadarCube.angle_bins</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube.velocity_bins"><code class="docutils literal notranslate"><span class="pre">RadarCube.velocity_bins</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube.range_bins"><code class="docutils literal notranslate"><span class="pre">RadarCube.range_bins</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube.plot_range"><code class="docutils literal notranslate"><span class="pre">RadarCube.plot_range()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube.plot_range_velocity"><code class="docutils literal notranslate"><span class="pre">RadarCube.plot_range_velocity()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube.normalize_power"><code class="docutils literal notranslate"><span class="pre">RadarCube.normalize_power()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection"><code class="docutils literal notranslate"><span class="pre">PointDetection</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection.FromSpherical"><code class="docutils literal notranslate"><span class="pre">PointDetection.FromSpherical()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection.position"><code class="docutils literal notranslate"><span class="pre">PointDetection.position</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection.velocity"><code class="docutils literal notranslate"><span class="pre">PointDetection.velocity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection.power"><code class="docutils literal notranslate"><span class="pre">PointDetection.power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud.points"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud.points</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud.num_points"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud.num_points</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud.add_point"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud.add_point()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector"><code class="docutils literal notranslate"><span class="pre">RadarDetector</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector.detect"><code class="docutils literal notranslate"><span class="pre">RadarDetector.detect()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector.min_power"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector.min_power</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector.detect"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector.detect()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.MaxDetector"><code class="docutils literal notranslate"><span class="pre">MaxDetector</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.MaxDetector.yaml_tag"><code class="docutils literal notranslate"><span class="pre">MaxDetector.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.MaxDetector.detect"><code class="docutils literal notranslate"><span class="pre">MaxDetector.detect()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator.receiving_radar"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator.receiving_radar</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator.radar_channel"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator.radar_channel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator.generate_result"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator.generate_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbArtifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbArtifact.to_scalar"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact.to_scalar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbabilityEvaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbabilityEvaluation.artifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation.artifact()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbabilityEvaluation.evaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation.evaluation</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator.yaml_tag"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator.abbreviation"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.abbreviation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator.title"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.title</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator.generate_result"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.generate_result()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator.evaluate"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.evaluate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocArtifact"><code class="docutils literal notranslate"><span class="pre">RocArtifact</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocArtifact.h0_value"><code class="docutils literal notranslate"><span class="pre">RocArtifact.h0_value</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocArtifact.h1_value"><code class="docutils literal notranslate"><span class="pre">RocArtifact.h1_value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation"><code class="docutils literal notranslate"><span class="pre">RocEvaluation</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation.data_h0"><code class="docutils literal notranslate"><span class="pre">RocEvaluation.data_h0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation.data_h1"><code class="docutils literal notranslate"><span class="pre">RocEvaluation.data_h1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation.artifact"><code class="docutils literal notranslate"><span class="pre">RocEvaluation.artifact()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluationResult"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluationResult.plot"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult.plot()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluationResult.to_array"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult.to_array()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.evaluate"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.evaluate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.receiving_radar_null_hypothesis"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.receiving_radar_null_hypothesis</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.abbreviation"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.abbreviation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.title"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.title</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.generate_result"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.generate_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact.num_errors"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact.num_errors</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact.cummulation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact.cummulation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact.to_scalar"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact.to_scalar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareEvaluation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareEvaluation.artifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation.artifact()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareErrorResult"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareErrorResult.plot_surface"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult.plot_surface</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError.evaluate"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.evaluate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError.title"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.title</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError.abbreviation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.abbreviation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError.generate_result"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.generate_result()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 <p>as well as the specific waveform implementations</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
+<li class="toctree-l1"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW"><code class="docutils literal notranslate"><span class="pre">FMCW</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.yaml_tag"><code class="docutils literal notranslate"><span class="pre">FMCW.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.ping"><code class="docutils literal notranslate"><span class="pre">FMCW.ping()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.estimate"><code class="docutils literal notranslate"><span class="pre">FMCW.estimate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.max_range"><code class="docutils literal notranslate"><span class="pre">FMCW.max_range</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.range_bins"><code class="docutils literal notranslate"><span class="pre">FMCW.range_bins</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.velocity_bins"><code class="docutils literal notranslate"><span class="pre">FMCW.velocity_bins</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.frame_duration"><code class="docutils literal notranslate"><span class="pre">FMCW.frame_duration</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.num_chirps"><code class="docutils literal notranslate"><span class="pre">FMCW.num_chirps</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.bandwidth"><code class="docutils literal notranslate"><span class="pre">FMCW.bandwidth</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.chirp_duration"><code class="docutils literal notranslate"><span class="pre">FMCW.chirp_duration</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.adc_sampling_rate"><code class="docutils literal notranslate"><span class="pre">FMCW.adc_sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.range_resolution"><code class="docutils literal notranslate"><span class="pre">FMCW.range_resolution</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.doppler_resolution"><code class="docutils literal notranslate"><span class="pre">FMCW.doppler_resolution</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.sampling_rate"><code class="docutils literal notranslate"><span class="pre">FMCW.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.pulse_rep_interval"><code class="docutils literal notranslate"><span class="pre">FMCW.pulse_rep_interval</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.max_velocity"><code class="docutils literal notranslate"><span class="pre">FMCW.max_velocity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.slope"><code class="docutils literal notranslate"><span class="pre">FMCW.slope</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.energy"><code class="docutils literal notranslate"><span class="pre">FMCW.energy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW.power"><code class="docutils literal notranslate"><span class="pre">FMCW.power</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -129,14 +384,14 @@ devices.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="beamforming.conventional.html" class="btn btn-neutral float-left" title="Conventional Beamforming" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="beamforming.capon.html" class="btn btn-neutral float-left" title="Capon Beamformer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="radar.radar.html" class="btn btn-neutral float-right" title="Radar Device Operation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcdb5c310>
+<jinja2.runtime.BlockReference object at 0x7f9e7cf5b580>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

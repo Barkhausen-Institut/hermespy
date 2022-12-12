@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Channel State Information Model &mdash; HermesPy  documentation</title>
+  <title>Channel State Information Model &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,34 +57,140 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ConsoleMode"><code class="docutils literal notranslate"><span class="pre">ConsoleMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ArtifactTemplate"><code class="docutils literal notranslate"><span class="pre">ArtifactTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationTemplate"><code class="docutils literal notranslate"><span class="pre">EvaluationTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationResult"><code class="docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ScalarEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloSample"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridSection"><code class="docutils literal notranslate"><span class="pre">GridSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ActorRunResult"><code class="docutils literal notranslate"><span class="pre">ActorRunResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.SampleGrid"><code class="docutils literal notranslate"><span class="pre">SampleGrid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloActor"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloResult"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension"><code class="docutils literal notranslate"><span class="pre">GridDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.RegisteredDimension"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.dimension"><code class="docutils literal notranslate"><span class="pre">dimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo"><code class="docutils literal notranslate"><span class="pre">MonteCarlo</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Verbosity"><code class="docutils literal notranslate"><span class="pre">Verbosity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable"><code class="docutils literal notranslate"><span class="pre">Serializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableEnum"><code class="docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableArray"><code class="docutils literal notranslate"><span class="pre">SerializableArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Factory"><code class="docutils literal notranslate"><span class="pre">Factory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.HDFSerializable"><code class="docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType"><code class="docutils literal notranslate"><span class="pre">SNRType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.html">Device Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError"><code class="docutils literal notranslate"><span class="pre">FloatingError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SlotType"><code class="docutils literal notranslate"><span class="pre">SlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorType"><code class="docutils literal notranslate"><span class="pre">OperatorType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperationResult"><code class="docutils literal notranslate"><span class="pre">OperationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmission"><code class="docutils literal notranslate"><span class="pre">Transmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Reception"><code class="docutils literal notranslate"><span class="pre">Reception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceTransmission"><code class="docutils literal notranslate"><span class="pre">DeviceTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceReception"><code class="docutils literal notranslate"><span class="pre">DeviceReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SecondSlotType"><code class="docutils literal notranslate"><span class="pre">SecondSlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.MixingOperator"><code class="docutils literal notranslate"><span class="pre">MixingOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Receiver"><code class="docutils literal notranslate"><span class="pre">Receiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorSlot"><code class="docutils literal notranslate"><span class="pre">OperatorSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter"><code class="docutils literal notranslate"><span class="pre">Transmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.TransmitterSlot"><code class="docutils literal notranslate"><span class="pre">TransmitterSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.ReceiverSlot"><code class="docutils literal notranslate"><span class="pre">ReceiverSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.UnsupportedSlot"><code class="docutils literal notranslate"><span class="pre">UnsupportedSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceType"><code class="docutils literal notranslate"><span class="pre">DeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator"><code class="docutils literal notranslate"><span class="pre">DuplexOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html#hermespy.core.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode"><code class="docutils literal notranslate"><span class="pre">RandomNode</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioMode"><code class="docutils literal notranslate"><span class="pre">ScenarioMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioType"><code class="docutils literal notranslate"><span class="pre">ScenarioType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal"><code class="docutils literal notranslate"><span class="pre">Signal</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateFormat"><code class="docutils literal notranslate"><span class="pre">ChannelStateFormat</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateFormat.IMPULSE_RESPONSE"><code class="docutils literal notranslate"><span class="pre">ChannelStateFormat.IMPULSE_RESPONSE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateFormat.FREQUENCY_SELECTIVITY"><code class="docutils literal notranslate"><span class="pre">ChannelStateFormat.FREQUENCY_SELECTIVITY</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateDimension"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateDimension.RECEIVE_STREAMS"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension.RECEIVE_STREAMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateDimension.TRANSMIT_STREAMS"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension.TRANSMIT_STREAMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateDimension.SAMPLES"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension.SAMPLES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateDimension.INFORMATION"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension.INFORMATION</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.__state_format"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.__state_format</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.__state"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.__state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.__num_delay_taps"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.__num_delay_taps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.__num_frequency_bins"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.__num_frequency_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.state_format"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.state_format</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.state"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.set_state"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.set_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.to_impulse_response"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.to_impulse_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.to_frequency_selectivity"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.to_frequency_selectivity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.num_receive_streams"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.num_receive_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.num_transmit_streams"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.num_transmit_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.num_samples"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.num_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.num_symbols"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.num_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.num_delay_taps"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.num_delay_taps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.linear"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.linear</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.Ideal"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.Ideal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.received_streams"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.received_streams()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.samples"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.samples()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.concatenate"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.concatenate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.plot"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.append"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.append()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.append_linear"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.append_linear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.reciprocal"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.reciprocal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.from_HDF"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.from_HDF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation.to_HDF"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation.to_HDF()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Antenna"><code class="docutils literal notranslate"><span class="pre">Antenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.IdealAntenna"><code class="docutils literal notranslate"><span class="pre">IdealAntenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.PatchAntenna"><code class="docutils literal notranslate"><span class="pre">PatchAntenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Dipole"><code class="docutils literal notranslate"><span class="pre">Dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArrayBase"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.UniformArray"><code class="docutils literal notranslate"><span class="pre">UniformArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArray"><code class="docutils literal notranslate"><span class="pre">AntennaArray</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -97,10 +208,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="core.html">Core Module</a> &raquo;</li>
-      <li>Channel State Information Model</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="core.html">Core</a></li>
+      <li class="breadcrumb-item active">Channel State Information Model</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/core.channel_state_information.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,12 +221,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.core.channel_state_information"></span><section id="channel-state-information-model">
-<h1>Channel State Information Model<a class="headerlink" href="#channel-state-information-model" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.core.channel_state_information"></span><section id="channel-state-information-model">
+<h1>Channel State Information Model<a class="headerlink" href="#channel-state-information-model" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateFormat">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChannelStateFormat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateFormat" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Format flag for wireless transmission link states.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateFormat.IMPULSE_RESPONSE">
@@ -132,7 +268,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateDimension">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChannelStateDimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateDimension" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Dimension selection of channel state information.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateDimension.RECEIVE_STREAMS">
@@ -159,7 +295,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChannelStateInformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_delay_taps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_frequency_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.HDFSerializable" title="hermespy.core.factory.HDFSerializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a></p>
 <p>State of a single wireless link between a transmitting and receiving modem.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation.__state_format">
@@ -232,7 +368,7 @@ A numpy tensor of dimension
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation.state_format">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateFormat" title="hermespy.core.channel_state_information.ChannelStateFormat"><span class="pre">hermespy.core.channel_state_information.ChannelStateFormat</span></a></em><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.state_format" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateFormat" title="hermespy.core.channel_state_information.ChannelStateFormat"><span class="pre">ChannelStateFormat</span></a></em><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.state_format" title="Permalink to this definition"></a></dt>
 <dd><p>Current channel state format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -246,7 +382,7 @@ A numpy tensor of dimension
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation.state">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.state" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.state" title="Permalink to this definition"></a></dt>
 <dd><p>Current channel state tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -391,7 +527,7 @@ i.e. a FFT without zero-padding will be performed.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation.linear">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">linear</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">sparse._coo.core.COO</span></em><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.linear" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">linear</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">COO</span></em><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.linear" title="Permalink to this definition"></a></dt>
 <dd><p>Convert the channel state to a linear transformation tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -508,9 +644,53 @@ i.e. a FFT without zero-padding will be performed.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation.reciprocal">
+<span class="sig-name descname"><span class="pre">reciprocal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.reciprocal" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the reciprocal channel state.</p>
+<p>Returns: The reciprocal channel state information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-</section>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation.from_HDF">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.from_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>De-Serialized the object state from HDF5.</p>
+<p>Recalls the object’s state from a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group from which the object state is recalled.</p>
+</dd>
+</dl>
+<p>Returns: The object initialized from the HDF5 group state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.channel_state_information.ChannelStateInformation.to_HDF">
+<span class="sig-name descname"><span class="pre">to_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.channel_state_information.ChannelStateInformation.to_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize the object state to HDF5.</p>
+<p>Dumps the object’s state and additional information to a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group to which the object is serialized.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 
 
            </div>
@@ -523,7 +703,7 @@ i.e. a FFT without zero-padding will be performed.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcd67c4c0>
+<jinja2.runtime.BlockReference object at 0x7f9e79d3dd00>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

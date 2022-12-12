@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar Detection &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Radar Evaluation" href="radar.evaluation.html" />
+    <link rel="prev" title="Radar Cube" href="radar.cube.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="radar.html">Sensing</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform"><code class="docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarTransmission"><code class="docutils literal notranslate"><span class="pre">RadarTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarReception"><code class="docutils literal notranslate"><span class="pre">RadarReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar"><code class="docutils literal notranslate"><span class="pre">Radar</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube"><code class="docutils literal notranslate"><span class="pre">RadarCube</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Radar Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.detection.PointDetection"><code class="docutils literal notranslate"><span class="pre">PointDetection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.PointDetection.FromSpherical"><code class="docutils literal notranslate"><span class="pre">PointDetection.FromSpherical()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.PointDetection.position"><code class="docutils literal notranslate"><span class="pre">PointDetection.position</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.PointDetection.velocity"><code class="docutils literal notranslate"><span class="pre">PointDetection.velocity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.PointDetection.power"><code class="docutils literal notranslate"><span class="pre">PointDetection.power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.detection.RadarPointCloud"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.RadarPointCloud.points"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud.points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.RadarPointCloud.num_points"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud.num_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.RadarPointCloud.add_point"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud.add_point()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.detection.RadarDetector"><code class="docutils literal notranslate"><span class="pre">RadarDetector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.RadarDetector.detect"><code class="docutils literal notranslate"><span class="pre">RadarDetector.detect()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.detection.ThresholdDetector"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.ThresholdDetector.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.ThresholdDetector.min_power"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector.min_power</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.ThresholdDetector.detect"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector.detect()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.detection.MaxDetector"><code class="docutils literal notranslate"><span class="pre">MaxDetector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.MaxDetector.yaml_tag"><code class="docutils literal notranslate"><span class="pre">MaxDetector.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.detection.MaxDetector.detect"><code class="docutils literal notranslate"><span class="pre">MaxDetector.detect()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbArtifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbabilityEvaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocArtifact"><code class="docutils literal notranslate"><span class="pre">RocArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation"><code class="docutils literal notranslate"><span class="pre">RocEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluationResult"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareEvaluation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareErrorResult"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW"><code class="docutils literal notranslate"><span class="pre">FMCW</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="radar.html">Sensing</a></li>
+      <li class="breadcrumb-item active">Radar Detection</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/radar.detection.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.radar.detection"></span><section id="radar-detection">
+<h1>Radar Detection<a class="headerlink" href="#radar-detection" title="Permalink to this heading"></a></h1>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.detection.PointDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PointDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.detection.PointDetection" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A single radar point detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>position</strong> (<em>np.ndarray</em>) – Cartesian position of the detection in cartesian coordinates.</p></li>
+<li><p><strong>velocity</strong> (<em>np.ndarray</em>) – Velocity vector of the detection in m/s</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Power of the detection.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>position</cite> is not three-dimensional.
+    If <cite>velocity</cite> is not three-dimensional.
+    If <cite>power</cite> is smaller or equal to zero.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.detection.PointDetection.FromSpherical">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FromSpherical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zenith</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.detection.PointDetection.FromSpherical" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a point detection from radar cube spherical coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zenith</strong> (<em>float</em>) – Zenith angle in Radians.</p></li>
+<li><p><strong>azimuth</strong> (<em>float</em>) – Azimuth angle in Radians.</p></li>
+<li><p><strong>velocity</strong> (<em>float</em>) – Velocity from / to the coordinate system origin in m/s.</p></li>
+<li><p><strong>range</strong> (<em>float</em>) – Point distance to coordiante system origin in m/s.</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Point power indicator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.radar.detection.PointDetection" title="hermespy.radar.detection.PointDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointDetection</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.detection.PointDetection.position">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.detection.PointDetection.position" title="Permalink to this definition"></a></dt>
+<dd><p>Position of the detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Cartesian position in m.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.detection.PointDetection.velocity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.detection.PointDetection.velocity" title="Permalink to this definition"></a></dt>
+<dd><p>Velocity of the detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Velocity vector in m/s.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.detection.PointDetection.power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.detection.PointDetection.power" title="Permalink to this definition"></a></dt>
+<dd><p>Detected power.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Power.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.detection.RadarPointCloud">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarPointCloud</span></span><a class="headerlink" href="#hermespy.radar.detection.RadarPointCloud" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A sparse radar point cloud.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.detection.RadarPointCloud.points">
+<span class="sig-name descname"><span class="pre">points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.radar.detection.PointDetection" title="hermespy.radar.detection.PointDetection"><span class="pre">PointDetection</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.detection.RadarPointCloud.points" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.detection.RadarPointCloud.num_points">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.radar.detection.RadarPointCloud.num_points" title="Permalink to this definition"></a></dt>
+<dd><p>Number of points contained within this point cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The number of points.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.detection.RadarPointCloud.add_point">
+<span class="sig-name descname"><span class="pre">add_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.detection.RadarPointCloud.add_point" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new detection to the point cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>point</strong> (<a class="reference internal" href="#hermespy.radar.detection.PointDetection" title="hermespy.radar.detection.PointDetection"><em>PointDetection</em></a>) – The detection to be added.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.detection.RadarDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarDetector</span></span><a class="headerlink" href="#hermespy.radar.detection.RadarDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for radar detection algorithms.</p>
+<p>Radar detection algorithms convert a radar cube to a radar point cloud.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.detection.RadarDetector.detect">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">detect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cube</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.detection.RadarDetector.detect" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a point cloud from a radar cube.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cube</strong> (<a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><em>RadarCube</em></a>) – The radar cube to be processed.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.radar.detection.RadarPointCloud" title="hermespy.radar.detection.RadarPointCloud"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The resulting (usually sparse) point cloud.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.detection.ThresholdDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ThresholdDetector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_power</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.detection.ThresholdDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.radar.detection.RadarDetector" title="hermespy.radar.detection.RadarDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarDetector</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Extract points by a power threshold.</p>
+<p>Args:</p>
+<dl class="simple">
+<dt>min_power (float):</dt><dd><p>Minmally required point power.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.detection.ThresholdDetector.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Threshold'</span></em><a class="headerlink" href="#hermespy.radar.detection.ThresholdDetector.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.detection.ThresholdDetector.min_power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">min_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.detection.ThresholdDetector.min_power" title="Permalink to this definition"></a></dt>
+<dd><p>Minimally required point power.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Power (linear).</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – On powers smaller or equal to zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.detection.ThresholdDetector.detect">
+<span class="sig-name descname"><span class="pre">detect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cube</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.detection.ThresholdDetector.detect" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a point cloud from a radar cube.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cube</strong> (<a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><em>RadarCube</em></a>) – The radar cube to be processed.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.radar.detection.RadarPointCloud" title="hermespy.radar.detection.RadarPointCloud"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The resulting (usually sparse) point cloud.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.detection.MaxDetector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MaxDetector</span></span><a class="headerlink" href="#hermespy.radar.detection.MaxDetector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.radar.detection.RadarDetector" title="hermespy.radar.detection.RadarDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarDetector</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Extracts the maximum point from the radar cube.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.detection.MaxDetector.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Max'</span></em><a class="headerlink" href="#hermespy.radar.detection.MaxDetector.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.detection.MaxDetector.detect">
+<span class="sig-name descname"><span class="pre">detect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cube</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.detection.MaxDetector.detect" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a point cloud from a radar cube.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cube</strong> (<a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><em>RadarCube</em></a>) – The radar cube to be processed.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.radar.detection.RadarPointCloud" title="hermespy.radar.detection.RadarPointCloud"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The resulting (usually sparse) point cloud.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="radar.cube.html" class="btn btn-neutral float-left" title="Radar Cube" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="radar.evaluation.html" class="btn btn-neutral float-right" title="Radar Evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e7c791970>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

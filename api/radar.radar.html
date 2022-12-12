@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Radar Device Operation &mdash; HermesPy  documentation</title>
+  <title>Radar Device Operation &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -27,8 +34,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Frequency Modulated Continuous Waveform Radar" href="radar.fmcw.html" />
-    <link rel="prev" title="Radar Module" href="radar.html" /> 
+    <link rel="next" title="Radar Cube" href="radar.cube.html" />
+    <link rel="prev" title="Sensing" href="radar.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +59,88 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="radar.html">Radar Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="radar.html">Sensing</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Radar Device Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform"><code class="docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform.ping"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.ping()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform.estimate"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.estimate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform.sampling_rate"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform.range_bins"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.range_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform.velocity_bins"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.velocity_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform.energy"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform.power"><code class="docutils literal notranslate"><span class="pre">RadarWaveform.power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.radar.RadarTransmission"><code class="docutils literal notranslate"><span class="pre">RadarTransmission</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarTransmission.signal"><code class="docutils literal notranslate"><span class="pre">RadarTransmission.signal</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.radar.RadarReception"><code class="docutils literal notranslate"><span class="pre">RadarReception</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarReception.cube"><code class="docutils literal notranslate"><span class="pre">RadarReception.cube</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.RadarReception.cloud"><code class="docutils literal notranslate"><span class="pre">RadarReception.cloud</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.radar.Radar"><code class="docutils literal notranslate"><span class="pre">Radar</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Radar.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.property_blacklist"><code class="docutils literal notranslate"><span class="pre">Radar.property_blacklist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.transmit_beamformer"><code class="docutils literal notranslate"><span class="pre">Radar.transmit_beamformer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.receive_beamformer"><code class="docutils literal notranslate"><span class="pre">Radar.receive_beamformer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.sampling_rate"><code class="docutils literal notranslate"><span class="pre">Radar.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.frame_duration"><code class="docutils literal notranslate"><span class="pre">Radar.frame_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.noise_power"><code class="docutils literal notranslate"><span class="pre">Radar.noise_power()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.waveform"><code class="docutils literal notranslate"><span class="pre">Radar.waveform</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.detector"><code class="docutils literal notranslate"><span class="pre">Radar.detector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.cloud"><code class="docutils literal notranslate"><span class="pre">Radar.cloud</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.cube"><code class="docutils literal notranslate"><span class="pre">Radar.cube</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.transmit"><code class="docutils literal notranslate"><span class="pre">Radar.transmit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.radar.Radar.receive"><code class="docutils literal notranslate"><span class="pre">Radar.receive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube"><code class="docutils literal notranslate"><span class="pre">RadarCube</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection"><code class="docutils literal notranslate"><span class="pre">PointDetection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector"><code class="docutils literal notranslate"><span class="pre">RadarDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.MaxDetector"><code class="docutils literal notranslate"><span class="pre">MaxDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbArtifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbabilityEvaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocArtifact"><code class="docutils literal notranslate"><span class="pre">RocArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation"><code class="docutils literal notranslate"><span class="pre">RocEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluationResult"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareEvaluation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareErrorResult"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW"><code class="docutils literal notranslate"><span class="pre">FMCW</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,10 +158,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="radar.html">Radar Module</a> &raquo;</li>
-      <li>Radar Device Operation</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="radar.html">Sensing</a></li>
+      <li class="breadcrumb-item active">Radar Device Operation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/radar.radar.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,8 +171,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.radar.radar"></span><section id="radar-device-operation">
-<h1>Radar Device Operation<a class="headerlink" href="#radar-device-operation" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.radar.radar"></span><section id="radar-device-operation">
+<h1>Radar Device Operation<a class="headerlink" href="#radar-device-operation" title="Permalink to this heading"></a></h1>
 <div class="mermaid">
             %%{init: {'theme': 'dark'}}%%
 flowchart LR
@@ -146,144 +238,7 @@ txsignal --&gt; txslot
 rxsignal --- rxslot
 
 TargetEstimation --- estimations
-        </div><dl class="py class">
-<dt class="sig sig-object py" id="hermespy.radar.radar.PointDetection">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PointDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.PointDetection" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A single radar point detection.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>position</strong> (<em>np.ndarray</em>) – Cartesian position of the detection in cartesian coordinates.</p></li>
-<li><p><strong>velocity</strong> (<em>np.ndarray</em>) – Velocity vector of the detection in m/s</p></li>
-<li><p><strong>power</strong> (<em>float</em>) – Power of the detection.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If <cite>position</cite> is not three-dimensional.
-    If <cite>velocity</cite> is not three-dimensional.
-    If <cite>power</cite> is smaller or equal to zero.</p>
-</dd>
-</dl>
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.radar.radar.PointDetection.position">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.PointDetection.position" title="Permalink to this definition"></a></dt>
-<dd><p>Position of the detection.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Cartesian position in m.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If position is not a three-dimensional vector.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.radar.radar.PointDetection.velocity">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.PointDetection.velocity" title="Permalink to this definition"></a></dt>
-<dd><p>Velocity of the detection.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Velocity vector in m/s.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If velocity is not a three-dimensional vector.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.radar.radar.PointDetection.power">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.radar.PointDetection.power" title="Permalink to this definition"></a></dt>
-<dd><p>Detected power.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Power.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>power</cite> is smaller or equal to zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarCube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_bins</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity_bins</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_bins</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.RadarCube" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube.data">
-<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarCube.data" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube.angle_bins">
-<span class="sig-name descname"><span class="pre">angle_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarCube.angle_bins" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube.velocity_bins">
-<span class="sig-name descname"><span class="pre">velocity_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarCube.velocity_bins" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube.range_bins">
-<span class="sig-name descname"><span class="pre">range_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarCube.range_bins" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube.plot_range">
-<span class="sig-name descname"><span class="pre">plot_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.RadarCube.plot_range" title="Permalink to this definition"></a></dt>
-<dd><p>Visualize the cube’s range data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</p></li>
-<li><p><strong>axes</strong> (<em>Optional</em><em>[</em><em>plt.Axes</em><em>]</em><em>, </em><em>optional</em>) – Matplotlib axes to plot the graph to.
-If none are provided, a new figure is created.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The visualization figure.
-<cite>None</cite> if axes were provided.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Optional[plt.Figure]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.radar.radar.RadarCube.plot_range_velocity">
-<span class="sig-name descname"><span class="pre">plot_range_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.RadarCube.plot_range_velocity" title="Permalink to this definition"></a></dt>
-<dd><p>Visualize the cube’s range-velocity profile.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</p></li>
-<li><p><strong>interpolate</strong> (<em>bool</em><em>, </em><em>optional</em>) – Interpolate the axis for a square profile plot.
-Enabled by default.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>plt.Figure</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+        </div></section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.radar.radar.RadarWaveform">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarWaveform</span></span><a class="headerlink" href="#hermespy.radar.radar.RadarWaveform" title="Permalink to this definition"></a></dt>
@@ -329,7 +284,7 @@ Enabled by default.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.radar.RadarWaveform.range_bins">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">range_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarWaveform.range_bins" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">range_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarWaveform.range_bins" title="Permalink to this definition"></a></dt>
 <dd><p>Sample bins of the depth sensing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -343,11 +298,11 @@ Enabled by default.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.radar.RadarWaveform.velocity_bins">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarWaveform.velocity_bins" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarWaveform.velocity_bins" title="Permalink to this definition"></a></dt>
 <dd><p>Sample bins of the radial velocity sensing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Velocities in m/s.</p>
+<dd class="field-odd"><p>Doppler shift in Hz.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>np.ndarray</p>
@@ -355,21 +310,98 @@ Enabled by default.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.radar.RadarWaveform.energy">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarWaveform.energy" title="Permalink to this definition"></a></dt>
+<dd><p>Energy of the radar waveform.</p>
+<p>Returns: Radar energy in <span class="math notranslate nohighlight">\(\mathrm{Wh}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.radar.RadarWaveform.power">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.radar.RadarWaveform.power" title="Permalink to this definition"></a></dt>
+<dd><p>Power of the radar waveform.</p>
+<p>Returns: Radar power in <span class="math notranslate nohighlight">\(\mathrm{W}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.radar.RadarTransmission">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarTransmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.RadarTransmission" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Transmission" title="hermespy.core.device.Transmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transmission</span></code></a></p>
+<p>Information generated by transmitting over a radar operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Transmitted radar waveform.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.radar.RadarTransmission.signal">
+<span class="sig-name descname"><span class="pre">signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">Signal</span></a></em><a class="headerlink" href="#hermespy.radar.radar.RadarTransmission.signal" title="Permalink to this definition"></a></dt>
+<dd><p>Base-band waveform.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.radar.RadarReception">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarReception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cloud</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.RadarReception" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Reception" title="hermespy.core.device.Reception"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reception</span></code></a>, <a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarCube</span></code></a></p>
+<p>Information generated by receiving over a radar operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Received radar waveform.</p></li>
+<li><p><strong>cube</strong> (<a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><em>RadarCube</em></a>) – Processed raw radar data.</p></li>
+<li><p><strong>cloud</strong> (<a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud" title="hermespy.radar.detection.RadarPointCloud"><em>RadarPointCloud</em></a><em>, </em><em>optional</em>) – Radar point cloud.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.radar.RadarReception.cube">
+<span class="sig-name descname"><span class="pre">cube</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><span class="pre">RadarCube</span></a></em><a class="headerlink" href="#hermespy.radar.radar.RadarReception.cube" title="Permalink to this definition"></a></dt>
+<dd><p>Processed raw radar data.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.radar.RadarReception.cloud">
+<span class="sig-name descname"><span class="pre">cloud</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud" title="hermespy.radar.detection.RadarPointCloud"><span class="pre">RadarPointCloud</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.RadarReception.cloud" title="Permalink to this definition"></a></dt>
+<dd><p>Radar point cloud.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.radar.radar.Radar">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Radar</span></span><a class="headerlink" href="#hermespy.radar.radar.Radar" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator" title="hermespy.core.device.DuplexOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.DuplexOperator</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator" title="hermespy.core.device.DuplexOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DuplexOperator</span></code></a></p>
 <p>HermesPy representation of a mono-static radar sensing its environment.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.waveform">
-<span class="sig-name descname"><span class="pre">waveform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform" title="hermespy.radar.radar.RadarWaveform"><span class="pre">RadarWaveform</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.waveform" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Radar'</span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.property_blacklist">
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'slot'}</span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.property_blacklist" title="Permalink to this definition"></a></dt>
+<dd><p>Set of properties to be ignored during serialization.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.radar.Radar.transmit_beamformer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_beamformer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer" title="hermespy.beamforming.beamformer.TransmitBeamformer"><span class="pre">hermespy.beamforming.beamformer.TransmitBeamformer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.transmit_beamformer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_beamformer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer" title="hermespy.beamforming.beamformer.TransmitBeamformer"><span class="pre">TransmitBeamformer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.transmit_beamformer" title="Permalink to this definition"></a></dt>
 <dd><p>Beamforming applied during signal transmission.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -384,7 +416,7 @@ Enabled by default.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.radar.Radar.receive_beamformer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive_beamformer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer" title="hermespy.beamforming.beamformer.ReceiveBeamformer"><span class="pre">hermespy.beamforming.beamformer.ReceiveBeamformer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.receive_beamformer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive_beamformer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer" title="hermespy.beamforming.beamformer.ReceiveBeamformer"><span class="pre">ReceiveBeamformer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.receive_beamformer" title="Permalink to this definition"></a></dt>
 <dd><p>Beamforming applied during signal transmission.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -400,9 +432,13 @@ Enabled by default.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.radar.Radar.sampling_rate">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.sampling_rate" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>The operator’s preferred sampling rate.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Sampling rate in Hz.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -410,7 +446,32 @@ Enabled by default.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.radar.Radar.frame_duration">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.frame_duration" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Duration of a single sample frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Frame duration in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>duration (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.noise_power">
+<span class="sig-name descname"><span class="pre">noise_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_type=&lt;enum</span> <span class="pre">'SNRType'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.Radar.noise_power" title="Permalink to this definition"></a></dt>
+<dd><p>Compute noise power for a given signal strength.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strength</strong> (<em>float</em>) – Signal strength indicator.
+The unit depends on <cite>snr_type</cite>.</p></li>
+<li><p><strong>snr_type</strong> (<a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType" title="hermespy.core.definitions.SNRType"><em>SNRType</em></a>) – The considered signal to noise ratio type.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the receiver does not support the required snr type.</p>
+</dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
@@ -418,15 +479,64 @@ Enabled by default.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.energy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.energy" title="Permalink to this definition"></a></dt>
-<dd><p>Average energy of the transmitted and received signal.</p>
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.waveform">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.radar.radar.RadarWaveform" title="hermespy.radar.radar.RadarWaveform"><span class="pre">RadarWaveform</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.waveform" title="Permalink to this definition"></a></dt>
+<dd><p>The waveform to be emitted by this radar.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Energy.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hermespy.radar.radar.RadarWaveform" title="hermespy.radar.radar.RadarWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>flot</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The configured waveform.
+<cite>None</cite> if the waveform is undefined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.detector">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">detector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector" title="hermespy.radar.detection.RadarDetector"><span class="pre">RadarDetector</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.detector" title="Permalink to this definition"></a></dt>
+<dd><p>The detector configured to process the resulting radar cube.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector" title="hermespy.radar.detection.RadarDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarDetector</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The configured detector.
+<cite>None</cite> if the detector is undefined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.cloud">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cloud</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud" title="hermespy.radar.detection.RadarPointCloud"><span class="pre">RadarPointCloud</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.cloud" title="Permalink to this definition"></a></dt>
+<dd><p>The resulting point cloud of the most recent reception.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud" title="hermespy.radar.detection.RadarPointCloud"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Point cloud object.
+<cite>None</cite> if no detection algorithm was configured.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.radar.Radar.cube">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cube</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><span class="pre">RadarCube</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.radar.radar.Radar.cube" title="Permalink to this definition"></a></dt>
+<dd><p>The resulting radar cube of the most recent reception.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube" title="hermespy.radar.cube.RadarCube"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarCube</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Radar cube object.</dt><dd><p><cite>None</cite> if no detection algorithm was configured.</p>
+</dd>
+</dl>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -434,9 +544,21 @@ Enabled by default.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.radar.radar.Radar.transmit">
 <span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.Radar.transmit" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
+<dd><p>Transmit a signal.</p>
+<p>Registers the signal samples to be transmitted by the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of the transmitted signal.
+If not specified, the duration will be inferred by the transmitter.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.radar.radar.RadarTransmission" title="hermespy.radar.radar.RadarTransmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarTransmission</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Information generated while transmitting over this operator.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -444,29 +566,36 @@ Enabled by default.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.radar.radar.Radar.receive">
 <span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.radar.Radar.receive" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Receive a signal.</p>
+<p>Pulls the required signal model and channel state information from the underlying device.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="#hermespy.radar.radar.RadarCube" title="hermespy.radar.radar.RadarCube"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarCube</span></code></a>]</p>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.radar.radar.RadarReception" title="hermespy.radar.radar.RadarReception"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarReception</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Information received by this operator.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="radar.html" class="btn btn-neutral float-left" title="Radar Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="radar.fmcw.html" class="btn btn-neutral float-right" title="Frequency Modulated Continuous Waveform Radar" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="radar.html" class="btn btn-neutral float-left" title="Sensing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="radar.cube.html" class="btn btn-neutral float-right" title="Radar Cube" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcda21700>
+<jinja2.runtime.BlockReference object at 0x7f9e7acd2ac0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Power Amplifier Modeling &mdash; HermesPy  documentation</title>
+  <title>Power Amplifier Modeling &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,8 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,8 +34,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Noise Modeling" href="simulation.noise.html" />
-    <link rel="prev" title="Hardware Radio Frequency Chain Modeling" href="simulation.rf_chain.html" /> 
+    <link rel="next" title="Phase Noise Modeling" href="simulation.rf_chain.phase_noise.html" />
+    <link rel="prev" title="Transmit-Receive Leakage Modeling" href="simulation.rf_chain.leakage.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -53,30 +59,99 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario"><code class="docutils literal notranslate"><span class="pre">SimulationScenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner"><code class="docutils literal notranslate"><span class="pre">SimulationRunner</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html">Simulated Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType"><code class="docutils literal notranslate"><span class="pre">GainControlType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain"><code class="docutils literal notranslate"><span class="pre">Gain</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType"><code class="docutils literal notranslate"><span class="pre">QuantizerType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain"><code class="docutils literal notranslate"><span class="pre">RfChain</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html">Transmit-Receive Leakage Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage"><code class="docutils literal notranslate"><span class="pre">Leakage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.LinearLeakage"><code class="docutils literal notranslate"><span class="pre">LinearLeakage</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.serialized_attributes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.adjust_power</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.saturation_amplitude"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.saturation_amplitude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.send"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.send()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.adjust_power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.smoothness_factor"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.smoothness_factor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.adjust_power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.serialized_attributes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_alpha"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.phase_alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_beta"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.phase_beta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_alpha"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.amplitude_alpha</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_beta"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.amplitude_beta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.serialized_attributes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.input</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.gain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.phase</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise"><code class="docutils literal notranslate"><span class="pre">PhaseNoise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN"><code class="docutils literal notranslate"><span class="pre">AWGN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling"><code class="docutils literal notranslate"><span class="pre">Coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation"><code class="docutils literal notranslate"><span class="pre">Isolation</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -94,10 +169,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="simulation.html">Simulation Module</a> &raquo;</li>
-      <li>Power Amplifier Modeling</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="simulation.html">Simulation</a></li>
+      <li class="breadcrumb-item active">Power Amplifier Modeling</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/simulation.rf_chain.power_amplifier.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -107,17 +182,41 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.simulation.rf_chain.power_amplifier"></span><section id="power-amplifier-modeling">
-<h1>Power Amplifier Modeling<a class="headerlink" href="#power-amplifier-modeling" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.simulation.rf_chain.power_amplifier"></span><section id="power-amplifier-modeling">
+<h1>Power Amplifier Modeling<a class="headerlink" href="#power-amplifier-modeling" title="Permalink to this heading"></a></h1>
 <p>Power amplification modeling represents a single processing step within the radio-frequency hardware model of
 transmitting modems.</p>
 <div class="mermaid">
             classDiagram
-  PowerAmplifier &lt;|-- RappPowerAmplifier
   PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  PowerAmplifier &lt;|-- CustomPowerAmplifier
   Serializable &lt;|-- PowerAmplifier
   PowerAmplifier &lt;|-- SalehPowerAmplifier
-  PowerAmplifier &lt;|-- CustomPowerAmplifier
+  PowerAmplifier &lt;|-- RappPowerAmplifier
         </div><p>Each power amplifier model instance implements an equation</p>
 <div class="math notranslate nohighlight">
 \[s'(t) = f\lbrace s(t), t \rbrace \in \mathbb{C}\]</div>
@@ -128,10 +227,11 @@ The following figure visualizes the gain characteristics for the implemented amp
 <figure class="align-center">
 <img alt="../_images/plot_pa_characteristics.png" class="plot-directive" src="../_images/plot_pa_characteristics.png" />
 </figure>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saturation_amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Base class of a power-amplifier model.</p>
 <p>Implements a distortion-less amplification model</p>
 <div class="math notranslate nohighlight">
@@ -149,6 +249,12 @@ The following figure visualizes the gain characteristics for the implemented amp
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag">
 <span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Distortionless'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag" title="Permalink to this definition"></a></dt>
 <dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes">
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes" title="Permalink to this definition"></a></dt>
+<dd><p>Set of object attributes to be serialized.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -231,33 +337,12 @@ By default, a new figure is created.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize a <cite>PowerAmplifier</cite> object to YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<em>BaseRepresenter</em>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><em>PowerAmplifier</em></a>) – The amplifier instance to be serialized.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClippingPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a clipping power amplifier.</p>
 <p>Complex signal samples with amplitudes above <span class="math notranslate nohighlight">\(s_\mathrm{sat} \in \mathbb{R}\)</span> will be clipped
 to the maximum amplitude value.
@@ -304,7 +389,7 @@ In case of clipping, the respective sample angles will be preserved, so that</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RappPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smoothness_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a power amplifier according to Rapp’s model.</p>
 <p>Implements a saturation characteristic according to</p>
 <div class="math notranslate nohighlight">
@@ -363,27 +448,6 @@ denotes the smoothness factor of the saturation curve.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize a <cite>RappPowerAmplifier</cite> object to YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<em>BaseRepresenter</em>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><em>RappPowerAmplifier</em></a>) – The amplifier instance to be serialized.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power">
 <span class="sig-name descname"><span class="pre">adjust_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power" title="Permalink to this definition"></a></dt>
@@ -396,7 +460,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SalehPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitude_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude_beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_beta</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a power amplifier according to Saleh.</p>
 <p>Implements a saturation characteristic according to</p>
 <div class="math notranslate nohighlight">
@@ -431,6 +495,12 @@ and</p>
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag">
 <span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Saleh'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag" title="Permalink to this definition"></a></dt>
 <dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes">
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power',</span> <span class="pre">'phase_alpha',</span> <span class="pre">'phase_beta'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes" title="Permalink to this definition"></a></dt>
+<dd><p>Set of object attributes to be serialized.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -496,33 +566,12 @@ and</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize a <cite>SalehPowerAmplifier</cite> object to YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<em>BaseRepresenter</em>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><em>SalehPowerAmplifier</em></a>) – The amplifier instance to be serialized.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CustomPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a customized power amplifier.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -543,6 +592,12 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes">
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power',</span> <span class="pre">'gain',</span> <span class="pre">'input',</span> <span class="pre">'phase'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes" title="Permalink to this definition"></a></dt>
+<dd><p>Set of object attributes to be serialized.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model">
 <span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model" title="Permalink to this definition"></a></dt>
@@ -560,9 +615,38 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
-</section>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">phase</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <div class="docutils container" id="id3">
 <dl class="footnote brackets">
 <dt class="label" id="footcite-1991-rapp"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
@@ -578,14 +662,14 @@ The representer gets passed down the serialization tree to each node.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="simulation.rf_chain.html" class="btn btn-neutral float-left" title="Hardware Radio Frequency Chain Modeling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="simulation.noise.html" class="btn btn-neutral float-right" title="Noise Modeling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="simulation.rf_chain.leakage.html" class="btn btn-neutral float-left" title="Transmit-Receive Leakage Modeling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="simulation.rf_chain.phase_noise.html" class="btn btn-neutral float-right" title="Phase Noise Modeling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcd8bb9d0>
+<jinja2.runtime.BlockReference object at 0x7f9e7ac04b50>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

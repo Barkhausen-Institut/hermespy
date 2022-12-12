@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Antenna Configuration &mdash; HermesPy  documentation</title>
+  <title>Antenna Configuration &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,8 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +34,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Channel Coding Module" href="coding.html" />
+    <link rel="next" title="Channel Modeling" href="channel.html" />
     <link rel="prev" title="Channel State Information Model" href="core.channel_state_information.html" /> 
 </head>
 
@@ -41,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -53,34 +59,160 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ConsoleMode"><code class="docutils literal notranslate"><span class="pre">ConsoleMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ArtifactTemplate"><code class="docutils literal notranslate"><span class="pre">ArtifactTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationTemplate"><code class="docutils literal notranslate"><span class="pre">EvaluationTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationResult"><code class="docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ScalarEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloSample"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridSection"><code class="docutils literal notranslate"><span class="pre">GridSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ActorRunResult"><code class="docutils literal notranslate"><span class="pre">ActorRunResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.SampleGrid"><code class="docutils literal notranslate"><span class="pre">SampleGrid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloActor"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloResult"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension"><code class="docutils literal notranslate"><span class="pre">GridDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.RegisteredDimension"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.dimension"><code class="docutils literal notranslate"><span class="pre">dimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo"><code class="docutils literal notranslate"><span class="pre">MonteCarlo</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Verbosity"><code class="docutils literal notranslate"><span class="pre">Verbosity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable"><code class="docutils literal notranslate"><span class="pre">Serializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableEnum"><code class="docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableArray"><code class="docutils literal notranslate"><span class="pre">SerializableArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Factory"><code class="docutils literal notranslate"><span class="pre">Factory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.HDFSerializable"><code class="docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType"><code class="docutils literal notranslate"><span class="pre">SNRType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.html">Device Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError"><code class="docutils literal notranslate"><span class="pre">FloatingError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SlotType"><code class="docutils literal notranslate"><span class="pre">SlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorType"><code class="docutils literal notranslate"><span class="pre">OperatorType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperationResult"><code class="docutils literal notranslate"><span class="pre">OperationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmission"><code class="docutils literal notranslate"><span class="pre">Transmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Reception"><code class="docutils literal notranslate"><span class="pre">Reception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceTransmission"><code class="docutils literal notranslate"><span class="pre">DeviceTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceReception"><code class="docutils literal notranslate"><span class="pre">DeviceReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SecondSlotType"><code class="docutils literal notranslate"><span class="pre">SecondSlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.MixingOperator"><code class="docutils literal notranslate"><span class="pre">MixingOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Receiver"><code class="docutils literal notranslate"><span class="pre">Receiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorSlot"><code class="docutils literal notranslate"><span class="pre">OperatorSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter"><code class="docutils literal notranslate"><span class="pre">Transmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.TransmitterSlot"><code class="docutils literal notranslate"><span class="pre">TransmitterSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.ReceiverSlot"><code class="docutils literal notranslate"><span class="pre">ReceiverSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.UnsupportedSlot"><code class="docutils literal notranslate"><span class="pre">UnsupportedSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceType"><code class="docutils literal notranslate"><span class="pre">DeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator"><code class="docutils literal notranslate"><span class="pre">DuplexOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html#hermespy.core.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode"><code class="docutils literal notranslate"><span class="pre">RandomNode</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioMode"><code class="docutils literal notranslate"><span class="pre">ScenarioMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioType"><code class="docutils literal notranslate"><span class="pre">ScenarioType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal"><code class="docutils literal notranslate"><span class="pre">Signal</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateFormat"><code class="docutils literal notranslate"><span class="pre">ChannelStateFormat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateDimension"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Antenna Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.antennas.Antenna"><code class="docutils literal notranslate"><span class="pre">Antenna</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Antenna.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.property_blacklist"><code class="docutils literal notranslate"><span class="pre">Antenna.property_blacklist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.array"><code class="docutils literal notranslate"><span class="pre">Antenna.array</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.pos"><code class="docutils literal notranslate"><span class="pre">Antenna.pos</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.transmit"><code class="docutils literal notranslate"><span class="pre">Antenna.transmit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.receive"><code class="docutils literal notranslate"><span class="pre">Antenna.receive()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.polarization"><code class="docutils literal notranslate"><span class="pre">Antenna.polarization()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.plot_polarization"><code class="docutils literal notranslate"><span class="pre">Antenna.plot_polarization()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Antenna.plot_gain"><code class="docutils literal notranslate"><span class="pre">Antenna.plot_gain()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.antennas.IdealAntenna"><code class="docutils literal notranslate"><span class="pre">IdealAntenna</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.IdealAntenna.yaml_tag"><code class="docutils literal notranslate"><span class="pre">IdealAntenna.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.IdealAntenna.polarization"><code class="docutils literal notranslate"><span class="pre">IdealAntenna.polarization()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.antennas.PatchAntenna"><code class="docutils literal notranslate"><span class="pre">PatchAntenna</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.PatchAntenna.yaml_tag"><code class="docutils literal notranslate"><span class="pre">PatchAntenna.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.PatchAntenna.polarization"><code class="docutils literal notranslate"><span class="pre">PatchAntenna.polarization()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.antennas.Dipole"><code class="docutils literal notranslate"><span class="pre">Dipole</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Dipole.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Dipole.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.Dipole.polarization"><code class="docutils literal notranslate"><span class="pre">Dipole.polarization()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.num_antennas"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.num_antennas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.num_transmit_antennas"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.num_transmit_antennas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.num_receive_antennas"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.num_receive_antennas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.topology"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.topology</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.polarization"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.polarization()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.plot_topology"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.plot_topology()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.cartesian_response"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.cartesian_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.horizontal_response"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.horizontal_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase.spherical_response"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase.spherical_response()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.antennas.UniformArray"><code class="docutils literal notranslate"><span class="pre">UniformArray</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.yaml_tag"><code class="docutils literal notranslate"><span class="pre">UniformArray.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.property_blacklist"><code class="docutils literal notranslate"><span class="pre">UniformArray.property_blacklist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.spacing"><code class="docutils literal notranslate"><span class="pre">UniformArray.spacing</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.num_antennas"><code class="docutils literal notranslate"><span class="pre">UniformArray.num_antennas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.dimensions"><code class="docutils literal notranslate"><span class="pre">UniformArray.dimensions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.topology"><code class="docutils literal notranslate"><span class="pre">UniformArray.topology</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.polarization"><code class="docutils literal notranslate"><span class="pre">UniformArray.polarization()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.UniformArray.antenna"><code class="docutils literal notranslate"><span class="pre">UniformArray.antenna</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray"><code class="docutils literal notranslate"><span class="pre">AntennaArray</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AntennaArray.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.antennas"><code class="docutils literal notranslate"><span class="pre">AntennaArray.antennas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.num_antennas"><code class="docutils literal notranslate"><span class="pre">AntennaArray.num_antennas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.positions"><code class="docutils literal notranslate"><span class="pre">AntennaArray.positions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.orientations"><code class="docutils literal notranslate"><span class="pre">AntennaArray.orientations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.add_antenna"><code class="docutils literal notranslate"><span class="pre">AntennaArray.add_antenna()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.remove_antenna"><code class="docutils literal notranslate"><span class="pre">AntennaArray.remove_antenna()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.topology"><code class="docutils literal notranslate"><span class="pre">AntennaArray.topology</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.polarization"><code class="docutils literal notranslate"><span class="pre">AntennaArray.polarization()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.to_yaml"><code class="docutils literal notranslate"><span class="pre">AntennaArray.to_yaml()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.antennas.AntennaArray.from_yaml"><code class="docutils literal notranslate"><span class="pre">AntennaArray.from_yaml()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -98,10 +230,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="core.html">Core Module</a> &raquo;</li>
-      <li>Antenna Configuration</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="core.html">Core</a></li>
+      <li class="breadcrumb-item active">Antenna Configuration</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/core.antennas.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -111,12 +243,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.core.antennas"></span><section id="antenna-configuration">
-<h1>Antenna Configuration<a class="headerlink" href="#antenna-configuration" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.core.antennas"></span><section id="antenna-configuration">
+<h1>Antenna Configuration<a class="headerlink" href="#antenna-configuration" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.antennas.Antenna">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Antenna</span></span><a class="headerlink" href="#hermespy.core.antennas.Antenna" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Model of a single antenna.</p>
 <p>A set of antenna models defines an antenna array model.</p>
 <dl class="py attribute">
@@ -125,9 +282,15 @@
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.antennas.Antenna.property_blacklist">
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'pos'}</span></em><a class="headerlink" href="#hermespy.core.antennas.Antenna.property_blacklist" title="Permalink to this definition"></a></dt>
+<dd><p>Set of properties to be ignored during serialization.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.antennas.Antenna.array">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">array</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.antennas.AntennaArray" title="hermespy.core.antennas.AntennaArray"><span class="pre">hermespy.core.antennas.AntennaArray</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.antennas.Antenna.array" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">array</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.antennas.AntennaArray" title="hermespy.core.antennas.AntennaArray"><span class="pre">AntennaArray</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.antennas.Antenna.array" title="Permalink to this definition"></a></dt>
 <dd><p>Array this antenna belongs to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -142,7 +305,7 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.antennas.Antenna.pos">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pos</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.Antenna.pos" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pos</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.Antenna.pos" title="Permalink to this definition"></a></dt>
 <dd><p>Local position of the antenna within its local coordinate system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -265,7 +428,7 @@ The signal model to be transmitted.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.antennas.IdealAntenna">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IdealAntenna</span></span><a class="headerlink" href="#hermespy.core.antennas.IdealAntenna" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.antennas.Antenna</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">Antenna</span></code></a></p>
 <p>Theoretic model of an ideal antenna.</p>
 <figure class="align-center" id="id3">
 <a class="reference internal image-reference" href="../_images/api_antenna_idealantenna_gain.png"><img alt="Ideal Antenna Gain" src="../_images/api_antenna_idealantenna_gain.png" style="width: 448.0px; height: 336.0px;" /></a>
@@ -281,6 +444,12 @@ The signal model to be transmitted.</p>
       \sqrt{2} \\
    \end{pmatrix}\end{split}\]</div>
 <p>resulting in unit gain in every direction.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.antennas.IdealAntenna.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IdealAntenna'</span></em><a class="headerlink" href="#hermespy.core.antennas.IdealAntenna.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.antennas.IdealAntenna.polarization">
 <span class="sig-name descname"><span class="pre">polarization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.IdealAntenna.polarization" title="Permalink to this definition"></a></dt>
@@ -312,7 +481,7 @@ The signal model to be transmitted.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.antennas.PatchAntenna">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PatchAntenna</span></span><a class="headerlink" href="#hermespy.core.antennas.PatchAntenna" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.antennas.Antenna</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">Antenna</span></code></a></p>
 <p>Realistic model of a vertically polarized patch antenna.</p>
 <figure class="align-center" id="id4">
 <a class="reference internal image-reference" href="../_images/api_antenna_patchantenna_gain.png"><img alt="Patch Antenna Gain" src="../_images/api_antenna_patchantenna_gain.png" style="width: 448.0px; height: 336.0px;" /></a>
@@ -321,6 +490,12 @@ The signal model to be transmitted.</p>
 </figcaption>
 </figure>
 <p>Refer to Jaeckel <em>et al.</em><a class="footnote-reference brackets" href="#footcite-2012-jaeckel" id="id1">1</a> for further information.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.antennas.PatchAntenna.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PatchAntenna'</span></em><a class="headerlink" href="#hermespy.core.antennas.PatchAntenna.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.antennas.PatchAntenna.polarization">
 <span class="sig-name descname"><span class="pre">polarization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.PatchAntenna.polarization" title="Permalink to this definition"></a></dt>
@@ -352,7 +527,7 @@ The signal model to be transmitted.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.antennas.Dipole">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Dipole</span></span><a class="headerlink" href="#hermespy.core.antennas.Dipole" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.antennas.Antenna</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">Antenna</span></code></a></p>
 <p>Model of vertically polarized half-wavelength dipole antenna.</p>
 <figure class="align-center" id="id5">
 <a class="reference internal image-reference" href="../_images/api_antenna_dipole_gain.png"><img alt="Dipole Antenna Gain" src="../_images/api_antenna_dipole_gain.png" style="width: 448.0px; height: 336.0px;" /></a>
@@ -364,6 +539,12 @@ The signal model to be transmitted.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}F_\mathrm{V}(\phi, \theta) &amp;= \frac{ \cos( \frac{\pi}{2} \cos(\theta)) }{ \sin(\theta) } \\
 F_\mathrm{H}(\phi, \theta) &amp;= 0\end{split}\]</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.antennas.Dipole.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DipoleAntenna'</span></em><a class="headerlink" href="#hermespy.core.antennas.Dipole.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.antennas.Dipole.polarization">
 <span class="sig-name descname"><span class="pre">polarization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.Dipole.polarization" title="Permalink to this definition"></a></dt>
@@ -412,8 +593,32 @@ F_\mathrm{H}(\phi, \theta) &amp;= 0\end{split}\]</div>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArrayBase.num_transmit_antennas">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_transmit_antennas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArrayBase.num_transmit_antennas" title="Permalink to this definition"></a></dt>
+<dd><p>Number of transmitting antenna elements within this array.</p>
+<p>Returns: Number of transmitting elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArrayBase.num_receive_antennas">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_antennas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArrayBase.num_receive_antennas" title="Permalink to this definition"></a></dt>
+<dd><p>Number of receiving antenna elements within this array.</p>
+<p>Returns: Number of receiving elements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArrayBase.topology">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArrayBase.topology" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArrayBase.topology" title="Permalink to this definition"></a></dt>
 <dd><p>Sensor array topology.</p>
 <p>Access the array topology as a <span class="math notranslate nohighlight">\(M \times 3\)</span> matrix indicating the cartesian locations
 of each antenna element within the local coordinate system.</p>
@@ -580,14 +785,14 @@ A one-dimensional, complex-valued numpy array modeling the phase responses of ea
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.antennas.UniformArray">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniformArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">antenna</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.UniformArray" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase" title="hermespy.core.antennas.AntennaArrayBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.antennas.AntennaArrayBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase" title="hermespy.core.antennas.AntennaArrayBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">AntennaArrayBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Model of a Uniform Antenna Array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>antenna</strong> (<a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><em>Antenna</em></a>) – The anntenna model this uniform array assumes.</p></li>
 <li><p><strong>spacing</strong> (<em>float</em>) – Spacing between the antenna elements in m.</p></li>
-<li><p><strong>dimensions</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – The number of antennas in x-, y-, and z-dimension.</p></li>
+<li><p><strong>dimensions</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>  # pragma no cover</em><em>]</em>) – The number of antennas in x-, y-, and z-dimension.</p></li>
 </ul>
 </dd>
 </dl>
@@ -595,6 +800,12 @@ A one-dimensional, complex-valued numpy array modeling the phase responses of ea
 <dt class="sig sig-object py" id="hermespy.core.antennas.UniformArray.yaml_tag">
 <span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'UniformArray'</span></em><a class="headerlink" href="#hermespy.core.antennas.UniformArray.yaml_tag" title="Permalink to this definition"></a></dt>
 <dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.antennas.UniformArray.property_blacklist">
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'topology'}</span></em><a class="headerlink" href="#hermespy.core.antennas.UniformArray.property_blacklist" title="Permalink to this definition"></a></dt>
+<dd><p>Set of properties to be ignored during serialization.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -644,7 +855,7 @@ A one-dimensional, complex-valued numpy array modeling the phase responses of ea
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.antennas.UniformArray.topology">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.UniformArray.topology" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.UniformArray.topology" title="Permalink to this definition"></a></dt>
 <dd><p>Sensor array topology.</p>
 <p>Access the array topology as a <span class="math notranslate nohighlight">\(M \times 3\)</span> matrix indicating the cartesian locations
 of each antenna element within the local coordinate system.</p>
@@ -678,16 +889,46 @@ of each antenna element within the local coordinate system.</p>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.antennas.UniformArray.antenna">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">antenna</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><span class="pre">Antenna</span></a></em><a class="headerlink" href="#hermespy.core.antennas.UniformArray.antenna" title="Permalink to this definition"></a></dt>
+<dd><p>The assumed antenna model.</p>
+<p>Returns: The antenna model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">Antenna</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AntennaArray</span></span><a class="headerlink" href="#hermespy.core.antennas.AntennaArray" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AntennaArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">antennas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.AntennaArray" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.antennas.AntennaArrayBase" title="hermespy.core.antennas.AntennaArrayBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">AntennaArrayBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Model of a set of arbitrary antennas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>antennas</strong> (<em>List</em><em>[</em><a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><em>Antenna</em></a><em>]</em><em>, </em><em>optional</em>) – Antenna models of each array element.</p></li>
+<li><p><strong>positions</strong> (<em>List</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>optional</em>) – Antenna positions of each array element.</p></li>
+<li><p><strong>orientations</strong> (<em>List</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>optional</em>) – Antenna orientation of each array element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the argument lists contain an unequal amount of objects.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CustomArray'</span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.antennas">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">antennas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><span class="pre">hermespy.core.antennas.Antenna</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.antennas" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">antennas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.antennas.Antenna" title="hermespy.core.antennas.Antenna"><span class="pre">Antenna</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.antennas" title="Permalink to this definition"></a></dt>
 <dd><p>Antennas within this array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -709,6 +950,30 @@ of each antenna element within the local coordinate system.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.positions">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">positions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.positions" title="Permalink to this definition"></a></dt>
+<dd><p>Antenna positions within the array</p>
+<p>Returns: List of carthesian vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.orientations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orientations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.orientations" title="Permalink to this definition"></a></dt>
+<dd><p>Antenna orientations within the array</p>
+<p>Returns: List of horizaontal orientation vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -751,10 +1016,16 @@ of each antenna element within the local coordinate system.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.topology">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.topology" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.topology" title="Permalink to this definition"></a></dt>
+<dd><p>Sensor array topology.</p>
+<p>Access the array topology as a <span class="math notranslate nohighlight">\(M \times 3\)</span> matrix indicating the cartesian locations
+of each antenna element within the local coordinate system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>math:<cite>M times 3</cite> topology matrix, where <span class="math notranslate nohighlight">\(M\)</span> is the number of antenna elements.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -762,16 +1033,66 @@ of each antenna element within the local coordinate system.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.polarization">
 <span class="sig-name descname"><span class="pre">polarization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.polarization" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Sensor array polarizations towards a certain angle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>azimuth</strong> (<em>float</em>) – Azimuth angle of interest in radians.</p></li>
+<li><p><strong>elevation</strong> (<em>float</em>) – Elevation angle of interest in radians.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>math:<cite>M times 2</cite> topology matrix, where <span class="math notranslate nohighlight">\(M\)</span> is the number of antenna elements.</p>
+</dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a serializable object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.core.antennas.AntennaArray" title="hermespy.core.antennas.AntennaArray"><em>AntennaArray</em></a>) – The channel instance to be serialized.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: The serialized YAML node.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MappingNode</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.antennas.AntennaArray.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.antennas.AntennaArray.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new serializable class instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>AntennaArray</cite> serialization.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: The de-serialized object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.antennas.AntennaArray" title="hermespy.core.antennas.AntennaArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">AntennaArray</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</section>
 <div class="docutils container" id="id2">
 <dl class="footnote brackets">
 <dt class="label" id="footcite-2012-jaeckel"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
@@ -785,13 +1106,13 @@ of each antenna element within the local coordinate system.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="core.channel_state_information.html" class="btn btn-neutral float-left" title="Channel State Information Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="coding.html" class="btn btn-neutral float-right" title="Channel Coding Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="channel.html" class="btn btn-neutral float-right" title="Channel Modeling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcd727340>
+<jinja2.runtime.BlockReference object at 0x7f9e7b6680d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

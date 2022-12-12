@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Frequency Modulated Continuous Waveform Radar &mdash; HermesPy  documentation</title>
+  <title>Frequency Modulated Continuous Waveform Radar &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -27,8 +34,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Simulation Module" href="simulation.html" />
-    <link rel="prev" title="Radar Device Operation" href="radar.radar.html" /> 
+    <link rel="next" title="Simulation" href="simulation.html" />
+    <link rel="prev" title="Radar Evaluation" href="radar.evaluation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +59,78 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="radar.html">Radar Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="radar.html">Sensing</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform"><code class="docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarTransmission"><code class="docutils literal notranslate"><span class="pre">RadarTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarReception"><code class="docutils literal notranslate"><span class="pre">RadarReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar"><code class="docutils literal notranslate"><span class="pre">Radar</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube"><code class="docutils literal notranslate"><span class="pre">RadarCube</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection"><code class="docutils literal notranslate"><span class="pre">PointDetection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector"><code class="docutils literal notranslate"><span class="pre">RadarDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.MaxDetector"><code class="docutils literal notranslate"><span class="pre">MaxDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RadarEvaluator"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbArtifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbabilityEvaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.DetectionProbEvaluator"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocArtifact"><code class="docutils literal notranslate"><span class="pre">RocArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluation"><code class="docutils literal notranslate"><span class="pre">RocEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RocEvaluationResult"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareEvaluation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareErrorResult"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Frequency Modulated Continuous Waveform Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW"><code class="docutils literal notranslate"><span class="pre">FMCW</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.yaml_tag"><code class="docutils literal notranslate"><span class="pre">FMCW.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.ping"><code class="docutils literal notranslate"><span class="pre">FMCW.ping()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.estimate"><code class="docutils literal notranslate"><span class="pre">FMCW.estimate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.max_range"><code class="docutils literal notranslate"><span class="pre">FMCW.max_range</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.range_bins"><code class="docutils literal notranslate"><span class="pre">FMCW.range_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.velocity_bins"><code class="docutils literal notranslate"><span class="pre">FMCW.velocity_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.frame_duration"><code class="docutils literal notranslate"><span class="pre">FMCW.frame_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.num_chirps"><code class="docutils literal notranslate"><span class="pre">FMCW.num_chirps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.bandwidth"><code class="docutils literal notranslate"><span class="pre">FMCW.bandwidth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.chirp_duration"><code class="docutils literal notranslate"><span class="pre">FMCW.chirp_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.adc_sampling_rate"><code class="docutils literal notranslate"><span class="pre">FMCW.adc_sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.range_resolution"><code class="docutils literal notranslate"><span class="pre">FMCW.range_resolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.doppler_resolution"><code class="docutils literal notranslate"><span class="pre">FMCW.doppler_resolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.sampling_rate"><code class="docutils literal notranslate"><span class="pre">FMCW.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.pulse_rep_interval"><code class="docutils literal notranslate"><span class="pre">FMCW.pulse_rep_interval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.max_velocity"><code class="docutils literal notranslate"><span class="pre">FMCW.max_velocity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.slope"><code class="docutils literal notranslate"><span class="pre">FMCW.slope</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.energy"><code class="docutils literal notranslate"><span class="pre">FMCW.energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.fmcw.FMCW.power"><code class="docutils literal notranslate"><span class="pre">FMCW.power</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,10 +148,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="radar.html">Radar Module</a> &raquo;</li>
-      <li>Frequency Modulated Continuous Waveform Radar</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="radar.html">Sensing</a></li>
+      <li class="breadcrumb-item active">Frequency Modulated Continuous Waveform Radar</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/radar.fmcw.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,13 +161,59 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.radar.fmcw"></span><section id="frequency-modulated-continuous-waveform-radar">
-<h1>Frequency Modulated Continuous Waveform Radar<a class="headerlink" href="#frequency-modulated-continuous-waveform-radar" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.radar.fmcw"></span><section id="frequency-modulated-continuous-waveform-radar">
+<h1>Frequency Modulated Continuous Waveform Radar<a class="headerlink" href="#frequency-modulated-continuous-waveform-radar" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FMCW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1500000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1500000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.fmcw.FMCW" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform" title="hermespy.radar.radar.RadarWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.radar.radar.RadarWaveform</span></code></a></p>
-<p>Frequency Modulated Continuous Waveform Radar Sensing.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FMCW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirp_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pulse_rep_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adc_sampling_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.fmcw.FMCW" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform" title="hermespy.radar.radar.RadarWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Frequency Modulated Continuous Waveform Radar Sensing with stretch processing.</p>
+<p>This class generates a frame consisting of a sequence of unmodulated chirps. They are used for radar detection with
+stretch processing, i.e., mixing the received signal with the transmitted sequence, (under)sampling and applying an
+FFT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_chirps</strong> (<em>float</em>) – number of chirps in a radar frame</p></li>
+<li><p><strong>bandwidth</strong> (<em>float</em>) – Sweep bandwidth of the chirp in Hz</p></li>
+<li><p><strong>sampling_rate</strong> (<em>float</em>) – simulation sampling rate of the baseband signal in Hz</p></li>
+<li><p><strong>chirp_duration</strong> (<em>float</em>) – chirp duration in seconds</p></li>
+<li><p><strong>pulse_rep_interval</strong> (<em>float</em>) – pulse repetition interval in seconds</p></li>
+<li><p><strong>adc_sampling_rate</strong> (<em>float</em>) – sampling rate of ADC after mixing</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Radar-FMCW'</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.ping">
 <span class="sig-name descname"><span class="pre">ping</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.ping" title="Permalink to this definition"></a></dt>
@@ -126,7 +230,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.estimate">
-<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.estimate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.estimate" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
@@ -135,8 +239,18 @@
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.max_range">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.max_range" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.range_bins">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">range_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.range_bins" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">range_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.range_bins" title="Permalink to this definition"></a></dt>
 <dd><p>Sample bins of the depth sensing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -150,14 +264,24 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.velocity_bins">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.velocity_bins" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity_bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.velocity_bins" title="Permalink to this definition"></a></dt>
 <dd><p>Sample bins of the radial velocity sensing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Velocities in m/s.</p>
+<dd class="field-odd"><p>Doppler shift in Hz.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.frame_duration" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -197,12 +321,61 @@
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.chirp_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.chirp_duration" title="Permalink to this definition"></a></dt>
+<dd><p>Duration of a single chirp within the FMCW frame.</p>
+<p>Returns: Duration in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueErorr</strong> – For durations smaller or equal to zero.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.adc_sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adc_sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.adc_sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Sampling rate at ADC</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If sampling rate is smaller or equal to zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.range_resolution">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">range_resolution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.range_resolution" title="Permalink to this definition"></a></dt>
 <dd><p>Depth sensing resolution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Range resolution in m.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If resolution is smaller or equal to zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.doppler_resolution">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">doppler_resolution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.doppler_resolution" title="Permalink to this definition"></a></dt>
+<dd><p>Doppler sensing resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Doppler resolution in Hz.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>float</p>
@@ -228,18 +401,18 @@
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.max_range">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.max_range" title="Permalink to this definition"></a></dt>
-<dd><p>Maximum detectable target range.</p>
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.pulse_rep_interval">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pulse_rep_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.pulse_rep_interval" title="Permalink to this definition"></a></dt>
+<dd><p>Pulse repetition interval</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Maximum range in m.</p>
+<dd class="field-odd"><p>pulse repetition interval in seconds</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>float</p>
 </dd>
 <dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If range is smaller or equal to zero.</p>
+<dd class="field-odd"><p><strong>ValueError</strong> – If interval is smaller or equal to zero.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -275,22 +448,47 @@
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.energy" title="Permalink to this definition"></a></dt>
+<dd><p>Energy of a radar pulse</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pulse energy.</p>
+</dd>
+</dl>
 </dd></dl>
 
-</section>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.fmcw.FMCW.power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.fmcw.FMCW.power" title="Permalink to this definition"></a></dt>
+<dd><p>Power of the radar waveform.</p>
+<p>Returns: Radar power in <span class="math notranslate nohighlight">\(\mathrm{W}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="radar.radar.html" class="btn btn-neutral float-left" title="Radar Device Operation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="simulation.html" class="btn btn-neutral float-right" title="Simulation Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="radar.evaluation.html" class="btn btn-neutral float-left" title="Radar Evaluation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="simulation.html" class="btn btn-neutral float-right" title="Simulation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcd40d6d0>
+<jinja2.runtime.BlockReference object at 0x7f9e7b1080d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

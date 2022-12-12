@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Implementing Beamformers &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Implementing Communication Waveforms" href="waveform.html" />
+    <link rel="prev" title="Implementing FEC codings" href="fec_coding.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Implementing Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec_coding.html">Implementing FEC codings</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Implementing Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="waveform.html">Implementing Communication Waveforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Implementing Precodings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="audio.html">Using Audio Equipment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluator.html">Implementing Evaluators</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">HermesPy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Implementing Beamformers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/beamformer.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars and line breaks on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+    white-space: pre;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This static document was automatically created from the output of a jupyter notebook.</p>
+<p>Execute and modify the notebook online <a class="reference external" href="https://colab.research.google.com/github/Barkhausen-Institut/hermespy/blob/main/docssource/notebooks/beamformer.ipynb">here</a>.</p>
+</div>
+<section id="Implementing-Beamformers">
+<h1>Implementing Beamformers<a class="headerlink" href="#Implementing-Beamformers" title="Permalink to this heading"></a></h1>
+<p>This Jupyter notebook will outline the step-by-step process of implementing a new receiving beamformer within the HermesPy framework, using the Minimum Variance Distortionless Response (MVDR, also known as <span id="id1">[<a class="reference internal" href="../references.html#id26" title="J. Capon. High-resolution frequency-wavenumber spectrum analysis. Proceedings of the IEEE, 57(8):1408-1418, 1969. doi:10.1109/PROC.1969.7278.">Cap69</a>]</span>) beamformer as a working example.</p>
+<p>As an initial step, we will import all required modules from HermesPy:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>%%capture
+pip install hermespy
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+
+from hermespy.beamforming import ReceiveBeamformer
+</pre></div>
+</div>
+</div>
+<p>The Capon beamformer estimates the power <span class="math notranslate nohighlight">\(\hat{P}\)</span> received from a direction <span class="math notranslate nohighlight">\((\theta, \phi)\)</span>, where <span class="math notranslate nohighlight">\(\theta\)</span> is the zenith and <span class="math notranslate nohighlight">\(\phi\)</span> is the azimuth angle of interest in spherical coordinates, respectively. Let <span class="math notranslate nohighlight">\(Y \in \mathbb{C}^{M \times N}\)</span> be the the matrix of <span class="math notranslate nohighlight">\(N\)</span> time-discrete samples acquired by an antenna arrary featuring <span class="math notranslate nohighlight">\(M\)</span> antennas and</p>
+<p><span class="math">\begin{equation}
+\mathbf{R} = \mathbf{Y}\mathbf{Y}^{\mathsf{H}}
+\end{equation}</span></p>
+<p>be the respective sample correlation matrix. The antenna array’s response towards a source within its far field emitting a signal of small relative bandwidth is <span class="math notranslate nohighlight">\(\mathbf{a}(\theta, \phi) \in \mathbb{C}^{M}\)</span>. Then, the Capon’s spatial power response is defined as</p>
+<p><span class="math">\begin{equation}
+\hat{P}_{\mathrm{Capon}}(\theta, \phi) = \frac{1}{\mathbf{a}^{\mathsf{H}}(\theta, \phi) \mathbf{R}^{-1} \mathbf{a}(\theta, \phi)}
+\end{equation}</span></p>
+<p>with</p>
+<p><span class="math">\begin{equation}
+\mathbf{w}(\theta, \phi) = \frac{\mathbf{R}^{-1} \mathbf{a}(\theta, \phi)}{\mathbf{a}^{\mathsf{H}}(\theta, \phi) \mathbf{R}^{-1} \mathbf{a}(\theta, \phi)} \in \mathbb{C}^{M}
+\end{equation}</span></p>
+<p>being the beamforming weights to steer the sensor array’s receive characteristics towards direction <span class="math notranslate nohighlight">\((\theta, \phi)\)</span>, so that</p>
+<p><span class="math">\begin{equation}
+\tilde{\mathbf{y}}(\theta, \phi) = \mathbf{w}^\mathsf{H}(\theta, \phi) \mathbf{Y}
+\end{equation}</span></p>
+<p>are the estimated signal samples impinging onto the sensor array from said direction.</p>
+<p>The structure of receiving beamformers is implemented as an abstract prototype in the <a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer"><span class="std std-ref">ReceiveBeamformer</span></a>. Prototypes specify several <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.abstractmethod">abstract</a> properties and methods which inheriting classes must implement. For receiving beamformers those are</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_input_streams"><span class="std std-ref">num_receive_input_streams</span></a> - <em>Number of antenna streams the beamformer can process.</em>Our Capon implementation will always require the samples of all device antennas.</p></li>
+<li><p><a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_output_streams"><span class="std std-ref">num_receive_output_streams</span></a> - <em>Number of antenna streams the beamformer generates after processing.</em>Since the Capon beamformer focuses the power towards a single direction of interest per estimation, a single stream of samples will be generated after beamforming.</p></li>
+<li><p><a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_angles"><span class="std std-ref">num_receive_focus_angles</span></a> - <em>Number of angles of interest the beamformer requires for its configuration.</em>The same logic as before applies, only a single direction of interest per beamforming operation is required.</p></li>
+<li><p><a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer._decode"><span class="std std-ref">_decode()</span></a> - <em>This subroutine performs the actual beamforming, given an array of baseband samples, assumed carrier frequency and the angles of interest.</em> This is where the Capon algorithm is being implemented.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>class CaponBeamformer(ReceiveBeamformer):
+
+    def __init__(self, *args, **kwargs) -&gt; None:
+
+        ReceiveBeamformer.__init__(self, *args, **kwargs)
+
+    @property
+    def num_receive_input_streams(self) -&gt; int:
+        return self.operator.device.antennas.num_antennas
+
+    @property
+    def num_receive_output_streams(self) -&gt; int:
+        return 1
+
+    @property
+    def num_receive_focus_angles(self) -&gt; int:
+        return 1
+
+    def _decode(self,
+                samples: np.ndarray,
+                carrier_frequency: float,
+                angles: np.ndarray) -&gt; np.ndarray:
+
+        # Compute the inverse sample covariance matrix R
+        sample_covariance = np.linalg.inv(samples @ samples.T.conj() + 1e-4 * np.eye(samples.shape[0]))
+
+        # Query the sensor array response vectors for the angles of interest and create a dictionary from it
+        dictionary = np.empty((self.num_receive_input_streams, angles.shape[0]), dtype=complex)
+        for d, focus in enumerate(angles):
+
+            array_response = self.operator.device.antennas.spherical_response(carrier_frequency, focus[0, 0], focus[0, 1])
+            dictionary[:, d] = sample_covariance @ array_response / (array_response.T.conj() @ sample_covariance @ array_response)
+
+        beamformed_samples = dictionary.T.conj() @ samples
+        return beamformed_samples[:, np.newaxis, :]
+</pre></div>
+</div>
+</div>
+<p>And that’s it, by specifying three properties and the decode routine a new beamformer has been implemented within HermesPy. We can now plot the beamforming characteristics towards a signal impinging from <span class="math notranslate nohighlight">\((\theta = 0, \phi = 0)\)</span> by calling <a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.PlotReceivePattern"><span class="std std-ref">PlotReceivePattern()</span></a> and compare it to the
+<a class="reference internal" href="../api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer"><span class="std std-ref">CoventionalBeamformer</span></a>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from hermespy.beamforming import ConventionalBeamformer
+
+_ = CaponBeamformer.PlotReceivePattern()
+_ = ConventionalBeamformer.PlotReceivePattern()
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_beamformer_6_0.png" src="../_images/notebooks_beamformer_6_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_beamformer_6_1.png" src="../_images/notebooks_beamformer_6_1.png" />
+</div>
+</div>
+<p>We may now use the newly created beamforming class to configure receive signal processing chains within HermesPy. For example, within an imaging radar application simulation:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>from hermespy.simulation import Simulation
+from hermespy.channel import RadarChannel
+from hermespy.radar import Radar, FMCW
+
+# Create a new simulation featuring a single device transmitting at 10GHz
+simulation = Simulation()
+device = simulation.scenario.new_device()
+device.carrier_frequency = 10e9
+
+simulation.scenario.set_channel(device, device, RadarChannel(target_range=10., radar_cross_section=1.))
+
+# Configure a radar operation on the device
+radar = Radar()
+radar.device = device
+radar.waveform = FMCW()
+radar.receive_beamformer = CaponBeamformer()
+
+# Run a very low-demanding simulation for demonstration purposes
+simulation.num_actors = 1
+simulation.num_samples = 1
+_ = simulation.run()
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #00ff00; text-decoration-color: #00ff00">─────────────────────────────────────────────── </span>Simulation Campaign<span style="color: #00ff00; text-decoration-color: #00ff00"> ───────────────────────────────────────────────</span>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:14:50] </span>Launched simulation campaign with <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span> dedicated actors                                 <a href="file://d:\envs\hermes\lib\site-packages\hermespy\core\monte_carlo.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">monte_carlo.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://d:\envs\hermes\lib\site-packages\hermespy\core\monte_carlo.py#1715" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">1715</span></a>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>Generating a maximum of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span> = <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span> samples inspected by <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span> evaluators                      <a href="file://d:\envs\hermes\lib\site-packages\hermespy\core\monte_carlo.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">monte_carlo.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://d:\envs\hermes\lib\site-packages\hermespy\core\monte_carlo.py#1735" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">1735</span></a>
+<span style="color: #7fbfbf; text-decoration-color: #7fbfbf">           </span>                                                                                     <span style="color: #7f7f7f; text-decoration-color: #7f7f7f">                   </span>
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-style: italic">Simulation Grid         </span>
+┏━━━━━━━━━━━┳━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Dimension </span>┃<span style="font-weight: bold"> Sections </span>┃
+┡━━━━━━━━━━━╇━━━━━━━━━━┩
+└───────────┴──────────┘
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "f046693ebc534d1586b47714b7587873", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"></pre></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+</pre></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7fbfbf; text-decoration-color: #7fbfbf">[14:14:55] </span>Simulation finished after <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.27</span> seconds                                               <a href="file://d:\envs\hermes\lib\site-packages\hermespy\core\monte_carlo.py" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">monte_carlo.py</span></a><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">:</span><a href="file://d:\envs\hermes\lib\site-packages\hermespy\core\monte_carlo.py#1875" target="_blank"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">1875</span></a>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fec_coding.html" class="btn btn-neutral float-left" title="Implementing FEC codings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="waveform.html" class="btn btn-neutral float-right" title="Implementing Communication Waveforms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e79d27040>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

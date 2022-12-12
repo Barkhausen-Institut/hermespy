@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Modem &mdash; HermesPy  documentation</title>
+  <title>Modem &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +33,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Bit Source" href="modem.bits_source.html" />
-    <link rel="prev" title="Communication Module" href="modem.html" /> 
+    <link rel="prev" title="Communication" href="modem.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,34 +57,203 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.signal"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.signal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.bits"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.encoded_bits"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.encoded_bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.encoded_symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.encoded_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.timestamp"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.timestamp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.from_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.from_HDF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame.to_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame.to_HDF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission.frames"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission.frames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission.num_frames"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission.num_frames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission.bits"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission.bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission.symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission.symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission.from_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission.from_HDF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission.to_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission.to_HDF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.signal"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.signal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.decoded_signal"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.decoded_signal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.decoded_symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.decoded_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.timestamp"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.timestamp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.equalized_symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.equalized_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.encoded_bits"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.encoded_bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.decoded_bits"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.decoded_bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.csi"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.csi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.from_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.from_HDF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame.to_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame.to_HDF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception"><code class="docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.frames"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.frames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.num_frames"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.num_frames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.encoded_bits"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.encoded_bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.bits"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.equalized_symbols"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.equalized_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.from_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.from_HDF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception.to_HDF"><code class="docutils literal notranslate"><span class="pre">CommunicationReception.to_HDF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.BaseModem"><code class="docutils literal notranslate"><span class="pre">BaseModem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.transmitting_device"><code class="docutils literal notranslate"><span class="pre">BaseModem.transmitting_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.receiving_device"><code class="docutils literal notranslate"><span class="pre">BaseModem.receiving_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.num_transmit_streams"><code class="docutils literal notranslate"><span class="pre">BaseModem.num_transmit_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.num_receive_streams"><code class="docutils literal notranslate"><span class="pre">BaseModem.num_receive_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.encoder_manager"><code class="docutils literal notranslate"><span class="pre">BaseModem.encoder_manager</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.waveform_generator"><code class="docutils literal notranslate"><span class="pre">BaseModem.waveform_generator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.precoding"><code class="docutils literal notranslate"><span class="pre">BaseModem.precoding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.num_data_bits_per_frame"><code class="docutils literal notranslate"><span class="pre">BaseModem.num_data_bits_per_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.frame_duration"><code class="docutils literal notranslate"><span class="pre">BaseModem.frame_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.sampling_rate"><code class="docutils literal notranslate"><span class="pre">BaseModem.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.noise_power"><code class="docutils literal notranslate"><span class="pre">BaseModem.noise_power()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.BaseModem.csi"><code class="docutils literal notranslate"><span class="pre">BaseModem.csi</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem"><code class="docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem.yaml_tag"><code class="docutils literal notranslate"><span class="pre">TransmittingModem.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem.transmitting_device"><code class="docutils literal notranslate"><span class="pre">TransmittingModem.transmitting_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem.receiving_device"><code class="docutils literal notranslate"><span class="pre">TransmittingModem.receiving_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem.bits_source"><code class="docutils literal notranslate"><span class="pre">TransmittingModem.bits_source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem.transmit_stream_coding"><code class="docutils literal notranslate"><span class="pre">TransmittingModem.transmit_stream_coding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem.transmission"><code class="docutils literal notranslate"><span class="pre">TransmittingModem.transmission</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.TransmittingModem.transmit"><code class="docutils literal notranslate"><span class="pre">TransmittingModem.transmit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem"><code class="docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.transmitting_device"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.transmitting_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.receiving_device"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.receiving_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.receive_stream_coding"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.receive_stream_coding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.transmit_stream_coding"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.transmit_stream_coding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.receive"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.receive()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.reception"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.reception</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.ReceivingModem.csi"><code class="docutils literal notranslate"><span class="pre">ReceivingModem.csi</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.DuplexModem"><code class="docutils literal notranslate"><span class="pre">DuplexModem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.DuplexModem.yaml_tag"><code class="docutils literal notranslate"><span class="pre">DuplexModem.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.DuplexModem.transmitting_device"><code class="docutils literal notranslate"><span class="pre">DuplexModem.transmitting_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.DuplexModem.receiving_device"><code class="docutils literal notranslate"><span class="pre">DuplexModem.receiving_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.DuplexModem.device"><code class="docutils literal notranslate"><span class="pre">DuplexModem.device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.DuplexModem.csi"><code class="docutils literal notranslate"><span class="pre">DuplexModem.csi</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.modem.SimplexLink"><code class="docutils literal notranslate"><span class="pre">SimplexLink</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.SimplexLink.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SimplexLink.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.SimplexLink.transmitting_device"><code class="docutils literal notranslate"><span class="pre">SimplexLink.transmitting_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.modem.SimplexLink.receiving_device"><code class="docutils literal notranslate"><span class="pre">SimplexLink.receiving_device</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource"><code class="docutils literal notranslate"><span class="pre">BitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.RandomBitsSource"><code class="docutils literal notranslate"><span class="pre">RandomBitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.StreamBitsSource"><code class="docutils literal notranslate"><span class="pre">StreamBitsSource</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.SymbolType"><code class="docutils literal notranslate"><span class="pre">SymbolType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbol"><code class="docutils literal notranslate"><span class="pre">Symbol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols"><code class="docutils literal notranslate"><span class="pre">Symbols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols"><code class="docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization"><code class="docutils literal notranslate"><span class="pre">Synchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEstimation"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.IdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">IdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="docutils literal notranslate"><span class="pre">PilotWaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">PilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.UniformPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">UniformPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.CustomPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">CustomPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.MappedPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">MappedPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_psk_qam.html">Phase Shift Keying / Quadrature Amplitude Modulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.CommunicationEvaluator"><code class="docutils literal notranslate"><span class="pre">CommunicationEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BitErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BlockErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorArtifact"><code class="docutils literal notranslate"><span class="pre">FrameErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputArtifact"><code class="docutils literal notranslate"><span class="pre">ThroughputArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluation"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluator"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RootRaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RectangularWaveform"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FMCWWaveform"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKCorrelationSynchronization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType"><code class="docutils literal notranslate"><span class="pre">ElementType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PrefixType"><code class="docutils literal notranslate"><span class="pre">PrefixType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameElement"><code class="docutils literal notranslate"><span class="pre">FrameElement</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameResource"><code class="docutils literal notranslate"><span class="pre">FrameResource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSection"><code class="docutils literal notranslate"><span class="pre">FrameSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection"><code class="docutils literal notranslate"><span class="pre">FrameSymbolSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameGuardSection"><code class="docutils literal notranslate"><span class="pre">FrameGuardSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMWaveform"><code class="docutils literal notranslate"><span class="pre">OFDMWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection"><code class="docutils literal notranslate"><span class="pre">PilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxPilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ReferencePosition"><code class="docutils literal notranslate"><span class="pre">ReferencePosition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMMinimumMeanSquareChannelEqualization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.PGT"><code class="docutils literal notranslate"><span class="pre">PGT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">CorrelationSynchronization</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -97,10 +271,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="modem.html">Communication Module</a> &raquo;</li>
-      <li>Modem</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="modem.html">Communication</a></li>
+      <li class="breadcrumb-item active">Modem</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/modem.modem.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,8 +284,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.modem.modem"></span><section id="modem">
-<h1>Modem<a class="headerlink" href="#modem" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.modem.modem"></span><section id="modem">
+<h1>Modem<a class="headerlink" href="#modem" title="Permalink to this heading"></a></h1>
 <p>Within HermesPy, the Modem class represents the full signal processing chain configuration for the transmission
 of information in form of bits.
 Modems are a form of <a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator" title="hermespy.core.device.DuplexOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.DuplexOperator</span></code></a>,
@@ -120,8 +318,8 @@ In other words, they both transmit and receive complex waveforms over the device
 It acts as a managing container for 5 signal processing step abstractions:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 45%" />
-<col style="width: 55%" />
+<col style="width: 56%" />
+<col style="width: 44%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Processing Step</p></th>
@@ -132,14 +330,20 @@ It acts as a managing container for 5 signal processing step abstractions:</p>
 <tr class="row-even"><td><p><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitsSource</span></code></a></p></td>
 <td><p>Source of data bits to be transmitted</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="coding.coding.html#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">EncoderManager</span></code></a></p></td>
-<td><p>Channel coding pipeline configuration</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.fec.EncoderManager</span></code></p></td>
+<td><p>Forward error correction configuration</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">WaveformGenerator</span></code></a></p></td>
 <td><p>Communication waveform configuration</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamCoding</span></code></p></td>
-<td><p>Precoding configuration</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.precoding.SymbolPrecoding</span></code></p></td>
+<td><p>Symbol precoding configuration</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.precoding.TransmitStreamCoding</span></code></p></td>
+<td><p>Transmit MIMO configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.precoding.ReceiveStreamCoding</span></code></p></td>
+<td><p>Receive MIMO configuration</p></td>
 </tr>
 </tbody>
 </table>
@@ -312,130 +516,408 @@ flowchart LR
  linkStyle 11 display: None
  linkStyle 12 display: None
  linkStyle 11 display: None
-        </div><dl class="py class">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Modem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.Modem" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a>, <a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator" title="hermespy.core.device.DuplexOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.DuplexOperator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableArray" title="hermespy.core.factory.SerializableArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.SerializableArray</span></code></a></p>
-<p>HermesPy representation of a wireless communication modem.</p>
-<p>Modems may transmit or receive information in form of bit streams.</p>
-<p>In HermesPy, a modem is the basis of every simulation entity which may transmit or receive
-electromagnetic waveforms.</p>
-<p>The modem consists of an analog RF chain, a waveform generator, and can be used
-either for transmission or reception of a given technology.</p>
+        </div></section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommunicationTransmissionFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoded_bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoded_symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Transmission" title="hermespy.core.device.Transmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transmission</span></code></a></p>
+<p>A single frame of information generated by transmitting over a communication operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>encoding</strong> (<a class="reference internal" href="coding.coding.html#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager"><em>EncoderManager</em></a><em>, </em><em>optional</em>) – Bit coding configuration.
+<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Transmitted communication base-band waveform.</p></li>
+<li><p><strong>bits</strong> (<em>np.ndarray</em>) – Transmitted communication data bits.</p></li>
+<li><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – Transmitted communication bits after FEC encoding.</p></li>
+<li><p><strong>symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Transmitted communication data symbols.</p></li>
+<li><p><strong>encoded_symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Transmitted communication data symbols after symbol encoding.</p></li>
+<li><p><strong>timestamp</strong> (<em>float</em>) – Time at which the frame was transmitted in seconds.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.signal">
+<span class="sig-name descname"><span class="pre">signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">Signal</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.signal" title="Permalink to this definition"></a></dt>
+<dd><p>Communication base-band waveform.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.bits">
+<span class="sig-name descname"><span class="pre">bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.bits" title="Permalink to this definition"></a></dt>
+<dd><p>Communication data bits.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.encoded_bits">
+<span class="sig-name descname"><span class="pre">encoded_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.encoded_bits" title="Permalink to this definition"></a></dt>
+<dd><p>Transmitted bits after FEC encoding.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.symbols">
+<span class="sig-name descname"><span class="pre">symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Communication data symbols.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.encoded_symbols">
+<span class="sig-name descname"><span class="pre">encoded_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.encoded_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Communication data symbols after symbol encoding.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.timestamp">
+<span class="sig-name descname"><span class="pre">timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.timestamp" title="Permalink to this definition"></a></dt>
+<dd><p>Time at which the frame was transmitted in seconds.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.from_HDF">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.from_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>De-Serialized the object state from HDF5.</p>
+<p>Recalls the object’s state from a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group from which the object state is recalled.</p>
+</dd>
+</dl>
+<p>Returns: The object initialized from the HDF5 group state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame" title="hermespy.modem.modem.CommunicationTransmissionFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmissionFrame.to_HDF">
+<span class="sig-name descname"><span class="pre">to_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmissionFrame.to_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize the object state to HDF5.</p>
+<p>Dumps the object’s state and additional information to a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group to which the object is serialized.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmission">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommunicationTransmission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmission" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Transmission" title="hermespy.core.device.Transmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transmission</span></code></a></p>
+<p>Information generated by transmitting over a communication operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Transmitted communication base-band waveform.</p></li>
+<li><p><strong>frames</strong> (<em>List</em><em>[</em><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame" title="hermespy.modem.modem.CommunicationTransmissionFrame"><em>CommunicationTransmissionFrame</em></a><em>]</em><em>, </em><em>optional</em>) – Individual transmitted communication frames.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmission.frames">
+<span class="sig-name descname"><span class="pre">frames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmissionFrame" title="hermespy.modem.modem.CommunicationTransmissionFrame"><span class="pre">CommunicationTransmissionFrame</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmission.frames" title="Permalink to this definition"></a></dt>
+<dd><p>Individual transmitted communication frames.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmission.num_frames">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_frames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmission.num_frames" title="Permalink to this definition"></a></dt>
+<dd><p>Number of transmitted communication frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Number of frames.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmission.bits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmission.bits" title="Permalink to this definition"></a></dt>
+<dd><p>Transmitted bits before FEC encoding.</p>
+<p>Returns: Numpy array of transmitted bits.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmission.symbols">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmission.symbols" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmission.from_HDF">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmission.from_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>De-Serialized the object state from HDF5.</p>
+<p>Recalls the object’s state from a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group from which the object state is recalled.</p>
+</dd>
+</dl>
+<p>Returns: The object initialized from the HDF5 group state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission" title="hermespy.modem.modem.CommunicationTransmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationTransmission.to_HDF">
+<span class="sig-name descname"><span class="pre">to_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationTransmission.to_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize the object state to HDF5.</p>
+<p>Dumps the object’s state and additional information to a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group to which the object is serialized.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommunicationReceptionFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded_signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded_symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equalized_symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoded_bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded_bits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A single frame of information generated by receiving over a communication operator.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.signal">
+<span class="sig-name descname"><span class="pre">signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">Signal</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.signal" title="Permalink to this definition"></a></dt>
+<dd><p>Communication base-band waveform.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.decoded_signal">
+<span class="sig-name descname"><span class="pre">decoded_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">Signal</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.decoded_signal" title="Permalink to this definition"></a></dt>
+<dd><p>Communication base-band waveform after MIMO stream decoding.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.symbols">
+<span class="sig-name descname"><span class="pre">symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Received communication symbols.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.decoded_symbols">
+<span class="sig-name descname"><span class="pre">decoded_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.decoded_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Received communication symbols after precoding stage.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.timestamp">
+<span class="sig-name descname"><span class="pre">timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.timestamp" title="Permalink to this definition"></a></dt>
+<dd><p>Time at which the frame was transmitted in seconds.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.equalized_symbols">
+<span class="sig-name descname"><span class="pre">equalized_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.equalized_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Equalized communication symbols.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.encoded_bits">
+<span class="sig-name descname"><span class="pre">encoded_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.encoded_bits" title="Permalink to this definition"></a></dt>
+<dd><p>Received encoded data bits before error correction.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.decoded_bits">
+<span class="sig-name descname"><span class="pre">decoded_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.decoded_bits" title="Permalink to this definition"></a></dt>
+<dd><p>Received decoded data bits after error correction.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.csi">
+<span class="sig-name descname"><span class="pre">csi</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><span class="pre">ChannelStateInformation</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.csi" title="Permalink to this definition"></a></dt>
+<dd><p>Estimated channel state.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.from_HDF">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.from_HDF" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame" title="hermespy.modem.modem.CommunicationReceptionFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationReceptionFrame</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReceptionFrame.to_HDF">
+<span class="sig-name descname"><span class="pre">to_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationReceptionFrame.to_HDF" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CommunicationReception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Reception" title="hermespy.core.device.Reception"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reception</span></code></a></p>
+<p>Information generated by receiving over a communication operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Received communication base-band waveform.</p></li>
+<li><p><strong>frames</strong> (<em>List</em><em>[</em><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame" title="hermespy.modem.modem.CommunicationReceptionFrame"><em>CommunicationReceptionFrame</em></a><em>]</em><em>, </em><em>optional</em>) – Individual received communication frames.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.frames">
+<span class="sig-name descname"><span class="pre">frames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.modem.modem.CommunicationReceptionFrame" title="hermespy.modem.modem.CommunicationReceptionFrame"><span class="pre">CommunicationReceptionFrame</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.frames" title="Permalink to this definition"></a></dt>
+<dd><p>Individual received communication frames.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.num_frames">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_frames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.num_frames" title="Permalink to this definition"></a></dt>
+<dd><p>Number of received communication frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Number of frames.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.encoded_bits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoded_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.encoded_bits" title="Permalink to this definition"></a></dt>
+<dd><p>Received bits before FEC decoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Numpy array containing received bits.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.bits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.bits" title="Permalink to this definition"></a></dt>
+<dd><p>Received bits after FEC decoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Numpy array containing received bits.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.symbols">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Collect all communication symbols.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.equalized_symbols">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">equalized_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.equalized_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Collect all equalized communication symbols.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.from_HDF">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.from_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>De-Serialized the object state from HDF5.</p>
+<p>Recalls the object’s state from a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group from which the object state is recalled.</p>
+</dd>
+</dl>
+<p>Returns: The object initialized from the HDF5 group state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="#hermespy.modem.modem.CommunicationReception" title="hermespy.modem.modem.CommunicationReception"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.CommunicationReception.to_HDF">
+<span class="sig-name descname"><span class="pre">to_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.CommunicationReception.to_HDF" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize the object state to HDF5.</p>
+<p>Dumps the object’s state and additional information to a HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group to which the object is serialized.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BaseModem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waveform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.BaseModem" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomNode</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for wireless modems transmitting or receiving information over devices</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encoding</strong> (<a class="reference internal" href="fec.coding.html#hermespy.fec.coding.EncoderManager" title="hermespy.fec.coding.EncoderManager"><em>EncoderManager</em></a><em>, </em><em>optional</em>) – Bit coding configuration.
 Encodes communication bit frames during transmission and decodes them during reception.</p></li>
-<li><p><strong>precoding</strong> (<a class="reference internal" href="precoding.precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding" title="hermespy.precoding.symbol_precoding.SymbolPrecoding"><em>SymbolPrecoding</em></a><em>, </em><em>optional</em>) – Modulation symbol coding configuration.</p></li>
+<li><p><strong>precoding</strong> (<a class="reference internal" href="precoding.symbol_precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding" title="hermespy.precoding.symbol_precoding.SymbolPrecoding"><em>SymbolPrecoding</em></a><em>, </em><em>optional</em>) – Modulation symbol coding configuration.</p></li>
 <li><p><strong>waveform</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform to be transmitted by this modem.</p></li>
 <li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Seed used to initialize the pseudo-random number generator.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Modem'</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.yaml_tag" title="Permalink to this definition"></a></dt>
-<dd><p>YAML serialization tag.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.transmit">
-<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.Modem.transmit" title="Permalink to this definition"></a></dt>
-<dd><p>Returns an array with the complex base-band samples of a waveform generator.</p>
-<p>The signal may be distorted by RF impairments.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.transmitting_device">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitting_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.transmitting_device" title="Permalink to this definition"></a></dt>
+<dd><p>Tranmsitting device operated by the modem.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Length of signal in seconds.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>signal (Signal):</dt><dd><p>Signal model carrying the <cite>data_bits</cite> in multiple streams, each stream encoding multiple
-radio frequency band communication frames.</p>
-</dd>
-<dt>symbols (Symbols):</dt><dd><p>Symbols to which <cite>data_bits</cite> were mapped, used to modulate <cite>signal</cite>.</p>
-</dd>
-<dt>data_bits (np.ndarray):</dt><dd><p>Vector of bits mapped to <cite>data_symbols</cite>.</p>
+<dd class="field-even"><p>Handle to the transmitting device.
+<cite>None</cite> if the device is unspecified.</p>
 </dd>
 </dl>
-</p>
-</dd>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.receiving_device">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receiving_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.receiving_device" title="Permalink to this definition"></a></dt>
+<dd><p>Receiving device operated by the modem.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>transmissions (tuple)</p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the receiving device.
+<cite>None</cite> if the device is unspecified.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.transmitted_bits">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitted_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.transmitted_bits" title="Permalink to this definition"></a></dt>
-<dd><p>Recently transmitted data bits.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Numpy array of recently transmitted data bits.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.transmitted_symbols">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitted_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">hermespy.modem.symbols.Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.Modem.transmitted_symbols" title="Permalink to this definition"></a></dt>
-<dd><p>Recently transmitted modulation symbols.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Recently transmitted symbol series.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols">Symbols</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.receive">
-<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.Modem.receive" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>, <a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.received_bits">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">received_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.received_bits" title="Permalink to this definition"></a></dt>
-<dd><p>Recently received data bits.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Numpy array of recently received data bits.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.received_symbols">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">received_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><span class="pre">hermespy.modem.symbols.Symbols</span></a></em><a class="headerlink" href="#hermespy.modem.modem.Modem.received_symbols" title="Permalink to this definition"></a></dt>
-<dd><p>Recently received modulation symbols.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Recently received symbol series.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols">Symbols</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.num_streams">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.num_streams" title="Permalink to this definition"></a></dt>
-<dd><p>The number of data streams handled by the modem.</p>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.num_transmit_streams">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_transmit_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.num_transmit_streams" title="Permalink to this definition"></a></dt>
+<dd><p>The number of data streams handled by the modem during transmission.</p>
 <p>The number of data streams is always less or equal to the number of available antennas <cite>num_antennas</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -448,36 +930,37 @@ radio frequency band communication frames.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.bits_source">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits_source</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><span class="pre">hermespy.modem.bits_source.BitsSource</span></a></em><a class="headerlink" href="#hermespy.modem.modem.Modem.bits_source" title="Permalink to this definition"></a></dt>
-<dd><p>Source of bits transmitted over the modem.</p>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.num_receive_streams">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.num_receive_streams" title="Permalink to this definition"></a></dt>
+<dd><p>The number of data streams handled by the modem during reception.</p>
+<p>The number of data streams is always less or equal to the number of available antennas <cite>num_antennas</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Handle to the bits source.</p>
+<dd class="field-odd"><p>The number of data streams processed by the modem.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bits_source (<a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource">BitsSource</a>)</p>
+<dd class="field-even"><p>int</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.encoder_manager">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoder_manager</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="coding.coding.html#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager"><span class="pre">hermespy.coding.coding.EncoderManager</span></a></em><a class="headerlink" href="#hermespy.modem.modem.Modem.encoder_manager" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.encoder_manager">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoder_manager</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="fec.coding.html#hermespy.fec.coding.EncoderManager" title="hermespy.fec.coding.EncoderManager"><span class="pre">EncoderManager</span></a></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.encoder_manager" title="Permalink to this definition"></a></dt>
 <dd><p>Access the modem’s encoder management.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Handle to the modem’s encoder instance.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="coding.coding.html#hermespy.coding.coding.EncoderManager" title="hermespy.coding.coding.EncoderManager">EncoderManager</a></p>
+<dd class="field-even"><p><a class="reference internal" href="fec.coding.html#hermespy.fec.coding.EncoderManager" title="hermespy.fec.coding.EncoderManager">EncoderManager</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.waveform_generator">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><span class="pre">hermespy.modem.waveform_generator.WaveformGenerator</span></a></em><a class="headerlink" href="#hermespy.modem.modem.Modem.waveform_generator" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.waveform_generator">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><span class="pre">WaveformGenerator</span></a></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.waveform_generator" title="Permalink to this definition"></a></dt>
 <dd><p>Communication waveform emitted by this modem.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -490,22 +973,22 @@ radio frequency band communication frames.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.precoding">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">precoding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="precoding.precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding" title="hermespy.precoding.symbol_precoding.SymbolPrecoding"><span class="pre">hermespy.precoding.symbol_precoding.SymbolPrecoding</span></a></em><a class="headerlink" href="#hermespy.modem.modem.Modem.precoding" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.precoding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">precoding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="precoding.symbol_precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding" title="hermespy.precoding.symbol_precoding.SymbolPrecoding"><span class="pre">SymbolPrecoding</span></a></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.precoding" title="Permalink to this definition"></a></dt>
 <dd><p>Access this modem’s precoding configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Handle to the configuration.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="precoding.precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding" title="hermespy.precoding.symbol_precoding.SymbolPrecoding">SymbolPrecoding</a></p>
+<dd class="field-even"><p><a class="reference internal" href="precoding.symbol_precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding" title="hermespy.precoding.symbol_precoding.SymbolPrecoding">SymbolPrecoding</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.num_data_bits_per_frame">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_data_bits_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.num_data_bits_per_frame" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.num_data_bits_per_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_data_bits_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.num_data_bits_per_frame" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the number of required data bits to generate a single frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -518,8 +1001,8 @@ radio frequency band communication frames.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.frame_duration">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.frame_duration" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.frame_duration" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
@@ -528,8 +1011,18 @@ radio frequency band communication frames.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.sampling_rate">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.sampling_rate" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.noise_power">
+<span class="sig-name descname"><span class="pre">noise_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.BaseModem.noise_power" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
@@ -538,90 +1031,383 @@ radio frequency band communication frames.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.energy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.modem.Modem.energy" title="Permalink to this definition"></a></dt>
-<dd><p>Average energy of the transmitted and received signal.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Energy.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>flot</p>
+<dt class="sig sig-object py" id="hermespy.modem.modem.BaseModem.csi">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">csi</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><span class="pre">ChannelStateInformation</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.BaseModem.csi" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.generate_data_bits">
-<span class="sig-name descname"><span class="pre">generate_data_bits</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.Modem.generate_data_bits" title="Permalink to this definition"></a></dt>
-<dd><p>Generate data bits required to build a single transmit data frame for this modem.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>A vector of hard data bits in 0/1 format.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.Modem.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize a <cite>Modem</cite> object to YAML.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TransmittingModem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="#hermespy.modem.modem.BaseModem" title="hermespy.modem.modem.BaseModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModem</span></code></a>, <a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transmitter</span></code></a></p>
+<p>Representation of a wireless modem exclusively transmitting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<a class="reference internal" href="#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><em>Modem</em></a>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><em>Modem</em></a>) – The <cite>Device</cite> instance to be serialized.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>bits_source</strong> (<a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><em>BitsSource</em></a><em>, </em><em>optional</em>) – Source configuration of communication bits transmitted by this modem.
+Bits are randomly generated by default.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TxModem'</span></em><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem.transmitting_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitting_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem.transmitting_device" title="Permalink to this definition"></a></dt>
+<dd><p>Tranmsitting device operated by the modem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node.</p>
+<dd class="field-even"><p>Handle to the transmitting device.
+<cite>None</cite> if the device is unspecified.</p>
 </dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem.receiving_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receiving_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem.receiving_device" title="Permalink to this definition"></a></dt>
+<dd><p>Receiving device operated by the modem.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>MappingNode</p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the receiving device.
+<cite>None</cite> if the device is unspecified.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem.bits_source">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits_source</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><span class="pre">BitsSource</span></a></em><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem.bits_source" title="Permalink to this definition"></a></dt>
+<dd><p>Source configuration of communication transmitted by this modem.</p>
+<p>Returns: A handle to the source configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitsSource</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem.transmit_stream_coding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_stream_coding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.TransmitStreamCoding" title="hermespy.precoding.stream_precoding.TransmitStreamCoding"><span class="pre">TransmitStreamCoding</span></a></em><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem.transmit_stream_coding" title="Permalink to this definition"></a></dt>
+<dd><p>Stream MIMO coding configuration during signal transmission.</p>
+<p>Returns: Handle to the coding configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.TransmitStreamCoding" title="hermespy.precoding.stream_precoding.TransmitStreamCoding"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitStreamCoding</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem.transmission">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmission</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission" title="hermespy.modem.modem.CommunicationTransmission"><span class="pre">CommunicationTransmission</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem.transmission" title="Permalink to this definition"></a></dt>
+<dd><p>The most recently transmitted information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission" title="hermespy.modem.modem.CommunicationTransmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A handle to the transmitted information.
+<cite>None</cite> if no information has been transmitted yet.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.modem.Modem.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.Modem.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new <cite>Modem</cite> class instance from YAML.</p>
+<dt class="sig sig-object py" id="hermespy.modem.modem.TransmittingModem.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.TransmittingModem.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an array with the complex base-band samples of a waveform generator.</p>
+<p>The signal may be distorted by RF impairments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>MappingNode</em>) – YAML node representing the <cite>Modem</cite> serialization.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Length of signal in seconds.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Newly created serializable instance.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.modem.modem.CommunicationTransmission" title="hermespy.modem.modem.CommunicationTransmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem">Modem</a></p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Transmitted information.</p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ReceivingModem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="#hermespy.modem.modem.BaseModem" title="hermespy.modem.modem.BaseModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModem</span></code></a>, <a class="reference internal" href="core.device.html#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><code class="xref py py-class docutils literal notranslate"><span class="pre">Receiver</span></code></a></p>
+<p>Representation of a wireless modem exclusively receiving.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'RxModem'</span></em><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.transmitting_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitting_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.transmitting_device" title="Permalink to this definition"></a></dt>
+<dd><p>Tranmsitting device operated by the modem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the transmitting device.
+<cite>None</cite> if the device is unspecified.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.receiving_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receiving_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.receiving_device" title="Permalink to this definition"></a></dt>
+<dd><p>Receiving device operated by the modem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the receiving device.
+<cite>None</cite> if the device is unspecified.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.receive_stream_coding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive_stream_coding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.ReceiveStreamCoding" title="hermespy.precoding.stream_precoding.ReceiveStreamCoding"><span class="pre">ReceiveStreamCoding</span></a></em><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.receive_stream_coding" title="Permalink to this definition"></a></dt>
+<dd><p>Stream MIMO coding configuration during signal reception.</p>
+<p>Returns: Handle to the coding configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.ReceiveStreamCoding" title="hermespy.precoding.stream_precoding.ReceiveStreamCoding"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveStreamCoding</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.transmit_stream_coding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_stream_coding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.ReceiveStreamCoding" title="hermespy.precoding.stream_precoding.ReceiveStreamCoding"><span class="pre">ReceiveStreamCoding</span></a></em><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.transmit_stream_coding" title="Permalink to this definition"></a></dt>
+<dd><p>Stream MIMO coding configuration during signal reception.</p>
+<p>Returns: Handle to the coding configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.ReceiveStreamCoding" title="hermespy.precoding.stream_precoding.ReceiveStreamCoding"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveStreamCoding</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.receive">
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.receive" title="Permalink to this definition"></a></dt>
+<dd><p>Receive a signal.</p>
+<p>Pulls the required signal model and channel state information from the underlying device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception" title="hermespy.modem.modem.CommunicationReception"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Information received by this operator.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the transmitter is currently considered floating.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.reception">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reception</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.modem.modem.CommunicationReception" title="hermespy.modem.modem.CommunicationReception"><span class="pre">CommunicationReception</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.reception" title="Permalink to this definition"></a></dt>
+<dd><p>The most recently received information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="#hermespy.modem.modem.CommunicationReception" title="hermespy.modem.modem.CommunicationReception"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A handle to the received information.
+<cite>None</cite> if no information has been received yet.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.ReceivingModem.csi">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">csi</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><span class="pre">ChannelStateInformation</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.ReceivingModem.csi" title="Permalink to this definition"></a></dt>
+<dd><p>Cached recently received channel state information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Channel state information.
+<cite>None</cite> if no state information is cached.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>csi (Optional[<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.DuplexModem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DuplexModem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.DuplexModem" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.modem.TransmittingModem" title="hermespy.modem.modem.TransmittingModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a>, <a class="reference internal" href="#hermespy.modem.modem.ReceivingModem" title="hermespy.modem.modem.ReceivingModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a></p>
+<p>Representation of a wireless modem simulatneously transmitting and receiving.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bits_source</strong> (<a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><em>BitsSource</em></a><em>, </em><em>optional</em>) – Source configuration of communication bits transmitted by this modem.
+Bits are randomly generated by default.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.DuplexModem.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Modem'</span></em><a class="headerlink" href="#hermespy.modem.modem.DuplexModem.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.DuplexModem.transmitting_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitting_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.DuplexModem.transmitting_device" title="Permalink to this definition"></a></dt>
+<dd><p>Tranmsitting device operated by the modem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the transmitting device.
+<cite>None</cite> if the device is unspecified.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.DuplexModem.receiving_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receiving_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.DuplexModem.receiving_device" title="Permalink to this definition"></a></dt>
+<dd><p>Receiving device operated by the modem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the receiving device.
+<cite>None</cite> if the device is unspecified.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.DuplexModem.device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.DuplexModem.device" title="Permalink to this definition"></a></dt>
+<dd><p>Device this operator is attached to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the operated device.
+<cite>None</cite> if the operator is currently considered floating.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>device (Optional[<a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device">Device</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.DuplexModem.csi">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">csi</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><span class="pre">ChannelStateInformation</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.modem.DuplexModem.csi" title="Permalink to this definition"></a></dt>
+<dd><p>Cached recently received channel state information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Channel state information.
+<cite>None</cite> if no state information is cached.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>csi (Optional[<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>])</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.modem.SimplexLink">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimplexLink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmitting_device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiving_device</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.modem.SimplexLink" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.modem.TransmittingModem" title="hermespy.modem.modem.TransmittingModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a>, <a class="reference internal" href="#hermespy.modem.modem.ReceivingModem" title="hermespy.modem.modem.ReceivingModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Convenience class to manage a simplex communication link between two dedicated devices.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>transmitting_device (Device):</dt><dd><p>Transmitting device.</p>
+</dd>
+<dt>receiving_device (Device):</dt><dd><p>Receiving device.</p>
+</dd>
+<dt>args, kwargs:</dt><dd><p>Modem initialization parameters.
+Refer to <a class="reference internal" href="#hermespy.modem.modem.TransmittingModem" title="hermespy.modem.modem.TransmittingModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a> and <a class="reference internal" href="#hermespy.modem.modem.ReceivingModem" title="hermespy.modem.modem.ReceivingModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a> for further details.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>transmitting_device</cite> and <cite>receiving_device</cite> are identical.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.modem.SimplexLink.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SimplexLink'</span></em><a class="headerlink" href="#hermespy.modem.modem.SimplexLink.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.SimplexLink.transmitting_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitting_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a></em><a class="headerlink" href="#hermespy.modem.modem.SimplexLink.transmitting_device" title="Permalink to this definition"></a></dt>
+<dd><p>The transmitting device.</p>
+<p>Returns: Device handle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.modem.SimplexLink.receiving_device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receiving_device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a></em><a class="headerlink" href="#hermespy.modem.modem.SimplexLink.receiving_device" title="Permalink to this definition"></a></dt>
+<dd><p>The receiving device.</p>
+<p>Returns: Device handle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="modem.html" class="btn btn-neutral float-left" title="Communication Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modem.html" class="btn btn-neutral float-left" title="Communication" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="modem.bits_source.html" class="btn btn-neutral float-right" title="Bit Source" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce4b50a0>
+<jinja2.runtime.BlockReference object at 0x7f9e7b84ec10>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

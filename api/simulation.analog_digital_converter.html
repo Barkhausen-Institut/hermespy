@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analog-to-Digital Converter &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Hardware Radio Frequency Chain Modeling" href="simulation.rf_chain.html" />
+    <link rel="prev" title="Simulated Devices" href="simulation.simulated_device.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario"><code class="docutils literal notranslate"><span class="pre">SimulationScenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner"><code class="docutils literal notranslate"><span class="pre">SimulationRunner</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html">Simulated Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Analog-to-Digital Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType"><code class="docutils literal notranslate"><span class="pre">GainControlType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType.NONE"><code class="docutils literal notranslate"><span class="pre">GainControlType.NONE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType.MAX_AMPLITUDE"><code class="docutils literal notranslate"><span class="pre">GainControlType.MAX_AMPLITUDE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType.RMS_AMPLITUDE"><code class="docutils literal notranslate"><span class="pre">GainControlType.RMS_AMPLITUDE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType.yaml_tag"><code class="docutils literal notranslate"><span class="pre">GainControlType.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType.property_blacklist"><code class="docutils literal notranslate"><span class="pre">GainControlType.property_blacklist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">GainControlType.serialized_attributes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain"><code class="docutils literal notranslate"><span class="pre">Gain</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Gain.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain.gain"><code class="docutils literal notranslate"><span class="pre">Gain.gain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain.multiply_signal"><code class="docutils literal notranslate"><span class="pre">Gain.multiply_signal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain.divide_signal"><code class="docutils literal notranslate"><span class="pre">Gain.divide_signal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain.to_yaml"><code class="docutils literal notranslate"><span class="pre">Gain.to_yaml()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.agc_type"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.agc_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.backoff"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.backoff</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.multiply_signal"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.multiply_signal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.from_yaml"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.from_yaml()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.to_yaml"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.to_yaml()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType"><code class="docutils literal notranslate"><span class="pre">QuantizerType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType.MID_RISER"><code class="docutils literal notranslate"><span class="pre">QuantizerType.MID_RISER</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType.MID_TREAD"><code class="docutils literal notranslate"><span class="pre">QuantizerType.MID_TREAD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType.yaml_tag"><code class="docutils literal notranslate"><span class="pre">QuantizerType.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType.property_blacklist"><code class="docutils literal notranslate"><span class="pre">QuantizerType.property_blacklist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">QuantizerType.serialized_attributes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.gain"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.gain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_bits"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.num_quantization_bits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_levels"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.num_quantization_levels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.quantizer_type"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.quantizer_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.convert"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.convert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.plot_quantizer"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.plot_quantizer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain"><code class="docutils literal notranslate"><span class="pre">RfChain</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html">Transmit-Receive Leakage Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage"><code class="docutils literal notranslate"><span class="pre">Leakage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.LinearLeakage"><code class="docutils literal notranslate"><span class="pre">LinearLeakage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise"><code class="docutils literal notranslate"><span class="pre">PhaseNoise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN"><code class="docutils literal notranslate"><span class="pre">AWGN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling"><code class="docutils literal notranslate"><span class="pre">Coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation"><code class="docutils literal notranslate"><span class="pre">Isolation</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="simulation.html">Simulation</a></li>
+      <li class="breadcrumb-item active">Analog-to-Digital Converter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/simulation.analog_digital_converter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.simulation.analog_digital_converter"></span><section id="analog-to-digital-converter">
+<h1>Analog-to-Digital Converter<a class="headerlink" href="#analog-to-digital-converter" title="Permalink to this heading"></a></h1>
+<p>Implements an analog-to digital converter.
+Currently only uniform quantization is considered.</p>
+<p>The following figure visualizes the quantizer responses.</p>
+<p>(<a class="reference external" href="../scripts/plot_quantizer.py">Source code</a>, <a class="reference external" href="../scripts/plot_quantizer.png">png</a>, <a class="reference external" href="../scripts/plot_quantizer.hires.png">hires.png</a>, <a class="reference external" href="../scripts/plot_quantizer.pdf">pdf</a>)</p>
+<figure class="align-center">
+<img alt="../_images/plot_quantizer.png" class="plot-directive" src="../_images/plot_quantizer.png" />
+</figure>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.GainControlType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GainControlType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.GainControlType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableEnum" title="hermespy.core.factory.SerializableEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a></p>
+<p>Type of automatig gain control</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.GainControlType.NONE">
+<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.GainControlType.NONE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.GainControlType.MAX_AMPLITUDE">
+<span class="sig-name descname"><span class="pre">MAX_AMPLITUDE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.GainControlType.MAX_AMPLITUDE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.GainControlType.RMS_AMPLITUDE">
+<span class="sig-name descname"><span class="pre">RMS_AMPLITUDE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.GainControlType.RMS_AMPLITUDE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.GainControlType.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'GainControlType'</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.GainControlType.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.GainControlType.property_blacklist">
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.GainControlType.property_blacklist" title="Permalink to this definition"></a></dt>
+<dd><p>Set of properties to be ignored during serialization.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.GainControlType.serialized_attributes">
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.GainControlType.serialized_attributes" title="Permalink to this definition"></a></dt>
+<dd><p>Set of object attributes to be serialized.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.Gain">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Gain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.Gain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Base class for analog-to-digital conversion gain modeling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gain</strong> (<em>float</em><em>, </em><em>optional</em>) – signal gain</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.Gain.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Gain'</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.Gain.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.Gain.gain">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.Gain.gain" title="Permalink to this definition"></a></dt>
+<dd><p>Gain before quantizer</p>
+<p>Quantizer operates by default between -1. and +1.
+Signal can be adjusted by to this range by appropriate gain setting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>fixed gain</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.Gain.multiply_signal">
+<span class="sig-name descname"><span class="pre">multiply_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.Gain.multiply_signal" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.Gain.divide_signal">
+<span class="sig-name descname"><span class="pre">divide_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.Gain.divide_signal" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.Gain.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.Gain.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a <cite>Gain</cite> object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>BaseRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl" title="hermespy.simulation.analog_digital_converter.AutomaticGainControl"><em>AutomaticGainControl</em></a>) – The ADC instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AutomaticGainControl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AutomaticGainControl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agc_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">GainControlType.MAX_AMPLITUDE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain" title="hermespy.simulation.analog_digital_converter.Gain"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gain</span></code></a></p>
+<p>Analog-to-digital conversion automatic gain control modeling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agc_type</strong> (<a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType" title="hermespy.simulation.analog_digital_converter.GainControlType"><em>GainControlType</em></a><em>, </em><em>optional</em>) – Type of amplitude gain control at ADC input. Default is GainControlType.MAX_AMPLITUDE.</p></li>
+<li><p><strong>backoff</strong> (<em>float</em><em>, </em><em>optional</em>) – this is the ratio between maximum amplitude and the rms value or maximum of input signal,
+depending on AGC type. Default value is 1.0.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AutomaticGainControl.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'AutomaticGainControl'</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AutomaticGainControl.agc_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">agc_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType" title="hermespy.simulation.analog_digital_converter.GainControlType"><span class="pre">GainControlType</span></a></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.agc_type" title="Permalink to this definition"></a></dt>
+<dd><p>Automatic Gain Control</p>
+<p>The AGC may have the following types of gain control, which wil specify the quantizer range:
+- GainControlType.NONE: no gain control, range must be specified
+- GainControlType.MAX_AMPLITUDE: the range is given by the maximum amplitude of the
+- GainControlType.RMS_AMPLITUDE: the range is given by the rms value plus a given backoff
+Note the for complex numbers, amplitude is calculated for both real and imaginary parts separately, and the
+greatest value is considered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.GainControlType" title="hermespy.simulation.analog_digital_converter.GainControlType">GainControlType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AutomaticGainControl.backoff">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">backoff</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.backoff" title="Permalink to this definition"></a></dt>
+<dd><p>Quantizer backoff in linear scale</p>
+<p>This quantity determines the ratio between the maximum quantization level and the signal rms value
+:returns: the backoff in linear scale
+:rtype: float</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AutomaticGainControl.multiply_signal">
+<span class="sig-name descname"><span class="pre">multiply_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.multiply_signal" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AutomaticGainControl.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Recall a new <cite>AnalogDigitalConverter</cite> instance from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constructor</strong> (<em>RoundTripConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
+<li><p><strong>node</strong> (<em>Union</em><em>[</em><em>ScalarNode</em><em>, </em><em>MappingNode</em><em>]</em>) – YAML node representing the <cite>AnalogDigitalConverter</cite> serialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Newly created <cite>AnalogDigitalConverter</cite> instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter" title="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter">AnalogDigitalConverter</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AutomaticGainControl.to_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl.to_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Serialize a <cite>AutomaticGainControl</cite> object to YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>representer</strong> (<em>BaseRepresenter</em>) – A handle to a representer used to generate valid YAML code.
+The representer gets passed down the serialization tree to each node.</p></li>
+<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.simulation.analog_digital_converter.AutomaticGainControl" title="hermespy.simulation.analog_digital_converter.AutomaticGainControl"><em>AutomaticGainControl</em></a>) – The ADC instance to be serialized.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The serialized YAML node.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.QuantizerType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QuantizerType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.QuantizerType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableEnum" title="hermespy.core.factory.SerializableEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a></p>
+<p>Type of quantizer</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.QuantizerType.MID_RISER">
+<span class="sig-name descname"><span class="pre">MID_RISER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.QuantizerType.MID_RISER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.QuantizerType.MID_TREAD">
+<span class="sig-name descname"><span class="pre">MID_TREAD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.QuantizerType.MID_TREAD" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.QuantizerType.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'QuantizerType'</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.QuantizerType.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.QuantizerType.property_blacklist">
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.QuantizerType.property_blacklist" title="Permalink to this definition"></a></dt>
+<dd><p>Set of properties to be ignored during serialization.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.QuantizerType.serialized_attributes">
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.QuantizerType.serialized_attributes" title="Permalink to this definition"></a></dt>
+<dd><p>Set of object attributes to be serialized.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AnalogDigitalConverter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_quantization_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantizer_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizerType.MID_RISER</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Implements an ADC (analog-to-digital converter)</p>
+<p>Models the behaviour of an ADC, including:
+- Sampling Jitter (to be implemented)
+- Automatic Gain Control
+- Quantization. Currently only uniform and symmetric quantization is supported.</p>
+<p>This class only implements the quantization noise, the output data is still in floating point representation with
+the same amplitude as the input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_quantization_bits</strong> (<em>int</em><em>, </em><em>optional</em>) – ADC resolution in bits. Default is infinite resolution (no quantization)</p></li>
+<li><p><strong>gain</strong> (<a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain" title="hermespy.simulation.analog_digital_converter.Gain"><em>Gain</em></a><em>, </em><em>optional</em>) – Amplitude gain control at ADC input. Default is Gain(1.0), i.e., no gain.</p></li>
+<li><p><strong>quantizer_type</strong> (<a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType" title="hermespy.simulation.analog_digital_converter.QuantizerType"><em>QuantizerType</em></a><em>, </em><em>optional</em>) – Determines quantizer behaviour at zero. Default is QuantizerType.MID_RISER.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ADC'</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.gain">
+<span class="sig-name descname"><span class="pre">gain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.Gain" title="hermespy.simulation.analog_digital_converter.Gain"><span class="pre">Gain</span></a></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.gain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_bits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_quantization_bits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_bits" title="Permalink to this definition"></a></dt>
+<dd><p>Quantization resolution in bits</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Bit resolution (if 0 or np.inf, then no quantization is applied)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If resolution is less than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_levels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_quantization_levels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_levels" title="Permalink to this definition"></a></dt>
+<dd><p>Number of quantization levels</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of levels</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.quantizer_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">quantizer_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType" title="hermespy.simulation.analog_digital_converter.QuantizerType"><span class="pre">QuantizerType</span></a></em><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.quantizer_type" title="Permalink to this definition"></a></dt>
+<dd><p>Type of quantizer</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>QuantizationType.MID_TREAD: 0 can be the output of a quantization step. Since the number of quantization step</dt><dd><p>must be even, negative values will have one step more than positive values</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>QuantizerType.MID_RISE: input values around zero are quantized as either -delta/2 or delta/2, with delta the</dt><dd><p>quantization step</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>type of quantizer</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.simulation.analog_digital_converter.QuantizerType" title="hermespy.simulation.analog_digital_converter.QuantizerType">QuantizerType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.convert">
+<span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.convert" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.plot_quantizer">
+<span class="sig-name descname"><span class="pre">plot_quantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.plot_quantizer" title="Permalink to this definition"></a></dt>
+<dd><p>Plot the quantizer characteristics.</p>
+<p>Generates a matplotlib plot depicting the staircase amplitude response.
+Note that only the real part is plotted, as the quantizer is applied separately in the real and imaginary parts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_samples</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Sample points at which to evaluate the characteristics, i.e., the x-axis of the resulting
+characteristics plot. It should be a sorted number sequence.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A label describing the desired plot.</p></li>
+<li><p><strong>fig_axes</strong> (<em>Optional</em><em>[</em><em>plt.axes</em><em>]</em><em>, </em><em>optional</em>) – Axes to which to plot the charateristics.
+By default, a new figure is created.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="simulation.simulated_device.html" class="btn btn-neutral float-left" title="Simulated Devices" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="simulation.rf_chain.html" class="btn btn-neutral float-right" title="Hardware Radio Frequency Chain Modeling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e7a1760a0>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

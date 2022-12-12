@@ -1,115 +1,337 @@
-*****
-About
-*****
-
+********
 Features
-========
+********
 
-The feature set of HermesPy is steadily expanding and currently includes
-(features in latest release are in **bold**)
-
-Modulation and Coding
----------------------
-
-* Coding
-
-    * Repetition Codes
-    * 3GPP-like LDPC codes (faster implementation with C++)
-    * 3GPP Scrambler
-    * Block Interleaving
-    * Cyclic Redundancy Check Mock
-
-* Modulation and Waveforms
-
-    * Generic PSK/QAM/PAM modem with square pulses, (root)-raised-cosine filters or FMCW
-    * Chirp FSK (a.k.a. chirp spread spectrum)
-    * OFDM frame with arbitrary allocation of data and reference symbols in each resource element
-
-* multiple antennas
-    * Transmit diversity (Alamouti) with 2 or 4 tx antennas
-    * Open-loop spatial multiplexing with linear receivers
-    * **beamforming**
-
-* precoding
-    * DFT-spread for OFDM
-    * Extended GFDM framework :footcite:p:`2018:nimr`
-
-* Receiver algorithms
-
-    * LLR calculation for BPSK/QAM/16-/64-/256-QAM
-    * Linear equalizers for non-orthogonal FMCW pulses in AWGN
-    * Channel estimation for OFDM
-    * Receiver diversity (SC or MRC)
-    * **Synchronization**
-    * **Matched-filter radar receiver**
-    * **Radar detection for FMCW**
-    * **Threshold-based radar detector**
-
-Channel and Interference Model
-------------------------------
-
-* Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading
-* COST-259 Macrocell Model :footcite:p:`2004:3GPP:TR25943`
-* 5G TDL model :footcite:p:`3GPP:TR38901`
-* MIMO support with antenna correlation, following Kronecker model
-* Interface to `Quadriga <https://quadriga-channel-model.de/>`_ channel model (requires Matlab or Octave)
-* Interference among different modems, with arbitrary transmit powers for different transmitters
-* Support for transmitters using different carrier frequencies and bandwidths
-* Single-target radar channel model
-* **3GPP Clustered Delay Line Models**
+The feature set of HermesPy is steadily expanding.
+This list provides an overview of core functionalities, latest feature additions introduced with the last official release are denoted in **bold**.
+Full releases with a new set of features will be provided on a bi-anual basis in Spring and Fall, with software patches in between.
 
 
-RF Chain
---------
+.. list-table:: **Beamforming**
+   :header-rows: 1
 
-* Memoryless non linear power amplifier
-    * Ideal Clipper
-    * Rapp's model :footcite:p:`1991:rapp`,
-    * Saleh's model :footcite:p:`1981:saleh`,
-    * Arbitrary AM/AM AM/PM responses
+   * - Feature
+     - API References
+     - Examples
 
-* Random time offset
-* I/Q imbalance
-* **Quantization**
+   * - Capon Beamformer
+     - :doc:`api/beamforming.capon`
+     - :doc:`notebooks/beamformer`
 
-Simulation
-----------
+   * - Conventional Beamformer
+     - :doc:`api/beamforming.conventional`
+     - 
 
-* **Native Support for Workload Distribution on Multicore Systems**
-* Greater modularity and standalone usage of simulator classes
-* Full configuration using **YAML** settings files
-* Drops containing several frames
-* Support for multiple transmitter and receivers
-* User manual provided
+.. list-table:: **Forward Error Correction**
+   :header-rows: 1
 
-Hardware Loop
--------------
+   * - Feature
+     - API References
+     - Examples
 
-* **Support to Evaluate Arbitrary Waveforms Over Real Hardware**
+   * - Interleaving
+     - :doc:`api/fec.block_interleaver`
+     -
 
-Statistics
-----------
+   * - Cyclic Reundancy Check Mock
+     - :doc:`api/fec.crc`
+     -
 
-* Bit Error Rate / Frame Error Rate Computation
-* **Block Error Rate Computation**
-* **Throughput Computation**
-* Confidence interval is calculated and may be considered as a stopping criterion
-* Theoretical results available (depending on simulation scenario)
-* Power spectral density and time-frequency analysis
-* Time-domain waveform plots
-* Constellation plots
-* **Radar cube (range/Doppler/angle)**
+   * - **Low Differential Parity Checks**
+     - :doc:`api/fec.ldpc`
+     - :doc:`examples/ofdm_5g`
 
-Known Limitations
-=================
+   * - **Polar Codes**
+     - :doc:`api/fec.polar`
+     -
 
-The known limitations currently include
+   * - Repetition Coding
+     - :doc:`api/fec.repetition`
+     - :doc:`examples/chirp_fsk_lora`, :doc:`getting_started`
 
-* Radar KPIs missing (only delay-Doppler map is generated)
+   * - **Reed Solomon Codes**
+     - :doc:`api/fec.rs`
+     -
 
-Release Plan
-============
+   * - **Recursive Systematic Convolutional Codes**
+     - :doc:`api/fec.rsc`
+     - 
 
-Full releases with a new set of features will be provided on a half-yearly basis, with software patches in between.
+   * - Scrambling
+     - :doc:`api/fec.scrambler`
+     -
+
+   * - **Turbo Coding**
+     - :doc:`api/fec.turbo`
+     - 
+
+.. list-table:: **Channel Models**
+   :header-rows: 1
+
+   * - Model
+     - API References
+     - Examples
+
+   * - Indoor Factory
+     - :doc:`api/channel.cluster_delay_line_indoor_factory`
+     -
+
+   * - Indoor Office
+     - :doc:`api/channel.cluster_delay_line_indoor_office`
+     -
+
+   * - Rural Macrocells
+     - :doc:`api/channel.cluster_delay_line_rural_macrocells`
+     -
+
+   * - Street Canyon
+     - :doc:`api/channel.cluster_delay_line_street_canyon`
+     -
+
+   * - Urban Macrocells
+     - :doc:`api/channel.cluster_delay_line_urban_macrocells`
+     -
+
+   * - Multipath Fading
+     - :doc:`api/channel.multipath_fading_channel`
+     -
+
+   * - Cost256
+     - :class:`MultipathFadingCost256 <hermespy.channel.multipath_fading_templates.MultipathFadingCost256>`
+     -
+
+   * - 5G Tapped Delay Lines
+     - :class:`MultipathFading5GTDL <hermespy.channel.multipath_fading_templates.MultipathFading5GTDL>`
+     -
+
+   * - Exponential
+     - :class:`MultipathFadingExponential <hermespy.channel.multipath_fading_templates.MultipathFadingExponential>`
+     -
+
+   * - Quadriga
+     - :doc:`api/channel.quadriga`
+     -
+
+   * - **Radar Single Reflector**
+     - :doc:`api/channel.radar_channel`
+     - :doc:`examples/jcas`
+
+.. list-table:: **Communication Modulation**
+   :header-rows: 1
+
+   * - Waveform
+     - API References
+     - Examples
+
+   * - Chirp FSK
+     - :doc:`api/modem.waveform_generator_chirp_fsk`
+     - :doc:`examples/chirp_fsk_lora`
+ 
+   * - OFDM
+     - :doc:`api/modem.waveform_generator_ofdm`
+     - :doc:`examples/interference_ofdm_single_carrier`,
+       :doc:`examples/ofdm_5g`,
+       :doc:`examples/ofdm_single_carrier`
+
+   * - Single Carrier
+     - :doc:`api/modem.waveform_single_carrier`
+     - 
+
+   * - Root Raised Cosine
+     - :doc:`api/modem.waveform_single_carrier`
+     - :doc:`examples/chirp_qam`,
+       :doc:`examples/hardware_model`,
+       :doc:`examples/interference_ofdm_single_carrier`
+
+   * - Raised Cosine
+     - :doc:`api/modem.waveform_single_carrier`
+     -  
+
+   * - Rectangular
+     - :doc:`api/modem.waveform_single_carrier`
+     - 
+
+   * - FMCW
+     - :doc:`api/modem.waveform_single_carrier`
+     - :doc:`examples/jcas`
+
+
+.. list-table:: **Communication Receiver Algorithms**
+   :header-rows: 1
+
+   * - Algorithm
+     - API References
+     - Examples
+
+   * - Synchronization
+     - :class:`Synchronization <hermespy.modem.waveform_generator.Synchronization>`
+     - 
+
+   * - Channel Estimation
+     - :class:`ChannelEstimation <hermespy.modem.waveform_generator.ChannelEstimation>`
+       :class:`IdealChannelEstimation <hermespy.modem.waveform_generator.IdealChannelEstimation>`
+       :class:`Single Carrier Least-Squares <hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation>`
+       :class:`OFDM Least-Squares <hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation>`
+     -
+
+   * - Equalization
+     - :class:`ChannelEqualization <hermespy.modem.waveform_generator.ChannelEqualization>`
+       :class:`Zero-Forcing <hermespy.modem.waveform_generator.ZeroForcingChannelEqualization>`
+       :class:`OFDM MMSE <hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization>`
+       :class:`Single Carrier MMSE <hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization>`
+     -
+
+
+
+.. list-table:: **Sensing Modulation**
+   :header-rows: 1
+
+   * - Waveform
+     - API References
+     - Examples
+
+   * - FMCW
+     - :doc:`api/radar.fmcw`
+     - 
+
+   * - Matched Filter JCAS 
+     - :doc:`api/jcas.matched_filtering`
+     - :doc:`examples/jcas`
+
+
+.. list-table:: **Multi Antenna Algorithms**
+   :header-rows: 1
+
+   * - Algorithm
+     - API References
+     - Examples
+
+   * - Alamouti
+     - :doc:`api/precoding.space_time_block_coding`
+     - 
+
+   * - 
+     - :doc:`api/precoding.single_carrier`
+     - :doc:`examples/ofdm_5g`
+
+   * - 
+     - :doc:`api/precoding.spatial_multiplexing`
+     - 
+
+   * - Maximum Ratio Combining
+     - :doc:`api/precoding.ratio_combining`
+     - 
+
+
+.. list-table:: **Precodings**
+   :header-rows: 1
+
+   * - Algorithm
+     - API References
+     - Examples
+
+   * - DFT
+     - :doc:`api/precoding.dft`
+     - 
+
+
+.. list-table:: **Hardware Models**
+   :header-rows: 1
+
+   * - Model
+     - API References
+     - Examples
+
+   * - Power Amplifier
+     - :doc:`PA <api/simulation.rf_chain.power_amplifier>`,
+       :class:`Clipping <hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier>`,
+       :class:`Rapp <hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier>`,
+       :class:`Saleh <hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier>`,
+       :class:`Custom AM/AM AM/PM Response <hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier>`
+     - :doc:`examples/hardware_model`
+
+   * - I/Q Imbalance
+     - :doc:`/api/simulation.rf_chain`
+     - :doc:`examples/hardware_model`
+
+   * - Anlog Digital Conversion
+     - :doc:`api/simulation.analog_digital_converter`
+     - :doc:`examples/hardware_model`
+    
+   * - **Phase Noise**
+     - :doc:`api/simulation.rf_chain.phase_noise`
+     - :doc:`examples/hardware_model`
+
+   * - Antenna Characteristics
+     - :doc:`api/core.antennas`
+     - 
+
+   * - Antenna Arrays
+     - :doc:`api/core.antennas`
+     - 
+
+   * - **Mutual Coupling**
+     - :doc:`api/simulation.coupling`
+       :doc:`api/simulation.coupling.impedance`
+       :doc:`api/simulation.coupling.perfect`
+     - 
+
+   * - **Transmit-Receive Isolation**
+     - :doc:`api/simulation.isolation`
+       :doc:`api/simulation.isolation.perfect`
+       :doc:`api/simulation.isolation.impedance`
+       :doc:`api/simulation.isolation.specific`
+     -
+
+   * - Noise
+     - :doc:`api/simulation.noise`
+     -
+
+
+.. list-table:: **Key Performance Indicators**
+   :header-rows: 1
+
+   * - Indicator
+     - Evaluator
+     - Examples
+
+   * - Bit Error Rate
+     - :class:`BitErrorEvaluator <hermespy.modem.evaluators.BitErrorEvaluator>`
+     - 
+
+   * - Block Error Rate
+     - :class:`BlockErrorEvaluator <hermespy.modem.evaluators.BlockErrorEvaluator>`
+     - 
+
+   * - Frame Error Rate
+     - :class:`FrameErrorEvaluator <hermespy.modem.evaluators.FrameErrorEvaluator>`
+     - 
+
+   * - Throughput
+     - :class:`ThroughputEvaluator <hermespy.modem.evaluators.ThroughputEvaluator>`
+     - 
+
+   * - **Receiver Operating Charactersitic**
+     - :class:`ReceiverOperatingCharacteristic <hermespy.radar.evaluators.ReceiverOperatingCharacteristic>`
+     - 
+
+   * - **Detection RMSE**
+     - :class:`RootMeanSquareError <hermespy.radar.evaluators.RootMeanSquareError>`
+     - 
+
+.. list-table:: **Hardware Interfaces**
+   :header-rows: 1
+
+   * - Interface
+     - API
+     - Examples
+
+   * - **Soundcard**
+     - :doc:`/api/hardware_loop.audio.device`
+     - :doc:`/notebooks/audio`, :doc:`/examples/audio`
+
+   * - **USRP**
+     - :doc:`/api/hardware_loop.usrp`
+     - :doc:`examples/uhd`
 
 .. footbibliography::

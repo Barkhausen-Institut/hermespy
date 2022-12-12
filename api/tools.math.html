@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Math Tools &mdash; HermesPy  documentation</title>
+  <title>Math Tools &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +33,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Resampling Routines" href="tools.resampling.html" />
-    <link rel="prev" title="Tools Module" href="tools.html" /> 
+    <link rel="prev" title="Tools" href="tools.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +57,50 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="tools.html">Tools Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tools.html">Tools</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Math Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.DbConversionType"><code class="docutils literal notranslate"><span class="pre">DbConversionType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.tools.math.DbConversionType.POWER"><code class="docutils literal notranslate"><span class="pre">DbConversionType.POWER</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.tools.math.DbConversionType.AMPLITUDE"><code class="docutils literal notranslate"><span class="pre">DbConversionType.AMPLITUDE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.tools.math.DbConversionType.HILLY"><code class="docutils literal notranslate"><span class="pre">DbConversionType.HILLY</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.db2lin"><code class="docutils literal notranslate"><span class="pre">db2lin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.lin2db"><code class="docutils literal notranslate"><span class="pre">lin2db()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.marcum_q"><code class="docutils literal notranslate"><span class="pre">marcum_q()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.rotation_matrix"><code class="docutils literal notranslate"><span class="pre">rotation_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.transform_vector"><code class="docutils literal notranslate"><span class="pre">transform_vector()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.transform_coordinates"><code class="docutils literal notranslate"><span class="pre">transform_coordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.tools.math.rms_value"><code class="docutils literal notranslate"><span class="pre">rms_value()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.resampling.html#hermespy.tools.resampling.delay_resampling_matrix"><code class="docutils literal notranslate"><span class="pre">delay_resampling_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.screen_geometry"><code class="docutils literal notranslate"><span class="pre">screen_geometry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.set_figure_geometry"><code class="docutils literal notranslate"><span class="pre">set_figure_geometry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.tile_figures"><code class="docutils literal notranslate"><span class="pre">tile_figures()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.test"><code class="docutils literal notranslate"><span class="pre">test()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,10 +118,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="tools.html">Tools Module</a> &raquo;</li>
-      <li>Math Tools</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="tools.html">Tools</a></li>
+      <li class="breadcrumb-item active">Math Tools</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/tools.math.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,40 +131,65 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-tools.math"></span><section id="math-tools">
-<h1>Math Tools<a class="headerlink" href="#math-tools" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.tools.math"></span><section id="math-tools">
+<h1>Math Tools<a class="headerlink" href="#math-tools" title="Permalink to this heading"></a></h1>
 <p>Implementations of basic maths equations.</p>
+</section>
 <dl class="py class">
-<dt class="sig sig-object py" id="tools.math.DbConversionType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DbConversionType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.DbConversionType" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<dt class="sig sig-object py" id="hermespy.tools.math.DbConversionType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DbConversionType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.DbConversionType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Supported db conversion types.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="tools.math.DbConversionType.POWER">
-<span class="sig-name descname"><span class="pre">POWER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#tools.math.DbConversionType.POWER" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.DbConversionType.POWER">
+<span class="sig-name descname"><span class="pre">POWER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.tools.math.DbConversionType.POWER" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="tools.math.DbConversionType.AMPLITUDE">
-<span class="sig-name descname"><span class="pre">AMPLITUDE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#tools.math.DbConversionType.AMPLITUDE" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.DbConversionType.AMPLITUDE">
+<span class="sig-name descname"><span class="pre">AMPLITUDE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.tools.math.DbConversionType.AMPLITUDE" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="tools.math.DbConversionType.HILLY">
-<span class="sig-name descname"><span class="pre">HILLY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#tools.math.DbConversionType.HILLY" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.DbConversionType.HILLY">
+<span class="sig-name descname"><span class="pre">HILLY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.tools.math.DbConversionType.HILLY" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="tools.math.db2lin">
-<span class="sig-name descname"><span class="pre">db2lin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conversion_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DbConversionType.POWER</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.db2lin" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.db2lin">
+<span class="sig-name descname"><span class="pre">db2lin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conversion_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DbConversionType.POWER</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.db2lin" title="Permalink to this definition"></a></dt>
 <dd><p>Converts from dB to linear</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>db_val</strong> (<em>float</em>) – value in dB</p></li>
-<li><p><strong>conversion_type</strong> (<a class="reference internal" href="#tools.math.DbConversionType" title="tools.math.DbConversionType"><em>DbConversionType</em></a><em>, </em><em>optional</em>) – if POWER then it converts from dB to a power ratio
+<li><p><strong>conversion_type</strong> (<a class="reference internal" href="#hermespy.tools.math.DbConversionType" title="hermespy.tools.math.DbConversionType"><em>DbConversionType</em></a><em>, </em><em>optional</em>) – if POWER then it converts from dB to a power ratio
 if AMPLITUDE, then it converts from dB to an amplitude ratio
 default = POWER</p></li>
 </ul>
@@ -151,14 +204,14 @@ default = POWER</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="tools.math.lin2db">
-<span class="sig-name descname"><span class="pre">lin2db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conversion_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DbConversionType.POWER</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.lin2db" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.lin2db">
+<span class="sig-name descname"><span class="pre">lin2db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conversion_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DbConversionType.POWER</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.lin2db" title="Permalink to this definition"></a></dt>
 <dd><p>Converts from linear to dB</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>val</strong> (<em>float</em>) – value in linear scale</p></li>
-<li><p><strong>conversion_type</strong> (<a class="reference internal" href="#tools.math.DbConversionType" title="tools.math.DbConversionType"><em>DbConversionType</em></a><em>, </em><em>optional</em>) – if POWER then it converts from a power ratio to dB
+<li><p><strong>conversion_type</strong> (<a class="reference internal" href="#hermespy.tools.math.DbConversionType" title="hermespy.tools.math.DbConversionType"><em>DbConversionType</em></a><em>, </em><em>optional</em>) – if POWER then it converts from a power ratio to dB
 if AMPLITUDE, then it converts from an amplitude ratio to dB
 default = POWER</p></li>
 </ul>
@@ -170,8 +223,8 @@ default = POWER</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="tools.math.marcum_q">
-<span class="sig-name descname"><span class="pre">marcum_q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.marcum_q" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.marcum_q">
+<span class="sig-name descname"><span class="pre">marcum_q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.marcum_q" title="Permalink to this definition"></a></dt>
 <dd><p>Calculates the Marcum-Q function Q_m(a, b)</p>
 <p>This method uses the relationship between Marcum-Q function and the chi-squared distribution</p>
 <dl class="field-list simple">
@@ -192,8 +245,8 @@ default = POWER</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="tools.math.rotation_matrix">
-<span class="sig-name descname"><span class="pre">rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.rotation_matrix" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.rotation_matrix">
+<span class="sig-name descname"><span class="pre">rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.rotation_matrix" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
@@ -202,8 +255,8 @@ default = POWER</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="tools.math.transform_vector">
-<span class="sig-name descname"><span class="pre">transform_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.transform_vector" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.transform_vector">
+<span class="sig-name descname"><span class="pre">transform_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.transform_vector" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
@@ -212,8 +265,8 @@ default = POWER</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="tools.math.transform_coordinates">
-<span class="sig-name descname"><span class="pre">transform_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.transform_coordinates" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.transform_coordinates">
+<span class="sig-name descname"><span class="pre">transform_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.transform_coordinates" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
@@ -222,8 +275,8 @@ default = POWER</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="tools.math.rms_value">
-<span class="sig-name descname"><span class="pre">rms_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tools.math.rms_value" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.tools.math.rms_value">
+<span class="sig-name descname"><span class="pre">rms_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.tools.math.rms_value" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the root-mean-square value of a given input vector</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -232,20 +285,19 @@ default = POWER</p></li>
 </dl>
 </dd></dl>
 
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="tools.html" class="btn btn-neutral float-left" title="Tools Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tools.html" class="btn btn-neutral float-left" title="Tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="tools.resampling.html" class="btn btn-neutral float-right" title="Resampling Routines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce5ff8e0>
+<jinja2.runtime.BlockReference object at 0x7f9e7a1e5d90>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

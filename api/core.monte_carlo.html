@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PyMonte &mdash; HermesPy  documentation</title>
+  <title>PyMonte &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,8 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -29,7 +35,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Executable" href="core.executable.html" />
-    <link rel="prev" title="Core Module" href="core.html" /> 
+    <link rel="prev" title="Core" href="core.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -53,34 +59,203 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.ConsoleMode"><code class="docutils literal notranslate"><span class="pre">ConsoleMode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ConsoleMode.INTERACTIVE"><code class="docutils literal notranslate"><span class="pre">ConsoleMode.INTERACTIVE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ConsoleMode.LINEAR"><code class="docutils literal notranslate"><span class="pre">ConsoleMode.LINEAR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ConsoleMode.SILENT"><code class="docutils literal notranslate"><span class="pre">ConsoleMode.SILENT</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Artifact.to_scalar"><code class="docutils literal notranslate"><span class="pre">Artifact.to_scalar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.ArtifactTemplate"><code class="docutils literal notranslate"><span class="pre">ArtifactTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ArtifactTemplate.artifact"><code class="docutils literal notranslate"><span class="pre">ArtifactTemplate.artifact</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ArtifactTemplate.to_scalar"><code class="docutils literal notranslate"><span class="pre">ArtifactTemplate.to_scalar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluation.artifact"><code class="docutils literal notranslate"><span class="pre">Evaluation.artifact()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationTemplate"><code class="docutils literal notranslate"><span class="pre">EvaluationTemplate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationTemplate.evaluation"><code class="docutils literal notranslate"><span class="pre">EvaluationTemplate.evaluation</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationResult"><code class="docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationResult.plot"><code class="docutils literal notranslate"><span class="pre">EvaluationResult.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationResult.to_array"><code class="docutils literal notranslate"><span class="pre">EvaluationResult.to_array()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.plot_surface"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult.plot_surface</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.plot"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.to_array"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult.to_array()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.ScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ScalarEvaluationResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.ScalarEvaluationResult.plot_surface"><code class="docutils literal notranslate"><span class="pre">ScalarEvaluationResult.plot_surface</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.evaluate"><code class="docutils literal notranslate"><span class="pre">Evaluator.evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.abbreviation"><code class="docutils literal notranslate"><span class="pre">Evaluator.abbreviation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.title"><code class="docutils literal notranslate"><span class="pre">Evaluator.title</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.confidence"><code class="docutils literal notranslate"><span class="pre">Evaluator.confidence</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.tolerance"><code class="docutils literal notranslate"><span class="pre">Evaluator.tolerance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.plot_scale"><code class="docutils literal notranslate"><span class="pre">Evaluator.plot_scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.generate_result"><code class="docutils literal notranslate"><span class="pre">Evaluator.generate_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample.grid_section"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample.grid_section</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample.sample_index"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample.sample_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample.artifacts"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample.artifacts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample.num_artifacts"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample.num_artifacts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample.artifact_scalars"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample.artifact_scalars</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection"><code class="docutils literal notranslate"><span class="pre">GridSection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection.coordinates"><code class="docutils literal notranslate"><span class="pre">GridSection.coordinates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection.num_samples"><code class="docutils literal notranslate"><span class="pre">GridSection.num_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection.samples"><code class="docutils literal notranslate"><span class="pre">GridSection.samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection.add_samples"><code class="docutils literal notranslate"><span class="pre">GridSection.add_samples()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection.confidences"><code class="docutils literal notranslate"><span class="pre">GridSection.confidences</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection.confidence_status"><code class="docutils literal notranslate"><span class="pre">GridSection.confidence_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridSection.scalars"><code class="docutils literal notranslate"><span class="pre">GridSection.scalars</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.ActorRunResult"><code class="docutils literal notranslate"><span class="pre">ActorRunResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.SampleGrid"><code class="docutils literal notranslate"><span class="pre">SampleGrid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloActor"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloActor.catch_exceptions"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor.catch_exceptions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloActor.run"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloActor.stage_identifiers"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor.stage_identifiers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloActor.stage_executors"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor.stage_executors()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloResult"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloResult.performance_time"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult.performance_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloResult.plot"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloResult.save_to_matlab"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult.save_to_matlab()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloResult.evaluation_results"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult.evaluation_results</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension"><code class="docutils literal notranslate"><span class="pre">GridDimension</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.considered_objects"><code class="docutils literal notranslate"><span class="pre">GridDimension.considered_objects</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.sample_points"><code class="docutils literal notranslate"><span class="pre">GridDimension.sample_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.num_sample_points"><code class="docutils literal notranslate"><span class="pre">GridDimension.num_sample_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.configure_point"><code class="docutils literal notranslate"><span class="pre">GridDimension.configure_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.first_impact"><code class="docutils literal notranslate"><span class="pre">GridDimension.first_impact</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.last_impact"><code class="docutils literal notranslate"><span class="pre">GridDimension.last_impact</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.title"><code class="docutils literal notranslate"><span class="pre">GridDimension.title</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension.plot_scale"><code class="docutils literal notranslate"><span class="pre">GridDimension.plot_scale</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension.is_registered"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension.is_registered()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension.setter"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension.setter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension.deleter"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension.deleter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension.first_impact"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension.first_impact</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension.last_impact"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension.last_impact</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.dimension"><code class="docutils literal notranslate"><span class="pre">dimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo"><code class="docutils literal notranslate"><span class="pre">MonteCarlo</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.runtime_env"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.runtime_env</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.catch_exceptions"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.catch_exceptions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.simulate"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.simulate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.investigated_object"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.investigated_object</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.new_dimension"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.new_dimension()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.add_dimension"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.add_dimension()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.add_evaluator"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.add_evaluator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.num_samples"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.num_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.min_num_samples"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.min_num_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.max_num_samples"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.max_num_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.num_actors"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.num_actors</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.console"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.console</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.section_block_size"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.section_block_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo.cpus_per_actor"><code class="docutils literal notranslate"><span class="pre">MonteCarlo.cpus_per_actor</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Verbosity"><code class="docutils literal notranslate"><span class="pre">Verbosity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable"><code class="docutils literal notranslate"><span class="pre">Serializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableEnum"><code class="docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableArray"><code class="docutils literal notranslate"><span class="pre">SerializableArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Factory"><code class="docutils literal notranslate"><span class="pre">Factory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.HDFSerializable"><code class="docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType"><code class="docutils literal notranslate"><span class="pre">SNRType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.html">Device Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError"><code class="docutils literal notranslate"><span class="pre">FloatingError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SlotType"><code class="docutils literal notranslate"><span class="pre">SlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorType"><code class="docutils literal notranslate"><span class="pre">OperatorType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperationResult"><code class="docutils literal notranslate"><span class="pre">OperationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmission"><code class="docutils literal notranslate"><span class="pre">Transmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Reception"><code class="docutils literal notranslate"><span class="pre">Reception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceTransmission"><code class="docutils literal notranslate"><span class="pre">DeviceTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceReception"><code class="docutils literal notranslate"><span class="pre">DeviceReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SecondSlotType"><code class="docutils literal notranslate"><span class="pre">SecondSlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.MixingOperator"><code class="docutils literal notranslate"><span class="pre">MixingOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Receiver"><code class="docutils literal notranslate"><span class="pre">Receiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorSlot"><code class="docutils literal notranslate"><span class="pre">OperatorSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter"><code class="docutils literal notranslate"><span class="pre">Transmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.TransmitterSlot"><code class="docutils literal notranslate"><span class="pre">TransmitterSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.ReceiverSlot"><code class="docutils literal notranslate"><span class="pre">ReceiverSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.UnsupportedSlot"><code class="docutils literal notranslate"><span class="pre">UnsupportedSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceType"><code class="docutils literal notranslate"><span class="pre">DeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator"><code class="docutils literal notranslate"><span class="pre">DuplexOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html#hermespy.core.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode"><code class="docutils literal notranslate"><span class="pre">RandomNode</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioMode"><code class="docutils literal notranslate"><span class="pre">ScenarioMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioType"><code class="docutils literal notranslate"><span class="pre">ScenarioType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal"><code class="docutils literal notranslate"><span class="pre">Signal</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateFormat"><code class="docutils literal notranslate"><span class="pre">ChannelStateFormat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateDimension"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Antenna"><code class="docutils literal notranslate"><span class="pre">Antenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.IdealAntenna"><code class="docutils literal notranslate"><span class="pre">IdealAntenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.PatchAntenna"><code class="docutils literal notranslate"><span class="pre">PatchAntenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Dipole"><code class="docutils literal notranslate"><span class="pre">Dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArrayBase"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.UniformArray"><code class="docutils literal notranslate"><span class="pre">UniformArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArray"><code class="docutils literal notranslate"><span class="pre">AntennaArray</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -98,10 +273,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="core.html">Core Module</a> &raquo;</li>
-      <li>PyMonte</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="core.html">Core</a></li>
+      <li class="breadcrumb-item active">PyMonte</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/core.monte_carlo.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -111,8 +286,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.core.monte_carlo"></span><section id="pymonte">
-<h1>PyMonte<a class="headerlink" href="#pymonte" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.core.monte_carlo"></span><section id="pymonte">
+<h1>PyMonte<a class="headerlink" href="#pymonte" title="Permalink to this heading"></a></h1>
 <p>PyMonte is a stand-alone core module of HermesPy,
 enabling efficient and flexible Monte Carlo simulations over arbitrary configuration parameter combinations.
 By wrapping the core of the <a class="reference external" href="https://www.ray.io/">Ray</a> project,
@@ -188,10 +387,36 @@ Using <a class="reference external" href="https://www.ray.io/">Ray</a>, PyMonte 
 with the number of actors depending on the available resources (i.e. number of CPU cores) detected.
 A central simulation controller schedules the workload by assigning <a class="reference internal" href="#hermespy.core.monte_carlo.GridSection" title="hermespy.core.monte_carlo.GridSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSection</span></code></a> indices as tasks
 to the actors, which return the resulting simulation Samples after the simulation iteration is completed.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ConsoleMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConsoleMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.ConsoleMode" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Printing behaviour of the simulation during runtime</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ConsoleMode.INTERACTIVE">
+<span class="sig-name descname"><span class="pre">INTERACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.ConsoleMode.INTERACTIVE" title="Permalink to this definition"></a></dt>
+<dd><p>Interactive refreshing of the shell information</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ConsoleMode.LINEAR">
+<span class="sig-name descname"><span class="pre">LINEAR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.ConsoleMode.LINEAR" title="Permalink to this definition"></a></dt>
+<dd><p>Linear appending of the shell information</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ConsoleMode.SILENT">
+<span class="sig-name descname"><span class="pre">SILENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.ConsoleMode.SILENT" title="Permalink to this definition"></a></dt>
+<dd><p>No prints exept errors</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.Artifact">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Artifact</span></span><a class="headerlink" href="#hermespy.core.monte_carlo.Artifact" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Persistent</span></code></p>
 <p>Result of an investigated object evaluation.</p>
 <p>Generated by <a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluator</span></code></a> instances operating on investigated object states.
 In other words, <a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.evaluate" title="hermespy.core.monte_carlo.Evaluator.evaluate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Evaluator.evaluate()</span></code></a> is expected to return an instance derived of this base class.</p>
@@ -219,7 +444,7 @@ the <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact.to_s
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.ArtifactTemplate">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ArtifactTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">artifact</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.ArtifactTemplate" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.monte_carlo.AT</span></code>], <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.monte_carlo.Artifact</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">AT</span></code>], <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a></p>
 <p>Scalar numerical result of an investigated object evaluation.</p>
 <p>Implements the common case of an <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> representing a scalar numerical value.</p>
 <dl class="field-list simple">
@@ -229,7 +454,7 @@ the <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact.to_s
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.ArtifactTemplate.artifact">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifact</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">hermespy.core.monte_carlo.AT</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.ArtifactTemplate.artifact" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifact</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AT</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.ArtifactTemplate.artifact" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluation artifact.</p>
 <p>Provides direct access to the represented artifact.</p>
 <dl class="field-list simple">
@@ -261,9 +486,134 @@ the <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact.to_s
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.Evaluation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Evaluation</span></span><a class="headerlink" href="#hermespy.core.monte_carlo.Evaluation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Evaluation of a single simulation sample.</p>
+<p>Evaluations are generated by <a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluators</span></code></a>
+during <a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.evaluate" title="hermespy.core.monte_carlo.Evaluator.evaluate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Evaluator.evaluate()</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.Evaluation.artifact">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifact</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.Evaluation.artifact" title="Permalink to this definition"></a></dt>
+<dd><p>Generate an artifact from this evaluation.</p>
+<p>Returns: The evaluation artifact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.EvaluationTemplate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EvaluationTemplate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.EvaluationTemplate" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">ET</span></code>], <a class="reference internal" href="#hermespy.core.monte_carlo.Evaluation" title="hermespy.core.monte_carlo.Evaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluation</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.EvaluationTemplate.evaluation">
+<span class="sig-name descname"><span class="pre">evaluation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ET</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.EvaluationTemplate.evaluation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.EvaluationResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EvaluationResult</span></span><a class="headerlink" href="#hermespy.core.monte_carlo.EvaluationResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Result of an evaluation routine iterating over a parameter grid.</p>
+<p>Evaluation results are generated by <a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluator</span> <span class="pre">Instances</span></code></a> as a final
+step within the evaluation routine.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.EvaluationResult.plot">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.EvaluationResult.plot" title="Permalink to this definition"></a></dt>
+<dd><p>Render a visual representation of the evaluation result.</p>
+<p>Generated by matplotlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A handle to the generated matplotlib figure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.EvaluationResult.to_array">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_array</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.EvaluationResult.to_array" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the evaluation result raw data to an array representation.</p>
+<p>Used to store the results in arbitrary binary file formats after simulation execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The array result representation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ProcessedScalarEvaluationResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ProcessedScalarEvaluationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalar_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationResult" title="hermespy.core.monte_carlo.EvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></p>
+<p>Base class for scalar evaluation results.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.plot_surface">
+<span class="sig-name descname"><span class="pre">plot_surface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.plot_surface" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.plot" title="Permalink to this definition"></a></dt>
+<dd><p>Render a visual representation of the evaluation result.</p>
+<p>Generated by matplotlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A handle to the generated matplotlib figure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.to_array">
+<span class="sig-name descname"><span class="pre">to_array</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult.to_array" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the evaluation result raw data to an array representation.</p>
+<p>Used to store the results in arbitrary binary file formats after simulation execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The array result representation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ScalarEvaluationResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ScalarEvaluationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_artifacts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.ScalarEvaluationResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult" title="hermespy.core.monte_carlo.ProcessedScalarEvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult</span></code></a></p>
+<p>Base class for scalar evaluation results.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ScalarEvaluationResult.plot_surface">
+<span class="sig-name descname"><span class="pre">plot_surface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.ScalarEvaluationResult.plot_surface" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.Evaluator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Evaluator</span></span><a class="headerlink" href="#hermespy.core.monte_carlo.Evaluator" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.monte_carlo.MO</span></code>]</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Evaluation routine for investigated object states, extracting performance indicators of interest.</p>
 <p>Evaluators represent the process of extracting arbitrary performance indicator samples <span class="math notranslate nohighlight">\(X_m\)</span> in the form of
 <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> instances from investigated object states.
@@ -271,7 +621,7 @@ Once a <a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarlo
 it calls the <code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code> routines of all configured evaluators,
 collecting the resulting respective <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> instances.</p>
 <p>For a given set of <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> instances,
-evaluators are expected to report a <a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator.confidence_level" title="hermespy.core.monte_carlo.Evaluator.confidence_level"><code class="xref py py-meth docutils literal notranslate"><span class="pre">confidence_level()</span></code></a> which may result in a premature abortion of the
+evaluators are expected to report a <code class="xref py py-meth docutils literal notranslate"><span class="pre">confidence_level()</span></code> which may result in a premature abortion of the
 sample collection routine for a single <a class="reference internal" href="#hermespy.core.monte_carlo.GridSection" title="hermespy.core.monte_carlo.GridSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSection</span></code></a>.
 By default, the routine suggested by Bayer <em>et al.</em><a class="footnote-reference brackets" href="#footcite-2014-bayer" id="id2">1</a> is applied:
 Considering a tolerance <span class="math notranslate nohighlight">\(\mathrm{TOL} \in \mathbb{R}_{++}\)</span> the confidence in the mean performance indicator</p>
@@ -286,21 +636,12 @@ is between a minimum number of required samples <span class="math notranslate no
 <span class="math notranslate nohighlight">\(M_{\mathrm{max}} \in \mathbb{R}_{++}\)</span>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.Evaluator.evaluate">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.Evaluator.evaluate" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.Evaluator.evaluate" title="Permalink to this definition"></a></dt>
 <dd><p>Evaluate the state of an investigated object.</p>
 <p>Implements the process of extracting an arbitrary performance indicator, represented by
-the returned <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>investigated_object</strong> (<em>MO</em>) – Investigated object, configured to an independent random state.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Artifact <span class="math notranslate nohighlight">\(X_m\)</span> resulting from the evaluation.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact">Artifact</a></p>
-</dd>
-</dl>
+the returned <a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.
+:returns:     Artifact <span class="math notranslate nohighlight">\(X_m\)</span> resulting from the evaluation.
+:rtype: Artifact</p>
 </dd></dl>
 
 <dl class="py property">
@@ -393,19 +734,21 @@ value <span class="math notranslate nohighlight">\(\mathrm{E}\left[ X \right]\)<
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.core.monte_carlo.Evaluator.confidence_level">
-<span class="sig-name descname"><span class="pre">confidence_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scalars</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.Evaluator.confidence_level" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the confidence level in a given set of scalars.</p>
-<p>Refer to Bayer <em>et al.</em><a class="footnote-reference brackets" href="#footcite-2014-bayer" id="id3">1</a> for a detailed derivation of the implement equations.</p>
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.Evaluator.generate_result">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.Evaluator.generate_result" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an evaluation result from the artifacts collected over the whole simulation grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>scalars</strong> (<em>np.ndarray</em>) – Numpy vector of scalar representations.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>List</em><em>[</em><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><em>GridDimension</em></a><em>]</em>) – The Simulation grid.</p></li>
+<li><p><strong>artifacts</strong> (<em>np.ndarray</em>) – Numpy object array whose dimensions represent grid dimensions.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If <cite>scalars</cite> is not a vector.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationResult" title="hermespy.core.monte_carlo.EvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The evaluation result.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -415,7 +758,7 @@ value <span class="math notranslate nohighlight">\(\mathrm{E}\left[ X \right]\)<
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloSample">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MonteCarloSample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloSample" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Persistent</span></code></p>
 <p>Single sample of a Monte Carlo simulation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -457,7 +800,7 @@ In other words this object represents the <cite>sample_index`th sample of the se
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloSample.artifacts">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifacts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><span class="pre">hermespy.core.monte_carlo.Artifact</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloSample.artifacts" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifacts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><span class="pre">Artifact</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloSample.artifacts" title="Permalink to this definition"></a></dt>
 <dd><p>Artifacts resulting from the sample’s evaluations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -485,7 +828,7 @@ In other words this object represents the <cite>sample_index`th sample of the se
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloSample.artifact_scalars">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifact_scalars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloSample.artifact_scalars" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">artifact_scalars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloSample.artifact_scalars" title="Permalink to this definition"></a></dt>
 <dd><p>Collect scalar artifact representations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -501,14 +844,11 @@ In other words this object represents the <cite>sample_index`th sample of the se
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridSection">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GridSection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GridSection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_evaluators</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Persistent</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>coordinates</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – Section indices within the simulation grid.</p></li>
-<li><p><strong>evaluators</strong> (<em>List</em><em>[</em><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><em>Evaluator</em></a><em>]</em>) – Configured evaluators.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – Section indices within the simulation grid.</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -540,22 +880,20 @@ In other words this object represents the <cite>sample_index`th sample of the se
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridSection.num_evaluators">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_evaluators</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.num_evaluators" title="Permalink to this definition"></a></dt>
-<dd><p>Number of configured evaluators.</p>
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridSection.samples">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample" title="hermespy.core.monte_carlo.MonteCarloSample"><span class="pre">MonteCarloSample</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.samples" title="Permalink to this definition"></a></dt>
+<dd><p>The collected evaluation samples within this grid section.</p>
+<p>Returns: List of samples.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Number of evaluators.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>int</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample" title="hermespy.core.monte_carlo.MonteCarloSample"><code class="xref py py-class docutils literal notranslate"><span class="pre">MonteCarloSample</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridSection.add_samples">
-<span class="sig-name descname"><span class="pre">add_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.add_samples" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.add_samples" title="Permalink to this definition"></a></dt>
 <dd><p>Add a new sample to this grid section collection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -572,21 +910,33 @@ In other words this object represents the <cite>sample_index`th sample of the se
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridSection.confidences">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">confidences</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.confidences" title="Permalink to this definition"></a></dt>
-<dd><p>Confidence in the scalar evaluations.</p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">confidences</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.confidences" title="Permalink to this definition"></a></dt>
+<dd><p>Confidence in the estimated evaluations.</p>
+<p>Returns: Array indicating probabilities for each evaluator</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Boolean array indicating confidence.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>np.ndarray</p>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridSection.confidence_status">
+<span class="sig-name descname"><span class="pre">confidence_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.confidence_status" title="Permalink to this definition"></a></dt>
+<dd><p>Check if each evaluator has reached its required confidence thershold.</p>
+<p>Conidence indicates that the simulation for the parameter combination this grid section represents
+may be aborted, i.e. no more samples are required.</p>
+<p>Returns: Confidence indicator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridSection.scalars">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scalars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.scalars" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scalars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridSection.scalars" title="Permalink to this definition"></a></dt>
 <dd><p>Access the scalar evaluator representations in this grid section.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -602,49 +952,85 @@ First dimension indicates the evaluator index, second dimension the sample.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.ActorRunResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ActorRunResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.ActorRunResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.SampleGrid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SampleGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.SampleGrid" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Persistent</span></code></p>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloActor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MonteCarloActor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argument_tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.monte_carlo.MO</span></code>]</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MonteCarloActor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argument_tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">MO</span></code>]</p>
 <p>Monte Carlo Simulation Actor.</p>
 <p>Actors are essentially workers running in a private process executing simulation tasks.
 The result of each individual simulation task is a simulation sample.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>argument_tuple</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">MO</span></code>), <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridDimension</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluator</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">MO</span></code>)]]]) – Object to be investigated during the simulation runtime.
+<li><p><strong>argument_tuple</strong> – Object to be investigated during the simulation runtime.
 Dimensions over which the simulation will iterate.
 Evaluators used to process the investigated object sample state.</p></li>
-<li><p><strong>section_block_size</strong> (<em>int</em>) – Number of samples generated per section block.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – Global index of the actor.</p></li>
+<li><p><strong>catch_exceptions</strong> (<em>bool</em><em>, </em><em>optional</em>) – Catch exceptions during run.
+Enabled by default.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloActor.catch_exceptions">
+<span class="sig-name descname"><span class="pre">catch_exceptions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.catch_exceptions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloActor.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_section</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.run" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_ray_trace_ctx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.run" title="Permalink to this definition"></a></dt>
 <dd><p>Run the simulation actor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>grid_section</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – Sample point index of each grid dimension.</p>
+<dd class="field-odd"><p><strong>program</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em><em>]</em>) – A list of simulation grid section indices for which to collect samples.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The generated sample object.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.core.monte_carlo.ActorRunResult" title="hermespy.core.monte_carlo.ActorRunResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActorRunResult</span></code></a></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.monte_carlo.MonteCarloSample" title="hermespy.core.monte_carlo.MonteCarloSample">MonteCarloSample</a></p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of generated <code class="xref py py-class docutils literal notranslate"><span class="pre">MonteCarloSample`s.</span>
+<span class="pre">Contains</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">entries</span> <span class="pre">as</span> <span class="pre">`program</span></code>.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloActor.sample">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.sample" title="Permalink to this definition"></a></dt>
-<dd><p>Generate a sample of the investigated object.</p>
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloActor.stage_identifiers">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stage_identifiers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.stage_identifiers" title="Permalink to this definition"></a></dt>
+<dd><p>List of simulation stage identifiers.</p>
+<p>Simulations stages will be executed in the order specified here.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The resulting sample.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>MO</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of function identifiers for simulation stage execution routines.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloActor.stage_executors">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stage_executors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloActor.stage_executors" title="Permalink to this definition"></a></dt>
+<dd><p>List of simulation stage execution callbacks.</p>
+<p>Simulations stages will be executed in the order specified here.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of function callbacks for simulation stage execution routines.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -653,14 +1039,14 @@ Evaluators used to process the investigated object sample state.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloResult">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MonteCarloResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">performance_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloResult" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.monte_carlo.MO</span></code>]</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MonteCarloResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">performance_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">MO</span></code>]</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>grid</strong> (<em>List</em><em>[</em><a class="reference internal" href="#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><em>GridDimension</em></a><em>]</em>) – Dimensions over which the simulation has swept.</p></li>
 <li><p><strong>evaluators</strong> (<em>List</em><em>[</em><a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><em>Evaluator</em></a><em>]</em>) – Evaluators used to evaluated the simulation artifacts.</p></li>
-<li><p><strong>sections</strong> (<em>np.ndarray</em>) – Evaluation results.</p></li>
+<li><p><strong>sample_grid</strong> (<a class="reference internal" href="#hermespy.core.monte_carlo.SampleGrid" title="hermespy.core.monte_carlo.SampleGrid"><em>SampleGrid</em></a>) – Grid containing evaluation artifacts collected over the grid iterations.</p></li>
 <li><p><strong>performance_time</strong> (<em>float</em>) – Time required to compute the simulation.</p></li>
 </ul>
 </dd>
@@ -668,6 +1054,20 @@ Evaluators used to process the investigated object sample state.</p></li>
 <dd class="field-even"><p><strong>ValueError</strong> – If the dimensions of <cite>samples</cite> do not match the supplied sweeping dimensions and evaluators.</p>
 </dd>
 </dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloResult.performance_time">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">performance_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloResult.performance_time" title="Permalink to this definition"></a></dt>
+<dd><p>Simulation runtime.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Simulation runtime in seconds.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloResult.plot">
 <span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloResult.plot" title="Permalink to this definition"></a></dt>
@@ -696,17 +1096,29 @@ Evaluators used to process the investigated object sample state.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarloResult.evaluation_results">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluation_results</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationResult" title="hermespy.core.monte_carlo.EvaluationResult"><span class="pre">EvaluationResult</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarloResult.evaluation_results" title="Permalink to this definition"></a></dt>
+<dd><p>Access individual evaluation results.</p>
+<p>Returns: List of evaluation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#hermespy.core.monte_carlo.EvaluationResult" title="hermespy.core.monte_carlo.EvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridDimension">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GridDimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">considered_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.GridDimension" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GridDimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">considered_objects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.GridDimension" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Single axis within the simulation grid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>considered_object</strong> (<em>Any</em>) – The considered object of this grid section.</p></li>
+<li><p><strong>considered_objects</strong> (<em>Union</em><em>[</em><em>Any</em><em>, </em><em>Tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>]</em>) – The considered objects of this grid section.</p></li>
 <li><p><strong>dimension</strong> (<em>str</em>) – Path to the attribute.</p></li>
 <li><p><strong>sample_points</strong> (<em>List</em><em>[</em><em>Any</em><em>]</em>) – Sections the grid is sampled at.</p></li>
 <li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Title of this dimension.
@@ -719,12 +1131,12 @@ If not specified, the attribute string is assumed.</p></li>
 </dd>
 </dl>
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridDimension.considered_object">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">considered_object</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridDimension.considered_object" title="Permalink to this definition"></a></dt>
-<dd><p>Considered object of this grid section.</p>
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridDimension.considered_objects">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">considered_objects</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridDimension.considered_objects" title="Permalink to this definition"></a></dt>
+<dd><p>Considered objects of this grid section.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">...</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -775,6 +1187,36 @@ If not specified, the attribute string is assumed.</p></li>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridDimension.first_impact">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">first_impact</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridDimension.first_impact" title="Permalink to this definition"></a></dt>
+<dd><p>Index of the first impacted simulation pipeline stage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Pipeline stage index.
+<cite>None</cite>, if the stage is unknown.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridDimension.last_impact">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_impact</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridDimension.last_impact" title="Permalink to this definition"></a></dt>
+<dd><p>Index of the last impacted simulation pipeline stage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Pipeline stage index.
+<cite>None</cite>, if the stage is unknown.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.GridDimension.title">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.GridDimension.title" title="Permalink to this definition"></a></dt>
 <dd><p>Title of the dimension.</p>
@@ -806,9 +1248,102 @@ If not specified, the attribute string is assumed.</p></li>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.RegisteredDimension">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RegisteredDimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_impact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_impact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.RegisteredDimension" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">property</span></code></p>
+<p>Register a class property getter as a PyMonte simulation dimension.</p>
+<p>Registered properties may specify their simulation stage impacts and therefore significantly
+increase simulation runtime in cases where computationally demanding section re-calculations
+can be reduced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>getter</strong> (<em>Callable</em>) – A callable getter function.</p></li>
+<li><p><strong>first_impact</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the first simulation stage within the simulation pipeline
+which is impacted by manipulating this property.
+If not specified, the initial stage is assumed.</p></li>
+<li><p><strong>last_impact</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the last simulation stage within the simulation pipeline
+which is impacted by manipulating this property.
+If not specified, the final stage is assumed.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.RegisteredDimension.is_registered">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_registered</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.RegisteredDimension.is_registered" title="Permalink to this definition"></a></dt>
+<dd><p>Check if any object is a registered PyMonte simulation dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>object</strong> (<em>Any</em>) – The object in question.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A boolean indicator.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.RegisteredDimension.setter">
+<span class="sig-name descname"><span class="pre">setter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_impact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_impact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.RegisteredDimension.setter" title="Permalink to this definition"></a></dt>
+<dd><p>Descriptor to obtain a copy of the property with a different setter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension" title="hermespy.core.monte_carlo.RegisteredDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.RegisteredDimension.deleter">
+<span class="sig-name descname"><span class="pre">deleter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.RegisteredDimension.deleter" title="Permalink to this definition"></a></dt>
+<dd><p>Descriptor to obtain a copy of the property with a different deleter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension" title="hermespy.core.monte_carlo.RegisteredDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.RegisteredDimension.first_impact">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">first_impact</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.RegisteredDimension.first_impact" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.RegisteredDimension.last_impact">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_impact</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.monte_carlo.RegisteredDimension.last_impact" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.dimension">
+<span class="sig-name descname"><span class="pre">dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">getter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.dimension" title="Permalink to this definition"></a></dt>
+<dd><p>Decorator to initialize a property as a registered PyMonte dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.monte_carlo.RegisteredDimension" title="hermespy.core.monte_carlo.RegisteredDimension"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarlo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MonteCarlo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.monte_carlo.MO</span></code>]</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MonteCarlo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">investigated_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ConsoleMode.INTERACTIVE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_block_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database_caching</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus_per_actor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">MO</span></code>]</p>
 <p>Grid of parameters over which to iterate the simulation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -820,11 +1355,32 @@ If not specified, the attribute string is assumed.</p></li>
 <li><p><strong>num_actors</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of dedicated actors spawned during simulation.
 By default, the number of actors will be the number of available CPU cores.</p></li>
 <li><p><strong>console</strong> (<em>Console</em><em>, </em><em>optional</em>) – Console the simulation writes to.</p></li>
+<li><p><strong>console_mode</strong> (<a class="reference internal" href="#hermespy.core.monte_carlo.ConsoleMode" title="hermespy.core.monte_carlo.ConsoleMode"><em>ConsoleMode</em></a><em>, </em><em>optional</em>) – The printing behaviour of the simulation during runtime.</p></li>
 <li><p><strong>section_block_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of samples per section block.
-10 by default, although this number is somewhat arbitrary.</p></li>
+By default, the size of the simulation grid is selected.</p></li>
+<li><p><strong>database_caching</strong> (<em>bool</em><em>, </em><em>optional</em>) – Cache simulation results in a hard drive ZODB database during runtime.
+Disabled by default.</p></li>
+<li><p><strong>ray_address</strong> (<em>str</em><em>, </em><em>optional</em>) – The address of the ray head node.
+If None is provided, the head node will be launched in this machine.</p></li>
+<li><p><strong>cpus_per_actor</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPU cores reserved per actor.
+One by default.</p></li>
+<li><p><strong>runtime_env</strong> (<em>bool</em><em>, </em><em>optional</em>) – Create a virtual environment on each host.
+Disabled by default.</p></li>
+<li><p><strong>catch_exceptions</strong> (<em>bool</em><em>, </em><em>optional</em>) – Catch exceptions occuring during simulation runtime.
+Enabled by default.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarlo.runtime_env">
+<span class="sig-name descname"><span class="pre">runtime_env</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.runtime_env" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarlo.catch_exceptions">
+<span class="sig-name descname"><span class="pre">catch_exceptions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.catch_exceptions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarlo.simulate">
 <span class="sig-name descname"><span class="pre">simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.simulate" title="Permalink to this definition"></a></dt>
@@ -855,7 +1411,7 @@ By default, the number of actors will be the number of available CPU cores.</p><
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarlo.new_dimension">
-<span class="sig-name descname"><span class="pre">new_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">considered_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.new_dimension" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">new_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dimension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_points</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.new_dimension" title="Permalink to this definition"></a></dt>
 <dd><p>Add a dimension to the simulation grid.</p>
 <p>Must be a property of the investigated object.</p>
 <dl class="field-list simple">
@@ -864,7 +1420,7 @@ By default, the number of actors will be the number of available CPU cores.</p><
 <li><p><strong>dimension</strong> (<em>str</em>) – String representation of dimension location relative to the investigated object.</p></li>
 <li><p><strong>sample_points</strong> (<em>List</em><em>[</em><em>Any</em><em>]</em>) – List points at which the dimension will be sampled into a grid.
 The type of points must be identical to the grid arguments / type.</p></li>
-<li><p><strong>considered_object</strong> (<em>Any</em><em>, </em><em>optional</em>) – The object the dimension belongs to.
+<li><p><strong>*args</strong> (<em>Tuple</em><em>[</em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – References to the object the imension belongs to.
 Resolved to the investigated object by default,
 but may be an attribute or sub-attribute of the investigated object.</p></li>
 </ul>
@@ -902,9 +1458,6 @@ but may be an attribute or sub-attribute of the investigated object.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>evaluator</strong> (<a class="reference internal" href="#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><em>Evaluator</em></a><em>[</em><em>MO</em><em>]</em>) – The evaluator to be added.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -976,7 +1529,7 @@ but may be an attribute or sub-attribute of the investigated object.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarlo.console">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">console</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">rich.console.Console</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.console" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">console</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Console</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.console" title="Permalink to this definition"></a></dt>
 <dd><p>Console the Simulation writes to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1005,12 +1558,28 @@ but may be an attribute or sub-attribute of the investigated object.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.monte_carlo.MonteCarlo.cpus_per_actor">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cpus_per_actor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.core.monte_carlo.MonteCarlo.cpus_per_actor" title="Permalink to this definition"></a></dt>
+<dd><p>Number of CPU cores reserved for each actor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Number of cores.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of cores is smaller than one</p>
+</dd>
+</dl>
 </dd></dl>
 
-</section>
-<div class="docutils container" id="id5">
+</dd></dl>
+
+<div class="docutils container" id="id4">
 <dl class="footnote brackets">
-<dt class="label" id="footcite-2014-bayer"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>,<a href="#id3">3</a>)</span></dt>
+<dt class="label" id="footcite-2014-bayer"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>)</span></dt>
 <dd><p>Christian Bayer, Håkon Hoel, Erik von Schwerin, and Raúl Tempone. On Non-Asymptotic Optimal Stopping Criteria in Monte Carlo Simulations. <em>SIAM Journal on Scientific Computing</em>, 36(2):A869–A885, 2014. <a class="reference external" href="https://doi.org/10.1137/130911433">doi:10.1137/130911433</a>.</p>
 </dd>
 </dl>
@@ -1020,14 +1589,14 @@ but may be an attribute or sub-attribute of the investigated object.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="core.html" class="btn btn-neutral float-left" title="Core Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="core.html" class="btn btn-neutral float-left" title="Core" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="core.executable.html" class="btn btn-neutral float-right" title="Executable" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcce70610>
+<jinja2.runtime.BlockReference object at 0x7f9e7a030040>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

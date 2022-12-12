@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hardware Loop Module &mdash; HermesPy  documentation</title>
+  <title>Hardware Loop &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +33,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Hardware Loop" href="hardware_loop.hardware_loop.html" />
-    <link rel="prev" title="Quadriga Channel Model" href="channel.quadriga.html" /> 
+    <link rel="prev" title="&lt;no title&gt;" href="fec.turbo.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +57,54 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Hardware Loop Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Hardware Loop</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop"><code class="docutils literal notranslate"><span class="pre">HardwareLoop</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html">Physical Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.StaticOperator"><code class="docutils literal notranslate"><span class="pre">StaticOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter"><code class="docutils literal notranslate"><span class="pre">SilentTransmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter"><code class="docutils literal notranslate"><span class="pre">SignalTransmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver"><code class="docutils literal notranslate"><span class="pre">PowerReceiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver"><code class="docutils literal notranslate"><span class="pre">SignalReceiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDeviceType"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html">Physical Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenario"><code class="docutils literal notranslate"><span class="pre">PhysicalScenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenarioType"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioDummy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html">UHD System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.system.UsrpSystem"><code class="docutils literal notranslate"><span class="pre">UsrpSystem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice"><code class="docutils literal notranslate"><span class="pre">UsrpDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html">Audio Device Binding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDeviceAntennas"><code class="docutils literal notranslate"><span class="pre">AudioDeviceAntennas</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice"><code class="docutils literal notranslate"><span class="pre">AudioDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html#hermespy.hardware_loop.audio.scenario.AudioScenario"><code class="docutils literal notranslate"><span class="pre">AudioScenario</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,9 +122,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-      <li>Hardware Loop Module</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+      <li class="breadcrumb-item active">Hardware Loop</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/hardware_loop.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -102,22 +134,187 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hardware-loop-module">
-<h1>Hardware Loop Module<a class="headerlink" href="#hardware-loop-module" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="hardware-loop">
+<h1>Hardware Loop<a class="headerlink" href="#hardware-loop" title="Permalink to this heading"></a></h1>
 <p>The hardware loop modules provides all required functionalities to transmit waveforms generated by
 HermesPy over real hardware setups such as USRPs (Universal Software-Defined Radio Peripherals).</p>
 <div align="center" class="mermaid align-center">
             classDiagram
+  ABC &lt;|-- PhysicalScenario
+  PhysicalScenario &lt;|-- AudioScenario
+  Serializable &lt;|-- AudioScenario
+  PhysicalScenario &lt;|-- PhysicalScenarioDummy
+  Pipeline &lt;|-- HardwareLoop
   PhysicalDevice &lt;|-- PhysicalDeviceDummy
-  SimulatedDevice &lt;|-- PhysicalDeviceDummy
   Device &lt;|-- PhysicalDevice
-  Executable &lt;|-- HardwareLoop
-  Scenario &lt;|-- HardwareLoop
+  Serializable &lt;|-- HardwareLoop
+  Serializable &lt;|-- UsrpDevice
+  PhysicalScenario &lt;|-- UsrpSystem
+  Serializable &lt;|-- UsrpSystem
+  Scenario &lt;|-- PhysicalScenario
+  SimulatedDevice &lt;|-- PhysicalDeviceDummy
+  PhysicalDevice &lt;|-- AudioDevice
+  PhysicalDevice &lt;|-- UsrpDevice
+  Serializable &lt;|-- AudioDevice
         </div>
-        <div class="toctree-wrapper compound">
+        <p>It consists of the base classes for hardware bindings</p>
+<div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hardware_loop.hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop"><code class="docutils literal notranslate"><span class="pre">HardwareLoop</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.yaml_tag"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.manual_triggering"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.manual_triggering</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.plot_information"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.plot_information</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.new_dimension"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.new_dimension()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_dimension"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.add_dimension()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_evaluator"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.add_evaluator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.num_evaluators"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.num_evaluators</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.run"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.run()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.replay"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.replay()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.from_yaml"><code class="docutils literal notranslate"><span class="pre">HardwareLoop.from_yaml()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html">Physical Devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.StaticOperator"><code class="docutils literal notranslate"><span class="pre">StaticOperator</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.StaticOperator.num_samples"><code class="docutils literal notranslate"><span class="pre">StaticOperator.num_samples</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.StaticOperator.sampling_rate"><code class="docutils literal notranslate"><span class="pre">StaticOperator.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.StaticOperator.frame_duration"><code class="docutils literal notranslate"><span class="pre">StaticOperator.frame_duration</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter"><code class="docutils literal notranslate"><span class="pre">SilentTransmitter</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter.transmit"><code class="docutils literal notranslate"><span class="pre">SilentTransmitter.transmit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter"><code class="docutils literal notranslate"><span class="pre">SignalTransmitter</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter.transmit"><code class="docutils literal notranslate"><span class="pre">SignalTransmitter.transmit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver"><code class="docutils literal notranslate"><span class="pre">PowerReceiver</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.sampling_rate"><code class="docutils literal notranslate"><span class="pre">PowerReceiver.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.energy"><code class="docutils literal notranslate"><span class="pre">PowerReceiver.energy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.receive"><code class="docutils literal notranslate"><span class="pre">PowerReceiver.receive()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver.frame_duration"><code class="docutils literal notranslate"><span class="pre">PowerReceiver.frame_duration</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver"><code class="docutils literal notranslate"><span class="pre">SignalReceiver</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver.energy"><code class="docutils literal notranslate"><span class="pre">SignalReceiver.energy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver.receive"><code class="docutils literal notranslate"><span class="pre">SignalReceiver.receive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.calibration_delay"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.calibration_delay</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.trigger"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.trigger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.adaptive_sampling"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.adaptive_sampling</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.lowpass_filter"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.lowpass_filter</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.lowpass_bandwidth"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.lowpass_bandwidth</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.max_receive_delay"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.max_receive_delay</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.max_sampling_rate"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.max_sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.velocity"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.velocity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.estimate_noise_power"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.estimate_noise_power()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.transmit"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.transmit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.receive"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.receive()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.calibrate"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.calibrate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice.load_calibration"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice.load_calibration()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDeviceType"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.scenario.html">Physical Device Scenario</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenario"><code class="docutils literal notranslate"><span class="pre">PhysicalScenario</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenario.receive_devices"><code class="docutils literal notranslate"><span class="pre">PhysicalScenario.receive_devices()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenarioType"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioType</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device_dummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.transmit"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.transmit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.receive"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.receive()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.trigger"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.trigger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.max_sampling_rate"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.max_sampling_rate</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioDummy</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.physical_device_dummy.html#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy.new_device"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioDummy.new_device()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>as well as specific bindings to UHD devices</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.usrp.html">UHD System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.system.UsrpSystem"><code class="docutils literal notranslate"><span class="pre">UsrpSystem</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.system.UsrpSystem.yaml_tag"><code class="docutils literal notranslate"><span class="pre">UsrpSystem.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.system.UsrpSystem.new_device"><code class="docutils literal notranslate"><span class="pre">UsrpSystem.new_device()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.system.UsrpSystem.add_device"><code class="docutils literal notranslate"><span class="pre">UsrpSystem.add_device()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice"><code class="docutils literal notranslate"><span class="pre">UsrpDevice</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.yaml_tag"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.property_blacklist"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.property_blacklist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.trigger"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.trigger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.ip"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.ip</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.port"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.port</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.tx_gain"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.tx_gain</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.rx_gain"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.rx_gain</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.sampling_rate"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.max_sampling_rate"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.max_sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice.carrier_frequency"><code class="docutils literal notranslate"><span class="pre">UsrpDevice.carrier_frequency</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>and audio devices (sound cards)</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.audio.device.html">Audio Device Binding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDeviceAntennas"><code class="docutils literal notranslate"><span class="pre">AudioDeviceAntennas</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDeviceAntennas.num_antennas"><code class="docutils literal notranslate"><span class="pre">AudioDeviceAntennas.num_antennas</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice"><code class="docutils literal notranslate"><span class="pre">AudioDevice</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AudioDevice.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.property_blacklist"><code class="docutils literal notranslate"><span class="pre">AudioDevice.property_blacklist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.playback_device"><code class="docutils literal notranslate"><span class="pre">AudioDevice.playback_device</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.record_device"><code class="docutils literal notranslate"><span class="pre">AudioDevice.record_device</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.playback_channels"><code class="docutils literal notranslate"><span class="pre">AudioDevice.playback_channels</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.record_channels"><code class="docutils literal notranslate"><span class="pre">AudioDevice.record_channels</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.carrier_frequency"><code class="docutils literal notranslate"><span class="pre">AudioDevice.carrier_frequency</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.sampling_rate"><code class="docutils literal notranslate"><span class="pre">AudioDevice.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.max_sampling_rate"><code class="docutils literal notranslate"><span class="pre">AudioDevice.max_sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice.trigger"><code class="docutils literal notranslate"><span class="pre">AudioDevice.trigger()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hardware_loop.audio.scenario.html#hermespy.hardware_loop.audio.scenario.AudioScenario"><code class="docutils literal notranslate"><span class="pre">AudioScenario</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.scenario.html#hermespy.hardware_loop.audio.scenario.AudioScenario.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AudioScenario.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.audio.scenario.html#hermespy.hardware_loop.audio.scenario.AudioScenario.new_device"><code class="docutils literal notranslate"><span class="pre">AudioScenario.new_device()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -126,14 +323,14 @@ HermesPy over real hardware setups such as USRPs (Universal Software-Defined Rad
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="channel.quadriga.html" class="btn btn-neutral float-left" title="Quadriga Channel Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fec.turbo.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="hardware_loop.hardware_loop.html" class="btn btn-neutral float-right" title="Hardware Loop" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcf1efdc0>
+<jinja2.runtime.BlockReference object at 0x7f9e7a1156a0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

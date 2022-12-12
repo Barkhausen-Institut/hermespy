@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Single-Target Radar Channel Modeling &mdash; HermesPy  documentation</title>
+  <title>Single-Target Radar Channel Modeling &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,36 +59,87 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="channel.html">Channel Modeling Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="channel.html">Channel Modeling</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.html#hermespy.channel.channel.Channel"><code class="docutils literal notranslate"><span class="pre">Channel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.AntennaCorrelation"><code class="docutils literal notranslate"><span class="pre">AntennaCorrelation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.CustomAntennaCorrelation"><code class="docutils literal notranslate"><span class="pre">CustomAntennaCorrelation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel"><code class="docutils literal notranslate"><span class="pre">MultipathFadingChannel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.DeviceType"><code class="docutils literal notranslate"><span class="pre">DeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.CorrelationType"><code class="docutils literal notranslate"><span class="pre">CorrelationType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.StandardAntennaCorrelation"><code class="docutils literal notranslate"><span class="pre">StandardAntennaCorrelation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.Cost256Type"><code class="docutils literal notranslate"><span class="pre">Cost256Type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingCost256"><code class="docutils literal notranslate"><span class="pre">MultipathFadingCost256</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.TDLType"><code class="docutils literal notranslate"><span class="pre">TDLType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL"><code class="docutils literal notranslate"><span class="pre">MultipathFading5GTDL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingExponential"><code class="docutils literal notranslate"><span class="pre">MultipathFadingExponential</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.DelayNormalization"><code class="docutils literal notranslate"><span class="pre">DelayNormalization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="docutils literal notranslate"><span class="pre">ClusterDelayLineBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine"><code class="docutils literal notranslate"><span class="pre">ClusterDelayLine</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase"><code class="docutils literal notranslate"><span class="pre">IndoorFactoryBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorFactoryLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorFactoryNoLineOfSight</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorOfficeLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorOfficeNoLineOfSight</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight"><code class="docutils literal notranslate"><span class="pre">RuralMacrocellsLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">RuralMacrocellsNoLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside"><code class="docutils literal notranslate"><span class="pre">RuralMacrocellsOutsideToInside</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight"><code class="docutils literal notranslate"><span class="pre">StreetCanyonLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.UrbanMicroCellsNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">UrbanMicroCellsNoLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">StreetCanyonNoLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside"><code class="docutils literal notranslate"><span class="pre">StreetCanyonOutsideToInside</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Single-Target Radar Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel"><code class="docutils literal notranslate"><span class="pre">RadarChannel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RadarChannel.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">RadarChannel.serialized_attributes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.target_exists"><code class="docutils literal notranslate"><span class="pre">RadarChannel.target_exists</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.attenuate"><code class="docutils literal notranslate"><span class="pre">RadarChannel.attenuate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.target_range"><code class="docutils literal notranslate"><span class="pre">RadarChannel.target_range</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.target_velocity"><code class="docutils literal notranslate"><span class="pre">RadarChannel.target_velocity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.radar_cross_section"><code class="docutils literal notranslate"><span class="pre">RadarChannel.radar_cross_section</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.target_azimuth"><code class="docutils literal notranslate"><span class="pre">RadarChannel.target_azimuth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.target_zenith"><code class="docutils literal notranslate"><span class="pre">RadarChannel.target_zenith</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.losses_db"><code class="docutils literal notranslate"><span class="pre">RadarChannel.losses_db</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.impulse_response"><code class="docutils literal notranslate"><span class="pre">RadarChannel.impulse_response()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel.ground_truth"><code class="docutils literal notranslate"><span class="pre">RadarChannel.ground_truth</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html#hermespy.channel.quadriga_channel.QuadrigaChannel"><code class="docutils literal notranslate"><span class="pre">QuadrigaChannel</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -99,10 +157,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="channel.html">Channel Modeling Module</a> &raquo;</li>
-      <li>Single-Target Radar Channel Modeling</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="channel.html">Channel Modeling</a></li>
+      <li class="breadcrumb-item active">Single-Target Radar Channel Modeling</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/channel.radar_channel.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -112,12 +170,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.channel.radar_channel"></span><section id="single-target-radar-channel-modeling">
-<h1>Single-Target Radar Channel Modeling<a class="headerlink" href="#single-target-radar-channel-modeling" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.channel.radar_channel"></span><section id="single-target-radar-channel-modeling">
+<h1>Single-Target Radar Channel Modeling<a class="headerlink" href="#single-target-radar-channel-modeling" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_cross_section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_azimuth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_zenith</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losses_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_velocity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="channel.channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.channel.Channel</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarChannel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_cross_section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_azimuth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_zenith</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losses_db</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attenuate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="channel.channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Channel</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Model of a monostatic radar channel in base-band.</p>
 <p>The radar channel is currently implemented as a single-point reflector.
 The model also considers the presence of self-interference due to leakage from transmitter to receiver.</p>
@@ -128,25 +211,27 @@ of the self-interference.</p>
 <p>Both the reflected signal and the self interference will have a random phase.</p>
 <p>Obs.:
 Currently only one transmit and receive antennas is supported.
-Only a radial velocity is considered.</p>
+Clutter not yet modelled.</p>
 <p>ToDo: Add literature references for this channel model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>target_range</strong> (<em>float</em>) – Distance from transmitter to target object</p></li>
+<li><p><strong>target_range</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – Absolute distance of target and radar sensor in meters.
+Either a specific distance or a range of minimal and maximal target distance.</p></li>
 <li><p><strong>radar_cross_section</strong> (<em>float</em>) – Radar cross section (RCS) of the assumed single-point reflector in m**2</p></li>
 <li><p><strong>target_azimuth</strong> (<em>float</em><em>, </em><em>optional</em>) – Target location azimuth angle in radians, considering spherical coordinates.
 Zero by default.</p></li>
 <li><p><strong>target_zenith</strong> (<em>float</em><em>, </em><em>optional</em>) – Target location zenith angle in radians, considering spherical coordinates.
 Zero by default.</p></li>
-<li><p><strong>target_exists</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if a target exists, False if there is only noise/clutter</p></li>
+<li><p><strong>target_exists</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if a target exists, False if there is only noise/clutter (default 0 True)</p></li>
 <li><p><strong>losses_db</strong> (<em>float</em><em>, </em><em>optional</em>) – Any additional atmospheric and/or cable losses, in dB (default = 0)</p></li>
-<li><p><strong>target_velocity</strong> (<em>float</em><em>, </em><em>optional</em>) – Radial target velocity, in m/s (default = 0)</p></li>
+<li><p><strong>velocity</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>np.ndarray</em><em>]</em><em>, </em><em>optional</em>) – Velocity as a 3D vector (or as a float), in m/s (default = 0)</p></li>
+<li><p><strong>attenuate</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, then signal will be attenuated depending on the range, RCS and losses.
+If False, then received power is equal to transmit power.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If target_range &lt; 0.
-    If radar_cross_section &lt; 0.
+<dd class="field-even"><p><strong>ValueError</strong> – If radar_cross_section &lt; 0.
     If carrier_frequency &lt;= 0.
     If more than one antenna is considered.</p>
 </dd>
@@ -158,25 +243,44 @@ Zero by default.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.yaml_matrix">
-<span class="sig-name descname"><span class="pre">yaml_matrix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.yaml_matrix" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.serialized_attributes">
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'attenuate',</span> <span class="pre">'impulse_response_interpolation',</span> <span class="pre">'target_exists'}</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.serialized_attributes" title="Permalink to this definition"></a></dt>
+<dd><p>Set of object attributes to be serialized.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.target_exists">
 <span class="sig-name descname"><span class="pre">target_exists</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.target_exists" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.attenuate">
+<span class="sig-name descname"><span class="pre">attenuate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.attenuate" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.target_range">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.target_range" title="Permalink to this definition"></a></dt>
-<dd><p>Access configured target range.</p>
+<dd><p>Absolute distance of target and radar sensor.</p>
+<p>Returns: Target range in meters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>range [m]</p>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the range is smaller than zero.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.target_velocity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target_velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.target_velocity" title="Permalink to this definition"></a></dt>
+<dd><p>Perceived target velocity.</p>
+<p>Returns: Velocity in m/s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -237,20 +341,6 @@ Zero by default.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.delay">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.delay" title="Permalink to this definition"></a></dt>
-<dd><p>Get delay from target</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>propagation delay [s]</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.impulse_response">
 <span class="sig-name descname"><span class="pre">impulse_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.impulse_response" title="Permalink to this definition"></a></dt>
@@ -275,30 +365,23 @@ channel in the base class, <cite>L = 0</cite>.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize a radar channel object to YAML.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.channel.radar_channel.RadarChannel.ground_truth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ground_truth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.channel.radar_channel.RadarChannel.ground_truth" title="Permalink to this definition"></a></dt>
+<dd><p>Set of carthesian points representing ideal point estimates from the most recent impulse response.</p>
+<p>Returns: Numpy array of dimension <span class="math notranslate nohighlight">\(N \times 3\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of detections.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel"><em>RadarChannel</em></a>) – The channel instance to be serialized.</p></li>
-</ul>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If no ground truth is available.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</section>
 
 
            </div>
@@ -311,7 +394,7 @@ The representer gets passed down the serialization tree to each node.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce17fee0>
+<jinja2.runtime.BlockReference object at 0x7f9e7ab974c0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

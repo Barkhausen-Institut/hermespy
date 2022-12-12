@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chirp Frequency Shift Keying &mdash; HermesPy  documentation</title>
+  <title>Chirp Frequency Shift Keying &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +35,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Orthogonal Frequency Division Multiplexing" href="modem.waveform_generator_ofdm.html" />
-    <link rel="prev" title="Phase Shift Keying / Quadrature Amplitude Modulation" href="modem.waveform_generator_psk_qam.html" /> 
+    <link rel="prev" title="Filtered Single Carrier Waveforms" href="modem.waveform_single_carrier.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,34 +59,153 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmissionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmission"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReceptionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReception"><code class="docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem"><code class="docutils literal notranslate"><span class="pre">BaseModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.TransmittingModem"><code class="docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.ReceivingModem"><code class="docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.DuplexModem"><code class="docutils literal notranslate"><span class="pre">DuplexModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.SimplexLink"><code class="docutils literal notranslate"><span class="pre">SimplexLink</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource"><code class="docutils literal notranslate"><span class="pre">BitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.RandomBitsSource"><code class="docutils literal notranslate"><span class="pre">RandomBitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.StreamBitsSource"><code class="docutils literal notranslate"><span class="pre">StreamBitsSource</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.SymbolType"><code class="docutils literal notranslate"><span class="pre">SymbolType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbol"><code class="docutils literal notranslate"><span class="pre">Symbol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols"><code class="docutils literal notranslate"><span class="pre">Symbols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols"><code class="docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization"><code class="docutils literal notranslate"><span class="pre">Synchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEstimation"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.IdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">IdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="docutils literal notranslate"><span class="pre">PilotWaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">PilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.UniformPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">UniformPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.CustomPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">CustomPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.MappedPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">MappedPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_psk_qam.html">Phase Shift Keying / Quadrature Amplitude Modulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.CommunicationEvaluator"><code class="docutils literal notranslate"><span class="pre">CommunicationEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BitErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BlockErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorArtifact"><code class="docutils literal notranslate"><span class="pre">FrameErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputArtifact"><code class="docutils literal notranslate"><span class="pre">ThroughputArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluation"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluator"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RootRaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RectangularWaveform"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FMCWWaveform"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_type"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.symbol_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.frame_duration"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.frame_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_duration"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.chirp_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_bandwidth"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.chirp_bandwidth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.freq_difference"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.freq_difference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.num_pilot_chirps"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.num_pilot_chirps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.num_data_chirps"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.num_data_chirps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.guard_interval"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.guard_interval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bits_per_symbol"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.bits_per_symbol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bits_per_frame"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.bits_per_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbols_per_frame"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.symbols_per_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.samples_in_chirp"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.samples_in_chirp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirps_in_frame"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.chirps_in_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_time"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.chirp_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.samples_in_frame"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.samples_in_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_energy"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.symbol_energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bit_energy"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.bit_energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.map"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modulate"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.modulate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.demodulate"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.demodulate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.unmap"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.unmap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bandwidth"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.bandwidth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.power"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.power</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modulation_order"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.modulation_order</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_precoding_support"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.symbol_precoding_support</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.sampling_rate"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.pilot_signal"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform.pilot_signal</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKSynchronization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ChirpFSKSynchronization.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKCorrelationSynchronization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ChirpFSKCorrelationSynchronization.yaml_tag</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType"><code class="docutils literal notranslate"><span class="pre">ElementType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PrefixType"><code class="docutils literal notranslate"><span class="pre">PrefixType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameElement"><code class="docutils literal notranslate"><span class="pre">FrameElement</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameResource"><code class="docutils literal notranslate"><span class="pre">FrameResource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSection"><code class="docutils literal notranslate"><span class="pre">FrameSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection"><code class="docutils literal notranslate"><span class="pre">FrameSymbolSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameGuardSection"><code class="docutils literal notranslate"><span class="pre">FrameGuardSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMWaveform"><code class="docutils literal notranslate"><span class="pre">OFDMWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection"><code class="docutils literal notranslate"><span class="pre">PilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxPilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ReferencePosition"><code class="docutils literal notranslate"><span class="pre">ReferencePosition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMMinimumMeanSquareChannelEqualization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.PGT"><code class="docutils literal notranslate"><span class="pre">PGT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">CorrelationSynchronization</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -97,10 +223,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="modem.html">Communication Module</a> &raquo;</li>
-      <li>Chirp Frequency Shift Keying</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="modem.html">Communication</a></li>
+      <li class="breadcrumb-item active">Chirp Frequency Shift Keying</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/modem.waveform_generator_chirp_fsk.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,13 +236,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.modem.waveform_generator_chirp_fsk"></span><section id="chirp-frequency-shift-keying">
-<h1>Chirp Frequency Shift Keying<a class="headerlink" href="#chirp-frequency-shift-keying" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.modem.waveform_generator_chirp_fsk"></span><section id="chirp-frequency-shift-keying">
+<h1>Chirp Frequency Shift Keying<a class="headerlink" href="#chirp-frequency-shift-keying" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WaveformGeneratorChirpFsk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chirp_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirp_bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_difference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pilot_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotWaveformGenerator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
-<p>Implements a chirp FSK waveform generator.</p>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChirpFSKWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chirp_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirp_bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_difference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_pilot_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_chirps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PilotWaveformGenerator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Chirp Frequency Shift Keying communication waveforms.</p>
 <p>Frequency Shift Keying Waveform Generator object initialization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -132,61 +283,20 @@
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ChirpFsk'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.yaml_tag" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ChirpFsk'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.yaml_tag" title="Permalink to this definition"></a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.symbol_type">
-<span class="sig-name descname"><span class="pre">symbol_type</span></span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.symbol_type" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_type">
+<span class="sig-name descname"><span class="pre">symbol_type</span></span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_type" title="Permalink to this definition"></a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize an <cite>WaveformGenerator</cite> object to YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a>) – The <cite>WaveformGeneratorChirpFsk</cite> instance to be serialized.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new <cite>WaveformGeneratorChirpFsk</cite> instance from YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>WaveformGeneratorChirpFsk</cite> serialization.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Newly created <cite>WaveformGeneratorChirpFsk</cite> instance.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator">WaveformGenerator</a></p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.frame_duration">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.frame_duration" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.frame_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.frame_duration" title="Permalink to this definition"></a></dt>
 <dd><p>Length of one data frame in seconds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -199,8 +309,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_duration">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_duration" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_duration" title="Permalink to this definition"></a></dt>
 <dd><p>Duration of a single chirp within a frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -216,8 +326,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_bandwidth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_bandwidth" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_bandwidth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_bandwidth" title="Permalink to this definition"></a></dt>
 <dd><p>Access the chirp bandwidth.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -230,8 +340,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.freq_difference">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">freq_difference</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.freq_difference" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.freq_difference">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">freq_difference</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.freq_difference" title="Permalink to this definition"></a></dt>
 <dd><p>The frequency offset between neighbouring chirp symbols.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -247,8 +357,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.num_pilot_chirps">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_pilot_chirps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.num_pilot_chirps" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.num_pilot_chirps">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_pilot_chirps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.num_pilot_chirps" title="Permalink to this definition"></a></dt>
 <dd><p>Access the number of pilot chirps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -261,8 +371,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.num_data_chirps">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_data_chirps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.num_data_chirps" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.num_data_chirps">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_data_chirps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.num_data_chirps" title="Permalink to this definition"></a></dt>
 <dd><p>Access the number of data chirps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -275,8 +385,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.guard_interval">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">guard_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.guard_interval" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.guard_interval">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">guard_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.guard_interval" title="Permalink to this definition"></a></dt>
 <dd><p>Access the guard interval.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -289,8 +399,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bits_per_symbol">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits_per_symbol</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bits_per_symbol" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bits_per_symbol">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits_per_symbol</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bits_per_symbol" title="Permalink to this definition"></a></dt>
 <dd><p>The number of bits per generated symbol.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -303,8 +413,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bits_per_frame">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bits_per_frame" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bits_per_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bits_per_frame" title="Permalink to this definition"></a></dt>
 <dd><p>Number of bits required to generate a single data frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -317,8 +427,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.symbols_per_frame">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbols_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.symbols_per_frame" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbols_per_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbols_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbols_per_frame" title="Permalink to this definition"></a></dt>
 <dd><p>Number of dat symbols per transmitted frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -331,8 +441,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.samples_in_chirp">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">samples_in_chirp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.samples_in_chirp" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.samples_in_chirp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">samples_in_chirp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.samples_in_chirp" title="Permalink to this definition"></a></dt>
 <dd><p>The number of discrete samples per generated chirp.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -345,8 +455,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirps_in_frame">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirps_in_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirps_in_frame" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirps_in_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirps_in_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirps_in_frame" title="Permalink to this definition"></a></dt>
 <dd><p>The number of chirps per generated frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -359,8 +469,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_time">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.chirp_time" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_time">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.chirp_time" title="Permalink to this definition"></a></dt>
 <dd><p>Chirp timestamps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -373,8 +483,8 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.samples_in_frame">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">samples_in_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.samples_in_frame" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.samples_in_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">samples_in_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.samples_in_frame" title="Permalink to this definition"></a></dt>
 <dd><p>The number of discrete samples per generated frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -387,10 +497,10 @@ The representer gets passed down the serialization tree to each node.</p></li>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.symbol_energy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbol_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.symbol_energy" title="Permalink to this definition"></a></dt>
-<dd><p>The theoretical average symbol (discrete-time) energy of the modulated signal.</p>
-<p>Energy of signal x[k] is defined as sum{<a href="#id1"><span class="problematic" id="id2">|</span></a>x[k]}^2
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbol_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_energy" title="Permalink to this definition"></a></dt>
+<dd><p>The theoretical average symbol (discrete-time) energy of the modulated baseband_signal.</p>
+<p>Energy of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum{|x[k]}^2\)</span>
 Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -403,8 +513,8 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bit_energy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bit_energy" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bit_energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bit_energy" title="Permalink to this definition"></a></dt>
 <dd><p>Theoretical average bit energy of the modulated signal.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -417,8 +527,8 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.map">
-<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.map" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.map" title="Permalink to this definition"></a></dt>
 <dd><p>Map a stream of bits to data symbols.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -434,8 +544,8 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulate">
-<span class="sig-name descname"><span class="pre">modulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulate" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modulate">
+<span class="sig-name descname"><span class="pre">modulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modulate" title="Permalink to this definition"></a></dt>
 <dd><p>Modulate a stream of data symbols to a base-band signal containing a single data frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -451,30 +561,25 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.demodulate">
-<span class="sig-name descname"><span class="pre">demodulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseband_signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_variance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.demodulate" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.demodulate">
+<span class="sig-name descname"><span class="pre">demodulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">baseband_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.demodulate" title="Permalink to this definition"></a></dt>
 <dd><p>Demodulate a base-band signal stream to data symbols.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex-valued base-band samples of a single communication frame.</p></li>
-<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state information of a single communication frame.</p></li>
-<li><p><strong>noise_variance</strong> (<em>float</em>) – Variance of the thermal noise introduced during reception.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex-valued base-band samples of a single communication frame.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple of 3 vectors of equal-length first dimension <cite>num_symbols</cite>.
-The demodulated data symbols, their channel estimates and their noise variance.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(np.ndarray, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>, np.ndarray)</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The demodulated communication symbols</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.unmap">
-<span class="sig-name descname"><span class="pre">unmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.unmap" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.unmap">
+<span class="sig-name descname"><span class="pre">unmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.unmap" title="Permalink to this definition"></a></dt>
 <dd><p>Map a stream of data symbols to data bits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -491,8 +596,8 @@ In general, L is greater or equal to K.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bandwidth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.bandwidth" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bandwidth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.bandwidth" title="Permalink to this definition"></a></dt>
 <dd><p>Bandwidth of the frame generated by this generator.</p>
 <p>Used to estimate the minimal sampling frequency required to adequately simulate the scenario.</p>
 <dl class="field-list simple">
@@ -506,10 +611,10 @@ In general, L is greater or equal to K.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.power">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.power" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.power" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the theoretical average symbol (unitless) power,</p>
-<p>Power of baseband_signal x[k] is defined as sum_{k=1}^N{<a href="#id3"><span class="problematic" id="id4">|x[k]|</span></a>}^2 / N
+<p>Power of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum_{k=1}^N{|x[k]|}^2 / N\)</span>
 Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -519,8 +624,8 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulation_order">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modulation_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.modulation_order" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modulation_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modulation_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modulation_order" title="Permalink to this definition"></a></dt>
 <dd><p>Access the modulation order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -533,8 +638,20 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.sampling_rate">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.sampling_rate" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_precoding_support">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbol_precoding_support</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.symbol_precoding_support" title="Permalink to this definition"></a></dt>
+<dd><p>Flag indicating if this waveforms supports symbol precodings.</p>
+<p>Returns: Boolean support flag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.sampling_rate" title="Permalink to this definition"></a></dt>
 <dd><p>Rate at which the waveform generator signal is internally sampled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -547,8 +664,8 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot_signal">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk.pilot_signal" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.pilot_signal">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.pilot_signal" title="Permalink to this definition"></a></dt>
 <dd><p>Samples of the frame’s pilot section.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -563,47 +680,58 @@ Power is the average power of the data part of the transmitted frame, i.e., bit 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFskSynchronization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChirpFskSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFskSynchronization" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.Synchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk" title="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk</span></code></a>]</p>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChirpFSKSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">Synchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform" title="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChirpFSKWaveform</span></code></a>], <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Synchronization for chirp-based frequency shift keying communication waveforms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this synchronization routine is attached to.</p>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ChirpFsk-Synchronization'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFskCorrelationSynchronization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChirpFskCorrelationSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFskCorrelationSynchronization" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" title="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk" title="hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator_chirp_fsk.WaveformGeneratorChirpFsk</span></code></a>]</p>
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChirpFSKCorrelationSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" title="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrelationSynchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform" title="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChirpFSKWaveform</span></code></a>], <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Correlation-based clock-synchronization for Chirp-FSK waveforms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Correlation threshold at which a pilot signal is detected.</p></li>
 <li><p><strong>guard_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Guard ratio of frame duration.</p></li>
-<li><p><strong>*args</strong> – Synchronization base class initialization parameters.</p></li>
+<li><p><strong>*args</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – Synchronization base class initialization parameters.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ChirpFsk-Correlation'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
 </dd></dl>
 
-</section>
+</dd></dl>
+
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="modem.waveform_generator_psk_qam.html" class="btn btn-neutral float-left" title="Phase Shift Keying / Quadrature Amplitude Modulation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modem.waveform_single_carrier.html" class="btn btn-neutral float-left" title="Filtered Single Carrier Waveforms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="modem.waveform_generator_ofdm.html" class="btn btn-neutral float-right" title="Orthogonal Frequency Division Multiplexing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcd0cc640>
+<jinja2.runtime.BlockReference object at 0x7f9e7db32a90>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Conventional Beamforming &mdash; HermesPy  documentation</title>
+  <title>Conventional Beamformer &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -27,7 +34,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Radar Module" href="radar.html" />
+    <link rel="next" title="Capon Beamformer" href="beamforming.capon.html" />
     <link rel="prev" title="Beamformer" href="beamforming.beamformer.html" /> 
 </head>
 
@@ -40,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +59,49 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="beamforming.html">Beamforming Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="beamforming.html">Beamforming</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Conventional Beamforming</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode"><code class="docutils literal notranslate"><span class="pre">FocusMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.BeamformerBase"><code class="docutils literal notranslate"><span class="pre">BeamformerBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer"><code class="docutils literal notranslate"><span class="pre">TransmitBeamformer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer"><code class="docutils literal notranslate"><span class="pre">ReceiveBeamformer</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Conventional Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_focus_angles"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer.num_receive_focus_angles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_input_streams"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer.num_receive_input_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_output_streams"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer.num_receive_output_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_transmit_focus_angles"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer.num_transmit_focus_angles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_transmit_output_streams"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer.num_transmit_output_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_transmit_input_streams"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer.num_transmit_input_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer._encode"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer._encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.beamforming.conventional.ConventionalBeamformer._decode"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer._decode()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html#hermespy.beamforming.capon.CaponBeamformer"><code class="docutils literal notranslate"><span class="pre">CaponBeamformer</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,10 +119,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="beamforming.html">Beamforming Module</a> &raquo;</li>
-      <li>Conventional Beamforming</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="beamforming.html">Beamforming</a></li>
+      <li class="breadcrumb-item active">Conventional Beamformer</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/beamforming.conventional.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,14 +132,55 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.beamforming.conventional"></span><section id="conventional-beamforming">
-<h1>Conventional Beamforming<a class="headerlink" href="#conventional-beamforming" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.beamforming.conventional"></span><section id="conventional-beamformer">
+<h1>Conventional Beamformer<a class="headerlink" href="#conventional-beamformer" title="Permalink to this heading"></a></h1>
 <p>Also refererd to as Delay and Sum Beamformer.</p>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.beamforming.conventional.ConventionalBeamformer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConventionalBeamformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.beamforming.conventional.ConventionalBeamformer" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a>, <a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer" title="hermespy.beamforming.beamformer.TransmitBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.beamforming.beamformer.TransmitBeamformer</span></code></a>, <a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer" title="hermespy.beamforming.beamformer.ReceiveBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.beamforming.beamformer.ReceiveBeamformer</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer" title="hermespy.beamforming.beamformer.TransmitBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitBeamformer</span></code></a>, <a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer" title="hermespy.beamforming.beamformer.ReceiveBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveBeamformer</span></code></a></p>
 <p>Conventional delay and sum beamforming.</p>
+<p>The Bartlett<a class="footnote-reference brackets" href="#footcite-1950-bartlett" id="id1">1</a> beamformer,
+also known as conventional or delay and sum beamformer,
+maximizes the power transmitted or received towards a single direction of interest
+<span class="math notranslate nohighlight">\((\theta, \phi)\)</span>, where <span class="math notranslate nohighlight">\(\theta\)</span> is the zenith and <span class="math notranslate nohighlight">\(\phi\)</span>  is the azimuth angle of interest in spherical coordinates, respectively.</p>
+<p>Let <span class="math notranslate nohighlight">\(\mathbf{X} \in \mathbb{C}^{N \times T}\)</span> be the the matrix of <span class="math notranslate nohighlight">\(T\)</span> time-discrete samples acquired by an antenna arrary featuring <span class="math notranslate nohighlight">\(N\)</span> antennas.
+The antenna array’s response towards a source within its far field emitting a signal of small relative bandwidth is <span class="math notranslate nohighlight">\(\mathbf{a}(\theta, \phi) \in \mathbb{C}^{N}\)</span>.
+Then</p>
+<div class="math notranslate nohighlight">
+\[\hat{P}_{\mathrm{Capon}}(\theta, \phi) = \mathbf{a}^\mathsf{H}(\theta, \phi)  \mathbf{X} \mathbf{X}^\mathsf{H} \mathbf{a}(\theta, \phi)\]</div>
+<p>is the Conventional beamformer’s power estimate     with</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{w}(\theta, \phi) = \mathbf{a}(\theta, \phi)\]</div>
+<p>being the beamforming weights to steer the sensor array’s receive characteristics towards direction <span class="math notranslate nohighlight">\((\theta, \phi)\)</span>, so that</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{B}\lbrace \mathbf{X} \rbrace = \mathbf{w}^\mathsf{H}(\theta, \phi) \mathbf{X}\]</div>
+<p>is the implemented beamforming equation.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.beamforming.conventional.ConventionalBeamformer.yaml_tag">
 <span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ConventionalBeamformer'</span></em><a class="headerlink" href="#hermespy.beamforming.conventional.ConventionalBeamformer.yaml_tag" title="Permalink to this definition"></a></dt>
@@ -120,13 +190,13 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_focus_angles">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_focus_angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_focus_angles" title="Permalink to this definition"></a></dt>
-<dd><p>Number of required transmit focus angles.</p>
+<dd><p>Number of required receive focus angles.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Number of focus angles.</p>
+<dd class="field-even"><p>Number of focus angles <span class="math notranslate nohighlight">\(F\)</span>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -135,12 +205,14 @@
 <dt class="sig sig-object py" id="hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_input_streams">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_input_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_input_streams" title="Permalink to this definition"></a></dt>
 <dd><p>Number of input streams required by this beamformer.</p>
+<p>Dimension <span class="math notranslate nohighlight">\(N\)</span> of the input sample matrix
+<span class="math notranslate nohighlight">\(\mathbf{X} \in \mathbb{C}^{N \times T}\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Number of input streams.</p>
+<dd class="field-even"><p>Number of input streams <span class="math notranslate nohighlight">\(N\)</span>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -149,12 +221,14 @@
 <dt class="sig sig-object py" id="hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_output_streams">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_output_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.beamforming.conventional.ConventionalBeamformer.num_receive_output_streams" title="Permalink to this definition"></a></dt>
 <dd><p>Number of output streams generated by this beamformer.</p>
+<p>Dimension <span class="math notranslate nohighlight">\(M\)</span> of the output sample matrix
+<span class="math notranslate nohighlight">\(\mathbf{Y} \in \mathbb{C}^{M \times T}\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Number of output streams.</p>
+<dd class="field-even"><p>Number of output streams <span class="math notranslate nohighlight">\(M\)</span>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -201,22 +275,78 @@
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.beamforming.conventional.ConventionalBeamformer._encode">
+<span class="sig-name descname"><span class="pre">_encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus_angles</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.beamforming.conventional.ConventionalBeamformer._encode" title="Permalink to this definition"></a></dt>
+<dd><p>Encode signal streams for transmit beamforming.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>np.ndarray</em>) – Signal samples, first dimension being the number of transmit antennas, second the number of samples.</p></li>
+<li><p><strong>carrier_frequency</strong> (<em>float</em>) – The assumed carrier central frequency of the samples.</p></li>
+<li><p><strong>focus_angles</strong> (<em>np.ndarray</em>) – Focused angles of departure in radians.
+Two-dimensional numpy array with the first dimension representing the number of focus points
+and the second dimension of magnitude two being the azimuth and elevation angles, respectively.</p></li>
+<li><p><strong>azimuth</strong> (<em>float</em>) – Azimuth angle of departure in Radians.</p></li>
+<li><p><strong>zenith</strong> (<em>float</em>) – Zenith angle of departure in Radians.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
-</section>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.beamforming.conventional.ConventionalBeamformer._decode">
+<span class="sig-name descname"><span class="pre">_decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angles</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.beamforming.conventional.ConventionalBeamformer._decode" title="Permalink to this definition"></a></dt>
+<dd><p>Decode signal streams for receive beamforming.</p>
+<p>This method is called as a subroutine during <code class="xref py py-meth docutils literal notranslate"><span class="pre">receive()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">probe()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>np.ndarray</em>) – Signal samples, first dimension being the number of signal streams <span class="math notranslate nohighlight">\(N\)</span>, second the number of samples <span class="math notranslate nohighlight">\(T\)</span>.</p></li>
+<li><p><strong>carrier_frequency</strong> (<em>float</em>) – The assumed carrier central frequency of the samples <span class="math notranslate nohighlight">\(f_\mathrm{c}\)</span>.</p></li>
+<li><p><strong>angles</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>) – (np.ndarray):
+Spherical coordinate system angles of arrival in radians.
+A three-dimensional numpy array with the first dimension representing the number of angles,
+the second dimension of magnitude number of focus points <span class="math notranslate nohighlight">\(F\)</span>,
+and the third dimension containing the azimuth and zenith angle in radians, respectively.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Stream samples of the focused signal towards all focus points.
+A three-dimensional numpy array with the first dimension representing the number of focus points,
+the second dimension the number of returned streams and the third dimension the amount of samples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="docutils container" id="id2">
+<dl class="footnote brackets">
+<dt class="label" id="footcite-1950-bartlett"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>M. S. Bartlett. Periodogram analysis and continuous spectra. <em>Biometrika</em>, 37(1/2):1–16, 1950. URL: <a class="reference external" href="http://www.jstor.org/stable/2332141">http://www.jstor.org/stable/2332141</a> (visited on 2022-06-28).</p>
+</dd>
+</dl>
+</div>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="beamforming.beamformer.html" class="btn btn-neutral float-left" title="Beamformer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="radar.html" class="btn btn-neutral float-right" title="Radar Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="beamforming.capon.html" class="btn btn-neutral float-right" title="Capon Beamformer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce50e0a0>
+<jinja2.runtime.BlockReference object at 0x7f9e7af50490>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

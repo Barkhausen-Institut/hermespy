@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3GPP Urban Macrocells Model &mdash; HermesPy  documentation</title>
+  <title>3GPP Urban Macrocells Model &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,8 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -41,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -53,36 +59,159 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="channel.html">Channel Modeling Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="channel.html">Channel Modeling</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.html#hermespy.channel.channel.Channel"><code class="docutils literal notranslate"><span class="pre">Channel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.AntennaCorrelation"><code class="docutils literal notranslate"><span class="pre">AntennaCorrelation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.CustomAntennaCorrelation"><code class="docutils literal notranslate"><span class="pre">CustomAntennaCorrelation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html#hermespy.channel.multipath_fading_channel.MultipathFadingChannel"><code class="docutils literal notranslate"><span class="pre">MultipathFadingChannel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.DeviceType"><code class="docutils literal notranslate"><span class="pre">DeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.CorrelationType"><code class="docutils literal notranslate"><span class="pre">CorrelationType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.StandardAntennaCorrelation"><code class="docutils literal notranslate"><span class="pre">StandardAntennaCorrelation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.Cost256Type"><code class="docutils literal notranslate"><span class="pre">Cost256Type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingCost256"><code class="docutils literal notranslate"><span class="pre">MultipathFadingCost256</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.TDLType"><code class="docutils literal notranslate"><span class="pre">TDLType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL"><code class="docutils literal notranslate"><span class="pre">MultipathFading5GTDL</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingExponential"><code class="docutils literal notranslate"><span class="pre">MultipathFadingExponential</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.DelayNormalization"><code class="docutils literal notranslate"><span class="pre">DelayNormalization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="docutils literal notranslate"><span class="pre">ClusterDelayLineBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLine"><code class="docutils literal notranslate"><span class="pre">ClusterDelayLine</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryBase"><code class="docutils literal notranslate"><span class="pre">IndoorFactoryBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorFactoryLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorFactoryNoLineOfSight</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorOfficeLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">IndoorOfficeNoLineOfSight</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight"><code class="docutils literal notranslate"><span class="pre">RuralMacrocellsLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">RuralMacrocellsNoLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside"><code class="docutils literal notranslate"><span class="pre">RuralMacrocellsOutsideToInside</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight"><code class="docutils literal notranslate"><span class="pre">StreetCanyonLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.UrbanMicroCellsNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">UrbanMicroCellsNoLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">StreetCanyonNoLineOfSight</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside"><code class="docutils literal notranslate"><span class="pre">StreetCanyonOutsideToInside</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">3GPP Urban Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.yaml_tag"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.line_of_sight"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.line_of_sight</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.delay_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.delay_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aod_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.aod_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aod_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.aod_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aoa_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.aoa_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.aoa_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.aoa_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zoa_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.zoa_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zoa_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.zoa_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zod_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.zod_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zod_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.zod_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.zod_offset"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.zod_offset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.rice_factor_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.rice_factor_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.rice_factor_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.rice_factor_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_scaling"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.delay_scaling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cross_polarization_power_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.cross_polarization_power_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cross_polarization_power_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.cross_polarization_power_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.num_clusters"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.num_clusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.num_rays"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.num_rays</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_delay_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.cluster_delay_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_aod_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.cluster_aod_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_aoa_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.cluster_aoa_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_zoa_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.cluster_zoa_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.cluster_shadowing_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.cluster_shadowing_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.delay_normalization"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight.delay_normalization</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.zod_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase.zod_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.zod_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase.zod_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.zod_offset"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase.zod_offset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase.delay_normalization"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase.delay_normalization</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.yaml_tag"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.line_of_sight"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.line_of_sight</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.delay_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.delay_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aod_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.aod_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aod_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.aod_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aoa_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.aoa_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.aoa_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.aoa_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.zoa_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.zoa_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.zoa_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.zoa_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.rice_factor_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.rice_factor_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.rice_factor_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.rice_factor_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_scaling"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.delay_scaling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cross_polarization_power_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.cross_polarization_power_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cross_polarization_power_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.cross_polarization_power_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.num_clusters"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.num_clusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.num_rays"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.num_rays</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_delay_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.cluster_delay_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_aod_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.cluster_aod_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_aoa_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.cluster_aoa_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_zoa_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.cluster_zoa_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.cluster_shadowing_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.cluster_shadowing_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.delay_normalization"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.delay_normalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.impulse_response_interpolation"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight.impulse_response_interpolation</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.yaml_tag"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.line_of_sight"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.line_of_sight</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.delay_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.delay_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aod_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.aod_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aod_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.aod_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aoa_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.aoa_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.aoa_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.aoa_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.zoa_spread_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.zoa_spread_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.zoa_spread_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.zoa_spread_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.rice_factor_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.rice_factor_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.rice_factor_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.rice_factor_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_scaling"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.delay_scaling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cross_polarization_power_mean"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.cross_polarization_power_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cross_polarization_power_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.cross_polarization_power_std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.num_clusters"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.num_clusters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.num_rays"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.num_rays</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_delay_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.cluster_delay_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_aod_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.cluster_aod_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_aoa_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.cluster_aoa_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_zoa_spread"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.cluster_zoa_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.delay_normalization"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.delay_normalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.impulse_response_interpolation"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.impulse_response_interpolation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.cluster_shadowing_std"><code class="docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside.cluster_shadowing_std</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel"><code class="docutils literal notranslate"><span class="pre">RadarChannel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html#hermespy.channel.quadriga_channel.QuadrigaChannel"><code class="docutils literal notranslate"><span class="pre">QuadrigaChannel</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -100,10 +229,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="channel.html">Channel Modeling Module</a> &raquo;</li>
-      <li>3GPP Urban Macrocells Model</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="channel.html">Channel Modeling</a></li>
+      <li class="breadcrumb-item active">3GPP Urban Macrocells Model</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/channel.cluster_delay_line_urban_macrocells.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -113,13 +242,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.channel.cluster_delay_line_urban_macrocells"></span><section id="gpp-urban-macrocells-model">
-<h1>3GPP Urban Macrocells Model<a class="headerlink" href="#gpp-urban-macrocells-model" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.channel.cluster_delay_line_urban_macrocells"></span><section id="gpp-urban-macrocells-model">
+<h1>3GPP Urban Macrocells Model<a class="headerlink" href="#gpp-urban-macrocells-model" title="Permalink to this heading"></a></h1>
 <p>Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.</p>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UrbanMacrocellsLineOfSight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delay_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DelayNormalization.ZERO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_lines.ClusterDelayLineBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDelayLineBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -562,7 +716,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UrbanMacrocellsNoLineOfSightBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delay_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DelayNormalization.ZERO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_lines.ClusterDelayLineBase</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="channel.cluster_delay_lines.html#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDelayLineBase</span></code></a></p>
 <p>Shared Parameters for all Urban Macrocells No Line of Sight Models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -630,7 +784,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UrbanMacrocellsNoLineOfSight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delay_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DelayNormalization.ZERO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1028,7 +1182,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UrbanMacrocellsOutsideToInside</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delay_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DelayNormalization.ZERO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSightBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSightBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1423,7 +1577,6 @@
 
 </dd></dl>
 
-</section>
 
 
            </div>
@@ -1436,7 +1589,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce2eea60>
+<jinja2.runtime.BlockReference object at 0x7f9e7bb91e80>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wireless Scenario &mdash; HermesPy  documentation</title>
+  <title>Wireless Scenario &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,34 +57,131 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ConsoleMode"><code class="docutils literal notranslate"><span class="pre">ConsoleMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ArtifactTemplate"><code class="docutils literal notranslate"><span class="pre">ArtifactTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationTemplate"><code class="docutils literal notranslate"><span class="pre">EvaluationTemplate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationResult"><code class="docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ScalarEvaluationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloSample"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridSection"><code class="docutils literal notranslate"><span class="pre">GridSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ActorRunResult"><code class="docutils literal notranslate"><span class="pre">ActorRunResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.SampleGrid"><code class="docutils literal notranslate"><span class="pre">SampleGrid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloActor"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloResult"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension"><code class="docutils literal notranslate"><span class="pre">GridDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.RegisteredDimension"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.dimension"><code class="docutils literal notranslate"><span class="pre">dimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo"><code class="docutils literal notranslate"><span class="pre">MonteCarlo</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Verbosity"><code class="docutils literal notranslate"><span class="pre">Verbosity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable"><code class="docutils literal notranslate"><span class="pre">Serializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableEnum"><code class="docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.SerializableArray"><code class="docutils literal notranslate"><span class="pre">SerializableArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.Factory"><code class="docutils literal notranslate"><span class="pre">Factory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html#hermespy.core.factory.HDFSerializable"><code class="docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType"><code class="docutils literal notranslate"><span class="pre">SNRType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.html">Device Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError"><code class="docutils literal notranslate"><span class="pre">FloatingError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SlotType"><code class="docutils literal notranslate"><span class="pre">SlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorType"><code class="docutils literal notranslate"><span class="pre">OperatorType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperationResult"><code class="docutils literal notranslate"><span class="pre">OperationResult</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmission"><code class="docutils literal notranslate"><span class="pre">Transmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Reception"><code class="docutils literal notranslate"><span class="pre">Reception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceTransmission"><code class="docutils literal notranslate"><span class="pre">DeviceTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceReception"><code class="docutils literal notranslate"><span class="pre">DeviceReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SecondSlotType"><code class="docutils literal notranslate"><span class="pre">SecondSlotType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.MixingOperator"><code class="docutils literal notranslate"><span class="pre">MixingOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Receiver"><code class="docutils literal notranslate"><span class="pre">Receiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorSlot"><code class="docutils literal notranslate"><span class="pre">OperatorSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter"><code class="docutils literal notranslate"><span class="pre">Transmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.TransmitterSlot"><code class="docutils literal notranslate"><span class="pre">TransmitterSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.ReceiverSlot"><code class="docutils literal notranslate"><span class="pre">ReceiverSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.UnsupportedSlot"><code class="docutils literal notranslate"><span class="pre">UnsupportedSlot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceType"><code class="docutils literal notranslate"><span class="pre">DeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator"><code class="docutils literal notranslate"><span class="pre">DuplexOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html#hermespy.core.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode"><code class="docutils literal notranslate"><span class="pre">RandomNode</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.scenario.ScenarioMode"><code class="docutils literal notranslate"><span class="pre">ScenarioMode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.ScenarioMode.DEFAULT"><code class="docutils literal notranslate"><span class="pre">ScenarioMode.DEFAULT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.ScenarioMode.RECORD"><code class="docutils literal notranslate"><span class="pre">ScenarioMode.RECORD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.ScenarioMode.REPLAY"><code class="docutils literal notranslate"><span class="pre">ScenarioMode.REPLAY</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.scenario.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.mode"><code class="docutils literal notranslate"><span class="pre">Scenario.mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.add_device"><code class="docutils literal notranslate"><span class="pre">Scenario.add_device()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.new_device"><code class="docutils literal notranslate"><span class="pre">Scenario.new_device()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.device_registered"><code class="docutils literal notranslate"><span class="pre">Scenario.device_registered()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.devices"><code class="docutils literal notranslate"><span class="pre">Scenario.devices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.num_devices"><code class="docutils literal notranslate"><span class="pre">Scenario.num_devices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.transmitters"><code class="docutils literal notranslate"><span class="pre">Scenario.transmitters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.receivers"><code class="docutils literal notranslate"><span class="pre">Scenario.receivers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.num_receivers"><code class="docutils literal notranslate"><span class="pre">Scenario.num_receivers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.num_transmitters"><code class="docutils literal notranslate"><span class="pre">Scenario.num_transmitters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.operators"><code class="docutils literal notranslate"><span class="pre">Scenario.operators</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.num_operators"><code class="docutils literal notranslate"><span class="pre">Scenario.num_operators</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.drop_duration"><code class="docutils literal notranslate"><span class="pre">Scenario.drop_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.record"><code class="docutils literal notranslate"><span class="pre">Scenario.record()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.replay"><code class="docutils literal notranslate"><span class="pre">Scenario.replay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.stop"><code class="docutils literal notranslate"><span class="pre">Scenario.stop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.transmit_operators"><code class="docutils literal notranslate"><span class="pre">Scenario.transmit_operators()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.transmit_devices"><code class="docutils literal notranslate"><span class="pre">Scenario.transmit_devices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.receive_devices"><code class="docutils literal notranslate"><span class="pre">Scenario.receive_devices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.receive_operators"><code class="docutils literal notranslate"><span class="pre">Scenario.receive_operators()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.scenario.Scenario.drop"><code class="docutils literal notranslate"><span class="pre">Scenario.drop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.scenario.ScenarioType"><code class="docutils literal notranslate"><span class="pre">ScenarioType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal"><code class="docutils literal notranslate"><span class="pre">Signal</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateFormat"><code class="docutils literal notranslate"><span class="pre">ChannelStateFormat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateDimension"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Antenna"><code class="docutils literal notranslate"><span class="pre">Antenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.IdealAntenna"><code class="docutils literal notranslate"><span class="pre">IdealAntenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.PatchAntenna"><code class="docutils literal notranslate"><span class="pre">PatchAntenna</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Dipole"><code class="docutils literal notranslate"><span class="pre">Dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArrayBase"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.UniformArray"><code class="docutils literal notranslate"><span class="pre">UniformArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArray"><code class="docutils literal notranslate"><span class="pre">AntennaArray</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -97,10 +199,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="core.html">Core Module</a> &raquo;</li>
-      <li>Wireless Scenario</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="core.html">Core</a></li>
+      <li class="breadcrumb-item active">Wireless Scenario</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/core.scenario.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,12 +212,65 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.core.scenario"></span><section id="wireless-scenario">
-<h1>Wireless Scenario<a class="headerlink" href="#wireless-scenario" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.core.scenario"></span><section id="wireless-scenario">
+<h1>Wireless Scenario<a class="headerlink" href="#wireless-scenario" title="Permalink to this heading"></a></h1>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.scenario.ScenarioMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ScenarioMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.ScenarioMode" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
+<p>Current scenario mode.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.scenario.ScenarioMode.DEFAULT">
+<span class="sig-name descname"><span class="pre">DEFAULT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.core.scenario.ScenarioMode.DEFAULT" title="Permalink to this definition"></a></dt>
+<dd><p>Default scenario state.</p>
+<p>For configuration and generating drops.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.scenario.ScenarioMode.RECORD">
+<span class="sig-name descname"><span class="pre">RECORD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.core.scenario.ScenarioMode.RECORD" title="Permalink to this definition"></a></dt>
+<dd><p>Recording scenario state.</p>
+<p>For recording datasets.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.core.scenario.ScenarioMode.REPLAY">
+<span class="sig-name descname"><span class="pre">REPLAY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.core.scenario.ScenarioMode.REPLAY" title="Permalink to this definition"></a></dt>
+<dd><p>Replay scenario state.</p>
+<p>For replaying already recorded datasets.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.scenario.Scenario">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Scenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.DeviceType" title="hermespy.core.device.DeviceType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.core.device.DeviceType</span></code></a>]</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomNode</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.DeviceType" title="hermespy.core.device.DeviceType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeviceType</span></code></a>]</p>
 <p>A simulation scenario.</p>
 <p>Scenarios consist of several devices transmitting and receiving electromagnetic signals.
 Each device can be operated by multiple operators simultaneously.</p>
@@ -124,19 +279,54 @@ Each device can be operated by multiple operators simultaneously.</p>
 <dd class="field-odd"><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p>
 </dd>
 </dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.mode">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.core.scenario.ScenarioMode" title="hermespy.core.scenario.ScenarioMode"><span class="pre">ScenarioMode</span></a></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.mode" title="Permalink to this definition"></a></dt>
+<dd><p>Current operating mode of the scenario.</p>
+<p>Returns: Operating mode flag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.scenario.ScenarioMode" title="hermespy.core.scenario.ScenarioMode"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScenarioMode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.add_device">
 <span class="sig-name descname"><span class="pre">add_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.add_device" title="Permalink to this definition"></a></dt>
-<dd><p>Add new device to scenario.</p>
+<dd><p>Add a new device to the scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>device</strong> (<em>DeviceType</em>) – New device to be added to the scenario.</p>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.DeviceType" title="hermespy.channel.multipath_fading_templates.DeviceType"><em>DeviceType</em></a>) – New device to be added to the scenario.</p>
 </dd>
-</dl>
-<p>Raises <cite>ValueError</cite> if the device already exists.</p>
-<dl class="field-list simple">
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the device already exists.</p></li>
+<li><p><strong>RuntimeError</strong> – If the scenario is not in default mode.</p></li>
+</ul>
+</dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.new_device">
+<span class="sig-name descname"><span class="pre">new_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.new_device" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new device to the scenario.</p>
+<p>Convenience function pointing to <a class="reference internal" href="#hermespy.core.scenario.Scenario.new_device" title="hermespy.core.scenario.Scenario.new_device"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hermespy.core.scenario.Scenario.new_device()</span></code></a>.</p>
+<p>Returns: Handle to the created device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the device already exists.</p></li>
+<li><p><strong>RuntimeError</strong> – If the scenario is not in default mode.</p></li>
+<li><p><strong>RuntimeError</strong> – If the scenario does not allow for the creation or addition of new devices.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">DeviceType</span></code>, bound= <a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -147,7 +337,7 @@ Each device can be operated by multiple operators simultaneously.</p>
 <dd><p>Check if an device is registered in this scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>device</strong> (<em>DeviceType</em>) – The device to be checked.</p>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.DeviceType" title="hermespy.channel.multipath_fading_templates.DeviceType"><em>DeviceType</em></a>) – The device to be checked.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The device’s registration status.</p>
@@ -160,14 +350,14 @@ Each device can be operated by multiple operators simultaneously.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.devices">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">hermespy.core.device.DeviceType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.devices" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">devices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">DeviceType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.devices" title="Permalink to this definition"></a></dt>
 <dd><p>Devices registered in this scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>List of devices.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>List[DeviceType]</p>
+<dd class="field-even"><p>List[<a class="reference internal" href="channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.DeviceType" title="hermespy.channel.multipath_fading_templates.DeviceType">DeviceType</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -188,7 +378,7 @@ Each device can be operated by multiple operators simultaneously.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.transmitters">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><span class="pre">hermespy.core.device.Transmitter</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.transmitters" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmitters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><span class="pre">Transmitter</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.transmitters" title="Permalink to this definition"></a></dt>
 <dd><p>All transmitting operators within this scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -202,7 +392,7 @@ Each device can be operated by multiple operators simultaneously.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.receivers">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receivers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><span class="pre">hermespy.core.device.Receiver</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.receivers" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receivers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><span class="pre">Receiver</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.receivers" title="Permalink to this definition"></a></dt>
 <dd><p>All receiving operators within this scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -244,7 +434,7 @@ Each device can be operated by multiple operators simultaneously.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.operators">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">operators</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Operator" title="hermespy.core.device.Operator"><span class="pre">hermespy.core.device.Operator</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.operators" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">operators</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.device.html#hermespy.core.device.Operator" title="hermespy.core.device.Operator"><span class="pre">Operator</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.scenario.Scenario.operators" title="Permalink to this definition"></a></dt>
 <dd><p>All operators within this scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -284,14 +474,138 @@ over all registered transmitting modems as drop duration!</p>
 <dd class="field-even"><p>float</p>
 </dd>
 <dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – For durations smaller than zero.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – For durations smaller than zero.</p></li>
+<li><p><strong>RuntimeError</strong> – If the scenario is not in default mode.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.record">
+<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.record" title="Permalink to this definition"></a></dt>
+<dd><p>Start recording drop information generated from this scenario.</p>
+<p>After the scenario starts recording, changing the device and operator configuration
+is not permitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>str</em>) – The system path where to store the generated recording data.</p></li>
+<li><p><strong>override</strong> (<em>bool</em><em>, </em><em>optional</em>) – Override the file if a recording already exists.
+Disabled by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the scenario is not in default mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.replay">
+<span class="sig-name descname"><span class="pre">replay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.replay" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.stop" title="Permalink to this definition"></a></dt>
+<dd><p>Stop a running recording / playback session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.transmit_operators">
+<span class="sig-name descname"><span class="pre">transmit_operators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.transmit_operators" title="Permalink to this definition"></a></dt>
+<dd><p>Generate information transmitted by all registered device operators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Transmission" title="hermespy.core.device.Transmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transmission</span></code></a>]]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The generated information sorted into devices and their respective operators.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.transmit_devices">
+<span class="sig-name descname"><span class="pre">transmit_devices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.transmit_devices" title="Permalink to this definition"></a></dt>
+<dd><p>Generated information transmitted by all registered devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The generated information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.receive_devices">
+<span class="sig-name descname"><span class="pre">receive_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receptions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.receive_devices" title="Permalink to this definition"></a></dt>
+<dd><p>Receive over all devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>receptions</strong> (<em>List</em><em>[</em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em>) – The signal models to be received be each device.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The signal models after device processing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.receive_operators">
+<span class="sig-name descname"><span class="pre">receive_operators</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.receive_operators" title="Permalink to this definition"></a></dt>
+<dd><p>Generate information received by all registered device operators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="core.device.html#hermespy.core.device.Reception" title="hermespy.core.device.Reception"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reception</span></code></a>]]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The generated information sorted into devices and their respective operators.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.core.scenario.Scenario.drop">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.scenario.Scenario.drop" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a single data drop from all scenario devices.</p>
+<p>Return: The generated drop information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Drop</span></code></p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</section>
+<dl class="py data">
+<dt class="sig sig-object py" id="hermespy.core.scenario.ScenarioType">
+<span class="sig-name descname"><span class="pre">ScenarioType</span></span><a class="headerlink" href="#hermespy.core.scenario.ScenarioType" title="Permalink to this definition"></a></dt>
+<dd><p>Type of scenario.</p>
+<p>alias of TypeVar(‘ScenarioType’, bound=<a class="reference internal" href="#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a>)</p>
+</dd></dl>
+
 
 
            </div>
@@ -304,7 +618,7 @@ over all registered transmitting modems as drop duration!</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcd67c490>
+<jinja2.runtime.BlockReference object at 0x7f9e7ad5f3d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

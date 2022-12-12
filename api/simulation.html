@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulation Module &mdash; HermesPy  documentation</title>
+  <title>Simulation &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,30 +57,62 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Simulation Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Simulation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario"><code class="docutils literal notranslate"><span class="pre">SimulationScenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner"><code class="docutils literal notranslate"><span class="pre">SimulationRunner</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html">Simulated Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType"><code class="docutils literal notranslate"><span class="pre">GainControlType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain"><code class="docutils literal notranslate"><span class="pre">Gain</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType"><code class="docutils literal notranslate"><span class="pre">QuantizerType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain"><code class="docutils literal notranslate"><span class="pre">RfChain</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html">Transmit-Receive Leakage Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage"><code class="docutils literal notranslate"><span class="pre">Leakage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.LinearLeakage"><code class="docutils literal notranslate"><span class="pre">LinearLeakage</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise"><code class="docutils literal notranslate"><span class="pre">PhaseNoise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN"><code class="docutils literal notranslate"><span class="pre">AWGN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling"><code class="docutils literal notranslate"><span class="pre">Coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation"><code class="docutils literal notranslate"><span class="pre">Isolation</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -93,9 +130,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-      <li>Simulation Module</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+      <li class="breadcrumb-item active">Simulation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/simulation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -105,36 +142,300 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="simulation-module">
-<h1>Simulation Module<a class="headerlink" href="#simulation-module" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="simulation">
+<h1>Simulation<a class="headerlink" href="#simulation" title="Permalink to this heading"></a></h1>
 <p>The simulation module provides the basis for all HermesPy simulations,
 including noise and hardware modeling.</p>
 <div class="mermaid">
             classDiagram
-  Scenario &lt;|-- SimulationScenario
-  PowerAmplifier &lt;|-- RappPowerAmplifier
-  Serializable &lt;|-- SimulatedDevice
-  Serializable &lt;|-- RfChain
-  Serializable &lt;|-- Gain
-  RandomNode &lt;|-- SimulatedDevice
-  PowerAmplifier &lt;|-- ClippingPowerAmplifier
-  Serializable &lt;|-- PowerAmplifier
-  Device &lt;|-- SimulatedDevice
-  PowerAmplifier &lt;|-- CustomPowerAmplifier
-  MonteCarlo &lt;|-- Simulation
-  Gain &lt;|-- AutomaticGainControl
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
-  RandomNode &lt;|-- Noise
-  Serializable &lt;|-- Simulation
-  Executable &lt;|-- Simulation
+  Noise &lt;|-- AWGN
   Serializable &lt;|-- AnalogDigitalConverter
+  PhaseNoise &lt;|-- NoPhaseNoise
+  Serializable &lt;|-- NoPhaseNoise
+  Serializable &lt;|-- Gain
+  Serializable &lt;|-- SimulatedDevice
+  MonteCarlo &lt;|-- Simulation
+  Isolation &lt;|-- SpecificIsolation
+  Serializable &lt;|-- PerfectCoupling
+  SerializableEnum &lt;|-- QuantizerType
+  Coupling &lt;|-- PerfectCoupling
+  Serializable &lt;|-- RfChain
+  Serializable &lt;|-- SpecificIsolation
+  Serializable &lt;|-- PowerAmplifier
+  Gain &lt;|-- AutomaticGainControl
+  Isolation &lt;|-- PerfectIsolation
+  RandomNode &lt;|-- SimulatedDevice
+  Pipeline &lt;|-- Simulation
+  PowerAmplifier &lt;|-- ClippingPowerAmplifier
+  RandomNode &lt;|-- PhaseNoise
+  PowerAmplifier &lt;|-- CustomPowerAmplifier
+  Serializable &lt;|-- AWGN
+  Serializable &lt;|-- PerfectIsolation
+  PowerAmplifier &lt;|-- RappPowerAmplifier
+  Serializable &lt;|-- ImpedanceCoupling
+  Coupling &lt;|-- ImpedanceCoupling
+  RandomNode &lt;|-- Noise
+  Device &lt;|-- SimulatedDevice
+  Serializable &lt;|-- Simulation
+  Scenario &lt;|-- SimulationScenario
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
         </div><div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario"><code class="docutils literal notranslate"><span class="pre">SimulationScenario</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.new_device"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.new_device()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.add_device"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.add_device()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.channels"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.channels</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.channel"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.channel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.departing_channels"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.departing_channels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.arriving_channels"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.arriving_channels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.set_channel"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.set_channel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.snr"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.snr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.snr_type"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.snr_type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.propagate"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.propagate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario.receive_devices"><code class="docutils literal notranslate"><span class="pre">SimulationScenario.receive_devices()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner"><code class="docutils literal notranslate"><span class="pre">SimulationRunner</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.transmit_operators"><code class="docutils literal notranslate"><span class="pre">SimulationRunner.transmit_operators()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.transmit_devices"><code class="docutils literal notranslate"><span class="pre">SimulationRunner.transmit_devices()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.propagate"><code class="docutils literal notranslate"><span class="pre">SimulationRunner.propagate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.receive_devices"><code class="docutils literal notranslate"><span class="pre">SimulationRunner.receive_devices()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner.receive_operators"><code class="docutils literal notranslate"><span class="pre">SimulationRunner.receive_operators()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Simulation.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.plot_results"><code class="docutils literal notranslate"><span class="pre">Simulation.plot_results</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.dump_results"><code class="docutils literal notranslate"><span class="pre">Simulation.dump_results</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.num_drops"><code class="docutils literal notranslate"><span class="pre">Simulation.num_drops</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.num_samples"><code class="docutils literal notranslate"><span class="pre">Simulation.num_samples</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.run"><code class="docutils literal notranslate"><span class="pre">Simulation.run()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.to_yaml"><code class="docutils literal notranslate"><span class="pre">Simulation.to_yaml()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation.from_yaml"><code class="docutils literal notranslate"><span class="pre">Simulation.from_yaml()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="simulation.simulated_device.html">Simulated Devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.property_blacklist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.serialized_attribute"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.serialized_attribute</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.rf_chain"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.rf_chain</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.adc"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.adc</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.orientation"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.orientation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.scenario"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.scenario</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.topology"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.topology</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.attached"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.attached</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.noise"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.noise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.isolation"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.isolation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.coupling"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.coupling</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.sampling_rate"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.sampling_rate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.carrier_frequency"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.carrier_frequency</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.velocity"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.velocity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.operator_separation"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.operator_separation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.transmit"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.transmit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.snr"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.snr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice.receive"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.receive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType"><code class="docutils literal notranslate"><span class="pre">GainControlType</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType.NONE"><code class="docutils literal notranslate"><span class="pre">GainControlType.NONE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType.MAX_AMPLITUDE"><code class="docutils literal notranslate"><span class="pre">GainControlType.MAX_AMPLITUDE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType.RMS_AMPLITUDE"><code class="docutils literal notranslate"><span class="pre">GainControlType.RMS_AMPLITUDE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType.yaml_tag"><code class="docutils literal notranslate"><span class="pre">GainControlType.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType.property_blacklist"><code class="docutils literal notranslate"><span class="pre">GainControlType.property_blacklist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">GainControlType.serialized_attributes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain"><code class="docutils literal notranslate"><span class="pre">Gain</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Gain.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain.gain"><code class="docutils literal notranslate"><span class="pre">Gain.gain</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain.multiply_signal"><code class="docutils literal notranslate"><span class="pre">Gain.multiply_signal()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain.divide_signal"><code class="docutils literal notranslate"><span class="pre">Gain.divide_signal()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain.to_yaml"><code class="docutils literal notranslate"><span class="pre">Gain.to_yaml()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl.agc_type"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.agc_type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl.backoff"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.backoff</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl.multiply_signal"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.multiply_signal()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl.from_yaml"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.from_yaml()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl.to_yaml"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl.to_yaml()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType"><code class="docutils literal notranslate"><span class="pre">QuantizerType</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType.MID_RISER"><code class="docutils literal notranslate"><span class="pre">QuantizerType.MID_RISER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType.MID_TREAD"><code class="docutils literal notranslate"><span class="pre">QuantizerType.MID_TREAD</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType.yaml_tag"><code class="docutils literal notranslate"><span class="pre">QuantizerType.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType.property_blacklist"><code class="docutils literal notranslate"><span class="pre">QuantizerType.property_blacklist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">QuantizerType.serialized_attributes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.gain"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.gain</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_bits"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.num_quantization_bits</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.num_quantization_levels"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.num_quantization_levels</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.quantizer_type"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.quantizer_type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.convert"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.convert()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter.plot_quantizer"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter.plot_quantizer()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain"><code class="docutils literal notranslate"><span class="pre">RfChain</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RfChain.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.amplitude_imbalance"><code class="docutils literal notranslate"><span class="pre">RfChain.amplitude_imbalance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.phase_offset"><code class="docutils literal notranslate"><span class="pre">RfChain.phase_offset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.to_yaml"><code class="docutils literal notranslate"><span class="pre">RfChain.to_yaml()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.transmit"><code class="docutils literal notranslate"><span class="pre">RfChain.transmit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.add_iq_imbalance"><code class="docutils literal notranslate"><span class="pre">RfChain.add_iq_imbalance()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.receive"><code class="docutils literal notranslate"><span class="pre">RfChain.receive()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.power_amplifier"><code class="docutils literal notranslate"><span class="pre">RfChain.power_amplifier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain.phase_noise"><code class="docutils literal notranslate"><span class="pre">RfChain.phase_noise</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.leakage.html">Transmit-Receive Leakage Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage"><code class="docutils literal notranslate"><span class="pre">Leakage</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage.transmit"><code class="docutils literal notranslate"><span class="pre">Leakage.transmit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage.receive"><code class="docutils literal notranslate"><span class="pre">Leakage.receive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.LinearLeakage"><code class="docutils literal notranslate"><span class="pre">LinearLeakage</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.serialized_attributes</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.adjust_power</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.saturation_amplitude"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.saturation_amplitude</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.send"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.send()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.adjust_power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.smoothness_factor"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.smoothness_factor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.adjust_power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.serialized_attributes</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_alpha"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.phase_alpha</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_beta"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.phase_beta</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_alpha"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.amplitude_alpha</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_beta"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.amplitude_beta</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.serialized_attributes</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.model()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.input</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.gain</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.phase</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise"><code class="docutils literal notranslate"><span class="pre">PhaseNoise</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise.add_noise"><code class="docutils literal notranslate"><span class="pre">PhaseNoise.add_noise()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise.yaml_tag"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise.add_noise"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise.add_noise()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise.add"><code class="docutils literal notranslate"><span class="pre">Noise.add()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise.power"><code class="docutils literal notranslate"><span class="pre">Noise.power</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN"><code class="docutils literal notranslate"><span class="pre">AWGN</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN.yaml_tag"><code class="docutils literal notranslate"><span class="pre">AWGN.yaml_tag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN.property_blacklist"><code class="docutils literal notranslate"><span class="pre">AWGN.property_blacklist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN.add"><code class="docutils literal notranslate"><span class="pre">AWGN.add()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.coupling.perfect.html">Perfect Coupling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.coupling.perfect.html#hermespy.simulation.coupling.perfect.PerfectCoupling"><code class="docutils literal notranslate"><span class="pre">PerfectCoupling</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.perfect.html#hermespy.simulation.coupling.perfect.PerfectCoupling.yaml_tag"><code class="docutils literal notranslate"><span class="pre">PerfectCoupling.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.coupling.impedance.html">Impedance Coupling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.coupling.impedance.html#hermespy.simulation.coupling.impedance.ImpedanceCoupling"><code class="docutils literal notranslate"><span class="pre">ImpedanceCoupling</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.impedance.html#hermespy.simulation.coupling.impedance.ImpedanceCoupling.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ImpedanceCoupling.yaml_tag</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.impedance.html#hermespy.simulation.coupling.impedance.ImpedanceCoupling.transmit_correlation"><code class="docutils literal notranslate"><span class="pre">ImpedanceCoupling.transmit_correlation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.impedance.html#hermespy.simulation.coupling.impedance.ImpedanceCoupling.receive_correlation"><code class="docutils literal notranslate"><span class="pre">ImpedanceCoupling.receive_correlation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.impedance.html#hermespy.simulation.coupling.impedance.ImpedanceCoupling.transmit_impedance"><code class="docutils literal notranslate"><span class="pre">ImpedanceCoupling.transmit_impedance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.impedance.html#hermespy.simulation.coupling.impedance.ImpedanceCoupling.receive_impedance"><code class="docutils literal notranslate"><span class="pre">ImpedanceCoupling.receive_impedance</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.impedance.html#hermespy.simulation.coupling.impedance.ImpedanceCoupling.matching_impedance"><code class="docutils literal notranslate"><span class="pre">ImpedanceCoupling.matching_impedance</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling"><code class="docutils literal notranslate"><span class="pre">Coupling</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling.device"><code class="docutils literal notranslate"><span class="pre">Coupling.device</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling.transmit"><code class="docutils literal notranslate"><span class="pre">Coupling.transmit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling.receive"><code class="docutils literal notranslate"><span class="pre">Coupling.receive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.isolation.perfect.html">Perfect Isolation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.isolation.perfect.html#hermespy.simulation.isolation.perfect.PerfectIsolation"><code class="docutils literal notranslate"><span class="pre">PerfectIsolation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.perfect.html#hermespy.simulation.isolation.perfect.PerfectIsolation.yaml_tag"><code class="docutils literal notranslate"><span class="pre">PerfectIsolation.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.isolation.impedance.html">Impedance Isolation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.isolation.specific.html">Specific Isolation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.isolation.specific.html#hermespy.simulation.isolation.specific.SpecificIsolation"><code class="docutils literal notranslate"><span class="pre">SpecificIsolation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.specific.html#hermespy.simulation.isolation.specific.SpecificIsolation.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SpecificIsolation.yaml_tag</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.specific.html#hermespy.simulation.isolation.specific.SpecificIsolation.isolation"><code class="docutils literal notranslate"><span class="pre">SpecificIsolation.isolation</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation"><code class="docutils literal notranslate"><span class="pre">Isolation</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation.device"><code class="docutils literal notranslate"><span class="pre">Isolation.device</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation.leak"><code class="docutils literal notranslate"><span class="pre">Isolation.leak()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -150,7 +451,7 @@ including noise and hardware modeling.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcde41e80>
+<jinja2.runtime.BlockReference object at 0x7f9e7b289730>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

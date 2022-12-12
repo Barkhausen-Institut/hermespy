@@ -1,6 +1,6 @@
-====================
-Communication Module
-====================
+=============
+Communication
+=============
 
 This module provides functionalities to transmit information in form of bits over a wireless link.
 
@@ -22,7 +22,7 @@ as well as multiple communication waveform implementations
 
 .. toctree::
 
-   modem.waveform_generator_psk_qam
+   modem.waveform_single_carrier
    modem.waveform_generator_chirp_fsk
    modem.waveform_generator_ofdm
    modem.waveform_correlation_synchronization

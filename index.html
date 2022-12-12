@@ -4,12 +4,15 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HermesPy &mdash; HermesPy  documentation</title>
+  <title>HermesPy &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="_static/bootstrap-carousel.min.css" type="text/css" />
+      <link rel="stylesheet" href="_static/carousel-custom.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
       <link rel="stylesheet" href="_static/dark_mode_css/dark.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,7 +22,12 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script src="_static/bootstrap-carousel.min.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="_static/dark_mode_js/default_dark.js"></script>
@@ -27,7 +35,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="About" href="features.html" /> 
+    <link rel="next" title="Features" href="features.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,7 +47,7 @@
             <img src="_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -51,10 +59,13 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
@@ -72,8 +83,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>HermesPy</li>
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">HermesPy</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -83,13 +94,40 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hermespy">
-<h1>HermesPy<a class="headerlink" href="#hermespy" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="hermespy">
+<h1>HermesPy<a class="headerlink" href="#hermespy" title="Permalink to this heading"></a></h1>
 <p>Welcome to the official documentation of HermesPy, the <strong>Heterogeneous Radio Mobile Simulator</strong>.</p>
 <p>HermesPy is a semi-static link-level simulator based on time-driven mechanisms.
 It aims to enable the simulation and evaluation of transmission protocols deployed by
 multi-RAT wireless electromagnetic communication and sensing devices.
 It specifically targets researchers, engineers and students interested in wireless communication and sensing.</p>
+<p>Please cite Adler <em>et al.</em><a class="footnote-reference brackets" href="#footcite-2022-adler" id="id1">1</a> for any results obtained with the help of HermesPy.
+For issue reports, feature requests or contributions please open a <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy/issues">GitHub issue</a>
+or directly contact the current <a class="reference external" href="https://www.linkedin.com/in/jan-adler/">maintainer</a>.</p>
 <video poster="https://www.barkhauseninstitut.org/fileadmin//user_upload/Filme/2020-12-09-release-trailer.jpg" controls="" no-cookie="" width="100%">
  <source src="https://www.barkhauseninstitut.org/fileadmin/user_upload/Filme/2020-12-09-release-trailer.mp4" type="video/mp4">
 </video>
@@ -103,16 +141,81 @@ It specifically targets researchers, engineers and students interested in wirele
 <li><p>Interference between multiple multi-antenna heterogeneous devices</p></li>
 <li><p>Sensing algorithms and KPIs</p></li>
 </ul>
+<p>in both simulations and hardware testbeds.</p>
+<div class="scbs-carousel scbs-slide" id="carousel-0">
+<div class="scbs-carousel-indicators">
+<button aria-current="true" aria-label="Slide 1" class="scbs-active scc-shadow-indicator" data-bs-slide-to="0" data-bs-target="#carousel-0" type="button"></button>
+<button aria-label="Slide 2" class="scc-shadow-indicator" data-bs-slide-to="1" data-bs-target="#carousel-0" type="button"></button>
+<button aria-label="Slide 3" class="scc-shadow-indicator" data-bs-slide-to="2" data-bs-target="#carousel-0" type="button"></button>
+<button aria-label="Slide 4" class="scc-shadow-indicator" data-bs-slide-to="3" data-bs-target="#carousel-0" type="button"></button>
+<button aria-label="Slide 5" class="scc-shadow-indicator" data-bs-slide-to="4" data-bs-target="#carousel-0" type="button"></button>
+<button aria-label="Slide 6" class="scc-shadow-indicator" data-bs-slide-to="5" data-bs-target="#carousel-0" type="button"></button>
+</div>
+<div class="scbs-carousel-inner">
+<div class="scbs-carousel-item scbs-active">
+<img alt="_images/getting_started_ber_evaluation.png" class="scbs-d-block scbs-w-100" src="_images/getting_started_ber_evaluation.png" />
+<div class="scbs-carousel-caption scbs-d-none scbs-d-md-block">
+<h5>Communication KPIs such as BER, BLER, FER and throughput</h5>
+</div>
+</div>
+<div class="scbs-carousel-item">
+<img alt="_images/getting_started_constellation_low_noise.png" class="scbs-d-block scbs-w-100" src="_images/getting_started_constellation_low_noise.png" />
+<div class="scbs-carousel-caption scbs-d-none scbs-d-md-block">
+<h5>Communication symbol mappings</h5>
+</div>
+</div>
+<div class="scbs-carousel-item">
+<img alt="_images/getting_started_signal_plot_preamble.png" class="scbs-d-block scbs-w-100" src="_images/getting_started_signal_plot_preamble.png" />
+<div class="scbs-carousel-caption scbs-d-none scbs-d-md-block">
+<h5>Signal modulations and their respective waveforms</h5>
+</div>
+</div>
+<div class="scbs-carousel-item">
+<img alt="_images/index_beamforming.png" class="scbs-d-block scbs-w-100" src="_images/index_beamforming.png" />
+<div class="scbs-carousel-caption scbs-d-none scbs-d-md-block">
+<h5>Beamforming</h5>
+</div>
+</div>
+<div class="scbs-carousel-item">
+<img alt="_images/index_radar.png" class="scbs-d-block scbs-w-100" src="_images/index_radar.png" />
+<div class="scbs-carousel-caption scbs-d-none scbs-d-md-block">
+<h5>Sensing KPIs</h5>
+</div>
+</div>
+<div class="scbs-carousel-item">
+<img alt="_images/getting_started_simulation_multidim_drx.png" class="scbs-d-block scbs-w-100" src="_images/getting_started_simulation_multidim_drx.png" />
+<div class="scbs-carousel-caption scbs-d-none scbs-d-md-block">
+<h5>Multidimensional parameter sweeps</h5>
+</div>
+</div>
+</div>
+<button class="scbs-carousel-control-prev scc-shadow-control" data-bs-slide="prev" data-bs-target="#carousel-0" type="button">
+<span aria-hidden="true" class="scbs-carousel-control-prev-icon"></span>
+<span class="scbs-visually-hidden">Previous</span>
+</button>
+<button class="scbs-carousel-control-next scc-shadow-control" data-bs-slide="next" data-bs-target="#carousel-0" type="button">
+<span aria-hidden="true" class="scbs-carousel-control-next-icon"></span>
+<span class="scbs-visually-hidden">Next</span>
+</button>
+</div>
 <p>HermesPy may be used in one of two modes of operation:</p>
 <ol class="arabic simple">
-<li><p>As a command line tool for Monte-Carlo simulations of wireless transmission scenarios.
-This allows one to define complex simulation scenarios by means of YML configuration files.
+<li><p>As a command line tool for Monte-Carlo evaluations of wireless transmissions.
+This enables the definition of complex scenarios by means of compact YAML configuration files.
 See <a class="reference internal" href="getting_started.html#gettingstarted-commandlinetool"><span class="std std-ref">Getting Started -&gt; Command Line Tool</span></a> for further information.</p></li>
-<li><p>As a plug-in library for the simulation of realistic wireless transmissions within your own python projects.
-Only specific HermesPy modules can be thus picked up needed, or more complex simulation scenarios can be built using Python code.
+<li><p>As a plug-in library for the evaluation of realistic wireless scenarios within your own python projects.
+Due to its modular design, parts of the simulation chain can be operated stand-alone to be customized for individual requirements,
+or the whole framework can be operated by its native Python interface.
 See <a class="reference internal" href="getting_started.html#gettingstarted-library"><span class="std std-ref">Getting Started -&gt; Library</span></a> for further information.</p></li>
 </ol>
 <div class="toctree-wrapper compound">
+</div>
+<div class="docutils container" id="id2">
+<dl class="footnote brackets">
+<dt class="label" id="footcite-2022-adler"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Jan Adler, Tobias Kronauer, and André Noll Barreto. HermesPy: An Open-Source Link-Level Evaluator for 6G. <em>IEEE Access</em>, 10():120256–120273, 2022. <a class="reference external" href="https://doi.org/10.1109/ACCESS.2022.3222063">doi:10.1109/ACCESS.2022.3222063</a>.</p>
+</dd>
+</dl>
 </div>
 </section>
 
@@ -120,13 +223,13 @@ See <a class="reference internal" href="getting_started.html#gettingstarted-libr
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="features.html" class="btn btn-neutral float-right" title="About" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="features.html" class="btn btn-neutral float-right" title="Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce1610d0>
+<jinja2.runtime.BlockReference object at 0x7f9e7a2f76d0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filtered Single Carrier Waveforms &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Chirp Frequency Shift Keying" href="modem.waveform_generator_chirp_fsk.html" />
+    <link rel="prev" title="Communication Evaluators" href="modem.evaluators.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmissionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmission"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReceptionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReception"><code class="docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem"><code class="docutils literal notranslate"><span class="pre">BaseModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.TransmittingModem"><code class="docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.ReceivingModem"><code class="docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.DuplexModem"><code class="docutils literal notranslate"><span class="pre">DuplexModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.SimplexLink"><code class="docutils literal notranslate"><span class="pre">SimplexLink</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource"><code class="docutils literal notranslate"><span class="pre">BitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.RandomBitsSource"><code class="docutils literal notranslate"><span class="pre">RandomBitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.StreamBitsSource"><code class="docutils literal notranslate"><span class="pre">StreamBitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.SymbolType"><code class="docutils literal notranslate"><span class="pre">SymbolType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbol"><code class="docutils literal notranslate"><span class="pre">Symbol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols"><code class="docutils literal notranslate"><span class="pre">Symbols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols"><code class="docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization"><code class="docutils literal notranslate"><span class="pre">Synchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEstimation"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.IdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">IdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="docutils literal notranslate"><span class="pre">PilotWaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">PilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.UniformPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">UniformPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.CustomPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">CustomPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.MappedPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">MappedPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.CommunicationEvaluator"><code class="docutils literal notranslate"><span class="pre">CommunicationEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BitErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BlockErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorArtifact"><code class="docutils literal notranslate"><span class="pre">FrameErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputArtifact"><code class="docutils literal notranslate"><span class="pre">ThroughputArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluation"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluator"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluator</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Filtered Single Carrier Waveforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbol_rate"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.symbol_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_preamble_symbols"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.num_preamble_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_postamble_symbols"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.num_postamble_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.modulation_order"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.modulation_order</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.pilot_signal"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.pilot_signal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.map"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.unmap"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.unmap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.modulate"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.modulate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.demodulate"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.demodulate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_pilot_samples"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.num_pilot_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_guard_samples"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.num_guard_samples</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.guard_interval"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.guard_interval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.pilot_rate"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.pilot_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_data_symbols"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.num_data_symbols</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.samples_in_frame"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.samples_in_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.bits_per_frame"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.bits_per_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbols_per_frame"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.symbols_per_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.bit_energy"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.bit_energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbol_energy"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.symbol_energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.power"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.power</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.sampling_rate"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.plot_filter_correlation"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.plot_filter_correlation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.plot_filter"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform.plot_filter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierCorrelationSynchronization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SingleCarrierCorrelationSynchronization.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierIdealChannelEstimation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SingleCarrierIdealChannelEstimation.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation.estimate_channel"><code class="docutils literal notranslate"><span class="pre">SingleCarrierIdealChannelEstimation.estimate_channel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierLeastSquaresChannelEstimation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SingleCarrierLeastSquaresChannelEstimation.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation.estimate_channel"><code class="docutils literal notranslate"><span class="pre">SingleCarrierLeastSquaresChannelEstimation.estimate_channel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierZeroForcingChannelEqualization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SingleCarrierZeroForcingChannelEqualization.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization.equalize_channel"><code class="docutils literal notranslate"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization.equalize_channel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.filter_length"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform.filter_length</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.relative_bandwidth"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform.relative_bandwidth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.roll_off"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform.roll_off</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.bandwidth"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform.bandwidth</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RootRaisedCosineWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RootRaisedCosineWaveform.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RaisedCosineWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RaisedCosineWaveform.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform.relative_bandwidth"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform.relative_bandwidth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform.bandwidth"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform.bandwidth</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.yaml_tag"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.property_blacklist"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform.property_blacklist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.chirp_duration"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform.chirp_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.bandwidth"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform.bandwidth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.chirp_slope"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform.chirp_slope</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType"><code class="docutils literal notranslate"><span class="pre">ElementType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PrefixType"><code class="docutils literal notranslate"><span class="pre">PrefixType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameElement"><code class="docutils literal notranslate"><span class="pre">FrameElement</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameResource"><code class="docutils literal notranslate"><span class="pre">FrameResource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSection"><code class="docutils literal notranslate"><span class="pre">FrameSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection"><code class="docutils literal notranslate"><span class="pre">FrameSymbolSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameGuardSection"><code class="docutils literal notranslate"><span class="pre">FrameGuardSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMWaveform"><code class="docutils literal notranslate"><span class="pre">OFDMWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection"><code class="docutils literal notranslate"><span class="pre">PilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxPilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ReferencePosition"><code class="docutils literal notranslate"><span class="pre">ReferencePosition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMMinimumMeanSquareChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.PGT"><code class="docutils literal notranslate"><span class="pre">PGT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">CorrelationSynchronization</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="modem.html">Communication</a></li>
+      <li class="breadcrumb-item active">Filtered Single Carrier Waveforms</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/modem.waveform_single_carrier.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.modem.waveform_single_carrier"></span><section id="filtered-single-carrier-waveforms">
+<h1>Filtered Single Carrier Waveforms<a class="headerlink" href="#filtered-single-carrier-waveforms" title="Permalink to this heading"></a></h1>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FilteredSingleCarrierWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_preamble_symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_symbols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_postamble_symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pilot_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oversampling_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pilot_symbol_sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat_pilot_symbol_sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform" title="hermespy.modem.waveform_generator.ConfigurablePilotWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform</span></code></a></p>
+<p>This method provides a class for a generic PSK/QAM modem.</p>
+<p>The modem has the following characteristics:
+- root-raised cosine filter with arbitrary roll-off factor
+- arbitrary constellation, as defined in modem.tools.psk_qam_mapping:PskQamMapping</p>
+<p>This implementation has currently the following limitations:
+- hard output only (no LLR)
+- no reference signal
+- ideal channel estimation
+- equalization of ISI with FMCW in AWGN channel only
+- no equalization (only amplitude and phase of first propagation path is compensated)</p>
+<p>Waveform Generator PSK-QAM initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>symbol_rate</strong> (<em>float</em>) – Rate at which symbols are being generated in Hz.</p></li>
+<li><p><strong>num_preamble_symbols</strong> (<em>int</em>) – Number of preamble symbols within a single communication frame.</p></li>
+<li><p><strong>num_data_symbols</strong> (<em>int</em>) – Number of data symbols within a single communication frame.</p></li>
+<li><p><strong>num_postamble_symbols</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of postamble symbols within a single communication frame.</p></li>
+<li><p><strong>guard_interval</strong> (<em>float</em><em>, </em><em>optional</em>) – Guard interval between communication frames in seconds.
+Zero by default.</p></li>
+<li><p><strong>oversampling_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – The oversampling factor of the waform.</p></li>
+<li><p><strong>pilot_rate</strong> (<em>int</em><em>, </em><em>optional</em>) – Pilot symbol rate.
+Zero by default, i.e. no pilot symbols.</p></li>
+<li><p><strong>pilot_symbol_sequence</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><em>PilotSymbolSequence</em></a><em>]</em><em>, </em><em>optional</em>) – The configured pilot symbol sequence.
+Uniform by default.</p></li>
+<li><p><strong>repeat_pilot_symbol_sequence</strong> (<em>bool</em><em>, </em><em>optional</em>) – Allow the repetition of pilot symbol sequences.
+Enabled by default.</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>) – Waveform generator base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbol_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbol_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbol_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Repetition rate of symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Symbol rate in Hz.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – For rates smaller or equal to zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_preamble_symbols">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_preamble_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_preamble_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Number of preamble symbols.</p>
+<p>Transmitted at the beginning of communication frames.</p>
+<p>Returns: The number of symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of symbols is smaller than zero.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_postamble_symbols">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_postamble_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_postamble_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Number of postamble symbols.</p>
+<p>Transmitted at the end of communication frames.</p>
+<p>Returns: The number of symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the number of symbols is smaller than zero.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.modulation_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modulation_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.modulation_order" title="Permalink to this definition"></a></dt>
+<dd><p>Access the modulation order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The modulation order.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.pilot_signal">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.pilot_signal" title="Permalink to this definition"></a></dt>
+<dd><p>Model of the pilot sequence within this communication waveform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The pilot sequence.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.map" title="Permalink to this definition"></a></dt>
+<dd><p>Map a stream of bits to data symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_bits</strong> (<em>np.ndarray</em>) – Vector containing a sequence of L hard data bits to be mapped onto data symbols.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Mapped data symbols.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols">Symbols</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.unmap">
+<span class="sig-name descname"><span class="pre">unmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.unmap" title="Permalink to this definition"></a></dt>
+<dd><p>Map a stream of data symbols to data bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Sequence of K data symbols to be mapped onto bit sequences.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Vector containing the resulting sequence of L data bits
+In general, L is greater or equal to K.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.modulate">
+<span class="sig-name descname"><span class="pre">modulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.modulate" title="Permalink to this definition"></a></dt>
+<dd><p>Modulate a stream of data symbols to a base-band signal containing a single data frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data_symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Singular stream of data symbols to be modulated by this waveform.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Signal model of a single modulate data frame.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.demodulate">
+<span class="sig-name descname"><span class="pre">demodulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.demodulate" title="Permalink to this definition"></a></dt>
+<dd><p>Demodulate a base-band signal stream to data symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex-valued base-band samples of a single communication frame.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The demodulated communication symbols</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_pilot_samples">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_pilot_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_pilot_samples" title="Permalink to this definition"></a></dt>
+<dd><p>Number of samples within the pilot section of a frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of pilot samples.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_guard_samples">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_guard_samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_guard_samples" title="Permalink to this definition"></a></dt>
+<dd><p>Number of samples within the guarding section of a frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of samples.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.guard_interval">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">guard_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.guard_interval" title="Permalink to this definition"></a></dt>
+<dd><p>Frame guard interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Interval in seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.pilot_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.pilot_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Repetition rate of pilot symbols within the frame.</p>
+<p>A pilot rate of zero indicates no pilot symbols within the data frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Rate in number of symbols</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the pilot rate is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_data_symbols">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_data_symbols</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.num_data_symbols" title="Permalink to this definition"></a></dt>
+<dd><p>Number of data symbols per frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of data symbols.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.samples_in_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">samples_in_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.samples_in_frame" title="Permalink to this definition"></a></dt>
+<dd><p>The number of discrete samples per generated frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The number of samples.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.bits_per_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bits_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.bits_per_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Number of bits required to generate a single data frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbols_per_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbols_per_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbols_per_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Number of dat symbols per transmitted frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of data symbols</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.bit_energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.bit_energy" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the theoretical average (discrete-time) bit energy of the modulated baseband_signal.</p>
+<p>Energy of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum{|x[k]}^2\)</span>
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbol_energy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbol_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.symbol_energy" title="Permalink to this definition"></a></dt>
+<dd><p>The theoretical average symbol (discrete-time) energy of the modulated baseband_signal.</p>
+<p>Energy of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum{|x[k]}^2\)</span>
+Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The average symbol energy in UNIT.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.power">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.power" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the theoretical average symbol (unitless) power,</p>
+<p>Power of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum_{k=1}^N{|x[k]|}^2 / N\)</span>
+Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Rate at which the waveform generator signal is internally sampled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Sampling rate in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.plot_filter_correlation">
+<span class="sig-name descname"><span class="pre">plot_filter_correlation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.plot_filter_correlation" title="Permalink to this definition"></a></dt>
+<dd><p>Plot the convolution between transmit and receive filter shapes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the generated matplotlib figure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.plot_filter">
+<span class="sig-name descname"><span class="pre">plot_filter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform.plot_filter" title="Permalink to this definition"></a></dt>
+<dd><p>Plot the transmit filter shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Handle to the generated matplotlib figure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">Synchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a>]</p>
+<p>Synchronization for chirp-based frequency shift keying communication waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this synchronization routine is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierCorrelationSynchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guard_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" title="hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrelationSynchronization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a>]</p>
+<p>Correlation-based clock-synchronization for PSK-QAM waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Correlation threshold at which a pilot signal is detected.</p></li>
+<li><p><strong>guard_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Guard ratio of frame duration.</p></li>
+<li><p><strong>*args</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>) – Synchronization base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-Correlation'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierChannelEstimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEstimation" title="hermespy.modem.waveform_generator.ChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Channel estimation for Psk Qam waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this synchronization routine is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierIdealChannelEstimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.IdealChannelEstimation" title="hermespy.modem.waveform_generator.IdealChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">IdealChannelEstimation</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a>], <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Ideal channel estimation for single carrier waveforms</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this estimation routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-Ideal'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation.estimate_channel">
+<span class="sig-name descname"><span class="pre">estimate_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation.estimate_channel" title="Permalink to this definition"></a></dt>
+<dd><p>Estimate the wireless channel of a received communication frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Demodulated communication symbols.</p>
+</dd>
+</dl>
+<p>Returns: The symbols and their respective channel states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols" title="hermespy.modem.symbols.StatedSymbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierLeastSquaresChannelEstimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation" title="hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">SingleCarrierChannelEstimation</span></code></a></p>
+<p>Least-Squares channel estimation for Psk Qam waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this synchronization routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-LS'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation.estimate_channel">
+<span class="sig-name descname"><span class="pre">estimate_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation.estimate_channel" title="Permalink to this definition"></a></dt>
+<dd><p>Estimate the wireless channel of a received communication frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Demodulated communication symbols.</p>
+</dd>
+</dl>
+<p>Returns: The symbols and their respective channel states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols" title="hermespy.modem.symbols.StatedSymbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization" title="hermespy.modem.waveform_generator.ChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Channel estimation for Psk Qam waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierZeroForcingChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization" title="hermespy.modem.waveform_generator.ZeroForcingChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization</span></code></a>[<a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a>]</p>
+<p>Zero-Forcing Channel estimation for Psk Qam waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-ZF'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization" title="hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">SingleCarrierChannelEqualization</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Minimum-Mean-Square Channel estimation for Psk Qam waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-MMSE'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization.equalize_channel">
+<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
+<dd><p>Equalize the wireless channel of a received communication frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frame</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Symbols and channel state of the received communication frame.</p>
+</dd>
+</dl>
+<p>Returns: The equalize symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RolledOffSingleCarrierWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relative_bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roll_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a></p>
+<p>Base class for single carrier waveforms applying linear filters longer than a single symbol duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>relative_bandwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – Bandwidth relative to the configured symbol rate.
+One by default, meaning the pulse bandwidth is equal to the symbol rate in Hz,
+assuming zero <cite>roll_off</cite>.</p></li>
+<li><p><strong>roll_off</strong> (<em>float</em><em>, </em><em>optional</em>) – Filter pulse shape roll off factor between zero and one.
+Zero by default, meaning no inter-symbol interference at the sampling instances.</p></li>
+<li><p><strong>filter_length</strong> (<em>float</em><em>, </em><em>optional</em>) – Filter length in modulation symbols.
+16 by default.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.filter_length">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">filter_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.filter_length" title="Permalink to this definition"></a></dt>
+<dd><p>Filter length in modulation symbols.</p>
+<p>Configures how far the shaping filter stretches in terms of the number of
+modulation symbols it overlaps with.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Filter length in number of modulation symbols.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – For filter lengths smaller than one.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.relative_bandwidth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">relative_bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.relative_bandwidth" title="Permalink to this definition"></a></dt>
+<dd><p>Bandwidth relative to the configured symbol rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – On values smaller or equal to zero.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.roll_off">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">roll_off</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.roll_off" title="Permalink to this definition"></a></dt>
+<dd><p>Filter pulse shape roll off factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – On values smaller than zero or larger than one.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.bandwidth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform.bandwidth" title="Permalink to this definition"></a></dt>
+<dd><p>Bandwidth of the frame generated by this generator.</p>
+<p>Used to estimate the minimal sampling frequency required to adequately simulate the scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Bandwidth in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RootRaisedCosineWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Root-Raised-Cosine filtered single carrier mdulation.</p>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-1.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-1.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-1.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-1.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-1.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-1.png" />
+</figure>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-2.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-2.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-2.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-2.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-2.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-2.png" />
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>relative_bandwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – Bandwidth relative to the configured symbol rate.
+One by default, meaning the pulse bandwidth is equal to the symbol rate in Hz,
+assuming zero <cite>roll_off</cite>.</p></li>
+<li><p><strong>roll_off</strong> (<em>float</em><em>, </em><em>optional</em>) – Filter pulse shape roll off factor between zero and one.
+Zero by default, meaning no inter-symbol interference at the sampling instances.</p></li>
+<li><p><strong>filter_length</strong> (<em>float</em><em>, </em><em>optional</em>) – Filter length in modulation symbols.
+16 by default.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-RootRaisedCosine'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RaisedCosineWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RaisedCosineWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Root-Raised-Cosine filtered single carrier mdulation.</p>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-3.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-3.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-3.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-3.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-3.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-3.png" />
+</figure>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-4.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-4.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-4.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-4.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-4.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-4.png" />
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>relative_bandwidth</strong> (<em>float</em><em>, </em><em>optional</em>) – Bandwidth relative to the configured symbol rate.
+One by default, meaning the pulse bandwidth is equal to the symbol rate in Hz,
+assuming zero <cite>roll_off</cite>.</p></li>
+<li><p><strong>roll_off</strong> (<em>float</em><em>, </em><em>optional</em>) – Filter pulse shape roll off factor between zero and one.
+Zero by default, meaning no inter-symbol interference at the sampling instances.</p></li>
+<li><p><strong>filter_length</strong> (<em>float</em><em>, </em><em>optional</em>) – Filter length in modulation symbols.
+16 by default.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RaisedCosineWaveform.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-RaisedCosine'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RectangularWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RectangularWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relative_bandwidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a></p>
+<p>Rectangular filtered single carrier modulation.</p>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-5.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-5.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-5.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-5.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-5.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-5.png" />
+</figure>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-6.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-6.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-6.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-6.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-6.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-6.png" />
+</figure>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RectangularWaveform.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-Rectangular'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RectangularWaveform.relative_bandwidth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">relative_bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform.relative_bandwidth" title="Permalink to this definition"></a></dt>
+<dd><p>Bandwidth relative to the configured symbol rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – On values smaller or equal to zero.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.RectangularWaveform.bandwidth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform.bandwidth" title="Permalink to this definition"></a></dt>
+<dd><p>Bandwidth of the frame generated by this generator.</p>
+<p>Used to estimate the minimal sampling frequency required to adequately simulate the scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Bandwidth in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FMCWWaveform">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FMCWWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bandwidth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirp_duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" title="hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a></p>
+<p>Frequency Modulated Continuous Waveform Filter Modulation Scheme.</p>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-7.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-7.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-7.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-7.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-7.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-7.png" />
+</figure>
+<p>(<a class="reference external" href="../api/modem-waveform_single_carrier-8.py">Source code</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-8.png">png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-8.hires.png">hires.png</a>, <a class="reference external" href="../api/modem-waveform_single_carrier-8.pdf">pdf</a>)</p>
+<figure class="align-default">
+<img alt="../_images/modem-waveform_single_carrier-8.png" class="plot-directive" src="../_images/modem-waveform_single_carrier-8.png" />
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bandwidth</strong> (<em>float</em>) – The chirp bandwidth in Hz.</p></li>
+<li><p><strong>chirp_duration</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration of each FMCW chirp in seconds.
+By default, the inverse symbol rate is assumed.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FMCWWaveform.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC-FMCW'</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FMCWWaveform.property_blacklist">
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'pilot_symbol_sequence'}</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.property_blacklist" title="Permalink to this definition"></a></dt>
+<dd><p>Set of properties to be ignored during serialization.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FMCWWaveform.chirp_duration">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_duration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.chirp_duration" title="Permalink to this definition"></a></dt>
+<dd><p>FMCW Chirp duration.</p>
+<p>A duration of zero will result in the inverse symbol rate as chirp duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Chirp duration in seconds.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the duration is smaller than zero.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FMCWWaveform.bandwidth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bandwidth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.bandwidth" title="Permalink to this definition"></a></dt>
+<dd><p>Bandwidth of the frame generated by this generator.</p>
+<p>Used to estimate the minimal sampling frequency required to adequately simulate the scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Bandwidth in Hz.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_single_carrier.FMCWWaveform.chirp_slope">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chirp_slope</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_single_carrier.FMCWWaveform.chirp_slope" title="Permalink to this definition"></a></dt>
+<dd><p>Chirp slope.</p>
+<p>The slope is equal to the chirp bandwidth divided by its duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Slope in Hz/s.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modem.evaluators.html" class="btn btn-neutral float-left" title="Communication Evaluators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modem.waveform_generator_chirp_fsk.html" class="btn btn-neutral float-right" title="Chirp Frequency Shift Keying" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e7985d520>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Communication Waveform Base &mdash; HermesPy  documentation</title>
+  <title>Communication Waveform Base &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +47,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,34 +59,183 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmissionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmission"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReceptionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReception"><code class="docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem"><code class="docutils literal notranslate"><span class="pre">BaseModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.TransmittingModem"><code class="docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.ReceivingModem"><code class="docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.DuplexModem"><code class="docutils literal notranslate"><span class="pre">DuplexModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.SimplexLink"><code class="docutils literal notranslate"><span class="pre">SimplexLink</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.BitsSource"><code class="docutils literal notranslate"><span class="pre">BitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.RandomBitsSource"><code class="docutils literal notranslate"><span class="pre">RandomBitsSource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html#hermespy.modem.bits_source.StreamBitsSource"><code class="docutils literal notranslate"><span class="pre">StreamBitsSource</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.SymbolType"><code class="docutils literal notranslate"><span class="pre">SymbolType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbol"><code class="docutils literal notranslate"><span class="pre">Symbol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols"><code class="docutils literal notranslate"><span class="pre">Symbols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols"><code class="docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization"><code class="docutils literal notranslate"><span class="pre">Synchronization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Synchronization.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization.waveform_generator"><code class="docutils literal notranslate"><span class="pre">Synchronization.waveform_generator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization.synchronize"><code class="docutils literal notranslate"><span class="pre">Synchronization.synchronize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation.waveform_generator"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation.waveform_generator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation.estimate_channel"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation.estimate_channel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.IdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">IdealChannelEstimation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.IdealChannelEstimation.yaml_tag"><code class="docutils literal notranslate"><span class="pre">IdealChannelEstimation.yaml_tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEqualization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEqualization.waveform_generator"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization.waveform_generator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization.equalize_channel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization.equalize_channel"><code class="docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization.equalize_channel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbol_type"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.symbol_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.samples_in_frame"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.samples_in_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.oversampling_factor"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.oversampling_factor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.modulation_order"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.modulation_order</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.bits_per_symbol"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.bits_per_symbol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.bits_per_frame"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.bits_per_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbols_per_frame"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.symbols_per_frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.frame_duration"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.frame_duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.bit_energy"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.bit_energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbol_energy"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.symbol_energy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.power"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.power</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.map"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.unmap"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.unmap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.modulate"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.modulate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.demodulate"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.demodulate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.estimate_channel"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.estimate_channel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.equalize_symbols"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.equalize_symbols()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.bandwidth"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.bandwidth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.data_rate"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.data_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.modem"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.modem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.synchronization"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.synchronization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.channel_estimation"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.channel_estimation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.channel_equalization"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.channel_equalization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.sampling_rate"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbol_precoding_support"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator.symbol_precoding_support</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="docutils literal notranslate"><span class="pre">PilotWaveformGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot_signal"><code class="docutils literal notranslate"><span class="pre">PilotWaveformGenerator.pilot_signal</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">PilotSymbolSequence</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence.sequence"><code class="docutils literal notranslate"><span class="pre">PilotSymbolSequence.sequence</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.UniformPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">UniformPilotSymbolSequence</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.UniformPilotSymbolSequence.sequence"><code class="docutils literal notranslate"><span class="pre">UniformPilotSymbolSequence.sequence</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">CustomPilotSymbolSequence</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence.sequence"><code class="docutils literal notranslate"><span class="pre">CustomPilotSymbolSequence.sequence</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.MappedPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">MappedPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbol_sequence"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform.pilot_symbol_sequence</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.repeat_pilot_symbol_sequence"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform.repeat_pilot_symbol_sequence</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbols"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform.pilot_symbols()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_psk_qam.html">Phase Shift Keying / Quadrature Amplitude Modulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.CommunicationEvaluator"><code class="docutils literal notranslate"><span class="pre">CommunicationEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BitErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BlockErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorArtifact"><code class="docutils literal notranslate"><span class="pre">FrameErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputArtifact"><code class="docutils literal notranslate"><span class="pre">ThroughputArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluation"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluator"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RootRaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RectangularWaveform"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FMCWWaveform"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKCorrelationSynchronization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType"><code class="docutils literal notranslate"><span class="pre">ElementType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PrefixType"><code class="docutils literal notranslate"><span class="pre">PrefixType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameElement"><code class="docutils literal notranslate"><span class="pre">FrameElement</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameResource"><code class="docutils literal notranslate"><span class="pre">FrameResource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSection"><code class="docutils literal notranslate"><span class="pre">FrameSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection"><code class="docutils literal notranslate"><span class="pre">FrameSymbolSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameGuardSection"><code class="docutils literal notranslate"><span class="pre">FrameGuardSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMWaveform"><code class="docutils literal notranslate"><span class="pre">OFDMWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection"><code class="docutils literal notranslate"><span class="pre">PilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxPilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ReferencePosition"><code class="docutils literal notranslate"><span class="pre">ReferencePosition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMMinimumMeanSquareChannelEqualization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.PGT"><code class="docutils literal notranslate"><span class="pre">PGT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">CorrelationSynchronization</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -97,10 +253,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="modem.html">Communication Module</a> &raquo;</li>
-      <li>Communication Waveform Base</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="modem.html">Communication</a></li>
+      <li class="breadcrumb-item active">Communication Waveform Base</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/modem.waveform_generator.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,12 +266,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.modem.waveform_generator"></span><section id="communication-waveform-base">
-<h1>Communication Waveform Base<a class="headerlink" href="#communication-waveform-base" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.modem.waveform_generator"></span><section id="communication-waveform-base">
+<h1>Communication Waveform Base<a class="headerlink" href="#communication-waveform-base" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Synchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformType</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Abstract base class for synchronization routines of waveform generators.</p>
 <p>Refer to Nasir <em>et al.</em><a class="footnote-reference brackets" href="#footcite-2016-nasir" id="id1">1</a> for an overview of the current state of the art.</p>
 <dl class="field-list simple">
@@ -131,7 +312,7 @@
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.waveform_generator">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">hermespy.modem.waveform_generator.WaveformType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.waveform_generator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">WaveformType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.waveform_generator" title="Permalink to this definition"></a></dt>
 <dd><p>Waveform generator this synchronization routine is attached to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -145,69 +326,21 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.synchronize">
-<span class="sig-name descname"><span class="pre">synchronize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.synchronize" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">synchronize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.synchronize" title="Permalink to this definition"></a></dt>
 <dd><p>Simulates time-synchronization at the receiver-side.</p>
 <p>Sorts base-band signal-sections into frames in time-domain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of with <cite>num_streams`x`num_samples</cite> entries.</p></li>
-<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – State of the wireless transmission channel over which <cite>signal</cite> has been propagated.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex base-band samples of with <cite>num_streams`x`num_samples</cite> entries.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple of <cite>signal</cite> samples and channel transformations sorted into frames</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[Tuple[np.ndarray, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>]]</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of time indices indicating the first samples of frames detected in <cite>signal</cite>.</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>ValueError</strong> – If the number of received streams in <cite>channel_state</cite> does not equal one.
-    If the length of <cite>signal</cite> and the number of samples in <cite>channel_state</cite> are not identical.</p></li>
-<li><p><strong>RuntimeError</strong> – If the synchronization routine is floating</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize an <cite>Synchronization</cite> object to YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><em>Synchronization</em></a>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><em>Synchronization</em></a>) – The <cite>Synchronization</cite> instance to be serialized.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.Synchronization.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.Synchronization.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new <cite>Synchronization</cite> instance from YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>Synchronization</cite> serialization.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Newly created <cite>Synchronization</cite> instance.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization">Synchronization</a></p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If the synchronization routine is floating</p>
 </dd>
 </dl>
 </dd></dl>
@@ -217,16 +350,22 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEstimation">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChannelEstimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEstimation" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformType</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
-<p>Abstract base class for channel estimation routines of waveform generators.</p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code>], <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Base class for channel estimation routines of waveform generators.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this estimation routine is attached to.</p>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEstimation.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NoChannelEstimation'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEstimation.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEstimation.waveform_generator">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">hermespy.modem.waveform_generator.WaveformType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEstimation.waveform_generator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">WaveformType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEstimation.waveform_generator" title="Permalink to this definition"></a></dt>
 <dd><p>Waveform generator this synchronization routine is attached to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -240,21 +379,17 @@ The representer gets passed down the serialization tree to each node.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEstimation.estimate_channel">
-<span class="sig-name descname"><span class="pre">estimate_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEstimation.estimate_channel" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">estimate_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEstimation.estimate_channel" title="Permalink to this definition"></a></dt>
 <dd><p>Estimate the wireless channel of a received communication frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Signal model of the communication frame waveform.</p></li>
-<li><p><strong>csi</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a><em>, </em><em>optional</em>) – Ideal channel state information.
-May be required for some routines.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Demodulated communication symbols.</p>
 </dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If <cite>csi</cite> is required but not provided.</p>
-</dd>
+</dl>
+<p>Returns: The symbols and their respective channel states.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a></p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols" title="hermespy.modem.symbols.StatedSymbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a>, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -262,18 +397,43 @@ May be required for some routines.</p></li>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.IdealChannelEstimation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IdealChannelEstimation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.IdealChannelEstimation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code>], <a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation" title="hermespy.modem.waveform_generator.ChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code>]</p>
+<p>Channel estimation accessing the ideal channel state informaion.</p>
+<p>This type of channel estimation is only available during simulation runtime.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this estimation routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.IdealChannelEstimation.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'IdealChannelEstimation'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.IdealChannelEstimation.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEqualization">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformType</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Abstract base class for channel equalization routines of waveform generators.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEqualization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'NoEqualization'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEqualization.waveform_generator">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">hermespy.modem.waveform_generator.WaveformType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization.waveform_generator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform_generator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">WaveformType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization.waveform_generator" title="Permalink to this definition"></a></dt>
 <dd><p>Waveform generator this equalization routine is attached to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -287,22 +447,52 @@ May be required for some routines.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel">
-<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stated_symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
 <dd><p>Equalize the wireless channel of a received communication frame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – Signal model of the communication frame waveform.</p></li>
-<li><p><strong>csi</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state estimation</p></li>
-<li><p><strong>snr</strong> (<em>float</em>) – Assumed signal to noise ratio.
-May be required by some routines, infinite by default.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>frame</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Symbols and channel state of the received communication frame.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The equalized signal model.</p>
-</dd>
+</dl>
+<p>Returns: The equalize symbols.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ZeroForcingChannelEqualization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ZeroForcingChannelEqualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform_generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code>], <a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEqualization" title="hermespy.modem.waveform_generator.ChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code>], <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Zero-Forcing channel equalization for arbitrary waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>waveform_generator</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a><em>, </em><em>optional</em>) – The waveform generator this equalization routine is attached to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ZeroForcingChannelEqualization.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ZeroForcing'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ZeroForcingChannelEqualization.equalize_channel">
+<span class="sig-name descname"><span class="pre">equalize_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stated_symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization.equalize_channel" title="Permalink to this definition"></a></dt>
+<dd><p>Equalize the wireless channel of a received communication frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frame</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Symbols and channel state of the received communication frame.</p>
+</dd>
+</dl>
+<p>Returns: The equalize symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -312,14 +502,14 @@ May be required by some routines, infinite by default.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WaveformGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oversampling_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Implements an abstract waveform generator.</p>
 <p>Implementations for specific technologies should inherit from this class.</p>
 <p>Waveform Generator initialization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>modem</strong> (<a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><em>Modem</em></a><em>, </em><em>optional</em>) – A modem this generator is attached to.
+<li><p><strong>modem</strong> (<a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem" title="hermespy.modem.modem.BaseModem"><em>BaseModem</em></a><em>, </em><em>optional</em>) – A modem this generator is attached to.
 By default, the generator is considered to be floating.</p></li>
 <li><p><strong>oversampling_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – The factor at which the simulated baseband_signal is oversampled.</p></li>
 <li><p><strong>modulation_order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of modulation.
@@ -327,12 +517,6 @@ Must be a non-negative power of two.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Waveform'</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.yaml_tag" title="Permalink to this definition"></a></dt>
-<dd><p>YAML serialization tag.</p>
-</dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.symbol_type">
 <span class="sig-name descname"><span class="pre">symbol_type</span></span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbol_type" title="Permalink to this definition"></a></dt>
@@ -442,7 +626,7 @@ Must be a non-negative power of two.</p></li>
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.bit_energy">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.bit_energy" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the theoretical average (discrete-time) bit energy of the modulated baseband_signal.</p>
-<p>Energy of baseband_signal x[k] is defined as sum{<a href="#id2"><span class="problematic" id="id3">|</span></a>x[k]}^2
+<p>Energy of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum{|x[k]}^2\)</span>
 Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -455,7 +639,7 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.symbol_energy">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbol_energy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbol_energy" title="Permalink to this definition"></a></dt>
 <dd><p>The theoretical average symbol (discrete-time) energy of the modulated baseband_signal.</p>
-<p>Energy of baseband_signal x[k] is defined as sum{<a href="#id4"><span class="problematic" id="id5">|</span></a>x[k]}^2
+<p>Energy of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum{|x[k]}^2\)</span>
 Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -471,7 +655,7 @@ Only data bits are considered, i.e., reference, guard intervals are ignored.</p>
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.power">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.power" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the theoretical average symbol (unitless) power,</p>
-<p>Power of baseband_signal x[k] is defined as sum_{k=1}^N{<a href="#id7"><span class="problematic" id="id8">|x[k]|</span></a>}^2 / N
+<p>Power of baseband_signal <span class="math notranslate nohighlight">\(x[k]\)</span> is defined as <span class="math notranslate nohighlight">\(\sum_{k=1}^N{|x[k]|}^2 / N\)</span>
 Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -534,22 +718,37 @@ In general, L is greater or equal to K.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.demodulate">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">demodulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_variance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.demodulate" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">demodulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.demodulate" title="Permalink to this definition"></a></dt>
 <dd><p>Demodulate a base-band signal stream to data symbols.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex-valued base-band samples of a single communication frame.</p></li>
-<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – Channel state information of a single communication frame.</p></li>
-<li><p><strong>noise_variance</strong> (<em>float</em>) – Variance of the thermal noise introduced during reception.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>signal</strong> (<em>np.ndarray</em>) – Vector of complex-valued base-band samples of a single communication frame.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple of 3 vectors of equal-length first dimension <cite>num_symbols</cite>.
-The demodulated data symbols, their channel estimates and their noise variance.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a></p>
 </dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The demodulated communication symbols</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.estimate_channel">
+<span class="sig-name descname"><span class="pre">estimate_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.estimate_channel" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(np.ndarray, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation">ChannelStateInformation</a>, np.ndarray)</p>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols" title="hermespy.modem.symbols.StatedSymbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a>, <a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.equalize_symbols">
+<span class="sig-name descname"><span class="pre">equalize_symbols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.equalize_symbols" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbols</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -585,24 +784,19 @@ The demodulated data symbols, their channel estimates and their noise variance.<
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.modem">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modem</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><span class="pre">hermespy.modem.modem.Modem</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.modem" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modem</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem" title="hermespy.modem.modem.BaseModem"><span class="pre">BaseModem</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.modem" title="Permalink to this definition"></a></dt>
 <dd><p>Access the modem this generator is attached to.</p>
+<p>Returns: A handle to the modem.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>A handle to the modem.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem">Modem</a></p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If this waveform generator is not attached to a modem.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem" title="hermespy.modem.modem.BaseModem"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModem</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.synchronization">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">synchronization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><span class="pre">hermespy.modem.waveform_generator.Synchronization</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.synchronization" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">synchronization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><span class="pre">Synchronization</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.synchronization" title="Permalink to this definition"></a></dt>
 <dd><p>Synchronization routine.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -616,11 +810,11 @@ The demodulated data symbols, their channel estimates and their noise variance.<
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.channel_estimation">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channel_estimation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation" title="hermespy.modem.waveform_generator.ChannelEstimation"><span class="pre">hermespy.modem.waveform_generator.ChannelEstimation</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.channel_estimation" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channel_estimation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation" title="hermespy.modem.waveform_generator.ChannelEstimation"><span class="pre">ChannelEstimation</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.channel_estimation" title="Permalink to this definition"></a></dt>
 <dd><p>Channel estimation routine.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Handle to the synchronization routine.</p>
+<dd class="field-odd"><p>Handle to the estimation routine.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEstimation" title="hermespy.modem.waveform_generator.ChannelEstimation">ChannelEstimation</a></p>
@@ -630,7 +824,7 @@ The demodulated data symbols, their channel estimates and their noise variance.<
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.channel_equalization">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channel_equalization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEqualization" title="hermespy.modem.waveform_generator.ChannelEqualization"><span class="pre">hermespy.modem.waveform_generator.ChannelEqualization</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.channel_equalization" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channel_equalization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.ChannelEqualization" title="hermespy.modem.waveform_generator.ChannelEqualization"><span class="pre">ChannelEqualization</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.channel_equalization" title="Permalink to this definition"></a></dt>
 <dd><p>Channel estimation routine.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -656,43 +850,14 @@ The demodulated data symbols, their channel estimates and their noise variance.<
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize an <cite>WaveformGenerator</cite> object to YAML.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.symbol_precoding_support">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">symbol_precoding_support</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.symbol_precoding_support" title="Permalink to this definition"></a></dt>
+<dd><p>Flag indicating if this waveforms supports symbol precodings.</p>
+<p>Returns: Boolean support flag.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><em>WaveformGenerator</em></a>) – The <cite>WaveformGenerator</cite> instance to be serialized.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node</p>
-</dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Node</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.WaveformGenerator.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.WaveformGenerator.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new <cite>WaveformGenerator</cite> instance from YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>WaveformGenerator</cite> serialization.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Newly created <cite>WaveformGenerator</cite> instance.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator">WaveformGenerator</a></p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -702,13 +867,13 @@ The representer gets passed down the serialization tree to each node.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotWaveformGenerator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PilotWaveformGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oversampling_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.WaveformGenerator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.WaveformGenerator" title="hermespy.modem.waveform_generator.WaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">WaveformGenerator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Abstract base class of communication waveform generators generating a pilot signal.</p>
 <p>Waveform Generator initialization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>modem</strong> (<a class="reference internal" href="modem.modem.html#hermespy.modem.modem.Modem" title="hermespy.modem.modem.Modem"><em>Modem</em></a><em>, </em><em>optional</em>) – A modem this generator is attached to.
+<li><p><strong>modem</strong> (<a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem" title="hermespy.modem.modem.BaseModem"><em>BaseModem</em></a><em>, </em><em>optional</em>) – A modem this generator is attached to.
 By default, the generator is considered to be floating.</p></li>
 <li><p><strong>oversampling_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – The factor at which the simulated baseband_signal is oversampled.</p></li>
 <li><p><strong>modulation_order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of modulation.
@@ -718,7 +883,7 @@ Must be a non-negative power of two.</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot_signal">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">hermespy.core.signal_model.Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot_signal" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pilot_signal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><span class="pre">Signal</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator.pilot_signal" title="Permalink to this definition"></a></dt>
 <dd><p>Model of the pilot sequence within this communication waveform.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -735,11 +900,11 @@ Must be a non-negative power of two.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotSymbolSequence">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PilotSymbolSequence</span></span><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Abstract base class for pilot sequences.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.PilotSymbolSequence.sequence">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.PilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
 <dd><p>The scalar sequence of pilot symbols.</p>
 <p>For a configurable pilot section, this symbol sequence will be repeated accordingly.</p>
 <dl class="field-list simple">
@@ -757,7 +922,7 @@ Must be a non-negative power of two.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.UniformPilotSymbolSequence">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UniformPilotSymbolSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pilot_symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">0j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.UniformPilotSymbolSequence" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotSymbolSequence</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">PilotSymbolSequence</span></code></a></p>
 <p>A pilot symbol sequence containing identical symbols.</p>
 <p>Only viable for testing purposes, since it makes the pilot sections easy to spot within the frame.
 Not advisable to be used in production scenarios.</p>
@@ -769,7 +934,7 @@ Not advisable to be used in production scenarios.</p>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.UniformPilotSymbolSequence.sequence">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.UniformPilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.UniformPilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
 <dd><p>The scalar sequence of pilot symbols.</p>
 <p>For a configurable pilot section, this symbol sequence will be repeated accordingly.</p>
 <dl class="field-list simple">
@@ -787,7 +952,7 @@ Not advisable to be used in production scenarios.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.CustomPilotSymbolSequence">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CustomPilotSymbolSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pilot_symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotSymbolSequence</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">PilotSymbolSequence</span></code></a></p>
 <p>A customized pilot symbol sequence.</p>
 <p>The user may freely chose the pilot symbols from samples within the complex plane.</p>
 <dl class="field-list simple">
@@ -797,7 +962,7 @@ Not advisable to be used in production scenarios.</p>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.CustomPilotSymbolSequence.sequence">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence.sequence" title="Permalink to this definition"></a></dt>
 <dd><p>The scalar sequence of pilot symbols.</p>
 <p>For a configurable pilot section, this symbol sequence will be repeated accordingly.</p>
 <dl class="field-list simple">
@@ -813,9 +978,21 @@ Not advisable to be used in production scenarios.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.modem.waveform_generator.MappedPilotSymbolSequence">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MappedPilotSymbolSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.MappedPilotSymbolSequence" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.CustomPilotSymbolSequence" title="hermespy.modem.waveform_generator.CustomPilotSymbolSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">CustomPilotSymbolSequence</span></code></a></p>
+<p>Pilot symbol sequence derived from a mapping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mapping</strong> (<em>PskQamMapping</em>) – Mapping from which the symbols pilot symbols should be inferred</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ConfigurablePilotWaveform">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConfigurablePilotWaveform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol_sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeat_symbol_sequence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.waveform_generator.PilotWaveformGenerator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.waveform_generator.PilotWaveformGenerator" title="hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PilotWaveformGenerator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -828,7 +1005,7 @@ Enabled by default.</p></li>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbol_sequence">
-<span class="sig-name descname"><span class="pre">pilot_symbol_sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><span class="pre">hermespy.modem.waveform_generator.PilotSymbolSequence</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbol_sequence" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pilot_symbol_sequence</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.modem.waveform_generator.PilotSymbolSequence" title="hermespy.modem.waveform_generator.PilotSymbolSequence"><span class="pre">PilotSymbolSequence</span></a></em><a class="headerlink" href="#hermespy.modem.waveform_generator.ConfigurablePilotWaveform.pilot_symbol_sequence" title="Permalink to this definition"></a></dt>
 <dd><p>The configured pilot symbol sequence.</p>
 </dd></dl>
 
@@ -860,8 +1037,7 @@ Enabled by default.</p></li>
 
 </dd></dl>
 
-</section>
-<div class="docutils container" id="id6">
+<div class="docutils container" id="id2">
 <dl class="footnote brackets">
 <dt class="label" id="footcite-2016-nasir"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>Ali A. Nasir, Salman Durrani, Hani Mehrpouyan, Steven D. Blostein, and Rodney A. Kennedy. Timing and carrier synchronization in wireless communication systems: a survey and classification of research in the last 5 years. <em>EURASIP Journal on Wireless Communications and Networking</em>, 2016(1):180, 2016. <a class="reference external" href="https://doi.org/10.1186/s13638-016-0670-9">doi:10.1186/s13638-016-0670-9</a>.</p>
@@ -880,7 +1056,7 @@ Enabled by default.</p></li>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce4592b0>
+<jinja2.runtime.BlockReference object at 0x7f9e79f42d90>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tools Module &mdash; HermesPy  documentation</title>
+  <title>Tools &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +57,45 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Tools Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tools</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.DbConversionType"><code class="docutils literal notranslate"><span class="pre">DbConversionType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.db2lin"><code class="docutils literal notranslate"><span class="pre">db2lin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.lin2db"><code class="docutils literal notranslate"><span class="pre">lin2db()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.marcum_q"><code class="docutils literal notranslate"><span class="pre">marcum_q()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.rotation_matrix"><code class="docutils literal notranslate"><span class="pre">rotation_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.transform_vector"><code class="docutils literal notranslate"><span class="pre">transform_vector()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.transform_coordinates"><code class="docutils literal notranslate"><span class="pre">transform_coordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html#hermespy.tools.math.rms_value"><code class="docutils literal notranslate"><span class="pre">rms_value()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.resampling.html#hermespy.tools.resampling.delay_resampling_matrix"><code class="docutils literal notranslate"><span class="pre">delay_resampling_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.screen_geometry"><code class="docutils literal notranslate"><span class="pre">screen_geometry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.set_figure_geometry"><code class="docutils literal notranslate"><span class="pre">set_figure_geometry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.tile_figures"><code class="docutils literal notranslate"><span class="pre">tile_figures()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.test"><code class="docutils literal notranslate"><span class="pre">test()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,9 +113,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-      <li>Tools Module</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+      <li class="breadcrumb-item active">Tools</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/tools.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -102,14 +125,57 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="tools-module">
-<h1>Tools Module<a class="headerlink" href="#tools-module" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="tools">
+<h1>Tools<a class="headerlink" href="#tools" title="Permalink to this heading"></a></h1>
 <p>The tools module contains a lose collection of various sub-routines supporting
 the main modules.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.DbConversionType"><code class="docutils literal notranslate"><span class="pre">DbConversionType</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tools.math.html#hermespy.tools.math.DbConversionType.POWER"><code class="docutils literal notranslate"><span class="pre">DbConversionType.POWER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.math.html#hermespy.tools.math.DbConversionType.AMPLITUDE"><code class="docutils literal notranslate"><span class="pre">DbConversionType.AMPLITUDE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.math.html#hermespy.tools.math.DbConversionType.HILLY"><code class="docutils literal notranslate"><span class="pre">DbConversionType.HILLY</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.db2lin"><code class="docutils literal notranslate"><span class="pre">db2lin()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.lin2db"><code class="docutils literal notranslate"><span class="pre">lin2db()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.marcum_q"><code class="docutils literal notranslate"><span class="pre">marcum_q()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.rotation_matrix"><code class="docutils literal notranslate"><span class="pre">rotation_matrix()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.transform_vector"><code class="docutils literal notranslate"><span class="pre">transform_vector()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.transform_coordinates"><code class="docutils literal notranslate"><span class="pre">transform_coordinates()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.math.html#hermespy.tools.math.rms_value"><code class="docutils literal notranslate"><span class="pre">rms_value()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.resampling.html#hermespy.tools.resampling.delay_resampling_matrix"><code class="docutils literal notranslate"><span class="pre">delay_resampling_matrix()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.screen_geometry"><code class="docutils literal notranslate"><span class="pre">screen_geometry()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.set_figure_geometry"><code class="docutils literal notranslate"><span class="pre">set_figure_geometry()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.tile_figures"><code class="docutils literal notranslate"><span class="pre">tile_figures()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.tile.html#hermespy.tools.tile.test"><code class="docutils literal notranslate"><span class="pre">test()</span></code></a></li>
 </ul>
 </div>
 </section>
@@ -125,7 +191,7 @@ the main modules.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce675550>
+<jinja2.runtime.BlockReference object at 0x7f9e79c37370>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

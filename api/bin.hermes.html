@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hermes Command Line Interface &mdash; HermesPy  documentation</title>
+  <title>Hermes Command Line Interface &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="../_static/tabs.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
@@ -28,8 +33,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Tools Module" href="tools.html" />
-    <link rel="prev" title="Binary Module" href="bin.html" /> 
+    <link rel="next" title="Tools" href="tools.html" />
+    <link rel="prev" title="Entry Points" href="bin.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +46,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -53,26 +58,31 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="bin.html">Binary Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="bin.html">Entry Points</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Hermes Command Line Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.bin.hermes.hermes"><code class="docutils literal notranslate"><span class="pre">hermes()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,10 +100,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="bin.html">Binary Module</a> &raquo;</li>
-      <li>Hermes Command Line Interface</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="bin.html">Entry Points</a></li>
+      <li class="breadcrumb-item active">Hermes Command Line Interface</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/bin.hermes.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,27 +113,56 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-bin.hermes"></span><section id="hermes-command-line-interface">
-<h1>Hermes Command Line Interface<a class="headerlink" href="#hermes-command-line-interface" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.bin.hermes"></span><section id="hermes-command-line-interface">
+<h1>Hermes Command Line Interface<a class="headerlink" href="#hermes-command-line-interface" title="Permalink to this heading"></a></h1>
 <p>Within this module the primary entry point to the HermesPy simulation routine is defined as
 command line interface (CLI).
 In order to conveniently launch HermesPy from any command line,
 make sure that the virtual Python environment you installed HermesPy in is activated by executing</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-Q29uZGE=" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Q29uZGE=" name="Q29uZGE=" role="tab" tabindex="0">Conda</button><button aria-controls="panel-0-VkVudg==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-VkVudg==" name="VkVudg==" role="tab" tabindex="-1">VEnv</button></div><div aria-labelledby="tab-0-Q29uZGE=" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-Q29uZGE=" name="Q29uZGE=" role="tabpanel" tabindex="0"><div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="p">&lt;</span><span class="n">envname</span><span class="p">&gt;</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-Q29uZGE=" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Q29uZGE=" name="Q29uZGE=" role="tab" tabindex="0">Conda</button><button aria-controls="panel-0-VkVudiBXaW5kb3dz" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-VkVudiBXaW5kb3dz" name="VkVudiBXaW5kb3dz" role="tab" tabindex="-1">VEnv Windows</button><button aria-controls="panel-0-VkVudiBMaW51eA==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-VkVudiBMaW51eA==" name="VkVudiBMaW51eA==" role="tab" tabindex="-1">VEnv Linux</button></div><div aria-labelledby="tab-0-Q29uZGE=" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-Q29uZGE=" name="Q29uZGE=" role="tabpanel" tabindex="0"><div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="p">&lt;</span><span class="n">envname</span><span class="p">&gt;</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-0-VkVudg==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-VkVudg==" name="VkVudg==" role="tabpanel" tabindex="0"><div class="highlight-batch notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span>envname<span class="p">&gt;</span>\Scripts\activate.bat
+</div><div aria-labelledby="tab-0-VkVudiBXaW5kb3dz" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-VkVudiBXaW5kb3dz" name="VkVudiBXaW5kb3dz" role="tabpanel" tabindex="0"><div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="n">envname</span><span class="p">&gt;/</span><span class="n">Scripts</span><span class="p">/</span><span class="n">activate</span><span class="p">.</span><span class="n">bat</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-VkVudiBMaW51eA==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-VkVudiBMaW51eA==" name="VkVudiBMaW51eA==" role="tabpanel" tabindex="0"><div class="highlight-batch notranslate"><div class="highlight"><pre><span></span>source <span class="p">&lt;</span>envname<span class="p">&gt;</span>\bin\activate
 </pre></div>
 </div>
 </div></div>
 <p>within a terminal.
 Usually activated environments are indicated by a <cite>(&lt;envname&gt;)</cite> in front of your terminal command line.
 Afterwards, HermesPy can be launched by executing the command</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">hermes -p &lt;parameter_dir&gt; -o &lt;output_dir&gt;</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">hermes &lt;configuration&gt; -o &lt;output_dir&gt;</span>
 </pre></div>
 </div>
-<p>The available argument options are</p>
+<p>The configuration should point to a configuration file describing the simulation scenario.
+Refer to the <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy/tree/main/_examples/settings">repository</a> for examples.
+The available argument options are</p>
 <table class="docutils align-center" id="id1">
 <caption><span class="caption-text">CLI Argument Options</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
 <colgroup>
@@ -131,26 +170,28 @@ Afterwards, HermesPy can be launched by executing the command</p>
 <col style="width: 50%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p>-h, –help</p></td>
-<td><p>Display the CLI help</p></td>
+<tr class="row-odd"><td><p>&lt;configuration&gt;</p></td>
+<td><p>Path to a <cite>.yml</cite> file containing a simulation scenario description</p></td>
 </tr>
-<tr class="row-even"><td><p>-p <cite>&lt;directory&gt;</cite></p></td>
-<td><p>Specify the parameter source directory</p></td>
+<tr class="row-even"><td><p>-h, –help</p></td>
+<td><p>Display the CLI help</p></td>
 </tr>
 <tr class="row-odd"><td><p>-o <cite>&lt;directory&gt;</cite></p></td>
 <td><p>Specify the result output directory</p></td>
 </tr>
 <tr class="row-even"><td><p>-s <cite>&lt;style&gt;</cite></p></td>
-<td><p>Specify the style of the result plots</p></td>
+<td><p>Specify the style of the result plots.</p></td>
 </tr>
 <tr class="row-odd"><td><p>-t</p></td>
-<td><p>Run the CLI in test mode</p></td>
+<td><p>Run the CLI in test mode. No artifacts will be saved to results folders.</p></td>
 </tr>
 </tbody>
 </table>
+<p>If no output directory was specified, a new folder <cite>results</cite> is being created within the current working directory.</p>
+</section>
 <dl class="py function">
-<dt class="sig sig-object py" id="bin.hermes.hermes">
-<span class="sig-name descname"><span class="pre">hermes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bin.hermes.hermes" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="hermespy.bin.hermes.hermes">
+<span class="sig-name descname"><span class="pre">hermes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.bin.hermes.hermes" title="Permalink to this definition"></a></dt>
 <dd><p>HermesPy Command Line Interface.</p>
 <p>Default entry point to execute hermespy <cite>.yml</cite> files via terminals.</p>
 <dl class="field-list simple">
@@ -164,20 +205,19 @@ By default, the system argument vector will be interpreted.</p>
 </dl>
 </dd></dl>
 
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="bin.html" class="btn btn-neutral float-left" title="Binary Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="tools.html" class="btn btn-neutral float-right" title="Tools Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="bin.html" class="btn btn-neutral float-left" title="Entry Points" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tools.html" class="btn btn-neutral float-right" title="Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce42b190>
+<jinja2.runtime.BlockReference object at 0x7f9e7ae94b50>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Single Carrier Encoding &mdash; HermesPy  documentation</title>
+  <title>Single Carrier Encoding &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -27,7 +32,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Zero-Forcing Equalization" href="precoding.spatial_multiplexing.html" />
+    <link rel="next" title="Spatial Multiplexing" href="precoding.spatial_multiplexing.html" />
     <link rel="prev" title="Discrete Fourier Transform Precoding" href="precoding.dft.html" /> 
 </head>
 
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,34 +57,58 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="precoding.html">Precoding Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="precoding.html">Precoding</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.precoder.html">Precoding Step Base</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.mean_square_equalizer.html">Minimum-Mean-Square Equalization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.zero_forcing_equalizer.html">Zero-Forcing Equalization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html#hermespy.precoding.precoding.Precoder"><code class="docutils literal notranslate"><span class="pre">Precoder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html#hermespy.precoding.precoding.PrecoderType"><code class="docutils literal notranslate"><span class="pre">PrecoderType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html#hermespy.precoding.precoding.Precoding"><code class="docutils literal notranslate"><span class="pre">Precoding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.symbol_precoding.html">Symbol Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.symbol_precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoder"><code class="docutils literal notranslate"><span class="pre">SymbolPrecoder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.symbol_precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoding"><code class="docutils literal notranslate"><span class="pre">SymbolPrecoding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.TransmitStreamEncoder"><code class="docutils literal notranslate"><span class="pre">TransmitStreamEncoder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.ReceiveStreamDecoder"><code class="docutils literal notranslate"><span class="pre">ReceiveStreamDecoder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.TransmitStreamCoding"><code class="docutils literal notranslate"><span class="pre">TransmitStreamCoding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.ReceiveStreamCoding"><code class="docutils literal notranslate"><span class="pre">ReceiveStreamCoding</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="precoding.dft.html">Discrete Fourier Transform Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.dft.html#hermespy.precoding.dft.DFT"><code class="docutils literal notranslate"><span class="pre">DFT</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Single Carrier Encoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.spatial_multiplexing.html">Zero-Forcing Equalization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.precoding.single_carrier.SingleCarrier"><code class="docutils literal notranslate"><span class="pre">SingleCarrier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.precoding.single_carrier.SingleCarrier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SingleCarrier.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.precoding.single_carrier.SingleCarrier.encode"><code class="docutils literal notranslate"><span class="pre">SingleCarrier.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.precoding.single_carrier.SingleCarrier.decode"><code class="docutils literal notranslate"><span class="pre">SingleCarrier.decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.precoding.single_carrier.SingleCarrier.num_input_streams"><code class="docutils literal notranslate"><span class="pre">SingleCarrier.num_input_streams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.precoding.single_carrier.SingleCarrier.num_output_streams"><code class="docutils literal notranslate"><span class="pre">SingleCarrier.num_output_streams</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.spatial_multiplexing.html#hermespy.precoding.spatial_multiplexing.SpatialMultiplexing"><code class="docutils literal notranslate"><span class="pre">SpatialMultiplexing</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="precoding.ratio_combining.html">Maximum Ratio Combining</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.ratio_combining.html#hermespy.precoding.ratio_combining.MaximumRatioCombining"><code class="docutils literal notranslate"><span class="pre">MaximumRatioCombining</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="precoding.space_time_block_coding.html">Space-Time Block Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.space_time_block_coding.html#hermespy.precoding.space_time_block_coding.SpaceTimeBlockCoding"><code class="docutils literal notranslate"><span class="pre">SpaceTimeBlockCoding</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -97,10 +126,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="precoding.html">Precoding Module</a> &raquo;</li>
-      <li>Single Carrier Encoding</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="precoding.html">Precoding</a></li>
+      <li class="breadcrumb-item active">Single Carrier Encoding</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/precoding.single_carrier.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,79 +139,84 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.precoding.single_carrier"></span><section id="single-carrier-encoding">
-<h1>Single Carrier Encoding<a class="headerlink" href="#single-carrier-encoding" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.precoding.single_carrier"></span><section id="single-carrier-encoding">
+<h1>Single Carrier Encoding<a class="headerlink" href="#single-carrier-encoding" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.precoding.single_carrier.SingleCarrier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SingleCarrier</span></span><a class="headerlink" href="#hermespy.precoding.single_carrier.SingleCarrier" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="precoding.precoder.html#hermespy.precoding.symbol_precoder.SymbolPrecoder" title="hermespy.precoding.symbol_precoder.SymbolPrecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.precoding.symbol_precoder.SymbolPrecoder</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="precoding.symbol_precoding.html#hermespy.precoding.symbol_precoding.SymbolPrecoder" title="hermespy.precoding.symbol_precoding.SymbolPrecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolPrecoder</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Single Carrier data symbol precoding step.</p>
 <p>Takes a on-dimensional input stream and distributes the symbols to multiple output streams.</p>
 <p>Single Carrier object initialization.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.precoding.single_carrier.SingleCarrier.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SC'</span></em><a class="headerlink" href="#hermespy.precoding.single_carrier.SingleCarrier.yaml_tag" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SingleCarrier'</span></em><a class="headerlink" href="#hermespy.precoding.single_carrier.SingleCarrier.yaml_tag" title="Permalink to this definition"></a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.precoding.single_carrier.SingleCarrier.encode">
-<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol_stream</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.precoding.single_carrier.SingleCarrier.encode" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.precoding.single_carrier.SingleCarrier.encode" title="Permalink to this definition"></a></dt>
 <dd><p>Encode a data stream before transmission.</p>
 <p>This operation may modify the number of streams as well as the number of data symbols per stream.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>symbol_stream</strong> (<em>np.ndarray</em>) – An MxN matrix of data symbol streams feeding into the precoding step to be encoded.
-The first matrix dimension M represents the number of streams,
-the second dimension N the number of discrete data symbols.</p>
+<dd class="field-odd"><p><strong>symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols" title="hermespy.modem.symbols.StatedSymbols"><em>StatedSymbols</em></a>) – Symbols to be encoded.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A matrix of M’xN’ encoded data symbol streams.
-The first matrix dimension M’ represents the number of streams after encoding,
-the second dimension N’ the number of discrete data symbols after encoding.</p>
+</dl>
+<p>Returns: Encoded symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – If an encoding operation is not supported.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> – If an encoding operation is not supported</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols" title="hermespy.modem.symbols.StatedSymbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.precoding.single_carrier.SingleCarrier.decode">
-<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol_stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream_noises</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.precoding.single_carrier.SingleCarrier.decode" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.precoding.single_carrier.SingleCarrier.decode" title="Permalink to this definition"></a></dt>
 <dd><p>Decode a data stream before reception.</p>
 <p>This operation may modify the number of streams as well as the number of data symbols per stream.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>symbol_stream</strong> (<em>np.ndarray</em>) – An MxN matrix of data symbol streams feeding into the precoding step to be decoded.
-The first matrix dimension M represents the number of streams,
-the second dimension N the number of discrete data symbols.</p></li>
-<li><p><strong>channel_state</strong> (<a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation" title="hermespy.core.channel_state_information.ChannelStateInformation"><em>ChannelStateInformation</em></a>) – The channel state estimates for each input symbol within <cite>input_stream</cite>.</p></li>
-<li><p><strong>stream_noises</strong> (<em>np.ndarray</em>) – The noise variances for each data symbol within <cite>symbol_stream</cite>.
-Identical dimensionality to <cite>input_stream</cite>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>A matrix of M’xN’ decoded data symbol streams.</dt><dd><p>The first matrix dimension M’ represents the number of streams after decoding,
-the second dimension N’ the number of discrete data symbols after decoding.</p>
-</dd>
-<dt>ChannelStateInformation:</dt><dd><p>Updated channel state information after decoding.</p>
-</dd>
-<dt>np.ndarray:</dt><dd><p>A matrix of M’xN’ data symbol noise estimations after this decoding step.</p>
+<dd class="field-odd"><p><strong>symbols</strong> (<a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols" title="hermespy.modem.symbols.Symbols"><em>Symbols</em></a>) – Symbols to be decoded.</p>
 </dd>
 </dl>
-</p>
+<p>Returns: Decoded symbols.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – If an encoding operation is not supported.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>NotImplementedError</strong> – If a decoding operation is not supported</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols" title="hermespy.modem.symbols.StatedSymbols"><code class="xref py py-class docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -217,20 +251,19 @@ the second dimension N’ the number of discrete data symbols after decoding.</p
 
 </dd></dl>
 
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="precoding.dft.html" class="btn btn-neutral float-left" title="Discrete Fourier Transform Precoding" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="precoding.spatial_multiplexing.html" class="btn btn-neutral float-right" title="Zero-Forcing Equalization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="precoding.spatial_multiplexing.html" class="btn btn-neutral float-right" title="Spatial Multiplexing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcde53ee0>
+<jinja2.runtime.BlockReference object at 0x7f9e7bca8460>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

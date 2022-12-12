@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar Evaluation &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Frequency Modulated Continuous Waveform Radar" href="radar.fmcw.html" />
+    <link rel="prev" title="Radar Detection" href="radar.detection.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="radar.html">Sensing</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarWaveform"><code class="docutils literal notranslate"><span class="pre">RadarWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarTransmission"><code class="docutils literal notranslate"><span class="pre">RadarTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.RadarReception"><code class="docutils literal notranslate"><span class="pre">RadarReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar"><code class="docutils literal notranslate"><span class="pre">Radar</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html#hermespy.radar.cube.RadarCube"><code class="docutils literal notranslate"><span class="pre">RadarCube</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.PointDetection"><code class="docutils literal notranslate"><span class="pre">PointDetection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarPointCloud"><code class="docutils literal notranslate"><span class="pre">RadarPointCloud</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.RadarDetector"><code class="docutils literal notranslate"><span class="pre">RadarDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.ThresholdDetector"><code class="docutils literal notranslate"><span class="pre">ThresholdDetector</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html#hermespy.radar.detection.MaxDetector"><code class="docutils literal notranslate"><span class="pre">MaxDetector</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Radar Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator.receiving_radar"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator.receiving_radar</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator.radar_channel"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator.radar_channel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator.generate_result"><code class="docutils literal notranslate"><span class="pre">RadarEvaluator.generate_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbArtifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbArtifact.to_scalar"><code class="docutils literal notranslate"><span class="pre">DetectionProbArtifact.to_scalar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbabilityEvaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbabilityEvaluation.artifact"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation.artifact()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbabilityEvaluation.evaluation"><code class="docutils literal notranslate"><span class="pre">DetectionProbabilityEvaluation.evaluation</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbEvaluator"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbEvaluator.yaml_tag"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbEvaluator.abbreviation"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.abbreviation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbEvaluator.title"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.title</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbEvaluator.generate_result"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.generate_result()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbEvaluator.evaluate"><code class="docutils literal notranslate"><span class="pre">DetectionProbEvaluator.evaluate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RocArtifact"><code class="docutils literal notranslate"><span class="pre">RocArtifact</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RocArtifact.h0_value"><code class="docutils literal notranslate"><span class="pre">RocArtifact.h0_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RocArtifact.h1_value"><code class="docutils literal notranslate"><span class="pre">RocArtifact.h1_value</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RocEvaluation"><code class="docutils literal notranslate"><span class="pre">RocEvaluation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RocEvaluation.data_h0"><code class="docutils literal notranslate"><span class="pre">RocEvaluation.data_h0</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RocEvaluation.data_h1"><code class="docutils literal notranslate"><span class="pre">RocEvaluation.data_h1</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RocEvaluation.artifact"><code class="docutils literal notranslate"><span class="pre">RocEvaluation.artifact()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RocEvaluationResult"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RocEvaluationResult.plot"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult.plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RocEvaluationResult.to_array"><code class="docutils literal notranslate"><span class="pre">RocEvaluationResult.to_array()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.evaluate"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.receiving_radar_null_hypothesis"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.receiving_radar_null_hypothesis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.abbreviation"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.abbreviation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.title"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.title</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.generate_result"><code class="docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic.generate_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareArtifact.num_errors"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact.num_errors</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareArtifact.cummulation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact.cummulation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareArtifact.to_scalar"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareArtifact.to_scalar()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareEvaluation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareEvaluation.artifact"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareEvaluation.artifact()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareErrorResult"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareErrorResult.plot_surface"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult.plot_surface</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareError"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareError.evaluate"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareError.title"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.title</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareError.abbreviation"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.abbreviation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareError.generate_result"><code class="docutils literal notranslate"><span class="pre">RootMeanSquareError.generate_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html#hermespy.radar.fmcw.FMCW"><code class="docutils literal notranslate"><span class="pre">FMCW</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="radar.html">Sensing</a></li>
+      <li class="breadcrumb-item active">Radar Evaluation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/radar.evaluation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.radar.evaluators"></span><section id="radar-evaluation">
+<h1>Radar Evaluation<a class="headerlink" href="#radar-evaluation" title="Permalink to this heading"></a></h1>
+<p>This module introduces several evaluators for performance indicators in radar detection.
+Refer to the <a class="reference internal" href="core.monte_carlo.html"><span class="doc">PyMonte</span></a> documentation for a detailed introduction to the concept of
+<a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluators</span></code></a>.</p>
+<div class="mermaid">
+            classDiagram
+  Serializable &lt;|-- BitErrorEvaluator
+  Serializable &lt;|-- BlockErrorEvaluator
+  EvaluationTemplate &lt;|-- FrameErrorEvaluation
+  CommunicationEvaluator &lt;|-- BitErrorEvaluator
+  ArtifactTemplate &lt;|-- BlockErrorArtifact
+  Serializable &lt;|-- FrameErrorEvaluator
+  ArtifactTemplate &lt;|-- ThroughputArtifact
+  ArtifactTemplate &lt;|-- FrameErrorArtifact
+  ArtifactTemplate &lt;|-- BitErrorArtifact
+  CommunicationEvaluator &lt;|-- BlockErrorEvaluator
+  FrameErrorEvaluator &lt;|-- ThroughputEvaluator
+  Evaluator &lt;|-- CommunicationEvaluator
+  CommunicationEvaluator &lt;|-- FrameErrorEvaluator
+  EvaluationTemplate &lt;|-- ThroughputEvaluation
+  EvaluationTemplate &lt;|-- BlockErrorEvaluation
+  EvaluationTemplate &lt;|-- BitErrorEvaluation
+  Serializable &lt;|-- ThroughputEvaluator
+        </div><p>The implemented <a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator" title="hermespy.radar.evaluators.RadarEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a> all inherit from the identically named common
+base which gets initialized by selecting one <code class="xref py py-class docutils literal notranslate"><span class="pre">Modem</span></code>, whose performance will be
+evaluated and one <a class="reference internal" href="channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarChannel</span></code></a> instance, containing the ground
+truth.
+The currently considered performance indicators are</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 24%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Evaluator</p></th>
+<th class="head"><p>Artifact</p></th>
+<th class="head"><p>Performance Indicator</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbEvaluator" title="hermespy.radar.evaluators.DetectionProbEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionProbEvaluator</span></code></a></p></td>
+<td><p><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbArtifact" title="hermespy.radar.evaluators.DetectionProbArtifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a></p></td>
+<td><p>Probability of detecting the target at the right bin</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic" title="hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a></p></td>
+<td><p><a class="reference internal" href="#hermespy.radar.evaluators.RocArtifact" title="hermespy.radar.evaluators.RocArtifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">RocArtifact</span></code></a></p></td>
+<td><p>Probability of detection versus probability of false alarm</p></td>
+</tr>
+<tr class="row-even"><td><p>:class`.RootMeanSquareError`</p></td>
+<td><p><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareArtifact" title="hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a></p></td>
+<td><p>Root mean square error of point detections</p></td>
+</tr>
+</tbody>
+</table>
+<p>Configuring <a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator" title="hermespy.radar.evaluators.RadarEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarEvaluators</span></code></a> to evaluate the radar detection of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Modem</span></code> instances is rather straightforward:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create two separate modem instances</span>
+<span class="n">modem</span> <span class="o">=</span> <span class="n">Modem</span><span class="p">()</span>
+<span class="n">channel</span> <span class="o">=</span> <span class="n">RadarChannel</span><span class="p">()</span>
+
+<span class="c1"># Create a radar evaluation as an evaluation example</span>
+<span class="n">radar_evaluator</span> <span class="o">=</span> <span class="n">DetectionProbEvaluator</span><span class="p">(</span><span class="n">modem</span><span class="p">,</span> <span class="n">channel</span><span class="p">)</span>
+
+<span class="c1"># Extract evaluation</span>
+<span class="n">radar_evaluation</span> <span class="o">=</span> <span class="n">radar_evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+
+<span class="c1"># Visualize evaluation</span>
+<span class="n">radar_evaluation</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RadarEvaluator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RadarEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receiving_radar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RadarEvaluator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" title="hermespy.core.monte_carlo.Evaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for evaluating communication processes between two modems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>receiving_radar</strong> (<a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar" title="hermespy.radar.radar.Radar"><em>Radar</em></a>) – Modem detecting radar in case of a target.</p></li>
+<li><p><strong>radar_channel</strong> (<a class="reference internal" href="channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel"><em>RadarChannel</em></a>) – Radar channel containing a desired target.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RadarEvaluator.receiving_radar">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receiving_radar</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar" title="hermespy.radar.radar.Radar"><span class="pre">Radar</span></a></em><a class="headerlink" href="#hermespy.radar.evaluators.RadarEvaluator.receiving_radar" title="Permalink to this definition"></a></dt>
+<dd><p>Radar detector with target present.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the receiving radar, when target is present.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Modem</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RadarEvaluator.radar_channel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radar_channel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel"><span class="pre">RadarChannel</span></a></em><a class="headerlink" href="#hermespy.radar.evaluators.RadarEvaluator.radar_channel" title="Permalink to this definition"></a></dt>
+<dd><p>Radar channel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the radar channel</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel">RadarChannel</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RadarEvaluator.generate_result">
+<span class="sig-name descname"><span class="pre">generate_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RadarEvaluator.generate_result" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an evaluation result from the artifacts collected over the whole simulation grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>List</em><em>[</em><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><em>GridDimension</em></a><em>]</em>) – The Simulation grid.</p></li>
+<li><p><strong>artifacts</strong> (<em>np.ndarray</em>) – Numpy object array whose dimensions represent grid dimensions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationResult" title="hermespy.core.monte_carlo.EvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The evaluation result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbArtifact">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DetectionProbArtifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">artifact</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbArtifact" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ArtifactTemplate" title="hermespy.core.monte_carlo.ArtifactTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArtifactTemplate</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</p>
+<p>Artifact of a detection probability evaluation for a radar detector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>artifact</strong> (<em>AT</em>) – Artifact value.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbArtifact.to_scalar">
+<span class="sig-name descname"><span class="pre">to_scalar</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbArtifact.to_scalar" title="Permalink to this definition"></a></dt>
+<dd><p>Scalar representation of this artifact’s content.</p>
+<p>Used to evaluate premature stopping criteria for the underlying evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Scalar floating-point representation.
+<cite>None</cite> if a conversion to scalar is impossible.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Optional[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbabilityEvaluation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DetectionProbabilityEvaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbabilityEvaluation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationTemplate" title="hermespy.core.monte_carlo.EvaluationTemplate"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationTemplate</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbabilityEvaluation.artifact">
+<span class="sig-name descname"><span class="pre">artifact</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbabilityEvaluation.artifact" title="Permalink to this definition"></a></dt>
+<dd><p>Generate an artifact from this evaluation.</p>
+<p>Returns: The evaluation artifact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.radar.evaluators.DetectionProbArtifact" title="hermespy.radar.evaluators.DetectionProbArtifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">DetectionProbArtifact</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbabilityEvaluation.evaluation">
+<span class="sig-name descname"><span class="pre">evaluation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ET</span></em><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbabilityEvaluation.evaluation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbEvaluator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DetectionProbEvaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receiving_radar</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbEvaluator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator" title="hermespy.radar.evaluators.RadarEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Evaluate detection probability at a radar detector, considering any bin, i.e., detection is considered if any
+bin in the radar cube is above the threshold</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>receiving_radar</strong> (<a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar" title="hermespy.radar.radar.Radar"><em>Radar</em></a>) – Radar detector</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbEvaluator.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DetectionProbEvaluator'</span></em><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbEvaluator.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbEvaluator.abbreviation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">abbreviation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbEvaluator.abbreviation" title="Permalink to this definition"></a></dt>
+<dd><p>Short string representation of this evaluator.</p>
+<p>Used as a label for console output and plot axes annotations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>String representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbEvaluator.title">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbEvaluator.title" title="Permalink to this definition"></a></dt>
+<dd><p>Long string representation of this evaluator.</p>
+<p>Used as plot title.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>String representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbEvaluator.generate_result">
+<span class="sig-name descname"><span class="pre">generate_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbEvaluator.generate_result" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an evaluation result from the artifacts collected over the whole simulation grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>List</em><em>[</em><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><em>GridDimension</em></a><em>]</em>) – The Simulation grid.</p></li>
+<li><p><strong>artifacts</strong> (<em>np.ndarray</em>) – Numpy object array whose dimensions represent grid dimensions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ScalarEvaluationResult" title="hermespy.core.monte_carlo.ScalarEvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScalarEvaluationResult</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The evaluation result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.DetectionProbEvaluator.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.DetectionProbEvaluator.evaluate" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate the state of an investigated object.</p>
+<p>Implements the process of extracting an arbitrary performance indicator, represented by
+the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.
+:returns:     Artifact <span class="math notranslate nohighlight">\(X_m\)</span> resulting from the evaluation.
+:rtype: Artifact</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocArtifact">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RocArtifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h0_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h1_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RocArtifact" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a></p>
+<p>Artifact of receiver operating characteristics (ROC) evaluation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h0_value</strong> (<em>float</em>) – Measured value for null-hypothesis (H0), i.e., noise only</p></li>
+<li><p><strong>h1_value</strong> (<em>float</em>) – Measured value for alternative hypothesis (H1)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocArtifact.h0_value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h0_value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RocArtifact.h0_value" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocArtifact.h1_value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h1_value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RocArtifact.h1_value" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocEvaluation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RocEvaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cube_h0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cube_h1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RocEvaluation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluation" title="hermespy.core.monte_carlo.Evaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluation</span></code></a></p>
+<p>Evaluation of receiver operating characteristics (ROC)</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocEvaluation.data_h0">
+<span class="sig-name descname"><span class="pre">data_h0</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RocEvaluation.data_h0" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocEvaluation.data_h1">
+<span class="sig-name descname"><span class="pre">data_h1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RocEvaluation.data_h1" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocEvaluation.artifact">
+<span class="sig-name descname"><span class="pre">artifact</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RocEvaluation.artifact" title="Permalink to this definition"></a></dt>
+<dd><p>Generate an artifact from this evaluation.</p>
+<p>Returns: The evaluation artifact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.radar.evaluators.RocArtifact" title="hermespy.radar.evaluators.RocArtifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">RocArtifact</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocEvaluationResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RocEvaluationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detection_probabilities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_alarm_probabilities</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RocEvaluationResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationResult" title="hermespy.core.monte_carlo.EvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></p>
+<p>Final result of an receive operating characteristcs evaluation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocEvaluationResult.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RocEvaluationResult.plot" title="Permalink to this definition"></a></dt>
+<dd><p>Render a visual representation of the evaluation result.</p>
+<p>Generated by matplotlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Figure</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A handle to the generated matplotlib figure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RocEvaluationResult.to_array">
+<span class="sig-name descname"><span class="pre">to_array</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RocEvaluationResult.to_array" title="Permalink to this definition"></a></dt>
+<dd><p>Convert the evaluation result raw data to an array representation.</p>
+<p>Used to store the results in arbitrary binary file formats after simulation execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The array result representation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.ReceiverOperatingCharacteristic">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ReceiverOperatingCharacteristic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receiving_radar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiving_radar_null_hypothesis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">101</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator" title="hermespy.radar.evaluators.RadarEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Evaluate the receiver operating characteristics for a radar operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>receiving_radar</strong> (<a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar" title="hermespy.radar.radar.Radar"><em>Radar</em></a>) – Modem detecting radar in case of a target.</p></li>
+<li><p><strong>receiving_radar_null_hypothesis</strong> (<a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar" title="hermespy.radar.radar.Radar"><em>Radar</em></a>) – Radar receiver containing only noise.</p></li>
+<li><p><strong>radar_channel</strong> (<a class="reference internal" href="channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel"><em>RadarChannel</em></a><em>, </em><em>Optional</em>) – Radar channel containing a desired target.
+If a radar channel is given, then the ROC is calculated for the bin that contains the target, or else
+a detection is performed if the output of any bin is above the threshold.</p></li>
+<li><p><strong>num_thresholds</strong> (<em>int</em><em>, </em><em>Optional</em>) – Number of different thresholds to be considered in ROC curve</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.ReceiverOperatingCharacteristic.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ROC'</span></em><a class="headerlink" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.ReceiverOperatingCharacteristic.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.evaluate" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate the state of an investigated object.</p>
+<p>Implements the process of extracting an arbitrary performance indicator, represented by
+the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.
+:returns:     Artifact <span class="math notranslate nohighlight">\(X_m\)</span> resulting from the evaluation.
+:rtype: Artifact</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.ReceiverOperatingCharacteristic.receiving_radar_null_hypothesis">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receiving_radar_null_hypothesis</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar" title="hermespy.radar.radar.Radar"><span class="pre">Radar</span></a></em><a class="headerlink" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.receiving_radar_null_hypothesis" title="Permalink to this definition"></a></dt>
+<dd><p>Radar detector with only noise</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Handle to the receiving modem, with only noise at receiver.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Modem</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.ReceiverOperatingCharacteristic.abbreviation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">abbreviation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.abbreviation" title="Permalink to this definition"></a></dt>
+<dd><p>Short string representation of this evaluator.</p>
+<p>Used as a label for console output and plot axes annotations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>String representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.ReceiverOperatingCharacteristic.title">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.title" title="Permalink to this definition"></a></dt>
+<dd><p>Long string representation of this evaluator.</p>
+<p>Used as plot title.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>String representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.ReceiverOperatingCharacteristic.generate_result">
+<span class="sig-name descname"><span class="pre">generate_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.ReceiverOperatingCharacteristic.generate_result" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an evaluation result from the artifacts collected over the whole simulation grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>List</em><em>[</em><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><em>GridDimension</em></a><em>]</em>) – The Simulation grid.</p></li>
+<li><p><strong>artifacts</strong> (<em>np.ndarray</em>) – Numpy object array whose dimensions represent grid dimensions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationResult" title="hermespy.core.monte_carlo.EvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The evaluation result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareArtifact">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RootMeanSquareArtifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_errors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cummulation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareArtifact" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a></p>
+<p>Artifact of a root mean square evaluation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_errors</strong> (<em>int</em>) – Number of errros.</p></li>
+<li><p><strong>cummulation</strong> (<em>float</em>) – Sum of squared errors distances.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareArtifact.num_errors">
+<span class="sig-name descname"><span class="pre">num_errors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareArtifact.num_errors" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareArtifact.cummulation">
+<span class="sig-name descname"><span class="pre">cummulation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareArtifact.cummulation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareArtifact.to_scalar">
+<span class="sig-name descname"><span class="pre">to_scalar</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareArtifact.to_scalar" title="Permalink to this definition"></a></dt>
+<dd><p>Scalar representation of this artifact’s content.</p>
+<p>Used to evaluate premature stopping criteria for the underlying evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Scalar floating-point representation.
+<cite>None</cite> if a conversion to scalar is impossible.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Optional[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareEvaluation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RootMeanSquareEvaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pcl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareEvaluation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluation" title="hermespy.core.monte_carlo.Evaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Evaluation</span></code></a></p>
+<p>Result of a single root mean squre evaluation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareEvaluation.artifact">
+<span class="sig-name descname"><span class="pre">artifact</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareEvaluation.artifact" title="Permalink to this definition"></a></dt>
+<dd><p>Generate an artifact from this evaluation.</p>
+<p>Returns: The evaluation artifact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareArtifact" title="hermespy.radar.evaluators.RootMeanSquareArtifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">RootMeanSquareArtifact</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareErrorResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RootMeanSquareErrorResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalar_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareErrorResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult" title="hermespy.core.monte_carlo.ProcessedScalarEvaluationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult</span></code></a></p>
+<p>Result of a root mean square error evaluation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareErrorResult.plot_surface">
+<span class="sig-name descname"><span class="pre">plot_surface</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareErrorResult.plot_surface" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RootMeanSquareError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">receiving_radar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radar_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareError" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.radar.evaluators.RadarEvaluator" title="hermespy.radar.evaluators.RadarEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarEvaluator</span></code></a></p>
+<p>Root mean square estimation error of point detections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>receiving_radar</strong> (<a class="reference internal" href="radar.radar.html#hermespy.radar.radar.Radar" title="hermespy.radar.radar.Radar"><em>Radar</em></a>) – Modem detecting radar in case of a target.</p></li>
+<li><p><strong>radar_channel</strong> (<a class="reference internal" href="channel.radar_channel.html#hermespy.channel.radar_channel.RadarChannel" title="hermespy.channel.radar_channel.RadarChannel"><em>RadarChannel</em></a>) – Radar channel containing a desired target.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareError.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareError.evaluate" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate the state of an investigated object.</p>
+<p>Implements the process of extracting an arbitrary performance indicator, represented by
+the returned <a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" title="hermespy.core.monte_carlo.Artifact"><code class="xref py py-class docutils literal notranslate"><span class="pre">Artifact</span></code></a> <span class="math notranslate nohighlight">\(X_m\)</span>.
+:returns:     Artifact <span class="math notranslate nohighlight">\(X_m\)</span> resulting from the evaluation.
+:rtype: Artifact</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareError.title">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareError.title" title="Permalink to this definition"></a></dt>
+<dd><p>Long string representation of this evaluator.</p>
+<p>Used as plot title.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>String representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareError.abbreviation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">abbreviation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareError.abbreviation" title="Permalink to this definition"></a></dt>
+<dd><p>Short string representation of this evaluator.</p>
+<p>Used as a label for console output and plot axes annotations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>String representation</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.radar.evaluators.RootMeanSquareError.generate_result">
+<span class="sig-name descname"><span class="pre">generate_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.radar.evaluators.RootMeanSquareError.generate_result" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an evaluation result from the artifacts collected over the whole simulation grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>List</em><em>[</em><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension" title="hermespy.core.monte_carlo.GridDimension"><em>GridDimension</em></a><em>]</em>) – The Simulation grid.</p></li>
+<li><p><strong>artifacts</strong> (<em>np.ndarray</em>) – Numpy object array whose dimensions represent grid dimensions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.radar.evaluators.RootMeanSquareErrorResult" title="hermespy.radar.evaluators.RootMeanSquareErrorResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">RootMeanSquareErrorResult</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The evaluation result.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="radar.detection.html" class="btn btn-neutral float-left" title="Radar Detection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="radar.fmcw.html" class="btn btn-neutral float-right" title="Frequency Modulated Continuous Waveform Radar" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e7b385730>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

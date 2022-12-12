@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Beamforming Module &mdash; HermesPy  documentation</title>
+  <title>Beamforming &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,27 +57,38 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Beamforming Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Beamforming</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamforming</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode"><code class="docutils literal notranslate"><span class="pre">FocusMode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.BeamformerBase"><code class="docutils literal notranslate"><span class="pre">BeamformerBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer"><code class="docutils literal notranslate"><span class="pre">TransmitBeamformer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer"><code class="docutils literal notranslate"><span class="pre">ReceiveBeamformer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html#hermespy.beamforming.capon.CaponBeamformer"><code class="docutils literal notranslate"><span class="pre">CaponBeamformer</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -90,9 +106,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-      <li>Beamforming Module</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+      <li class="breadcrumb-item active">Beamforming</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/beamforming.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -102,24 +118,62 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="beamforming-module">
-<h1>Beamforming Module<a class="headerlink" href="#beamforming-module" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="beamforming">
+<h1>Beamforming<a class="headerlink" href="#beamforming" title="Permalink to this heading"></a></h1>
 <p>The beamforming module of HermesPy provides routines for spatial precoding of MIMO antenna streams.</p>
 <div class="mermaid">
             classDiagram
-  Serializable &lt;|-- ConventionalBeamformer
-  ReceiveBeamformer &lt;|-- ConventionalBeamformer
+  ReceiveStreamDecoder &lt;|-- ReceiveBeamformer
+  SerializableEnum &lt;|-- FocusMode
   TransmitBeamformer &lt;|-- ConventionalBeamformer
+  Serializable &lt;|-- ConventionalBeamformer
+  Serializable &lt;|-- CaponBeamformer
   BeamformerBase &lt;|-- TransmitBeamformer
+  ReceiveBeamformer &lt;|-- CaponBeamformer
+  TransmitStreamEncoder &lt;|-- TransmitBeamformer
+  BeamformerBase &lt;|-- ReceiveBeamformer
+  ReceiveBeamformer &lt;|-- ConventionalBeamformer
         </div><p>Beamforming during transmission allows to steer the power of a signal emitted by an antenna array towards
 a desired direction, within the package this direction is referred to as focus point.
 During signal reception inverse beamforming can be used as well in order to focus the received signal power towards a focus point.
 By focusing towards a dictionary of angles of interest during signal reception, sensing algorithms ma create a spatial image of an array’s environment.
 Within this package, this process is referred to as <a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.probe" title="hermespy.beamforming.beamformer.ReceiveBeamformer.probe"><code class="xref py py-func docutils literal notranslate"><span class="pre">probing</span></code></a>.</p>
 <div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Module Content:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamforming</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.FocusMode"><code class="docutils literal notranslate"><span class="pre">FocusMode</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.BeamformerBase"><code class="docutils literal notranslate"><span class="pre">BeamformerBase</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.TransmitBeamformer"><code class="docutils literal notranslate"><span class="pre">TransmitBeamformer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer"><code class="docutils literal notranslate"><span class="pre">ReceiveBeamformer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer"><code class="docutils literal notranslate"><span class="pre">ConventionalBeamformer</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamforming.capon.html#hermespy.beamforming.capon.CaponBeamformer"><code class="docutils literal notranslate"><span class="pre">CaponBeamformer</span></code></a></li>
 </ul>
 </div>
 </section>
@@ -135,7 +189,7 @@ Within this package, this process is referred to as <a class="reference internal
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadd4304400>
+<jinja2.runtime.BlockReference object at 0x7f9e7b2fb5e0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

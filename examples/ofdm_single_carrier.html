@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFDM Single Carrier &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Operator Separation" href="operator_separation.html" />
+    <link rel="prev" title="OFDM 5G" href="ofdm_5g.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="examples.html">Configuration Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="chirp_fsk_lora.html">Chirp FSK LORA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="chirp_qam.html">Chirp QAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_model.html">Hardware Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interference_ofdm_single_carrier.html">OFDM Interference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ofdm_5g.html">OFDM 5G</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">OFDM Single Carrier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operator_separation.html">Operator Separation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="uhd.html">USRP Hardware Driver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="audio.html">Audio Hardware Binding</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">HermesPy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="examples.html">Configuration Examples</a></li>
+      <li class="breadcrumb-item active">OFDM Single Carrier</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/ofdm_single_carrier.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="ofdm-single-carrier">
+<h1>OFDM Single Carrier<a class="headerlink" href="#ofdm-single-carrier" title="Permalink to this heading"></a></h1>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos">  1</span><span class="kt">!&lt;Simulation&gt;</span><span class="w"></span>
+<span class="linenos">  2</span>
+<span class="linenos">  3</span><span class="c1"># Physical device models within the simulated scenario</span><span class="w"></span>
+<span class="linenos">  4</span><span class="nt">Devices</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">  5</span>
+<span class="linenos">  6</span><span class="w">  </span><span class="c1"># Representation of a single (virtual) device</span><span class="w"></span>
+<span class="linenos">  7</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;device_alpha</span><span class="w"> </span><span class="kt">!&lt;SimulatedDevice&gt;</span><span class="w"></span>
+<span class="linenos">  8</span>
+<span class="linenos">  9</span><span class="w">    </span><span class="nt">carrier_frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">865e6</span><span class="w">        </span><span class="c1"># Center frequency of Rf-band emitted signal</span><span class="w"></span>
+<span class="linenos"> 10</span><span class="w">    </span>
+<span class="linenos"> 11</span><span class="w">    </span><span class="nt">antennas</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;UniformArray&gt;</span><span class="w">       </span><span class="c1"># Uniform antenna array</span><span class="w"></span>
+<span class="linenos"> 12</span><span class="w">      </span>
+<span class="linenos"> 13</span><span class="w">      </span><span class="nt">antenna</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;IdealAntenna&gt;</span><span class="w">      </span><span class="c1"># Assume ideal isotropic antennas</span><span class="w"></span>
+<span class="linenos"> 14</span><span class="w">      </span><span class="nt">spacing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10e-2</span><span class="w">                </span><span class="c1"># Elements spaced 10cm apart</span><span class="w"></span>
+<span class="linenos"> 15</span><span class="w">      </span><span class="nt">dimensions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span><span class="w">         </span><span class="c1"># 2 elements within the array</span><span class="w"></span>
+<span class="linenos"> 16</span>
+<span class="linenos"> 17</span>
+<span class="linenos"> 18</span><span class="c1"># Specify channel models interconnecting devices </span><span class="w"></span>
+<span class="linenos"> 19</span><span class="nt">Channels</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 20</span>
+<span class="linenos"> 21</span><span class="w">  </span><span class="c1"># 5G TDL model at the self-interference channel of device_alpha</span><span class="w"></span>
+<span class="linenos"> 22</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;5GTDL&gt;</span><span class="w"></span>
+<span class="linenos"> 23</span><span class="w">    </span><span class="nt">devices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">*device_alpha</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">*device_alpha</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="linenos"> 24</span><span class="w">    </span><span class="nt">model_type</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;TDLType&gt;</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">A</span><span class="w">       </span><span class="c1"># Type of the TDL model. A-E are available</span><span class="w"></span>
+<span class="linenos"> 25</span><span class="w">    </span><span class="nt">rms_delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-9</span><span class="w">                </span><span class="c1"># Root mean square delay in seconds    </span><span class="w"></span>
+<span class="linenos"> 26</span>
+<span class="linenos"> 27</span>
+<span class="linenos"> 28</span><span class="c1"># Operators transmitting or receiving signals over the devices</span><span class="w"></span>
+<span class="linenos"> 29</span><span class="nt">Operators</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 30</span>
+<span class="linenos"> 31</span><span class="w">  </span><span class="c1"># A single modem operating the device #0</span><span class="w"></span>
+<span class="linenos"> 32</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;modem_alpha</span><span class="w"> </span><span class="kt">!&lt;Modem&gt;</span><span class="w"></span>
+<span class="linenos"> 33</span>
+<span class="linenos"> 34</span><span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="nv">*device_alpha</span><span class="w">                 </span><span class="c1"># Device the modem is operating on</span><span class="w"></span>
+<span class="linenos"> 35</span><span class="w">    </span><span class="nt">reference</span><span class="p">:</span><span class="w"> </span><span class="nv">*device_alpha</span><span class="w">              </span><span class="c1"># Reference device to which the channel is estimated</span><span class="w"></span>
+<span class="linenos"> 36</span>
+<span class="linenos"> 37</span><span class="w">    </span><span class="c1"># Bit encoding configuration before mapping to modulation symbols</span><span class="w"></span>
+<span class="linenos"> 38</span><span class="w">    </span><span class="c1">#Encoding:</span><span class="w"></span>
+<span class="linenos"> 39</span><span class="w">    </span><span class="c1">#</span><span class="w"></span>
+<span class="linenos"> 40</span><span class="w">    </span><span class="c1">#  - !&lt;LDPC&gt;</span><span class="w"></span>
+<span class="linenos"> 41</span><span class="w">    </span><span class="c1">#    block_size: 256</span><span class="w"></span>
+<span class="linenos"> 42</span><span class="w">    </span><span class="c1">#    rate: [1, 2]</span><span class="w"></span>
+<span class="linenos"> 43</span>
+<span class="linenos"> 44</span><span class="w">    </span><span class="c1"># MIMO configuration on the symbol level</span><span class="w"></span>
+<span class="linenos"> 45</span><span class="w">    </span><span class="nt">precoding</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;SymbolCoding&gt;</span><span class="w"></span>
+<span class="linenos"> 46</span>
+<span class="linenos"> 47</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;SingleCarrier&gt;</span><span class="w">       </span><span class="c1"># Spatial Multiplexing</span><span class="w"></span>
+<span class="linenos"> 48</span>
+<span class="linenos"> 49</span><span class="w">    </span><span class="c1"># Configuration of the waveform emitted by this transmitter</span><span class="w"></span>
+<span class="linenos"> 50</span><span class="w">    </span><span class="nt">waveform</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;OFDM&gt;</span><span class="w"></span>
+<span class="linenos"> 51</span>
+<span class="linenos"> 52</span><span class="w">      </span><span class="c1"># Modulation settings</span><span class="w"></span>
+<span class="linenos"> 53</span><span class="w">      </span><span class="nt">modulation_order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span><span class="w">                  </span><span class="c1"># Modulation order, in other words 4 bit per data resource element</span><span class="w"></span>
+<span class="linenos"> 54</span><span class="w">      </span><span class="nt">subcarrier_spacing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15e3</span><span class="w">              </span><span class="c1"># Spacing between the individual subcarrier center frequencies in Hz</span><span class="w"></span>
+<span class="linenos"> 55</span><span class="w">      </span><span class="nt">dc_suppression</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span><span class="w">                 </span><span class="c1"># Consider the DC component during the DFT</span><span class="w"></span>
+<span class="linenos"> 56</span><span class="w">      </span><span class="nt">num_subcarriers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span><span class="w">                  </span><span class="c1"># Number of subcarriers per communication frame</span><span class="w"></span>
+<span class="linenos"> 57</span><span class="w">      </span><span class="nt">channel_estimation</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;OFDM-Ideal&gt;</span><span class="w">     </span><span class="c1"># Ideal channel estimation routine</span><span class="w"></span>
+<span class="linenos"> 58</span><span class="w">      </span><span class="nt">channel_equalization</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;OFDM-ZF&gt;</span><span class="w">      </span><span class="c1"># Zero-forcing channel equalization</span><span class="w"></span>
+<span class="linenos"> 59</span>
+<span class="linenos"> 60</span><span class="w">      </span><span class="c1"># OFDM symbol resources, each resource represents one symbol&#39;s subcarrier configuration</span><span class="w"></span>
+<span class="linenos"> 61</span><span class="w">      </span><span class="nt">resources</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 62</span>
+<span class="linenos"> 63</span><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;OFDM-Resource&gt;</span><span class="w"></span>
+<span class="linenos"> 64</span><span class="w">          </span><span class="nt">repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w"></span>
+<span class="linenos"> 65</span><span class="w">          </span><span class="nt">prefix_type</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;PrefixType&gt;</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CYCLIC</span><span class="w"></span>
+<span class="linenos"> 66</span><span class="w">          </span><span class="nt">prefix_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.078125</span><span class="w"></span>
+<span class="linenos"> 67</span><span class="w">          </span><span class="nt">elements</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 68</span><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;FrameElement&gt;</span><span class="w"></span>
+<span class="linenos"> 69</span><span class="w">              </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;ElementType&gt;</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATA</span><span class="w"></span>
+<span class="linenos"> 70</span><span class="w">              </span><span class="nt">repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w"></span>
+<span class="linenos"> 71</span>
+<span class="linenos"> 72</span><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;OFDM-Resource&gt;</span><span class="w"></span>
+<span class="linenos"> 73</span><span class="w">          </span><span class="nt">repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w"></span>
+<span class="linenos"> 74</span><span class="w">          </span><span class="nt">prefix_type</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;PrefixType&gt;</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CYCLIC</span><span class="w"></span>
+<span class="linenos"> 75</span><span class="w">          </span><span class="nt">prefix_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0703125</span><span class="w"></span>
+<span class="linenos"> 76</span><span class="w">          </span><span class="nt">elements</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 77</span><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;FrameElement&gt;</span><span class="w"></span>
+<span class="linenos"> 78</span><span class="w">              </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;ElementType&gt;</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATA</span><span class="w"></span>
+<span class="linenos"> 79</span><span class="w">              </span><span class="nt">repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w"></span>
+<span class="linenos"> 80</span>
+<span class="linenos"> 81</span><span class="w">      </span><span class="c1"># Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid</span><span class="w"></span>
+<span class="linenos"> 82</span><span class="w">      </span><span class="nt">structure</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 83</span>
+<span class="linenos"> 84</span><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;Symbol&gt;</span><span class="w"></span>
+<span class="linenos"> 85</span><span class="w">          </span><span class="nt">num_repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"></span>
+<span class="linenos"> 86</span><span class="w">          </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="linenos"> 87</span>
+<span class="linenos"> 88</span><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;Guard&gt;</span><span class="w"></span>
+<span class="linenos"> 89</span><span class="w">          </span><span class="nt">num_repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="linenos"> 90</span><span class="w">          </span><span class="nt">duration</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2e-3</span><span class="w"></span>
+<span class="linenos"> 91</span>
+<span class="linenos"> 92</span>
+<span class="linenos"> 93</span><span class="c1"># Performance indication evaluation configuration</span><span class="w"></span>
+<span class="linenos"> 94</span><span class="nt">Evaluators</span><span class="p">:</span><span class="w"></span>
+<span class="linenos"> 95</span>
+<span class="linenos"> 96</span><span class="w">  </span><span class="c1"># Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`</span><span class="w"></span>
+<span class="linenos"> 97</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;BitErrorEvaluator&gt;</span><span class="w"></span>
+<span class="linenos"> 98</span>
+<span class="linenos"> 99</span><span class="w">    </span><span class="nt">transmitting_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
+<span class="linenos">100</span><span class="w">    </span><span class="nt">receiving_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
+<span class="linenos">101</span><span class="w">    </span><span class="nt">confidence</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.9</span><span class="w"></span>
+<span class="linenos">102</span><span class="w">    </span><span class="nt">tolerance</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.01</span><span class="w"></span>
+<span class="linenos">103</span><span class="w">    </span><span class="nt">plot_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">log</span><span class="w"></span>
+<span class="linenos">104</span>
+<span class="linenos">105</span>
+<span class="linenos">106</span><span class="c1"># Simulation parameters</span><span class="w"></span>
+<span class="linenos">107</span><span class="nt">num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w">                  </span><span class="c1"># Number of samples per simulation grid section</span><span class="w"></span>
+<span class="linenos">108</span><span class="nt">min_num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">               </span><span class="c1"># Minimum number of samples per simulation grid section before premature stopping</span><span class="w"></span>
+<span class="linenos">109</span><span class="nt">snr_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EBN0</span><span class="w">                     </span><span class="c1"># SNR is defined as the ratio between bit energy and noise power</span><span class="w"></span>
+<span class="linenos">110</span><span class="nt">plot_results</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w">                 </span><span class="c1"># Visualize the evaluations after the simulation has finished</span><span class="w"></span>
+<span class="linenos">111</span>
+<span class="linenos">112</span>
+<span class="linenos">113</span><span class="c1"># Scenario parameters over which the Monte-Carlo simulation sweeps</span><span class="w"></span>
+<span class="linenos">114</span><span class="nt">Dimensions</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">115</span>
+<span class="linenos">116</span><span class="w">  </span><span class="nt">snr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">20</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dB</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ofdm_5g.html" class="btn btn-neutral float-left" title="OFDM 5G" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="operator_separation.html" class="btn btn-neutral float-right" title="Operator Separation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e79d7c130>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simulated Devices &mdash; HermesPy  documentation</title>
+  <title>Simulated Devices &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -27,7 +32,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Hardware Radio Frequency Chain Modeling" href="simulation.rf_chain.html" />
+    <link rel="next" title="Analog-to-Digital Converter" href="simulation.analog_digital_converter.html" />
     <link rel="prev" title="Simulation" href="simulation.simulation.html" /> 
 </head>
 
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,30 +57,83 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario"><code class="docutils literal notranslate"><span class="pre">SimulationScenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner"><code class="docutils literal notranslate"><span class="pre">SimulationRunner</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Simulated Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.property_blacklist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.serialized_attribute"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.serialized_attribute</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.rf_chain"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.rf_chain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.adc"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.adc</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.orientation"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.orientation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.scenario"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.scenario</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.topology"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.topology</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.attached"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.attached</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.noise"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.noise</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.isolation"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.isolation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.coupling"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.coupling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.sampling_rate"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.sampling_rate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.carrier_frequency"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.carrier_frequency</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.velocity"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.velocity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.operator_separation"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.operator_separation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.transmit"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.transmit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.snr"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.snr</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice.receive"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice.receive()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType"><code class="docutils literal notranslate"><span class="pre">GainControlType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain"><code class="docutils literal notranslate"><span class="pre">Gain</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType"><code class="docutils literal notranslate"><span class="pre">QuantizerType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain"><code class="docutils literal notranslate"><span class="pre">RfChain</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html">Transmit-Receive Leakage Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage"><code class="docutils literal notranslate"><span class="pre">Leakage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.LinearLeakage"><code class="docutils literal notranslate"><span class="pre">LinearLeakage</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise"><code class="docutils literal notranslate"><span class="pre">PhaseNoise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN"><code class="docutils literal notranslate"><span class="pre">AWGN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling"><code class="docutils literal notranslate"><span class="pre">Coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation"><code class="docutils literal notranslate"><span class="pre">Isolation</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -93,10 +151,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="simulation.html">Simulation Module</a> &raquo;</li>
-      <li>Simulated Devices</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="simulation.html">Simulation</a></li>
+      <li class="breadcrumb-item active">Simulated Devices</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/simulation.simulated_device.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -106,12 +164,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.simulation.simulated_device"></span><section id="simulated-devices">
-<h1>Simulated Devices<a class="headerlink" href="#simulated-devices" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.simulation.simulated_device"></span><section id="simulated-devices">
+<h1>Simulated Devices<a class="headerlink" href="#simulated-devices" title="Permalink to this heading"></a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimulatedDevice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rf_chain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.device.Device</span></code></a>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimulatedDevice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scenario</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rf_chain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isolation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="core.device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></a>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomNode</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Representation of a device simulating hardware.</p>
 <p>Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.</p>
 <div class="admonition warning">
@@ -125,7 +208,11 @@ channel models may ignore spatial properties such as <code class="xref py py-fun
 <li><p><strong>scenario</strong> (<a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><em>Scenario</em></a><em>, </em><em>optional</em>) – Scenario this device is attached to.
 By default, the device is considered floating.</p></li>
 <li><p><strong>rf_chain</strong> (<a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain" title="hermespy.simulation.rf_chain.rf_chain.RfChain"><em>RfChain</em></a><em>, </em><em>optional</em>) – Model of the device’s radio frequency amplification chain.</p></li>
-<li><p><strong>adc</strong> (<em>AnalogDigitalConverter</em><em>, </em><em>optional</em>) – Model of receiver’s ADC converter.</p></li>
+<li><p><strong>adc</strong> (<a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter" title="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><em>AnalogDigitalConverter</em></a><em>, </em><em>optional</em>) – Model of receiver’s ADC converter.</p></li>
+<li><p><strong>isolation</strong> (<a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation" title="hermespy.simulation.isolation.isolation.Isolation"><em>Isolation</em></a><em>, </em><em>optional</em>) – Model of the device’s transmit-receive isolations.
+By default, perfect isolation is assumed.</p></li>
+<li><p><strong>coupling</strong> (<a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling" title="hermespy.simulation.coupling.coupling.Coupling"><em>Coupling</em></a><em>, </em><em>optional</em>) – Model of the device’s antenna array mutual coupling.
+By default, ideal coupling behaviour is assumed.</p></li>
 <li><p><strong>sampling_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Sampling rate at which this device operates.
 By default, the sampling rate of the first operator is assumed.</p></li>
 <li><p><strong>carrier_frequency</strong> (<em>float</em><em>, </em><em>optional</em>) – Center frequency of the mixed signal in rf-band in Hz.
@@ -142,6 +229,17 @@ Zero by default.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist">
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'num_antennas',</span> <span class="pre">'orientation',</span> <span class="pre">'topology',</span> <span class="pre">'velocity',</span> <span class="pre">'wavelength'}</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist" title="Permalink to this definition"></a></dt>
+<dd><p>Set of properties to be ignored during serialization.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.serialized_attribute">
+<span class="sig-name descname"><span class="pre">serialized_attribute</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adc',</span> <span class="pre">'rf_chain'}</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.serialized_attribute" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.rf_chain">
 <span class="sig-name descname"><span class="pre">rf_chain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain" title="hermespy.simulation.rf_chain.rf_chain.RfChain"><span class="pre">RfChain</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.rf_chain" title="Permalink to this definition"></a></dt>
 <dd><p>Model of the device’s radio-frequency chain.</p>
@@ -149,13 +247,13 @@ Zero by default.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.adc">
-<span class="sig-name descname"><span class="pre">adc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AnalogDigitalConverter</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.adc" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">adc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter" title="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><span class="pre">AnalogDigitalConverter</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.adc" title="Permalink to this definition"></a></dt>
 <dd><p>Model of receiver’s ADC</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.orientation">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orientation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.orientation" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orientation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.orientation" title="Permalink to this definition"></a></dt>
 <dd><p>Orientation of the device within its scenario as a quaternion.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -173,27 +271,19 @@ Zero by default.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.scenario">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scenario</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><span class="pre">hermespy.core.scenario.Scenario</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.scenario" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scenario</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><span class="pre">Scenario</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.scenario" title="Permalink to this definition"></a></dt>
 <dd><p>Scenario this device is attached to.</p>
+<p>Returns: Handle to the scenario this device is attached to.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Handle to the scenario this device is attached to.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario">Scenario</a></p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError" title="hermespy.core.device.FloatingError"><strong>FloatingError</strong></a> – If the device is currently floating.</p></li>
-<li><p><strong>RuntimeError</strong> – Trying to overwrite the scenario of an already attached device.</p></li>
-</ul>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.topology">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.topology" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">topology</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.topology" title="Permalink to this definition"></a></dt>
 <dd><p>Antenna array topology.</p>
 <p>The topology is represented by an <cite>Mx3</cite> numpy array,
 where the first dimension M is the number of antennas and the second dimension their cartesian position
@@ -227,7 +317,7 @@ within the device’s local coordinate system.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.noise">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise" title="hermespy.simulation.noise.noise.Noise"><span class="pre">hermespy.simulation.noise.noise.Noise</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.noise" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise" title="hermespy.simulation.noise.noise.Noise"><span class="pre">Noise</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.noise" title="Permalink to this definition"></a></dt>
 <dd><p>Model of the hardware noise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -240,21 +330,43 @@ within the device’s local coordinate system.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.isolation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">isolation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation" title="hermespy.simulation.isolation.isolation.Isolation"><span class="pre">Isolation</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.isolation" title="Permalink to this definition"></a></dt>
+<dd><p>Model of the device’s transmit-receive isolation.</p>
+<p>Returns: Handle to the isolation model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation" title="hermespy.simulation.isolation.isolation.Isolation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Isolation</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.coupling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coupling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling" title="hermespy.simulation.coupling.coupling.Coupling"><span class="pre">Coupling</span></a></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.coupling" title="Permalink to this definition"></a></dt>
+<dd><p>Model of the device’s antenna array mutual coupling behaviour.</p>
+<p>Returns: Handle to the coupling model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling" title="hermespy.simulation.coupling.coupling.Coupling"><code class="xref py py-class docutils literal notranslate"><span class="pre">Coupling</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.sampling_rate">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.sampling_rate" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.sampling_rate" title="Permalink to this definition"></a></dt>
 <dd><p>Sampling rate at which the device’s analog-to-digital converters operate.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Sampling rate in Hz.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>sampling_rate (float)</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Sampling rate in Hz.
+<cite>None</cite> if the sampling rate is unknown.</p>
 </dd>
 <dt class="field-odd">Raises</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ValueError</strong> – If the sampling rate is not greater than zero.</p></li>
-<li><p><strong>RuntimeError</strong> – If the sampling rate could not be inferred.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the sampling rate is not greater than zero.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -278,7 +390,7 @@ within the device’s local coordinate system.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.velocity">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">numpy.ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.velocity" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.velocity" title="Permalink to this definition"></a></dt>
 <dd><p>Cartesian device velocity vector.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -313,17 +425,17 @@ within the device’s local coordinate system.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.transmit">
 <span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.transmit" title="Permalink to this definition"></a></dt>
-<dd><p>Transmit signal over this device.</p>
+<dd><p>Transmit over this device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>clear_cache</strong> (<em>bool</em><em>, </em><em>optional</em>) – Clear the cache of operator signals to be transmitted.
 Enabled by default.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Signal emitted by this device.</p>
-</dd>
+</dl>
+<p>Returns: Signal transmitted by this device.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a></p>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -344,18 +456,19 @@ Enabled by default.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.receive">
-<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SNRType.EBN0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.receive" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snr_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SNRType.PN0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaking_signal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.receive" title="Permalink to this definition"></a></dt>
 <dd><p>Receive signals at this device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>device_signals</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – List of signal models arriving at the device.
+<li><p><strong>device_signals</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>, </em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>, </em><em>np.ndarray</em><em>]</em>) – List of signal models arriving at the device.
 May also be a two-dimensional numpy object array where the first dimension indicates the link
 and the second dimension contains the transmitted signal as the first element and the link channel
 as the second element.</p></li>
 <li><p><strong>snr</strong> (<em>float</em><em>, </em><em>optional</em>) – Signal to noise power ratio.
 Infinite by default, meaning no noise will be added to the received signals.</p></li>
-<li><p><strong>snr_type</strong> (<em>SNRType</em><em>, </em><em>optional</em>) – Type of signal to noise ratio.</p></li>
+<li><p><strong>snr_type</strong> (<a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType" title="hermespy.core.definitions.SNRType"><em>SNRType</em></a><em>, </em><em>optional</em>) – Type of signal to noise ratio.</p></li>
+<li><p><strong>leaking_signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>, </em><em>optional</em>) – Signal leaking from transmit to receive chains.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -367,63 +480,21 @@ Infinite by default, meaning no noise will be added to the received signals.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.to_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Serialize a <cite>SimulatedDevice</cite> object to YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>representer</strong> (<a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice"><em>SimulatedDevice</em></a>) – A handle to a representer used to generate valid YAML code.
-The representer gets passed down the serialization tree to each node.</p></li>
-<li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice"><em>SimulatedDevice</em></a>) – The <cite>Device</cite> instance to be serialized.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The serialized YAML node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>MappingNode</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.simulated_device.SimulatedDevice.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.simulated_device.SimulatedDevice.from_yaml" title="Permalink to this definition"></a></dt>
-<dd><p>Recall a new <cite>SimulatedDevice</cite> class instance from YAML.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
-<li><p><strong>node</strong> (<em>MappingNode</em>) – YAML node representing the <cite>SimulatedDevice</cite> serialization.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Newly created serializable instance.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice">SimulatedDevice</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="simulation.simulation.html" class="btn btn-neutral float-left" title="Simulation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="simulation.rf_chain.html" class="btn btn-neutral float-right" title="Hardware Radio Frequency Chain Modeling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="simulation.analog_digital_converter.html" class="btn btn-neutral float-right" title="Analog-to-Digital Converter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce71c670>
+<jinja2.runtime.BlockReference object at 0x7f9e79e03700>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

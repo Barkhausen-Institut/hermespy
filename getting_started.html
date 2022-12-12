@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting Started &mdash; HermesPy  documentation</title>
+  <title>Getting Started &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
@@ -19,8 +20,13 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +34,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="HermesPy API" href="api/api.html" />
+    <link rel="next" title="Tutorials" href="tutorials.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -41,7 +47,7 @@
             <img src="_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -53,7 +59,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#hermespy-architecture">HermesPy Architecture</a></li>
@@ -68,7 +74,10 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
@@ -86,8 +95,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Getting Started</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -97,8 +106,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h1>
 <p>Assuming HermesPy is properly <a class="reference internal" href="installation.html"><span class="doc">installed</span></a> within the currently selected Python environment,
 users may define custom wireless communication scenarios to be investigated within the context of
 <a class="reference internal" href="api/simulation.html"><span class="doc">Simulations</span></a> or <a class="reference internal" href="api/hardware_loop.html"><span class="doc">Hardware Loops</span></a>.
@@ -108,7 +141,7 @@ and launched from any system command line.</p>
 <p>This section provides a rough description of the HermesPy software architecture and gives an introduction
 into both the library and command line interface in order to get new users quickly accustomed.</p>
 <section id="hermespy-architecture">
-<h2>HermesPy Architecture<a class="headerlink" href="#hermespy-architecture" title="Permalink to this headline"></a></h2>
+<h2>HermesPy Architecture<a class="headerlink" href="#hermespy-architecture" title="Permalink to this heading"></a></h2>
 <p>In its core, the HermesPy API aims to abstract the process of wireless communication and sensing signal processing
 within a strictly object-oriented class structure.
 Each processing step is represented by a dedicated class and can be adapted and customized by the software user.</p>
@@ -220,7 +253,7 @@ Each processing step is represented by a customizable or interchangeable class s
 The <a class="reference internal" href="api/modem.modem.html"><span class="doc">Communication Modem</span></a> operator class currently considers</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="api/modem.bits_source.html"><span class="doc">Bit Sources</span></a> as the source of data bits to be transmitted</p></li>
-<li><p><a class="reference internal" href="api/coding.coding.html"><span class="doc">Channel Codings</span></a> as the channel coding configuration</p></li>
+<li><p><a class="reference internal" href="api/fec.coding.html"><span class="doc">Channel Codings</span></a> as the channel coding configuration</p></li>
 <li><p><a class="reference internal" href="api/modem.waveform_generator.html"><span class="doc">Waveform Generators</span></a> as the transmit waveform configuration</p></li>
 <li><p><a class="reference internal" href="api/precoding.precoding.html"><span class="doc">Channel Precodings</span></a> as the channel precoding configuration</p></li>
 </ul>
@@ -231,25 +264,25 @@ The <a class="reference internal" href="api/modem.modem.html"><span class="doc">
 <p>making it much easier to configure.</p>
 </section>
 <section id="library">
-<span id="gettingstarted-library"></span><h2>Library<a class="headerlink" href="#library" title="Permalink to this headline"></a></h2>
+<span id="gettingstarted-library"></span><h2>Library<a class="headerlink" href="#library" title="Permalink to this heading"></a></h2>
 <p>This chapter provides several examples outlining the utilization of HermesPy as a library within custom Python projects.
 A full description of the application programming interface can be found in the section <a class="reference internal" href="api/api.html"><span class="doc">HermesPy API</span></a>.</p>
 <section id="transmissions">
-<h3>Transmissions<a class="headerlink" href="#transmissions" title="Permalink to this headline"></a></h3>
+<h3>Transmissions<a class="headerlink" href="#transmissions" title="Permalink to this heading"></a></h3>
 <p>The following code generates the samples of a single communication frame
 transmitted by a PSK/QAM modem:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.simulation</span> <span class="kn">import</span> <span class="n">SimulatedDevice</span>
-<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Modem</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">DuplexModem</span><span class="p">,</span> <span class="n">RootRaisedCosineWaveform</span>
 <span class="linenos"> 5</span>
-<span class="linenos"> 6</span><span class="n">operator</span> <span class="o">=</span> <span class="n">Modem</span><span class="p">()</span>
-<span class="linenos"> 7</span><span class="n">operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">(</span><span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="linenos"> 6</span><span class="n">operator</span> <span class="o">=</span> <span class="n">DuplexModem</span><span class="p">()</span>
+<span class="linenos"> 7</span><span class="n">operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">(</span><span class="n">symbol_rate</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">num_preamble_symbols</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_data_symbols</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">roll_off</span><span class="o">=</span><span class="mf">.9</span><span class="p">)</span>
 <span class="linenos"> 8</span><span class="n">operator</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">SimulatedDevice</span><span class="p">()</span>
 <span class="linenos"> 9</span>
-<span class="linenos">10</span><span class="n">signal</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">transmit</span><span class="p">()</span>
+<span class="linenos">10</span><span class="n">transmission</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">transmit</span><span class="p">()</span>
 <span class="linenos">11</span>
-<span class="linenos">12</span><span class="n">signal</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="linenos">12</span><span class="n">transmission</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 <span class="linenos">13</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -260,7 +293,7 @@ transmitted by a PSK/QAM modem:</p>
 <li><p>The waveform to be generated by the modem is configured by assigning a specific
 <a class="reference internal" href="api/modem.waveform_generator.html"><span class="doc">Waveform Generator</span></a> instance to the modem’s
 waveform_generator property <em>(line 7)</em>. <br>
-In our case, this is an instance of a <a class="reference internal" href="api/modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a>
+In our case, this is an instance of a <a class="reference internal" href="api/modem.waveform_single_carrier.html"><span class="doc">Single Carrier</span></a>
 waveform.</p></li>
 <li><p>The device on which the modem operates is defined <em>(line 9)</em>.</p></li>
 <li><p>An signal model, encoding a single communication frame, emitted by the modem operator
@@ -282,9 +315,9 @@ during signal generation.
 Changing the waveform generated by the modem operator defined in the previous snippet
 is therefore as simple as assigning a different type of
 <a class="reference internal" href="api/modem.waveform_generator.html"><span class="doc">Waveform Generator</span></a>
-to its <a class="reference internal" href="api/modem.modem.html#hermespy.modem.modem.Modem.waveform_generator" title="hermespy.modem.modem.Modem.waveform_generator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hermespy.modem.modem.Modem.waveform_generator()</span></code></a> property slot.</p>
+to its <code class="xref py py-meth docutils literal notranslate"><span class="pre">hermespy.modem.modem.Modem.waveform_generator()</span></code> property slot.</p>
 <p>Of course, a multitude of parameters can be configured to customize the behaviour of each processing step.
-For instance, the frame generated by a <a class="reference internal" href="api/modem.waveform_generator_psk_qam.html"><span class="doc">PKS/QAM</span></a> waveform
+For instance, the frame generated by a <a class="reference internal" href="api/modem.waveform_single_carrier.html"><span class="doc">Single Carrier</span></a> waveform
 generator features no preamble by default.
 A preamble is defined as a static set of known reference symbols at the beginning of the communication frame.
 By modifying the property</p>
@@ -312,38 +345,36 @@ is implemented in the next example:</p>
 <span class="linenos"> 3</span><span class="c1"># Import required HermesPy modules</span>
 <span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.channel</span> <span class="kn">import</span> <span class="n">Channel</span>
 <span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">hermespy.simulation</span> <span class="kn">import</span> <span class="n">SimulatedDevice</span>
-<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Modem</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">,</span> <span class="n">BitErrorEvaluator</span>
-<span class="linenos"> 7</span><span class="kn">from</span> <span class="nn">hermespy.simulation.analog_digital_converter</span> <span class="kn">import</span> <span class="n">AnalogDigitalConverter</span><span class="p">,</span> <span class="n">GainControlType</span>
-<span class="linenos"> 8</span>
-<span class="linenos"> 9</span><span class="c1"># Create two simulated devices acting as source and sink</span>
-<span class="linenos">10</span><span class="n">tx_device</span> <span class="o">=</span> <span class="n">SimulatedDevice</span><span class="p">()</span>
-<span class="linenos">11</span><span class="n">rx_device</span> <span class="o">=</span> <span class="n">SimulatedDevice</span><span class="p">()</span>
-<span class="linenos">12</span><span class="n">rx_device</span><span class="o">.</span><span class="n">analog_digital_converter</span> <span class="o">=</span> <span class="n">AnalogDigitalConverter</span><span class="p">(</span><span class="n">num_quantization_bits</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="linenos">13</span>
-<span class="linenos">14</span><span class="c1"># Define a transmit operation on the first device</span>
-<span class="linenos">15</span><span class="n">tx_operator</span> <span class="o">=</span> <span class="n">Modem</span><span class="p">()</span>
-<span class="linenos">16</span><span class="n">tx_operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">(</span><span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-<span class="linenos">17</span><span class="n">tx_operator</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">tx_device</span>
-<span class="linenos">18</span>
-<span class="linenos">19</span><span class="c1"># Define a receive operation on the second device</span>
-<span class="linenos">20</span><span class="n">rx_operator</span> <span class="o">=</span> <span class="n">Modem</span><span class="p">()</span>
-<span class="linenos">21</span><span class="n">rx_operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">(</span><span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-<span class="linenos">22</span><span class="n">rx_operator</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">rx_device</span>
-<span class="linenos">23</span>
-<span class="linenos">24</span><span class="c1"># Simulate a channel between the two devices</span>
-<span class="linenos">25</span><span class="n">channel</span> <span class="o">=</span> <span class="n">Channel</span><span class="p">(</span><span class="n">tx_operator</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">rx_operator</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-<span class="linenos">26</span>
-<span class="linenos">27</span><span class="c1"># Simulate the signal transmission over the channel</span>
-<span class="linenos">28</span><span class="n">tx_signal</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tx_bits</span> <span class="o">=</span> <span class="n">tx_operator</span><span class="o">.</span><span class="n">transmit</span><span class="p">()</span>
-<span class="linenos">29</span><span class="n">rx_signal</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">channel_state</span> <span class="o">=</span> <span class="n">channel</span><span class="o">.</span><span class="n">propagate</span><span class="p">(</span><span class="n">tx_signal</span><span class="p">)</span>
-<span class="linenos">30</span><span class="n">rx_device</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">rx_signal</span><span class="p">)</span>
-<span class="linenos">31</span><span class="n">_</span><span class="p">,</span> <span class="n">rx_symbols</span><span class="p">,</span> <span class="n">rx_bits</span> <span class="o">=</span> <span class="n">rx_operator</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
-<span class="linenos">32</span>
-<span class="linenos">33</span><span class="c1"># Evaluate bit errors during transmission and visualize the received symbol constellation</span>
-<span class="linenos">34</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">BitErrorEvaluator</span><span class="p">(</span><span class="n">tx_operator</span><span class="p">,</span> <span class="n">rx_operator</span><span class="p">)</span>
-<span class="linenos">35</span><span class="n">evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-<span class="linenos">36</span><span class="n">rx_symbols</span><span class="o">.</span><span class="n">plot_constellation</span><span class="p">()</span>
-<span class="linenos">37</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">TransmittingModem</span><span class="p">,</span> <span class="n">ReceivingModem</span><span class="p">,</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">,</span> <span class="n">BitErrorEvaluator</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="c1"># Create two simulated devices acting as source and sink</span>
+<span class="linenos"> 9</span><span class="n">tx_device</span> <span class="o">=</span> <span class="n">SimulatedDevice</span><span class="p">()</span>
+<span class="linenos">10</span><span class="n">rx_device</span> <span class="o">=</span> <span class="n">SimulatedDevice</span><span class="p">()</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="c1"># Define a transmit operation on the first device</span>
+<span class="linenos">13</span><span class="n">tx_operator</span> <span class="o">=</span> <span class="n">TransmittingModem</span><span class="p">()</span>
+<span class="linenos">14</span><span class="n">tx_operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">(</span><span class="n">symbol_rate</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">num_preamble_symbols</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_data_symbols</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">roll_off</span><span class="o">=</span><span class="mf">.9</span><span class="p">)</span>
+<span class="linenos">15</span><span class="n">tx_device</span><span class="o">.</span><span class="n">transmitters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tx_operator</span><span class="p">)</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span><span class="c1"># Define a receive operation on the second device</span>
+<span class="linenos">18</span><span class="n">rx_operator</span> <span class="o">=</span> <span class="n">ReceivingModem</span><span class="p">()</span>
+<span class="linenos">19</span><span class="n">rx_operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">(</span><span class="n">symbol_rate</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">num_preamble_symbols</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_data_symbols</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">roll_off</span><span class="o">=</span><span class="mf">.9</span><span class="p">)</span>
+<span class="linenos">20</span><span class="n">rx_device</span><span class="o">.</span><span class="n">receivers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">rx_operator</span><span class="p">)</span>
+<span class="linenos">21</span>
+<span class="linenos">22</span><span class="c1"># Simulate a channel between the two devices</span>
+<span class="linenos">23</span><span class="n">channel</span> <span class="o">=</span> <span class="n">Channel</span><span class="p">(</span><span class="n">tx_device</span><span class="p">,</span> <span class="n">rx_device</span><span class="p">)</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span><span class="c1"># Simulate the signal transmission over the channel</span>
+<span class="linenos">26</span><span class="n">transmission</span> <span class="o">=</span> <span class="n">tx_operator</span><span class="o">.</span><span class="n">transmit</span><span class="p">()</span>
+<span class="linenos">27</span><span class="n">rx_signal</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">channel_state</span> <span class="o">=</span> <span class="n">channel</span><span class="o">.</span><span class="n">propagate</span><span class="p">(</span><span class="n">tx_device</span><span class="o">.</span><span class="n">transmit</span><span class="p">())</span>
+<span class="linenos">28</span><span class="n">rx_device</span><span class="o">.</span><span class="n">receive</span><span class="p">(</span><span class="n">rx_signal</span><span class="p">)</span>
+<span class="linenos">29</span><span class="n">reception</span> <span class="o">=</span> <span class="n">rx_operator</span><span class="o">.</span><span class="n">receive</span><span class="p">()</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="c1"># Evaluate bit errors during transmission and visualize the received symbol constellation</span>
+<span class="linenos">32</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">BitErrorEvaluator</span><span class="p">(</span><span class="n">tx_operator</span><span class="p">,</span> <span class="n">rx_operator</span><span class="p">)</span>
+<span class="linenos">33</span><span class="n">evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="linenos">34</span><span class="n">reception</span><span class="o">.</span><span class="n">symbols</span><span class="o">.</span><span class="n">plot_constellation</span><span class="p">()</span>
+<span class="linenos">35</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>While this code may seem somewhat complex at first glance, it expands the previous example by some important
@@ -429,7 +460,7 @@ of distributing the simulation workload in multicore systems and parameter grid 
 Its usage is introduced in the next section.</p>
 </section>
 <section id="simulations">
-<h3>Simulations<a class="headerlink" href="#simulations" title="Permalink to this headline"></a></h3>
+<h3>Simulations<a class="headerlink" href="#simulations" title="Permalink to this heading"></a></h3>
 <p>Consider the simulation scenario of a single device transmitting its waveforms and receiving them back
 after reflections from surroundings, assuming ideal isolation between transmit and receive chain.
 One of the most frequently conducted investigations in communication signal processing is the estimation of the
@@ -440,19 +471,19 @@ For example, the following snippet</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="c1"># Import required HermesPy modules</span>
-<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.channel</span> <span class="kn">import</span> <span class="n">Channel</span>
-<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">hermespy.simulation</span> <span class="kn">import</span> <span class="n">Simulation</span>
-<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">Modem</span><span class="p">,</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">,</span> <span class="n">BitErrorEvaluator</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.simulation</span> <span class="kn">import</span> <span class="n">Simulation</span>
+<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">DuplexModem</span><span class="p">,</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">,</span> <span class="n">BitErrorEvaluator</span>
+<span class="linenos"> 6</span>
 <span class="linenos"> 7</span>
 <span class="linenos"> 8</span><span class="c1"># Create a new HermesPy simulation scenario</span>
-<span class="linenos"> 9</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
+<span class="linenos"> 9</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 <span class="linenos">10</span>
 <span class="linenos">11</span><span class="c1"># Create device</span>
 <span class="linenos">12</span><span class="n">device</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">new_device</span><span class="p">()</span>
 <span class="linenos">13</span>
 <span class="linenos">14</span><span class="c1"># Configure device operator</span>
-<span class="linenos">15</span><span class="n">operator</span> <span class="o">=</span> <span class="n">Modem</span><span class="p">()</span>
-<span class="linenos">16</span><span class="n">operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">(</span><span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="linenos">15</span><span class="n">operator</span> <span class="o">=</span> <span class="n">DuplexModem</span><span class="p">()</span>
+<span class="linenos">16</span><span class="n">operator</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">(</span><span class="n">symbol_rate</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">num_preamble_symbols</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_data_symbols</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">roll_off</span><span class="o">=</span><span class="mf">.9</span><span class="p">)</span>
 <span class="linenos">17</span><span class="n">operator</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
 <span class="linenos">18</span>
 <span class="linenos">19</span><span class="c1"># Configure Monte Carlo simulation</span>
@@ -465,7 +496,9 @@ For example, the following snippet</p>
 <span class="linenos">26</span>
 <span class="linenos">27</span><span class="c1"># Visualize results</span>
 <span class="linenos">28</span><span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-<span class="linenos">29</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="linenos">29</span><span class="n">result</span><span class="o">.</span><span class="n">save_to_matlab</span><span class="p">(</span><span class="s2">&quot;output.mat&quot;</span><span class="p">)</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>defines the described scenario, adds a bit error rate evaluation and, most importantly,
@@ -479,11 +512,11 @@ Executing the script will launch a full simulation run and a rendered result</p>
 </figcaption>
 </figure>
 <p>of the bit error rate graph.</p>
-<p>Now, a typical approach to reduce the bit errors is the introduction of <a class="reference internal" href="api/coding.html"><span class="doc">Channel Coding</span></a>
+<p>Now, a typical approach to reduce the bit errors is the introduction of <a class="reference internal" href="api/fec.html"><span class="doc">Channel Coding</span></a>
 schemes for error correction.
 They introduce redundancy within the transmitted bit stream during transmission
 and exploit said redundancy at the receiver to correct errors.
-One of the most basic error-correcting channel codes is the <a class="reference internal" href="api/coding.repetition.html"><span class="doc">Repetition Encoder</span></a>,
+One of the most basic error-correcting channel codes is the <a class="reference internal" href="api/fec.repetition.html"><span class="doc">Repetition Encoder</span></a>,
 which simply repeats bits to be transmitted and decodes by majority voting after reception.
 In theory, the more repetitions per transmitted data frame, the higher the error correction capabilites.
 But the more redundancy is introduced, the lower the actual information throughput becomes.
@@ -494,40 +527,51 @@ to number of repetitions and noise ratio:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">hermespy.simulation.simulation</span> <span class="kn">import</span> <span class="n">Simulation</span>
-<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.modem.modem</span> <span class="kn">import</span> <span class="n">Modem</span>
-<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">hermespy.modem.evaluators</span> <span class="kn">import</span> <span class="n">BitErrorEvaluator</span><span class="p">,</span> <span class="n">ThroughputEvaluator</span>
-<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">hermespy.modem.waveform_generator_psk_qam</span> <span class="kn">import</span> <span class="n">WaveformGeneratorPskQam</span>
-<span class="linenos"> 7</span><span class="kn">from</span> <span class="nn">hermespy.coding</span> <span class="kn">import</span> <span class="n">RepetitionEncoder</span>
-<span class="linenos"> 8</span>
-<span class="linenos"> 9</span><span class="c1"># Create a new HermesPy simulation scenario</span>
-<span class="linenos">10</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
-<span class="linenos">11</span>
-<span class="linenos">12</span><span class="c1"># Create a new simulated device</span>
-<span class="linenos">13</span><span class="n">device</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">new_device</span><span class="p">()</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">TransmittingModem</span><span class="p">,</span> <span class="n">ReceivingModem</span><span class="p">,</span> <span class="n">BitErrorEvaluator</span><span class="p">,</span> <span class="n">ThroughputEvaluator</span><span class="p">,</span> <span class="n">RootRaisedCosineWaveform</span>
+<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">hermespy.fec</span> <span class="kn">import</span> <span class="n">RepetitionEncoder</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="c1"># Create a new HermesPy simulation scenario</span>
+<span class="linenos"> 8</span><span class="n">simulation</span> <span class="o">=</span> <span class="n">Simulation</span><span class="p">()</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="c1"># Create two devices representing base station and terminal</span>
+<span class="linenos">11</span><span class="c1"># in a downlink scenario</span>
+<span class="linenos">12</span><span class="n">base_station</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">new_device</span><span class="p">()</span>
+<span class="linenos">13</span><span class="n">terminal</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">new_device</span><span class="p">()</span>
 <span class="linenos">14</span>
-<span class="linenos">15</span><span class="c1"># Add a modem at the simulated device</span>
-<span class="linenos">16</span><span class="n">modem</span> <span class="o">=</span> <span class="n">Modem</span><span class="p">()</span>
-<span class="linenos">17</span><span class="n">modem</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">WaveformGeneratorPskQam</span><span class="p">()</span>
-<span class="linenos">18</span><span class="n">modem</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
-<span class="linenos">19</span><span class="n">modem</span><span class="o">.</span><span class="n">encoder_manager</span><span class="o">.</span><span class="n">add_encoder</span><span class="p">(</span><span class="n">RepetitionEncoder</span><span class="p">(</span><span class="n">repetitions</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
-<span class="linenos">20</span>
-<span class="linenos">21</span><span class="c1"># Configure simulation evaluators</span>
-<span class="linenos">22</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">BitErrorEvaluator</span><span class="p">(</span><span class="n">modem</span><span class="p">,</span> <span class="n">modem</span><span class="p">))</span>
-<span class="linenos">23</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">ThroughputEvaluator</span><span class="p">(</span><span class="n">modem</span><span class="p">,</span> <span class="n">modem</span><span class="p">))</span>
-<span class="linenos">24</span>
-<span class="linenos">25</span><span class="c1"># Configure simulation sweep dimensions</span>
-<span class="linenos">26</span><span class="n">snr_dimension</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;snr&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">.125</span><span class="p">,</span> <span class="mf">.0625</span><span class="p">])</span>
-<span class="linenos">27</span><span class="n">rep_dimension</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;repetitions&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="n">modem</span><span class="o">.</span><span class="n">encoder_manager</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="linenos">28</span><span class="n">snr_dimension</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;SNR&#39;</span>
-<span class="linenos">29</span><span class="n">rep_dimension</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Code Repetitions&#39;</span>
-<span class="linenos">30</span>
-<span class="linenos">31</span><span class="c1"># Run the simulation</span>
-<span class="linenos">32</span><span class="n">simulation</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">=</span> <span class="mi">1000</span>
-<span class="linenos">33</span><span class="n">result</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-<span class="linenos">34</span>
-<span class="linenos">35</span><span class="c1"># Plot simulation results</span>
-<span class="linenos">36</span><span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-<span class="linenos">37</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="linenos">15</span><span class="c1"># Disable device self-interference by setting the gain</span>
+<span class="linenos">16</span><span class="c1"># of the respective self-inteference channels to zero</span>
+<span class="linenos">17</span><span class="n">simulation</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">channel</span><span class="p">(</span><span class="n">base_station</span><span class="p">,</span> <span class="n">base_station</span><span class="p">)</span><span class="o">.</span><span class="n">gain</span> <span class="o">=</span> <span class="mf">0.</span>
+<span class="linenos">18</span><span class="n">simulation</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">channel</span><span class="p">(</span><span class="n">terminal</span><span class="p">,</span> <span class="n">terminal</span><span class="p">)</span><span class="o">.</span><span class="n">gain</span> <span class="o">=</span> <span class="mf">0.</span>
+<span class="linenos">19</span>
+<span class="linenos">20</span><span class="c1"># Configure a transmitting modem at the base station</span>
+<span class="linenos">21</span><span class="n">transmitter</span> <span class="o">=</span> <span class="n">TransmittingModem</span><span class="p">()</span>
+<span class="linenos">22</span><span class="n">transmitter</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">(</span><span class="n">symbol_rate</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">num_preamble_symbols</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_data_symbols</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">roll_off</span><span class="o">=</span><span class="mf">.9</span><span class="p">)</span>
+<span class="linenos">23</span><span class="n">transmitter</span><span class="o">.</span><span class="n">encoder_manager</span><span class="o">.</span><span class="n">add_encoder</span><span class="p">(</span><span class="n">RepetitionEncoder</span><span class="p">(</span><span class="n">repetitions</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<span class="linenos">24</span><span class="n">base_station</span><span class="o">.</span><span class="n">transmitters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">transmitter</span><span class="p">)</span>
+<span class="linenos">25</span>
+<span class="linenos">26</span><span class="c1"># Configure a receiving modem at the terminal</span>
+<span class="linenos">27</span><span class="n">receiver</span> <span class="o">=</span> <span class="n">ReceivingModem</span><span class="p">()</span>
+<span class="linenos">28</span><span class="n">receiver</span><span class="o">.</span><span class="n">waveform_generator</span> <span class="o">=</span> <span class="n">RootRaisedCosineWaveform</span><span class="p">(</span><span class="n">symbol_rate</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span> <span class="n">num_preamble_symbols</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_data_symbols</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">oversampling_factor</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">roll_off</span><span class="o">=</span><span class="mf">.9</span><span class="p">)</span>
+<span class="linenos">29</span><span class="n">receiver</span><span class="o">.</span><span class="n">encoder_manager</span><span class="o">.</span><span class="n">add_encoder</span><span class="p">(</span><span class="n">RepetitionEncoder</span><span class="p">(</span><span class="n">repetitions</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<span class="linenos">30</span><span class="n">terminal</span><span class="o">.</span><span class="n">receivers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">receiver</span><span class="p">)</span>
+<span class="linenos">31</span>
+<span class="linenos">32</span><span class="c1"># Configure simulation evaluators</span>
+<span class="linenos">33</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">BitErrorEvaluator</span><span class="p">(</span><span class="n">transmitter</span><span class="p">,</span> <span class="n">receiver</span><span class="p">))</span>
+<span class="linenos">34</span><span class="n">simulation</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">ThroughputEvaluator</span><span class="p">(</span><span class="n">transmitter</span><span class="p">,</span> <span class="n">receiver</span><span class="p">))</span>
+<span class="linenos">35</span>
+<span class="linenos">36</span><span class="c1"># Configure simulation sweep dimensions</span>
+<span class="linenos">37</span><span class="n">snr_dimension</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;snr&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">.125</span><span class="p">,</span> <span class="mf">.0625</span><span class="p">])</span>
+<span class="linenos">38</span><span class="n">rep_dimension</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;repetitions&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span> <span class="n">transmitter</span><span class="o">.</span><span class="n">encoder_manager</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">receiver</span><span class="o">.</span><span class="n">encoder_manager</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="linenos">39</span><span class="n">snr_dimension</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;SNR&#39;</span>
+<span class="linenos">40</span><span class="n">rep_dimension</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Code Repetitions&#39;</span>
+<span class="linenos">41</span>
+<span class="linenos">42</span><span class="c1"># Run the simulation</span>
+<span class="linenos">43</span><span class="n">simulation</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="linenos">44</span><span class="n">result</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="linenos">45</span>
+<span class="linenos">46</span><span class="c1"># Plot simulation results</span>
+<span class="linenos">47</span><span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="linenos">48</span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Executing it leads to the rendering of a surface plot visualization, from which engineers
@@ -542,26 +586,23 @@ a given noise ratio:</p>
 </section>
 </section>
 <section id="command-line-tool">
-<span id="gettingstarted-commandlinetool"></span><h2>Command Line Tool<a class="headerlink" href="#command-line-tool" title="Permalink to this headline"></a></h2>
+<span id="gettingstarted-commandlinetool"></span><h2>Command Line Tool<a class="headerlink" href="#command-line-tool" title="Permalink to this heading"></a></h2>
 <p>This section outlines how to use HermesPy as a command line tool
 and provides some reference examples to get new users accustomed with the process of configuring scenarios.</p>
 <p>Once HermesPy is installed within any Python environment,
-users may call the command line interface by executing the command <code class="xref py py-mod docutils literal notranslate"><span class="pre">hermes</span></code>
+users may call the command line interface by executing the command <a class="reference internal" href="api/bin.hermes.html#module-hermespy.bin.hermes" title="hermespy.bin.hermes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hermes</span></code></a>
 in both Linux and Windows command line terminals.
 Consult <a class="reference internal" href="api/bin.hermes.html"><span class="doc">Hermes Command Line Interface</span></a> for a detailed description of all available command line options.</p>
 <p>In short, entering</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes -p /path/to/settings -o /path/to/output
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes /path/to/config.yml -o /path/to/output
 </pre></div>
 </div>
 <p>is the most common use-case of the command line interface.
-All configuration files located under <em>/path/to/settings</em> are parsed and interpreted as
-an executable scenario configuration.
-The configuration is subsequently being executed.
+The configuration <em>/path/to/config.yml</em> is subsequently being executed.
 All data resulting from this execution will be stored within <em>/path/to/output</em>.</p>
-<p>If the command-line parameter <code class="docutils literal notranslate"><span class="pre">-p</span></code> is left out, then the default path <em>/_settings</em> will be considered.
-If the <code class="docutils literal notranslate"><span class="pre">-o</span></code> is left out, then the results will be stored in a unique sub-folder of <em>/results/</em>.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">-o</span></code> is left out, then the results will be stored in a unique sub-folder of <em>/results/</em>.</p>
 <section id="first-steps">
-<h3>First Steps<a class="headerlink" href="#first-steps" title="Permalink to this headline"></a></h3>
+<h3>First Steps<a class="headerlink" href="#first-steps" title="Permalink to this heading"></a></h3>
 <p>Let’s begin by configuring a basic simulation scenario.
 It should consist of:</p>
 <ol class="arabic simple">
@@ -579,87 +620,98 @@ It should consist of:</p>
 <li><p>A parameter sweep over the SNR between 0 and 20 dB</p></li>
 </ol>
 <p>This scenario is represented by the following <em>simulation.yml</em> file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kt">!&lt;Simulation&gt;</span><span class="w"></span>
-<span class="linenos"> 2</span>
-<span class="linenos"> 3</span><span class="c1"># Physical device models within the simulated scenario</span><span class="w"></span>
-<span class="linenos"> 4</span><span class="nt">Devices</span><span class="p">:</span><span class="w"></span>
-<span class="linenos"> 5</span>
-<span class="linenos"> 6</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;device_alpha</span><span class="w"> </span><span class="kt">!&lt;SimulatedDevice&gt;</span><span class="w"></span>
-<span class="linenos"> 7</span>
-<span class="linenos"> 8</span><span class="w">    </span><span class="c1"># RF-Chain configuration</span><span class="w"></span>
-<span class="linenos"> 9</span><span class="w">    </span><span class="nt">rf_chain</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;RfChain&gt;</span><span class="w"></span>
-<span class="linenos">10</span>
-<span class="linenos">11</span><span class="w">      </span><span class="c1"># Power amplifier model</span><span class="w"></span>
-<span class="linenos">12</span><span class="w">      </span><span class="nt">power_amplifier</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;Rapp&gt;</span><span class="w"></span>
-<span class="linenos">13</span>
-<span class="linenos">14</span><span class="w">        </span><span class="nt">smoothness_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.</span><span class="w">     </span><span class="c1"># Smoothness factor of Rapp&#39;s model</span><span class="w"></span>
-<span class="linenos">15</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># In this example we simulate a frame of QAM modulated overlapping chirps.</span><span class="w"></span>
+<span class="linenos"> 2</span><span class="c1"># </span><span class="w"></span>
+<span class="linenos"> 3</span><span class="c1"># A bandwidth of 100 MHz is considered with chirps separated at the Nyquist</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="c1"># sampling rate. Modulation is 16-QAM, yielding an uncoded bit rate of 400 Mbps.</span><span class="w"></span>
+<span class="linenos"> 5</span><span class="c1"># Chirps have a duration of 1 \mu s.</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="c1"># The interchirp interference is compensated by an MMSE block equalizer.</span><span class="w"></span>
+<span class="linenos"> 7</span><span class="c1"># </span><span class="w"></span>
+<span class="linenos"> 8</span><span class="c1"># A non-linear amplifier following Rapp&#39;s model is also considered.</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="c1"># </span><span class="w"></span>
+<span class="linenos">10</span><span class="c1"># Each frame transmits 10 unmodulated non-overlapping chirps at the beginning,</span><span class="w"></span>
+<span class="linenos">11</span><span class="c1"># followed by 1000 modulated chirps.</span><span class="w"></span>
+<span class="linenos">12</span><span class="c1"># </span><span class="w"></span>
+<span class="linenos">13</span><span class="c1"># Channel is AWGN.</span><span class="w"></span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="kt">!&lt;Simulation&gt;</span><span class="w"></span>
 <span class="linenos">16</span>
-<span class="linenos">17</span><span class="c1"># Operators transmitting or receiving signals over the devices</span><span class="w"></span>
-<span class="linenos">18</span><span class="nt">Operators</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">17</span><span class="c1"># Physical device models within the simulated scenario</span><span class="w"></span>
+<span class="linenos">18</span><span class="nt">Devices</span><span class="p">:</span><span class="w"></span>
 <span class="linenos">19</span>
-<span class="linenos">20</span><span class="w">  </span><span class="c1"># A single modem operating the device #0</span><span class="w"></span>
-<span class="linenos">21</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;modem_alpha</span><span class="w"> </span><span class="kt">!&lt;Modem&gt;</span><span class="w"></span>
-<span class="linenos">22</span>
-<span class="linenos">23</span><span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="nv">*device_alpha</span><span class="w">          </span><span class="c1"># Device the modem is operating on</span><span class="w"></span>
+<span class="linenos">20</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;device_alpha</span><span class="w"> </span><span class="kt">!&lt;SimulatedDevice&gt;</span><span class="w"></span>
+<span class="linenos">21</span>
+<span class="linenos">22</span><span class="w">    </span><span class="c1"># RF-Chain configuration</span><span class="w"></span>
+<span class="linenos">23</span><span class="w">    </span><span class="nt">rf_chain</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;RfChain&gt;</span><span class="w"></span>
 <span class="linenos">24</span>
-<span class="linenos">25</span><span class="w">    </span><span class="c1"># Bit encoding configuration before mapping to modulation symbols</span><span class="w"></span>
-<span class="linenos">26</span><span class="w">    </span><span class="nt">Encoding</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">25</span><span class="w">      </span><span class="c1"># Power amplifier model</span><span class="w"></span>
+<span class="linenos">26</span><span class="w">      </span><span class="nt">power_amplifier</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;Rapp&gt;</span><span class="w"></span>
 <span class="linenos">27</span>
-<span class="linenos">28</span><span class="w">      </span><span class="c1"># Repetition encoding, repeating bit sections for redundancy</span><span class="w"></span>
-<span class="linenos">29</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;Repetition&gt;</span><span class="w"></span>
+<span class="linenos">28</span><span class="w">        </span><span class="nt">smoothness_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.</span><span class="w">     </span><span class="c1"># Smoothness factor of Rapp&#39;s model</span><span class="w"></span>
+<span class="linenos">29</span>
 <span class="linenos">30</span>
-<span class="linenos">31</span><span class="w">        </span><span class="nt">bit_block_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w">       </span><span class="c1"># Block size</span><span class="w"></span>
-<span class="linenos">32</span><span class="w">        </span><span class="nt">repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">             </span><span class="c1"># Number of times the bits within the block get repeated</span><span class="w"></span>
+<span class="linenos">31</span><span class="c1"># Operators transmitting or receiving signals over the devices</span><span class="w"></span>
+<span class="linenos">32</span><span class="nt">Operators</span><span class="p">:</span><span class="w"></span>
 <span class="linenos">33</span>
-<span class="linenos">34</span><span class="w">    </span><span class="c1"># Waveform configuration</span><span class="w"></span>
-<span class="linenos">35</span><span class="w">    </span><span class="nt">Waveform</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;PskQam&gt;</span><span class="w"></span>
+<span class="linenos">34</span><span class="w">  </span><span class="c1"># A single modem operating the device #0</span><span class="w"></span>
+<span class="linenos">35</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nl">&amp;modem_alpha</span><span class="w"> </span><span class="kt">!&lt;Modem&gt;</span><span class="w"></span>
 <span class="linenos">36</span>
-<span class="linenos">37</span><span class="w">      </span><span class="c1"># Symbol settings</span><span class="w"></span>
-<span class="linenos">38</span><span class="w">      </span><span class="nt">symbol_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100e6</span><span class="w"></span>
-<span class="linenos">39</span><span class="w">      </span><span class="nt">modulation_order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span><span class="w"></span>
-<span class="linenos">40</span><span class="w">      </span><span class="nt">oversampling_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w"></span>
-<span class="linenos">41</span>
-<span class="linenos">42</span><span class="w">      </span><span class="c1"># Filter settings</span><span class="w"></span>
-<span class="linenos">43</span><span class="w">      </span><span class="nt">filter</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">44</span><span class="w">        </span><span class="nt">filter_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FMCW</span><span class="w"></span>
+<span class="linenos">37</span><span class="w">    </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="nv">*device_alpha</span><span class="w">          </span><span class="c1"># Device the modem is operating on</span><span class="w"></span>
+<span class="linenos">38</span><span class="w">    </span><span class="nt">reference</span><span class="p">:</span><span class="w"> </span><span class="nv">*device_alpha</span><span class="w"></span>
+<span class="linenos">39</span>
+<span class="linenos">40</span><span class="w">    </span><span class="c1"># Bit encoding configuration before mapping to modulation symbols</span><span class="w"></span>
+<span class="linenos">41</span><span class="w">    </span><span class="nt">encoding</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;Encoding&gt;</span><span class="w"></span>
+<span class="linenos">42</span>
+<span class="linenos">43</span><span class="w">      </span><span class="c1"># Repetition encoding, repeating bit sections for redundancy</span><span class="w"></span>
+<span class="linenos">44</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;Repetition&gt;</span><span class="w"></span>
 <span class="linenos">45</span>
-<span class="linenos">46</span><span class="w">      </span><span class="c1"># Frame settings</span><span class="w"></span>
-<span class="linenos">47</span><span class="w">      </span><span class="nt">chirp_bandwidth</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100e6</span><span class="w"></span>
-<span class="linenos">48</span><span class="w">      </span><span class="nt">num_preamble_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
-<span class="linenos">49</span><span class="w">      </span><span class="nt">num_data_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"></span>
-<span class="linenos">50</span><span class="w">      </span><span class="nt">pilot_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e6</span><span class="w"></span>
-<span class="linenos">51</span><span class="w">      </span><span class="nt">guard_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-6</span><span class="w"></span>
-<span class="linenos">52</span>
-<span class="linenos">53</span><span class="w">      </span><span class="c1"># Post-Processing</span><span class="w"></span>
-<span class="linenos">54</span><span class="w">      </span><span class="nt">channel_equalization</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;PskQamMMSE&gt;</span><span class="w"></span>
-<span class="linenos">55</span>
-<span class="linenos">56</span><span class="c1"># Performance indication evaluation configuration</span><span class="w"></span>
-<span class="linenos">57</span><span class="nt">Evaluators</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">58</span>
-<span class="linenos">59</span><span class="w">  </span><span class="c1"># Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`</span><span class="w"></span>
-<span class="linenos">60</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;BitErrorEvaluator&gt;</span><span class="w"></span>
-<span class="linenos">61</span>
-<span class="linenos">62</span><span class="w">    </span><span class="nt">transmitting_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
-<span class="linenos">63</span><span class="w">    </span><span class="nt">receiving_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
-<span class="linenos">64</span><span class="w">    </span><span class="nt">confidence</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.9</span><span class="w"></span>
-<span class="linenos">65</span><span class="w">    </span><span class="nt">tolerance</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.01</span><span class="w"></span>
-<span class="linenos">66</span><span class="w">    </span><span class="nt">plot_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">log</span><span class="w"></span>
-<span class="linenos">67</span>
-<span class="linenos">68</span><span class="c1"># Simulation parameters</span><span class="w"></span>
-<span class="linenos">69</span><span class="nt">num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span><span class="w">                    </span><span class="c1"># Number of samples per simulation grid section</span><span class="w"></span>
-<span class="linenos">70</span><span class="nt">min_num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">                </span><span class="c1"># Minimum number of samples per simulation grid section before premature stopping</span><span class="w"></span>
-<span class="linenos">71</span><span class="nt">snr_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EBN0</span><span class="w">                     </span><span class="c1"># SNR is defined as the ratio between bit energy and noise power</span><span class="w"></span>
-<span class="linenos">72</span><span class="nt">plot_results</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w">                 </span><span class="c1"># Visualize the evaluations after the simulation has finished</span><span class="w"></span>
-<span class="linenos">73</span>
-<span class="linenos">74</span><span class="c1"># Scenario parameters over which the Monte-Carlo simulation sweeps</span><span class="w"></span>
-<span class="linenos">75</span><span class="nt">Dimensions</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">76</span>
-<span class="linenos">77</span><span class="w">  </span><span class="nt">snr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">...</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dB</span><span class="w"></span>
+<span class="linenos">46</span><span class="w">        </span><span class="nt">bit_block_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w">       </span><span class="c1"># Block size</span><span class="w"></span>
+<span class="linenos">47</span><span class="w">        </span><span class="nt">repetitions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w">             </span><span class="c1"># Number of times the bits within the block get repeated</span><span class="w"></span>
+<span class="linenos">48</span>
+<span class="linenos">49</span><span class="w">    </span><span class="c1"># Waveform configuration</span><span class="w"></span>
+<span class="linenos">50</span><span class="w">    </span><span class="nt">waveform</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;SC-RootRaisedCosine&gt;</span><span class="w"></span>
+<span class="linenos">51</span>
+<span class="linenos">52</span><span class="w">      </span><span class="c1"># Symbol settings</span><span class="w"></span>
+<span class="linenos">53</span><span class="w">      </span><span class="nt">symbol_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100e6</span><span class="w"></span>
+<span class="linenos">54</span><span class="w">      </span><span class="nt">modulation_order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span><span class="w"></span>
+<span class="linenos">55</span><span class="w">      </span><span class="nt">oversampling_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w"></span>
+<span class="linenos">56</span>
+<span class="linenos">57</span><span class="w">      </span><span class="c1"># Frame settings</span><span class="w"></span>
+<span class="linenos">58</span><span class="w">      </span><span class="nt">num_preamble_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
+<span class="linenos">59</span><span class="w">      </span><span class="nt">num_data_symbols</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"></span>
+<span class="linenos">60</span><span class="w">      </span><span class="nt">pilot_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e6</span><span class="w"></span>
+<span class="linenos">61</span><span class="w">      </span><span class="nt">guard_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-6</span><span class="w"></span>
+<span class="linenos">62</span>
+<span class="linenos">63</span><span class="w">      </span><span class="c1"># Post-Processing</span><span class="w"></span>
+<span class="linenos">64</span><span class="w">      </span><span class="nt">channel_estimation</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;SC-Ideal&gt;</span><span class="w"></span>
+<span class="linenos">65</span><span class="w">      </span><span class="nt">channel_equalization</span><span class="p">:</span><span class="w"> </span><span class="kt">!&lt;SC-MMSE&gt;</span><span class="w"></span>
+<span class="linenos">66</span>
+<span class="linenos">67</span><span class="c1"># Performance indication evaluation configuration</span><span class="w"></span>
+<span class="linenos">68</span><span class="nt">Evaluators</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">69</span>
+<span class="linenos">70</span><span class="w">  </span><span class="c1"># Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`</span><span class="w"></span>
+<span class="linenos">71</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="kt">!&lt;BitErrorEvaluator&gt;</span><span class="w"></span>
+<span class="linenos">72</span>
+<span class="linenos">73</span><span class="w">    </span><span class="nt">transmitting_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
+<span class="linenos">74</span><span class="w">    </span><span class="nt">receiving_modem</span><span class="p">:</span><span class="w"> </span><span class="nv">*modem_alpha</span><span class="w"></span>
+<span class="linenos">75</span><span class="w">    </span><span class="nt">confidence</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.9</span><span class="w"></span>
+<span class="linenos">76</span><span class="w">    </span><span class="nt">tolerance</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.01</span><span class="w"></span>
+<span class="linenos">77</span><span class="w">    </span><span class="nt">plot_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">log</span><span class="w"></span>
+<span class="linenos">78</span>
+<span class="linenos">79</span><span class="c1"># Simulation parameters</span><span class="w"></span>
+<span class="linenos">80</span><span class="nt">num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">                   </span><span class="c1"># Number of samples per simulation grid section</span><span class="w"></span>
+<span class="linenos">81</span><span class="nt">min_num_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">                </span><span class="c1"># Minimum number of samples per simulation grid section before premature stopping</span><span class="w"></span>
+<span class="linenos">82</span><span class="nt">snr_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">EBN0</span><span class="w">                     </span><span class="c1"># SNR is defined as the ratio between bit energy and noise power</span><span class="w"></span>
+<span class="linenos">83</span><span class="nt">plot_results</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w">                 </span><span class="c1"># Visualize the evaluations after the simulation has finished</span><span class="w"></span>
+<span class="linenos">84</span>
+<span class="linenos">85</span><span class="c1"># Scenario parameters over which the Monte-Carlo simulation sweeps</span><span class="w"></span>
+<span class="linenos">86</span><span class="nt">Dimensions</span><span class="p">:</span><span class="w"></span>
+<span class="linenos">87</span>
+<span class="linenos">88</span><span class="w">  </span><span class="nt">snr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">...</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dB</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Assuming <em>simulation.yml</em> is located within <em>/path/to/settings</em>, calling</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes -p /path/to/settings
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>hermes /path/to/config.yml
 </pre></div>
 </div>
 <p>will result in the rendering of four plots displaying the respective information.
@@ -675,13 +727,13 @@ Github repository.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api/api.html" class="btn btn-neutral float-right" title="HermesPy API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcf54ed30>
+<jinja2.runtime.BlockReference object at 0x7f9e79b10e50>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

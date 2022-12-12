@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bit Source &mdash; HermesPy  documentation</title>
+  <title>Bit Source &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="../_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +45,7 @@
             <img src="../_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -52,34 +57,127 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding.html">Channel Coding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop Module</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modem.html">Communication</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmissionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmissionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationTransmission"><code class="docutils literal notranslate"><span class="pre">CommunicationTransmission</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReceptionFrame"><code class="docutils literal notranslate"><span class="pre">CommunicationReceptionFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.CommunicationReception"><code class="docutils literal notranslate"><span class="pre">CommunicationReception</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.BaseModem"><code class="docutils literal notranslate"><span class="pre">BaseModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.TransmittingModem"><code class="docutils literal notranslate"><span class="pre">TransmittingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.ReceivingModem"><code class="docutils literal notranslate"><span class="pre">ReceivingModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.DuplexModem"><code class="docutils literal notranslate"><span class="pre">DuplexModem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html#hermespy.modem.modem.SimplexLink"><code class="docutils literal notranslate"><span class="pre">SimplexLink</span></code></a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.bits_source.BitsSource"><code class="docutils literal notranslate"><span class="pre">BitsSource</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.bits_source.BitsSource.generate_bits"><code class="docutils literal notranslate"><span class="pre">BitsSource.generate_bits()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.bits_source.RandomBitsSource"><code class="docutils literal notranslate"><span class="pre">RandomBitsSource</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.bits_source.RandomBitsSource.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RandomBitsSource.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.bits_source.RandomBitsSource.generate_bits"><code class="docutils literal notranslate"><span class="pre">RandomBitsSource.generate_bits()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.modem.bits_source.StreamBitsSource"><code class="docutils literal notranslate"><span class="pre">StreamBitsSource</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.modem.bits_source.StreamBitsSource.generate_bits"><code class="docutils literal notranslate"><span class="pre">StreamBitsSource.generate_bits()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.SymbolType"><code class="docutils literal notranslate"><span class="pre">SymbolType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbol"><code class="docutils literal notranslate"><span class="pre">Symbol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.Symbols"><code class="docutils literal notranslate"><span class="pre">Symbols</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html#hermespy.modem.symbols.StatedSymbols"><code class="docutils literal notranslate"><span class="pre">StatedSymbols</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization"><code class="docutils literal notranslate"><span class="pre">Synchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEstimation"><code class="docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.IdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">IdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">ZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.WaveformGenerator"><code class="docutils literal notranslate"><span class="pre">WaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotWaveformGenerator"><code class="docutils literal notranslate"><span class="pre">PilotWaveformGenerator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.PilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">PilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.UniformPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">UniformPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.CustomPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">CustomPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.MappedPilotSymbolSequence"><code class="docutils literal notranslate"><span class="pre">MappedPilotSymbolSequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator.html#hermespy.modem.waveform_generator.ConfigurablePilotWaveform"><code class="docutils literal notranslate"><span class="pre">ConfigurablePilotWaveform</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_psk_qam.html">Phase Shift Keying / Quadrature Amplitude Modulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.CommunicationEvaluator"><code class="docutils literal notranslate"><span class="pre">CommunicationEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BitErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BitErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorArtifact"><code class="docutils literal notranslate"><span class="pre">BlockErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">BlockErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorArtifact"><code class="docutils literal notranslate"><span class="pre">FrameErrorArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluation"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluator"><code class="docutils literal notranslate"><span class="pre">FrameErrorEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputArtifact"><code class="docutils literal notranslate"><span class="pre">ThroughputArtifact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluation"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluator"><code class="docutils literal notranslate"><span class="pre">ThroughputEvaluator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">FilteredSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">SingleCarrierLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">SingleCarrierMinimumMeanSquareChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform"><code class="docutils literal notranslate"><span class="pre">RolledOffSingleCarrierWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RootRaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RaisedCosineWaveform"><code class="docutils literal notranslate"><span class="pre">RaisedCosineWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.RectangularWaveform"><code class="docutils literal notranslate"><span class="pre">RectangularWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.FMCWWaveform"><code class="docutils literal notranslate"><span class="pre">FMCWWaveform</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform"><code class="docutils literal notranslate"><span class="pre">ChirpFSKWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_chirp_fsk.html#hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">ChirpFSKCorrelationSynchronization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ElementType"><code class="docutils literal notranslate"><span class="pre">ElementType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PrefixType"><code class="docutils literal notranslate"><span class="pre">PrefixType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameElement"><code class="docutils literal notranslate"><span class="pre">FrameElement</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameResource"><code class="docutils literal notranslate"><span class="pre">FrameResource</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSection"><code class="docutils literal notranslate"><span class="pre">FrameSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameSymbolSection"><code class="docutils literal notranslate"><span class="pre">FrameSymbolSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.FrameGuardSection"><code class="docutils literal notranslate"><span class="pre">FrameGuardSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMWaveform"><code class="docutils literal notranslate"><span class="pre">OFDMWaveform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.PilotSection"><code class="docutils literal notranslate"><span class="pre">PilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxPilotSection"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxPilotSection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMCorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">OFDMCorrelationSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.SchmidlCoxSynchronization"><code class="docutils literal notranslate"><span class="pre">SchmidlCoxSynchronization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.ReferencePosition"><code class="docutils literal notranslate"><span class="pre">ReferencePosition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMIdealChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMIdealChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation"><code class="docutils literal notranslate"><span class="pre">OFDMLeastSquaresChannelEstimation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMZeroForcingChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMZeroForcingChannelEqualization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization"><code class="docutils literal notranslate"><span class="pre">OFDMMinimumMeanSquareChannelEqualization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.PGT"><code class="docutils literal notranslate"><span class="pre">PGT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization"><code class="docutils literal notranslate"><span class="pre">CorrelationSynchronization</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Radar Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Binary Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 </ul>
@@ -97,10 +195,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="api.html">HermesPy API</a> &raquo;</li>
-          <li><a href="modem.html">Communication Module</a> &raquo;</li>
-      <li>Bit Source</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="modem.html">Communication</a></li>
+      <li class="breadcrumb-item active">Bit Source</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/modem.bits_source.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,8 +208,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <span class="target" id="module-hermespy.modem.bits_source"></span><section id="bit-source">
-<h1>Bit Source<a class="headerlink" href="#bit-source" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.modem.bits_source"></span><section id="bit-source">
+<h1>Bit Source<a class="headerlink" href="#bit-source" title="Permalink to this heading"></a></h1>
 <p>Bit sources represent, as the title suggest, a source of (hard) communication bits
 to be transmitted over a modem.
 Every bit source implementation is expected to inherit from the <a class="reference internal" href="#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitsSource</span></code></a> base class,
@@ -119,9 +241,9 @@ which in turn represents a random node.</p>
 <div align="center" class="mermaid align-center">
             classDiagram
   RandomNode &lt;|-- BitsSource
-  BitsSource &lt;|-- RandomBitsSource
   Serializable &lt;|-- RandomBitsSource
   BitsSource &lt;|-- StreamBitsSource
+  BitsSource &lt;|-- RandomBitsSource
   Serializable &lt;|-- StreamBitsSource
         </div>
         <p>There are currently two basic types of bit sources available:</p>
@@ -129,10 +251,11 @@ which in turn represents a random node.</p>
 <li><p><a class="reference internal" href="#hermespy.modem.bits_source.RandomBitsSource" title="hermespy.modem.bits_source.RandomBitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomBitsSource</span></code></a> instances implement a random stream of bits</p></li>
 <li><p><a class="reference internal" href="#hermespy.modem.bits_source.StreamBitsSource" title="hermespy.modem.bits_source.StreamBitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamBitsSource</span></code></a> instances implement a deterministic stream of bits</p></li>
 </ul>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.bits_source.BitsSource">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BitsSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.bits_source.BitsSource" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.random_node.RandomNode</span></code></a></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomNode</span></code></a></p>
 <p>Base Class for Arbitrary Streams of Communication Bits.</p>
 <p>Inheriting classes are required to implement the <a class="reference internal" href="#hermespy.modem.bits_source.BitsSource.generate_bits" title="hermespy.modem.bits_source.BitsSource.generate_bits"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_bits()</span></code></a> routine.</p>
 <dl class="field-list simple">
@@ -162,7 +285,7 @@ which in turn represents a random node.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.bits_source.RandomBitsSource">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RandomBitsSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.bits_source.RandomBitsSource" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.bits_source.BitsSource</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitsSource</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Bit stream generator for pseudo-random sequences of bits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -197,7 +320,7 @@ which in turn represents a random node.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.bits_source.StreamBitsSource">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StreamBitsSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.modem.bits_source.StreamBitsSource" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.modem.bits_source.BitsSource</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">hermespy.core.factory.Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#hermespy.modem.bits_source.BitsSource" title="hermespy.modem.bits_source.BitsSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitsSource</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Bit-stream generator mapping representing file system streams as bit sources.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -223,7 +346,6 @@ which in turn represents a random node.</p>
 
 </dd></dl>
 
-</section>
 
 
            </div>
@@ -236,7 +358,7 @@ which in turn represents a random node.</p>
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadcf235130>
+<jinja2.runtime.BlockReference object at 0x7f9e7a4c27f0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

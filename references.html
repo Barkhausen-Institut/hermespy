@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>References &mdash; HermesPy  documentation</title>
+  <title>References &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="_static/dark_mode_js/default_dark.js"></script>
@@ -28,7 +33,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="For Developers" href="developer_hints.html" />
-    <link rel="prev" title="Resampling Routines" href="api/tools.resampling.html" /> 
+    <link rel="prev" title="Matlab" href="matlab.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,7 +45,7 @@
             <img src="_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -52,10 +57,13 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
@@ -73,8 +81,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>References</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">References</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/references.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,8 +92,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="references">
-<h1>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="references">
+<h1>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h1>
 <p>HermesPy contains numerous submodules implementing algorithms,
 concepts and models published in peer-reviewed mediums.</p>
 <p>The following list provides an overview over all references:</p>
@@ -97,8 +129,41 @@ concepts and models published in peer-reviewed mediums.</p>
 <dt class="label" id="id12"><span class="brackets">{3GPP TSG-RAN}20</span></dt>
 <dd><p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2020. version 16.1.0 Release 16. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf</a>.</p>
 </dd>
+<dt class="label" id="id31"><span class="brackets">AKB22</span></dt>
+<dd><p>Jan Adler, Tobias Kronauer, and André Noll Barreto. HermesPy: An Open-Source Link-Level Evaluator for 6G. <em>IEEE Access</em>, 10():120256–120273, 2022. <a class="reference external" href="https://doi.org/10.1109/ACCESS.2022.3222063">doi:10.1109/ACCESS.2022.3222063</a>.</p>
+</dd>
+<dt class="label" id="id21"><span class="brackets">Ari09</span></dt>
+<dd><p>Erdal Arikan. Channel polarization: a method for constructing capacity-achieving codes for symmetric binary-input memoryless channels. <em>IEEE Transactions on Information Theory</em>, 55(7):3051–3073, 2009. <a class="reference external" href="https://doi.org/10.1109/TIT.2009.2021379">doi:10.1109/TIT.2009.2021379</a>.</p>
+</dd>
+<dt class="label" id="id24"><span class="brackets">BCJR74</span></dt>
+<dd><p>L. Bahl, J. Cocke, F. Jelinek, and J. Raviv. Optimal decoding of linear codes for minimizing symbol error rate (corresp.). <em>IEEE Transactions on Information Theory</em>, 20(2):284–287, 1974. <a class="reference external" href="https://doi.org/10.1109/TIT.1974.1055186">doi:10.1109/TIT.1974.1055186</a>.</p>
+</dd>
+<dt class="label" id="id27"><span class="brackets">Bar50</span></dt>
+<dd><p>M. S. Bartlett. Periodogram analysis and continuous spectra. <em>Biometrika</em>, 37(1/2):1–16, 1950. URL: <a class="reference external" href="http://www.jstor.org/stable/2332141">http://www.jstor.org/stable/2332141</a> (visited on 2022-06-28).</p>
+</dd>
 <dt class="label" id="id9"><span class="brackets">BHvST14</span></dt>
 <dd><p>Christian Bayer, Håkon Hoel, Erik von Schwerin, and Raúl Tempone. On Non-Asymptotic Optimal Stopping Criteria in Monte Carlo Simulations. <em>SIAM Journal on Scientific Computing</em>, 36(2):A869–A885, 2014. <a class="reference external" href="https://doi.org/10.1137/130911433">doi:10.1137/130911433</a>.</p>
+</dd>
+<dt class="label" id="id18"><span class="brackets">BGT93</span></dt>
+<dd><p>C. Berrou, A. Glavieux, and P. Thitimajshima. Near shannon limit error-correcting coding and decoding: turbo-codes. 1. In <em>Proceedings of ICC '93 - IEEE International Conference on Communications</em>, volume 2, 1064–1070 vol.2. 1993. <a class="reference external" href="https://doi.org/10.1109/ICC.1993.397441">doi:10.1109/ICC.1993.397441</a>.</p>
+</dd>
+<dt class="label" id="id25"><span class="brackets">BRC60</span></dt>
+<dd><p>R. C. Bose and Dwijendra K. Ray-Chaudhuri. On a class of error correcting binary group codes. <em>Inf. Control.</em>, 3:68–79, 1960.</p>
+</dd>
+<dt class="label" id="id26"><span class="brackets">Cap69</span></dt>
+<dd><p>J. Capon. High-resolution frequency-wavenumber spectrum analysis. <em>Proceedings of the IEEE</em>, 57(8):1408–1418, 1969. <a class="reference external" href="https://doi.org/10.1109/PROC.1969.7278">doi:10.1109/PROC.1969.7278</a>.</p>
+</dd>
+<dt class="label" id="id19"><span class="brackets">CHLeonardon+19</span></dt>
+<dd><p>A. Cassagne, O. Hartmann, M. Léonardon, K. He, C. Leroux, R. Tajan, O. Aumage, D. Barthou, T. Tonnellier, V. Pignoly, B. Le Gal, and C. Jégo. Aff3ct: a fast forward error correction toolbox! <em>Elsevier SoftwareX</em>, 10:100345, October 2019. URL: <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S2352711019300457">http://www.sciencedirect.com/science/article/pii/S2352711019300457</a>, <a class="reference external" href="https://doi.org/https://doi.org/10.1016/j.softx.2019.100345">doi:https://doi.org/10.1016/j.softx.2019.100345</a>.</p>
+</dd>
+<dt class="label" id="id29"><span class="brackets">CB06</span></dt>
+<dd><p>A. Chorti and M. Brookes. A spectral model for rf oscillators with power-law phase noise. <em>IEEE Transactions on Circuits and Systems I: Regular Papers</em>, 53(9):1989–1999, 2006. <a class="reference external" href="https://doi.org/10.1109/TCSI.2006.881182">doi:10.1109/TCSI.2006.881182</a>.</p>
+</dd>
+<dt class="label" id="id30"><span class="brackets">CB07</span></dt>
+<dd><p>Arsenia Chorti and Mike Brookes. Resolving near-carrier spectral infinities due to 1/f phase noise in oscillators. In <em>2007 IEEE International Conference on Acoustics, Speech and Signal Processing - ICASSP '07</em>, volume 3, III–1005–III–1008. 2007. <a class="reference external" href="https://doi.org/10.1109/ICASSP.2007.366852">doi:10.1109/ICASSP.2007.366852</a>.</p>
+</dd>
+<dt class="label" id="id20"><span class="brackets">Gal63</span></dt>
+<dd><p>Robert G. Gallager. Low-density parity-check codes. 1963.</p>
 </dd>
 <dt class="label" id="id5"><span class="brackets">IEE99</span></dt>
 <dd><p>IEEE. IEEE standard for telecommunications and information exchange between systems - LAN/MAN specific requirements - Part 11: wireless medium access control (MAC) and physical layer (PHY) specifications: high speed physical layer in the 5 GHz band. <em>IEEE Std 802.11a-1999</em>, 1999. <a class="reference external" href="https://doi.org/10.1109/IEEESTD.1999.90606">doi:10.1109/IEEESTD.1999.90606</a>.</p>
@@ -109,6 +174,9 @@ concepts and models published in peer-reviewed mediums.</p>
 <dt class="label" id="id8"><span class="brackets">KWA+18</span></dt>
 <dd><p>Adnan Kiayani, Muhammad Zeeshan Waheed, Lauri Anttila, Mahmoud Abdelaziz, Dani Korpi, Ville Syrjälä, Marko Kosunen, Kari Stadius, Jussi Ryynänen, and Mikko Valkama. Adaptive nonlinear rf cancellation for improved isolation in simultaneous transmit–receive systems. <em>IEEE Transactions on Microwave Theory and Techniques</em>, 66(5):2299–2312, 2018. <a class="reference external" href="https://doi.org/10.1109/TMTT.2017.2786729">doi:10.1109/TMTT.2017.2786729</a>.</p>
 </dd>
+<dt class="label" id="id28"><span class="brackets">KC76</span></dt>
+<dd><p>C. Knapp and G. Carter. The generalized correlation method for estimation of time delay. <em>IEEE Transactions on Acoustics, Speech, and Signal Processing</em>, 24(4):320–327, 1976. <a class="reference external" href="https://doi.org/10.1109/TASSP.1976.1162830">doi:10.1109/TASSP.1976.1162830</a>.</p>
+</dd>
 <dt class="label" id="id7"><span class="brackets">NDM+16</span></dt>
 <dd><p>Ali A. Nasir, Salman Durrani, Hani Mehrpouyan, Steven D. Blostein, and Rodney A. Kennedy. Timing and carrier synchronization in wireless communication systems: a survey and classification of research in the last 5 years. <em>EURASIP Journal on Wireless Communications and Networking</em>, 2016(1):180, 2016. <a class="reference external" href="https://doi.org/10.1186/s13638-016-0670-9">doi:10.1186/s13638-016-0670-9</a>.</p>
 </dd>
@@ -118,6 +186,9 @@ concepts and models published in peer-reviewed mediums.</p>
 <dt class="label" id="id4"><span class="brackets">Rap91</span></dt>
 <dd><p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
 </dd>
+<dt class="label" id="id23"><span class="brackets">RS60</span></dt>
+<dd><p>I. S. Reed and G. Solomon. Polynomial codes over certain finite fields. <em>Journal of the Society for Industrial and Applied Mathematics</em>, 8(2):300–304, 1960. URL: <a class="reference external" href="https://doi.org/10.1137/0108018">https://doi.org/10.1137/0108018</a>, <a class="reference external" href="https://arxiv.org/abs/https://doi.org/10.1137/0108018">arXiv:https://doi.org/10.1137/0108018</a>, <a class="reference external" href="https://doi.org/10.1137/0108018">doi:10.1137/0108018</a>.</p>
+</dd>
 <dt class="label" id="id3"><span class="brackets">Sal81</span></dt>
 <dd><p>A.A.M. Saleh. Frequency-independent and frequency-dependent nonlinear models of TWT amplifiers. <em>IEEE Transactions on Communications</em>, 29(11):1715–1720, November 1981. <a class="reference external" href="https://doi.org/10.1109/TCOM.1981.1094911">doi:10.1109/TCOM.1981.1094911</a>.</p>
 </dd>
@@ -126,6 +197,9 @@ concepts and models published in peer-reviewed mediums.</p>
 </dd>
 <dt class="label" id="id6"><span class="brackets">SLG04</span></dt>
 <dd><p>E. Sharon, S. Litsyn, and J. Goldberger. An efficient message-passing schedule for LDPC decoding. In <em>2004 23rd IEEE Convention of Electrical and Electronics Engineers in Israel</em>, volume, 223–226. 2004. <a class="reference external" href="https://doi.org/10.1109/EEEI.2004.1361130">doi:10.1109/EEEI.2004.1361130</a>.</p>
+</dd>
+<dt class="label" id="id22"><span class="brackets">TV15</span></dt>
+<dd><p>Ido Tal and Alexander Vardy. List decoding of polar codes. <em>IEEE Transactions on Information Theory</em>, 61(5):2213–2226, 2015. <a class="reference external" href="https://doi.org/10.1109/TIT.2015.2410251">doi:10.1109/TIT.2015.2410251</a>.</p>
 </dd>
 <dt class="label" id="id2"><span class="brackets">Vit67</span></dt>
 <dd><p>A. Viterbi. Error bounds for convolutional codes and an asymptotically optimum decoding algorithm. <em>IEEE Transactions on Information Theory</em>, 13(2):260–269, April 1967. <a class="reference external" href="https://doi.org/10.1109/TIT.1967.1054010">doi:10.1109/TIT.1967.1054010</a>.</p>
@@ -147,14 +221,14 @@ concepts and models published in peer-reviewed mediums.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="api/tools.resampling.html" class="btn btn-neutral float-left" title="Resampling Routines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="matlab.html" class="btn btn-neutral float-left" title="Matlab" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="developer_hints.html" class="btn btn-neutral float-right" title="For Developers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadce5ff280>
+<jinja2.runtime.BlockReference object at 0x7f9e7a033a30>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

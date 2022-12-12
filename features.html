@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About &mdash; HermesPy  documentation</title>
+  <title>Features &mdash; HermesPy Documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
       <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
@@ -19,7 +20,11 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
         <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
         <script>mermaid.initialize({startOnLoad:true});</script>
         <script src="_static/dark_mode_js/default_dark.js"></script>
@@ -40,7 +45,7 @@
             <img src="_static/bi.svg" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.3.0
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -52,23 +57,13 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">About</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#features">Features</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#modulation-and-coding">Modulation and Coding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#channel-and-interference-model">Channel and Interference Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#rf-chain">RF Chain</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation">Simulation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hardware-loop">Hardware Loop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#statistics">Statistics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#known-limitations">Known Limitations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#release-plan">Release Plan</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Configuration Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 </ul>
@@ -86,8 +81,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>About</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Features</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -97,162 +92,454 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="about">
-<h1>About<a class="headerlink" href="#about" title="Permalink to this headline"></a></h1>
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
 <section id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline"></a></h2>
-<p>The feature set of HermesPy is steadily expanding and currently includes
-(features in latest release are in <strong>bold</strong>)</p>
-<section id="modulation-and-coding">
-<h3>Modulation and Coding<a class="headerlink" href="#modulation-and-coding" title="Permalink to this headline"></a></h3>
-<ul>
-<li><p>Coding</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Repetition Codes</p></li>
-<li><p>3GPP-like LDPC codes (faster implementation with C++)</p></li>
-<li><p>3GPP Scrambler</p></li>
-<li><p>Block Interleaving</p></li>
-<li><p>Cyclic Redundancy Check Mock</p></li>
-</ul>
-</div></blockquote>
-</li>
-<li><p>Modulation and Waveforms</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Generic PSK/QAM/PAM modem with square pulses, (root)-raised-cosine filters or FMCW</p></li>
-<li><p>Chirp FSK (a.k.a. chirp spread spectrum)</p></li>
-<li><p>OFDM frame with arbitrary allocation of data and reference symbols in each resource element</p></li>
-</ul>
-</div></blockquote>
-</li>
-<li><dl class="simple">
-<dt>multiple antennas</dt><dd><ul class="simple">
-<li><p>Transmit diversity (Alamouti) with 2 or 4 tx antennas</p></li>
-<li><p>Open-loop spatial multiplexing with linear receivers</p></li>
-<li><p><strong>beamforming</strong></p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>precoding</dt><dd><ul class="simple">
-<li><p>DFT-spread for OFDM</p></li>
-<li><p>Extended GFDM framework <a class="footnote-reference brackets" href="#footcite-2018-nimr" id="id1">1</a></p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p>Receiver algorithms</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>LLR calculation for BPSK/QAM/16-/64-/256-QAM</p></li>
-<li><p>Linear equalizers for non-orthogonal FMCW pulses in AWGN</p></li>
-<li><p>Channel estimation for OFDM</p></li>
-<li><p>Receiver diversity (SC or MRC)</p></li>
-<li><p><strong>Synchronization</strong></p></li>
-<li><p><strong>Matched-filter radar receiver</strong></p></li>
-<li><p><strong>Radar detection for FMCW</strong></p></li>
-<li><p><strong>Threshold-based radar detector</strong></p></li>
-</ul>
-</div></blockquote>
-</li>
-</ul>
-</section>
-<section id="channel-and-interference-model">
-<h3>Channel and Interference Model<a class="headerlink" href="#channel-and-interference-model" title="Permalink to this headline"></a></h3>
-<ul class="simple">
-<li><p>Time-variant multipath channel with arbitrary power delay profile, Rice/Rayleigh fading</p></li>
-<li><p>COST-259 Macrocell Model <a class="footnote-reference brackets" href="#footcite-2004-3gpp-tr25943" id="id2">2</a></p></li>
-<li><p>5G TDL model <a class="footnote-reference brackets" href="#footcite-3gpp-tr38901" id="id3">3</a></p></li>
-<li><p>MIMO support with antenna correlation, following Kronecker model</p></li>
-<li><p>Interface to <a class="reference external" href="https://quadriga-channel-model.de/">Quadriga</a> channel model (requires Matlab or Octave)</p></li>
-<li><p>Interference among different modems, with arbitrary transmit powers for different transmitters</p></li>
-<li><p>Support for transmitters using different carrier frequencies and bandwidths</p></li>
-<li><p>Single-target radar channel model</p></li>
-<li><p><strong>3GPP Clustered Delay Line Models</strong></p></li>
-</ul>
-</section>
-<section id="rf-chain">
-<h3>RF Chain<a class="headerlink" href="#rf-chain" title="Permalink to this headline"></a></h3>
-<ul class="simple">
-<li><dl class="simple">
-<dt>Memoryless non linear power amplifier</dt><dd><ul>
-<li><p>Ideal Clipper</p></li>
-<li><p>Rapp’s model <a class="footnote-reference brackets" href="#footcite-1991-rapp" id="id4">4</a>,</p></li>
-<li><p>Saleh’s model <a class="footnote-reference brackets" href="#footcite-1981-saleh" id="id5">5</a>,</p></li>
-<li><p>Arbitrary AM/AM AM/PM responses</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p>Random time offset</p></li>
-<li><p>I/Q imbalance</p></li>
-<li><p><strong>Quantization</strong></p></li>
-</ul>
-</section>
-<section id="simulation">
-<h3>Simulation<a class="headerlink" href="#simulation" title="Permalink to this headline"></a></h3>
-<ul class="simple">
-<li><p><strong>Native Support for Workload Distribution on Multicore Systems</strong></p></li>
-<li><p>Greater modularity and standalone usage of simulator classes</p></li>
-<li><p>Full configuration using <strong>YAML</strong> settings files</p></li>
-<li><p>Drops containing several frames</p></li>
-<li><p>Support for multiple transmitter and receivers</p></li>
-<li><p>User manual provided</p></li>
-</ul>
-</section>
-<section id="hardware-loop">
-<h3>Hardware Loop<a class="headerlink" href="#hardware-loop" title="Permalink to this headline"></a></h3>
-<ul class="simple">
-<li><p><strong>Support to Evaluate Arbitrary Waveforms Over Real Hardware</strong></p></li>
-</ul>
-</section>
-<section id="statistics">
-<h3>Statistics<a class="headerlink" href="#statistics" title="Permalink to this headline"></a></h3>
-<ul class="simple">
-<li><p>Bit Error Rate / Frame Error Rate Computation</p></li>
-<li><p><strong>Block Error Rate Computation</strong></p></li>
-<li><p><strong>Throughput Computation</strong></p></li>
-<li><p>Confidence interval is calculated and may be considered as a stopping criterion</p></li>
-<li><p>Theoretical results available (depending on simulation scenario)</p></li>
-<li><p>Power spectral density and time-frequency analysis</p></li>
-<li><p>Time-domain waveform plots</p></li>
-<li><p>Constellation plots</p></li>
-<li><p><strong>Radar cube (range/Doppler/angle)</strong></p></li>
-</ul>
-</section>
-</section>
-<section id="known-limitations">
-<h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Permalink to this headline"></a></h2>
-<p>The known limitations currently include</p>
-<ul class="simple">
-<li><p>Radar KPIs missing (only delay-Doppler map is generated)</p></li>
-</ul>
-</section>
-<section id="release-plan">
-<h2>Release Plan<a class="headerlink" href="#release-plan" title="Permalink to this headline"></a></h2>
-<p>Full releases with a new set of features will be provided on a half-yearly basis, with software patches in between.</p>
-<div class="docutils container" id="id6">
-<dl class="footnote brackets">
-<dt class="label" id="footcite-2018-nimr"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>A. Nimr, M. Chafii, M. Matthe, and G. Fettweis. Extended GFDM framework: OTFS and GFDM comparison. In <em>IEEE Global Communications Conference (GLOBECOM)</em>, volume. 2018. <a class="reference external" href="https://doi.org/10.1109/GLOCOM.2018.8647704">doi:10.1109/GLOCOM.2018.8647704</a>.</p>
-</dd>
-<dt class="label" id="footcite-2004-3gpp-tr25943"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
-<dd><p>3GPP TSG-RAN. 3GPP TR 25.943 v6.0.0; Deployment aspects. 2004.</p>
-</dd>
-<dt class="label" id="footcite-3gpp-tr38901"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
-<dd><p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2020. version 16.1.0 Release 16. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf</a>.</p>
-</dd>
-<dt class="label" id="footcite-1991-rapp"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
-<dd><p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
-</dd>
-<dt class="label" id="footcite-1981-saleh"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
-<dd><p>A.A.M. Saleh. Frequency-independent and frequency-dependent nonlinear models of TWT amplifiers. <em>IEEE Transactions on Communications</em>, 29(11):1715–1720, November 1981. <a class="reference external" href="https://doi.org/10.1109/TCOM.1981.1094911">doi:10.1109/TCOM.1981.1094911</a>.</p>
-</dd>
-</dl>
-</div>
-</section>
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h1>
+<p>The feature set of HermesPy is steadily expanding.
+This list provides an overview of core functionalities, latest feature additions introduced with the last official release are denoted in <strong>bold</strong>.
+Full releases with a new set of features will be provided on a bi-anual basis in Spring and Fall, with software patches in between.</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text"><strong>Beamforming</strong></span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Capon Beamformer</p></td>
+<td><p><a class="reference internal" href="api/beamforming.capon.html"><span class="doc">Capon Beamformer</span></a></p></td>
+<td><p><a class="reference internal" href="notebooks/beamformer.html"><span class="doc">Implementing Beamformers</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Conventional Beamformer</p></td>
+<td><p><a class="reference internal" href="api/beamforming.conventional.html"><span class="doc">Conventional Beamformer</span></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text"><strong>Forward Error Correction</strong></span><a class="headerlink" href="#id2" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Interleaving</p></td>
+<td><p><a class="reference internal" href="api/fec.block_interleaver.html"><span class="doc">Interleaving</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Cyclic Reundancy Check Mock</p></td>
+<td><p><a class="reference internal" href="api/fec.crc.html"><span class="doc">Cyclic Redundancy Checks</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>Low Differential Parity Checks</strong></p></td>
+<td><p><a class="reference internal" href="api/fec.ldpc.html"><span class="doc">&lt;no title&gt;</span></a></p></td>
+<td><p><a class="reference internal" href="examples/ofdm_5g.html"><span class="doc">OFDM 5G</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Polar Codes</strong></p></td>
+<td><p><a class="reference internal" href="api/fec.polar.html"><span class="doc">&lt;no title&gt;</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Repetition Coding</p></td>
+<td><p><a class="reference internal" href="api/fec.repetition.html"><span class="doc">Repetition Coding</span></a></p></td>
+<td><p><a class="reference internal" href="examples/chirp_fsk_lora.html"><span class="doc">Chirp FSK LORA</span></a>, <a class="reference internal" href="getting_started.html"><span class="doc">Getting Started</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Reed Solomon Codes</strong></p></td>
+<td><p><a class="reference internal" href="api/fec.rs.html"><span class="doc">&lt;no title&gt;</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>Recursive Systematic Convolutional Codes</strong></p></td>
+<td><p><a class="reference internal" href="api/fec.rsc.html"><span class="doc">&lt;no title&gt;</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Scrambling</p></td>
+<td><p><a class="reference internal" href="api/fec.scrambler.html"><span class="doc">Scrambling</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>Turbo Coding</strong></p></td>
+<td><p><a class="reference internal" href="api/fec.turbo.html"><span class="doc">&lt;no title&gt;</span></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id3">
+<caption><span class="caption-text"><strong>Channel Models</strong></span><a class="headerlink" href="#id3" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Indoor Factory</p></td>
+<td><p><a class="reference internal" href="api/channel.cluster_delay_line_indoor_factory.html"><span class="doc">3GPP Cluster Delay Line Indoor Factory Model</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Indoor Office</p></td>
+<td><p><a class="reference internal" href="api/channel.cluster_delay_line_indoor_office.html"><span class="doc">3GPP Cluster Delay Line Indoor Office Model</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Rural Macrocells</p></td>
+<td><p><a class="reference internal" href="api/channel.cluster_delay_line_rural_macrocells.html"><span class="doc">3GPP Rural Macrocells Model</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Street Canyon</p></td>
+<td><p><a class="reference internal" href="api/channel.cluster_delay_line_street_canyon.html"><span class="doc">3GPP Street Canyon (Urban Microcells) Model</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Urban Macrocells</p></td>
+<td><p><a class="reference internal" href="api/channel.cluster_delay_line_urban_macrocells.html"><span class="doc">3GPP Urban Macrocells Model</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Multipath Fading</p></td>
+<td><p><a class="reference internal" href="api/channel.multipath_fading_channel.html"><span class="doc">Multipath Fading</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Cost256</p></td>
+<td><p><a class="reference internal" href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingCost256" title="hermespy.channel.multipath_fading_templates.MultipathFadingCost256"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipathFadingCost256</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>5G Tapped Delay Lines</p></td>
+<td><p><a class="reference internal" href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFading5GTDL" title="hermespy.channel.multipath_fading_templates.MultipathFading5GTDL"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipathFading5GTDL</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Exponential</p></td>
+<td><p><a class="reference internal" href="api/channel.multipath_fading_templates.html#hermespy.channel.multipath_fading_templates.MultipathFadingExponential" title="hermespy.channel.multipath_fading_templates.MultipathFadingExponential"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipathFadingExponential</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Quadriga</p></td>
+<td><p><a class="reference internal" href="api/channel.quadriga.html"><span class="doc">Quadriga Channel Model</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>Radar Single Reflector</strong></p></td>
+<td><p><a class="reference internal" href="api/channel.radar_channel.html"><span class="doc">Single-Target Radar Channel Modeling</span></a></p></td>
+<td><p><a class="reference internal" href="examples/jcas.html"><span class="doc">JCAS</span></a></p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text"><strong>Communication Modulation</strong></span><a class="headerlink" href="#id4" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Waveform</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Chirp FSK</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_generator_chirp_fsk.html"><span class="doc">Chirp Frequency Shift Keying</span></a></p></td>
+<td><p><a class="reference internal" href="examples/chirp_fsk_lora.html"><span class="doc">Chirp FSK LORA</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>OFDM</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_generator_ofdm.html"><span class="doc">Orthogonal Frequency Division Multiplexing</span></a></p></td>
+<td><p><a class="reference internal" href="examples/interference_ofdm_single_carrier.html"><span class="doc">OFDM Interference</span></a>,
+<a class="reference internal" href="examples/ofdm_5g.html"><span class="doc">OFDM 5G</span></a>,
+<a class="reference internal" href="examples/ofdm_single_carrier.html"><span class="doc">OFDM Single Carrier</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Single Carrier</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_single_carrier.html"><span class="doc">Filtered Single Carrier Waveforms</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Root Raised Cosine</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_single_carrier.html"><span class="doc">Filtered Single Carrier Waveforms</span></a></p></td>
+<td><p><a class="reference internal" href="examples/chirp_qam.html"><span class="doc">Chirp QAM</span></a>,
+<a class="reference internal" href="examples/hardware_model.html"><span class="doc">Hardware Modeling</span></a>,
+<a class="reference internal" href="examples/interference_ofdm_single_carrier.html"><span class="doc">OFDM Interference</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Raised Cosine</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_single_carrier.html"><span class="doc">Filtered Single Carrier Waveforms</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Rectangular</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_single_carrier.html"><span class="doc">Filtered Single Carrier Waveforms</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>FMCW</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_single_carrier.html"><span class="doc">Filtered Single Carrier Waveforms</span></a></p></td>
+<td><p><a class="reference internal" href="examples/jcas.html"><span class="doc">JCAS</span></a></p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text"><strong>Communication Receiver Algorithms</strong></span><a class="headerlink" href="#id5" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Synchronization</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.Synchronization" title="hermespy.modem.waveform_generator.Synchronization"><code class="xref py py-class docutils literal notranslate"><span class="pre">Synchronization</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Channel Estimation</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEstimation" title="hermespy.modem.waveform_generator.ChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelEstimation</span></code></a>
+<a class="reference internal" href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.IdealChannelEstimation" title="hermespy.modem.waveform_generator.IdealChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">IdealChannelEstimation</span></code></a>
+<a class="reference internal" href="api/modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation" title="hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Single</span> <span class="pre">Carrier</span> <span class="pre">Least-Squares</span></code></a>
+<a class="reference internal" href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation" title="hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation"><code class="xref py py-class docutils literal notranslate"><span class="pre">OFDM</span> <span class="pre">Least-Squares</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Equalization</p></td>
+<td><p><a class="reference internal" href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ChannelEqualization" title="hermespy.modem.waveform_generator.ChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelEqualization</span></code></a>
+<a class="reference internal" href="api/modem.waveform_generator.html#hermespy.modem.waveform_generator.ZeroForcingChannelEqualization" title="hermespy.modem.waveform_generator.ZeroForcingChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">Zero-Forcing</span></code></a>
+<a class="reference internal" href="api/modem.waveform_generator_ofdm.html#hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization" title="hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">OFDM</span> <span class="pre">MMSE</span></code></a>
+<a class="reference internal" href="api/modem.waveform_single_carrier.html#hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization" title="hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization"><code class="xref py py-class docutils literal notranslate"><span class="pre">Single</span> <span class="pre">Carrier</span> <span class="pre">MMSE</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text"><strong>Sensing Modulation</strong></span><a class="headerlink" href="#id6" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Waveform</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>FMCW</p></td>
+<td><p><a class="reference internal" href="api/radar.fmcw.html"><span class="doc">Frequency Modulated Continuous Waveform Radar</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Matched Filter JCAS</p></td>
+<td><p><a class="reference internal" href="api/jcas.matched_filtering.html"><span class="doc">Matched Filter JCAS</span></a></p></td>
+<td><p><a class="reference internal" href="examples/jcas.html"><span class="doc">JCAS</span></a></p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text"><strong>Multi Antenna Algorithms</strong></span><a class="headerlink" href="#id7" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Alamouti</p></td>
+<td><p><a class="reference internal" href="api/precoding.space_time_block_coding.html"><span class="doc">Space-Time Block Coding</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><a class="reference internal" href="api/precoding.single_carrier.html"><span class="doc">Single Carrier Encoding</span></a></p></td>
+<td><p><a class="reference internal" href="examples/ofdm_5g.html"><span class="doc">OFDM 5G</span></a></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><a class="reference internal" href="api/precoding.spatial_multiplexing.html"><span class="doc">Spatial Multiplexing</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Maximum Ratio Combining</p></td>
+<td><p><a class="reference internal" href="api/precoding.ratio_combining.html"><span class="doc">Maximum Ratio Combining</span></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id8">
+<caption><span class="caption-text"><strong>Precodings</strong></span><a class="headerlink" href="#id8" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DFT</p></td>
+<td><p><a class="reference internal" href="api/precoding.dft.html"><span class="doc">Discrete Fourier Transform Precoding</span></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-text"><strong>Hardware Models</strong></span><a class="headerlink" href="#id9" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>API References</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Power Amplifier</p></td>
+<td><p><a class="reference internal" href="api/simulation.rf_chain.power_amplifier.html"><span class="doc">PA</span></a>,
+<a class="reference internal" href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Clipping</span></code></a>,
+<a class="reference internal" href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Rapp</span></code></a>,
+<a class="reference internal" href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Saleh</span></code></a>,
+<a class="reference internal" href="api/simulation.rf_chain.power_amplifier.html#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Custom</span> <span class="pre">AM/AM</span> <span class="pre">AM/PM</span> <span class="pre">Response</span></code></a></p></td>
+<td><p><a class="reference internal" href="examples/hardware_model.html"><span class="doc">Hardware Modeling</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>I/Q Imbalance</p></td>
+<td><p><a class="reference internal" href="api/simulation.rf_chain.html"><span class="doc">Hardware Radio Frequency Chain Modeling</span></a></p></td>
+<td><p><a class="reference internal" href="examples/hardware_model.html"><span class="doc">Hardware Modeling</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Anlog Digital Conversion</p></td>
+<td><p><a class="reference internal" href="api/simulation.analog_digital_converter.html"><span class="doc">Analog-to-Digital Converter</span></a></p></td>
+<td><p><a class="reference internal" href="examples/hardware_model.html"><span class="doc">Hardware Modeling</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Phase Noise</strong></p></td>
+<td><p><a class="reference internal" href="api/simulation.rf_chain.phase_noise.html"><span class="doc">Phase Noise Modeling</span></a></p></td>
+<td><p><a class="reference internal" href="examples/hardware_model.html"><span class="doc">Hardware Modeling</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Antenna Characteristics</p></td>
+<td><p><a class="reference internal" href="api/core.antennas.html"><span class="doc">Antenna Configuration</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Antenna Arrays</p></td>
+<td><p><a class="reference internal" href="api/core.antennas.html"><span class="doc">Antenna Configuration</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>Mutual Coupling</strong></p></td>
+<td><p><a class="reference internal" href="api/simulation.coupling.html"><span class="doc">Mutual Coupling</span></a>
+<a class="reference internal" href="api/simulation.coupling.impedance.html"><span class="doc">Impedance Coupling</span></a>
+<a class="reference internal" href="api/simulation.coupling.perfect.html"><span class="doc">Perfect Coupling</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Transmit-Receive Isolation</strong></p></td>
+<td><p><a class="reference internal" href="api/simulation.isolation.html"><span class="doc">Antenna Isolation Modeling</span></a>
+<a class="reference internal" href="api/simulation.isolation.perfect.html"><span class="doc">Perfect Isolation</span></a>
+<a class="reference internal" href="api/simulation.isolation.impedance.html"><span class="doc">Impedance Isolation</span></a>
+<a class="reference internal" href="api/simulation.isolation.specific.html"><span class="doc">Specific Isolation</span></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Noise</p></td>
+<td><p><a class="reference internal" href="api/simulation.noise.html"><span class="doc">Noise Modeling</span></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id10">
+<caption><span class="caption-text"><strong>Key Performance Indicators</strong></span><a class="headerlink" href="#id10" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Indicator</p></th>
+<th class="head"><p>Evaluator</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Bit Error Rate</p></td>
+<td><p><a class="reference internal" href="api/modem.evaluators.html#hermespy.modem.evaluators.BitErrorEvaluator" title="hermespy.modem.evaluators.BitErrorEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BitErrorEvaluator</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Block Error Rate</p></td>
+<td><p><a class="reference internal" href="api/modem.evaluators.html#hermespy.modem.evaluators.BlockErrorEvaluator" title="hermespy.modem.evaluators.BlockErrorEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BlockErrorEvaluator</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>Frame Error Rate</p></td>
+<td><p><a class="reference internal" href="api/modem.evaluators.html#hermespy.modem.evaluators.FrameErrorEvaluator" title="hermespy.modem.evaluators.FrameErrorEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrameErrorEvaluator</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Throughput</p></td>
+<td><p><a class="reference internal" href="api/modem.evaluators.html#hermespy.modem.evaluators.ThroughputEvaluator" title="hermespy.modem.evaluators.ThroughputEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThroughputEvaluator</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>Receiver Operating Charactersitic</strong></p></td>
+<td><p><a class="reference internal" href="api/radar.evaluation.html#hermespy.radar.evaluators.ReceiverOperatingCharacteristic" title="hermespy.radar.evaluators.ReceiverOperatingCharacteristic"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiverOperatingCharacteristic</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Detection RMSE</strong></p></td>
+<td><p><a class="reference internal" href="api/radar.evaluation.html#hermespy.radar.evaluators.RootMeanSquareError" title="hermespy.radar.evaluators.RootMeanSquareError"><code class="xref py py-class docutils literal notranslate"><span class="pre">RootMeanSquareError</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" id="id11">
+<caption><span class="caption-text"><strong>Hardware Interfaces</strong></span><a class="headerlink" href="#id11" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Interface</p></th>
+<th class="head"><p>API</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Soundcard</strong></p></td>
+<td><p><a class="reference internal" href="api/hardware_loop.audio.device.html"><span class="doc">Audio Device Binding</span></a></p></td>
+<td><p><a class="reference internal" href="notebooks/audio.html"><span class="doc">Using Audio Equipment</span></a>, <a class="reference internal" href="examples/audio.html"><span class="doc">Audio Hardware Binding</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>USRP</strong></p></td>
+<td><p><a class="reference internal" href="api/hardware_loop.usrp.html"><span class="doc">UHD System</span></a></p></td>
+<td><p><a class="reference internal" href="examples/uhd.html"><span class="doc">USRP Hardware Driver</span></a></p></td>
+</tr>
+</tbody>
+</table>
 </section>
 
 
@@ -266,7 +553,7 @@
   <hr/>
 
   <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7fadd2276520>
+<jinja2.runtime.BlockReference object at 0x7f9e7b6a55b0>
 <p>
     <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
     <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>

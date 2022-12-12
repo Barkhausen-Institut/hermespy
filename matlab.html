@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matlab &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="_static/dark_mode_js/default_dark.js"></script>
+        <script src="_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="References" href="references.html" />
+    <link rel="prev" title="Tile Figures" href="api/tools.tile.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> HermesPy
+            <img src="_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/api.html">HermesPy API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Matlab</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/matlab.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="matlab">
+<h1>Matlab<a class="headerlink" href="#matlab" title="Permalink to this heading"></a></h1>
+<p>Especially in engineering disciplines, <a class="reference external" href="https://mathworks.com/">Matlab</a> by Mathworks is a popular scripting languange
+for numerical simulations.
+While Hermes is a Python tool, almost completely implemented in Python and C++, it is possible
+to control modules and routines from Matlab’s Python interface, esentially integrating Hermes’
+full feature set into existing Matlab workflows.
+Hermes requires Python 3.9, the respective Matlab interface requires a specific <a class="reference external" href="https://mathworks.com/support/requirements/python-compatibility.html">Matlab Version</a>.</p>
+<p>Assuming Hermes has been properly <a class="reference internal" href="installation.html"><span class="doc">installed</span></a> on the host system,
+before the execution of any python matlab routines, the virtual environment has to be selected:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">pyenv</span><span class="p">(</span><span class="s">&#39;Version&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;&lt;path&gt;&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;ExecutionMode&#39;</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;OutOfProcess&#39;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Note that <cite>path</cite> has to point to the <cite>python.exe</cite> of your virtual environment.
+So, for instance assuming Conda has been used to create Hermes’ virtual Python environment, <cite>&lt;path&gt;</cite>
+should look something like <cite>C:\Users\&lt;username&gt;\.conda\envs\&lt;envname&gt;\python</cite>, <cite>&lt;username&gt;</cite>
+and <cite>&lt;envname&gt;</cite> being replaced by the respective directory names.</p>
+<p>After environment activation, any Hermes module can be loaded, objects initialized and functions called.
+As a minimal example, initializing a new simulation and adding a single virtual device can be achieved via</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">simulation_module</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">py</span><span class="p">.</span><span class="n">importlib</span><span class="p">.</span><span class="n">import_module</span><span class="p">(</span><span class="s">&#39;hermespy.simulation&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="n">simulation</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">simulation_module</span><span class="p">.</span><span class="n">Simulation</span><span class="p">();</span><span class="w"></span>
+<span class="n">device</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">simulation</span><span class="p">.</span><span class="n">new_device</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Several complete examples are hosted within the official GitHub <a class="reference external" href="https://github.com/Barkhausen-Institut/hermespy/tree/main/_examples/settings/matlab">repository</a>.
+They should provide a starting point for anyone interested in integrating Hermes functionalities
+into their Matlab workflow.
+Thanks to <a class="reference external" href="https://www.linkedin.com/in/roberto-bomfin-b33a43144/">Roberto Bomfin</a> for providing the source files.
+Please note that Hermes does not officially support complete Matlab integration of all features.
+Instead, this documentation is only served as a courtesy to users and developers.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api/tools.tile.html" class="btn btn-neutral float-left" title="Tile Figures" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="references.html" class="btn btn-neutral float-right" title="References" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e7ae59df0>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

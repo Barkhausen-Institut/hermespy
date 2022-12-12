@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scrambling &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="fec.turbo.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="fec.rsc.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="fec.html">Error Correction</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="fec.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.coding.html#hermespy.fec.coding.Encoder"><code class="docutils literal notranslate"><span class="pre">Encoder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.coding.html#hermespy.fec.coding.EncoderManager"><code class="docutils literal notranslate"><span class="pre">EncoderManager</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.block_interleaver.html#hermespy.fec.block_interleaver.BlockInterleaver"><code class="docutils literal notranslate"><span class="pre">BlockInterleaver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.crc.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.crc.html#hermespy.fec.cyclic_redundancy_check.CyclicRedundancyCheck"><code class="docutils literal notranslate"><span class="pre">CyclicRedundancyCheck</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.repetition.html#hermespy.fec.repetition_encoder.RepetitionEncoder"><code class="docutils literal notranslate"><span class="pre">RepetitionEncoder</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Scrambling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.fec.scrambler.PseudoRandomGenerator"><code class="docutils literal notranslate"><span class="pre">PseudoRandomGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.PseudoRandomGenerator.generate"><code class="docutils literal notranslate"><span class="pre">PseudoRandomGenerator.generate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.PseudoRandomGenerator.generate_sequence"><code class="docutils literal notranslate"><span class="pre">PseudoRandomGenerator.generate_sequence()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.PseudoRandomGenerator.reset"><code class="docutils literal notranslate"><span class="pre">PseudoRandomGenerator.reset()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP"><code class="docutils literal notranslate"><span class="pre">Scrambler3GPP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Scrambler3GPP.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP.encode"><code class="docutils literal notranslate"><span class="pre">Scrambler3GPP.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP.decode"><code class="docutils literal notranslate"><span class="pre">Scrambler3GPP.decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP.bit_block_size"><code class="docutils literal notranslate"><span class="pre">Scrambler3GPP.bit_block_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP.code_block_size"><code class="docutils literal notranslate"><span class="pre">Scrambler3GPP.code_block_size</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a"><code class="docutils literal notranslate"><span class="pre">Scrambler80211a</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Scrambler80211a.yaml_tag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.seed"><code class="docutils literal notranslate"><span class="pre">Scrambler80211a.seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.encode"><code class="docutils literal notranslate"><span class="pre">Scrambler80211a.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.decode"><code class="docutils literal notranslate"><span class="pre">Scrambler80211a.decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.bit_block_size"><code class="docutils literal notranslate"><span class="pre">Scrambler80211a.bit_block_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.code_block_size"><code class="docutils literal notranslate"><span class="pre">Scrambler80211a.code_block_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="fec.html">Error Correction</a></li>
+      <li class="breadcrumb-item active">Scrambling</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/fec.scrambler.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.fec.scrambler"></span><section id="scrambling">
+<h1>Scrambling<a class="headerlink" href="#scrambling" title="Permalink to this heading"></a></h1>
+<p>Scrambling as a channel coding step masks transmitted bits by a pseudo-random sequence
+known at both receiver and transmitter in order to prevent long sequences of identical
+bits.
+Therefore, most scrambling coding operations do not introduce redundancy to the scrambled bit blocks,
+i.e. the code rate is usually <span class="math notranslate nohighlight">\(R = 1\)</span>.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.PseudoRandomGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PseudoRandomGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">init_sequence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1600</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.PseudoRandomGenerator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A generator for pseudo-random bit sequences.</p>
+<p>Generators with identical initialization will output identical random sequences.
+Implements pseudo-random generator as described in the 3GPP standard for <em>Physical Channels and Modulation</em><a class="footnote-reference brackets" href="#footcite-2018-ts138211" id="id1">1</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>init_sequence</strong> (<em>np.ndarray</em>) – A sequence of 31 bits initializing the generator.</p></li>
+<li><p><strong>offset</strong> (<em>int</em>) – Gold sequence parameter controlling the sequence offset.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.PseudoRandomGenerator.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.PseudoRandomGenerator.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the next bit within the pseudo-random sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The generated bit.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.PseudoRandomGenerator.generate_sequence">
+<span class="sig-name descname"><span class="pre">generate_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.PseudoRandomGenerator.generate_sequence" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a new sequence of random numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>length</strong> (<em>int</em>) – Length of the sequence to be generated.</p>
+</dd>
+</dl>
+<p>Returns: A numpy array of dimension length containing a sequence of pseudo-random bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.PseudoRandomGenerator.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.PseudoRandomGenerator.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Resets the gernator to its default state.</p>
+<p>This implies reverting the queues back to their original state (at rng position n = 0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler3GPP">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Scrambler3GPP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler3GPP" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="fec.coding.html#hermespy.fec.coding.Encoder" title="hermespy.fec.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Scrambler channel coding in the physical up- and down-link standard of the 3GPP.</p>
+<p>See section 7.3.1.1 of the respective technical standard <em>Physical Channels and Modulation</em><a class="footnote-reference brackets" href="#footcite-2018-ts138211" id="id2">1</a> for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Seed used to initialize the scrambling sequence generation.
+Must contain a sequence of bits.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler3GPP.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SCRAMBLER_3GPP'</span></em><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler3GPP.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler3GPP.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler3GPP.encode" title="Permalink to this definition"></a></dt>
+<dd><p>Encodes a single block of bits.</p>
+<p>Bit encoding routine during data transmission,
+encoding a block of <span class="math notranslate nohighlight">\(K_n\)</span> input bits into a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single bit block to be encoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> bits, representing a single code block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP.bit_block_size" title="hermespy.fec.scrambler.Scrambler3GPP.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler3GPP.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler3GPP.decode" title="Permalink to this definition"></a></dt>
+<dd><p>Decodes a single block of bits.</p>
+<p>Bit decoding routine during data reception,
+decoding a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits into a block of <span class="math notranslate nohighlight">\(K_n\)</span> data bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> code bits, representing a single code block to be decoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single data block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">encoded_bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.scrambler.Scrambler3GPP.code_block_size" title="hermespy.fec.scrambler.Scrambler3GPP.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler3GPP.bit_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler3GPP.bit_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Data bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during transmit encoding,
+or the number of output bits during receive decoding.
+Referred to as <span class="math notranslate nohighlight">\(K_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(K_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler3GPP.code_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler3GPP.code_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Code bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during receive decoding,
+or the number of output bits during transmit encoding.
+Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(L_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler80211a">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Scrambler80211a</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler80211a" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="fec.coding.html#hermespy.fec.coding.Encoder" title="hermespy.fec.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<p>Scrambler channel coding in the the <cite>802.11a</cite> standard.</p>
+<p>Refer to section 17.3.5.4 of IEEE<a class="footnote-reference brackets" href="#footcite-80211a-1999" id="id3">2</a> for further details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Seed used to initialize the scrambling sequence generation.
+Must contain a sequence of 7 bits.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler80211a.yaml_tag">
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SCRAMBLER_80211A'</span></em><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler80211a.yaml_tag" title="Permalink to this definition"></a></dt>
+<dd><p>YAML serialization tag.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler80211a.seed">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">seed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler80211a.seed" title="Permalink to this definition"></a></dt>
+<dd><p>Random sequence generator seed.</p>
+<p>Resets the internal register queue used to generate the scrambling sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Numpy vector containing the generator seed.
+Must be an array of dimension 7 containing only soft bits.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>seed</cite> does not contain exactly 7 bits.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler80211a.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler80211a.encode" title="Permalink to this definition"></a></dt>
+<dd><p>Encodes a single block of bits.</p>
+<p>Bit encoding routine during data transmission,
+encoding a block of <span class="math notranslate nohighlight">\(K_n\)</span> input bits into a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single bit block to be encoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> bits, representing a single code block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.bit_block_size" title="hermespy.fec.scrambler.Scrambler80211a.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler80211a.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler80211a.decode" title="Permalink to this definition"></a></dt>
+<dd><p>Decodes a single block of bits.</p>
+<p>Bit decoding routine during data reception,
+decoding a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits into a block of <span class="math notranslate nohighlight">\(K_n\)</span> data bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> code bits, representing a single code block to be decoded.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single data block.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the length of <code class="docutils literal notranslate"><span class="pre">encoded_bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.scrambler.Scrambler80211a.code_block_size" title="hermespy.fec.scrambler.Scrambler80211a.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler80211a.bit_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler80211a.bit_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Data bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during transmit encoding,
+or the number of output bits during receive decoding.
+Referred to as <span class="math notranslate nohighlight">\(K_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(K_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.fec.scrambler.Scrambler80211a.code_block_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.fec.scrambler.Scrambler80211a.code_block_size" title="Permalink to this definition"></a></dt>
+<dd><p>Code bit block size of a single coding operation.</p>
+<p>In other words, the number of input bits within a single code block during receive decoding,
+or the number of output bits during transmit encoding.
+Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within the respective equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(L_n\)</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<div class="docutils container" id="id4">
+<dl class="footnote brackets">
+<dt class="label" id="footcite-2018-ts138211"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>)</span></dt>
+<dd><p><em>Physical Channels and Modulation</em>. ETSI, 07 2018. Version 15.2.0 Release 15. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_ts/138200_138299/138211/15.02.00_60/ts_138211v150200p.pdf">https://www.etsi.org/deliver/etsi_ts/138200_138299/138211/15.02.00_60/ts_138211v150200p.pdf</a>.</p>
+</dd>
+<dt class="label" id="footcite-80211a-1999"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>IEEE. IEEE standard for telecommunications and information exchange between systems - LAN/MAN specific requirements - Part 11: wireless medium access control (MAC) and physical layer (PHY) specifications: high speed physical layer in the 5 GHz band. <em>IEEE Std 802.11a-1999</em>, 1999. <a class="reference external" href="https://doi.org/10.1109/IEEESTD.1999.90606">doi:10.1109/IEEESTD.1999.90606</a>.</p>
+</dd>
+</dl>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fec.rsc.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fec.turbo.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e7a781610>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

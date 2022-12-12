@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Physical Device Dummy &mdash; HermesPy Documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+        <script>mermaid.initialize({startOnLoad:true});</script>
+        <script src="../_static/dark_mode_js/default_dark.js"></script>
+        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="UHD System" href="hardware_loop.usrp.html" />
+    <link rel="prev" title="Physical Device Scenario" href="hardware_loop.scenario.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> HermesPy
+            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop"><code class="docutils literal notranslate"><span class="pre">HardwareLoop</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html">Physical Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.StaticOperator"><code class="docutils literal notranslate"><span class="pre">StaticOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SilentTransmitter"><code class="docutils literal notranslate"><span class="pre">SilentTransmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalTransmitter"><code class="docutils literal notranslate"><span class="pre">SignalTransmitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PowerReceiver"><code class="docutils literal notranslate"><span class="pre">PowerReceiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.SignalReceiver"><code class="docutils literal notranslate"><span class="pre">SignalReceiver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice"><code class="docutils literal notranslate"><span class="pre">PhysicalDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDeviceType"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceType</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html">Physical Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenario"><code class="docutils literal notranslate"><span class="pre">PhysicalScenario</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenarioType"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioType</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.transmit"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.transmit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.receive"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.receive()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.trigger"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.trigger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.max_sampling_rate"><code class="docutils literal notranslate"><span class="pre">PhysicalDeviceDummy.max_sampling_rate</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioDummy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy.new_device"><code class="docutils literal notranslate"><span class="pre">PhysicalScenarioDummy.new_device()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html">UHD System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.system.UsrpSystem"><code class="docutils literal notranslate"><span class="pre">UsrpSystem</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#hermespy.hardware_loop.uhd.usrp.UsrpDevice"><code class="docutils literal notranslate"><span class="pre">UsrpDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html">Audio Device Binding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDeviceAntennas"><code class="docutils literal notranslate"><span class="pre">AudioDeviceAntennas</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html#hermespy.hardware_loop.audio.device.AudioDevice"><code class="docutils literal notranslate"><span class="pre">AudioDevice</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html#hermespy.hardware_loop.audio.scenario.AudioScenario"><code class="docutils literal notranslate"><span class="pre">AudioScenario</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HermesPy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
+          <li class="breadcrumb-item"><a href="hardware_loop.html">Hardware Loop</a></li>
+      <li class="breadcrumb-item active">Physical Device Dummy</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/hardware_loop.physical_device_dummy.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<span class="target" id="module-hermespy.hardware_loop.physical_device_dummy"></span><section id="physical-device-dummy">
+<h1>Physical Device Dummy<a class="headerlink" href="#physical-device-dummy" title="Permalink to this heading"></a></h1>
+<p>Implements a physical device dummy for testing and demonstration purposes.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PhysicalDeviceDummy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a>, <a class="reference internal" href="hardware_loop.physical_device.html#hermespy.hardware_loop.physical_device.PhysicalDevice" title="hermespy.hardware_loop.physical_device.PhysicalDevice"><code class="xref py py-class docutils literal notranslate"><span class="pre">PhysicalDevice</span></code></a></p>
+<p>Physical device dummy for testing and demonstration.</p>
+<p>The physical device dummy always receives back its most recent transmission.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scenario</strong> (<a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><em>Scenario</em></a><em>, </em><em>optional</em>) – Scenario this device is attached to.
+By default, the device is considered floating.</p></li>
+<li><p><strong>rf_chain</strong> (<a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain" title="hermespy.simulation.rf_chain.rf_chain.RfChain"><em>RfChain</em></a><em>, </em><em>optional</em>) – Model of the device’s radio frequency amplification chain.</p></li>
+<li><p><strong>adc</strong> (<a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter" title="hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><em>AnalogDigitalConverter</em></a><em>, </em><em>optional</em>) – Model of receiver’s ADC converter.</p></li>
+<li><p><strong>isolation</strong> (<a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation" title="hermespy.simulation.isolation.isolation.Isolation"><em>Isolation</em></a><em>, </em><em>optional</em>) – Model of the device’s transmit-receive isolations.
+By default, perfect isolation is assumed.</p></li>
+<li><p><strong>coupling</strong> (<a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling" title="hermespy.simulation.coupling.coupling.Coupling"><em>Coupling</em></a><em>, </em><em>optional</em>) – Model of the device’s antenna array mutual coupling.
+By default, ideal coupling behaviour is assumed.</p></li>
+<li><p><strong>sampling_rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Sampling rate at which this device operates.
+By default, the sampling rate of the first operator is assumed.</p></li>
+<li><p><strong>carrier_frequency</strong> (<em>float</em><em>, </em><em>optional</em>) – Center frequency of the mixed signal in rf-band in Hz.
+Zero by default.</p></li>
+<li><p><strong>*args</strong> – Device base class initialization parameters.</p></li>
+<li><p><strong>**kwargs</strong> – Device base class initialization parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.transmit">
+<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.transmit" title="Permalink to this definition"></a></dt>
+<dd><p>Transmit over this device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>clear_cache</strong> (<em>bool</em><em>, </em><em>optional</em>) – Clear the cache of operator signals to be transmitted.
+Enabled by default.</p>
+</dd>
+</dl>
+<p>Returns: Signal transmitted by this device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.receive">
+<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.receive" title="Permalink to this definition"></a></dt>
+<dd><p>Receive signals at this device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device_signals</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>, </em><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>, </em><em>np.ndarray</em><em>]</em>) – List of signal models arriving at the device.
+May also be a two-dimensional numpy object array where the first dimension indicates the link
+and the second dimension contains the transmitted signal as the first element and the link channel
+as the second element.</p></li>
+<li><p><strong>snr</strong> (<em>float</em><em>, </em><em>optional</em>) – Signal to noise power ratio.
+Infinite by default, meaning no noise will be added to the received signals.</p></li>
+<li><p><strong>snr_type</strong> (<a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType" title="hermespy.core.definitions.SNRType"><em>SNRType</em></a><em>, </em><em>optional</em>) – Type of signal to noise ratio.</p></li>
+<li><p><strong>leaking_signal</strong> (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>, </em><em>optional</em>) – Signal leaking from transmit to receive chains.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Baseband signal sampled after hardware-modeling.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>baseband_signal (<a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal">Signal</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.trigger">
+<span class="sig-name descname"><span class="pre">trigger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.trigger" title="Permalink to this definition"></a></dt>
+<dd><p>Trigger the device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.max_sampling_rate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_sampling_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy.max_sampling_rate" title="Permalink to this definition"></a></dt>
+<dd><p>Maximal device sampling rate.</p>
+<p>Returns: The samplin rate in Hz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PhysicalScenarioDummy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="hardware_loop.scenario.html#hermespy.hardware_loop.scenario.PhysicalScenario" title="hermespy.hardware_loop.scenario.PhysicalScenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">PhysicalScenario</span></code></a>[<a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy" title="hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy"><code class="xref py py-class docutils literal notranslate"><span class="pre">PhysicalDeviceDummy</span></code></a>]</p>
+<p>Physical scenario for testing and demonstration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed used to initialize the pseudo-random number generator.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy.new_device">
+<span class="sig-name descname"><span class="pre">new_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalScenarioDummy.new_device" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new device to the scenario.</p>
+<p>Convenience function pointing to <a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario.new_device" title="hermespy.core.scenario.Scenario.new_device"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hermespy.core.scenario.Scenario.new_device()</span></code></a>.</p>
+<p>Returns: Handle to the created device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the device already exists.</p></li>
+<li><p><strong>RuntimeError</strong> – If the scenario is not in default mode.</p></li>
+<li><p><strong>RuntimeError</strong> – If the scenario does not allow for the creation or addition of new devices.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy" title="hermespy.hardware_loop.physical_device_dummy.PhysicalDeviceDummy"><code class="xref py py-class docutils literal notranslate"><span class="pre">PhysicalDeviceDummy</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hardware_loop.scenario.html" class="btn btn-neutral float-left" title="Physical Device Scenario" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hardware_loop.usrp.html" class="btn btn-neutral float-right" title="UHD System" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+<jinja2.runtime.BlockReference object at 0x7f9e7aec8d00>
+<p>
+    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
+    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
+</p>
+
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
