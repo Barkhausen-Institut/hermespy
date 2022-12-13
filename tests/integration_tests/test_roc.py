@@ -23,10 +23,10 @@ class TestRocFromMeasurements(TestCase):
     
     def setUp(self) -> None:
         
-        self.num_drops = 10
+        self.num_drops = 5
         
-        self.h0_scenario = SimulationScenario(snr=10., snr_type=SNRType.PN0)
-        self.h1_scenario = SimulationScenario(snr=10., snr_type=SNRType.PN0)
+        self.h0_scenario = SimulationScenario(snr=1., snr_type=SNRType.PN0)
+        self.h1_scenario = SimulationScenario(snr=1., snr_type=SNRType.PN0)
         
         h0_device = self.h0_scenario.new_device()
         h1_device = self.h1_scenario.new_device()
@@ -63,3 +63,4 @@ class TestRocFromMeasurements(TestCase):
         
         roc = ReceiverOperatingCharacteristic.from_scenarios(self.h0_scenario, self.h1_scenario)
         dir.cleanup()
+            
