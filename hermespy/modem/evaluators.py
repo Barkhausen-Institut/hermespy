@@ -62,7 +62,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -71,12 +71,10 @@ __status__ = "Prototype"
 class CommunicationEvaluator(Evaluator, ABC):
     """Base class for evaluating communication processes between two modems."""
 
-    __transmitting_modem: TransmittingModem     # Handle to the transmitting modem
-    __receiving_modem: ReceivingModem           # Handle to the receiving modem
+    __transmitting_modem: TransmittingModem  # Handle to the transmitting modem
+    __receiving_modem: ReceivingModem  # Handle to the receiving modem
 
-    def __init__(self,
-                 transmitting_modem: TransmittingModem,
-                 receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
@@ -113,9 +111,7 @@ class CommunicationEvaluator(Evaluator, ABC):
 
         return self.__receiving_modem
 
-    def generate_result(self,
-                        grid: List[GridDimension],
-                        artifacts: np.ndarray) -> EvaluationResult:
+    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
 
         return ScalarEvaluationResult(grid, artifacts, self)
 
@@ -131,8 +127,7 @@ class BitErrorArtifact(ArtifactTemplate[float]):
 class BitErrorEvaluation(EvaluationTemplate[np.ndarray]):
     """Bit error evaluation of a single communication process between modems."""
 
-    def plot(self,
-             axes: plt.Axes = None) -> List[plt.Figure]:
+    def plot(self, axes: plt.Axes = None) -> List[plt.Figure]:
 
         with Executable.style_context():
 
@@ -160,12 +155,10 @@ class BitErrorEvaluation(EvaluationTemplate[np.ndarray]):
 class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate bit errors between two modems exchanging information."""
 
-    yaml_tag = u'BitErrorEvaluator'
+    yaml_tag = "BitErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self,
-                 transmitting_modem: TransmittingModem,
-                 receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
@@ -176,9 +169,8 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
                 Modem receiving information.
         """
 
-        CommunicationEvaluator.__init__(
-            self, transmitting_modem, receiving_modem)
-        self.plot_scale = 'log'  # Plot logarithmically by default
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BitErrorEvaluation:
 
@@ -188,10 +180,8 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
 
         # Pad bit sequences (if required)
         num_bits = max(len(received_bits), len(transmitted_bits))
-        padded_transmission = np.append(
-            transmitted_bits, np.zeros(num_bits - len(transmitted_bits)))
-        padded_reception = np.append(
-            received_bits, np.zeros(num_bits - len(received_bits)))
+        padded_transmission = np.append(transmitted_bits, np.zeros(num_bits - len(transmitted_bits)))
+        padded_reception = np.append(received_bits, np.zeros(num_bits - len(received_bits)))
 
         # Compute bit errors as the positions where both sequences differ.
         # Note that this requires the sequences to be in 0/1 format!
@@ -245,12 +235,10 @@ class BlockErrorEvaluation(EvaluationTemplate[np.ndarray]):
 class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate block errors between two modems exchanging information."""
 
-    yaml_tag = u'BlockErrorEvaluator'
+    yaml_tag = "BlockErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self,
-                 transmitting_modem: TransmittingModem,
-                 receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
@@ -261,9 +249,8 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
                 Modem receiving information.
         """
 
-        CommunicationEvaluator.__init__(
-            self, transmitting_modem, receiving_modem)
-        self.plot_scale = 'log'  # Plot logarithmically by default
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BlockErrorEvaluation:
 
@@ -273,22 +260,20 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         block_size = self.receiving_modem.encoder_manager.bit_block_size
 
         # Pad bit sequences (if required)
-        received_bits = np.append(received_bits, np.zeros(
-            received_bits.shape[0] % block_size))
+        received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % block_size))
 
         if transmitted_bits.shape[0] >= received_bits.shape[0]:
 
-            transmitted_bits = transmitted_bits[:received_bits.shape[0]]
+            transmitted_bits = transmitted_bits[: received_bits.shape[0]]
 
         else:
 
-            transmitted_bits = np.append(
-                transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
+            transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
 
         # Compute bit errors as the positions where both sequences differ.
         # Note that this requires the sequences to be in 0/1 format!
         bit_errors = np.abs(transmitted_bits - received_bits)
-        block_errors = (bit_errors.reshape((-1, block_size)).sum(axis=1) > 0)
+        block_errors = bit_errors.reshape((-1, block_size)).sum(axis=1) > 0
 
         return BlockErrorEvaluation(block_errors)
 
@@ -340,12 +325,10 @@ class FrameErrorEvaluation(EvaluationTemplate[np.ndarray]):
 class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate frame errors between two modems exchanging information."""
 
-    yaml_tag = u'FrameErrorEvaluator'
+    yaml_tag = "FrameErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self,
-                 transmitting_modem: TransmittingModem,
-                 receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
         """
         Args:
 
@@ -356,9 +339,8 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
                 Modem receiving information.
         """
 
-        CommunicationEvaluator.__init__(
-            self, transmitting_modem, receiving_modem)
-        self.plot_scale = 'log'  # Plot logarithmically by default
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> FrameErrorEvaluation:
 
@@ -371,22 +353,20 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
             return FrameErrorArtifact(np.empty(0, dtype=np.unit8))
 
         # Pad bit sequences (if required)
-        received_bits = np.append(received_bits, np.zeros(
-            received_bits.shape[0] % frame_size))
+        received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % frame_size))
 
         if transmitted_bits.shape[0] >= received_bits.shape[0]:
 
-            transmitted_bits = transmitted_bits[:received_bits.shape[0]]
+            transmitted_bits = transmitted_bits[: received_bits.shape[0]]
 
         else:
 
-            transmitted_bits = np.append(
-                transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
+            transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
 
         # Compute bit errors as the positions where both sequences differ.
         # Note that this requires the sequences to be in 0/1 format!
         bit_errors = np.abs(transmitted_bits - received_bits)
-        frame_errors = (bit_errors.reshape((-1, frame_size)).sum(axis=1) > 0)
+        frame_errors = bit_errors.reshape((-1, frame_size)).sum(axis=1) > 0
 
         return FrameErrorEvaluation(frame_errors)
 
@@ -416,13 +396,10 @@ class ThroughputArtifact(ArtifactTemplate[float]):
 class ThroughputEvaluation(EvaluationTemplate[np.ndarray]):
     """Throughput evaluation between two modems exchanging information."""
 
-    __bits_per_frame: int           # Number of bits per communication frame
-    __frame_duration: float         # Duration of a single communication frame in seconds
+    __bits_per_frame: int  # Number of bits per communication frame
+    __frame_duration: float  # Duration of a single communication frame in seconds
 
-    def __init__(self,
-                 bits_per_frame: int,
-                 frame_duration: float,
-                 frame_errors: np.ndarray) -> None:
+    def __init__(self, bits_per_frame: int, frame_duration: float, frame_errors: np.ndarray) -> None:
         """
         Args:
 
@@ -448,8 +425,7 @@ class ThroughputEvaluation(EvaluationTemplate[np.ndarray]):
 
         num_frames = len(self.evaluation)
         num_correct_frames = np.sum(np.invert(self.evaluation))
-        throughput = num_correct_frames * self.__bits_per_frame / \
-            (num_frames * self.__frame_duration)
+        throughput = num_correct_frames * self.__bits_per_frame / (num_frames * self.__frame_duration)
 
         return ThroughputArtifact(throughput)
 
@@ -457,12 +433,10 @@ class ThroughputEvaluation(EvaluationTemplate[np.ndarray]):
 class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
     """Evaluate data throughput between two modems exchanging information."""
 
-    yaml_tag = u'ThroughputEvaluator'
+    yaml_tag = "ThroughputEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self,
-                 transmitting_modem: TransmittingModem,
-                 receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
         """
         Args:
 

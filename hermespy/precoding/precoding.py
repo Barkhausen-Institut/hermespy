@@ -21,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -44,19 +44,16 @@ class Precoder(ABC):
         self.__precoding = None
 
     @property
-    def precoding(self) -> Precoding:
+    def precoding(self) -> Optional[Precoding]:
         """Access the precoding configuration this precoder is attached to.
 
         Returns:
-            Precoding: Handle to the precoding.
+            Handle to the precoding.
+            `None` if the precoder is considered floating.
 
         Raises:
             RuntimeError: If this precoder is currently floating.
         """
-
-        if self.__precoding is None:
-            raise RuntimeError(
-                "Trying to access the precoding of a floating precoder")
 
         return self.__precoding
 
@@ -103,9 +100,8 @@ class Precoder(ABC):
             RuntimeError: If precoder is not attached to a precoding configuration.
         """
 
-        if self.__precoding is None:
-            raise RuntimeError(
-                "Error trying to access requirements of a floating precoder")
+        if self.precoding is None:
+            raise RuntimeError("Error trying to access requirements of a floating precoder")
 
         return self.precoding.required_outputs(self)
 
@@ -120,9 +116,8 @@ class Precoder(ABC):
             RuntimeError: If precoder is not attached to a precoding configuration.
         """
 
-        if self.__precoding is None:
-            raise RuntimeError(
-                "Error trying to access requirements of a floating precoder")
+        if self.precoding is None:
+            raise RuntimeError("Error trying to access requirements of a floating precoder")
 
         return self.precoding.required_inputs(self)
 
@@ -139,7 +134,7 @@ class Precoder(ABC):
         return Fraction(1, 1)
 
 
-PrecoderType = TypeVar('PrecoderType', bound=Precoder)
+PrecoderType = TypeVar("PrecoderType", bound=Precoder)
 """Type of precoder."""
 
 
@@ -164,8 +159,7 @@ class Precoding(Generic[PrecoderType], Serializable):
     __modem: Optional[BaseModem]
     __precoders: List[PrecoderType]
 
-    def __init__(self,
-                 modem: BaseModem = None) -> None:
+    def __init__(self, modem: BaseModem = None) -> None:
         """Symbol Precoding object initialization.
 
         Args:
@@ -193,9 +187,6 @@ class Precoding(Generic[PrecoderType], Serializable):
                 The serialized YAML node.
                 None if the object state is default.
         """
-
-        if len(node.__precoders) < 1:
-            return representer.represent_none(None)
 
         return representer.represent_sequence(cls.yaml_tag, node.__precoders)
 
@@ -226,20 +217,11 @@ class Precoding(Generic[PrecoderType], Serializable):
         return symbol_precoding
 
     @property
-    def modem(self) -> BaseModem:
+    def modem(self) -> Optional[BaseModem]:
         """Access the modem this Precoding configuration is attached to.
 
-        Returns:
-            Modem:
-                Handle to the modem object.
-
-        Raises:
-            RuntimeError: If the Precoding configuration is floating.
+        Returns:  Handle to the modem object.
         """
-
-        if self.__modem is None:
-            raise RuntimeError(
-                "Trying to access the modem of a floating Precoding configuration")
 
         return self.__modem
 

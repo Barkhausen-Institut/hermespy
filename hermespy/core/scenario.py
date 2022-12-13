@@ -15,7 +15,6 @@ from h5py import File
 
 from .device import DeviceType, Reception, Transmission, Transmitter, Receiver, Operator
 from .drop import Drop
-from .factory import Serializable
 from .random_node import RandomNode
 from .signal_model import Signal
 
@@ -23,7 +22,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -51,23 +50,22 @@ class ScenarioMode(IntEnum):
     """
 
 
-class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
+class Scenario(ABC, RandomNode, Generic[DeviceType]):
     """A simulation scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
     Each device can be operated by multiple operators simultaneously.
     """
 
-    __mode: ScenarioMode              # Current scenario operating mode
+    __mode: ScenarioMode  # Current scenario operating mode
     # Registered devices within this scenario.
     __devices: List[DeviceType]
-    __drop_duration: float            # Drop duration in seconds.
-    __file: Optional[File]            # HDF5 file handle
-    __file_location: Optional[str]    # HDF5 file location
-    __drop_counter: int               # Internal drop counter
+    __drop_duration: float  # Drop duration in seconds.
+    __file: Optional[File]  # HDF5 file handle
+    __file_location: Optional[str]  # HDF5 file location
+    __drop_counter: int  # Internal drop counter
 
-    def __init__(self,
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -78,7 +76,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         RandomNode.__init__(self, seed=seed)
         self.__mode = ScenarioMode.DEFAULT
         self.__devices = []
-        self.drop_duration = 0.
+        self.drop_duration = 0.0
         self.__file = None
         self.__file_location = None
         self.__drop_counter = 0
@@ -113,12 +111,10 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         """
 
         if self.device_registered(device):
-            raise ValueError(
-                "Error trying to add an already registered device to a scenario")
+            raise ValueError("Error trying to add an already registered device to a scenario")
 
         if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError(
-                "Modifying a scenario is only allowed in default mode")
+            raise RuntimeError("Modifying a scenario is only allowed in default mode")
 
         # Add device to internal device list
         self.__devices.append(device)
@@ -141,8 +137,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
             RuntimeError: If the scenario does not allow for the creation or addition of new devices.
         """
 
-        raise RuntimeError(
-            "Error trying to create a new device within a scenario not supporting the operation")
+        raise RuntimeError("Error trying to create a new device within a scenario not supporting the operation")
 
     def device_registered(self, device: DeviceType) -> bool:
         """Check if an device is registered in this scenario.
@@ -283,7 +278,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         # Return the largest frame length as default drop duration
         if self.__drop_duration == 0.0:
 
-            duration = 0.
+            duration = 0.0
 
             for device in self.__devices:
                 duration = max(duration, device.max_frame_duration)
@@ -300,14 +295,11 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
             raise ValueError("Drop duration must be greater or equal to zero")
 
         if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError(
-                "Modifying scenario parameters is only allowed in default mode")
+            raise RuntimeError("Modifying scenario parameters is only allowed in default mode")
 
         self.__drop_duration = value
 
-    def record(self,
-               file: str,
-               override: bool = False) -> None:
+    def record(self, file: str, override: bool = False) -> None:
         """Start recording drop information generated from this scenario.
 
         After the scenario starts recording, changing the device and operator configuration
@@ -328,8 +320,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         """
 
         if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError(
-                "Initialize a recording is only possible in default mode. Please stop before starting a new recording.")
+            raise RuntimeError("Initialize a recording is only possible in default mode. Please stop before starting a new recording.")
 
         if override and path.exists(file):
             remove(file)
@@ -338,7 +329,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         drop_duration = self.drop_duration
 
         # Initialize dataset
-        self.__file = File(file, 'w-')
+        self.__file = File(file, "w-")
         self.__file_location = file
         self.__drop_counter = 0
 
@@ -348,17 +339,16 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         # ToDo: Write scenario state to the set
         # factory = Factory()
         # self.__file.attrs['serialization'] = factory.to_str(self)
-        self.__file.attrs['drop_duration'] = drop_duration
-        self.__file.attrs['num_devices'] = self.num_devices
+        self.__file.attrs["drop_duration"] = drop_duration
+        self.__file.attrs["num_devices"] = self.num_devices
 
     def replay(self, path: Optional[str] = None) -> None:
 
         if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError(
-                "Initializing a replay is only possible in default mode. Please stop before starting a new replay.")
+            raise RuntimeError("Initializing a replay is only possible in default mode. Please stop before starting a new replay.")
 
         # Initialize dataset
-        self.__file = File(path, 'r')
+        self.__file = File(path, "r")
         self.__file_location = path
         self.__drop_counter = 0
 
@@ -375,7 +365,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         # Save the overall number of recorder drops if in record mode
         if self.mode == ScenarioMode.RECORD:
 
-            self.__file.attrs['num_drops'] = self.__drop_counter
+            self.__file.attrs["num_drops"] = self.__drop_counter
 
         # Close HDF5 file handle properly
         self.__file.close()
@@ -392,8 +382,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
             The generated information sorted into devices and their respective operators.
         """
 
-        transmissions = [[o.transmit() for o in d.transmitters]
-                         for d in self.devices]
+        transmissions = [[o.transmit() for o in d.transmitters] for d in self.devices]
         return transmissions
 
     def transmit_devices(self) -> List[Signal]:
@@ -419,11 +408,9 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         """
 
         if len(receptions) != len(self.__devices):
-            raise ValueError(
-                f"Number of receptions must be equal to number of devices ({len(receptions)} != {len(self.__devices)})")
+            raise ValueError(f"Number of receptions must be equal to number of devices ({len(receptions)} != {len(self.__devices)})")
 
-        device_receptions = [d.receive(r)
-                             for d, r in zip(self.devices, receptions)]
+        device_receptions = [d.receive(r) for d, r in zip(self.devices, receptions)]
         return device_receptions
 
     def receive_operators(self) -> List[List[Reception]]:
@@ -478,24 +465,20 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
         if self.mode == ScenarioMode.REPLAY:
 
             # Recall the drop from the savefile
-            drop = Drop.from_HDF(
-                self.__file[f'drop_{self.__drop_counter:02d}'])
-            self.__drop_counter = (
-                self.__drop_counter + 1) % self.num_drops
+            drop = Drop.from_HDF(self.__file[f"drop_{self.__drop_counter:02d}"])
+            self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
 
             # Replay device operator transmissions
             for device, device_transmission in zip(self.devices, drop.device_transmissions):
 
                 for transmitter, transmission in zip(device.transmitters, device_transmission.operator_transmissions):
-                    device.transmitters.add_transmission(
-                        transmitter, transmission)
+                    device.transmitters.add_transmission(transmitter, transmission)
 
             # Replay device operator receptions
             for device, device_reception in zip(self.devices, drop.device_receptions):
 
                 for receiver, reception in zip(device.receivers, device_reception.operator_receptions):
-                    receiver.cache_reception(
-                        reception.signal, device_reception.csi)
+                    receiver.cache_reception(reception.signal, device_reception.csi)
 
         else:
 
@@ -505,12 +488,11 @@ class Scenario(ABC, RandomNode, Generic[DeviceType], Serializable):
             # Serialize the drop to HDF if in record mode
             if self.mode == ScenarioMode.RECORD:
 
-                drop.to_HDF(self.__file.create_group(
-                    f'drop_{self.__drop_counter:02d}'))
+                drop.to_HDF(self.__file.create_group(f"drop_{self.__drop_counter:02d}"))
                 self.__drop_counter += 1
 
         return drop
 
 
-ScenarioType = TypeVar('ScenarioType', bound=Scenario)
+ScenarioType = TypeVar("ScenarioType", bound=Scenario)
 """Type of scenario."""

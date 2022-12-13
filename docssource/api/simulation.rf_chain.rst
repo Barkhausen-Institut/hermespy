@@ -1,3 +1,3 @@
-.. automodule:: hermespy.simulation.rf_chain.power_amplifier
+.. automodule:: hermespy.simulation.rf_chain.rf_chain
 
 .. footbibliography::

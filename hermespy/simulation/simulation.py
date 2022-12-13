@@ -15,8 +15,7 @@ from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core import Drop, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, \
-    MonteCarloResult, Scenario, Signal, DeviceTransmission, DeviceReception, SNRType
+from hermespy.core import Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceTransmission, DeviceReception, SNRType
 from hermespy.channel import QuadrigaInterface, Channel
 from .simulated_device import SimulatedDevice
 
@@ -24,7 +23,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -32,14 +31,11 @@ __status__ = "Prototype"
 
 class SimulationScenario(Scenario[SimulatedDevice]):
 
-    __channels: np.ndarray      # Channel matrix linking devices
-    __snr: Optional[float]      # Signal to noise ratio at the receiver-side
-    __snr_type: SNRType         # Global global type of signal to noise ratio.
+    __channels: np.ndarray  # Channel matrix linking devices
+    __snr: Optional[float]  # Signal to noise ratio at the receiver-side
+    __snr_type: SNRType  # Global global type of signal to noise ratio.
 
-    def __init__(self,
-                 seed: Optional[int] = None,
-                 snr: float = float('inf'),
-                 snr_type: Union[str, SNRType] = SNRType.PN0) -> None:
+    def __init__(self, seed: Optional[int] = None, snr: float = float("inf"), snr_type: Union[str, SNRType] = SNRType.PN0) -> None:
         """
         Args:
 
@@ -79,20 +75,16 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         if self.num_devices == 1:
 
-            self.__channels = np.array(
-                [[Channel(device, device)]], dtype=object)
+            self.__channels = np.array([[Channel(device, device)]], dtype=object)
 
         else:
 
             # Create new channels from each existing device to the newly added device
-            new_channels = np.array([[Channel(device, rx)]
-                                    for rx in self.devices])
+            new_channels = np.array([[Channel(device, rx)] for rx in self.devices])
 
             # Complete channel matrix by the newly created channels
-            self.__channels = np.append(
-                self.__channels, new_channels[:-1], axis=1)
-            self.__channels = np.append(
-                self.__channels, new_channels.T, axis=0)
+            self.__channels = np.append(self.__channels, new_channels[:-1], axis=1)
+            self.__channels = np.append(self.__channels, new_channels.T, axis=0)
 
     @property
     def channels(self) -> np.ndarray:
@@ -105,9 +97,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__channels
 
-    def channel(self,
-                transmitter: SimulatedDevice,
-                receiver: SimulatedDevice) -> Channel:
+    def channel(self, transmitter: SimulatedDevice, receiver: SimulatedDevice) -> Channel:
         """Access a specific channel between two devices.
 
         Args:
@@ -130,12 +120,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         devices = self.devices
 
         if transmitter not in devices:
-            raise ValueError(
-                "Provided transmitter is not registered with this scenario")
+            raise ValueError("Provided transmitter is not registered with this scenario")
 
         if receiver not in devices:
-            raise ValueError(
-                "Provided receiver is not registered with this scenario")
+            raise ValueError("Provided receiver is not registered with this scenario")
 
         index_transmitter = devices.index(transmitter)
         index_receiver = devices.index(receiver)
@@ -165,12 +153,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         devices = self.devices
 
         if transmitter not in devices:
-            raise ValueError(
-                "The provided transmitter is not registered with this scenario.")
+            raise ValueError("The provided transmitter is not registered with this scenario.")
 
         transmitter_index = devices.index(transmitter)
-        channels: List[Channel] = self.__channels[:,
-                                                  transmitter_index].tolist()
+        channels: List[Channel] = self.__channels[:, transmitter_index].tolist()
 
         if active_only:
             channels = [channel for channel in channels if channel.active]
@@ -199,8 +185,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         devices = self.devices
 
         if receiver not in devices:
-            raise ValueError(
-                "The provided transmitter is not registered with this scenario.")
+            raise ValueError("The provided transmitter is not registered with this scenario.")
 
         receiver_index = devices.index(receiver)
         channels: List[Channel] = self.__channels[receiver_index, ].tolist()
@@ -210,10 +195,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return channels
 
-    def set_channel(self,
-                    receiver: Union[int, SimulatedDevice],
-                    transmitter: Union[int, SimulatedDevice],
-                    channel: Optional[Channel]) -> None:
+    def set_channel(self, receiver: Union[int, SimulatedDevice], transmitter: Union[int, SimulatedDevice], channel: Optional[Channel]) -> None:
         """Specify a channel within the channel matrix.
 
         Args:
@@ -239,12 +221,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             transmitter = self.devices.index(transmitter)
 
         if self.__channels.shape[0] <= transmitter or 0 > transmitter:
-            raise ValueError(
-                "Transmitter index greater than channel matrix dimension")
+            raise ValueError("Transmitter index greater than channel matrix dimension")
 
         if self.__channels.shape[1] <= receiver or 0 > receiver:
-            raise ValueError(
-                "Receiver index greater than channel matrix dimension")
+            raise ValueError("Receiver index greater than channel matrix dimension")
 
         # Update channel field within the matrix
         self.__channels[transmitter, receiver] = channel
@@ -272,7 +252,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr
 
-    @snr.setter(first_impact='receive_devices')
+    @snr.setter(first_impact="receive_devices")
     def snr(self, value: Optional[float]) -> None:
         """Set ratio of signal energy to noise power at the receiver-side"""
 
@@ -282,9 +262,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         else:
 
-            if value <= 0.:
-                raise ValueError(
-                    "Signal to noise ratio must be greater than zero")
+            if value <= 0.0:
+                raise ValueError("Signal to noise ratio must be greater than zero")
 
             self.__snr = value
 
@@ -298,7 +277,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr_type
 
-    @snr_type.setter(first_impact='receive_devices')
+    @snr_type.setter(first_impact="receive_devices")
     def snr_type(self, snr_type: Union[str, int, SNRType]) -> None:
         """Modify the type of signal-to-noise ratio.
 
@@ -318,29 +297,23 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     def propagate(self, transmitted_signals: List[Signal]) -> np.ndarray:
 
         if len(transmitted_signals) != self.num_devices:
-            raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match "
-                             f"the number of registered devices ({self.num_devices})")
+            raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match " f"the number of registered devices ({self.num_devices})")
 
         # Initialize the propagated signals
-        propagation_matrix = np.empty(
-            (self.num_devices, self.num_devices), dtype=object)
+        propagation_matrix = np.empty((self.num_devices, self.num_devices), dtype=object)
 
         # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
         for device_alpha_idx, device_alpha in enumerate(self.devices):
-            for device_beta_idx, device_beta in enumerate(self.devices[:(1+device_alpha_idx)]):
+            for device_beta_idx, device_beta in enumerate(self.devices[: (1 + device_alpha_idx)]):
 
                 alpha_transmissions = transmitted_signals[device_alpha_idx]
                 beta_transmissions = transmitted_signals[device_beta_idx]
 
-                channel: Channel = self.channels[device_alpha_idx,
-                                                 device_beta_idx]
-                beta_receptions, alpha_receptions, csi = channel.propagate(
-                    alpha_transmissions, beta_transmissions)
+                channel: Channel = self.channels[device_alpha_idx, device_beta_idx]
+                beta_receptions, alpha_receptions, csi = channel.propagate(alpha_transmissions, beta_transmissions)
 
-                propagation_matrix[device_alpha_idx, device_beta_idx] = (
-                    alpha_receptions, csi.reciprocal())
-                propagation_matrix[device_beta_idx,
-                                   device_alpha_idx] = (beta_receptions, csi)
+                propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi.reciprocal())
+                propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
 
         return propagation_matrix
 
@@ -352,11 +325,9 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             return Scenario.receive_devices(self, receptions)
 
         if len(receptions) != self.num_devices:
-            raise ValueError(f"Number of arriving signals ({len(receptions)}) does not match "
-                             f"the number of receiving devices ({self.num_devices})")
+            raise ValueError(f"Number of arriving signals ({len(receptions)}) does not match " f"the number of receiving devices ({self.num_devices})")
 
-        received_signals = [d.receive(s, self.snr, self.snr_type)
-                            for d, s in zip(self.devices, receptions)]
+        received_signals = [d.receive(s, self.snr, self.snr_type) for d, s in zip(self.devices, receptions)]
         return received_signals
 
     def _drop(self) -> Drop:
@@ -369,8 +340,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         transmitted_device_signals = self.transmit_devices()
 
         # ToDo: Support operator separation here or elsewhere
-        device_transmissions = [DeviceTransmission(s[0], i) for s, i in zip(
-            transmitted_device_signals, operator_transmissions)]
+        device_transmissions = [DeviceTransmission(s[0], i) for s, i in zip(transmitted_device_signals, operator_transmissions)]
 
         # Simulate channel propagation
         propagation_matrix = self.propagate(transmitted_device_signals)
@@ -378,20 +348,18 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         received_device_signals = self.receive_devices(propagation_matrix)
         operator_receptions = self.receive_operators()
         # ToDo: Patch CSI here
-        device_receptions = [DeviceReception(s, None, i) for s, i in zip(
-            received_device_signals, operator_receptions)]
+        device_receptions = [DeviceReception(s, None, i) for s, i in zip(received_device_signals, operator_receptions)]
 
         return Drop(timestamp, device_transmissions, device_receptions)
 
 
 class SimulationRunner(object):
 
-    __scenario: SimulationScenario      # Scenario to be run
+    __scenario: SimulationScenario  # Scenario to be run
     __recent_device_transmissions: Optional[List[Signal]]
     __recent_propagation: Optional[np.ndarray]
 
-    def __init__(self,
-                 scenario: SimulationScenario) -> None:
+    def __init__(self, scenario: SimulationScenario) -> None:
         """
         Args:
 
@@ -412,9 +380,8 @@ class SimulationRunner(object):
     def transmit_devices(self) -> None:
         """Generate radio-frequency band signal models emitted by devices"""
 
-        device_transmssions = [device.transmit(
-            clear_cache=False) for device in self.__scenario.devices]
-        self.__recent_device_transmissions = device_transmssions
+        device_transmissions = [device.transmit(clear_cache=False) for device in self.__scenario.devices]
+        self.__recent_device_transmissions = device_transmissions
 
     def propagate(self) -> None:
         """Propagate the signals generated by registered transmitters over the channel model.
@@ -429,33 +396,26 @@ class SimulationRunner(object):
         transmitted_signals = self.__recent_device_transmissions
 
         if transmitted_signals is None:
-            raise RuntimeError(
-                "Propagation simulation stage called without prior device transmission")
+            raise RuntimeError("Propagation simulation stage called without prior device transmission")
 
         if len(transmitted_signals) != self.__scenario.num_devices:
-            raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match "
-                             f"the number of registered devices ({self.__scenario.num_devices})")
+            raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match " f"the number of registered devices ({self.__scenario.num_devices})")
 
         # Initialize the propagated signals
-        propagation_matrix = np.empty(
-            (self.__scenario.num_devices, self.__scenario.num_devices), dtype=object)
+        propagation_matrix = np.empty((self.__scenario.num_devices, self.__scenario.num_devices), dtype=object)
 
         # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
         for device_alpha_idx, device_alpha in enumerate(self.__scenario.devices):
-            for device_beta_idx, device_beta in enumerate(self.__scenario.devices[:(1+device_alpha_idx)]):
+            for device_beta_idx, device_beta in enumerate(self.__scenario.devices[: (1 + device_alpha_idx)]):
 
                 alpha_transmissions = transmitted_signals[device_alpha_idx]
                 beta_transmissions = transmitted_signals[device_beta_idx]
 
-                channel: Channel = self.__scenario.channels[device_alpha_idx,
-                                                            device_beta_idx]
-                beta_receptions, alpha_receptions, csi = channel.propagate(
-                    alpha_transmissions, beta_transmissions)
+                channel: Channel = self.__scenario.channels[device_alpha_idx, device_beta_idx]
+                beta_receptions, alpha_receptions, csi = channel.propagate(alpha_transmissions, beta_transmissions)
 
-                propagation_matrix[device_alpha_idx, device_beta_idx] = (
-                    alpha_receptions, csi.reciprocal())
-                propagation_matrix[device_beta_idx,
-                                   device_alpha_idx] = (beta_receptions, csi)
+                propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi.reciprocal())
+                propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
 
         # Cache the recent propagation
         self.__recent_propagation = propagation_matrix
@@ -466,16 +426,13 @@ class SimulationRunner(object):
         propagation_matrix = self.__recent_propagation
 
         if propagation_matrix is None:
-            raise RuntimeError(
-                "Receive device simulation stage called without prior channel propagation")
+            raise RuntimeError("Receive device simulation stage called without prior channel propagation")
 
         if len(propagation_matrix) != self.__scenario.num_devices:
-            raise ValueError(f"Number of arriving signals ({len(propagation_matrix)}) does not match "
-                             f"the number of receiving devices ({self.__scenario.num_devices})")
+            raise ValueError(f"Number of arriving signals ({len(propagation_matrix)}) does not match " f"the number of receiving devices ({self.__scenario.num_devices})")
 
         for device, impinging_signals in zip(self.__scenario.devices, propagation_matrix):
-            _ = device.receive(device_signals=impinging_signals,
-                               snr=self.__scenario.snr, snr_type=self.__scenario.snr_type)
+            _ = device.receive(device_signals=impinging_signals, snr=self.__scenario.snr, snr_type=self.__scenario.snr_type)
 
     def receive_operators(self) -> None:
         """Demodulate base-band signal models received by all registered receiving operators."""
@@ -486,11 +443,7 @@ class SimulationRunner(object):
 
 @remote(num_cpus=1)
 class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
-
-    def __init__(self,
-                 argument_tuple: Any,
-                 index: int,
-                 catch_exceptions: bool = True) -> None:
+    def __init__(self, argument_tuple: Any, index: int, catch_exceptions: bool = True) -> None:
         """
         Args:
 
@@ -504,20 +457,20 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         # Update the internal random seed pseudo-deterministically for each actor instance
         seed = self._investigated_object._rng.integers(0, 100000000000000)
         individual_seed = seed + index * 12345678
-        self._investigated_object.set_seed(individual_seed)
+        self._investigated_object.seed = individual_seed
 
     @staticmethod
     def stage_identifiers() -> List[str]:
-        return ['transmit_operators', 'transmit_devices', 'propagate', 'receive_devices', 'receive_operators']
+        return ["transmit_operators", "transmit_devices", "propagate", "receive_devices", "receive_operators"]
 
     def stage_executors(self) -> List[Callable]:
         return [self.transmit_operators, self.transmit_devices, self.propagate, self.receive_devices, self.receive_operators]
 
 
-class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
+class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
     """HermesPy simulation configuration."""
 
-    yaml_tag = u'Simulation'
+    yaml_tag = "Simulation"
     """YAML serialization tag."""
 
     plot_results: bool
@@ -526,64 +479,52 @@ class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
     dump_results: bool
     """Dump results to files after simulation runs."""
 
-    def __init__(self,
-                 scenario: Optional[SimulationScenario] = None,
-                 num_drops: int = 100,
-                 drop_duration: float = 0.,
-                 plot_results: bool = False,
-                 dump_results: bool = True,
-                 console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
-                 ray_address: Optional[str] = None,
-                 results_dir: Optional[str] = None,
-                 verbosity: Union[str, Verbosity] = Verbosity.INFO,
-                 seed: Optional[int] = None,
-                 num_actors: Optional[int] = None) -> None:
+    def __init__(
+        self, scenario: Optional[SimulationScenario] = None, num_drops: int = 100, drop_duration: float = 0.0, plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address: Optional[str] = None, results_dir: Optional[str] = None, verbosity: Union[str, Verbosity] = Verbosity.INFO, seed: Optional[int] = None, num_actors: Optional[int] = None
+    ) -> None:
         """Args:
 
-            scenario (SimulationScenario, optional):
-                The simulated scenario.
-                If none is provided, an empty one will be initialized.
+        scenario (SimulationScenario, optional):
+            The simulated scenario.
+            If none is provided, an empty one will be initialized.
 
-            num_drops (int, optional):
-                Number of drops generated per sweeping grid section.
-                100 by default.
+        num_drops (int, optional):
+            Number of drops generated per sweeping grid section.
+            100 by default.
 
-            drop_duration(float, optional):
-                Duration of simulation drops in seconds.
+        drop_duration(float, optional):
+            Duration of simulation drops in seconds.
 
-            plot_results (bool, optional):
-                Plot results after simulation runs.
-                Disabled by default.
+        plot_results (bool, optional):
+            Plot results after simulation runs.
+            Disabled by default.
 
-            dump_results (bool, optional):
-                Dump results to files after simulation runs.
-                Enabled by default.
+        dump_results (bool, optional):
+            Dump results to files after simulation runs.
+            Enabled by default.
 
-            ray_address (str, optional):
-                The address of the ray head node.
-                If None is provided, the head node will be launched in this machine.
+        ray_address (str, optional):
+            The address of the ray head node.
+            If None is provided, the head node will be launched in this machine.
 
-            results_dir (str, optional):
-                Directory in which all simulation artifacts will be dropped.
+        results_dir (str, optional):
+            Directory in which all simulation artifacts will be dropped.
 
-            verbosity (Union[str, Verbosity], optional):
-                Information output behaviour during execution.
+        verbosity (Union[str, Verbosity], optional):
+            Information output behaviour during execution.
 
-            seed (int, optional):
-                Random seed used to initialize the pseudo-random number generator.
+        seed (int, optional):
+            Random seed used to initialize the pseudo-random number generator.
         """
 
         scenario = SimulationScenario() if scenario is None else scenario
 
         if seed is not None:
-            scenario.set_seed(seed)
+            scenario.seed = seed
 
-        Pipeline.__init__(
-            self, scenario, results_dir=results_dir, verbosity=verbosity)
+        Pipeline.__init__(self, scenario, results_dir=results_dir, verbosity=verbosity)
 
-        MonteCarlo.__init__(self, self.scenario, num_drops,
-                            console=self.console, console_mode=console_mode, ray_address=ray_address,
-                            num_actors=num_actors)
+        MonteCarlo.__init__(self, self.scenario, num_drops, console=self.console, console_mode=console_mode, ray_address=ray_address, num_actors=num_actors)
 
         self.plot_results = plot_results
         self.dump_results = dump_results
@@ -624,11 +565,10 @@ class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
 
             # Save figures to png files
             for figure_idx, figure in enumerate(figures):
-                figure.savefig(path.join(self.results_dir,
-                               f'figure_{figure_idx}.png'), format='png')
+                figure.savefig(path.join(self.results_dir, f"figure_{figure_idx}.png"), format="png")
 
             # Save results to matlab file
-            result.save_to_matlab(path.join(self.results_dir, 'results.mat'))
+            result.save_to_matlab(path.join(self.results_dir, "results.mat"))
 
         # Show plots if the flag is enabled
         # if self.plot_results:
@@ -638,9 +578,7 @@ class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
         return result
 
     @classmethod
-    def to_yaml(cls: Type[Simulation],
-                representer: SafeRepresenter,
-                node: Simulation) -> MappingNode:
+    def to_yaml(cls: Type[Simulation], representer: SafeRepresenter, node: Simulation) -> MappingNode:
         """Serialize an `Simulation` object to YAML.
 
         Args:
@@ -656,22 +594,12 @@ class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
                 The serialized YAML node
         """
 
-        state = {
-            "snr_type": node.snr_type.value,
-            "verbosity": node.verbosity.name
-        }
-
-        # If a global Quadriga interface exists,
-        # add its configuration to the simulation section
-        if QuadrigaInterface.GlobalInstanceExists():
-            state[QuadrigaInterface.yaml_tag] = QuadrigaInterface.GlobalInstance()
+        state = {"snr_type": node.scenario.snr_type.name, "verbosity": node.verbosity.name}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[Simulation],
-                  constructor: SafeConstructor,
-                  node: MappingNode) -> Simulation:
+    def from_yaml(cls: Type[Simulation], constructor: SafeConstructor, node: MappingNode) -> Simulation:
         """Recall a new `Simulation` instance from YAML.
 
         Args:
@@ -689,21 +617,19 @@ class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
         state = constructor.construct_mapping(node, deep=True)
 
         # Launch a global quadriga instance
-        quadriga_interface: Optional[QuadrigaInterface] = state.pop(
-            QuadrigaInterface.yaml_tag, None)
+        quadriga_interface: Optional[QuadrigaInterface] = state.pop(QuadrigaInterface.yaml_tag, None)
         if quadriga_interface is not None:
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
 
         # Pop configuration sections for "special" treatment
-        devices: List[SimulatedDevice] = state.pop('Devices', [])
-        channels: List[Channel] = state.pop('Channels', [])
-        _: List[Operator] = state.pop('Operators', [])
-        evaluators: List[Evaluator] = state.pop('Evaluators', [])
-        dimensions: Dict[str, Any] = state.pop('Dimensions', {})
+        devices: List[SimulatedDevice] = state.pop("Devices", [])
+        channels: List[Channel] = state.pop("Channels", [])
+        _: List[Operator] = state.pop("Operators", [])
+        evaluators: List[Evaluator] = state.pop("Evaluators", [])
+        dimensions: Dict[str, Any] = state.pop("Dimensions", {})
 
         # Initialize simulation
-        state['scenario'] = SimulationScenario(snr=state.pop(
-            'snr', float('inf')), snr_type=state.pop('snr_type', SNRType.EBN0))
+        state["scenario"] = SimulationScenario(snr=state.pop("snr", float("inf")), snr_type=state.pop("snr_type", SNRType.EBN0))
         simulation: Simulation = cls.InitializationWrapper(state)
 
         # Add devices to the simulation
@@ -717,14 +643,12 @@ class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
             if channel.transmitter is None or channel.receiver is None:
 
                 if simulation.scenario.num_devices > 1:
-                    raise RuntimeError(
-                        "Please specifiy the transmitting and receiving device of each channel in a multi-device scenario")
+                    raise RuntimeError("Please specifiy the transmitting and receiving device of each channel in a multi-device scenario")
 
                 channel.transmitter = simulation.scenario.devices[0]
                 channel.receiver = simulation.scenario.devices[0]
 
-            simulation.scenario.set_channel(
-                channel.receiver, channel.transmitter, channel)
+            simulation.scenario.set_channel(channel.receiver, channel.transmitter, channel)
 
         # Register evaluators
         for evaluator in evaluators:
@@ -740,6 +664,4 @@ class Simulation(Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
     @staticmethod
     def _pip_packages() -> List[str]:
 
-        return MonteCarlo._pip_packages() + [
-            'sparse', 'protobuf', 'numba',
-        ]
+        return MonteCarlo._pip_packages() + ["sparse", "protobuf", "numba"]

@@ -9,12 +9,13 @@ import numpy.random as rnd
 
 from hermespy.core.signal_model import Signal
 from hermespy.simulation.noise import AWGN
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.5"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -45,10 +46,7 @@ class TestAWGN(unittest.TestCase):
 
             self.assertTrue(abs(noise_power - expected_noise_power) <= (0.001 * expected_noise_power))
 
-    def test_to_yaml(self) -> None:
-        """Test object serialization."""
-        pass
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
 
-    def test_from_yaml(self) -> None:
-        """Test object recall from yaml."""
-        pass
+        test_yaml_roundtrip_serialization(self, self.noise, {'is_random_root'})

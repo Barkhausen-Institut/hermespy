@@ -1,6 +1,6 @@
-=======================
-Channel Modeling Module
-=======================
+================
+Channel Modeling
+================
 
 The channel modeling module provides functionalities to model
 the wireless transmission link between devices on a physical level.

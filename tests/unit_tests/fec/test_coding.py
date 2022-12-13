@@ -3,7 +3,7 @@
 
 from typing import Type
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -11,12 +11,13 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 from hermespy.core import Serializable
 from hermespy.fec import Encoder, EncoderManager
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -102,17 +103,6 @@ class TestEncoderManager(TestCase):
         self.assertIs(0, len(self.encoder_manager.encoders), "Encoder list not properly initialized")
         self.assertEqual(True, self.encoder_manager.allow_truncating, "Truncating flag not properly initialized")
         self.assertEqual(True, self.encoder_manager.allow_padding, "Padding flag not properly initialized")
-
-    def test_to_yaml(self) -> None:
-        """Serialization to YAML."""
-
-        safe_representer = SafeRepresenter()
-        node = EncoderManager.to_yaml(safe_representer, self.encoder_manager)
-        self.assertEqual(node.value, 'null', "YAML serialization produced unexpected result")
-
-    def test_from_yaml(self) -> None:
-        """Recall from YAML dump."""
-        pass
 
     def test_modem(self) -> None:
         """Modem getter must return setter value."""
@@ -275,3 +265,11 @@ class TestEncoderManager(TestCase):
         data = self.encoder_manager.decode(code, len(expected_data))
         
         assert_array_equal(expected_data, data)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.fec.coding.EncoderManager.modem', new=PropertyMock) as modem:
+
+            modem.return_value = self.modem
+            test_yaml_roundtrip_serialization(self, self.encoder_manager)

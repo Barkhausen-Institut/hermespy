@@ -9,16 +9,13 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Optional
 
-
-from hermespy.core.random_node import RandomNode
-from hermespy.core.signal_model import Signal
-
+from hermespy.core import RandomNode, Serializable, Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -27,11 +24,9 @@ __status__ = "Prototype"
 class Noise(RandomNode):
     """Noise modeling base class."""
 
-    __power: float       # Power of the added noise
+    __power: float  # Power of the added noise
 
-    def __init__(self,
-                 power: float = 0.,
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, power: float = 0.0, seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -43,9 +38,7 @@ class Noise(RandomNode):
         RandomNode.__init__(self, seed=seed)
 
     @abstractmethod
-    def add(self,
-            signal: Signal,
-            power: Optional[float] = None) -> None:
+    def add(self, signal: Signal, power: Optional[float] = None) -> None:
         """Add noise to a signal model.
 
         Args:
@@ -56,7 +49,7 @@ class Noise(RandomNode):
             power (float, optional)
                 Power of the added noise.
         """
-        ...
+        ...  # pragma no cover
 
     @property
     def power(self) -> float:
@@ -78,19 +71,19 @@ class Noise(RandomNode):
     def power(self, value: float) -> None:
         """Set power of the added noise."""
 
-        if value < 0.:
-            raise ValueError(
-                "Additive white Gaussian noise power must be greater or equal to zero")
+        if value < 0.0:
+            raise ValueError("Additive white Gaussian noise power must be greater or equal to zero")
 
         self.__power = value
 
 
-class AWGN(Noise):
+class AWGN(Serializable, Noise):
     """Additive White Gaussian Noise."""
 
-    def __init__(self,
-                 power: float = 0.,
-                 seed: Optional[int] = None) -> None:
+    yaml_tag = "AWGN"
+    property_blacklist = {"random_mother"}
+
+    def __init__(self, power: float = 0.0, seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -100,12 +93,9 @@ class AWGN(Noise):
 
         Noise.__init__(self, power=power, seed=seed)
 
-    def add(self,
-            signal: Signal,
-            power: Optional[float] = None) -> None:
+    def add(self, signal: Signal, power: Optional[float] = None) -> None:
 
         power = self.power if power is None else power
 
-        signal.samples += (self._rng.normal(0, power ** .5, signal.samples.shape) +
-                           1j * self._rng.normal(0, power ** .5, signal.samples.shape)) / 2 ** .5
+        signal.samples += (self._rng.normal(0, power**0.5, signal.samples.shape) + 1j * self._rng.normal(0, power**0.5, signal.samples.shape)) / 2**0.5
         signal.noise_power += power

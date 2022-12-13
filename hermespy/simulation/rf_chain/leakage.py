@@ -15,7 +15,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -25,8 +25,7 @@ class Leakage(Serializable, ABC):
     """Leakage model between transmit and receive hardware chains."""
 
     @abstractmethod
-    def transmit(self,
-                 transmission: Signal) -> Signal:
+    def transmit(self, transmission: Signal) -> Signal:
         """Model a leaking transmission.
 
         Args:
@@ -44,8 +43,7 @@ class Leakage(Serializable, ABC):
         return transmission
 
     @abstractmethod
-    def receive(self,
-                reception: Signal) -> Signal:
+    def receive(self, reception: Signal) -> Signal:
         """Model a leaking reception.
 
         Args:

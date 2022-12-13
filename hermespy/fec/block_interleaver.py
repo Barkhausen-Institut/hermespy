@@ -23,7 +23,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -55,14 +55,12 @@ class BlockInterleaver(Encoder, Serializable):
     describes the block interleaving scheme.
     """
 
-    yaml_tag = 'BlockInterleaver'
-    __block_size: int           # The number of bits the interleaver operates on
+    yaml_tag = "BlockInterleaver"
+    __block_size: int  # The number of bits the interleaver operates on
     # The number of sub-blocks the interleaver divides `__block_size` in
     __interleave_blocks: int
 
-    def __init__(self,
-                 block_size: int,
-                 interleave_blocks: int) -> None:
+    def __init__(self, block_size: int, interleave_blocks: int) -> None:
         """
         Args:
 
@@ -84,8 +82,7 @@ class BlockInterleaver(Encoder, Serializable):
         self.__interleave_blocks = interleave_blocks
 
         if self.block_size % self.interleave_blocks != 0:
-            raise ValueError(
-                "The block size must be an integer multiple of the number of interleave blocks")
+            raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
 
     @classmethod
     def to_yaml(cls: Type[BlockInterleaver], representer: SafeRepresenter, node: BlockInterleaver) -> MappingNode:
@@ -106,10 +103,7 @@ class BlockInterleaver(Encoder, Serializable):
         :meta private:
         """
 
-        state = {
-            "block_size": node.block_size,
-            "interleave_blocks": node.interleave_blocks
-        }
+        state = {"block_size": node.block_size, "interleave_blocks": node.interleave_blocks}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
@@ -197,8 +191,7 @@ class BlockInterleaver(Encoder, Serializable):
     def interleave_blocks(self, num_blocks: int) -> None:
 
         if num_blocks < 1:
-            raise ValueError(
-                "The number of interleaved sections must be at least one")
+            raise ValueError("The number of interleaved sections must be at least one")
 
         self.__interleave_blocks = num_blocks
 

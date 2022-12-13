@@ -7,16 +7,17 @@ without in-depth Python knowledge, instead the simulator parameters are configur
 convenient YAML-style files.
 
 In order to run any given example, please follow the :doc:`installation instructions</installation>`
-in order to install the HermesPy suite on your system.
-Afterwards, copy and save any given example configuration code to a text-file on your system.
+to install the HermesPy suite on your system.
+Afterwards, copy and save any given example configuration code to a text-file on your system's drive.
 The simulation can now be launched by entering
 
 .. code-block:: bash
 
-   hermes text-file
+   hermes /path/to/downloaded/text-file
 
 in your command line, provided the environment hermes was installed in is activated.
-The following example scenarios are currently implemented:
+The following example scenarios configurations are currently provided,
+giving new users a starting point to define their own scenarios:
 
 .. toctree::
    :maxdepth: 2
@@ -30,3 +31,5 @@ The following example scenarios are currently implemented:
    ofdm_5g
    ofdm_single_carrier
    operator_separation
+   uhd
+   audio

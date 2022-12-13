@@ -18,7 +18,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Tobias Kronauer"
 __email__ = "tobias.kronaue@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -59,40 +59,31 @@ class TheoreticalResults:
         """
 
         # Generate theory callback axes
-        self.__waveform_generators = [
-            ChirpFSKWaveform, FilteredSingleCarrierWaveform]
+        self.__waveform_generators = [ChirpFSKWaveform, FilteredSingleCarrierWaveform]
         self.__channels = [MultipathFadingChannel, Channel]
 
         # Generate theory callback lookup table
-        self.__theory_grid = np.array([[self.__default_theory for _ in self.__channels]
-                                      for _ in self.__waveform_generators])
+        self.__theory_grid = np.array([[self.__default_theory for _ in self.__channels] for _ in self.__waveform_generators])
 
         # Insert theoretically computable configurations
         self.__theory_grid[0, 1] = TheoreticalResults.__theory_chirpfsk_channel
-        self.__theory_grid[1,
-                           0] = TheoreticalResults.__theory_pskquam_stochastic
+        self.__theory_grid[1, 0] = TheoreticalResults.__theory_pskquam_stochastic
         self.__theory_grid[1, 1] = TheoreticalResults.__theory_pskquam_channel
 
     def theory(self, scenario: Scenario, snrs: np.ndarray) -> np.ndarray:
 
-        theoretical_results = np.empty(
-            (scenario.num_transmitters, scenario.num_receivers), dtype=object)
+        theoretical_results = np.empty((scenario.num_transmitters, scenario.num_receivers), dtype=object)
 
         channels = scenario.channels
 
         for tx_id, transmitter in enumerate(scenario.transmitters):
             for rx_id, receiver in enumerate(scenario.receivers):
 
-                theoretical_results[tx_id, rx_id] = self.theoretical_results(transmitter, receiver,
-                                                                             channels[tx_id, rx_id], snrs)
+                theoretical_results[tx_id, rx_id] = self.theoretical_results(transmitter, receiver, channels[tx_id, rx_id], snrs)
 
         return theoretical_results
 
-    def theoretical_results(self,
-                            transmitter: Transmitter,
-                            receiver: Receiver,
-                            channel: Channel,
-                            snrs: np.ndarray) -> Optional[Dict[str, Any]]:
+    def theoretical_results(self, transmitter: Transmitter, receiver: Receiver, channel: Channel, snrs: np.ndarray) -> Optional[Dict[str, Any]]:
 
         # ToDo: Fix
         return None
@@ -129,10 +120,7 @@ class TheoreticalResults:
         return None
 
     @staticmethod
-    def __theory_pskquam_channel(transmitter: Transmitter,
-                                 receiver: Receiver,
-                                 channel: Channel,
-                                 snrs: np.ndarray) -> Optional[Dict[str, Any]]:
+    def __theory_pskquam_channel(transmitter: Transmitter, receiver: Receiver, channel: Channel, snrs: np.ndarray) -> Optional[Dict[str, Any]]:
 
         bits_in_frame = receiver.num_data_bits_per_frame
         modulation_order = receiver.waveform_generator.modulation_order
@@ -146,29 +134,21 @@ class TheoreticalResults:
 
         # M-PSK
         elif modulation_order == 8:
-            ber = (2 * stats.norm.sf(np.sqrt(2 * bits_per_symbol * snrs) *
-                                     np.sin(np.pi / modulation_order)) / bits_per_symbol)
+            ber = 2 * stats.norm.sf(np.sqrt(2 * bits_per_symbol * snrs) * np.sin(np.pi / modulation_order)) / bits_per_symbol
 
         # M-QAM
         elif modulation_order in [16, 64, 256]:
-            ser = 4 * (np.sqrt(modulation_order) - 1) / np.sqrt(modulation_order) * \
-                stats.norm.sf(np.sqrt(3 * bits_per_symbol /
-                              (modulation_order - 1) * snrs))
+            ser = 4 * (np.sqrt(modulation_order) - 1) / np.sqrt(modulation_order) * stats.norm.sf(np.sqrt(3 * bits_per_symbol / (modulation_order - 1) * snrs))
             ber = ser / bits_per_symbol
 
         else:
             return None
 
         fer = 1 - (1 - ber) ** bits_in_frame
-        return {'ber': ber,
-                'fer': fer,
-                'notes': 'AWGN channel'}
+        return {"ber": ber, "fer": fer, "notes": "AWGN channel"}
 
     @staticmethod
-    def __theory_pskquam_stochastic(transmitter: Transmitter,
-                                    receiver: Receiver,
-                                    channel: MultipathFadingChannel,
-                                    snrs: np.ndarray) -> Optional[Dict[str, Any]]:
+    def __theory_pskquam_stochastic(transmitter: Transmitter, receiver: Receiver, channel: MultipathFadingChannel, snrs: np.ndarray) -> Optional[Dict[str, Any]]:
 
         if channel.delays.size != 1 or channel.rice_factors[0] != 0:
             return None
@@ -179,7 +159,7 @@ class TheoreticalResults:
         if modulation_order == 2:
 
             alpha = 1
-            beta = 2.
+            beta = 2.0
 
         # M-PSK
         elif modulation_order in [4, 8]:
@@ -190,24 +170,19 @@ class TheoreticalResults:
         # M-QAM
         elif modulation_order in [16, 64, 256]:
 
-            alpha = 4 * (np.sqrt(modulation_order) - 1) / \
-                np.sqrt(modulation_order)
+            alpha = 4 * (np.sqrt(modulation_order) - 1) / np.sqrt(modulation_order)
             beta = 3 / (modulation_order - 1)
 
         else:
             return None
 
-        ser = alpha / 2 * \
-            (1 - np.sqrt(beta * snrs / 2 / (1 + beta * snrs / 2)))
+        ser = alpha / 2 * (1 - np.sqrt(beta * snrs / 2 / (1 + beta * snrs / 2)))
         ber = ser / np.log2(modulation_order)
 
-        return {'ser': ser, 'ber': ber, 'notes': 'Rayleigh channel'}
+        return {"ser": ser, "ber": ber, "notes": "Rayleigh channel"}
 
     @staticmethod
-    def __theory_chirpfsk_channel(transmitter: Transmitter,
-                                  receiver: Receiver,
-                                  channel: Channel,
-                                  ebn0_linear: np.ndarray) -> Optional[Dict[str, Any]]:
+    def __theory_chirpfsk_channel(transmitter: Transmitter, receiver: Receiver, channel: Channel, ebn0_linear: np.ndarray) -> Optional[Dict[str, Any]]:
 
         mod_order = receiver.waveform_generator.modulation_order
 
@@ -220,16 +195,14 @@ class TheoreticalResults:
         # calculate BER according do Proakis, Salehi, Digital
         # Communications, 5th edition, Section 4.5, Equations 44 and 47
         ser = np.zeros(len(ebn0_linear))  # symbol error rate
-        for n in range(2, mod_order+1):
-            ser += (-1)**n / n * exp(- (n - 1) * n_bits / n *
-                                     ebn0_linear) * comb(mod_order - 1, n - 1)
+        for n in range(2, mod_order + 1):
+            ser += (-1) ** n / n * exp(-(n - 1) * n_bits / n * ebn0_linear) * comb(mod_order - 1, n - 1)
 
         # Bit error rate
-        ber = 2 ** (n_bits - 1) / (2 ** n_bits - 1) * ser
+        ber = 2 ** (n_bits - 1) / (2**n_bits - 1) * ser
         fer = 1 - (1 - ser) ** receiver.waveform_generator.num_data_chirps
 
-        return {'ber': ber, 'fer': fer,
-                'notes': 'AWGN channel, non-coherent detection, orthogonal modulation'}
+        return {"ber": ber, "fer": fer, "notes": "AWGN channel, non-coherent detection, orthogonal modulation"}
 
     @staticmethod
     def plot_theory_chirpfsk(modulation_orders: np.ndarray, ebn0: np.ndarray) -> None:
@@ -241,8 +214,7 @@ class TheoreticalResults:
         """
 
         fig, axes = plt.subplots()
-        fig.suptitle(
-            "Error Probability Orthogonal Signaling, Noncoherent Detection")
+        fig.suptitle("Error Probability Orthogonal Signaling, Noncoherent Detection")
 
         ebn0_linear = 10 ** (ebn0 / 10)
 
@@ -251,26 +223,22 @@ class TheoreticalResults:
             n_bits = np.log2(mod_order)  # Number of bits per symbol
 
             ser = np.zeros(len(ebn0_linear))  # symbol error rate
-            for n in range(2, mod_order+1):
-                ser += (-1)**n / n * exp(- (n - 1) * n_bits / n *
-                                         ebn0_linear) * comb(mod_order - 1, n - 1)
+            for n in range(2, mod_order + 1):
+                ser += (-1) ** n / n * exp(-(n - 1) * n_bits / n * ebn0_linear) * comb(mod_order - 1, n - 1)
 
             # Bit error rate
-            ber = 2 ** (n_bits - 1) / (2 ** n_bits - 1) * ser
+            ber = 2 ** (n_bits - 1) / (2**n_bits - 1) * ser
 
             axes.plot(ebn0, ber, label="M = {}".format(mod_order))
 
-        axes.set_yscale('log')
-        axes.set(xlabel='SNR [dB]')
-        axes.set(ylabel='Probability of Bit Error')
+        axes.set_yscale("log")
+        axes.set(xlabel="SNR [dB]")
+        axes.set(ylabel="Probability of Bit Error")
         axes.grid()
         axes.legend()
 
     @staticmethod
-    def __theory_ofdm_channel(transmitter: Transmitter,
-                              receiver: Receiver,
-                              channel: Channel,
-                              snrs: np.ndarray) -> Optional[Dict[str, Any]]:
+    def __theory_ofdm_channel(transmitter: Transmitter, receiver: Receiver, channel: Channel, snrs: np.ndarray) -> Optional[Dict[str, Any]]:
 
         # TODO: Re-implement for new OFDM model
         return None

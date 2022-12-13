@@ -6,45 +6,41 @@ Correlation-Based Waveform Synchronization
 """
 
 from __future__ import annotations
-from typing import Any, Generic, List, Type, TypeVar
+from typing import Any, Generic, List, TypeVar
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter
 from scipy.signal import correlate, find_peaks
 
+from hermespy.core import Serializable
 from .waveform_generator import PilotWaveformGenerator, Synchronization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-PGT = TypeVar('PGT', bound=PilotWaveformGenerator)
+PGT = TypeVar("PGT", bound=PilotWaveformGenerator)
 """Type of pilot-generating waveforms."""
 
 
-class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
+class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializable):
     """Correlation-based clock synchronization for arbitrary communication waveforms.
 
     The implemented algorithm is equivalent to :cite:p:`1976:knapp` without pre-filtering.
     """
 
-    yaml_tag = u'PilotCorrelation'
+    yaml_tag = "PilotCorrelation"
     """YAML serialization tag."""
 
-    __threshold: float          # Correlation threshold at which a pilot signal is detected
-    __guard_ratio: float        # Guard ratio of frame duration
+    __threshold: float  # Correlation threshold at which a pilot signal is detected
+    __guard_ratio: float  # Guard ratio of frame duration
 
-    def __init__(self,
-                 threshold: float = 0.9,
-                 guard_ratio: float = 0.8,
-                 *args: Any,
-                 **kwargs: Any) -> None:
+    def __init__(self, threshold: float = 0.9, guard_ratio: float = 0.8, *args: Any, **kwargs: Any) -> None:
         """
         Args:
 
@@ -80,9 +76,8 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
     def threshold(self, value: float):
         """Set correlation threshold at which a pilot signal is detected."""
 
-        if value < 0. or value > 1.:
-            raise ValueError(
-                "Synchronization threshold must be between zero and one.")
+        if value < 0.0 or value > 1.0:
+            raise ValueError("Synchronization threshold must be between zero and one.")
 
         self.__threshold = value
 
@@ -106,9 +101,8 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
     def guard_ratio(self, value: float):
         """Set correlation guard ratio at which a pilot signal is detected."""
 
-        if value < 0. or value > 1.:
-            raise ValueError(
-                "Synchronization guard ratio must be between zero and one.")
+        if value < 0.0 or value > 1.0:
+            raise ValueError("Synchronization guard ratio must be between zero and one.")
 
         self.__guard_ratio = value
 
@@ -123,22 +117,18 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:
-            raise RuntimeError(
-                "No pilot sequence configured, time-domain correlation synchronization impossible")
+            raise RuntimeError("No pilot sequence configured, time-domain correlation synchronization impossible")
 
         # Compute the correlation between each signal stream and the pilot sequence, sum up as a result
-        correlation = np.zeros(len(pilot_sequence) +
-                               signal.shape[1] - 1, dtype=float)
+        correlation = np.zeros(len(pilot_sequence) + signal.shape[1] - 1, dtype=float)
         for stream in signal:
-            correlation += abs(correlate(stream, pilot_sequence,
-                               mode='full', method='fft'))
+            correlation += abs(correlate(stream, pilot_sequence, mode="full", method="fft"))
 
         correlation /= correlation.max()  # Normalize correlation
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
         frame_length = self.waveform_generator.samples_in_frame
-        pilot_indices, _ = find_peaks(
-            abs(correlation), height=.9, distance=int(.8 * frame_length))
+        pilot_indices, _ = find_peaks(abs(correlation), height=0.9, distance=int(0.8 * frame_length))
 
         # Abort if no pilot section has been detected
         if len(pilot_indices) < 1:
@@ -150,31 +140,6 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
 
         # Correct infeasible pilot index choices
         pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
-        pilot_indices = np.where(pilot_indices > (
-            signal.shape[1] - frame_length), abs(signal.shape[1] - frame_length), pilot_indices)
+        pilot_indices = np.where(pilot_indices > (signal.shape[1] - frame_length), abs(signal.shape[1] - frame_length), pilot_indices)
 
         return pilot_indices.tolist()
-
-    @classmethod
-    def to_yaml(cls: Type[CorrelationSynchronization], representer: SafeRepresenter, node: CorrelationSynchronization) -> CorrelationSynchronization:
-        """Serialize an `CorrelationSynchronization` object to YAML.
-
-        Args:
-            representer (CorrelationSynchronization):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (CorrelationSynchronization):
-                The `CorrelationSynchronization` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node
-        """
-
-        state = {
-            'threshold': cls.threshold,
-            'guard_ratio': cls.guard_ratio,
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, state)
