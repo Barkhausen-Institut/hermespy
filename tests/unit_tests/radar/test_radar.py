@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -11,12 +11,14 @@ from scipy.constants import speed_of_light
 from hermespy.core import Signal, SNRType, IdealAntenna, UniformArray
 from hermespy.radar import Radar, RadarCube, RadarWaveform, PointDetection
 from hermespy.simulation import SimulatedDevice
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -237,6 +239,10 @@ class TestRadar(TestCase):
         beamformer = Mock()
         beamformer.num_transmit_input_streams = 1
         beamformer.num_transmit_output_streams = 2
+        
+        ping = self.waveform.ping()
+        ping.samples = np.repeat(ping.samples, 2, 0)
+        beamformer.transmit.return_value = ping
         self.radar.transmit_beamformer = beamformer
 
         _ = self.radar.transmit()
@@ -291,8 +297,8 @@ class TestRadar(TestCase):
     def test_receive_beamformer_input_streams_validation(self) -> None:
         """Receiving should raise a RuntimeError if the configured beamformer is not supported"""
 
-        tranmsission = self.radar.transmit()
-        self.radar.cache_reception(tranmsission.signal)
+        transmission = self.radar.transmit()
+        self.radar.cache_reception(transmission.signal)
 
         beamformer = Mock()
         beamformer.num_receive_output_streams = 1
@@ -320,3 +326,14 @@ class TestRadar(TestCase):
 
         reception = self.radar.receive()
         self.assertEqual(1, len(reception.cube.angle_bins))
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.radar.Radar.property_blacklist', new_callable=PropertyMock) as blacklist, \
+             patch('hermespy.radar.Radar.waveform', new_callable=PropertyMock) as waveform:
+                 
+            blacklist.return_value = {'slot', 'waveform', 'receive_beamformer'}
+            waveform.return_value = self.waveform
+
+            test_yaml_roundtrip_serialization(self, self.radar)

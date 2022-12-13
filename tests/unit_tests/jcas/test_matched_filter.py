@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
+from unittest.mock import patch, PropertyMock
 
 import numpy as np
 
@@ -8,12 +9,13 @@ from hermespy.core import Signal
 from hermespy.modem import Symbols, WaveformGenerator
 from hermespy.simulation import SimulatedDevice
 from hermespy.jcas import MatchedFilterJcas
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -134,3 +136,16 @@ class TestMatchedFilterJoint(TestCase):
             
         with self.assertRaises(ValueError):
             self.joint.range_resolution = 0.
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        with patch('hermespy.jcas.matched_filtering.MatchedFilterJcas.property_blacklist',
+                   new_callable=PropertyMock) as blacklist, \
+             patch('hermespy.jcas.matched_filtering.MatchedFilterJcas.waveform_generator',
+                   new_callable=PropertyMock) as waveform_generator:
+            
+            blacklist.return_value = {'slot', 'waveform_generator'}
+            waveform_generator.return_value = self.waveform
+            
+            test_yaml_roundtrip_serialization(self, self.joint)

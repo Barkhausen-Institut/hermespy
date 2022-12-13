@@ -15,7 +15,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -24,7 +24,7 @@ __status__ = "Prototype"
 class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
     """Scenario of USRPs running the UHD server application."""
 
-    yaml_tag = u'UsrpSystem'
+    yaml_tag = "UsrpSystem"
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
@@ -60,8 +60,7 @@ class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
         """
 
         usrp_uid = str(self.num_devices)
-        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(
-            usrp_uid, device.ip, device._client)
+        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(usrp_uid, device.ip, device._client)
         PhysicalScenario.add_device(self, device)
 
     def _trigger(self) -> None:

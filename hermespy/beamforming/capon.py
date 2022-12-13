@@ -7,19 +7,20 @@ Capon Beamformer
 
 import numpy as np
 
+from hermespy.core import Serializable
 from .beamformer import ReceiveBeamformer
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class CaponBeamformer(ReceiveBeamformer):
+class CaponBeamformer(Serializable, ReceiveBeamformer):
     """Implementation of the Capon beamformer, also referred to as Minimum Variance Distortionless Response (MVDR).
 
     The Capon\ :footcite:`1969:capon` beamformer estimates the power :math:`\\hat{P}` received from a direction :math:`(\\theta, \\phi)`, where :math:`\\theta` is the zenith and :math:`\\phi`  is the azimuth angle of interest in spherical coordinates, respectively.
@@ -52,9 +53,9 @@ class CaponBeamformer(ReceiveBeamformer):
     is the implemented beamforming equation.
     """
 
-    def __init__(self,
-                 loading: float = 0.,
-                 **kwargs) -> None:
+    yaml_tag = "Capon"
+
+    def __init__(self, loading: float = 0.0, **kwargs) -> None:
         """
         Args:
 
@@ -98,32 +99,24 @@ class CaponBeamformer(ReceiveBeamformer):
     @loading.setter
     def loading(self, value: float) -> None:
 
-        if value < 0.:
-            raise ValueError(
-                "Diagonal loading coefficient must be greater or equal to zero")
+        if value < 0.0:
+            raise ValueError("Diagonal loading coefficient must be greater or equal to zero")
 
         self.__loading = value
 
-    def _decode(self,
-                samples: np.ndarray,
-                carrier_frequency: float,
-                angles: np.ndarray) -> np.ndarray:
+    def _decode(self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray) -> np.ndarray:
 
         # Compute the inverse sample covariance matrix R
         # In order to avoid algebra exceptions on decodings without noise, we will resort to the pseudo-inverse,
         # which is able to invert rank-deficient matrices
-        sample_covariance = np.linalg.inv(
-            samples @ samples.T.conj() + self.loading * np.eye(samples.shape[0]))
+        sample_covariance = np.linalg.inv(samples @ samples.T.conj() + self.loading * np.eye(samples.shape[0]))
 
         # Query the sensor array response vectors for the angles of interest and create a dictionary from it
-        dictionary = np.empty(
-            (self.num_receive_input_streams, angles.shape[0]), dtype=complex)
+        dictionary = np.empty((self.num_receive_input_streams, angles.shape[0]), dtype=complex)
         for d, focus in enumerate(angles):
 
-            array_response = self.operator.device.antennas.spherical_response(
-                carrier_frequency, focus[0, 0], focus[0, 1])
-            dictionary[:, d] = sample_covariance @ array_response / \
-                (array_response.T.conj() @ sample_covariance @ array_response)
+            array_response = self.operator.device.antennas.spherical_response(carrier_frequency, focus[0, 0], focus[0, 1])
+            dictionary[:, d] = sample_covariance @ array_response / (array_response.T.conj() @ sample_covariance @ array_response)
 
         beamformed_samples = dictionary.T.conj() @ samples
         return beamformed_samples[:, np.newaxis, :]

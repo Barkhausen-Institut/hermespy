@@ -76,7 +76,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -101,7 +101,7 @@ class Encoder(ABC, Serializable):
 
     """
 
-    yaml_tag: Optional[str] = u'Encoder'
+    yaml_tag: Optional[str] = "Encoder"
     """YAML serialization tag."""
 
     enabled: bool
@@ -244,7 +244,7 @@ class Encoder(ABC, Serializable):
 class EncoderManager(RandomNode, Serializable):
     """Configuration managing a channel coding pipeline."""
 
-    yaml_tag: str = u'Encoding'
+    yaml_tag: str = "Encoding"
 
     allow_padding: bool
     """Tolerate padding of data bit blocks during encoding."""
@@ -257,10 +257,7 @@ class EncoderManager(RandomNode, Serializable):
     # List of encoding steps defining the internal pipeline configuration
     _encoders: List[Encoder]
 
-    def __init__(self,
-                 modem: BaseModem = None,
-                 allow_padding: bool = True,
-                 allow_truncating: bool = True) -> None:
+    def __init__(self, modem: BaseModem = None, allow_padding: bool = True, allow_truncating: bool = True) -> None:
         """
         Args:
 
@@ -307,9 +304,6 @@ class EncoderManager(RandomNode, Serializable):
         :meta private:
         """
 
-        if len(node.encoders) < 1:
-            return representer.represent_none(None)
-
         return representer.represent_sequence(cls.yaml_tag, node.encoders)
 
     @classmethod
@@ -351,8 +345,7 @@ class EncoderManager(RandomNode, Serializable):
         """
 
         if self.__modem is None:
-            raise RuntimeError(
-                "Trying to access the modem of a floating encoding configuration")
+            raise RuntimeError("Trying to access the modem of a floating encoding configuration")
 
         return self.__modem
 
@@ -371,7 +364,7 @@ class EncoderManager(RandomNode, Serializable):
         """
 
         # Register this encoding configuration to the encoder
-        if hasattr(encoder, 'manager'):
+        if hasattr(encoder, "manager"):
             encoder.manager = self
 
         # Add new encoder to the queue of configured encoders
@@ -391,9 +384,7 @@ class EncoderManager(RandomNode, Serializable):
 
         return self._encoders
 
-    def encode(self,
-               data_bits: np.ndarray,
-               num_code_bits: Optional[int] = None) -> np.ndarray:
+    def encode(self, data_bits: np.ndarray, num_code_bits: Optional[int] = None) -> np.ndarray:
         """Encode a stream of data bits to a stream of code bits.
 
         By default, the input `data_bits` will be padded with zeros
@@ -437,52 +428,42 @@ class EncoderManager(RandomNode, Serializable):
 
             # Pad if allowed
             data_state = code_state
-            code_state = np.empty(num_blocks*code_block_size, dtype=bool)
+            code_state = np.empty(num_blocks * code_block_size, dtype=bool)
 
             required_num_data_bits = num_blocks * data_block_size
             if len(data_state) < required_num_data_bits:
 
                 if not self.allow_padding:
-                    raise RuntimeError(
-                        'Encoding would require padding, but padding is not allowed')
+                    raise RuntimeError("Encoding would require padding, but padding is not allowed")
 
                 num_padding_bits = required_num_data_bits - len(data_state)
-                data_state = np.append(data_state, self._rng.integers(
-                    0, 2, num_padding_bits, dtype=bool))
+                data_state = np.append(data_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool))
 
             # Encode all blocks sequentially
             for block_idx in range(num_blocks):
 
-                encoded_block = encoder.encode(
-                    data_state[block_idx*data_block_size:(1+block_idx)*data_block_size])
-                code_state[block_idx *
-                           code_block_size:(1+block_idx)*code_block_size] = encoded_block
+                encoded_block = encoder.encode(data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size])
+                code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size] = encoded_block
 
         if num_code_bits and len(code_state) > num_code_bits:
-            raise RuntimeError(
-                'Too many input bits provided for encoding, truncating would destroy information')
+            raise RuntimeError("Too many input bits provided for encoding, truncating would destroy information")
 
         if num_code_bits and len(code_state) < num_code_bits:
 
             if not self.allow_padding:
-                raise RuntimeError(
-                    'Encoding would require padding, but padding is not allowed')
+                raise RuntimeError("Encoding would require padding, but padding is not allowed")
 
             num_padding_bits = num_code_bits - len(code_state)
 
             if num_padding_bits >= self.code_block_size:
-                raise ValueError(
-                    'Insufficient number of input blocks provided for encoding')
+                raise ValueError("Insufficient number of input blocks provided for encoding")
 
-            code_state = np.append(code_state, self._rng.integers(
-                0, 2, num_padding_bits, dtype=bool))
+            code_state = np.append(code_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool))
 
         # Return resulting overall code
         return code_state
 
-    def decode(self,
-               encoded_bits: np.ndarray,
-               num_data_bits: Optional[int] = None) -> np.ndarray:
+    def decode(self, encoded_bits: np.ndarray, num_data_bits: Optional[int] = None) -> np.ndarray:
         """Decode a stream of code bits to a stream of plain data bits.
 
         By default, decoding `encoded_bits` may ignore bits in order
@@ -521,12 +502,10 @@ class EncoderManager(RandomNode, Serializable):
             num_data_bits_full = num_blocks * bit_block_size
 
             if num_data_bits > num_data_bits_full:
-                raise RuntimeError("The requested number of data bits is larger than number "
-                                   "of bits recovered by decoding")
+                raise RuntimeError("The requested number of data bits is larger than number " "of bits recovered by decoding")
 
             if not self.allow_truncating and num_data_bits != num_data_bits_full:
-                raise RuntimeError(
-                    "Data truncating is required but not allowed")
+                raise RuntimeError("Data truncating is required but not allowed")
 
         else:
             num_data_bits = num_blocks * bit_block_size
@@ -547,13 +526,12 @@ class EncoderManager(RandomNode, Serializable):
             num_blocks = int(len(data_state) / code_block_size)
 
             # Truncate if allowed, otherwise throw an exception
-            code_state = data_state[:num_blocks*code_block_size]
-            data_state = np.empty(num_blocks*data_block_size, dtype=bool)
+            code_state = data_state[: num_blocks * code_block_size]
+            data_state = np.empty(num_blocks * data_block_size, dtype=bool)
 
             # Decode all blocks sequentially
             for block_idx in range(num_blocks):
-                data_state[block_idx*data_block_size:(1+block_idx)*data_block_size] = encoder.decode(
-                    code_state[block_idx*code_block_size:(1+block_idx)*code_block_size])
+                data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size] = encoder.decode(code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size])
 
         # Return resulting data
         return data_state[:num_data_bits]
@@ -587,7 +565,7 @@ class EncoderManager(RandomNode, Serializable):
                 num_bits = encoder.code_block_size
                 break
 
-        for encoder in self._encoders[encoder_index+1:]:
+        for encoder in self._encoders[encoder_index + 1 :]:
 
             if not encoder.enabled:
                 continue

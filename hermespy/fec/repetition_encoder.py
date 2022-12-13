@@ -21,7 +21,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -64,13 +64,11 @@ class RepetitionEncoder(Encoder, Serializable):
     assigning input bits to output bits by index.
     """
 
-    yaml_tag = 'Repetition'
+    yaml_tag = "Repetition"
     __bit_block_size: int
     __repetitions: int
 
-    def __init__(self,
-                 bit_block_size: int = 32,
-                 repetitions: int = 3) -> None:
+    def __init__(self, bit_block_size: int = 32, repetitions: int = 3) -> None:
         """
         Args:
             bit_block_size (int, optional): The number of input bits per data block.
@@ -110,8 +108,7 @@ class RepetitionEncoder(Encoder, Serializable):
     def bit_block_size(self, num_bits: int) -> None:
 
         if num_bits < 1:
-            raise ValueError(
-                "Number data bits must be greater or equal to one")
+            raise ValueError("Number data bits must be greater or equal to one")
 
         self.__bit_block_size = num_bits
 
@@ -142,8 +139,7 @@ class RepetitionEncoder(Encoder, Serializable):
     def repetitions(self, num: int) -> None:
 
         if num < 1:
-            raise ValueError(
-                "The number of data bit repetitions must be at least one")
+            raise ValueError("The number of data bit repetitions must be at least one")
 
         if num % 2 == 0:
             raise ValueError("Repetitions must be an uneven integer")
@@ -171,10 +167,7 @@ class RepetitionEncoder(Encoder, Serializable):
         :meta private:
         """
 
-        state = {
-            "bit_block_size": node.bit_block_size,
-            "repetitions": node.repetitions
-        }
+        state = {"bit_block_size": node.bit_block_size, "repetitions": node.repetitions}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 

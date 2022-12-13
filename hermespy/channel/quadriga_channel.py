@@ -17,7 +17,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -29,16 +29,13 @@ class QuadrigaChannel(Channel):
     Maps the output of the QuadrigaInterface to fit into hermes software architecture.
     """
 
-    yaml_tag = u'Quadriga'
+    yaml_tag = "Quadriga"
     yaml_matrix = True
 
     # Reference to the interface class
     __interface: Optional[QuadrigaInterface]
 
-    def __init__(self,
-                 *args,
-                 interface: Optional[QuadrigaInterface] = None,
-                 **kwargs) -> None:
+    def __init__(self, *args, interface: Optional[QuadrigaInterface] = None, **kwargs) -> None:
         """
         Args:
 
@@ -74,21 +71,14 @@ class QuadrigaChannel(Channel):
 
         return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface
 
-    def impulse_response(self,
-                         num_samples: int,
-                         sampling_rate: float) -> np.ndarray:
+    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
 
         # Query the quadriga interface for a new impulse response
-        path_gains, path_delays = self.__quadriga_interface.get_impulse_response(
-            self)
+        path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
 
-        max_delay_in_samples = np.around(
-            np.max(path_delays) * sampling_rate).astype(int)
+        max_delay_in_samples = np.around(np.max(path_delays) * sampling_rate).astype(int)
 
-        impulse_response = np.zeros((num_samples,
-                                     self.receiver.num_antennas,
-                                     self.transmitter.num_antennas,
-                                     max_delay_in_samples + 1), dtype=complex)
+        impulse_response = np.zeros((num_samples, self.receiver.num_antennas, self.transmitter.num_antennas, max_delay_in_samples + 1), dtype=complex)
 
         for tx_antenna in range(self.transmitter.num_antennas):
             for rx_antenna in range(self.receiver.num_antennas):
@@ -97,15 +87,11 @@ class QuadrigaChannel(Channel):
                 cir_txa_rxa = path_gains[rx_antenna, tx_antenna, :]
                 tau_txa_rxa = path_delays[rx_antenna, tx_antenna, :]
 
-                time_delay_in_samples_vec = np.around(
-                    tau_txa_rxa * sampling_rate).astype(int)
+                time_delay_in_samples_vec = np.around(tau_txa_rxa * sampling_rate).astype(int)
 
-                for delay_idx, delay_in_samples in enumerate(
-                        time_delay_in_samples_vec):
+                for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
 
-                    impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += (
-                        cir_txa_rxa[delay_idx]
-                    )
+                    impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += cir_txa_rxa[delay_idx]
         return impulse_response
 
     @classmethod
@@ -125,12 +111,7 @@ class QuadrigaChannel(Channel):
                 The serialized YAML node.
         """
 
-        state = {
-            'active': node.active,
-            'gain': node.gain,
-            'sync_offset_low': node.sync_offset_low,
-            'sync_offset_high': node.sync_offset_high
-        }
+        state = {"active": node.active, "gain": node.gain, "sync_offset_low": node.sync_offset_low, "sync_offset_high": node.sync_offset_high}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 

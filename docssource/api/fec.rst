@@ -1,6 +1,6 @@
-=======================
-Error Correction Module
-=======================
+================
+Error Correction
+================
 
 The forward error correction coding module provides a pipeline description
 of operations on the bit level of communication signal processing chains.
