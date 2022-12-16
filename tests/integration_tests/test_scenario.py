@@ -92,3 +92,6 @@ class TestRecordReplay(TestCase):
                                           replayed_drop.device_transmissions[d].signal.samples)
                 assert_array_almost_equal(expected_drop.device_receptions[d].signal.samples,
                                           replayed_drop.device_receptions[d].signal.samples)
+
+        self.scenario.stop()
+        replay_scenario.stop()

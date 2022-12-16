@@ -7,7 +7,7 @@ Simulation
 
 from __future__ import annotations
 from time import time
-from typing import Any, Callable, Dict, List, Type, Optional, Union
+from typing import Any, Callable, Dict, List, Set, Type, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,17 +30,27 @@ __status__ = "Prototype"
 
 
 class SimulationScenario(Scenario[SimulatedDevice]):
+    
+    yaml_tag = u'SimulationScenario'
+    
+    @classmethod
+    def _arg_signature(cls: SimulationScenario) -> Set[str]:
+        
+        base_signature = Scenario._arg_signature()
+        base_signature.update({'seed', 'devices'})
+        
+        return base_signature
 
     __channels: np.ndarray  # Channel matrix linking devices
     __snr: Optional[float]  # Signal to noise ratio at the receiver-side
     __snr_type: SNRType  # Global global type of signal to noise ratio.
 
-    def __init__(self, seed: Optional[int] = None, snr: float = float("inf"), snr_type: Union[str, SNRType] = SNRType.PN0) -> None:
+    def __init__(self,
+                 snr: float = float("inf"),
+                 snr_type: Union[str, SNRType] = SNRType.PN0,
+                 *args, **kwargs) -> None:
         """
         Args:
-
-            seed (int, optional):
-                Random seed used to initialize the pseudo-random number generator.
 
             snr (float, optional):
                 The assumed linear signal to noise ratio.
@@ -51,7 +61,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 By default, signal power to noise power is assumed.
         """
 
-        Scenario.__init__(self, seed=seed)
+        Scenario.__init__(self, *args, **kwargs)
         self.snr = snr
         self.snr_type = snr_type
         self.__channels = np.ndarray((0, 0), dtype=object)

@@ -59,6 +59,7 @@ class Scenario(Serializable, ABC, RandomNode, Generic[DeviceType]):
     """
     
     yaml_tag = u'Scenario'
+    serialized_attributes = {'devices'}
 
     __mode: ScenarioMode  # Current scenario operating mode
     # Registered devices within this scenario.
