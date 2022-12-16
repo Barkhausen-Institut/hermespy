@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 import ray
 
+from hermespy.simulation import SimulatedDevice
 from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -25,8 +26,8 @@ class TestSimulationScenario(TestCase):
     def setUp(self) -> None:
 
         self.seed = 0
-        self.device_alpha = Mock()
-        self.device_beta = Mock()
+        self.device_alpha = SimulatedDevice()
+        self.device_beta = SimulatedDevice()
 
         self.scenario = SimulationScenario(seed=self.seed)
         self.scenario.add_device(self.device_alpha)
@@ -130,6 +131,11 @@ class TestSimulationScenario(TestCase):
             # String set
             self.scenario.snr_type = str(snr_type.name)
             self.assertEqual(snr_type, self.scenario.snr_type)
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.scenario)
 
 
 class TestSimulationRunner(TestCase):
