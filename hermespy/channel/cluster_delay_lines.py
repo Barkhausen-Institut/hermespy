@@ -42,7 +42,7 @@ from scipy.constants import pi, speed_of_light
 from hermespy.core.factory import Serializable
 from hermespy.tools.math import db2lin, rotation_matrix
 from hermespy.tools.resampling import delay_resampling_matrix
-from .channel import Channel
+from .channel import Channel, ChannelRealization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -703,7 +703,9 @@ class ClusterDelayLineBase(Channel):
 
         return ray_zenith
 
-    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
+    def realize(self,
+                num_samples: int,
+                sampling_rate: float) -> ChannelRealization:
 
         center_frequency = self.transmitter.carrier_frequency
 
@@ -838,7 +840,7 @@ class ClusterDelayLineBase(Channel):
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples).flatten()
             impulse_response += np.multiply.outer(coefficients, resampling_matrix)
 
-        return impulse_response
+        return ChannelRealization(self, impulse_response)
 
     @property
     def _center_frequency(self) -> float:

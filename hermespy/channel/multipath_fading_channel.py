@@ -17,7 +17,7 @@ from scipy.constants import pi
 from hermespy.core import Serializable
 from hermespy.core.device import Device
 from hermespy.tools import delay_resampling_matrix
-from .channel import Channel
+from .channel import Channel, ChannelRealization
 
 if TYPE_CHECKING:
     from hermespy.simulation import SimulatedDevice  # pragma no cover
@@ -453,7 +453,9 @@ class MultipathFadingChannel(Channel, Serializable):
 
         self.__los_angle = angle
 
-    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
+    def realize(self,
+                num_samples: int,
+                sampling_rate: float) -> ChannelRealization:
 
         max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
         timestamps = np.arange(num_samples) / sampling_rate
@@ -488,7 +490,7 @@ class MultipathFadingChannel(Channel, Serializable):
             beta_covariance = self.beta_correlation.covariance
             impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
 
-        return self.gain * impulse_response
+        return ChannelRealization(self, self.gain * impulse_response)
 
     def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
         """Generate a single fading sequence tap.

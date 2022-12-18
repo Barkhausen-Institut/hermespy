@@ -75,7 +75,7 @@ __status__ = "Prototype"
 
 
 class RadarEvaluator(Evaluator, ABC):
-    """Base class for evaluating communication processes between two modems."""
+    """Base class for evaluating sensing performance."""
 
     __receiving_radar: Radar  # Handle to the radar receiver
     __radar_channel: RadarChannel  # Handle to the radar channel
@@ -84,11 +84,8 @@ class RadarEvaluator(Evaluator, ABC):
         """
         Args:
 
-            receiving_radar (Radar):
-                Modem detecting radar in case of a target.
-
-            radar_channel (RadarChannel):
-                Radar channel containing a desired target.
+            receiving_radar (Radar): nRadar under test.
+            radar_channel (RadarChannel): Radar channel modeling a desired target.
 
         """
 
@@ -302,52 +299,59 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
     yaml_tag = "ROC"
     """YAML serialization tag."""
 
-    receiving_radar: Radar
-    # handle to a radar receiver with only noise (H0)
-    __receiving_radar_null_hypothesis: Radar
     __num_thresholds: int
 
-    def __init__(self, receiving_radar: Radar, receiving_radar_null_hypothesis: Radar, radar_channel: RadarChannel = None, num_thresholds=101) -> None:
+    def __init__(self,
+                 radar: Radar,
+                 radar_channel: RadarChannel,
+                 num_thresholds=101) -> None:
         """
         Args:
 
-            receiving_radar (Radar):
-                Modem detecting radar in case of a target.
+            radar (Radar):
+                Radar under test.
 
-            receiving_radar_null_hypothesis(Radar):
-                Radar receiver containing only noise.
-
-            radar_channel (RadarChannel, Optional):
+            radar_channel (RadarChannel):
                 Radar channel containing a desired target.
                 If a radar channel is given, then the ROC is calculated for the bin that contains the target, or else
                 a detection is performed if the output of any bin is above the threshold.
 
-            num_thresholds (int, Optional)
+            num_thresholds (int, optional)
                 Number of different thresholds to be considered in ROC curve
         """
 
-        RadarEvaluator.__init__(self, receiving_radar=receiving_radar, radar_channel=radar_channel)
+        # Make sure the channel belongs to a simulation scenario
+        if self.radar_channel.transmitter is None or self.radar_channel.receiver is None:
+            raise ValueError("ROC evaluator must be defined within a simulation scenario")
 
-        self.__receiving_radar_null_hypothesis = receiving_radar_null_hypothesis
+        RadarEvaluator.__init__(self, receiving_radar=radar, radar_channel=radar_channel)
         self.__num_thresholds = num_thresholds
 
     def evaluate(self) -> RocEvaluation:
+
+        # Retrieve the positive detection hypothesis radar cube
+        radar_cube_h1 = self.receiving_radar.cube
+
+        # Generate the null hypothesis detection radar cube by re-running the radar detection routine
+        null_hypothesis_channel_realization = self.radar_channel.null_hypothesis()
+
+        transmission = self.radar_channel.transmitter.recent_transmission
+        reception = self.radar_channel.receiver.recent_reception
+
+        if transmission is None or reception is None:
+            raise RuntimeError("Channel devices lack cached transmission / reception information")
+
+        null_hypothesis_propagation = self.radar_channel.Propagate(transmission.signal, null_hypothesis_channel_realization)
+        null_hypothesis_reception = self.radar_channel.rece
+
+        
+
 
         # Retrieve transmitted and received bits
         radar_cube_h0 = self.receiving_radar_null_hypothesis.cube
         radar_cube_h1 = self.receiving_radar.cube
 
         return RocEvaluation(radar_cube_h0, radar_cube_h1)
-
-    @property
-    def receiving_radar_null_hypothesis(self) -> Radar:
-        """Radar detector with only noise
-
-        Returns:
-            Modem: Handle to the receiving modem, with only noise at receiver.
-        """
-
-        return self.__receiving_radar_null_hypothesis
 
     @property
     def abbreviation(self) -> str:

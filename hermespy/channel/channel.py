@@ -17,7 +17,7 @@ from hermespy.core.factory import Serializable
 from hermespy.core.channel_state_information import ChannelStateFormat
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice
+    from hermespy.simulation import SimulatedDevice, SimulationScenario
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -91,9 +91,11 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
     __active: bool
     __transmitter: Optional[SimulatedDevice]
     __receiver: Optional[SimulatedDevice]
+    __scenario: SimulationScenario
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
+    __last_realization: Optional[ChannelRealizationType]
     impulse_response_interpolation: bool
 
     def __init__(self, transmitter: Optional[SimulatedDevice] = None, receiver: Optional[SimulatedDevice] = None, devices: Optional[Tuple[SimulatedDevice, SimulatedDevice]] = None, active: Optional[bool] = None, gain: Optional[float] = None, sync_offset_low: float = 0.0, sync_offset_high: float = 0.0, impulse_response_interpolation: bool = True, seed: Optional[int] = None) -> None:
@@ -143,7 +145,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         self.__scenario = None
         self.sync_offset_low = sync_offset_low
         self.sync_offset_high = sync_offset_high
-        self.recent_response = None
+        self.__last_realization = None
         self.impulse_response_interpolation = impulse_response_interpolation
 
         if transmitter is not None:
@@ -231,6 +233,23 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         #    raise RuntimeError("Overwriting a receiver configuration is not supported")
 
         self.__receiver = value
+
+    @property
+    def scenario(self) -> Optional[SimulationScenario]:
+        """Simulation scenario the channel belongs to.
+
+        Returns:
+            Handle to the :class:`Scenario <hermespy.simulation.simulation.SimulationScenario>`.
+            `None` if the channel is considered floating.
+        """
+
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, value: SimulationScenario) -> None:
+
+        self.__scenario = value
+        self.random_mother = self
 
     @property
     def sync_offset_low(self) -> float:
@@ -443,9 +462,11 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
         # Compute the propgated signal samples for both channel directions
-        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), realization.state, sync_offset) for signal in forwards]
-        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), realization.state.transpose((1, 0, 2, 3)), sync_offset) for signal in backwards]
+        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), realization, PropagationDirection.FORWARDS, sync_offset) for signal in forwards]
+        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), realization, PropagationDirection.BACKWARDS, sync_offset) for signal in backwards]
 
+        # Cache the realization and return results
+        self.__last_realization = realization
         return forwards_receptions, backwards_receptions, realization
 
     @staticmethod
@@ -453,7 +474,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
                   realization: ChannelRealization,
                   direction: PropagationDirection = PropagationDirection.FORWARDS,
                   delay: float = 0.) -> Signal:
-        """Propagate a single signal model given a specific channel impulse response.
+        """Propagate a single signal model given a specific channel realzation.
 
         Args:
 
@@ -465,6 +486,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
             direction (PropagationDirection, optional):
                 Direction in which the propagation should be assumed.
+                :class:`PropagationDirection.FORWARDS` by default.
 
             delay (float, optional):
                 Additional delays, for example synchronization offsets.
@@ -538,6 +560,19 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         # Return resulting impulse response
         return ChannelRealization(self, impulse_responses)
+
+    @property
+    def last_propagation_realization(self) -> Optional[ChannelRealizationType]:
+        """The last realization used for channel propagation.
+
+        Updated every time :meth:`.propagate` is called.
+
+        Returns:
+            The channel realization.
+            `None` if :meth:`.propagate` has not been called yet.
+        """
+
+        return self.__last_realization
 
     @property
     def min_sampling_rate(self) -> float:
