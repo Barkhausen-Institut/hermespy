@@ -235,7 +235,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             # Set proper receiver and transmitter fields
             channel.transmitter = self.devices[transmitter]
             channel.receiver = self.devices[receiver]
-            channel.random_mother = self
+            channel.scenario = self
 
     @dimension
     def snr(self) -> Optional[float]:

@@ -13,7 +13,7 @@ from scipy.constants import pi
 
 from hermespy.core import Device, RandomNode, Scenario, Serializable, Signal, Receiver, SNRType
 from .analog_digital_converter import AnalogDigitalConverter
-from .noise import Noise, AWGN
+from .noise import Noise, NoiseRealization, AWGN
 from .rf_chain.rf_chain import RfChain
 from .isolation import Isolation, PerfectIsolation
 from .coupling import Coupling, PerfectCoupling
@@ -26,6 +26,57 @@ __version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class SimulatedDeviceTransmission(object):
+    """Information transmitted by a simulated device"""
+
+    __signal: Union[Signal, List[Signal]]
+    __operator_separation: bool
+
+    def __init__(self,
+                 signal: Union[Signal, List[Signal]],
+                 operator_separation: bool) -> None:
+        """
+        Args:
+
+
+        """
+        self.__signal = signal
+        self.__operator_separation = operator_separation
+
+
+    @property
+    def signal(self) -> Union[Signal, List[Signal]]:
+
+        return self.__signal
+
+    @property
+    def operator_separation(self) -> bool:
+
+        return self.__operator_separation
+
+
+class SimulatedDeviceReception(object):
+    """Information received by a simulated device"""
+
+    __impinging_signals: np.ndarray
+    __operator_separation: bool
+    __noise_realization: NoiseRealization
+
+    def __init__(self,
+                 impinging_signals: np.ndarray,
+                 operator_separation: bool,
+                 noise_realization: NoiseRealization) -> None:
+        """
+        Args:
+
+
+        """
+
+        self.__impinging_signals = impinging_signals
+        self.__operator_separation = operator_separation
+        self.__noise_realization = noise_realization
 
 
 class SimulatedDevice(Device, RandomNode, Serializable):
@@ -55,6 +106,11 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
     __coupling: Coupling
     """Model of the device's antenna array mutual coupling"""
+
+    __recent_transmission: Optional[SimulatedDeviceTransmission]
+    """Recent transmission of the device. None if nothing has been transmitted"""
+
+    __recent_reception: Optional[SimulatedDeviceReception]
 
     __noise: Noise  # Model of the hardware noise
     # Scenario this device is attached to
@@ -105,6 +161,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         # Init base class
         Device.__init__(self, *args, **kwargs)
+
+        self.__recent_transmission = None
 
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
@@ -290,7 +348,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         self.__operator_separation = value
 
-    def transmit(self, clear_cache: bool = True) -> List[Signal]:
+    def transmit(self, clear_cache: bool = True) -> SimulatedDeviceTransmission:
 
         # Collect transmissions
         operator_signals = [t.signal for t in self.transmitters.get_transmissions(clear_cache)] if self.operator_separation else [Device.transmit(self, clear_cache)]
@@ -311,8 +369,22 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             transmitted_signals.append(coupled_signal)
 
-        # Return result
-        return transmitted_signals
+        # Cache and return resulting transmission
+        device_transmission = SimulatedDeviceTransmission(transmitted_signals, self.operator_separation)
+        
+        self.__recent_transmission = device_transmission
+        return device_transmission
+
+    @property
+    def recent_transmission(self) -> Optional[SimulatedDeviceTransmission]:
+        """Recent transmission of the simulated device.
+
+        Returns:
+            The recent device transmission.
+            `None` if the deice has not yet transmitted.
+        """
+
+        return self.__recent_transmission
 
     @property
     def snr(self) -> float:
@@ -333,7 +405,11 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         self.__snr = value
 
-    def receive(self, device_signals: Union[List[Signal], Signal, np.ndarray], snr: Optional[float] = None, snr_type: SNRType = SNRType.PN0, leaking_signal: Optional[Signal] = None) -> Signal:
+    def receive(self,
+                device_signals: Union[List[Signal], Signal, np.ndarray],
+                snr: Optional[float] = None,
+                snr_type: SNRType = SNRType.PN0,
+                leaking_signal: Optional[Signal] = None) -> SimulatedDeviceReception:
         """Receive signals at this device.
 
         Args:
@@ -404,13 +480,13 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             modeled_leakage = self.__isolation.leak(leaking_signal)
             coupled_signal.superimpose(modeled_leakage)
 
-        # Model radio-frequency chain during transmission
+        # Model radio-frequency chain during reception
         baseband_signal = self.rf_chain.receive(coupled_signal)
 
-        # Model adc conversion during transmission
+        # Model adc conversion during reception
         baseband_signal = self.adc.convert(baseband_signal)
 
-        # After rf chain transmission, the signal is considered to be converted to base-band
+        # After rf chain reception, the signal is considered to be converted to base-band
         # However, for now, carrier frequency information will remain to enable beamforming
 
         # Cache received signal at receiver slots
@@ -438,9 +514,25 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             # Add noise to the received signal according to the selected ratio
             noise_power = receiver.noise_power(snr, snr_type)
-            self.__noise.add(receiver_signal, noise_power)
+            noise_realization = self.__noise.realize(receiver_signal, noise_power)
+            
+            noisy_signal = self.__noise.add(receiver_signal, noise_power)
 
             # Cache reception
             receiver.cache_reception(receiver_signal, reference_csi)
 
-        return baseband_signal
+        device_reception = SimulatedDeviceReception()
+
+        self.__recent_reception = device_reception
+        return device_reception
+
+    @property
+    def recent_reception(self) -> Optional[SimulatedDeviceReception]:
+        """Recent reception of the simulated device.
+
+        Returns:
+            The recent device reception.
+            `None` if the deice has not yet received.
+        """
+
+        return self.__recent_reception
