@@ -27,7 +27,7 @@ simulation.scenario.set_channel(device, device, channel)
 
 simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, channel))
 simulation.new_dimension('snr', np.linspace(1e-2, 1, 10, endpoint=True))
-simulation.num_samples = 1000
+simulation.num_samples = 10000
 
 result = simulation.run()
 result.plot()
