@@ -342,5 +342,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
             if realization is None:
                 raise RuntimeError("Channel has not been propagated over yet")
 
-        impulse_response = np.zeros(realization.state.shape.transpose((2, 0, 1, 3)), dtype=complex)
-        return RadarChannelRealization(self, impulse_response, impulse_response.ground_truth)
+        dims = realization.state.shape
+        impulse_response = np.zeros((dims[2], dims[0], dims[1], dims[3]), dtype=complex)
+        return RadarChannelRealization(self, impulse_response, realization.ground_truth)

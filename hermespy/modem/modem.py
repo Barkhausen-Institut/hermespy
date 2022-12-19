@@ -200,9 +200,8 @@ from typing import List, Set, Tuple, Type, Optional
 import numpy as np
 from h5py import Group
 
-from hermespy.channel import ChannelStateInformation
 from hermespy.fec import EncoderManager
-from hermespy.core import RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
+from hermespy.core import ChannelStateInformation, RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
 from hermespy.precoding import SymbolPrecoding, ReceiveStreamCoding, TransmitStreamCoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import Symbols

@@ -33,7 +33,7 @@ class RandomRealization(object):
         """
         
         # Draw a random signed integer from the node's random number generator
-        self.__seed = random_node._rng.integers(~maxsize, maxsize)
+        self.__seed = random_node._rng.integers(0, maxsize)
         
     @property
     def seed(self) -> int:
@@ -117,7 +117,7 @@ class RandomNode(object):
         return self.__seed
 
     @seed.setter
-    def seed(self, value: Optional[int]) -> None:
+    def seed(self, value: int) -> None:
 
         self.__seed = value
         self.__generator = default_rng(value)
