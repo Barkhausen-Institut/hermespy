@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import ray
+# ray.init(local_mode=True, num_cpus=1)
 
 from hermespy.channel import RadarChannel
 from hermespy.simulation import Simulation
@@ -27,7 +28,7 @@ simulation.scenario.set_channel(device, device, channel)
 
 simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, channel))
 simulation.new_dimension('snr', np.linspace(1e-2, 1, 10, endpoint=True))
-simulation.num_samples = 10000
+simulation.num_samples = 5000
 
 result = simulation.run()
 result.plot()

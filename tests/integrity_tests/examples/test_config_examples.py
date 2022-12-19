@@ -67,7 +67,7 @@ class TestConfigurationExamples(TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
 
-        # Shut down ray 
+        # Shut down ray
         ray.shutdown()
 
     def __run_yaml(self, path: str) -> None:

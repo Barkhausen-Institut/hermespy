@@ -770,7 +770,7 @@ class BaseModem(RandomNode, ABC):
         return None
 
 
-class TransmittingModem(Serializable, BaseModem, Transmitter):
+class TransmittingModem(BaseModem, Transmitter, Serializable):
     """Representation of a wireless modem exclusively transmitting."""
 
     yaml_tag = "TxModem"
@@ -979,7 +979,7 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
         return transmission
 
 
-class ReceivingModem(Serializable, BaseModem, Receiver):
+class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
     """Representation of a wireless modem exclusively receiving."""
 
     yaml_tag = "RxModem"
@@ -987,16 +987,10 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
     # MIMO stream configuration during signal rececption
     __receive_stream_coding: ReceiveStreamCoding
-    # Cache of recently received information
-    __cached_reception: Optional[CommunicationReception]
-    # Cache of the most recent channel state estimation
-    __cached_channel_state: Optional[ChannelStateInformation]
 
     def __init__(self, *args, **kwargs) -> None:
 
         self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
-        self.__cached_reception = None
-        self.__cached_channel_state = None
 
         BaseModem.__init__(self, *args, **kwargs)
         Receiver.__init__(self)
@@ -1088,16 +1082,11 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
         return bits
 
-    def receive(self) -> CommunicationReception:
+    def _receive(self,
+                 signal: Signal,
+                 csi: ChannelStateInformation) -> CommunicationReception:
 
-        # Abort if no reception has been submitted to the operator
-        if self.signal is None:
-
-            reception = CommunicationReception(Signal.empty(self.sampling_rate))
-            self.__cached_reception = reception
-
-            return reception
-
+        # Resample the signal to match the waveform's requirements
         signal = self.signal.resample(self.waveform_generator.sampling_rate)
 
         # Synchronize incoming signals
@@ -1146,22 +1135,7 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
         # Store the received information of all frames
         reception = CommunicationReception(signal=signal, frames=frames)
-        self.__cached_reception = reception
-
-        # Return reception processing result
         return reception
-
-    @property
-    def reception(self) -> Optional[CommunicationReception]:
-        """The most recently received information.
-
-        Returns:
-
-            A handle to the received information.
-            `None` if no information has been received yet.
-        """
-
-        return self.__cached_reception
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
