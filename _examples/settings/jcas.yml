@@ -104,6 +104,11 @@ Evaluators:
     tolerance: .01
     plot_scale: log
 
+  # Evaluate the radar detector operating characteristics
+  - !<ROC>
+
+    radar: *base_station_operator
+    radar_channel: *radar_channel
 
 # Simulation parameters
 num_samples: 100                   # Number of samples per simulation grid section
