@@ -339,28 +339,28 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         null_hypothesis_channel_realization = self.radar_channel.null_hypothesis()
 
         # Collect required information from the simulation
-        transmission = self.radar_channel.transmitter.transmission
-        reception = self.radar_channel.receiver.reception
+        device_transmission = self.radar_channel.transmitter.transmission
+        device_reception = self.radar_channel.receiver.reception
         device_index = self.radar_channel.scenario.device_index(self.receiving_radar.device)
         operator_index = self.receiving_radar.device.receivers.operator_index(self.receiving_radar)
 
-        if transmission is None or reception is None:
+        if device_transmission is None or device_reception is None:
             raise RuntimeError("Channel devices lack cached transmission / reception information")
 
         # Propagate again over the radar channel
-        null_hypothesis_propagation = self.radar_channel.Propagate(transmission.signal[0], null_hypothesis_channel_realization)
+        null_hypothesis_propagation = self.radar_channel.Propagate(device_transmission.signal[0], null_hypothesis_channel_realization)
         
         # Exchange the respective propagated signal
-        impinging_signals = reception.impinging_signals.copy()
+        impinging_signals = device_reception.impinging_signals.copy()
         impinging_signals[device_index] = ([null_hypothesis_propagation], null_hypothesis_channel_realization)
         
         # Receive again
-        null_hypothesis_device_reception = self.radar_channel.receiver.receive_from_realization(impinging_signals, reception, reception.leaking_signal, False)
-        null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], False)
+        null_hypothesis_device_reception = self.radar_channel.receiver.receive_from_realization(impinging_signals, device_reception, device_reception.leaking_signal, False)
+        null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], None, False)
 
         # Retrieve radar cubes for both hypothesis
         radar_cube_h0 = null_hypothesis_radar_reception.cube
-        radar_cube_h1 = self.receiving_radar.cube
+        radar_cube_h1 = self.receiving_radar.reception.cube
 
         # Return resulting evaluation
         return RocEvaluation(radar_cube_h0, radar_cube_h1)
@@ -460,6 +460,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         result = evaluator.generate_result(grid, artifacts)
         return result
 
+
 class RootMeanSquareArtifact(Artifact):
     """Artifact of a root mean square evaluation"""
 
@@ -521,8 +522,8 @@ class RootMeanSquareError(RadarEvaluator):
 
     def evaluate(self) -> Evaluation:
 
-        point_cloud = self.receiving_radar.cloud
-        ground_truth = self.radar_channel.ground_truth
+        point_cloud = self.receiving_radar.reception.cloud
+        ground_truth = self.radar_channel.realization.ground_truth
 
         return RootMeanSquareEvaluation(point_cloud, ground_truth)
 

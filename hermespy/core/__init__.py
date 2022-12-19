@@ -1,7 +1,7 @@
 from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .definitions import SNRType
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
-from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, DeviceReception, DeviceTransmission
+from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
@@ -44,6 +44,7 @@ __all__ = [
     "FloatingError",
     "Transmission",
     "Reception",
+    "ReceptionType",
     "DeviceReception",
     "DeviceTransmission",
     "Executable",

@@ -338,7 +338,8 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         # Assume the last channel propagation realization if the realization has not been specified
         if realization is None:
 
-            realization = self.last_propagation_realization
+            realization = self.realization
+            
             if realization is None:
                 raise RuntimeError("Channel has not been propagated over yet")
 

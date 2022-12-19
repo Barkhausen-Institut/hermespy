@@ -56,7 +56,7 @@ from typing import Optional
 import numpy as np
 
 from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
-from hermespy.core import DuplexOperator, Signal, Serializable, SNRType, Transmission, Reception
+from hermespy.core import ChannelStateInformation, DuplexOperator, Signal, Serializable, SNRType, Transmission, Reception, ReceptionType
 from .cube import RadarCube
 from .detection import RadarDetector, RadarPointCloud
 
@@ -172,7 +172,7 @@ class RadarReception(Reception, RadarCube):
         self.cloud = cloud
 
 
-class Radar(Serializable, DuplexOperator):
+class Radar(DuplexOperator[RadarReception], Serializable):
     """HermesPy representation of a mono-static radar sensing its environment."""
 
     yaml_tag = "Radar"
@@ -304,30 +304,6 @@ class Radar(Serializable, DuplexOperator):
 
         self.__detector = value
 
-    @property
-    def cloud(self) -> Optional[RadarPointCloud]:
-        """The resulting point cloud of the most recent reception.
-
-        Returns:
-
-            Point cloud object.
-            `None` if no detection algorithm was configured.
-        """
-
-        return self.__cloud
-
-    @property
-    def cube(self) -> Optional[RadarCube]:
-        """The resulting radar cube of the most recent reception.
-
-        Returns:
-
-           Radar cube object.
-            `None` if no detection algorithm was configured.
-        """
-
-        return self.__cube
-
     def transmit(self, duration: float = 0.0) -> RadarTransmission:
 
         if not self.__waveform:
@@ -366,9 +342,9 @@ class Radar(Serializable, DuplexOperator):
 
         return transmission
 
-    def receive(self,
-                signal: Optional[Signal] = None,
-                cache: bool = True) -> RadarReception:
+    def _receive(self,
+                 signal: Signal,
+                 _: ChannelStateInformation) -> RadarReception:
 
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
@@ -376,16 +352,8 @@ class Radar(Serializable, DuplexOperator):
         if not self.device:
             raise RuntimeError("Error attempting to receive over a floating radar operator")
 
-        # Retrieve signal from receiver slot
-        if signal is None:
-            
-            if self.signal is None:
-                raise RuntimeError("No signal cached at receiver")
-            
-            signal = self.signal.resample(self.__waveform.sampling_rate)
-            
-        else:
-            signal = signal.resample(self.__waveform.sampling_rate)
+        # Resample signal properly
+        signal = signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:
@@ -428,12 +396,4 @@ class Radar(Serializable, DuplexOperator):
         cloud = None if self.detector is None else self.detector.detect(cube)
 
         reception = RadarReception(signal, cube, cloud)
-        if cache:
-            self._cache_reception(reception)
-
         return reception
-
-    def _cache_reception(self, reception: RadarReception) -> None:
-
-        self.__cube = reception.cube
-        self.__cloud = reception.cloud

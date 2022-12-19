@@ -562,7 +562,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         return ChannelRealization(self, impulse_responses)
 
     @property
-    def last_propagation_realization(self) -> Optional[ChannelRealizationType]:
+    def realization(self) -> Optional[ChannelRealizationType]:
         """The last realization used for channel propagation.
 
         Updated every time :meth:`.propagate` is called.

@@ -39,6 +39,7 @@ Channels:
     devices: [*terminal, *terminal]
     gain: 0.
 
+
 # Operators transmitting or receiving signals over the devices
 Operators:
 
@@ -109,6 +110,7 @@ Evaluators:
 
     radar: *base_station_operator
     radar_channel: *radar_channel
+
 
 # Simulation parameters
 num_samples: 100                   # Number of samples per simulation grid section
