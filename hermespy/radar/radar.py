@@ -366,7 +366,9 @@ class Radar(Serializable, DuplexOperator):
 
         return transmission
 
-    def receive(self) -> RadarReception:
+    def receive(self,
+                signal: Optional[Signal] = None,
+                cache: bool = True) -> RadarReception:
 
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
@@ -375,7 +377,15 @@ class Radar(Serializable, DuplexOperator):
             raise RuntimeError("Error attempting to receive over a floating radar operator")
 
         # Retrieve signal from receiver slot
-        signal: Signal = self.signal.resample(self.__waveform.sampling_rate)
+        if signal is None:
+            
+            if self.signal is None:
+                raise RuntimeError("No signal cached at receiver")
+            
+            signal = self.signal.resample(self.__waveform.sampling_rate)
+            
+        else:
+            signal = signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:
@@ -418,7 +428,8 @@ class Radar(Serializable, DuplexOperator):
         cloud = None if self.detector is None else self.detector.detect(cube)
 
         reception = RadarReception(signal, cube, cloud)
-        self._cache_reception(reception)
+        if cache:
+            self._cache_reception(reception)
 
         return reception
 

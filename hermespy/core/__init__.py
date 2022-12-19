@@ -6,7 +6,7 @@ from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
 from .monte_carlo import Artifact, ArtifactTemplate, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
-from .random_node import RandomNode
+from .random_node import RandomRealization, RandomNode
 from .drop import Drop
 from .scenario import Scenario, ScenarioMode
 from .signal_model import Signal
@@ -68,8 +68,8 @@ __all__ = [
     "Serializable",
     "SerializableEnum",
     "HDFSerializable",
-    "RandomNode",
+    "RandomRealization", "RandomNode",
     "Drop",
-    "Scenario",
+    "Scenario", "ScenarioMode",
     "Signal",
 ]

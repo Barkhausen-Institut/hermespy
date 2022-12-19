@@ -56,7 +56,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import uniform
 
-from hermespy.core import Executable, Sceario, ScenarioMode, Serializable
+from hermespy.core import Executable, Scenario, ScenarioMode, Serializable
 from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult, ProcessedScalarEvaluationResult
 from hermespy.radar import Radar
 from hermespy.channel.radar_channel import RadarChannel
@@ -87,8 +87,14 @@ class RadarEvaluator(Evaluator, ABC):
             receiving_radar (Radar): nRadar under test.
             radar_channel (RadarChannel): Radar channel modeling a desired target.
 
+        Raises:
+        
+            ValueError: If the receiving radar is not an operator of the radar_channel receiver.
         """
-
+        
+        if receiving_radar not in radar_channel.receiver.receivers:
+            raise ValueError("The radar operator is not a receiver within the radar channel receiving device")
+            
         self.__receiving_radar = receiving_radar
         self.__radar_channel = radar_channel
 
@@ -335,22 +341,31 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         # Generate the null hypothesis detection radar cube by re-running the radar detection routine
         null_hypothesis_channel_realization = self.radar_channel.null_hypothesis()
 
+        # Collect required information from the simulation
         transmission = self.radar_channel.transmitter.recent_transmission
         reception = self.radar_channel.receiver.recent_reception
+        device_index = self.radar_channel.scenario.device_index(self.receiving_radar.device)
+        operator_index = self.receiving_radar.device.receivers.operator_index(self.receiving_radar)
 
         if transmission is None or reception is None:
             raise RuntimeError("Channel devices lack cached transmission / reception information")
 
+        # Propagate again over the radar channel
         null_hypothesis_propagation = self.radar_channel.Propagate(transmission.signal, null_hypothesis_channel_realization)
-        null_hypothesis_reception = self.radar_channel.rece
-
         
+        # Exchange the respective propagated signal
+        impinging_signals = reception.impinging_signals.copy()
+        impinging_signals[device_index] = [null_hypothesis_propagation]
+        
+        # Receive again
+        null_hypothesis_device_reception = self.radar_channel.receiver.receive_from_realization(impinging_signals, reception, reception.leaking_signal)
+        null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index], False)
 
-
-        # Retrieve transmitted and received bits
-        radar_cube_h0 = self.receiving_radar_null_hypothesis.cube
+        # Retrieve radar cubes for both hypothesis
+        radar_cube_h0 = null_hypothesis_radar_reception.cube
         radar_cube_h1 = self.receiving_radar.cube
 
+        # Return resulting evaluation
         return RocEvaluation(radar_cube_h0, radar_cube_h1)
 
     @property

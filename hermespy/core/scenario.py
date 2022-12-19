@@ -150,6 +150,25 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         """
 
         return device in self.__devices
+    
+    def device_index(self, device: DeviceType) -> int:
+        """Index of device
+        
+        Args:
+        
+            device (DeviceType): Device for which to lookup the index.
+            
+        Returns: The device index.
+        
+        Raises:
+
+            ValueError: If `device` is not registered in this scenario.
+        """
+        
+        if not self.device_registered(device):
+            raise ValueError("Device not registered")
+        
+        return self.devices.index(device)
 
     @property
     def devices(self) -> List[DeviceType]:

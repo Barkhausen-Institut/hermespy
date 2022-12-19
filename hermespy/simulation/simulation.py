@@ -432,7 +432,7 @@ class SimulationRunner(object):
             raise ValueError(f"Number of arriving signals ({len(propagation_matrix)}) does not match " f"the number of receiving devices ({self.__scenario.num_devices})")
 
         for device, impinging_signals in zip(self.__scenario.devices, propagation_matrix):
-            _ = device.receive(device_signals=impinging_signals, snr=self.__scenario.snr, snr_type=self.__scenario.snr_type)
+            _ = device.receive(impinging_signals=impinging_signals, snr=self.__scenario.snr, snr_type=self.__scenario.snr_type)
 
     def receive_operators(self) -> None:
         """Demodulate base-band signal models received by all registered receiving operators."""
