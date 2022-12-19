@@ -6,7 +6,7 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 import numpy as np
 from scipy.constants import pi
@@ -57,26 +57,93 @@ class SimulatedDeviceTransmission(object):
         return self.__operator_separation
 
 
-class SimulatedDeviceReception(object):
+class SimulatedDeviceReceiveRealization(object):
+    """Realization of a simulated device reception random process"""
+    
+    __operator_separation: bool
+    __noise_realizations: List[NoiseRealization]
+    
+    def __init__(self,
+                 operator_separation: bool,
+                 noise_realizations: List[NoiseRealization]) -> None:
+        """
+        Args:
+        
+            operator_separation (bool): Is the operator separation flag enabled?
+            noise_realization (List[NoiseRealization]): Noise realizations for each receive operator.
+        """
+        
+        self.__operator_separation = operator_separation
+        self.__noise_realizations = noise_realizations
+    
+    @property
+    def operator_separation(self) -> bool:
+        """Is operator separation mode enabled?
+        
+        Returns: Boolean indicator.
+        """
+        
+        return self.__operator_separation
+    
+    @property
+    def noise_realizations(self) -> List[NoiseRealization]:
+        """Receive operator noise realizations.
+        
+        Returns: List of noise realizations corresponding to the number of registerd receive operators.
+        """
+        
+        return self.__noise_realizations
+
+
+class SimulatedDeviceReception(SimulatedDeviceReceiveRealization):
     """Information received by a simulated device"""
 
     __impinging_signals: np.ndarray
-    __operator_separation: bool
-    __noise_realization: NoiseRealization
+    __leaking_signal: Optional[Signal]
 
     def __init__(self,
                  impinging_signals: np.ndarray,
+                 leaking_signal: Signal,
                  operator_separation: bool,
-                 noise_realization: NoiseRealization) -> None:
+                 noise_realizations: List[NoiseRealization]) -> None:
         """
         Args:
 
-
+            impinging_signals (np.ndarray): Numpy vector containing lists of signals impinging onto the device.
+            leaking_signal (Optional[Signal]): Signal leaking from transmit to receive chains.
+            operator_separation (bool): Is the operator separation flag enabled?
+            noise_realization (List[NoiseRealization]): Noise realizations for each receive operator. 
         """
 
         self.__impinging_signals = impinging_signals
-        self.__operator_separation = operator_separation
-        self.__noise_realization = noise_realization
+        self.__leaking_signal = leaking_signal
+        
+        SimulatedDeviceReceiveRealization.__init__(self, operator_separation, noise_realizations)
+
+    @classmethod
+    def From_Realization(cls: Type[SimulatedDeviceReception],
+                         impinging_signals: np.ndarray,
+                         leaking_signal: Optional[Signal],
+                         realization: SimulatedDeviceReceiveRealization) -> SimulatedDeviceReception:
+        """Initialize a simulated device reception from its realization.
+        
+        Returns: Initialized object.
+        """
+        
+        return cls(impinging_signals,
+                   leaking_signal,
+                   realization.operator_separation,
+                   realization.noise_realizations)
+
+    @property
+    def impinging_signals(self) -> np.ndarray:
+        
+        return self.__impinging_signals
+    
+    @property
+    def leaking_signal(self) -> Optional[Signal]:
+        
+        return self.__leaking_signal
 
 
 class SimulatedDevice(Device, RandomNode, Serializable):
@@ -110,8 +177,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     __recent_transmission: Optional[SimulatedDeviceTransmission]
     """Recent transmission of the device. None if nothing has been transmitted"""
 
-    __recent_reception: Optional[SimulatedDeviceReception]
-
     __noise: Noise  # Model of the hardware noise
     # Scenario this device is attached to
     __scenario: Optional[Scenario]
@@ -121,6 +186,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     __carrier_frequency: float
     __velocity: np.ndarray  # Cartesian device velocity vector
     __operator_separation: bool
+    __realization: Optional[SimulatedDeviceReceiveRealization]
+    __reception: Optional[SimulatedDeviceReception]
 
     def __init__(self, scenario: Optional[Scenario] = None, rf_chain: Optional[RfChain] = None, adc: Optional[AnalogDigitalConverter] = None, isolation: Optional[Isolation] = None, coupling: Optional[Coupling] = None, sampling_rate: Optional[float] = None, carrier_frequency: float = 0.0, *args, **kwargs) -> None:
         """
@@ -175,6 +242,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.velocity = np.zeros(3, dtype=float)
+        self.__realization = None
+        self.__reception = None
 
     @property
     def scenario(self) -> Optional[Scenario]:
@@ -404,21 +473,39 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             raise ValueError("The linear signal to noise ratio must be greater than zero")
 
         self.__snr = value
-
-    def receive(self,
-                device_signals: Union[List[Signal], Signal, np.ndarray],
-                snr: Optional[float] = None,
-                snr_type: SNRType = SNRType.PN0,
-                leaking_signal: Optional[Signal] = None) -> SimulatedDeviceReception:
-        """Receive signals at this device.
+        
+    @property
+    def realization(self) -> Optional[SimulatedDeviceReceiveRealization]:
+        """Most recent random realization of a receive process.
+        
+        Updated during :meth:`.realize_reception`.
+        
+        Returns:
+            The realization.
+            `None` if :meth:`.realize_reception` has not been called yet.
+        """
+        
+        return self.__realization
+    
+    @property
+    def reception(self) -> Optional[SimulatedDeviceReception]:
+        """Most recent reception of this device.
+        
+        Updated during :meth:`.receive` and :meth:`.receive_from_realization`.
+        
+        Returns:
+            The reception.
+            `None` if :meth:`.receive` or :meth:`.receive_from_realization` has not been called yet.
+        """
+        
+        return self.__reception
+        
+    def realize_reception(self,
+                          snr: Optional[float] = None,
+                          snr_type: SNRType = SNRType.PN0) -> SimulatedDeviceReceiveRealization:
+        """Generate a random realization for receiving over the simulated device.
 
         Args:
-
-            device_signals (Union[List[Signal], Signal, np.ndarray]):
-                List of signal models arriving at the device.
-                May also be a two-dimensional numpy object array where the first dimension indicates the link
-                and the second dimension contains the transmitted signal as the first element and the link channel
-                as the second element.
 
             snr (float, optional):
                 Signal to noise power ratio.
@@ -427,15 +514,63 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             snr_type (SNRType, optional):
                 Type of signal to noise ratio.
 
+        Returns: The generated realization.
+        """
+        
+        # Generate noise realizations for each registered receive operator
+        noise_realizations = [self.noise.realize(r.noise_power(snr, snr_type)) for r in self.receivers]
+        
+        return SimulatedDeviceReceiveRealization(self.operator_separation,
+                                                 noise_realizations)
+
+    def receive_from_realization(self,
+                                 impinging_signals: Union[List[Signal], Signal, np.ndarray],
+                                 realization: SimulatedDeviceReceiveRealization,
+                                 leaking_signal: Optional[Signal] = None) -> SimulatedDeviceReception:
+        """Simulate a signal reception for this device model.
+
+        Args:
+        
+            impinging_signals (Union[List[Signal], Signal, np.ndarray]):
+                List of signal models arriving at the device.
+                May also be a two-dimensional numpy object array where the first dimension indicates the link
+                and the second dimension contains the transmitted signal as the first element and the link channel
+                as the second element.
+
+            realization (SimulatedDeviceRealization):
+                Random realization of the device reception process.
+
             leaking_signal(Signal, optional):
                 Signal leaking from transmit to receive chains.
+                If not specified, no leakage is considered during signal reception.
 
         Returns:
-
-            baseband_signal (Signal):
-                Baseband signal sampled after hardware-modeling.
+            SimulatedDeviceReception: _description_
+            
+        Raises:
+            
+            ValueError: If `device_signals` is constructed improperly.
         """
+        
+        # Transform signal argument to matrix argument
+        if isinstance(impinging_signals, Signal):
 
+            propagation_matrix = np.empty(1, dtype=object)
+            propagation_matrix[0] = ([impinging_signals], None)
+            impinging_signals = propagation_matrix
+
+        # Tranform list arguments to matrix arguments
+        elif isinstance(impinging_signals, list):
+
+            if isinstance(impinging_signals[0], Signal):
+                impinging_signals = np.array([(impinging_signals, None)], dtype=object)
+
+            elif isinstance(impinging_signals[0], tuple):
+                impinging_signals = np.array([impinging_signals], dtype=object)
+
+            else:
+                raise ValueError("Unsupported propagation matrix")
+            
         # Default to the device's configured SNR if no snr argument was provided
         snr = self.snr if snr is None else snr
 
@@ -443,26 +578,26 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas, num_samples=0, carrier_frequency=self.carrier_frequency)
 
         # Transform signal argument to matrix argument
-        if isinstance(device_signals, Signal):
+        if isinstance(impinging_signals, Signal):
 
             propagation_matrix = np.empty(1, dtype=object)
-            propagation_matrix[0] = ([device_signals], None)
-            device_signals = propagation_matrix
+            propagation_matrix[0] = ([impinging_signals], None)
+            impinging_signals = propagation_matrix
 
         # Tranform list arguments to matrix arguments
-        elif isinstance(device_signals, list):
+        elif isinstance(impinging_signals, list):
 
-            if isinstance(device_signals[0], Signal):
-                device_signals = np.array([(device_signals, None)], dtype=object)
+            if isinstance(impinging_signals[0], Signal):
+                impinging_signals = np.array([(impinging_signals, None)], dtype=object)
 
-            elif isinstance(device_signals[0], tuple):
-                device_signals = np.array([device_signals], dtype=object)
+            elif isinstance(impinging_signals[0], tuple):
+                impinging_signals = np.array([impinging_signals], dtype=object)
 
             else:
                 raise ValueError("Unsupported propagation matrix")
 
         # Superimpose receive signals
-        for signals, _ in device_signals:
+        for signals, _ in impinging_signals:
 
             if signals is not None:
                 for signal in signals:
@@ -491,18 +626,18 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         # Cache received signal at receiver slots
         receiver: Receiver
-        for receiver in self.receivers:
+        for receiver, noise_realization in zip(self.receivers, realization.noise_realizations):
 
             # Collect the reference channel if a reference transmitter has been specified
             if receiver.reference is not None and self.attached:
 
                 reference_device_idx = self.scenario.devices.index(receiver.reference)
-                reference_csi = device_signals[reference_device_idx][1] if isinstance(device_signals[reference_device_idx], (tuple, list, np.ndarray)) else None
+                reference_csi = impinging_signals[reference_device_idx][1] if isinstance(impinging_signals[reference_device_idx], (tuple, list, np.ndarray)) else None
 
                 if self.operator_separation:
 
                     reference_transmitter_idx = receiver.slot_index
-                    receiver_signal = device_signals[reference_device_idx][0][reference_transmitter_idx].copy()
+                    receiver_signal = impinging_signals[reference_device_idx][0][reference_transmitter_idx].copy()
 
                 else:
                     receiver_signal = baseband_signal.copy()
@@ -512,27 +647,55 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 reference_csi = None
                 receiver_signal = baseband_signal.copy()
 
-            # Add noise to the received signal according to the selected ratio
-            noise_power = receiver.noise_power(snr, snr_type)
-            noise_realization = self.__noise.realize(receiver_signal, noise_power)
-            
-            noisy_signal = self.__noise.add(receiver_signal, noise_power)
+            # Add noise to the received signal
+            noisy_signal = self.__noise.add(receiver_signal, noise_realization)
 
             # Cache reception
-            receiver.cache_reception(receiver_signal, reference_csi)
+            receiver.cache_reception(noisy_signal, reference_csi)
 
-        device_reception = SimulatedDeviceReception()
-
-        self.__recent_reception = device_reception
+        # Generate and cache recent reception
+        device_reception = SimulatedDeviceReception.From_Realization(impinging_signals, leaking_signal, realization)
+        self.__reception = device_reception
+        
+        # Return final result
         return device_reception
 
-    @property
-    def recent_reception(self) -> Optional[SimulatedDeviceReception]:
-        """Recent reception of the simulated device.
+    def receive(self,
+                impinging_signals: Union[List[Signal], Signal, np.ndarray],
+                snr: Optional[float] = None,
+                snr_type: SNRType = SNRType.PN0,
+                leaking_signal: Optional[Signal] = None) -> SimulatedDeviceReception:
+        """Receive signals at this device.
+
+        Args:
+
+            impinging_signals (Union[List[Signal], Signal, np.ndarray]):
+                List of signal models arriving at the device.
+                May also be a two-dimensional numpy object array where the first dimension indicates the link
+                and the second dimension contains the transmitted signal as the first element and the link channel
+                as the second element.
+
+            snr (float, optional):
+                Signal to noise power ratio.
+                Infinite by default, meaning no noise will be added to the received signals.
+
+            snr_type (SNRType, optional):
+                Type of signal to noise ratio.
+
+            leaking_signal(Signal, optional):
+                Signal leaking from transmit to receive chains.
 
         Returns:
-            The recent device reception.
-            `None` if the deice has not yet received.
-        """
 
-        return self.__recent_reception
+            baseband_signal (Signal):
+                Baseband signal sampled after hardware-modeling.
+        """
+        
+        # Realize the random process
+        realization = self.realize_reception(snr, snr_type)
+        
+        # Receive the signal
+        reception = self.receive_from_realization(impinging_signals, realization, leaking_signal)
+        
+        # Return result
+        return reception

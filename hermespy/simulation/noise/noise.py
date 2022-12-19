@@ -11,7 +11,7 @@ from typing import Generic, Optional, TypeVar
 
 import numpy as np
 
-from hermespy.core import RandomNode, Serializable, Signal
+from hermespy.core import RandomNode, RandomRealization, Serializable, Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -23,19 +23,23 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class NoiseRealization(object):
+class NoiseRealization(RandomRealization):
     """Realization of a noise model"""
 
     __power: float
 
-    def __init__(self, power: float) -> None:
+    def __init__(self,
+                 noise: Noise,
+                 power: float) -> None:
         """
         Args:
 
-            power (float): Power of the noise realization.
+            noise (Noise): Noise model to be realized.
+            power (power): Power indicator of the noise model.
         """
 
         self.__power = power
+        RandomRealization.__init__(noise)
 
     @property
     def power(self) -> float:
@@ -84,14 +88,10 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
 
     @abstractmethod
     def realize(self,
-                signal: Signal,
                 power: Optional[float] = None) -> NoiseRealizationType:
         """Realize the noise model.
 
         Args:
-
-            signal (Signal):
-                Signal model for which to realize noise.
 
             power (float, optional):
                 Power of the added noise.
@@ -148,23 +148,18 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
 class AWGNRealization(NoiseRealization):
     """Realization of additive white Gaussian noise"""
 
-    __samples: np.ndarray
-
-    def __init__(self, samples: np.ndarray, power: float) -> None:
-        """
-        Args:
-
-            samples (np.ndarray): Samples of the additive noise.
-            power (float): Power of the additive noise.
-        """
-
-        self.__samples = samples
-        NoiseRealization.__init__(self, power)
-
     def add_to(self, signal: Signal) -> Signal:
 
+        # Create random number generator
+        rng = self.generator()
+
+        noise_samples = (rng.normal(0, self.power**0.5, signal.samples.shape) + 1j * rng.normal(0, self.power**0.5, signal.samples.shape)) / 2**0.5
+
         noisy_signal = signal.copy()
-        noisy_signal.samples += self.__samples
+        noisy_signal.samples += noise_samples
+        noisy_signal.noise_power = self.power
+        
+        return noisy_signal
 
 
 class AWGN(Serializable, Noise[AWGNRealization]):
@@ -184,10 +179,7 @@ class AWGN(Serializable, Noise[AWGNRealization]):
         Noise.__init__(self, power=power, seed=seed)
 
     def realize(self,
-                signal: Signal,
                 power: Optional[float] = None) -> AWGNRealization:
 
         power = self.power if power is None else power
-        noise_samples = (self._rng.normal(0, power**0.5, signal.samples.shape) + 1j * self._rng.normal(0, power**0.5, signal.samples.shape)) / 2**0.5
-
-        return AWGNRealization(noise_samples, power)
+        return AWGNRealization(self, power)
