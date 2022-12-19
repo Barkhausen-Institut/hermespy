@@ -249,7 +249,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
     def scenario(self, value: SimulationScenario) -> None:
 
         self.__scenario = value
-        self.random_mother = self
+        self.random_mother = value
 
     @property
     def sync_offset_low(self) -> float:

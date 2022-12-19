@@ -327,7 +327,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         """
 
         # Make sure the channel belongs to a simulation scenario
-        if self.radar_channel.transmitter is None or self.radar_channel.receiver is None:
+        if radar_channel.transmitter is None or radar_channel.receiver is None:
             raise ValueError("ROC evaluator must be defined within a simulation scenario")
 
         RadarEvaluator.__init__(self, receiving_radar=radar, radar_channel=radar_channel)
@@ -335,15 +335,12 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     def evaluate(self) -> RocEvaluation:
 
-        # Retrieve the positive detection hypothesis radar cube
-        radar_cube_h1 = self.receiving_radar.cube
-
         # Generate the null hypothesis detection radar cube by re-running the radar detection routine
         null_hypothesis_channel_realization = self.radar_channel.null_hypothesis()
 
         # Collect required information from the simulation
-        transmission = self.radar_channel.transmitter.recent_transmission
-        reception = self.radar_channel.receiver.recent_reception
+        transmission = self.radar_channel.transmitter.transmission
+        reception = self.radar_channel.receiver.reception
         device_index = self.radar_channel.scenario.device_index(self.receiving_radar.device)
         operator_index = self.receiving_radar.device.receivers.operator_index(self.receiving_radar)
 
@@ -351,15 +348,15 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             raise RuntimeError("Channel devices lack cached transmission / reception information")
 
         # Propagate again over the radar channel
-        null_hypothesis_propagation = self.radar_channel.Propagate(transmission.signal, null_hypothesis_channel_realization)
+        null_hypothesis_propagation = self.radar_channel.Propagate(transmission.signal[0], null_hypothesis_channel_realization)
         
         # Exchange the respective propagated signal
         impinging_signals = reception.impinging_signals.copy()
-        impinging_signals[device_index] = [null_hypothesis_propagation]
+        impinging_signals[device_index] = ([null_hypothesis_propagation], null_hypothesis_channel_realization)
         
         # Receive again
-        null_hypothesis_device_reception = self.radar_channel.receiver.receive_from_realization(impinging_signals, reception, reception.leaking_signal)
-        null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index], False)
+        null_hypothesis_device_reception = self.radar_channel.receiver.receive_from_realization(impinging_signals, reception, reception.leaking_signal, False)
+        null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], False)
 
         # Retrieve radar cubes for both hypothesis
         radar_cube_h0 = null_hypothesis_radar_reception.cube

@@ -39,7 +39,7 @@ class NoiseRealization(RandomRealization):
         """
 
         self.__power = power
-        RandomRealization.__init__(noise)
+        RandomRealization.__init__(self, noise)
 
     @property
     def power(self) -> float:
@@ -117,7 +117,7 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
         Returns: Signal model with added noise.
         """
 
-        return realization.add_to(signal, self.power)
+        return realization.add_to(signal)
 
     @property
     def power(self) -> float:
