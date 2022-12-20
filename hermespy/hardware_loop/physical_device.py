@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import butter, sosfilt
 
-from hermespy.core import Device, Transmitter, Receiver
+from hermespy.core import Device, ChannelStateInformation, Transmitter, Receiver
 from hermespy.core.device import Reception, Transmission
 from hermespy.core.signal_model import Signal
 
@@ -109,10 +109,11 @@ class PowerReceiver(Receiver):
 
         return 0.0
 
-    def receive(self) -> Reception:
+    def _receive(self,
+                 signal: Signal,
+                 _: ChannelStateInformation) -> Reception:
 
         # Fetch noise samples
-        signal = self.signal
         return Reception(signal)
 
     @property
@@ -129,9 +130,11 @@ class SignalReceiver(StaticOperator, Receiver):
 
         return 0.0
 
-    def receive(self) -> Reception:
+    def _receive(self,
+                 signal: Signal,
+                 _: ChannelStateInformation) -> Reception:
 
-        received_signal = self.signal.resample(self.sampling_rate)
+        received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
 
 
