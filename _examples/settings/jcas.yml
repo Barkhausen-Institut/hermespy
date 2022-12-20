@@ -16,6 +16,10 @@ Devices:
   - &base_station !<SimulatedDevice>
     carrier_frequency: 1e9    # 1GHz assumed carrier frequency
 
+    # Assume a transmit-receive leakage
+    isolation: !<Specific>
+      isolation: 1e-6
+
   - &terminal !<SimulatedDevice>
     carrier_frequency: 1e9    # 1GHz assumed carrier frequency
 
@@ -26,7 +30,7 @@ Channels:
   # Single target radar channel
   - &radar_channel !<RadarChannel>
     devices: [*base_station, *base_station]
-    target_range: 1         # The target is located within a distance of 1m of the base station
+    target_range: [1, 2]    # The target is located within a distance between 1m and 2m to the base station
     radar_cross_section: 5  # The target has a cross section of 5m2
 
   # 5G TDL communication channel model
