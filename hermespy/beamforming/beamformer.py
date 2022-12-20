@@ -21,7 +21,7 @@ import matplotlib.tri as tri
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Executable, FloatingError, IdealAntenna, Operator, Receiver, SerializableEnum, Signal, Transmitter, UniformArray
+from hermespy.core import Executable, FloatingError, IdealAntenna, Operator, Receiver, Reception, SerializableEnum, Signal, Transmitter, UniformArray
 from hermespy.precoding import ReceiveStreamDecoder, TransmitStreamEncoder
 from hermespy.precoding.precoding import Precoding
 from hermespy.simulation import SimulatedDevice
@@ -548,7 +548,7 @@ class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
         device.antennas = UniformArray(IdealAntenna(), 0.5 * device.wavelength, (8, 8))
 
         class ReceiverMock(Receiver, ABC):
-            def receive(self) -> Tuple:
+            def _receive(self) -> Reception:
                 raise NotImplementedError()  # pragma no cover
 
             def energy(self) -> float:

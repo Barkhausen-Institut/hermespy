@@ -336,7 +336,7 @@ class Reception(OperationResult):
     ...  # pragma no cover
 
 
-ReceptionType = TypeVar('Reception', bound=Reception)
+ReceptionType = TypeVar('ReceptionType', bound=Reception)
 """Type of operator reception"""
 
 
