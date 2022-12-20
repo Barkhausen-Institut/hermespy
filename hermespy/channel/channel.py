@@ -17,7 +17,7 @@ from hermespy.core.factory import Serializable
 from hermespy.core.channel_state_information import ChannelStateFormat
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice, SimulationScenario
+    from hermespy.simulation import SimulatedDevice, SimulatedDeviceTransmission, SimulationScenario
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -373,8 +373,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         return self.__receiver.antennas.num_antennas
 
     def propagate(self,
-                  forwards: Union[Signal, List[Signal], None] = None,
-                  backwards: Union[Signal, List[Signal], None] = None,
+                  forwards: Union[SimulatedDeviceTransmission, Signal, List[Signal], None] = None,
+                  backwards: Union[SimulatedDeviceTransmission, Signal, List[Signal], None] = None,
                   realization: Optional[ChannelRealizationType] = None) -> Tuple[List[Signal], List[Signal], ChannelRealizationType]:
         """Propagate radio-frequency band signals over a channel instance.
 
@@ -383,7 +383,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         Args:
 
-            forwards (Union[Signal, List[Signal]], optional):
+            forwards (Union[SimulatedDeviceTransmission, Signal, List[Signal]], optional):
                 Signal models emitted by `device_alpha` associated with this wireless channel model.
 
             backwards (Union[Signal, List[Signal]], optional):
@@ -423,10 +423,32 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         """
 
         # Convert forwards and backwards transmissions to lists if required
-        forwards = [] if forwards is None else forwards
-        backwards = [] if backwards is None else backwards
-        forwards = [forwards] if isinstance(forwards, Signal) else forwards
-        backwards = [backwards] if isinstance(backwards, Signal) else backwards
+        forwards: List[Signal]
+        backwards: List[Signal]
+        
+        if isinstance(forwards, SimulatedDeviceTransmission):
+            forwards = [forwards.signal] if isinstance(forwards.signal, list) else forwards.signal
+        
+        elif isinstance(forwards, Signal):
+            forwards = [forwards]
+            
+        elif isinstance(forwards, list):
+            forwards = forwards
+            
+        elif forwards is None:
+            forwards = []
+            
+        if isinstance(backwards, SimulatedDeviceTransmission):
+            backwards = [backwards.signal] if isinstance(backwards.signal, list) else backwards.signal
+        
+        elif isinstance(backwards, Signal):
+            backwards = [backwards]
+            
+        elif isinstance(backwards, list):
+            backwards = backwards
+            
+        elif backwards is None:
+            backwards = []
 
         # Abort if the channel is considered floating, since physical device properties are required for
         # channel modeling

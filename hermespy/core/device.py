@@ -345,7 +345,9 @@ class DeviceTransmission(OperationResult):
 
     __operator_transmissions: List[Transmission]
 
-    def __init__(self, signal: Signal, operator_transmissions: List[Transmission]) -> None:
+    def __init__(self,
+                 signal: Signal,
+                 operator_transmissions: List[Transmission]) -> None:
         """
         Args:
 

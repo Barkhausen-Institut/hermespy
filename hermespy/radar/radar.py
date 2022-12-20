@@ -182,8 +182,6 @@ class Radar(DuplexOperator[RadarReception], Serializable):
     __receive_beamformer: Optional[ReceiveBeamformer]
     __waveform: Optional[RadarWaveform]
     __detector: Optional[RadarDetector]
-    __cloud: Optional[RadarPointCloud]
-    __cube: Optional[RadarCube]
 
     def __init__(self) -> None:
 
@@ -191,8 +189,6 @@ class Radar(DuplexOperator[RadarReception], Serializable):
         self.receive_beamformer = None
         self.transmit_beamformer = None
         self.__waveform = None
-        self.__cloud = None
-        self.__cube = None
         self.detector = None
 
         DuplexOperator.__init__(self)

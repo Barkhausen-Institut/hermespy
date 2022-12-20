@@ -211,6 +211,7 @@ class TestSimulationRunner(TestCase):
         self.receiver_alpha.receive.assert_called()
         self.receiver_beta.receive.assert_called()
 
+
 class TestSimulationActor(TestCase):
     """Test the Simulation Actor."""
 
