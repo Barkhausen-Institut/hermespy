@@ -536,7 +536,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                                                  noise_realizations)
 
     def receive_from_realization(self,
-                                 impinging_signals: Union[List[Signal], Signal, np.ndarray],
+                                 impinging_signals: Union[List[Signal], Signal, np.ndarray, SimulatedDeviceTransmission],
                                  realization: SimulatedDeviceReceiveRealization,
                                  leaking_signal: Optional[Signal] = None,
                                  cache: bool = True) -> SimulatedDeviceReception:
@@ -544,7 +544,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
         Args:
         
-            impinging_signals (Union[List[Signal], Signal, np.ndarray]):
+            impinging_signals (Union[List[Signal], Signal, np.ndarray, SimulatedDeviceTransmission]):
                 List of signal models arriving at the device.
                 May also be a two-dimensional numpy object array where the first dimension indicates the link
                 and the second dimension contains the transmitted signal as the first element and the link channel
@@ -568,6 +568,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             
             ValueError: If `device_signals` is constructed improperly.
         """
+        
+        if isinstance(impinging_signals, SimulatedDeviceTransmission):
+            impinging_signals = impinging_signals.signal
         
         # Transform signal argument to matrix argument
         if isinstance(impinging_signals, Signal):
@@ -687,7 +690,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         return device_reception
 
     def receive(self,
-                impinging_signals: Union[List[Signal], Signal, np.ndarray],
+                impinging_signals: Union[List[Signal], Signal, np.ndarray, SimulatedDeviceTransmission],
                 snr: Optional[float] = None,
                 snr_type: SNRType = SNRType.PN0,
                 leaking_signal: Optional[Signal] = None,

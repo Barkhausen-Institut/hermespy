@@ -366,15 +366,15 @@ class TestDuplexModem(TestBaseModem):
     def test_transmit_receive(self) -> None:
         """Test modem data transmission and subsequent reception"""
         
-        transmission = self.modem.transmit()
+        operator_transmission = self.modem.transmit()
         
-        device_signals = self.device.transmit()
-        self.device.receive(device_signals)
+        device_transmission = self.device.transmit()
+        self.device.receive(device_transmission)
         
         reception = self.modem.receive()
         
-        assert_array_almost_equal(transmission.bits, reception.bits)
-        self.assertIs(transmission, self.modem.transmission)
+        assert_array_almost_equal(operator_transmission.bits, reception.bits)
+        self.assertIs(operator_transmission, self.modem.transmission)
 
     def test_empty_receive(self) -> None:
         """Test modem data reception over an empty slot"""
