@@ -578,7 +578,11 @@ class BaseModem(RandomNode, ABC):
 
         return {"encoding", "precoding", "waveform", "seed"}
 
-    def __init__(self, encoding: Optional[EncoderManager] = None, precoding: Optional[SymbolPrecoding] = None, waveform: Optional[WaveformGenerator] = None, seed: Optional[int] = None) -> None:
+    def __init__(self,
+                 encoding: Optional[EncoderManager] = None,
+                 precoding: Optional[SymbolPrecoding] = None,
+                 waveform: Optional[WaveformGenerator] = None,
+                 seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -988,12 +992,17 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
     # MIMO stream configuration during signal rececption
     __receive_stream_coding: ReceiveStreamCoding
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self,
+                 device: Optional[Device] = None,
+                 *args, **kwargs) -> None:
 
         self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
 
         BaseModem.__init__(self, *args, **kwargs)
         Receiver.__init__(self)
+        
+        if device is not None:
+            device.receivers.add(self)
 
     @property
     def transmitting_device(self) -> Optional[Device]:
@@ -1096,8 +1105,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         if len(synchronized_signals) < 1:
 
             reception = CommunicationReception(signal)
-            self.__cached_reception = reception
-
             return reception
 
         # Infer required parameters
@@ -1116,7 +1123,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
             # Estimate the channel from each frame demodulation
             stated_symbols, channel_estimate = self.waveform_generator.estimate_channel(symbols)
-            self.__cached_channel_state = stated_symbols.states
 
             # Decode the pre-equalization symbol precoding stage
             decoded_symbols = self.precoding.decode(stated_symbols)
