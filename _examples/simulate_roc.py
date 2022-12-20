@@ -5,8 +5,9 @@ import ray
 # ray.init(local_mode=True, num_cpus=1)
 
 from hermespy.channel import RadarChannel
-from hermespy.simulation import Simulation
+from hermespy.simulation import Simulation, SpecificIsolation
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
+from hermespy.tools import db2lin
 
 
 # Global parameters
@@ -15,7 +16,9 @@ carrier_frequency = 10e9
 
 # Initialize the base system
 simulation = Simulation()
+
 device = simulation.new_device(carrier_frequency=carrier_frequency)
+device.isolation = SpecificIsolation(db2lin(0))
 
 # Configure a root-raised-cosine single carrier communication waveform to be transmitted
 radar = Radar()
@@ -27,7 +30,7 @@ channel = RadarChannel(target_range=(0, radar.waveform.max_range), radar_cross_s
 simulation.scenario.set_channel(device, device, channel)
 
 simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, channel))
-simulation.new_dimension('snr', np.linspace(1e-2, 1, 10, endpoint=True))
+simulation.new_dimension('snr', [1e-2, .1, 1.])
 simulation.num_samples = 5000
 
 result = simulation.run()

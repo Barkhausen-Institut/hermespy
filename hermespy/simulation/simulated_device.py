@@ -628,6 +628,13 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             modeled_leakage = self.__isolation.leak(leaking_signal)
             coupled_signal.superimpose(modeled_leakage)
+            
+        # If no leaking signal has been specified, assume the most recent transmission to be leaking
+        elif self.transmission is not None:
+            for signal in self.transmission.signal:
+                
+                modeled_leakage = self.__isolation.leak(signal)
+                coupled_signal.superimpose(modeled_leakage)
 
         # Model radio-frequency chain during reception
         baseband_signal = self.rf_chain.receive(coupled_signal)

@@ -9,8 +9,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Generic, Optional, TypeVar
 
-import numpy as np
-
 from hermespy.core import RandomNode, RandomRealization, Serializable, Signal
 
 __author__ = "Jan Adler"
