@@ -9,9 +9,10 @@ from __future__ import annotations
 from typing import List, Optional, Union, Tuple, Type
 
 import numpy as np
+from h5py import Group
 from scipy.constants import pi
 
-from hermespy.core import ChannelStateInformation, Device, RandomNode, Scenario, Serializable, Signal, Receiver, SNRType
+from hermespy.core import ChannelStateInformation, Device, DeviceTransmission, DeviceReception, Transmission, Reception, RandomNode, Scenario, Serializable, Signal, Receiver, SNRType
 from .analog_digital_converter import AnalogDigitalConverter
 from .noise import Noise, NoiseRealization, AWGN
 from .rf_chain.rf_chain import RfChain
@@ -28,34 +29,55 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SimulatedDeviceTransmission(object):
+class SimulatedDeviceTransmission(DeviceTransmission):
     """Information transmitted by a simulated device"""
 
-    __signal: Union[Signal, List[Signal]]
     __operator_separation: bool
 
     def __init__(self,
-                 signal: Union[Signal, List[Signal]],
+                 signal: Signal,
+                 operator_transmissions: List[Tra],
                  operator_separation: bool) -> None:
         """
         Args:
 
+            signal (signal):
+                Device mixed signal model.
 
+            operator_transmissions (List[OperatorTransmission]):
+                Information transmitted by device operators.
+                
+            operator_separation (bool):
+                Operator separation flag.
         """
-        self.__signal = signal
+        
+        DeviceTransmission.__init__(self, signal, operator_transmissions)
         self.__operator_separation = operator_separation
-
-
-    @property
-    def signal(self) -> Union[Signal, List[Signal]]:
-
-        return self.__signal
 
     @property
     def operator_separation(self) -> bool:
 
         return self.__operator_separation
+    
+    @classmethod
+    def from_HDF(cls: Type[SimulatedDeviceTransmission], group: Group) -> SimulatedDeviceTransmission:
 
+        # Recall base class
+        device_transmission = DeviceTransmission.from_HDF(group)
+        
+        # Recall operator separation flag
+        operator_separation = group.attrs.get("operator_separation", False)
+
+        return cls(device_transmission.signal, device_transmission.operator_transmissions, operator_separation)
+
+    def to_HDF(self, group: Group) -> None:
+
+        # Serialize base class
+        DeviceTransmission.to_HDF(self, group)
+
+        # Serialize operator separation flag
+        group.attrs['operator_separation'] = self.operator_separation
+        
 
 class SimulatedDeviceReceiveRealization(object):
     """Realization of a simulated device reception random process"""

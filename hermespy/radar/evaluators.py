@@ -92,7 +92,7 @@ class RadarEvaluator(Evaluator, ABC):
             ValueError: If the receiving radar is not an operator of the radar_channel receiver.
         """
         
-        if receiving_radar not in radar_channel.receiver.receivers:
+        if radar_channel is not None and receiving_radar not in radar_channel.receiver.receivers:
             raise ValueError("The radar operator is not a receiver within the radar channel receiving device")
             
         self.__receiving_radar = receiving_radar
@@ -176,7 +176,7 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
     def evaluate(self) -> DetectionProbArtifact:
 
         # Retrieve transmitted and received bits
-        cloud = self.receiving_radar.cloud
+        cloud = self.receiving_radar.reception.cloud
 
         if cloud is None:
             RuntimeError("Detection evaluation requires a detector to be configured at the radar")
