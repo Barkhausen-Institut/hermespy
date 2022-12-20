@@ -286,7 +286,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
         # If no target is present we may abort already
         if not self.target_exists:
-            return impulse_response
+            return RadarChannelRealization(self, impulse_response, np.empty((0, 3), dtype=float))
 
         # The radar target's channel weight is essentially a mix of
         # 1. The phase shift during reflection (uniformly distributed)

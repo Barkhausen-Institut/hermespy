@@ -59,16 +59,16 @@ class TestStreetCanyonLOS(TestCase):
                                                transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestStreetCanyonNLOS(TestCase):
@@ -101,16 +101,16 @@ class TestStreetCanyonNLOS(TestCase):
                                                  transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestStreetCanyonO2I(TestCase):
@@ -143,16 +143,16 @@ class TestStreetCanyonO2I(TestCase):
                                                    transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestUrbanMacrocellsLOS(TestCase):
@@ -185,16 +185,16 @@ class TestUrbanMacrocellsLOS(TestCase):
                                                   transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestUrbanMacrocellsNLOS(TestCase):
@@ -227,16 +227,16 @@ class TestUrbanMacrocellsNLOS(TestCase):
                                                     transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestUrbanMacrocellsO2I(TestCase):
@@ -269,16 +269,16 @@ class TestUrbanMacrocellsO2I(TestCase):
                                                       transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestRuralMacrocellsLOS(TestCase):
@@ -311,16 +311,16 @@ class TestRuralMacrocellsLOS(TestCase):
                                                   transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestRuralMacrocellsNLOS(TestCase):
@@ -353,16 +353,16 @@ class TestRuralMacrocellsNLOS(TestCase):
                                                     transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestRuralMacrocellsO2I(TestCase):
@@ -395,16 +395,16 @@ class TestRuralMacrocellsO2I(TestCase):
                                                       transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestIndoorOfficeLOS(TestCase):
@@ -437,16 +437,16 @@ class TestIndoorOfficeLOS(TestCase):
                                                transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestIndoorOfficeNLOS(TestCase):
@@ -479,16 +479,16 @@ class TestIndoorOfficeNLOS(TestCase):
                                                  transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestIndoorFactoryLOS(TestCase):
@@ -526,16 +526,16 @@ class TestIndoorFactoryLOS(TestCase):
                                                 transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
 
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
 
 class TestIndoorFactoryNLOS(TestCase):
@@ -572,12 +572,13 @@ class TestIndoorFactoryNLOS(TestCase):
                                                   transmitter=self.transmitter)
         self.channel.random_mother = self.random_node
 
-    def test_impulse_response(self):
+    def test_realization(self):
+        
         num_samples = 5000
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
