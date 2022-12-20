@@ -391,6 +391,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
             realization (ChannelRealizationType, optional):
                 Channel realization over which to propagate the signals.
+                If not specified, a new channel realization will be generated.
 
         Returns:
 
@@ -456,7 +457,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
             return [], [], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
 
         # Generate the channel's impulse response realization
-        realization = self.realize(csi_num_samples, csi_sampling_rate)
+        realization = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization
 
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)

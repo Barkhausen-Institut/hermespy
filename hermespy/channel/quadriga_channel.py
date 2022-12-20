@@ -71,9 +71,9 @@ class QuadrigaChannel(Channel):
 
         return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface
 
-    def impulse_response(self,
-                         num_samples: int,
-                         sampling_rate: float) -> ChannelRealization:
+    def realize(self,
+                num_samples: int,
+                sampling_rate: float) -> ChannelRealization:
 
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
