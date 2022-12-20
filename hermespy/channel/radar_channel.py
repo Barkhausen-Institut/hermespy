@@ -80,7 +80,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
     __losses_db: float
     __target_velocity: float
     attenuate: bool
-    __ground_truth: Optional[np.ndarray]
 
     def __init__(self, target_range: Union[float, Tuple[float, float]], radar_cross_section: float, target_azimuth: float = 0.0, target_zenith: float = 0.0, target_exists: bool = True, losses_db: float = 0, velocity: Union[float, np.ndarray] = 0, attenuate: bool = True, **kwargs) -> None:
         """
