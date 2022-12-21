@@ -12,12 +12,12 @@ from itertools import chain, product
 
 import numpy as np
 
-from hermespy.core import RandomNode, Signal, ChannelStateInformation
+from hermespy.core import DeviceTransmission, RandomNode, Signal, ChannelStateInformation
 from hermespy.core.factory import Serializable
 from hermespy.core.channel_state_information import ChannelStateFormat
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice, SimulatedDeviceTransmission, SimulationScenario
+    from hermespy.simulation import SimulatedDevice, SimulationScenario
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -426,7 +426,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         forwards: List[Signal]
         backwards: List[Signal]
         
-        if isinstance(forwards, SimulatedDeviceTransmission):
+        if isinstance(forwards, DeviceTransmission):
             forwards = [forwards.signal] if isinstance(forwards.signal, list) else forwards.signal
         
         elif isinstance(forwards, Signal):
@@ -438,7 +438,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         elif forwards is None:
             forwards = []
             
-        if isinstance(backwards, SimulatedDeviceTransmission):
+        if isinstance(backwards, DeviceTransmission):
             backwards = [backwards.signal] if isinstance(backwards.signal, list) else backwards.signal
         
         elif isinstance(backwards, Signal):

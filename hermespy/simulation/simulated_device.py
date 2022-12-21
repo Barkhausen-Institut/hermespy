@@ -131,7 +131,6 @@ class SimulatedDeviceReception(SimulatedDeviceReceiveRealization):
                  noise_realizations: List[NoiseRealization]) -> None:
         """
         Args:
-
             impinging_signals (np.ndarray): Numpy vector containing lists of signals impinging onto the device.
             leaking_signal (Optional[Signal]): Signal leaking from transmit to receive chains.
             operator_separation (bool): Is the operator separation flag enabled?
