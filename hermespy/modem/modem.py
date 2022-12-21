@@ -1096,7 +1096,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
                  csi: ChannelStateInformation) -> CommunicationReception:
 
         # Resample the signal to match the waveform's requirements
-        signal = self.signal.resample(self.waveform_generator.sampling_rate)
+        signal = signal.resample(self.waveform_generator.sampling_rate)
 
         # Synchronize incoming signals
         frame_start_indices, synchronized_signals = self.__synchronize(signal)

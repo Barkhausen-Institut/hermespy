@@ -118,7 +118,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from itertools import chain
 from math import ceil
-from typing import Generic, Iterator, List, Optional, Tuple, Type, TypeVar
+from typing import Generic, Iterator, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
 from h5py import Group
