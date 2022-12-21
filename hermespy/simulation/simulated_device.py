@@ -36,7 +36,7 @@ class SimulatedDeviceTransmission(DeviceTransmission):
 
     def __init__(self,
                  signal: Signal,
-                 operator_transmissions: List[Tra],
+                 operator_transmissions: List[Transmission],
                  operator_separation: bool) -> None:
         """
         Args:
@@ -454,6 +454,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         operator_signals = [t.signal for t in self.transmitters.get_transmissions(clear_cache)] if self.operator_separation else [Device.transmit(self, clear_cache)]
 
         transmitted_signals = []
+        superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas)
+        
         for operator_signal in operator_signals:
 
             if operator_signal is None:
@@ -468,9 +470,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             coupled_signal = self.coupling.transmit(rf_signal)
 
             transmitted_signals.append(coupled_signal)
+            superimposed_signal.superimpose(coupled_signal)
 
         # Cache and return resulting transmission
-        device_transmission = SimulatedDeviceTransmission(transmitted_signals, self.operator_separation)
+        device_transmission = SimulatedDeviceTransmission(superimposed_signal,
+                                                          transmitted_signals,
+                                                          self.operator_separation)
         
         self.__transmission = device_transmission
         return device_transmission
@@ -534,7 +539,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         return self.__reception
         
     def realize_reception(self,
-                          snr: Optional[float] = None,
+                          snr: float = float('inf'),
                           snr_type: SNRType = SNRType.PN0) -> SimulatedDeviceReceiveRealization:
         """Generate a random realization for receiving over the simulated device.
 
@@ -647,18 +652,15 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Model mutual coupling behaviour
         coupled_signal = self.coupling.receive(mixed_signal)
 
-        # Add leaked signal if provided
+        # If no leaking signal has been specified, assume the most recent transmission to be leaking
+        if leaking_signal is None and self.transmission is not None:
+            leaking_signal = self.transmission.signal
+        
+        # Simulate signal transmit-receive isolation leakage
         if leaking_signal is not None:
 
             modeled_leakage = self.__isolation.leak(leaking_signal)
             coupled_signal.superimpose(modeled_leakage)
-            
-        # If no leaking signal has been specified, assume the most recent transmission to be leaking
-        elif self.transmission is not None:
-            for signal in self.transmission.signal:
-                
-                modeled_leakage = self.__isolation.leak(signal)
-                coupled_signal.superimpose(modeled_leakage)
 
         # Model radio-frequency chain during reception
         baseband_signal = self.rf_chain.receive(coupled_signal)
@@ -712,7 +714,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
     def receive(self,
                 impinging_signals: Union[List[Signal], Signal, np.ndarray, SimulatedDeviceTransmission],
-                snr: Optional[float] = None,
+                snr: float = float('inf'),
                 snr_type: SNRType = SNRType.PN0,
                 leaking_signal: Optional[Signal] = None,
                 cache: bool = True) -> SimulatedDeviceReception:

@@ -338,15 +338,6 @@ class TestReceivingModem(TestBaseModem):
 
         self.assertIs(self.modem, self.modem.receive_stream_coding.modem)
 
-    def test_reception(self) -> None:
-        """Reception property should return the recently received information"""
-
-        # Initially None should be returned
-        self.assertIsNone(self.modem.reception)
-
-        expected_reception = self.modem.receive()
-        self.assertIs(expected_reception, self.modem.reception)
-
 
 class TestDuplexModem(TestBaseModem):
     """Test the simultaneously transmitting and receiving duplex modem"""
@@ -376,14 +367,6 @@ class TestDuplexModem(TestBaseModem):
         assert_array_almost_equal(operator_transmission.bits, reception.bits)
         self.assertIs(operator_transmission, self.modem.transmission)
 
-    def test_empty_receive(self) -> None:
-        """Test modem data reception over an empty slot"""
-
-        reception = self.modem.receive()
-
-        self.assertEqual(0, reception.signal.num_samples)
-        self.assertIs(reception, self.modem.reception)
-
     def test_receive_synchronization_fail(self) -> None:
         """A failed synchronization should result in an empty reception"""
 
@@ -407,14 +390,6 @@ class TestDuplexModem(TestBaseModem):
         
         assert_array_almost_equal(transmission.bits, reception.bits)
         self.assertIs(transmission, self.modem.transmission)
-
-    def test_empty_receive(self) -> None:
-        """Test modem data reception over an empty slot"""
-
-        reception = self.modem.receive()
-
-        self.assertEqual(0, reception.signal.num_samples)
-        self.assertIs(reception, self.modem.reception)
 
     def test_receive_synchronization_fail(self) -> None:
         """A failed synchronization should result in an empty reception"""
