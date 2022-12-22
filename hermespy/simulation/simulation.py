@@ -12,13 +12,14 @@ from typing import Any, Callable, Dict, List, Type, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from h5py import Group
 from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core import Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceTransmission, DeviceReception, SNRType
+from hermespy.core import ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceTransmission, DeviceReception, SNRType
 from hermespy.channel import QuadrigaInterface, Channel
-from .simulated_device import SimulatedDevice
+from .simulated_device import ProcessedSimulatedDeviceReception, SimulatedDevice, SimulatedDeviceReception
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -30,6 +31,71 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class SimulatedDrop(Drop):
+    """Drop containing all information generated during a simulated wireless scenario transmission,
+       channel propagation and reception."""
+       
+    __channel_realizations: List[ChannelStateInformation]
+       
+    def __init__(self,
+                 timestamp: float,
+                 device_transmissions: List[DeviceTransmission],
+                 channel_realizations: List[ChannelStateInformation],
+                 device_receptions: List[ProcessedSimulatedDeviceReception]) -> None:
+        """
+        Args:
+
+            timestamp (float):
+                Time at which the drop was generated.
+
+            device_transmissions (List[DeviceTransmission]):
+                Transmitted device information.
+                
+            channel_realizations (List[ChannelStateInformation]):
+                Realizations of the wireless channels over which the simualation propagated device transmissions.
+
+            device_receptions (List[ProcessedSimulatedDeviceReception]):
+                Received device information.
+        """
+        
+        self.__channel_realizations = channel_realizations
+        Drop.__init__(self, timestamp, device_transmissions, device_receptions)
+    
+    @property
+    def channel_realizations(self) -> np.ndarray:
+        """Channel realizations over which signals were propagated.
+        
+        Returns: Two-dimensional numpy matrix with each entry corresponding to the respective device link's channel.
+        """
+
+        return self.__channel_realizations
+    
+    @classmethod
+    def from_HDF(cls: Type[SimulatedDrop], group: Group) -> SimulatedDrop:
+
+        # Recall attributes
+        timestamp = group.attrs.get("timestamp", 0.0)
+        num_transmissions = group.attrs.get("num_transmissions", 0)
+        num_receptions = group.attrs.get("num_receptions", 0)
+        num_devices = group.attrs.get("num_devices", 1)
+        
+        # Recall groups
+        transmissions = [DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
+        receptions = [ProcessedSimulatedDeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)]
+        
+        channel_realizations = np.empty((num_devices, num_devices), dtype=object)
+        for d_out in range(num_devices):
+            for d_in in range(d_out+1):
+                
+                realization = ChannelStateInformation.from_HDF(group[f"channel_realization_{d_out:02d}_{d_in:02d}_"])
+                
+                channel_realizations[d_out, d_in] = realization
+                if d_out != d_in:
+                    channel_realizations[d_in, d_out] =  realization.reciprocal()
+                    
+        return SimulatedDrop(timestamp, transmissions, channel_realizations, receptions)
+    
+    
 class SimulationScenario(Scenario[SimulatedDevice]):
 
     __channels: np.ndarray  # Channel matrix linking devices
@@ -295,41 +361,63 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         self.__snr_type = snr_type
 
-    def propagate(self, transmitted_signals: List[Signal]) -> np.ndarray:
+    def propagate(self, transmissions: List[DeviceTransmission]) -> np.ndarray:
+        """Propagate device transmissions over the scenario's channel instances.
+        
+        Args:
+        
+            transmissions (List[DeviceTransmission]): List of device transmissisons.
+            
+        Returns: Propagation matrix.
+        
+        Raises:
 
-        if len(transmitted_signals) != self.num_devices:
-            raise ValueError(f"Number of transmit signals ({len(transmitted_signals)}) does not match " f"the number of registered devices ({self.num_devices})")
+            ValueError: If the length of `transmissions` does not match the number of registered devices.
+        """
+
+        if len(transmissions) != self.num_devices:
+            raise ValueError(f"Number of transmit signals ({len(transmissions)}) does not match " f"the number of registered devices ({self.num_devices})")
 
         # Initialize the propagated signals
         propagation_matrix = np.empty((self.num_devices, self.num_devices), dtype=object)
 
         # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
-        for device_alpha_idx, device_alpha in enumerate(self.devices):
-            for device_beta_idx, device_beta in enumerate(self.devices[: (1 + device_alpha_idx)]):
+        for device_alpha_idx in range(self.num_devices):
+            for device_beta_idx in range(1 + device_alpha_idx):
 
-                alpha_transmissions = transmitted_signals[device_alpha_idx]
-                beta_transmissions = transmitted_signals[device_beta_idx]
+                alpha_transmission = transmissions[device_alpha_idx]
+                beta_transmission = transmissions[device_beta_idx]
 
                 channel: Channel = self.channels[device_alpha_idx, device_beta_idx]
-                beta_receptions, alpha_receptions, csi = channel.propagate(alpha_transmissions, beta_transmissions)
+                beta_receptions, alpha_receptions, csi = channel.propagate(alpha_transmission, beta_transmission)
 
                 propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi.reciprocal())
                 propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
 
         return propagation_matrix
 
-    def receive_devices(self, receptions: Union[List[Signal], np.ndarray]) -> List[Signal]:
-        """Generate base-band signal models received by devices."""
+    def receive_devices(self,
+                        impinging_signals: Union[List[Signal], np.ndarray],
+                        cache: bool = True) -> List[SimulatedDeviceReception]:
+        """Generate base-band signal models received by devices
+        
+        Args:
+        
+            impinging_signals (Union[List[Signal], np.ndarray]):
+                Signal models impinging onto the scenario's devices.
+                
+            cache (bool, optional):
+                Cache the receptions at the devices.
+                Enabled by default.
+                
+        Returns: List of device receptions.
+        """
 
-        # Resolve to the base method if just a signal array is provided
-        if isinstance(receptions, list):
-            return Scenario.receive_devices(self, receptions)
+        if len(impinging_signals) != self.num_devices:
+            raise ValueError(f"Number of arriving signals ({len(impinging_signals)}) does not match " f"the number of receiving devices ({self.num_devices})")
 
-        if len(receptions) != self.num_devices:
-            raise ValueError(f"Number of arriving signals ({len(receptions)}) does not match " f"the number of receiving devices ({self.num_devices})")
-
-        received_signals = [d.receive(s, self.snr, self.snr_type) for d, s in zip(self.devices, receptions)]
-        return received_signals
+        device_receptions = [d.receive(s, self.snr, self.snr_type, cache=cache) for d, s in zip(self.devices, impinging_signals)]
+        return device_receptions
 
     def _drop(self) -> Drop:
 
@@ -337,21 +425,19 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         timestamp = time()
 
         # Generate device transmissions
-        operator_transmissions = self.transmit_operators()
-        transmitted_device_signals = self.transmit_devices()
-
-        # ToDo: Support operator separation here or elsewhere
-        device_transmissions = [DeviceTransmission(s[0], i) for s, i in zip(transmitted_device_signals, operator_transmissions)]
+        _ = self.transmit_operators()
+        device_transmissions = self.transmit_devices()
 
         # Simulate channel propagation
-        propagation_matrix = self.propagate(transmitted_device_signals)
+        propagation_matrix = self.propagate(device_transmissions)
 
-        received_device_signals = self.receive_devices(propagation_matrix)
+        # Process receptions
+        device_receptions = self.receive_devices(propagation_matrix)
         operator_receptions = self.receive_operators()
-        # ToDo: Patch CSI here
-        device_receptions = [DeviceReception(s, None, i) for s, i in zip(received_device_signals, operator_receptions)]
+        device_receptions = [ProcessedSimulatedDeviceReception.From_Receptions(d, o) for d, o in zip(device_receptions, operator_receptions)]
 
-        return Drop(timestamp, device_transmissions, device_receptions)
+        # Return finished drop
+        return SimulatedDrop(timestamp, device_transmissions, propagation_matrix, device_receptions)
 
 
 class SimulationRunner(object):

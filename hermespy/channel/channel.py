@@ -65,6 +65,10 @@ class ChannelRealization(ChannelStateInformation):
         """
 
         return self.__channel
+    
+    def reciprocal(self) -> ChannelRealization:
+        
+        return ChannelRealization(self.channel, ChannelStateInformation.reciprocal(self).state.transpose((2, 0, 1, 3)))
 
 
 ChannelRealizationType = TypeVar('ChannelRealizationType', bound=ChannelRealization)
@@ -373,8 +377,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         return self.__receiver.antennas.num_antennas
 
     def propagate(self,
-                  forwards: Union[SimulatedDeviceTransmission, Signal, List[Signal], None] = None,
-                  backwards: Union[SimulatedDeviceTransmission, Signal, List[Signal], None] = None,
+                  forwards: Union[DeviceTransmission, Signal, List[Signal], None] = None,
+                  backwards: Union[DeviceTransmission, Signal, List[Signal], None] = None,
                   realization: Optional[ChannelRealizationType] = None) -> Tuple[List[Signal], List[Signal], ChannelRealizationType]:
         """Propagate radio-frequency band signals over a channel instance.
 
@@ -383,7 +387,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         Args:
 
-            forwards (Union[SimulatedDeviceTransmission, Signal, List[Signal]], optional):
+            forwards (Union[DeviceTransmission, Signal, List[Signal]], optional):
                 Signal models emitted by `device_alpha` associated with this wireless channel model.
 
             backwards (Union[Signal, List[Signal]], optional):
@@ -427,7 +431,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         backwards: List[Signal]
         
         if isinstance(forwards, DeviceTransmission):
-            forwards = [forwards.signal] if isinstance(forwards.signal, list) else forwards.signal
+            forwards = [forwards.signal]
         
         elif isinstance(forwards, Signal):
             forwards = [forwards]
@@ -439,7 +443,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
             forwards = []
             
         if isinstance(backwards, DeviceTransmission):
-            backwards = [backwards.signal] if isinstance(backwards.signal, list) else backwards.signal
+            backwards = [backwards.signal]
         
         elif isinstance(backwards, Signal):
             backwards = [backwards]

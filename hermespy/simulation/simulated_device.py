@@ -12,7 +12,7 @@ import numpy as np
 from h5py import Group
 from scipy.constants import pi
 
-from hermespy.core import ChannelStateInformation, Device, DeviceTransmission, DeviceReception, Transmission, Reception, RandomNode, Scenario, Serializable, Signal, Receiver, SNRType
+from hermespy.core import ChannelStateInformation, Device, DeviceTransmission, DeviceReception, ProcessedDeviceReception, Transmission, RandomNode, Reception, Scenario, Serializable, Signal, Receiver, SNRType
 from .analog_digital_converter import AnalogDigitalConverter
 from .noise import Noise, NoiseRealization, AWGN
 from .rf_chain.rf_chain import RfChain
@@ -117,10 +117,9 @@ class SimulatedDeviceReceiveRealization(object):
         return self.__noise_realizations
 
 
-class SimulatedDeviceReception(SimulatedDeviceReceiveRealization):
+class SimulatedDeviceReception(SimulatedDeviceReceiveRealization, DeviceReception):
     """Information received by a simulated device"""
 
-    __impinging_signals: np.ndarray
     __leaking_signal: Optional[Signal]
 
     def __init__(self,
@@ -138,11 +137,11 @@ class SimulatedDeviceReception(SimulatedDeviceReceiveRealization):
             noise_realization (List[NoiseRealization]): Noise realizations for each receive operator. 
         """
 
-        self.__impinging_signals = impinging_signals
         self.__leaking_signal = leaking_signal
         self.__operator_inputs = operator_inputs
         
         SimulatedDeviceReceiveRealization.__init__(self, operator_separation, noise_realizations)
+        DeviceReception.__init__(self, impinging_signals)
    
     @classmethod
     def From_Realization(cls: Type[SimulatedDeviceReception],
@@ -160,11 +159,6 @@ class SimulatedDeviceReception(SimulatedDeviceReceiveRealization):
                    realization.operator_separation,
                    operator_inputs,
                    realization.noise_realizations)
-
-    @property
-    def impinging_signals(self) -> np.ndarray:
-        
-        return self.__impinging_signals
     
     @property
     def leaking_signal(self) -> Optional[Signal]:
@@ -175,6 +169,28 @@ class SimulatedDeviceReception(SimulatedDeviceReceiveRealization):
     def operator_inputs(self) -> List[Tuple[Signal, ChannelStateInformation]]:
         
         return self.__operator_inputs
+    
+
+class ProcessedSimulatedDeviceReception(SimulatedDeviceReception, ProcessedDeviceReception):
+    
+    def __init__(self,
+                 impinging_signals: np.ndarray,
+                 leaking_signal: Signal,
+                 superimpose_signal: Signal,
+                 operator_separation: bool,
+                 operator_inputs: List[Tuple[Signal, ChannelStateInformation]],
+                 noise_realizations: List[NoiseRealization],
+                 operator_receptions: List[Reception]) -> None:
+        
+        SimulatedDeviceReception.__init__(self, impinging_signals, leaking_signal, operator_separation, operator_inputs, noise_realizations)
+        ProcessedDeviceReception.__init__(self, superimpose_signal, operator_receptions=operator_receptions)
+    
+    @classmethod
+    def From_Receptions(cls: Type[ProcessedSimulatedDeviceReception],
+                        device: SimulatedDeviceReception,
+                        operator_receptions: List[Reception]) -> ProcessedSimulatedDeviceReception:
+        
+        return cls(device.impinging_signals, device.leaking_signal, device.)
 
 
 class SimulatedDevice(Device, RandomNode, Serializable):
@@ -369,12 +385,13 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         value.device = self
 
     @property
-    def sampling_rate(self) -> Optional[float]:
+    def sampling_rate(self) -> float:
         """Sampling rate at which the device's analog-to-digital converters operate.
 
         Returns:
             Sampling rate in Hz.
-            `None` if the sampling rate is unknown.
+            If no operator has been specified and the sampling rate was not set,
+            a sampling rate of :math:`1` Hz will be assumed by default.
 
         Raises:
             ValueError: If the sampling rate is not greater than zero.
@@ -389,7 +406,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         if self.receivers.num_operators > 0:
             return self.receivers[0].sampling_rate
 
-        return None
+        return 1.
 
     @sampling_rate.setter
     def sampling_rate(self, value: Optional[float]) -> None:
@@ -451,12 +468,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     def transmit(self, clear_cache: bool = True) -> SimulatedDeviceTransmission:
 
         # Collect transmissions
-        operator_signals = [t.signal for t in self.transmitters.get_transmissions(clear_cache)] if self.operator_separation else [Device.transmit(self, clear_cache)]
+        device_transmission = Device.transmit(self, clear_cache)
 
         transmitted_signals = []
-        superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas)
+        superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency)
         
-        for operator_signal in operator_signals:
+        for operator_signal in device_transmission.operator_transmissions:
 
             if operator_signal is None:
 
@@ -587,8 +604,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 Cache the resulting device reception and operator inputs.
                 Enabled by default.
 
-        Returns:
-            SimulatedDeviceReception: _description_
+        Returns: The received information.
             
         Raises:
             
@@ -619,25 +635,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             
         # Mix arriving signals
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas, num_samples=0, carrier_frequency=self.carrier_frequency)
-
-        # Transform signal argument to matrix argument
-        if isinstance(impinging_signals, Signal):
-
-            propagation_matrix = np.empty(1, dtype=object)
-            propagation_matrix[0] = ([impinging_signals], None)
-            impinging_signals = propagation_matrix
-
-        # Tranform list arguments to matrix arguments
-        elif isinstance(impinging_signals, list):
-
-            if isinstance(impinging_signals[0], Signal):
-                impinging_signals = np.array([(impinging_signals, None)], dtype=object)
-
-            elif isinstance(impinging_signals[0], tuple):
-                impinging_signals = np.array([impinging_signals], dtype=object)
-
-            else:
-                raise ValueError("Unsupported propagation matrix")
 
         # Superimpose receive signals
         for signals, _ in impinging_signals:
