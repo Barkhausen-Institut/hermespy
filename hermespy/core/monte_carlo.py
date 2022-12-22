@@ -1735,7 +1735,7 @@ class MonteCarlo(Generic[MO]):
             self.console.log(f"Generating a maximum of {max_num_samples} = " + dimension_str + f" samples inspected by {len(self.__evaluators)} evaluators\n")
 
         # Render simulation grid table
-        if self.__console_mode != ConsoleMode.SILENT:
+        if self.__console_mode != ConsoleMode.SILENT and len(self.__dimensions) > 0:
             dimension_table = Table(title="Simulation Grid", title_justify="left")
             dimension_table.add_column("Dimension", style="cyan")
             dimension_table.add_column("Sections", style="green")

@@ -25,12 +25,10 @@ class TestSimulationScenario(TestCase):
     def setUp(self) -> None:
 
         self.seed = 0
-        self.device_alpha = Mock()
-        self.device_beta = Mock()
 
         self.scenario = SimulationScenario(seed=self.seed)
-        self.scenario.add_device(self.device_alpha)
-        self.scenario.add_device(self.device_beta)
+        self.device_alpha = self.scenario.new_device()
+        self.device_beta = self.scenario.new_device()
 
     def test_new_device(self) -> None:
         """Calling new_device should result in a simulated new device being added."""
@@ -130,6 +128,11 @@ class TestSimulationScenario(TestCase):
             # String set
             self.scenario.snr_type = str(snr_type.name)
             self.assertEqual(snr_type, self.scenario.snr_type)
+        
+    def test_drop(self) -> None:
+        """Test the generation of a single drop"""
+        
+        drop = self.scenario.drop()
 
 
 class TestSimulationRunner(TestCase):

@@ -348,7 +348,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             raise RuntimeError("Channel devices lack cached transmission / reception information")
 
         # Propagate again over the radar channel
-        null_hypothesis_propagation = self.radar_channel.Propagate(device_transmission.signal[0], null_hypothesis_channel_realization)
+        null_hypothesis_propagation = self.radar_channel.Propagate(device_transmission.signal, null_hypothesis_channel_realization)
         
         # Exchange the respective propagated signal
         impinging_signals = device_reception.impinging_signals.copy()
@@ -367,13 +367,15 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     @property
     def abbreviation(self) -> str:
-        return "ROC"
+        return "ROC"  # pragma no cover
 
     @property
     def title(self) -> str:
-        return "Operating Characteristics"
+        return "Operating Characteristics"  # pragma no cover
 
-    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+    def generate_result(self,
+                        grid: List[GridDimension],
+                        artifacts: np.ndarray) -> EvaluationResult:
 
         # Prepare result containers
         dimensions = tuple(g.num_sample_points for g in grid)

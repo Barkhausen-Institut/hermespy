@@ -13,7 +13,7 @@ from typing import Generic, List, Optional, TypeVar
 
 from h5py import File
 
-from .device import DeviceType, Reception, Transmission, Transmitter, Receiver, Operator
+from .device import DeviceTransmission, DeviceType, Reception, Transmission, Transmitter, Receiver, Operator
 from .drop import Drop
 from .random_node import RandomNode
 from .signal_model import Signal
@@ -404,11 +404,10 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         transmissions = [[o.transmit() for o in d.transmitters] for d in self.devices]
         return transmissions
 
-    def transmit_devices(self) -> List[Signal]:
+    def transmit_devices(self) -> List[DeviceTransmission]:
         """Generated information transmitted by all registered devices.
 
-        Returns:
-            The generated information.
+        Returns: The generated information for each device.
         """
 
         transmissions = [device.transmit(False) for device in self.devices]

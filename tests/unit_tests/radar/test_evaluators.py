@@ -4,10 +4,12 @@
 from unittest import TestCase
 from unittest.mock import PropertyMock, patch, Mock
 
+import numpy as np
 from numpy.random import default_rng
 
 from hermespy.channel import RadarChannel
 from hermespy.radar import DetectionProbEvaluator, FMCW, Radar, ReceiverOperatingCharacteristic
+from hermespy.radar.evaluators import RocEvaluation, RocEvaluationResult
 from hermespy.simulation import SimulationScenario
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -58,7 +60,7 @@ class TestReceiverOperatingCharacteristic(TestCase):
     def setUp(self) -> None:
         
         self.scenario = SimulationScenario()
-        self.device = self.scenario.new_device()
+        self.device = self.scenario.new_device(carrier_frequency=1e9)
         self.channel = RadarChannel(1., 1.)
         self.scenario.set_channel(self.device, self.device, self.channel)
         
@@ -68,12 +70,29 @@ class TestReceiverOperatingCharacteristic(TestCase):
         
         self.evaluator = ReceiverOperatingCharacteristic(self.radar, self.channel)
         
-    def test_evaluate(self) -> None:
-        """Test evaluation"""
+    def _generate_evaluation(self) -> RocEvaluation:
+        """Helper class to generate an evaluation.
+        
+        Returns: The evaluation.
+        """
         
         _ = self.radar.transmit()
         forwards_propagation, _, _ = self.channel.propagate(self.device.transmit())
         self.device.receive(forwards_propagation)
         _ = self.radar.receive()
         
-        evaluation = self.evaluator.evaluate()
+        return self.evaluator.evaluate()
+        
+    def test_evaluate(self) -> None:
+        """Test evaluation extraction"""
+        
+        evaluation = self._generate_evaluation()
+        self.assertCountEqual(evaluation.data_h0.shape, evaluation.data_h1.shape)
+
+    def test_generate_result(self) -> None:
+        """Test result generation"""
+        
+        artifacts = np.array([self._generate_evaluation().artifact() for _ in range(3)], dtype=object)
+        
+        result = self.evaluator.generate_result([], artifacts)
+        self.assertIsInstance(result, RocEvaluationResult)
