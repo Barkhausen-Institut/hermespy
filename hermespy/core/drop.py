@@ -11,7 +11,7 @@ from typing import List, Type
 
 from h5py import Group
 
-from .device import DeviceReception, DeviceTransmission
+from .device import DeviceReception, DeviceOutput
 from .factory import HDFSerializable
 from .monte_carlo import Artifact
 
@@ -32,18 +32,18 @@ class Drop(HDFSerializable):
     # Time at which the drop was generated
     __timestamp: float
     # Transmitted device information
-    __device_transmissions: List[DeviceTransmission]
+    __device_transmissions: List[DeviceOutput]
     # Received device information
     __device_receptions: List[DeviceReception]
 
-    def __init__(self, timestamp: float, device_transmissions: List[DeviceTransmission], device_receptions: List[DeviceReception]) -> None:
+    def __init__(self, timestamp: float, device_transmissions: List[DeviceOutput], device_receptions: List[DeviceReception]) -> None:
         """
         Args:
 
             timestamp (float):
                 Time at which the drop was generated.
 
-            device_transmissions (List[DeviceTransmission]):
+            device_transmissions (List[DeviceOutput]):
                 Transmitted device information.
 
             device_receptions (List[DeviceReception]):
@@ -61,7 +61,7 @@ class Drop(HDFSerializable):
         return self.__timestamp
 
     @property
-    def device_transmissions(self) -> List[DeviceTransmission]:
+    def device_transmissions(self) -> List[DeviceOutput]:
         """Transmitted device information within this drop."""
 
         return self.__device_transmissions
@@ -93,7 +93,7 @@ class Drop(HDFSerializable):
         num_receptions = group.attrs.get("num_receptions", 0)
 
         # Recall groups
-        transmissions = [DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
+        transmissions = [DeviceOutput.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
         receptions = [DeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)]
 
         return cls(timestamp=timestamp, device_transmissions=transmissions, device_receptions=receptions)
@@ -120,14 +120,14 @@ class EvaluatedDrop(Drop):
     # Evaluation artifacts generated for this drop.
     __artifacts: List[Artifact]
 
-    def __init__(self, timestamp: float, device_transmissions: List[DeviceTransmission], device_receptions: List[DeviceReception], artifacts: List[Artifact]) -> None:
+    def __init__(self, timestamp: float, device_transmissions: List[DeviceOutput], device_receptions: List[DeviceReception], artifacts: List[Artifact]) -> None:
         """
         Args:
 
             timestamp (float):
                 Time at which the drop was generated.
 
-            device_transmissions (List[DeviceTransmission]):
+            device_transmissions (List[DeviceOutput]):
                 Transmitted device information.
 
             device_receptions (List[DeviceReception]):

@@ -9,7 +9,7 @@ from abc import abstractmethod, ABC
 from time import time
 from typing import Generic, List, Optional, TypeVar
 
-from hermespy.core import Scenario, DeviceReception, DeviceTransmission, Drop, Signal
+from hermespy.core import Scenario, DeviceReception, DeviceOutput, Drop, Signal
 from .physical_device import PhysicalDeviceType
 
 __author__ = "Jan Adler"

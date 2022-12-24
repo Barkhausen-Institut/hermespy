@@ -339,23 +339,23 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         null_hypothesis_channel_realization = self.radar_channel.null_hypothesis()
 
         # Collect required information from the simulation
-        device_transmission = self.radar_channel.transmitter.transmission
-        device_reception = self.radar_channel.receiver.reception
+        device_output = self.radar_channel.transmitter.output
+        device_input = self.radar_channel.receiver.input
         device_index = self.radar_channel.scenario.device_index(self.receiving_radar.device)
         operator_index = self.receiving_radar.device.receivers.operator_index(self.receiving_radar)
 
-        if device_transmission is None or device_reception is None:
+        if device_output is None or device_input is None:
             raise RuntimeError("Channel devices lack cached transmission / reception information")
 
         # Propagate again over the radar channel
-        null_hypothesis_propagation = self.radar_channel.Propagate(device_transmission.signal, null_hypothesis_channel_realization)
+        null_hypothesis_propagation = self.radar_channel.Propagate(device_output.mixed_signal, null_hypothesis_channel_realization)
         
         # Exchange the respective propagated signal
-        impinging_signals = device_reception.impinging_signals.copy()
+        impinging_signals = device_input.impinging_signals.copy()
         impinging_signals[device_index] = ([null_hypothesis_propagation], null_hypothesis_channel_realization)
         
         # Receive again
-        null_hypothesis_device_reception = self.radar_channel.receiver.receive_from_realization(impinging_signals, device_reception, device_reception.leaking_signal, False)
+        null_hypothesis_device_reception = self.radar_channel.receiver.receive_from_realization(impinging_signals, device_input, device_input.leaking_signal, False)
         null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], None, False)
 
         # Retrieve radar cubes for both hypothesis
