@@ -101,7 +101,7 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
 
     def add(self,
             signal: Signal,
-            realization: NoiseRealizationType) -> Signal:
+            realization: Optional[NoiseRealizationType] = None) -> Signal:
         """Add noise to a signal model.
 
         Args:
@@ -115,6 +115,7 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
         Returns: Signal model with added noise.
         """
 
+        realization = self.realize() if realization is None else realization
         return realization.add_to(signal)
 
     @property
