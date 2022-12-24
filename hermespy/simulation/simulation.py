@@ -17,9 +17,9 @@ from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core import ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceTransmission, DeviceReception, SNRType
+from hermespy.core import ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, DeviceReception, SNRType
 from hermespy.channel import QuadrigaInterface, Channel
-from .simulated_device import ProcessedSimulatedDeviceReception, SimulatedDevice, SimulatedDeviceReception
+from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDeviceReception, SimulatedDevice, SimulatedDeviceReception
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -39,16 +39,16 @@ class SimulatedDrop(Drop):
        
     def __init__(self,
                  timestamp: float,
-                 device_transmissions: List[DeviceTransmission],
+                 device_outputs: List[DeviceOutput],
                  channel_realizations: List[ChannelStateInformation],
-                 device_receptions: List[ProcessedSimulatedDeviceReception]) -> None:
+                 device_receptions: List[SimulatedDeviceReception]) -> None:
         """
         Args:
 
             timestamp (float):
                 Time at which the drop was generated.
 
-            device_transmissions (List[DeviceTransmission]):
+            device_outputs (List[DeviceOutput]):
                 Transmitted device information.
                 
             channel_realizations (List[ChannelStateInformation]):
@@ -59,7 +59,7 @@ class SimulatedDrop(Drop):
         """
         
         self.__channel_realizations = channel_realizations
-        Drop.__init__(self, timestamp, device_transmissions, device_receptions)
+        Drop.__init__(self, timestamp, device_outputs, device_receptions)
     
     @property
     def channel_realizations(self) -> np.ndarray:
@@ -80,8 +80,8 @@ class SimulatedDrop(Drop):
         num_devices = group.attrs.get("num_devices", 1)
         
         # Recall groups
-        transmissions = [DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
-        receptions = [ProcessedSimulatedDeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)]
+        transmissions = [DeviceOutput.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
+        receptions = [SimulatedDeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)]
         
         channel_realizations = np.empty((num_devices, num_devices), dtype=object)
         for d_out in range(num_devices):
@@ -361,12 +361,12 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         self.__snr_type = snr_type
 
-    def propagate(self, transmissions: List[DeviceTransmission]) -> np.ndarray:
+    def propagate(self, transmissions: List[DeviceOutput]) -> np.ndarray:
         """Propagate device transmissions over the scenario's channel instances.
         
         Args:
         
-            transmissions (List[DeviceTransmission]): List of device transmissisons.
+            transmissions (List[DeviceOutput]): List of device transmissisons.
             
         Returns: Propagation matrix.
         
@@ -398,7 +398,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
     def receive_devices(self,
                         impinging_signals: Union[List[Signal], np.ndarray],
-                        cache: bool = True) -> List[SimulatedDeviceReception]:
+                        cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
         """Generate base-band signal models received by devices
         
         Args:
@@ -410,14 +410,14 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 Cache the receptions at the devices.
                 Enabled by default.
                 
-        Returns: List of device receptions.
+        Returns: List of device inputs.
         """
 
         if len(impinging_signals) != self.num_devices:
             raise ValueError(f"Number of arriving signals ({len(impinging_signals)}) does not match " f"the number of receiving devices ({self.num_devices})")
 
-        device_receptions = [d.receive(s, self.snr, self.snr_type, cache=cache) for d, s in zip(self.devices, impinging_signals)]
-        return device_receptions
+        device_inputs = [d.receive(s, self.snr, self.snr_type, cache=cache) for d, s in zip(self.devices, impinging_signals)]
+        return device_inputs
 
     def _drop(self) -> Drop:
 
@@ -426,18 +426,18 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Generate device transmissions
         _ = self.transmit_operators()
-        device_transmissions = self.transmit_devices()
+        device_outputs = self.transmit_devices()
 
         # Simulate channel propagation
-        propagation_matrix = self.propagate(device_transmissions)
+        propagation_matrix = self.propagate(device_outputs)
 
         # Process receptions
-        device_receptions = self.receive_devices(propagation_matrix)
+        device_inputs = self.receive_devices(propagation_matrix)
         operator_receptions = self.receive_operators()
-        device_receptions = [ProcessedSimulatedDeviceReception.From_Receptions(d, o) for d, o in zip(device_receptions, operator_receptions)]
+        device_receptions = [SimulatedDeviceReception.From_DeviceInput(i, r) for i, r in zip(device_inputs, operator_receptions)]
 
         # Return finished drop
-        return SimulatedDrop(timestamp, device_transmissions, propagation_matrix, device_receptions)
+        return SimulatedDrop(timestamp, device_outputs, propagation_matrix, device_receptions)
 
 
 class SimulationRunner(object):

@@ -12,7 +12,7 @@ from itertools import chain, product
 
 import numpy as np
 
-from hermespy.core import DeviceTransmission, RandomNode, Signal, ChannelStateInformation
+from hermespy.core import DeviceOutput, RandomNode, Signal, ChannelStateInformation
 from hermespy.core.factory import Serializable
 from hermespy.core.channel_state_information import ChannelStateFormat
 
@@ -377,8 +377,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         return self.__receiver.antennas.num_antennas
 
     def propagate(self,
-                  forwards: Union[DeviceTransmission, Signal, List[Signal], None] = None,
-                  backwards: Union[DeviceTransmission, Signal, List[Signal], None] = None,
+                  forwards: Union[DeviceOutput, Signal, List[Signal], None] = None,
+                  backwards: Union[DeviceOutput, Signal, List[Signal], None] = None,
                   realization: Optional[ChannelRealizationType] = None) -> Tuple[List[Signal], List[Signal], ChannelRealizationType]:
         """Propagate radio-frequency band signals over a channel instance.
 
@@ -387,7 +387,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         Args:
 
-            forwards (Union[DeviceTransmission, Signal, List[Signal]], optional):
+            forwards (Union[DeviceOutput, Signal, List[Signal]], optional):
                 Signal models emitted by `device_alpha` associated with this wireless channel model.
 
             backwards (Union[Signal, List[Signal]], optional):
@@ -430,8 +430,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         forwards: List[Signal]
         backwards: List[Signal]
         
-        if isinstance(forwards, DeviceTransmission):
-            forwards = [forwards.signal]
+        if isinstance(forwards, DeviceOutput):
+            forwards = forwards.emerging_signals
         
         elif isinstance(forwards, Signal):
             forwards = [forwards]
@@ -442,8 +442,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         elif forwards is None:
             forwards = []
             
-        if isinstance(backwards, DeviceTransmission):
-            backwards = [backwards.signal]
+        if isinstance(backwards, DeviceOutput):
+            backwards = backwards.emerging_signals
         
         elif isinstance(backwards, Signal):
             backwards = [backwards]
