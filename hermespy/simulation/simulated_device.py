@@ -106,12 +106,9 @@ class SimulatedDeviceOutput(DeviceOutput):
         
     @property
     def emerging_signals(self) -> List[Signal]:
+
         
-        if len(self.__emerging_signals) == 1:
-            return [self.__emerging_signals[0] for _ in range(self.num_operator_transmissions)]
-        
-        else:
-            return self.__emerging_signals
+        return self.__emerging_signals
         
     @property
     def mixed_signal(self) -> Signal:

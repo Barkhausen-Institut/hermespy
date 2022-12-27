@@ -478,12 +478,12 @@ class SimulationRunner(object):
         signal samples on the second dimension.
         """
 
-        device_transmissions = [device.transmission for device in self.__scenario.devices]
-        if any([t is None for t in device_transmissions]):
+        device_outputs = [device.output for device in self.__scenario.devices]
+        if any([t is None for t in device_outputs]):
             raise RuntimeError("Propagation simulation stage called without prior device transmission")
 
-        if len(device_transmissions) != self.__scenario.num_devices:
-            raise ValueError(f"Number of transmit signals ({len(device_transmissions)}) does not match " f"the number of registered devices ({self.__scenario.num_devices})")
+        if len(device_outputs) != self.__scenario.num_devices:
+            raise ValueError(f"Number of transmit signals ({len(device_outputs)}) does not match " f"the number of registered devices ({self.__scenario.num_devices})")
 
         # Initialize the propagated signals
         propagation_matrix = np.empty((self.__scenario.num_devices, self.__scenario.num_devices), dtype=object)
@@ -492,8 +492,8 @@ class SimulationRunner(object):
         for forwards_device_idx in range(self.__scenario.num_devices):
             for backwards_device_idx in range(1 + forwards_device_idx):
 
-                forwards_signals = device_transmissions[forwards_device_idx].signal
-                backwards_signals = device_transmissions[backwards_device_idx].signal
+                forwards_signals = device_outputs[forwards_device_idx].emerging_signals
+                backwards_signals = device_outputs[backwards_device_idx].emerging_signals
 
                 channel: Channel = self.__scenario.channels[forwards_device_idx, backwards_device_idx]
                 beta_receptions, alpha_receptions, realization = channel.propagate(forwards_signals, backwards_signals)

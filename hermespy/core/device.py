@@ -455,7 +455,7 @@ class DeviceOutput(HDFSerializable):
         if self.__mixed_signal is None:
 
             self.__mixed_signal = Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency)
-            for transmission in self.transmissions:
+            for transmission in self.operator_transmissions:
                 self.__mixed_signal.superimpose(transmission.signal)
 
         return self.__mixed_signal
