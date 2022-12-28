@@ -63,10 +63,10 @@ operator_h0.transmit().signal
 rx_signal_h0, _, channel_state_h0 = channel_h0.propagate(device_h0.transmit())
 
 # Simulate the signal reception and radar processing
-device_h1.receive(rx_signal_h1, snr=snr)
+device_h1.process_input(rx_signal_h1, snr=snr)
 operator_h1.receive()
 
-device_h0.receive(rx_signal_h0, snr=snr)
+device_h0.process_input(rx_signal_h0, snr=snr)
 operator_h0.receive()
 
 # Plot range profile

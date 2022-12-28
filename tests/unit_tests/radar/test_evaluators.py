@@ -78,7 +78,7 @@ class TestReceiverOperatingCharacteristic(TestCase):
         
         _ = self.radar.transmit()
         forwards_propagation, _, _ = self.channel.propagate(self.device.transmit())
-        self.device.receive(forwards_propagation)
+        self.device.process_input(forwards_propagation)
         _ = self.radar.receive()
         
         return self.evaluator.evaluate()

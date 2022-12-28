@@ -169,7 +169,7 @@ class TestAudioDevice(TestCase):
         
         self.device.transmit()
         self.device.trigger()
-        self.device.receive()
+        self.device.process_input()
         
         reception = operator.receive()
         

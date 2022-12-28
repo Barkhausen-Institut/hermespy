@@ -64,7 +64,7 @@ class TestMIMOLink(TestCase):
         device_reception, _, csi = self.channel.propagate(device_transmission)
         
         device_reception[0].samples = device_reception[0].samples[:, :self.rx_modem.waveform_generator.samples_in_frame]
-        self.rx_device.receive(device_reception)
+        self.rx_device.process_input(device_reception)
         
         self.rx_modem.cache_reception(self.rx_modem.signal, csi)
         communication_reception = self.rx_modem.receive()

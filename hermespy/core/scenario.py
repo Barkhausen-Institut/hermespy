@@ -9,11 +9,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import IntEnum
 from os import path, remove
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, Iterable, List, Optional, Tuple, TypeVar, Union
 
 from h5py import File
 
-from .device import DeviceOutput, DeviceType, Reception, Transmission, Transmitter, Receiver, Operator
+from .channel_state_information import ChannelStateInformation
+from .device import DeviceInput, DeviceOutput, DeviceReception, DeviceType, ProcessedDeviceInput, Reception, Transmission, Transmitter, Receiver, Operator
 from .drop import Drop
 from .random_node import RandomNode
 from .signal_model import Signal
@@ -404,6 +405,27 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         transmissions = [[o.transmit() for o in d.transmitters] for d in self.devices]
         return transmissions
 
+    def generate_outputs(self,
+                         transmissions: Optional[List[List[Transmission]]] = None) -> List[DeviceOutput]:
+        """Generate signals emitted by devices.
+        
+        Args:
+
+            transmissions ([List[List[Transmission]], optional):
+                Transmissions by operators.
+                If none were provided, cached operator transmissions are assumed.
+
+        Returns: List of device outputs.
+        """
+
+        transmissions = [None] * self.num_devices if transmissions is None else transmissions
+
+        if len(transmissions) != self.num_devices:
+            raise ValueError(f"Number of device transmissions ({len(transmissions)}) does not match number of registered devices ({self.num_devices}")
+
+        outputs = [d.generate_output(t) for d, t in zip(self.devices, transmissions)]
+        return outputs
+
     def transmit_devices(self) -> List[DeviceOutput]:
         """Generated information transmitted by all registered devices.
 
@@ -413,33 +435,98 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         transmissions = [device.transmit(False) for device in self.devices]
         return transmissions
 
-    def receive_devices(self, receptions: List[Signal]) -> List[Signal]:
-        """Receive over all devices.
-
+    def process_inputs(self,
+                       impinging_signals: List[Union[DeviceInput, Signal, Iterable[Signal]]],
+                       cache: bool = True) -> List[ProcessedDeviceInput]:
+        """Process input signals impinging onto the scenario's devices.
+        
         Args:
 
-            receptions (List[Signal]):
-                The signal models to be received be each device.
+            impinging_signals (List[Union[DeviceInput, Signal, Iterable[Signal]]]):
+                List of signals impinging onto the devices.
 
-        Returns:
-            The signal models after device processing.
+            cache (bool, optional):
+                Cache the operator inputs at the registered receive operators for further processing.
+                Enabled by default.
+
+        Returns: List of the processed device input information.
+
+        Raises:
+
+            ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 
-        if len(receptions) != len(self.__devices):
-            raise ValueError(f"Number of receptions must be equal to number of devices ({len(receptions)} != {len(self.__devices)})")
+        if len(impinging_signals) != self.num_devices:
+            raise ValueError(f"Number of impinging signals ({len(impinging_signals)}) does not match the number if registered devices ({self.num_devices}) within this scenario")
 
-        device_receptions = [d.receive(r) for d, r in zip(self.devices, receptions)]
-        return device_receptions
+        # Call the process input method for each device
+        processed_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]
 
-    def receive_operators(self) -> List[List[Reception]]:
-        """Generate information received by all registered device operators.
+        return processed_inputs
 
-        Returns:
-            The generated information sorted into devices and their respective operators.
+    def receive_operators(self,
+                          operator_inputs: Optional[List[List[Union[Signal, Tuple[Signal, ChannelStateInformation]]]]] = None,
+                          cache: bool = True) -> List[Reception]:
+        """Receive over the registered operators.
+        
+        Args:
+
+            operator_inputs (List[List[Union[Signal, Tuple[Signal, ChannelStateInformation]]]], optional):
+                Signal models fed to the receive operators of each device.
+                If not provided, the operatores are expected to have inputs cached
+
+            cache (bool, optional):
+                Cache the generated received information at the device's receive operators.
+                Enabled by default.
+
+        Returns: List of information generated by receiving over the device's operators.
+
+        Raises:
+        
+            ValueError: If the number of operator inputs does not match the number of receive devices.
+            RuntimeError: If no operator inputs were specified and an operator has no cached inputs.
         """
 
-        receptions = [[o.receive() for o in d.receivers] for d in self.devices]
+        operator_inputs = [None for _ in range(self.num_devices)] if operator_inputs is None else operator_inputs
+
+        if len(operator_inputs) != self.num_devices:
+            raise ValueError(f"Number of operator inputs ({len(operator_inputs)}) does not match the number of registered scenario devices ({self.num_devices})")
+
+        # Generate receptions
+        receptions = [d.receive_operators(i, cache) for d, i in zip(self.devices, operator_inputs)]
         return receptions
+
+    def receive_devices(self,
+                        impinging_signals: List[Union[DeviceInput, Signal, Iterable[Signal]]],
+                        cache: bool = True) -> List[DeviceReception]:
+        """Receive over all scenario devices.
+
+        Internally calls :meth:`.process_inputs` and :meth:`.receive_devices`.
+        
+        Args:
+
+            impinging_signals (List[Union[DeviceInput, Signal, Iterable[Signal]]]):
+                List of signals impinging onto the devices.
+
+            cache (bool, optional):
+                Cache the operator inputs at the registered receive operators for further processing.
+                Enabled by default.
+
+        Returns: List of the processed device input information.
+
+        Raises:
+
+            ValueError: If the number of `impinging_signals` does not match the number of registered devices.
+        """
+
+        # Generate inputs
+        device_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]
+
+        # Generate operator receptions
+        receptions = self.receive_operators(device_inputs)
+
+        # Generate device receptions
+        return [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(device_inputs, receptions)]
     
     @property
     def num_drops(self) -> Optional[int]:
