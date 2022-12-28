@@ -38,7 +38,7 @@ class TestAudioDevice(TestCase):
         
         _ = self.device.transmit()
         self.device.trigger()
-        _ = self.device.receive()
+        _ = self.device.process_input()
         
         reception = self.modem.receive()
         

@@ -58,7 +58,7 @@ class TestSCMatchedFilterJcas(TestCase):
             
             # Propagate signal over the radar channel
             propagetd_signals, _, _ = self.channel.propagate(rf_signals)
-            self.device.receive(propagetd_signals)
+            self.device.process_input(propagetd_signals)
             
             # Receive signal
             reception = self.operator.receive()
