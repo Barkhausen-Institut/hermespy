@@ -9,13 +9,14 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import IntEnum
 from os import path, remove
-from typing import Generic, Iterable, List, Optional, Tuple, TypeVar, Union
+from typing import Generic, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
-from h5py import File
+from h5py import File, Group
 
 from .channel_state_information import ChannelStateInformation
 from .device import DeviceInput, DeviceOutput, DeviceReception, DeviceType, ProcessedDeviceInput, Reception, Transmission, Transmitter, Receiver, Operator
 from .drop import Drop
+from .factory import Factory
 from .random_node import RandomNode
 from .signal_model import Signal
 
@@ -52,19 +53,17 @@ class ScenarioMode(IntEnum):
 
 
 class Scenario(ABC, RandomNode, Generic[DeviceType]):
-    """A simulation scenario.
+    """A wireless scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
     Each device can be operated by multiple operators simultaneously.
     """
 
-    __mode: ScenarioMode  # Current scenario operating mode
-    # Registered devices within this scenario.
-    __devices: List[DeviceType]
-    __drop_duration: float  # Drop duration in seconds.
-    __file: Optional[File]  # HDF5 file handle
-    __file_location: Optional[str]  # HDF5 file location
-    __drop_counter: int  # Internal drop counter
+    __mode: ScenarioMode                # Current scenario operating mode 
+    __devices: List[DeviceType]         # Registered devices within this scenario.
+    __drop_duration: float              # Drop duration in seconds.
+    __file: Optional[File]              # HDF5 file handle
+    __drop_counter: int                 # Internal drop counter
 
     def __init__(self, seed: Optional[int] = None) -> None:
         """
@@ -79,7 +78,6 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         self.__devices = []
         self.drop_duration = 0.0
         self.__file = None
-        self.__file_location = None
         self.__drop_counter = 0
 
     def __del__(self) -> None:
@@ -319,7 +317,53 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         self.__drop_duration = value
 
-    def record(self, file: str, override: bool = False) -> None:
+    def _state_to_HDF(self,
+                      factory: Factory,
+                      group: Group) -> None:
+        """Serialize the scenario's state to an HDF5 group.
+        
+        Args:
+
+            factory (Factory):
+                Reference to the serialization factory.
+
+            group (Group):
+                Reference to an empty HDF5 group.
+        """
+
+        # Serialize required attributes
+        group.attrs["num_devices"] = self.num_devices
+
+        # Serialize device states
+        for d, device in enumerate(self.devices):
+            group.attrs[f"device_{d:02d}"] = factory.to_str(device)
+
+    @classmethod
+    def _state_from_HDF(cls: Type[Scenario],
+                        factory: Factory,
+                        group: Group) -> Scenario:
+
+        # Deserialize required attributes
+        num_devices = group.attrs["num_devices"]
+
+        # Initialize class
+        scenario = cls()
+
+        # Deserialize required devices
+        for d in range(num_devices):
+
+            # Recall device state from string representation
+            device = factory.from_str(group.attrs[f"device_{d:02d}"])[0]
+
+            # Add device to the scenario
+            scenario.add_device(device)
+
+        # Return initialize scenario
+        return scenario
+
+    def record(self,
+               file: str,
+               override: bool = False) -> None:
         """Start recording drop information generated from this scenario.
 
         After the scenario starts recording, changing the device and operator configuration
@@ -350,30 +394,83 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Initialize dataset
         self.__file = File(file, "w-")
-        self.__file_location = file
         self.__drop_counter = 0
 
         # Switch mode
         self.__mode = ScenarioMode.RECORD
 
-        # ToDo: Write scenario state to the set
-        # factory = Factory()
-        # self.__file.attrs['serialization'] = factory.to_str(self)
+        # Write required attributes
         self.__file.attrs["drop_duration"] = drop_duration
-        self.__file.attrs["num_devices"] = self.num_devices
 
-    def replay(self, path: Optional[str] = None) -> None:
+        # Write scenario state to the dataset for easy recollection
+        # Future feature: Write a locking mechanism during recording
+        factory = Factory()
+        self._state_to_HDF(factory, self.__file.create_group('state'))
 
-        if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError("Initializing a replay is only possible in default mode. Please stop before starting a new replay.")
+        # Write meta-information
+        self.__file.attrs["hermes_version"] = __version__
+        self.__file.attrs["hermes_status"] = __status__
+
+    def replay(self,
+               file: Union[None, str, File] = None) -> None:
+        """Replay the scenario from and HDF5 savefile.
+        
+        Args:
+
+            file (Union[None, str, File], optional):
+                File from which the scenario should be replayed.
+                May be a file system location or an HDF5 `File` handle.
+
+        Raises:
+
+            RuntimeError: If `file` is not specified and can't be inferred from previous record executions.
+        """
+
+        if file is None:
+
+            if self.__file is None:
+                raise ValueError("A file location must be specified or the scenario most be in record or replay mode")
+
+            file = self.__file.filename
+
+        # Stop any action and close file handles if required
+        self.stop()
+
+        # If only a file system location was specified, open the file
+        if isinstance(file, str):
+            file = File(file, 'r')
 
         # Initialize dataset
-        self.__file = File(path, "r")
-        self.__file_location = path
+        self.__file = file
         self.__drop_counter = 0
 
         # Switch mode
         self.__mode = ScenarioMode.REPLAY
+
+    @classmethod
+    def Replay(cls: Type[Scenario],
+               file: Union[str, File]) -> Scenario:
+        """Replay a scenario from an HDF5 save file.
+        
+        Args:
+
+            file (str):
+                File system location of the HDF5 save file.
+        """
+
+        # Load the dataset
+        if isinstance(file, str):
+            file = File(file, "r")
+
+        # Recall the class state from the respective HDF5 group
+        factory = Factory()
+        scenario = cls._state_from_HDF(factory, file['state'])
+
+        # Enable the replay mode
+        scenario.replay(file)
+
+        # Return the scenario (initialized and in replay mode)
+        return scenario
 
     def stop(self) -> None:
         """Stop a running recording / playback session."""
