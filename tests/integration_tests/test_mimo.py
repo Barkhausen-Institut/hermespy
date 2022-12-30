@@ -58,18 +58,14 @@ class TestMIMOLink(TestCase):
     
     def __propagate(self) -> Tuple[CommunicationTransmission, CommunicationReception]:
         
-        communication_transmission = self.tx_modem.transmit()
         device_transmission = self.tx_device.transmit()
         
-        device_reception, _, csi = self.channel.propagate(device_transmission)
+        propagation, _, csi = self.channel.propagate(device_transmission)
+        propagation[0].samples = propagation[0].samples[:, :self.rx_modem.waveform_generator.samples_in_frame]
         
-        device_reception[0].samples = device_reception[0].samples[:, :self.rx_modem.waveform_generator.samples_in_frame]
-        self.rx_device.process_input(device_reception)
+        device_reception = self.rx_device.receive(propagation, channel_state=csi)
         
-        self.rx_modem.cache_reception(self.rx_modem.signal, csi)
-        communication_reception = self.rx_modem.receive()
-        
-        return communication_transmission, communication_reception
+        return device_transmission.operator_transmissions[0], device_reception.operator_receptions[0]
         
     def test_conventional_beamforming(self) -> None:
         """Test valid data transmission using conventional beamformers"""

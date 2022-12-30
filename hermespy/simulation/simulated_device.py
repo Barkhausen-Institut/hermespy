@@ -6,7 +6,7 @@ Simulated Devices
 """
 
 from __future__ import annotations
-from typing import List, Optional, Union, Tuple, Type
+from typing import Iterable, List, Optional, Union, Tuple, Type
 
 import numpy as np
 from h5py import Group
@@ -129,7 +129,7 @@ class SimulatedDeviceOutput(DeviceOutput):
     def to_HDF(self, group: Group) -> None:
         
         # Serialize base class
-        DeviceOutput.to_HDF(group)
+        DeviceOutput.to_HDF(self, group)
         
         # Serialize emerging signals
         group.attrs['num_emerging_signals'] = self.num_emerging_signals
@@ -215,7 +215,7 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
     __operator_separation: bool
 
     def __init__(self,
-                 impinging_signals: np.ndarray,
+                 impinging_signals: List[Signal],
                  leaking_signal: Signal,
                  operator_separation: bool,
                  operator_inputs: List[Tuple[Signal, ChannelStateInformation]],
@@ -223,7 +223,7 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
         """
         Args:
 
-            impinging_signals (np.ndarray): Numpy vector containing lists of signals impinging onto the device.
+            impinging_signals (List[Signal]): Numpy vector containing lists of signals impinging onto the device.
             leaking_signal (Optional[Signal]): Signal leaking from transmit to receive chains.
             operator_separation (bool): Is the operator separation flag enabled?
             operator_inputs (bool): Information cached by the device operators.
@@ -742,11 +742,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Return device receive realization
         return SimulatedDeviceReceiveRealization(noise_realizations)
 
-    def receive_from_realization(self,
+    def process_from_realization(self,
                                  impinging_signals: Union[List[Signal], Signal, np.ndarray, SimulatedDeviceOutput],
                                  realization: SimulatedDeviceReceiveRealization,
                                  leaking_signal: Optional[Signal] = None,
-                                 cache: bool = True) -> ProcessedSimulatedDeviceInput:
+                                 cache: bool = True,
+                                 channel_state: Optional[ChannelStateInformation] = None) -> ProcessedSimulatedDeviceInput:
         """Simulate a signal reception for this device model.
 
         Args:
@@ -767,6 +768,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             cache (bool, optional):
                 Cache the resulting device reception and operator inputs.
                 Enabled by default.
+
+            channel_state (ChannelStateInformation, optional):
+                Assumed state of the channel over which the impinging signals were propagated.
 
         Returns: The received information.
             
@@ -853,6 +857,10 @@ class SimulatedDevice(Device, RandomNode, Serializable):
                 reference_csi = None
                 receiver_signal = baseband_signal.copy()
 
+            # Overwrite the reference csi if channel_state was specified
+            if channel_state is not None:
+                reference_csi = channel_state
+
             # Add noise to the received signal
             noisy_signal = self.__noise.add(receiver_signal, noise_realization)
             
@@ -863,7 +871,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             operator_inputs.append((noisy_signal, reference_csi))
 
         # Generate output information
-        processed_input = ProcessedSimulatedDeviceInput(impinging_signals, leaking_signal, self.operator_separation, operator_inputs, realization.noise_realizations)
+        stored_impinging_signals = [s[0][0] for s in impinging_signals]  # Hack, ToDo: Find better solution
+        processed_input = ProcessedSimulatedDeviceInput(stored_impinging_signals, leaking_signal, self.operator_separation, operator_inputs, realization.noise_realizations)
         
         # Cache information if respective flag is enabled
         if cache:
@@ -873,11 +882,12 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         return processed_input
 
     def process_input(self,
-                impinging_signals: Union[List[Signal], Signal, np.ndarray, SimulatedDeviceOutput],
-                snr: float = float('inf'),
-                snr_type: SNRType = SNRType.PN0,
-                leaking_signal: Optional[Signal] = None,
-                cache: bool = True) -> ProcessedSimulatedDeviceInput:
+                      impinging_signals: Union[List[Signal], Signal, np.ndarray, SimulatedDeviceOutput],
+                      snr: float = float('inf'),
+                      snr_type: SNRType = SNRType.PN0,
+                      leaking_signal: Optional[Signal] = None,
+                      cache: bool = True,
+                      channel_state: Optional[ChannelStateInformation] = None) -> ProcessedSimulatedDeviceInput:
         """Receive signals at this device.
 
         Args:
@@ -909,7 +919,22 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         realization = self.realize_reception(snr, snr_type)
         
         # Receive the signal
-        processed_input = self.receive_from_realization(impinging_signals, realization, leaking_signal, cache)
+        processed_input = self.process_from_realization(impinging_signals, realization, leaking_signal, cache, channel_state)
         
         # Return result
         return processed_input
+
+    def receive(self,
+                impinging_signals: Union[DeviceInput, Signal, Iterable[Signal]],
+                cache: bool = True,
+                channel_state: Optional[ChannelStateInformation] = None) -> DeviceReception:
+
+        # Process input
+        processed_input = self.process_input(impinging_signals, cache=cache, channel_state=channel_state)
+
+        # Generate receptions
+        receptions = self.receive_operators(processed_input.operator_inputs, cache)
+
+        # Generate device reception
+        return DeviceReception.From_ProcessedDeviceInput(processed_input, receptions)
+    
