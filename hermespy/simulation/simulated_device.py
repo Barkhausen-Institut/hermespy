@@ -324,7 +324,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     """
 
     yaml_tag = "SimulatedDevice"
-    property_blacklist = {"num_antennas", "orientation", "topology", "velocity", "wavelength"}
+    property_blacklist = {"num_antennas", "orientation", "random_mother", "scenario", "topology", "velocity", "wavelength"}
     serialized_attribute = {"rf_chain", "adc"}
 
     rf_chain: RfChain
