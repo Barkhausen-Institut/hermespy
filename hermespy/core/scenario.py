@@ -64,6 +64,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
     __drop_duration: float              # Drop duration in seconds.
     __file: Optional[File]              # HDF5 file handle
     __drop_counter: int                 # Internal drop counter
+    __campaign: str                     # Measurement campaign name
 
     def __init__(self, seed: Optional[int] = None) -> None:
         """
@@ -79,6 +80,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         self.drop_duration = 0.0
         self.__file = None
         self.__drop_counter = 0
+        self.__campaign = 'default'
 
     def __del__(self) -> None:
 
@@ -317,6 +319,48 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         self.__drop_duration = value
 
+    @property
+    def campaign(self) -> str:
+        """Measurement campaign identifier.
+
+        If not specified, the scenario will assume the campaign name to be `default`.
+        
+        Returns:
+            Name of the current measurement campaign.
+
+        Raises:
+
+            ValueError: If in replay mode and the requested campaign name is not available.
+        """
+
+        return self.__campaign
+
+    @campaign.setter
+    def campaign(self, value: str) -> None:
+
+        # Do nothing if value matches the current campaign
+        if value == self.__campaign:
+            return
+
+        # If in replay mode, make sure the campaign exists
+        if self.mode == ScenarioMode.REPLAY:
+            
+            if not self.__campaign_exists(value):
+                raise ValueError(f"The requested measurement campaign '{value}' does not exists within the currently replayed savefile")
+
+            self.__drop_counter = 0
+
+        elif self.mode == ScenarioMode.RECORD:
+
+            # Create the campaign if it doesn't exists
+            if not self.__campaign_exists(value):
+                self.__file.create_group('/campaigns/' + value)
+
+            self.__drop_counter = self.__file['/campaigns/' + value].len
+
+        # Update the campaign identifier
+        self.__campaign = value
+
     def _state_to_HDF(self,
                       factory: Factory,
                       group: Group) -> None:
@@ -363,7 +407,8 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
     def record(self,
                file: str,
-               override: bool = False) -> None:
+               override: bool = False,
+               campaign: str = 'default') -> None:
         """Start recording drop information generated from this scenario.
 
         After the scenario starts recording, changing the device and operator configuration
@@ -377,6 +422,9 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
             override (bool, optional):
                 Override the file if a recording already exists.
                 Disabled by default.
+
+            campaign (str, optional):
+                Name of the measurement campaign.
 
         Raises:
 
@@ -395,12 +443,17 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         # Initialize dataset
         self.__file = File(file, "w-")
         self.__drop_counter = 0
+        self.__campaign = campaign
 
         # Switch mode
         self.__mode = ScenarioMode.RECORD
 
         # Write required attributes
         self.__file.attrs["drop_duration"] = drop_duration
+
+        # Write required groups
+        self.__file.create_group('/campaigns')
+        self.__file.create_group('/camapgins/' + campaign)
 
         # Write scenario state to the dataset for easy recollection
         # Future feature: Write a locking mechanism during recording
@@ -411,8 +464,38 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         self.__file.attrs["hermes_version"] = __version__
         self.__file.attrs["hermes_status"] = __status__
 
+    def __campaign_exists(self,
+                          campaign: str,
+                          file: Optional[File] = None) -> bool:
+        """Check wether a campaign identifier exists within the current dataset.
+
+        Args:
+
+            campaign (str):
+                The campaign identifier string.
+
+            file (File, optoinal):
+                The HDF5 file to check for campaign existence.
+        
+        Returns: Boolean indicator.
+
+        Raises:
+
+            RuntimeError: If the scenario is currently in default mode and `file` was not specified.
+        """
+
+        if file is None:
+
+            if self.__mode == ScenarioMode.DEFAULT:
+                raise RuntimeError("Campain existence may not be queried in default mode")
+
+            file = self.__file
+
+        return "/campaigns/" + campaign in file
+
     def replay(self,
-               file: Union[None, str, File] = None) -> None:
+               file: Union[None, str, File] = None,
+               campaign: str = 'default') -> None:
         """Replay the scenario from and HDF5 savefile.
         
         Args:
@@ -421,9 +504,14 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
                 File from which the scenario should be replayed.
                 May be a file system location or an HDF5 `File` handle.
 
+            campaign (str, optional):
+                Identifier of the campaign to replay.
+                If not specified, the assumed campaign name is `default`.
+
         Raises:
 
             RuntimeError: If `file` is not specified and can't be inferred from previous record executions.
+            ValueError: If `campaign` is specified and is not contained within the savefile.
         """
 
         if file is None:
@@ -433,16 +521,22 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
             file = self.__file.filename
 
-        # Stop any action and close file handles if required
-        self.stop()
 
         # If only a file system location was specified, open the file
         if isinstance(file, str):
             file = File(file, 'r')
 
+        # Check if the campaign is available (if a campaign was specified)
+        if not self.__campaign_exists(campaign, file):
+            raise ValueError(f"The requested measurement campaign '{campaign}' does not exists within the savefile '{file.filename}'")
+
+        # Stop any action and close file handles if required
+        self.stop()
+
         # Initialize dataset
         self.__file = file
         self.__drop_counter = 0
+        self.__campaign = campaign
 
         # Switch mode
         self.__mode = ScenarioMode.REPLAY
@@ -667,7 +761,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         if self.mode == ScenarioMode.REPLAY:
 
             # Recall the drop from the savefile
-            drop = Drop.from_HDF(self.__file[f"drop_{self.__drop_counter:02d}"])
+            drop = Drop.from_HDF(self.__file[f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"])
             self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
 
             # Replay device operator transmissions
@@ -691,7 +785,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
             # Serialize the drop to HDF if in record mode
             if self.mode == ScenarioMode.RECORD:
 
-                drop.to_HDF(self.__file.create_group(f"drop_{self.__drop_counter:02d}"))
+                drop.to_HDF(self.__file.create_group(f"campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"))
                 self.__drop_counter += 1
 
         return drop
