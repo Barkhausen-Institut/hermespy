@@ -411,29 +411,16 @@ class DeviceOutput(HDFSerializable):
     @classmethod
     def from_HDF(cls: Type[DeviceOutput], group: Group) -> DeviceOutput:
 
-        # Recall operator transmissions
-        num_transmissions = group.attrs.get("num_transmissions", 0)
-        transmissions = [Transmission.from_HDF(group[f"transmission_{f:02d}"]) for f in range(num_transmissions)]
-
-        # Recall attributes
-        sampling_rate: float = group.attrs.get("sampling_rate")
-        num_antennas: int = group.attrs.get("num_antennas")
-        carrier_frequency: float = group.attrs.get("carrier_frequency")
+        # Recall serialized mixed signal group
+        mixed_signal = Signal.from_HDF(group['mixed_signal'])
 
         # Initialize object
-        return cls(transmissions, sampling_rate, num_antennas, carrier_frequency)
+        return cls(mixed_signal)
 
     def to_HDF(self, group: Group) -> None:
 
         # Serialize groups
-        for t, transmission in enumerate(self.operator_transmissions):
-            transmission.to_HDF(group.create_group(f"transmission_{t:02d}"))
-
-        # Serialize attributes
-        group.attrs["num_transmissions"] = self.num_operator_transmissions
-        group.attrs["sampling_rate"] = self.sampling_rate
-        group.attrs["num_antennas"] = self.num_antennas
-        group.attrs["carrier_frequency"] = self.carrier_frequency
+        self.mixed_signal.to_HDF(group.create_group('mixed_signal'))
 
 
 class DeviceTransmission(DeviceOutput):
@@ -490,6 +477,33 @@ class DeviceTransmission(DeviceOutput):
 
         return len(self.__operator_transmissions)
 
+    @classmethod
+    def from_HDF(cls: Type[DeviceTransmission], group: Group) -> DeviceTransmission:
+
+        # Recall base class
+        device_output = DeviceOutput.from_HDF(group)
+
+        # Recall attributes
+        num_transmissions = group.attrs.get('num_transmissions', 1)
+
+        # Recall groups
+        transmissions = [Transmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
+
+        # Initialize object
+        return cls.From_Output(device_output, transmissions)
+
+    def to_HDF(self, group: Group) -> None:
+
+        # Serialize base class
+        DeviceOutput.to_HDF(self, group)
+
+        # Serialize attributes
+        group.attrs['num_transmissions'] = self.num_operator_transmissions
+
+        # Serialize groups
+        for t, transmission in enumerate(self.operator_transmissions):
+            transmission.to_HDF(group.create_group(f"transmission_{t:02d}"))
+
 
 class DeviceInput(HDFSerializable):
     """Receive information required by devices."""
@@ -516,11 +530,20 @@ class DeviceInput(HDFSerializable):
 
         return self.__impinging_signals
 
+    @property
+    def num_impinging_signals(self) -> int:
+        """Number of signals impinging onto the device.
+        
+        Returns: Signal model count.
+        """
+
+        return len(self.__impinging_signals)
+
     @classmethod
     def from_HDF(cls: Type[DeviceInput], group: Group) -> DeviceInput:
 
-        num_signals = group.atrs.get('num_signals', 1)
-        impinging_signals = [Signal.from_HDF(group[f"signal_{s:02d}"]) for s in range(num_signals)]
+        num_impinging_signals = group.attrs.get('num_impinging_signals', 1)
+        impinging_signals = [Signal.from_HDF(group[f"impinging_signal_{s:02d}"]) for s in range(num_impinging_signals)]
 
         return cls(impinging_signals)
 
@@ -528,7 +551,10 @@ class DeviceInput(HDFSerializable):
 
         # Serialize groups
         for s, signal in enumerate(self.impinging_signals):
-            signal.to_HDF(group.create_group(f"signal_{s:02d}"))
+            signal.to_HDF(group.create_group(f"impinging_signal_{s:02d}"))
+
+        # Serialize attributes
+        group.attrs['num_impinging_signals'] = self.num_impinging_signals
 
 
 class ProcessedDeviceInput(DeviceInput):
@@ -584,7 +610,7 @@ class ProcessedDeviceInput(DeviceInput):
     def to_HDF(self, group: Group) -> None:
 
         # Serialize base class
-        OperationResult.to_HDF(self, group)
+        DeviceInput.to_HDF(self, group)
 
         # Serialize groups
         for i, (input_signal, _) in enumerate(self.operator_inputs):

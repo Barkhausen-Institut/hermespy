@@ -582,8 +582,9 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
             # Replay device operator receptions
             for device, device_reception in zip(self.devices, drop.device_receptions):
 
-                for receiver, reception in zip(device.receivers, device_reception.operator_receptions):
-                    receiver.cache_reception(reception.signal, device_reception.csi)
+                receiver: Receiver
+                for receiver, input in zip(device.receivers, device_reception.operator_inputs):
+                    receiver.cache_reception(input)
 
         else:
 

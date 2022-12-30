@@ -34,20 +34,18 @@ class TestAudioDevice(TestCase):
             
         playrec_mock.side_effect = side_effect 
         
-        transmission = self.modem.transmit()
-        
+        # Execute a fulle device transmit-receive cycle
         _ = self.device.transmit()
         self.device.trigger()
-        _ = self.device.process_input()
+        _ = self.device.receive()
         
-        reception = self.modem.receive()
-        
-        transmit_spectrum = fftshift(fft(transmission.signal.samples[0, :]))
-        receive_spectrum = fftshift(fft(reception.signal.samples[0, :]))
+        # Assert the transmit and receive spectra
+        transmit_spectrum = fftshift(fft(self.modem.transmission.signal.samples[0, :]))
+        receive_spectrum = fftshift(fft(self.modem.reception.signal.samples[0, :]))
         left_bin = int(.375 * transmit_spectrum.shape[0])
         right_bin = int(.625 * transmit_spectrum.shape[0])
         assert_array_almost_equal(transmit_spectrum[left_bin:right_bin], receive_spectrum[left_bin:right_bin])
-        assert_array_equal(transmission.bits, reception.bits)
+        assert_array_equal(self.modem.transmission.bits, self.modem.reception.bits)
 
     def test_single_carrier(self) -> None:
         """Test single carrier data transmission over audio devices"""
