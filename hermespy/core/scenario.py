@@ -453,7 +453,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Write required groups
         self.__file.create_group('/campaigns')
-        self.__file.create_group('/camapgins/' + campaign)
+        self.__file.create_group('/campaigns/' + campaign)
 
         # Write scenario state to the dataset for easy recollection
         # Future feature: Write a locking mechanism during recording
@@ -543,13 +543,19 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
     @classmethod
     def Replay(cls: Type[Scenario],
-               file: Union[str, File]) -> Scenario:
+               file: Union[str, File],
+               campaign: str = 'default') -> Scenario:
         """Replay a scenario from an HDF5 save file.
         
         Args:
 
             file (str):
                 File system location of the HDF5 save file.
+
+
+            campaign (str, optional):
+                Identifier of the campaign to replay.
+                If not specified, the assumed campaign name is `default`.
         """
 
         # Load the dataset
@@ -561,7 +567,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         scenario = cls._state_from_HDF(factory, file['state'])
 
         # Enable the replay mode
-        scenario.replay(file)
+        scenario.replay(file, campaign)
 
         # Return the scenario (initialized and in replay mode)
         return scenario
