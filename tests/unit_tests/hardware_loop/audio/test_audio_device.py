@@ -5,7 +5,7 @@ import numpy as np
 from unittest.mock import MagicMock, Mock, patch
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.core import DuplexOperator, Reception, Signal, Transmission
+from hermespy.core import ChannelStateInformation, DuplexOperator, Reception, Signal, Transmission
 from hermespy.hardware_loop.audio import AudioDevice
 from hermespy.hardware_loop.audio.device import AudioDeviceAntennas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
@@ -43,7 +43,7 @@ class SineOperator(DuplexOperator):
         self.device.transmitters.add_transmission(self, transmission)
         return transmission
 
-    def receive(self) -> Reception:
+    def _receive(self, *args) -> Reception:
         
         reception = Reception(signal=self.signal)
         return reception
@@ -169,7 +169,7 @@ class TestAudioDevice(TestCase):
         
         self.device.transmit()
         self.device.trigger()
-        self.device.receive()
+        self.device.process_input()
         
         reception = operator.receive()
         

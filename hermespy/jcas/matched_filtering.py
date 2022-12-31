@@ -12,7 +12,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
 
-from hermespy.core import Signal, Serializable
+from hermespy.core import ChannelStateInformation, Receiver, Signal, Serializable
 from hermespy.modem import DuplexModem, CommunicationTransmission, CommunicationReception
 from hermespy.radar import Radar, RadarTransmission, RadarReception, RadarCube
 
@@ -44,7 +44,7 @@ class JCASReception(CommunicationReception, RadarReception):
         RadarReception.__init__(self, radar.signal, radar.cube, radar.cloud)
 
 
-class MatchedFilterJcas(Radar, DuplexModem, Serializable):
+class MatchedFilterJcas(Radar, DuplexModem, Receiver[JCASReception], Serializable):
     """Joint Communication and Sensing Operator.
 
     A combination of communication and sensing operations.
@@ -78,14 +78,16 @@ class MatchedFilterJcas(Radar, DuplexModem, Serializable):
         transmission = JCASTransmission(DuplexModem.transmit(self, duration))
         return transmission
 
-    def receive(self) -> JCASReception:
+    def _receive(self,
+                 signal: Signal,
+                 csi: ChannelStateInformation) -> JCASReception:
 
         # There must be a recent transmission being cached in order to correlate
         if self.transmission is None:
             raise RuntimeError("Receiving from a matched filter joint must be preceeded by a transmission")
 
         # Receive information
-        communication_reception = DuplexModem.receive(self)
+        communication_reception = DuplexModem._receive(self, signal, csi)
 
         # Re-sample communication waveform
         signal = self.signal.resample(self.sampling_rate)
@@ -119,9 +121,8 @@ class MatchedFilterJcas(Radar, DuplexModem, Serializable):
         cloud = None if self.detector is None else self.detector.detect(cube)
 
         radar_reception = RadarReception(signal, cube, cloud)
-        Radar._cache_reception(self, radar_reception)
-
-        return JCASReception(communication_reception, radar_reception)
+        jcas_reception = JCASReception(communication_reception, radar_reception)
+        return jcas_reception
 
     @property
     def sampling_rate(self) -> float:

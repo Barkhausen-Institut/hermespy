@@ -117,25 +117,25 @@ class TestRadarChannel(unittest.TestCase):
         self.channel.target_velocity = new_velocity
         self.assertEqual(new_velocity, self.channel.target_velocity)
 
-    def test_impulse_response_anchored_validation(self) -> None:
+    def test_realize_anchored_validation(self) -> None:
         """Impulse response should raise FloatingError if not anchored to a device"""
 
         with patch.object(RadarChannel, 'transmitter', None), self.assertRaises(FloatingError):
-            _ = self.channel.impulse_response(0, 1.)
+            _ = self.channel.realize(0, 1.)
 
-    def test_impulse_response_carrier_frequency_validation(self) -> None:
+    def test_realize_carrier_frequency_validation(self) -> None:
         """Impulse response should raise RuntimeError if device carrier frequencies are smaller or equal to zero"""
 
         self.transmitter.carrier_frequency = 0.
 
         with self.assertRaises(RuntimeError):
-            _ = self.channel.impulse_response(0, 1.)
+            _ = self.channel.realize(0, 1.)
 
-    def test_impulse_response_interference_validation(self) -> None:
+    def test_realize_interference_validation(self) -> None:
         """Impulse response should raise RuntimeError if not configured as a self-interference channel"""
 
         with patch.object(RadarChannel, 'receiver', None), self.assertRaises(RuntimeError):
-            _ = self.channel.impulse_response(0, 1.)
+            _ = self.channel.realize(0, 1.)
 
     def _create_impulse_train(self, interval_in_samples: int, number_of_pulses: int):
 
@@ -260,9 +260,8 @@ class TestRadarChannel(unittest.TestCase):
         self.assertAlmostEqual(freq_out - freq_in, doppler_shift, delta=np.abs(doppler_shift)*.01)
 
     def test_no_echo(self) -> None:
-        """
-        Test if no echos are observed if target_exists is set to False
-        """
+        """Test if no echos are observed if target_exists flag is disabled"""
+        
         samples_per_symbol = 500
         num_pulses = 15
 

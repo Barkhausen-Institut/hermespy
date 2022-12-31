@@ -11,7 +11,7 @@ from typing import Type, Optional
 import numpy as np
 from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
-from hermespy.channel import Channel, QuadrigaInterface
+from hermespy.channel import Channel, ChannelRealization, QuadrigaInterface
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -71,7 +71,9 @@ class QuadrigaChannel(Channel):
 
         return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface
 
-    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
+    def realize(self,
+                num_samples: int,
+                sampling_rate: float) -> ChannelRealization:
 
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
@@ -92,7 +94,8 @@ class QuadrigaChannel(Channel):
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
 
                     impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += cir_txa_rxa[delay_idx]
-        return impulse_response
+
+        return ChannelRealization(self, impulse_response)
 
     @classmethod
     def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:
