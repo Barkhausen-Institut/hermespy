@@ -61,6 +61,6 @@ class TestRocFromMeasurements(TestCase):
         self.h0_scenario.replay(h0_path)
         self.h1_scenario.replay(h1_path)
         
-        roc = ReceiverOperatingCharacteristic.from_scenarios(self.h0_scenario, self.h1_scenario)
+        roc = ReceiverOperatingCharacteristic.From_Scenarios(self.h0_scenario, self.h1_scenario)
         dir.cleanup()
             

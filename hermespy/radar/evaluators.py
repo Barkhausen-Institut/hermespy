@@ -50,10 +50,11 @@ Configuring :class:`RadarEvaluators<.RadarEvaluator>` to evaluate the radar dete
 from __future__ import annotations
 from abc import ABC
 from itertools import product
-from typing import List, Optional
+from typing import List, Optional, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from h5py import File
 from scipy.stats import uniform
 
 from hermespy.core import Executable, Scenario, ScenarioMode, Serializable
@@ -352,10 +353,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         
         # Exchange the respective propagated signal
         impinging_signals = device_input.impinging_signals.copy()
-        impinging_signals[device_index] = ([null_hypothesis_propagation], null_hypothesis_channel_realization)
+        impinging_signals[device_index] = null_hypothesis_propagation
         
         # Receive again
-        null_hypothesis_device_reception = self.radar_channel.receiver.process_from_realization(impinging_signals, device_input, device_input.leaking_signal, False)
+        null_hypothesis_device_reception = self.radar_channel.receiver.process_from_realization(impinging_signals, device_input, device_input.leaking_signal, False, channel_state=null_hypothesis_channel_realization)
         null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], None, False)
 
         # Retrieve radar cubes for both hypothesis
@@ -397,7 +398,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         return RocEvaluationResult(self, grid, detection_probabilities, false_alarm_probabilities)
 
     @classmethod
-    def from_scenarios(cls: ReceiverOperatingCharacteristic,
+    def From_Scenarios(cls: Type[ReceiverOperatingCharacteristic],
                        h0_scenario: Scenario,
                        h1_scenario: Scenario,
                        h0_operator: Optional[Radar] = None,
@@ -461,6 +462,37 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         grid = [GridDimension(h1_scenario, 'num_drops', [0.])]
         result = evaluator.generate_result(grid, artifacts)
         return result
+
+    @classmethod
+    def From_HDF(cls: Type[ReceiverOperatingCharacteristic],
+                 file: Union[str, File],
+                 h0_campaign = 'h0_measurements',
+                 h1_campaign = 'h1_measurements') -> RocEvaluationResult:
+        """Compute an ROC evaluation result from a savefile.
+        
+        Args:
+
+            file (Union[str, File]):
+                Savefile containing the measurements.
+                Either as file system location or h5py `File` handle.
+
+            h0_campaign (str, optional):
+                Campaign identifier of the h0 hypothesis measurements.
+                By default, `h0_measurements` is assumed.
+
+            h1_campaign (str, optional):
+                Campaign identifier of the h1 hypothesis measurements.
+                By default, `h1_measurements` is assumed.
+
+        Returns: The ROC evaluation result.
+        """
+        
+        # Load scenarios with the respective campaigns from the specified savefile
+        h0_scenario = Scenario.Replay(file, h0_campaign)
+        h1_scenario = Scenario.Replay(file, h1_campaign)
+
+        # Resort to the from scenarios routine for computing the evaluation result
+        return cls.From_Scenarios(h0_scenario=h0_scenario, h1_scenario=h1_scenario)
 
 
 class RootMeanSquareArtifact(Artifact):
