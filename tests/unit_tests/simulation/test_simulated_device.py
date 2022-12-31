@@ -79,7 +79,7 @@ class TestSimulatedDevice(TestCase):
     def test_sampling_rate_inference(self) -> None:
         """Sampling rate property should attempt to infer the sampling rate from all possible sources."""
 
-        self.assertIsNone(self.device.sampling_rate)
+        self.assertEqual(1.0, self.device.sampling_rate)
 
         receiver = Mock()
         receiver.sampling_rate = 1.23

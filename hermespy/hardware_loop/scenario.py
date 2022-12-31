@@ -7,9 +7,9 @@ Physical Device Scenario
 
 from abc import abstractmethod, ABC
 from time import time
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, Iterable, List, Optional, TypeVar, Union
 
-from hermespy.core import Scenario, DeviceReception, DeviceTransmission, Drop, Signal
+from hermespy.core import DeviceInput, DeviceReception, Scenario, Drop, Signal
 from .physical_device import PhysicalDeviceType
 
 __author__ = "Jan Adler"
@@ -34,30 +34,53 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], ABC, Generic[PhysicalDevice
         """Trigger synchronzed transmission and reception for all managed devices."""
         ...  # pragma no cover
 
-    def receive_devices(self, receptions: Optional[List[Signal]] = None) -> List[Signal]:
+    def receive_devices(self,
+                        impinging_signals: Optional[List[Union[DeviceInput, Signal, Iterable[Signal]]]] = None,
+                        cache: bool = True) -> List[DeviceReception]:
+        """Receive over all scenario devices.
 
-        if receptions is None:
+        Internally calls :meth:`.process_inputs` and :meth:`.receive_devices`.
+        
+        Args:
 
-            receptions = [device.receive() for device in self.devices]
-            return receptions
+            impinging_signals (List[Union[DeviceInput, Signal, Iterable[Signal]]], optional):
+                List of signals impinging onto the devices.
+                If not specified, the device will download the signal samples from its binding.
 
-        else:
-            return Scenario.receive_devices(self, receptions)
+            cache (bool, optional):
+                Cache the operator inputs at the registered receive operators for further processing.
+                Enabled by default.
+
+        Returns: List of the processed device input information.
+
+        Raises:
+
+            ValueError: If the number of `impinging_signals` does not match the number of registered devices.
+        """
+
+        impinging_signals = [None] * self.num_devices if impinging_signals is None else impinging_signals
+
+        # Generate inputs
+        device_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]
+
+        # Generate operator receptions
+        receptions = self.receive_operators(device_inputs)
+
+        # Generate device receptions
+        return [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(device_inputs, receptions)]
+
 
     def _drop(self) -> Drop:
 
         # Generate device transmissions
-        operator_transmissions = self.transmit_operators()
-        transmitted_device_signals = self.transmit_devices()
-        device_transmissions = [DeviceTransmission(s, i) for s, i in zip(transmitted_device_signals, operator_transmissions)]
+        device_transmissions = self.transmit_devices()
 
         # Trigger the full scenario for phyiscal transmission and reception
         timestamp = time()
         self._trigger()
 
-        received_device_signals = self.receive_devices()
-        operator_receptions = self.receive_operators()
-        device_receptions = [DeviceReception(s, None, i) for s, i in zip(received_device_signals, operator_receptions)]
+        # Generate device receptions
+        device_receptions = self.receive_devices()
 
         return Drop(timestamp, device_transmissions, device_receptions)
 

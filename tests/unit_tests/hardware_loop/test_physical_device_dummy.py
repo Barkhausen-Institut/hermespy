@@ -28,19 +28,18 @@ class TestPhysicalDeviceDummy(TestCase):
         self.sampling_rate = 1.
         self.dummy = PhysicalDeviceDummy(sampling_rate=self.sampling_rate)
         
-        self.transmitter = SignalTransmitter(100, self.sampling_rate)
-        self.receiver = SignalReceiver(100, self.sampling_rate)
-        self.dummy.transmitters.add(self.transmitter)
-        self.dummy.receivers.add(self.receiver)
-        
     def test_transmit_receive(self) -> None:
         """Test the proper transmit receive routine execution """
         
-        expected_signal = Signal(self.rng.normal(size=(1, 100)), self.sampling_rate)
+        expected_signal = Signal(self.rng.normal(size=(1, 100)), self.sampling_rate)        
         
-        self.transmitter.transmit(expected_signal)
-        self.dummy.transmit()
-        self.dummy.receive()
-        reception = self.receiver.receive()
+        transmitter = SignalTransmitter(expected_signal)
+        receiver = SignalReceiver(expected_signal.num_samples, self.sampling_rate)
+        self.dummy.transmitters.add(transmitter)
+        self.dummy.receivers.add(receiver)
+
+        transmission = self.dummy.transmit()
+        reception = self.dummy.receive()
         
-        assert_array_almost_equal(expected_signal.samples, reception.signal.samples)
+        assert_array_almost_equal(expected_signal.samples, transmission.mixed_signal.samples)
+        assert_array_almost_equal(expected_signal.samples, reception.operator_receptions[0].signal.samples)

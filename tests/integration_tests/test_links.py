@@ -65,7 +65,7 @@ class TestSISOLinks(TestCase):
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()
         rx_signals, _, channel_state = channel.propagate(tx_signals)
-        self.rx_device.receive(np.array([[rx_signals, channel_state]], dtype=object))
+        self.rx_device.process_input(np.array([[rx_signals, channel_state]], dtype=object))
         reception = self.rx_operator.receive()
         
         return
@@ -241,7 +241,7 @@ class TestMIMOLinks(TestCase):
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()
         rx_signals, _, channel_state = channel.propagate(tx_signals)
-        self.rx_device.receive(np.array([[rx_signals, channel_state]], dtype=object))
+        self.rx_device.process_input(np.array([[rx_signals, channel_state]], dtype=object))
         reception = self.rx_operator.receive()
         
         return
