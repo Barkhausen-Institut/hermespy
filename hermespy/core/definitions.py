@@ -32,5 +32,8 @@ class SNRType(SerializableEnum):
     EN0 = 3
     """Signal energy to noise power ratio."""
 
+    N0 = 4
+    """Noise power."""
+
     CUSTOM = 3
     """Custom snr definition."""

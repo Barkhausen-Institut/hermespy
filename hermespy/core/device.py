@@ -929,6 +929,32 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
     def noise_power(self, strength: float, snr_type=SNRType) -> float:
         """Compute noise power for a given signal strength.
 
+        Internally calls :meth:`._noise_power` for some `snr_type`s.
+
+        Args:
+
+            strength (float):
+                Signal strength indicator.
+                The unit depends on `snr_type`.
+
+            snr_type (SNRType):
+                The considered signal to noise ratio type.
+
+        Raises:
+
+            ValueError: If the receiver does not support the required snr type.
+        """
+        
+        # For the N0 snr_type the receiver implementation must not be queried
+        if snr_type is SNRType.N0:
+            return strength
+
+        return self._noise_power(strength, snr_type)
+
+    @abstractmethod
+    def _noise_power(self, strength, snr_type=SNRType) -> float:
+        """Compute noise power for a given signal strength.
+
         Args:
 
             strength (float):
@@ -1855,5 +1881,5 @@ class DuplexOperator(Transmitter, Receiver[ReceptionType], Generic[ReceptionType
 
     @property
     @abstractmethod
-    def noise_power(self, strength: float, snr_type=SNRType) -> float:
+    def _noise_power(self, strength: float, snr_type=SNRType) -> float:
         ...  # pragma no cover

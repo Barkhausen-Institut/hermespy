@@ -146,8 +146,8 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
             figure[1][0].clear()
             figure[1][1].clear()
 
-            device_tx.signal.plot(axes=figure[1][0], space="time", legend=False)
-            device_rx.signal.plot(axes=figure[1][1], space="time", legend=False)
+            device_tx.mixed_signal.plot(axes=figure[1][0], space="time", legend=False)
+            device_rx.impinging_signals[0].plot(axes=figure[1][1], space="time", legend=False)
 
             figure[0].canvas.draw()
             figure[0].canvas.flush_events()
@@ -160,12 +160,14 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
             figure[0].canvas.draw()
             figure[0].canvas.flush_events()
 
-    def run(self) -> None:
+    def run(self,
+            override = True,
+            campaign: str='default') -> None:
 
         # Prepare the results file
         if self.results_dir:
             file_location = path.join(self.results_dir, "drops.h5")
-            self.scenario.record(file_location, override=True)
+            self.scenario.record(file_location, override=override, campaign=campaign)
 
         # Run internally
         self.__run()
