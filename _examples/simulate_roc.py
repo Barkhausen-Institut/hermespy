@@ -1,9 +1,10 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import ray
-# ray.init(local_mode=True, num_cpus=1)
+#import ray
+#ray.init(local_mode=True, num_cpus=1)
 
+from hermespy.core import SNRType
 from hermespy.channel import RadarChannel
 from hermespy.simulation import Simulation, SpecificIsolation
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
@@ -16,10 +17,11 @@ carrier_frequency = 10e9
 
 # Initialize the base system
 simulation = Simulation()
-simulation.scenario.snr = 1e13
+simulation.scenario.snr = 1e-12
+simulation.scenario.snr_type = SNRType.N0
 
 device = simulation.new_device(carrier_frequency=carrier_frequency)
-device.isolation = SpecificIsolation(db2lin(-70))
+device.isolation = SpecificIsolation()
 
 # Configure a root-raised-cosine single carrier communication waveform to be transmitted
 radar = Radar()
@@ -31,8 +33,9 @@ channel = RadarChannel(target_range=(.75, 1.25), radar_cross_section=1.)
 simulation.scenario.set_channel(device, device, channel)
 
 simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, channel))
-#simulation.new_dimension('snr', [1e-2, .1, 1.])
-simulation.num_samples = 100
+simulation.new_dimension('snr', db2lin(np.array([-120, -130])))
+simulation.new_dimension('isolation', db2lin(np.array([-80, -70])), simulation.scenario.devices[0].isolation)
+simulation.num_samples = 1000
 
 result = simulation.run()
 result.plot()

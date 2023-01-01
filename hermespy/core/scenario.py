@@ -76,6 +76,10 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
+
+            devices (List[DeviceType], optional):
+                Devices to be added to the scenario during initialization.
+
         """
 
         RandomNode.__init__(self, seed=seed)
@@ -85,6 +89,11 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         self.__file = None
         self.__drop_counter = 0
         self.__campaign = 'default'
+
+        # Add devices if specified
+        if devices is not None:
+            for device in devices:
+                self.add_device(device)
 
     def __del__(self) -> None:
 

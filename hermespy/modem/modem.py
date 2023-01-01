@@ -751,7 +751,7 @@ class BaseModem(RandomNode, ABC):
 
         return self.waveform_generator.sampling_rate
 
-    def noise_power(self, strength: float, snr_type: SNRType) -> float:
+    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
 
         # No waveform configured equals no noise required
         if self.waveform_generator is None:
