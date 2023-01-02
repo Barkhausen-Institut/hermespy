@@ -13,20 +13,21 @@ from hermespy.tools import db2lin
 # Global parameters
 bandwidth = 3.072e9
 carrier_frequency = 10e9
+chirp_duration = 2e-8
 
 system = SimulatedPhysicalScenario()
-system.snr = 1
+system.snr = 1e-13
 system.snr_type = SNRType.N0
 
 hardware_loop = HardwareLoop[SimulatedPhysicalScenario](system)
-hardware_loop.num_drops = 2
+hardware_loop.plot_information = False
+hardware_loop.num_drops = 1000
 hardware_loop.results_dir = hardware_loop.default_results_dir()
 
 device = system.new_device(carrier_frequency=carrier_frequency)
 device.isolation = SpecificIsolation(db2lin(-80))
 
 radar = Radar()
-chirp_duration = 2e-8
 radar.waveform = FMCW(bandwidth=bandwidth, num_chirps=10, chirp_duration=chirp_duration, pulse_rep_interval=1.1*chirp_duration)
 radar.device = device
 
