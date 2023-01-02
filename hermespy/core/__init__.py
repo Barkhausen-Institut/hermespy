@@ -8,7 +8,7 @@ from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
 from .monte_carlo import Artifact, ArtifactTemplate, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
 from .random_node import RandomRealization, RandomNode
 from .drop import Drop
-from .scenario import Scenario, ScenarioMode
+from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
 from .signal_model import Signal
 
 __author__ = "André Noll Barreto"
@@ -72,7 +72,7 @@ __all__ = [
     "HDFSerializable",
     "RandomRealization", "RandomNode",
     "Drop",
-    "Scenario", "ScenarioMode",
+    "Scenario", "ScenarioMode", "ScenarioType", "ReplayScenario",
     "Signal",
     "ProcessedDeviceInput", "DeviceInput",
 ]

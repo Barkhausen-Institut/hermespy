@@ -57,9 +57,9 @@ import numpy as np
 from h5py import File
 from scipy.stats import uniform
 
-from hermespy.core import Executable, Scenario, ScenarioMode, Serializable
+from hermespy.core import Executable, ReplayScenario, Scenario, ScenarioMode, Serializable
 from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult, ProcessedScalarEvaluationResult
-from hermespy.radar import Radar
+from hermespy.radar import Radar, RadarReception
 from hermespy.channel.radar_channel import RadarChannel
 from hermespy.radar.cube import RadarCube
 from hermespy.radar.detection import RadarPointCloud
@@ -242,17 +242,20 @@ class RocEvaluation(Evaluation):
 class RocEvaluationResult(EvaluationResult):
     """Final result of an receive operating characteristcs evaluation."""
 
-    __evaluator: ReceiverOperatingCharacteristic
     __grid: List[GridDimension]
     __detection_probabilities: np.ndarray
     __false_alarm_probabilities: np.ndarray
 
-    def __init__(self, evaluator: ReceiverOperatingCharacteristic, grid: List[GridDimension], detection_probabilities: np.ndarray, false_alarm_probabilities: np.ndarray) -> None:
+    def __init__(self,
+                 grid: List[GridDimension],
+                 detection_probabilities: np.ndarray,
+                 false_alarm_probabilities: np.ndarray,
+                 title: str = 'Receiver Operating Characteristics') -> None:
 
-        self.__evaluator = evaluator
         self.__grid = grid
         self.__detection_probabilities = detection_probabilities
         self.__false_alarm_probabilities = false_alarm_probabilities
+        self.__title = title
 
     def plot(self) -> plt.Figure:
 
@@ -310,7 +313,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     def __init__(self,
                  radar: Radar,
-                 radar_channel: RadarChannel,
+                 radar_channel: Optional[RadarChannel] = None,
                  num_thresholds=101) -> None:
         """
         Args:
@@ -318,23 +321,49 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             radar (Radar):
                 Radar under test.
 
-            radar_channel (RadarChannel):
+            radar_channel (RadarChannel, optional):
                 Radar channel containing a desired target.
-                If a radar channel is given, then the ROC is calculated for the bin that contains the target, or else
-                a detection is performed if the output of any bin is above the threshold.
+                If the radar channel is not specified, the :meth:`.evaluate` routine will not be available.
 
             num_thresholds (int, optional)
                 Number of different thresholds to be considered in ROC curve
         """
 
         # Make sure the channel belongs to a simulation scenario
-        if radar_channel.transmitter is None or radar_channel.receiver is None:
-            raise ValueError("ROC evaluator must be defined within a simulation scenario")
+        if radar_channel is not None:
+            if radar_channel.transmitter is None or radar_channel.receiver is None:
+                raise ValueError("ROC evaluator must be defined within a simulation scenario")
 
         RadarEvaluator.__init__(self, receiving_radar=radar, radar_channel=radar_channel)
         self.__num_thresholds = num_thresholds
 
+    @staticmethod
+    def __evaluation_from_receptions(h0_reception: RadarReception,
+                                     h1_reception: RadarReception) -> RocEvaluation:
+        """Subroutine to generate an evaluation given two hypothesis radar receptions.
+        
+        Args:
+
+            h0_reception (RadarReception):
+                Reception missing the target of interest.
+
+            h1_reception (RadarReception):
+                Reception containing the target of interest.
+
+        Returns: An initialized :class:`RocEvaluation`.
+        """
+
+        # Retrieve radar cubes for both hypothesis
+        radar_cube_h0 = h0_reception.cube
+        radar_cube_h1 = h1_reception.cube
+
+        # Return resulting evaluation
+        return RocEvaluation(radar_cube_h0, radar_cube_h1)
+
     def evaluate(self) -> RocEvaluation:
+
+        if self.radar_channel is None:
+            raise RuntimeError("Radar channel must be specified in order to evaluate during rutime")
 
         # Generate the null hypothesis detection radar cube by re-running the radar detection routine
         null_hypothesis_channel_realization = self.radar_channel.null_hypothesis()
@@ -359,12 +388,8 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         null_hypothesis_device_reception = self.radar_channel.receiver.process_from_realization(impinging_signals, device_input, device_input.leaking_signal, False, channel_state=null_hypothesis_channel_realization)
         null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], None, False)
 
-        # Retrieve radar cubes for both hypothesis
-        radar_cube_h0 = null_hypothesis_radar_reception.cube
-        radar_cube_h1 = self.receiving_radar.reception.cube
-
-        # Return resulting evaluation
-        return RocEvaluation(radar_cube_h0, radar_cube_h1)
+        # Generate evaluation
+        return self.__evaluation_from_receptions(null_hypothesis_radar_reception, self.receiving_radar.reception)
 
     @property
     def abbreviation(self) -> str:
@@ -395,7 +420,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
                 detection_probabilities[threshold_coordinates] = np.mean(roc_data[:, 1] >= threshold)
                 false_alarm_probabilities[threshold_coordinates] = np.mean(roc_data[:, 0] >= threshold)
 
-        return RocEvaluationResult(self, grid, detection_probabilities, false_alarm_probabilities)
+        return RocEvaluationResult(grid, detection_probabilities, false_alarm_probabilities, self.title)
 
     @classmethod
     def From_Scenarios(cls: Type[ReceiverOperatingCharacteristic],
@@ -427,7 +452,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             if h0_scenario.num_operators < 1:
                 raise ValueError("Null hypothesis radar has no registered operators")
             
-            h0_operator = h0_scenario.operators[0]
+            h0_operator = list(h0_scenario.operators)[0]
             
         if h1_operator:
             if h1_operator not in h1_scenario.operators:
@@ -437,10 +462,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             if h1_scenario.num_operators < 1:
                 raise ValueError("One hypothesis radar has no registered operators")
             
-            h1_operator = h1_scenario.operators[0]
-            
-        # Register evaluators
-        evaluator: ReceiverOperatingCharacteristic = cls(h1_operator, h0_operator)
+            h1_operator = list(h1_scenario.operators)[0]
             
         # The overall number of considered drops is bounded by the H1 hypothesis
         num_drops = h1_scenario.num_drops
@@ -453,14 +475,15 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             _ = h0_scenario.drop()
             _ = h1_scenario.drop()
             
-            _ = h0_operator.receive()
-            _ = h1_operator.receive()
+            h0_reception = h0_operator.receive()
+            h1_reception = h1_operator.receive()
             
-            artifacts[0].append(evaluator.evaluate().artifact())
+            evaluation = cls.__evaluation_from_receptions(h0_reception, h1_reception)
+            artifacts[0].append(evaluation.artifact())
             
         # Generate results
         grid = [GridDimension(h1_scenario, 'num_drops', [0.])]
-        result = evaluator.generate_result(grid, artifacts)
+        result = cls(h1_operator).generate_result(grid, artifacts)
         return result
 
     @classmethod
@@ -488,8 +511,8 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         """
         
         # Load scenarios with the respective campaigns from the specified savefile
-        h0_scenario = Scenario.Replay(file, h0_campaign)
-        h1_scenario = Scenario.Replay(file, h1_campaign)
+        h0_scenario = ReplayScenario.Replay(file, h0_campaign)
+        h1_scenario = ReplayScenario.Replay(file, h1_campaign)
 
         # Resort to the from scenarios routine for computing the evaluation result
         return cls.From_Scenarios(h0_scenario=h0_scenario, h1_scenario=h1_scenario)
@@ -547,7 +570,6 @@ class RootMeanSquareEvaluation(Evaluation):
 
 class RootMeanSquareErrorResult(ProcessedScalarEvaluationResult):
     """Result of a root mean square error evaluation."""
-
     ...  # pragma no cover
 
 

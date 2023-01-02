@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
+from contextlib import ExitStack
 from os import path
-from unittest import TestCase
+from sys import gettrace
 from tempfile import TemporaryDirectory
+from unittest import TestCase
+from unittest.mock import patch
 
-from hermespy.core import SNRType
 from hermespy.channel import RadarChannel
+from hermespy.core import SNRType
+from hermespy.hardware_loop import HardwareLoop, SimulatedPhysicalScenario
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
-from hermespy.simulation import SimulationScenario
+from hermespy.simulation import SpecificIsolation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -22,45 +26,56 @@ __status__ = "Prototype"
 class TestRocFromMeasurements(TestCase):
     
     def setUp(self) -> None:
+
+        # Create temporary directory to store simulation artifacts
+        self.tempdir = TemporaryDirectory()
         
-        self.num_drops = 5
+        bandwidth = 3.072e9
+        carrier_frequency = 10e9
+        chirp_duration = 2e-8
+
+        system = SimulatedPhysicalScenario()
+        system.snr = 1e-13
+        system.snr_type = SNRType.N0
+
+        hardware_loop = HardwareLoop[SimulatedPhysicalScenario](system)
+        hardware_loop.num_drops = 1
+        hardware_loop.results_dir = self.tempdir.name
+
+        device = system.new_device(carrier_frequency=carrier_frequency)
+        device.isolation = SpecificIsolation(1e-8)
+
+        radar = Radar()
+        radar.waveform = FMCW(bandwidth=bandwidth, num_chirps=10, chirp_duration=chirp_duration, pulse_rep_interval=1.1*chirp_duration)
+        radar.device = device
+
+        channel = RadarChannel(target_range=(.75, 1.25), radar_cross_section=1.)
+        system.set_channel(device, device, channel)
+
+        with ExitStack() as stack:
         
-        self.h0_scenario = SimulationScenario(snr=1., snr_type=SNRType.PN0)
-        self.h1_scenario = SimulationScenario(snr=1., snr_type=SNRType.PN0)
+            # Supress matplotlib plots
+            stack.enter_context(patch('matplotlib.pyplot.figure'))
+
+            # Suppress stdout if not in debug mode
+            if gettrace() is None:
+                stack.enter_context(patch('sys.stdout'))
+
+            hardware_loop.run(override=False, campaign='h1_measurements')
+
+            channel.target_exists = False
+            hardware_loop.run(override=False, campaign='h0_measurements')
+
+    def tearDown(self) -> None:
         
-        h0_device = self.h0_scenario.new_device()
-        h1_device = self.h1_scenario.new_device()
+        # Clear temporary directory
+        self.tempdir.cleanup()
         
-        h0_operator = Radar()
-        h1_operator = Radar()
-        h0_operator.waveform = FMCW()
-        h1_operator.waveform = FMCW()
-        h0_operator.device = h0_device
-        h1_operator.device = h1_device
+    def test_roc_from_measurements(self) -> None:
+        """Test ROC computation from measured datasets"""
         
-        self.h0_channel = RadarChannel((0, h0_operator.waveform.max_range), 0., attenuate=True, transmitter=h0_device, receiver=h0_device)
-        self.h1_channel = RadarChannel((0, h1_operator.waveform.max_range), 1., attenuate=False, transmitter=h1_device, receiver=h1_device)
+        roc = ReceiverOperatingCharacteristic.From_HDF(path.join(self.tempdir.name, 'drops.h5'))
         
-    def test_roc_generation(self) -> None:
-        
-        dir = TemporaryDirectory()
-        
-        h0_path = path.join(dir.name, 'h0.h5')
-        h1_path = path.join(dir.name, 'h1.h5')
-    
-        self.h0_scenario.record(h0_path)
-        self.h1_scenario.record(h1_path)
-    
-        for _ in range(self.num_drops):
-            
-            self.h0_scenario.drop()
-            self.h1_scenario.drop()
-            
-        self.h0_scenario.stop()
-        self.h1_scenario.stop()
-        self.h0_scenario.replay(h0_path)
-        self.h1_scenario.replay(h1_path)
-        
-        roc = ReceiverOperatingCharacteristic.From_Scenarios(self.h0_scenario, self.h1_scenario)
-        dir.cleanup()
-            
+        roc_data = roc.to_array()
+        self.assertEqual(1, roc_data.shape[0])
+        self.assertEqual(2, roc_data.shape[2])

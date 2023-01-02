@@ -1296,11 +1296,11 @@ class Device(ABC, RandomNode):
     receivers: ReceiverSlot
     """Receivers capturing signals from this device"""
 
-    __power: float  # Average power of the transmitted signals
-    __position: Optional[np.ndarray]  # Position of the device within its scenario in cartesian coordinates
-    __orientation: Optional[np.ndarray]  # Orientation of the device within its scenario as a quaternion
-    __topology: np.ndarray  # Antenna array topology of the device
-    __received_signal: Optional[Signal]  # Recently received signal
+    __power: float                          # Average power of the transmitted signals
+    __position: Optional[np.ndarray]        # Position of the device within its scenario in cartesian coordinates
+    __orientation: Optional[np.ndarray]     # Orientation of the device within its scenario as a quaternion
+    __topology: np.ndarray                  # Antenna array topology of the device
+    __received_signal: Optional[Signal]     # Recently received signal
 
     def __init__(self, antennas: Optional[AntennaArrayBase] = None, power: float = 1.0, position: Optional[np.ndarray] = None, orientation: Optional[np.ndarray] = None, topology: Optional[np.ndarray] = None, seed: Optional[int] = None) -> None:
         """

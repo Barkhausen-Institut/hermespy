@@ -10,6 +10,7 @@ from time import time
 from typing import Generic, Iterable, List, Optional, TypeVar, Union
 
 from hermespy.core import DeviceInput, DeviceReception, Scenario, Drop, Signal
+from hermespy.simulation import SimulationScenario
 from .physical_device import PhysicalDeviceType
 
 __author__ = "Jan Adler"
@@ -87,3 +88,12 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], ABC, Generic[PhysicalDevice
 
 PhysicalScenarioType = TypeVar("PhysicalScenarioType", bound=PhysicalScenario)
 """Type of physical scenario"""
+
+
+class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
+    """Simulated physical scenario for testing purposes."""
+
+    def _trigger(self) -> None:
+        
+        # Triggering does nothing
+        pass

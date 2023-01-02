@@ -1,19 +1,12 @@
+from os import path
 
 from hermespy.core import SNRType
 from hermespy.channel import RadarChannel
-from hermespy.hardware_loop import HardwareLoop, PhysicalScenario
+from hermespy.hardware_loop import HardwareLoop, SimulatedPhysicalScenario
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
-from hermespy.simulation import SimulationScenario, SpecificIsolation
+from hermespy.simulation import SpecificIsolation
 from hermespy.tools import db2lin
 
-
-class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
-
-
-    def _trigger(self) -> None:
-        
-        # Triggering does nothing
-        pass
 
 
 # Global parameters
@@ -43,3 +36,6 @@ hardware_loop.run(override=False, campaign='h1_measurements')
 
 channel.target_exists = False
 hardware_loop.run(override=False, campaign='h0_measurements')
+
+
+roc = ReceiverOperatingCharacteristic.From_HDF(path.join(hardware_loop.results_dir, 'drops.h5'))
