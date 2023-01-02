@@ -299,7 +299,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
                         self.__plot_drop(drop, evaluations, device_figures, evaluator_figures)
 
                     # Update the results table
-                    progress.log((str(total), str(indices[0]), *[str(d.sample_points[i]) for d, i in zip(self.__dimensions, indices[1:])], *[str(a) for a in artifacts]))
+                    # progress.log((str(total), str(indices[0]), *[str(d.sample_points[i]) for d, i in zip(self.__dimensions, indices[1:])], *[str(a) for a in artifacts]))
 
                     # Render results table
                     results_table = Table(min_width=self.console.measure(progress).minimum)
