@@ -1,5 +1,7 @@
 from os import path
 
+import matplotlib.pyplot as plt
+
 from hermespy.core import SNRType
 from hermespy.channel import RadarChannel
 from hermespy.hardware_loop import HardwareLoop, SimulatedPhysicalScenario
@@ -8,13 +10,12 @@ from hermespy.simulation import SpecificIsolation
 from hermespy.tools import db2lin
 
 
-
 # Global parameters
 bandwidth = 3.072e9
 carrier_frequency = 10e9
 
 system = SimulatedPhysicalScenario()
-system.snr = db2lin(-130)
+system.snr = 1
 system.snr_type = SNRType.N0
 
 hardware_loop = HardwareLoop[SimulatedPhysicalScenario](system)
@@ -32,10 +33,11 @@ radar.device = device
 channel = RadarChannel(target_range=(.75, 1.25), radar_cross_section=1.)
 system.set_channel(device, device, channel)
 
-hardware_loop.run(override=False, campaign='h1_measurements')
+hardware_loop.run(overwrite=False, campaign='h1_measurements')
 
 channel.target_exists = False
-hardware_loop.run(override=False, campaign='h0_measurements')
-
+hardware_loop.run(overwrite=False, campaign='h0_measurements')
 
 roc = ReceiverOperatingCharacteristic.From_HDF(path.join(hardware_loop.results_dir, 'drops.h5'))
+roc.plot()
+plt.show()

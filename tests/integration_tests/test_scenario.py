@@ -96,7 +96,7 @@ class TestRecordReplay(TestCase):
         self.scenario.stop()
         self.scenario.replay(self.file)
         
-        replay_scenario = SimulationScenario.From_Dataset(self.file)
+        replay_scenario = SimulationScenario.Replay(self.file)
         replayed_drops = [replay_scenario.drop() for _ in range(self.num_drops)]
         
         # Compare the expected and replayed drops to make sure the generated information is identical

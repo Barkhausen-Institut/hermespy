@@ -161,13 +161,23 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
             figure[0].canvas.flush_events()
 
     def run(self,
-            override = True,
-            campaign: str='default') -> None:
+            overwrite = True,
+            campaign: str = 'default') -> None:
+        """Run the hardware loop configuration.
+        
+        Args:
+
+            overwrite (bool, optional):
+                Allow the replacement of an already existing savefile.
+
+            campaing (str, optional):
+                Name of the measurement campaign.
+        """
 
         # Prepare the results file
         if self.results_dir:
             file_location = path.join(self.results_dir, "drops.h5")
-            self.scenario.record(file_location, overwrite=override, campaign=campaign)
+            self.scenario.record(file_location, overwrite=overwrite, campaign=campaign)
 
         # Run internally
         self.__run()

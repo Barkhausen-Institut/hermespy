@@ -947,7 +947,7 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
         return impulse_response / np.linalg.norm(impulse_response)
 
 
-class RectangularWaveform(Serializable, FilteredSingleCarrierWaveform):
+class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
     """Rectangular filtered single carrier modulation.
 
     .. plot::
@@ -1027,7 +1027,7 @@ class RectangularWaveform(Serializable, FilteredSingleCarrierWaveform):
         return int(self.oversampling_factor / self.relative_bandwidth) - 1
 
 
-class FMCWWaveform(Serializable, FilteredSingleCarrierWaveform):
+class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
     """Frequency Modulated Continuous Waveform Filter Modulation Scheme.
 
     .. plot::

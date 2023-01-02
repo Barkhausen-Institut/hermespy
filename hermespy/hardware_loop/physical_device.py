@@ -137,6 +137,10 @@ class PowerReceiver(Receiver):
 
         return 0.0
 
+    def _noise_power(self, strength: float, snr_type=...) -> float:
+
+        return strength
+
 
 class SignalReceiver(StaticOperator, Receiver):
     """Custom signal receiver."""
@@ -152,6 +156,10 @@ class SignalReceiver(StaticOperator, Receiver):
 
         received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
+
+    def _noise_power(self, strength, snr_type=...) -> float:
+        
+        return 0.
 
 
 class PhysicalDevice(Device):

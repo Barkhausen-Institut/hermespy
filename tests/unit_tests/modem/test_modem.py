@@ -257,12 +257,12 @@ class TestBaseModem(TestCase):
     def test_noise_power(self) -> None:
         """Noise power estiamtor should report the correct noise powers"""
 
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.EBN0))
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.ESN0))
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.PN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.EBN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.ESN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.PN0))
         
         with self.assertRaises(ValueError):
-            _ = self.modem.noise_power(1., SNRType.EN0)
+            _ = self.modem._noise_power(1., SNRType.EN0)
 
 
 class TestTransmittingModem(TestBaseModem):

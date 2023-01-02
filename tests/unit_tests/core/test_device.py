@@ -181,6 +181,10 @@ class ReceiverMock(Receiver):
 
         return 1.0
 
+    def _noise_power(self, strength, snr_type=...) -> float:
+        
+        return strength
+
 
 class TestReceiver(TestCase):
     """Test the base class for receiving operators."""
