@@ -262,7 +262,7 @@ class RocEvaluationResult(EvaluationResult):
         with Executable.style_context():
 
             figure = plt.figure()
-            figure.suptitle(self.__evaluator.title)
+            figure.suptitle(self.__title)
 
             # Create single axes
             axes = figure.add_subplot()

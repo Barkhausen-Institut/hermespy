@@ -778,7 +778,6 @@ class TransmittingModem(BaseModem, Transmitter, Serializable):
     """Representation of a wireless modem exclusively transmitting."""
 
     yaml_tag = "TxModem"
-    """YAML serialization tag"""
 
     # Source configuration of the transmitted bits
     __bits_source: BitsSource

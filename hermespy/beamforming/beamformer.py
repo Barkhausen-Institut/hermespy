@@ -548,6 +548,7 @@ class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
         device.antennas = UniformArray(IdealAntenna(), 0.5 * device.wavelength, (8, 8))
 
         class ReceiverMock(Receiver, ABC):
+
             def _receive(self) -> Reception:
                 raise NotImplementedError()  # pragma no cover
 
@@ -556,6 +557,9 @@ class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
 
             def sampling_rate(self) -> float:
                 return 1.0  # pragma no cover
+
+            def _noise_power(self, strength, snr_type) -> float:
+                return strength
 
         operator = ReceiverMock()
         operator.slot = device.receivers

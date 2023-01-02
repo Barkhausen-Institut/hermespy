@@ -61,10 +61,10 @@ class TestRocFromMeasurements(TestCase):
             if gettrace() is None:
                 stack.enter_context(patch('sys.stdout'))
 
-            hardware_loop.run(override=False, campaign='h1_measurements')
+            hardware_loop.run(overwrite=False, campaign='h1_measurements')
 
             channel.target_exists = False
-            hardware_loop.run(override=False, campaign='h0_measurements')
+            hardware_loop.run(overwrite=False, campaign='h0_measurements')
 
     def tearDown(self) -> None:
         

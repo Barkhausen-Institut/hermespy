@@ -63,8 +63,9 @@ class SineOperator(DuplexOperator):
 
         return 1.
     
-    def noise_power(self, strength: float, snr_type=...) -> float:
-        return 0.
+    def _noise_power(self, strength: float, snr_type=...) -> float:
+
+        return strength
     
 class TestAudioDeviceAntennas(TestCase):
     

@@ -168,6 +168,9 @@ class MockReceiver(Receiver):
     def sampling_rate(self) -> float:
         return 1.
 
+    def _noise_power(self, strength, snr_type=...) -> float:
+        return strength
+
 
 class TestSimulationRunner(TestCase):
     """Test the Simulation Runner."""

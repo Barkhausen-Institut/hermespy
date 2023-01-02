@@ -128,7 +128,7 @@ from hermespy.tools.math import transform_coordinates
 from .antennas import AntennaArrayBase, UniformArray, IdealAntenna
 from .definitions import SNRType
 from .channel_state_information import ChannelStateInformation
-from .factory import HDFSerializable
+from .factory import HDFSerializable, Serializable
 from .signal_model import Signal
 from .random_node import RandomNode
 
@@ -197,15 +197,16 @@ OperatorType = TypeVar("OperatorType", bound="Operator")
 """Type of operator."""
 
 
-class Operator(Generic[SlotType]):
+class Operator(Generic[SlotType], Serializable):
     """Base class for operators of devices.
 
     In HermesPy, operators may configure devices, broadcast signals over them or capture signals from them.
     Each operator is attached to a single device instance it operates on.
     """
 
-    # Slot within a device this operator 'operates'
-    __slot: Optional[SlotType]
+    property_blacklist = {'slot',}
+
+    __slot: Optional[SlotType]   # Slot within a device this operator 'operates'
 
     def __init__(self, slot: Optional[SlotType] = None) -> None:
         """
@@ -788,7 +789,7 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
         # Initialize base classes
         RandomNode.__init__(self, seed=seed)
-        MixingOperator[ReceiverSlot].__init__(self, params=args)
+        MixingOperator.__init__(self, *args, **kwargs)
 
         self.reference = reference
         self.__signal = None
@@ -1281,7 +1282,7 @@ class UnsupportedSlot(OperatorSlot):
         raise RuntimeError("Slot not supported by this device")
 
 
-class Device(ABC, RandomNode):
+class Device(ABC, RandomNode, Serializable):
     """Physical device representation within HermesPy.
 
     It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.
