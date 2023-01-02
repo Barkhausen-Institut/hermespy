@@ -167,7 +167,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
         # Prepare the results file
         if self.results_dir:
             file_location = path.join(self.results_dir, "drops.h5")
-            self.scenario.record(file_location, override=override, campaign=campaign)
+            self.scenario.record(file_location, overwrite=override, campaign=campaign)
 
         # Run internally
         self.__run()

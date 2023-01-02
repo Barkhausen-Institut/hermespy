@@ -8,8 +8,9 @@ Wireless Scenario
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import IntEnum
+from itertools import chain
 from os import path, remove
-from typing import Generic, Iterable, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Generic, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 from h5py import File, Group
 
@@ -263,19 +264,18 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         return num
 
     @property
-    def operators(self) -> List[Operator]:
+    def operators(self) -> Set[Operator]:
         """All operators within this scenario.
 
-        Returns:
-            List[Operator]: List of all operators.
+        Returns: A set containing all unique operators within this scenario
         """
 
-        operators: List[Receiver] = []
+        operators = set()
 
-        for device in self.__devices:
-
-            operators.extend(device.receivers)
-            operators.extend(device.transmitters)
+        # Iterate over all devices and collect operators
+        for device in self.devices:
+            for operator in chain(device.transmitters, device.receivers):
+                operators.add(operator)
 
         return operators
 
@@ -390,29 +390,32 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Serialize required attributes
         group.attrs["num_devices"] = self.num_devices
+        group.attrs["num_operators"] = self.num_operators
 
         # Serialize device states
         for d, device in enumerate(self.devices):
             group.attrs[f"device_{d:02d}"] = factory.to_str(device)
+
+        # Serialize operator states
+            for o, operator in enumerate(self.operators):
+                group.attrs[f"operator_{o:02d}"] = factory.to_str(operator)
+
+        # Serialize full state
+        group.attrs["state"] = factory.to_str({'devices': self.devices, 'operators': self.operators})
 
     @classmethod
     def _state_from_HDF(cls: Type[Scenario],
                         factory: Factory,
                         group: Group) -> Scenario:
 
-        # Deserialize required attributes
-        num_devices = group.attrs["num_devices"]
-
         # Initialize class
         scenario = cls()
 
-        # Deserialize required devices
-        for d in range(num_devices):
+        # Recall serialization
+        state: dict = factory.from_str(group.attrs["state"])
 
-            # Recall device state from string representation
-            device = factory.from_str(group.attrs[f"device_{d:02d}"])[0]
-
-            # Add device to the scenario
+        # Add devices to the scenario
+        for device in state['devices']:
             scenario.add_device(device)
 
         # Return initialize scenario
@@ -420,7 +423,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
     def record(self,
                file: str,
-               override: bool = False,
+               overwrite: bool = False,
                campaign: str = 'default') -> None:
         """Start recording drop information generated from this scenario.
 
@@ -432,8 +435,8 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
             file (str):
                 The system path where to store the generated recording data.
 
-            override (bool, optional):
-                Override the file if a recording already exists.
+            overwrite (bool, optional):
+                Overwrite the file if a recording already exists.
                 Disabled by default.
 
             campaign (str, optional):
@@ -447,14 +450,21 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         if self.mode != ScenarioMode.DEFAULT:
             raise RuntimeError("Initialize a recording is only possible in default mode. Please stop before starting a new recording.")
 
-        if override and path.exists(file):
+        # Check wether the specified file already exists within the filesystem
+        file_exists = path.exists(file)
+
+        # Remove the existing file if the overwrite flag is enabled
+        if overwrite and file_exists:
+
             remove(file)
+            file_exists = False
 
         # Compute drop duration
         drop_duration = self.drop_duration
 
         # Initialize dataset
-        self.__file = File(file, "w-")
+        file_mode = "w-" if overwrite else "a"
+        self.__file = File(file, file_mode)
         self.__drop_counter = 0
         self.__campaign = campaign
 
@@ -465,17 +475,23 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         self.__file.attrs["drop_duration"] = drop_duration
 
         # Write required groups
-        self.__file.create_group('/campaigns')
-        self.__file.create_group('/campaigns/' + campaign)
+        if not '/campaigns' in self.__file:
+            self.__file.create_group('/campaigns')
+
+        if not '/state' in self.__file:
+            self.__file.create_group('state')
 
         # Write scenario state to the dataset for easy recollection
         # Future feature: Write a locking mechanism during recording
         factory = Factory()
-        self._state_to_HDF(factory, self.__file.create_group('state'))
+        self._state_to_HDF(factory, self.__file['/state'])
 
         # Write meta-information
         self.__file.attrs["hermes_version"] = __version__
         self.__file.attrs["hermes_status"] = __status__
+
+        # Update the campaign, will create the respective group if it doesn't exist yet
+        self.campaign = campaign
 
     def __campaign_exists(self,
                           campaign: str,
@@ -794,7 +810,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
                 receiver: Receiver
                 for receiver, input in zip(device.receivers, device_reception.operator_inputs):
-                    receiver.cache_reception(input)
+                    receiver.cache_reception(*input)
 
         else:
 
@@ -812,3 +828,11 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
 ScenarioType = TypeVar("ScenarioType", bound=Scenario)
 """Type of scenario."""
+
+
+class ReplayScenario(Scenario):
+    """Scenario which is unable to generate drops."""
+
+    def _drop(self) -> Drop:
+        
+        raise RuntimeError("Replay scenario may not generate data drops.")
